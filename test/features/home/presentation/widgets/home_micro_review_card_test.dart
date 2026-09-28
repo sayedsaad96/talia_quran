@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_micro_review_card.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/ayah_review_record.dart';
@@ -72,6 +73,9 @@ void main() {
 
     expect(find.byKey(const ValueKey('revealed')), findsOneWidget);
     expect(find.byKey(const ValueKey('hidden')), findsNothing);
+    expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
+    expect(find.text('﴿'), findsOneWidget);
+    expect(find.text('Surah Al-Baqarah, Ayah 255'), findsOneWidget);
   });
 
   testWidgets('renders nothing when the user has no memorized ayahs',

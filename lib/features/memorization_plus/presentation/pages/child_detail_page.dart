@@ -85,15 +85,15 @@ class _ChildDetailBody extends StatelessWidget {
         120,
       ),
       children: [
-        // â”€â”€â”€ Header avatar + name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Header avatar + name ──────────────────────────────────────────
         _ChildHeaderCard(child: child),
         const SizedBox(height: AppSpacing.md),
 
-        // â”€â”€â”€ Today summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Today summary ─────────────────────────────────────────────────
         _TodayCard(child: child),
         const SizedBox(height: AppSpacing.md),
 
-        // â”€â”€â”€ Metrics row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Metrics row ───────────────────────────────────────────────────
         _MetricsRow(child: child),
         const SizedBox(height: AppSpacing.md),
 
@@ -102,34 +102,28 @@ class _ChildDetailBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // â”€â”€â”€ Memorization progress (remote only, if production available) â”€â”€
+        // ─── Memorization progress (remote only, if production available) ──
         if (production != null) ...[
           _MemorizationProgressCard(production: production),
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // â”€â”€â”€ Recent sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Recent sessions ───────────────────────────────────────────────
         _RecentSessionsCard(logs: logs),
         const SizedBox(height: AppSpacing.md),
 
-        // â”€â”€â”€ Rewards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Rewards ───────────────────────────────────────────────────────
         if (rewards.isNotEmpty) ...[
           _RewardsCard(rewards: rewards),
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // â”€â”€â”€ Open full dashboard (local child only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Open full dashboard (local child only) ────────────────────────
         if (child.isLocal) ...[
           OutlinedButton.icon(
-            onPressed: () {
-              // Now we are ALREADY in the full dashboard hierarchy.
-              // If they want to change the local child nickname, we can show a dialog.
-              _showChangeNicknameDialog(context);
-            },
+            onPressed: () => _showChangeNicknameDialog(context),
             icon: const Icon(Icons.edit_rounded),
-            label: Text(
-              context.l10n.familyDashboardLocalBadge,
-            ), // Change nickname
+            label: Text(context.l10n.parentDashboardEditChild),
           ),
         ],
       ],
@@ -141,7 +135,7 @@ class _ChildDetailBody extends StatelessWidget {
       context: context,
       builder: (_) => _TextInputDialog(
         title: context.l10n.parentDashboardEditChild,
-        hintText: context.l10n.familyDashboardAddChild,
+        hintText: context.l10n.name,
         actionLabel: context.l10n.save,
         initialText: child.displayName,
       ),
@@ -154,7 +148,7 @@ class _ChildDetailBody extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Header card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Header card ──────────────────────────────────────────────────────────────
 
 class _ChildHeaderCard extends StatelessWidget {
   const _ChildHeaderCard({required this.child});
@@ -183,7 +177,7 @@ class _ChildHeaderCard extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              child.avatarEmoji ?? (child.isLocal ? 'ðŸ‘¨â€ðŸ‘§' : 'ðŸ§’'),
+              child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
               style: AppTypography.displayMedium.copyWith(fontSize: 32),
             ),
           ),
@@ -226,7 +220,7 @@ class _ChildHeaderCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Today card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Today card ───────────────────────────────────────────────────────────────
 
 class _TodayCard extends StatelessWidget {
   const _TodayCard({required this.child});
@@ -257,7 +251,7 @@ class _TodayCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Metrics row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Metrics row ──────────────────────────────────────────────────────────────
 
 class _MetricsRow extends StatelessWidget {
   const _MetricsRow({required this.child});
@@ -268,15 +262,15 @@ class _MetricsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _MetricChip(icon: 'â­', label: 'Lv.${child.currentLevel}'),
+          child: _MetricChip(icon: '⭐', label: 'Lv.${child.currentLevel}'),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: 'ðŸŒŸ', label: '${child.starsEarned}'),
+          child: _MetricChip(icon: '🌟', label: '${child.starsEarned}'),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: 'ðŸ”¥', label: '${child.currentStreak}'),
+          child: _MetricChip(icon: '🔥', label: '${child.currentStreak}'),
         ),
       ],
     );
@@ -368,7 +362,7 @@ class _SupportMetric extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Memorization progress card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Memorization progress card ───────────────────────────────────────────────
 
 class _MemorizationProgressCard extends StatelessWidget {
   const _MemorizationProgressCard({required this.production});
@@ -423,7 +417,7 @@ class _MemorizationProgressCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Recent sessions card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Recent sessions card ─────────────────────────────────────────────────────
 
 class _RecentSessionsCard extends StatelessWidget {
   const _RecentSessionsCard({required this.logs});
@@ -471,7 +465,7 @@ class _RecentSessionsCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Rewards card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Rewards card ─────────────────────────────────────────────────────────────
 
 class _RewardsCard extends StatelessWidget {
   const _RewardsCard({required this.rewards});
@@ -507,7 +501,7 @@ class _RewardsCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Shared panel widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Shared panel widget ──────────────────────────────────────────────────────
 
 class _Panel extends StatelessWidget {
   const _Panel({required this.title, required this.child});
@@ -551,6 +545,8 @@ class _TextInputDialog extends StatefulWidget {
     this.initialText = '',
   });
 
+  static const int maxLength = 50;
+
   final String title;
   final String hintText;
   final String actionLabel;
@@ -562,6 +558,7 @@ class _TextInputDialog extends StatefulWidget {
 
 class _TextInputDialogState extends State<_TextInputDialog> {
   late final TextEditingController _controller;
+  String? _errorText;
 
   @override
   void initState() {
@@ -575,6 +572,24 @@ class _TextInputDialogState extends State<_TextInputDialog> {
     super.dispose();
   }
 
+  String? _validate(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return context.l10n.fieldRequired;
+    if (trimmed.length > _TextInputDialog.maxLength) {
+      return context.l10n.fieldTooLong(_TextInputDialog.maxLength);
+    }
+    return null;
+  }
+
+  void _submit() {
+    final error = _validate(_controller.text);
+    if (error != null) {
+      setState(() => _errorText = error);
+      return;
+    }
+    Navigator.pop(context, _controller.text.trim());
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -583,8 +598,16 @@ class _TextInputDialogState extends State<_TextInputDialog> {
         child: TextField(
           controller: _controller,
           autofocus: true,
-          decoration: InputDecoration(hintText: widget.hintText),
-          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+          maxLength: _TextInputDialog.maxLength,
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+            errorText: _errorText,
+            counterText: '',
+          ),
+          onChanged: (_) {
+            if (_errorText != null) setState(() => _errorText = null);
+          },
+          onSubmitted: (_) => _submit(),
         ),
       ),
       actions: [
@@ -592,12 +615,8 @@ class _TextInputDialogState extends State<_TextInputDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.cancel),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          child: Text(widget.actionLabel),
-        ),
+        FilledButton(onPressed: _submit, child: Text(widget.actionLabel)),
       ],
     );
   }
 }
-

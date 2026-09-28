@@ -172,18 +172,6 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                       GlobalWidgetsLocalizations.delegate,
                       GlobalCupertinoLocalizations.delegate,
                     ],
-                    builder: (context, child) {
-                      final media = MediaQuery.of(context);
-                      return MediaQuery(
-                        data: media.copyWith(
-                          textScaler: media.textScaler.clamp(
-                            minScaleFactor: 0.85,
-                            maxScaleFactor: 1.35,
-                          ),
-                        ),
-                        child: child ?? const SizedBox.shrink(),
-                      );
-                    },
                     routerConfig: AppRouter.router,
                   );
                 },

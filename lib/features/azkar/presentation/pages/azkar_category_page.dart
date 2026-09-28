@@ -8,6 +8,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../xp/domain/entities/xp_gain_result.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
@@ -16,6 +20,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
+import '../services/zikr_audio_service.dart';
 import '../widgets/font_scale_selector_sheet.dart';
 
 class AzkarCategoryPage extends StatelessWidget {
@@ -51,11 +56,9 @@ class _AzkarCategoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = switch (category) {
-      AzkarCategory.evening => true,
-      AzkarCategory.morning => false,
-      _ => context.isDark,
-    };
+    // Respect the user's theme; each category keeps its own accent colors in
+    // the content below.
+    final isDark = context.isDark;
 
     return Scaffold(
       backgroundColor: isDark
@@ -81,6 +84,10 @@ class _AzkarCategoryView extends StatelessWidget {
             }
             if (state.allDone) {
               return _CompletionScreen(
+                key: ValueKey('azkar-completion-${category.name}'),
+                title: _title(context),
+                completedCount: state.completedCount,
+                totalCount: state.sessions.length,
                 isDark: isDark,
                 onReset: () => context.read<AzkarCubit>().reset(),
               );
@@ -172,6 +179,7 @@ class _ActiveAzkarScreen extends StatefulWidget {
 
 class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
   late final AzkarPreferencesStore _prefsStore;
+  final ZikrAudioService _audioService = getIt<ZikrAudioService>();
   late PageController _pageController;
   Timer? _undoTimer;
   bool _showUndo = false;
@@ -269,6 +277,15 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
   void _openIndexSheet(BuildContext context) {
     HapticFeedback.selectionClick();
     final cubit = context.read<AzkarCubit>();
+    // Snapshot the live state so the sheet reflects current counts/progress
+    // even if it stays open while the user completes zikr in the background.
+    final AzkarLoaded snapshot;
+    final current = cubit.state;
+    if (current is AzkarLoaded) {
+      snapshot = current;
+    } else {
+      snapshot = widget.state;
+    }
     final isDark = widget.isDark;
     final surfaceColor = isDark
         ? AppColors.darkSurface
@@ -319,7 +336,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                   Expanded(
                     child: ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      itemCount: widget.state.sessions.length,
+                      itemCount: snapshot.sessions.length,
                       separatorBuilder: (_, _) => Divider(
                         color: (isDark
                             ? AppColors.darkDivider
@@ -327,8 +344,8 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         height: 1,
                       ),
                       itemBuilder: (context, index) {
-                        final session = widget.state.sessions[index];
-                        final selected = index == widget.state.currentIndex;
+                        final session = snapshot.sessions[index];
+                        final selected = index == snapshot.currentIndex;
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -519,8 +536,8 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         valueListenable: _prefsStore.autoAdvanceListenable,
                         builder: (context, autoAdvance, _) => IconButton(
                           tooltip: autoAdvance
-                              ? 'الانتقال التلقائي مفعّل'
-                              : 'الانتقال التلقائي معطّل',
+                              ? context.l10n.azkarAutoAdvanceOn
+                              : context.l10n.azkarAutoAdvanceOff,
                           constraints: iconConstraints,
                           visualDensity: isSmall ? VisualDensity.compact : null,
                           icon: Icon(
@@ -599,6 +616,11 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                           onUndo: () => _undoLastCount(context),
                           onShare: () => _shareZikr(context, session),
                           onCopy: () => _copyZikr(context, session),
+                          onToggleAudio: () => _audioService.toggle(session.zikr),
+                          hasAudio: _audioService.hasAudio(session.zikr),
+                          isAudioPlaying:
+                              _audioService.state.isPlaying &&
+                                  _audioService.state.zikrId == session.zikr.id,
                         );
                       },
                     );
@@ -624,6 +646,9 @@ class _ZikrReaderPage extends StatelessWidget {
     required this.onUndo,
     required this.onShare,
     required this.onCopy,
+    required this.onToggleAudio,
+    required this.hasAudio,
+    required this.isAudioPlaying,
   });
 
   final ZikrSession session;
@@ -635,6 +660,9 @@ class _ZikrReaderPage extends StatelessWidget {
   final VoidCallback onUndo;
   final VoidCallback onShare;
   final VoidCallback onCopy;
+  final VoidCallback onToggleAudio;
+  final bool hasAudio;
+  final bool isAudioPlaying;
 
   @override
   Widget build(BuildContext context) {
@@ -673,6 +701,20 @@ class _ZikrReaderPage extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          if (hasAudio)
+                            IconButton(
+                              tooltip: isAudioPlaying
+                                  ? context.l10n.azkarPauseRecitation
+                                  : context.l10n.azkarPlayRecitation,
+                              icon: Icon(
+                                isAudioPlaying
+                                    ? Icons.pause_circle_rounded
+                                    : Icons.play_circle_rounded,
+                                size: 22,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: onToggleAudio,
+                            ),
                           IconButton(
                             tooltip: context.l10n.copy,
                             icon: Icon(
@@ -749,7 +791,9 @@ class _ZikrReaderPage extends StatelessWidget {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          'فضل الذكر / المصدر',
+                                          session.zikr.virtue.isNotEmpty
+                                              ? context.l10n.azkarVirtueAndSource
+                                              : context.l10n.azkarSource,
                                           style: AppTypography.labelSmall
                                               .copyWith(
                                             color: isDark
@@ -761,17 +805,44 @@ class _ZikrReaderPage extends StatelessWidget {
                                       ],
                                     ),
                                     const SizedBox(height: 6),
-                                    Text(
-                                      session.zikr.reference,
-                                      style: AppTypography.titleMedium
-                                          .copyWith(
-                                        color: secondaryColor,
-                                        fontFamily: 'Amiri',
-                                        fontSize: 15,
-                                        height: 1.5,
+                                    if (session.zikr.virtue.isNotEmpty) ...[
+                                      Text(
+                                        session.zikr.virtue,
+                                        style: AppTypography.titleMedium
+                                            .copyWith(
+                                          color: secondaryColor,
+                                          fontFamily: 'Amiri',
+                                          fontSize: 15,
+                                          height: 1.5,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                      if (session.zikr.reference.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          session.zikr.reference,
+                                          style: AppTypography.labelSmall
+                                              .copyWith(
+                                            color: secondaryColor
+                                                .withValues(alpha: 0.85),
+                                            fontFamily: 'Amiri',
+                                            height: 1.4,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ] else
+                                      Text(
+                                        session.zikr.reference,
+                                        style: AppTypography.titleMedium
+                                            .copyWith(
+                                          color: secondaryColor,
+                                          fontFamily: 'Amiri',
+                                          fontSize: 15,
+                                          height: 1.5,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                   ],
                                 ),
                               ),
@@ -798,7 +869,7 @@ class _ZikrReaderPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // â”€â”€â”€ Tap Target (Circular Counter) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ─── Tap Target (Circular Counter) ──────────────────────
           Semantics(
             button: true,
             label: context.l10n.tapToTasbeeh(session.zikr.totalCount),
@@ -954,16 +1025,69 @@ class _ZikrReaderPage extends StatelessWidget {
   }
 }
 
-class _CompletionScreen extends StatelessWidget {
-  const _CompletionScreen({required this.isDark, required this.onReset});
+class _CompletionScreen extends StatefulWidget {
+  const _CompletionScreen({
+    super.key,
+    required this.title,
+    required this.completedCount,
+    required this.totalCount,
+    required this.isDark,
+    required this.onReset,
+  });
 
+  final String title;
+  final int completedCount;
+  final int totalCount;
   final bool isDark;
   final VoidCallback onReset;
+
+  @override
+  State<_CompletionScreen> createState() => _CompletionScreenState();
+}
+
+class _CompletionScreenState extends State<_CompletionScreen> {
+  XpGainResult? _xpResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _awardXpOncePerDay();
+  }
+
+  Future<void> _awardXpOncePerDay() async {
+    try {
+      final prefs = getIt<SharedPreferences>();
+      final today = DateTime.now();
+      final todayKey =
+          '${today.year}-${today.month}-${today.day}-${widget.title.hashCode}';
+      if (prefs.getString('azkar_xp_day') == todayKey) return;
+      await prefs.setString('azkar_xp_day', todayKey);
+
+      final xp = getIt<XpService>();
+      final result = await xp.addXp('azkar_wird_completed');
+      if (mounted && result.xpAdded > 0) {
+        setState(() => _xpResult = result);
+      }
+    } catch (_) {
+      // XP is a bonus, never a blocker for the completion moment.
+    }
+  }
+
+  void _shareWird() {
+    HapticFeedback.lightImpact();
+    final data = SocialShareData.azkarWird(
+      categoryTitle: widget.title,
+      completedCount: widget.completedCount,
+      totalCount: widget.totalCount,
+    );
+    SocialShareSheet.show(context, data);
+  }
 
   @override
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final motionValue = disableAnimations ? 1.0 : null;
+    final isDark = widget.isDark;
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -1023,12 +1147,22 @@ class _CompletionScreen extends StatelessWidget {
                 )
                 .animate(autoPlay: !disableAnimations, value: motionValue)
                 .fadeIn(delay: 400.ms),
+            if (_xpResult != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '+${_xpResult!.xpAdded} XP',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xxl),
             Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: onReset,
+                        onPressed: widget.onReset,
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: Text(context.l10n.reset),
                         style: OutlinedButton.styleFrom(
@@ -1046,15 +1180,9 @@ class _CompletionScreen extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
-                        },
-                        icon: const Icon(Icons.home_rounded, size: 18),
-                        label: Text(context.l10n.home),
+                        onPressed: _shareWird,
+                        icon: const Icon(Icons.ios_share_rounded, size: 18),
+                        label: Text(context.l10n.azkarShareWird),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,

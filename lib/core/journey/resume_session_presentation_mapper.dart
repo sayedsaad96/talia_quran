@@ -9,7 +9,7 @@ class ResumeSessionPresentationMapper {
 
   JourneyPresentationData map(ResumeSessionPresentationInput input) {
     final uri = Uri.tryParse(input.route);
-    
+
     if (uri == null) {
       return JourneyPresentationData(
         title: input.l10n.resumeWhereYouLeft,
@@ -20,9 +20,16 @@ class ResumeSessionPresentationMapper {
     }
 
     final metadata = input.metadata;
-    final surahId = int.tryParse(metadata['surahId'] ?? uri.queryParameters['surahId'] ?? '');
-    final startAyah = int.tryParse(metadata['startAyah'] ?? uri.queryParameters['startAyah'] ?? '') ??
-        int.tryParse(metadata['ayahNumber'] ?? uri.queryParameters['ayahNumber'] ?? '');
+    final surahId = int.tryParse(
+      metadata['surahId'] ?? uri.queryParameters['surahId'] ?? '',
+    );
+    final startAyah =
+        int.tryParse(
+          metadata['startAyah'] ?? uri.queryParameters['startAyah'] ?? '',
+        ) ??
+        int.tryParse(
+          metadata['ayahNumber'] ?? uri.queryParameters['ayahNumber'] ?? '',
+        );
 
     if (uri.path.startsWith('/quran/page/')) {
       final page = uri.pathSegments.length >= 3 ? uri.pathSegments[2] : null;
@@ -39,7 +46,9 @@ class ResumeSessionPresentationMapper {
     }
 
     if (uri.path.startsWith('/quran/surah/')) {
-      final id = uri.pathSegments.length >= 3 ? int.tryParse(uri.pathSegments[2]) : null;
+      final id = uri.pathSegments.length >= 3
+          ? int.tryParse(uri.pathSegments[2])
+          : null;
       final surah = _surahLabel(input, id);
       return JourneyPresentationData(
         title: input.isArabic ? 'تابع $surah' : 'Continue $surah',

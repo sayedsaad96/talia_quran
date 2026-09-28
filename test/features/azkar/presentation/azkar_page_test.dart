@@ -8,6 +8,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_store.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
+import 'package:talia_quran/features/azkar/data/datasources/smart_wird_progress_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/azkar/domain/repositories/azkar_repository.dart';
 import 'package:talia_quran/features/azkar/presentation/pages/azkar_page.dart';
@@ -22,7 +23,12 @@ void main() {
     prefs = await SharedPreferences.getInstance();
     getIt.registerSingleton<SharedPreferences>(prefs);
     getIt.registerSingleton<AzkarCompletionStore>(AzkarCompletionStore(prefs));
-    getIt.registerSingleton<AzkarPreferencesStore>(AzkarPreferencesStore(prefs));
+    getIt.registerSingleton<AzkarPreferencesStore>(
+      AzkarPreferencesStore(prefs),
+    );
+    getIt.registerSingleton<SmartWirdProgressStore>(
+      SmartWirdProgressStore(prefs),
+    );
   });
 
   tearDown(() => getIt.reset());
@@ -63,7 +69,9 @@ void main() {
     datasetVersion: 'v1',
   );
 
-  testWidgets('shows safe under review state when no approved records exist', (tester) async {
+  testWidgets('shows safe under review state when no approved records exist', (
+    tester,
+  ) async {
     const repo = _FakeRepo({});
     getIt.registerSingleton<AzkarRepository>(repo);
 
@@ -71,12 +79,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('الأذكار'), findsOneWidget);
-    expect(find.byKey(const ValueKey('azkar-content-under-review')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('azkar-content-under-review')),
+      findsOneWidget,
+    );
     expect(find.text('أذكار الصباح'), findsNothing);
     expect(find.text('أذكار المساء'), findsNothing);
   });
 
-  testWidgets('morning time context displays morning Hero card', (tester) async {
+  testWidgets('morning time context displays morning Hero card', (
+    tester,
+  ) async {
     const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
       AzkarCategory.evening: [eveningZikr],
@@ -94,7 +107,9 @@ void main() {
     expect(find.text('مسبحة حرة'), findsOneWidget);
   });
 
-  testWidgets('evening time context displays evening Hero card', (tester) async {
+  testWidgets('evening time context displays evening Hero card', (
+    tester,
+  ) async {
     const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
       AzkarCategory.evening: [eveningZikr],
@@ -112,7 +127,9 @@ void main() {
     expect(find.text('مسبحة حرة'), findsOneWidget);
   });
 
-  testWidgets('tapping free tasbeeh card opens FreeTasbeehSheet', (tester) async {
+  testWidgets('tapping free tasbeeh card opens FreeTasbeehSheet', (
+    tester,
+  ) async {
     const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
     });
@@ -139,4 +156,12 @@ class _FakeRepo implements AzkarRepository {
   @override
   Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async =>
       Right(records[category] ?? const []);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async {
+    return Right({
+      for (final category in AzkarCategory.values)
+        category: records[category] ?? const [],
+    });
+  }
 }

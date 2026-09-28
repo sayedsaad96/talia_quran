@@ -63,10 +63,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   @override
   void initState() {
     super.initState();
-    _prefsStore = widget.prefsStore ??
-        (getIt.isRegistered<AzkarPreferencesStore>()
-            ? getIt<AzkarPreferencesStore>()
-            : AzkarPreferencesStore());
+    _prefsStore = widget.prefsStore ?? getIt<AzkarPreferencesStore>();
   }
 
   @override
@@ -154,10 +151,16 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       final textNorm = ArabicNormalizer.normalize(s.zikr.text);
       final refNorm = ArabicNormalizer.normalize(s.zikr.reference);
       final subNorm = ArabicNormalizer.normalize(s.zikr.subcategory);
+      final translitNorm = ArabicNormalizer.normalize(s.zikr.transliteration);
+      final translationNorm = ArabicNormalizer.normalize(s.zikr.translation);
 
       return textNorm.contains(normalizedQuery) ||
           refNorm.contains(normalizedQuery) ||
-          subNorm.contains(normalizedQuery);
+          subNorm.contains(normalizedQuery) ||
+          (translitNorm.isNotEmpty &&
+              translitNorm.contains(normalizedQuery)) ||
+          (translationNorm.isNotEmpty &&
+              translationNorm.contains(normalizedQuery));
     }).toList();
 
     return CustomScrollView(
@@ -206,7 +209,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         onChanged: (val) => setState(() => _searchQuery = val),
         textDirection: TextDirection.rtl,
         decoration: InputDecoration(
-          hintText: 'ابحث في الأدعية والأذكار...',
+          hintText: context.l10n.azkarSearchHint,
           hintStyle: AppTypography.bodyMedium.copyWith(
             color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
           ),
@@ -285,7 +288,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                       : (isDark ? AppColors.goldLight : AppColors.goldDark),
                 ),
                 const SizedBox(width: 4),
-                const Text('المفضلة'),
+                Text(context.l10n.azkarFavorites),
               ],
             );
           } else {
@@ -335,7 +338,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'لا توجد أدعية في المفضلة',
+                  context.l10n.azkarFavoritesEmptyTitle,
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark
                         ? AppColors.darkTextPrimary
@@ -345,7 +348,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا',
+                  context.l10n.azkarFavoritesEmptyDesc,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -373,9 +376,8 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 size: 56,
                 color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'لا توجد نتائج مطابقة',
+              const SizedBox(height: 16),                Text(
+                  context.l10n.azkarSearchNoResultsTitle,
                 style: AppTypography.titleMedium.copyWith(
                   color: isDark
                       ? AppColors.darkTextPrimary
@@ -383,9 +385,8 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'لم نجد أي أدعية تطابق بحثك',
+              const SizedBox(height: 8),                Text(
+                  context.l10n.azkarSearchNoResultsDesc,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary
@@ -401,7 +402,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   setState(() => _searchQuery = '');
                 },
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('مسح البحث'),
+                label: Text(context.l10n.azkarSearchClear),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                 ),

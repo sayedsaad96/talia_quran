@@ -1,10 +1,13 @@
-﻿// lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
+// lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
+import '../../../../../core/di/injection.dart';
 import '../../../../../core/widgets/closing_moment.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/memorization/v2/session_state.dart';
@@ -14,21 +17,66 @@ import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../../features/settings/presentation/cubits/profile_cubit.dart';
+import '../../../domain/navigation/memorization_navigation_resolver.dart';
+import '../../../domain/repositories/memorization_plus_repository.dart';
 import 'v2_session_widgets.dart';
 
-/// V2 Phase 6: Completion â€” the block is fully memorized.
+/// V2 Phase 6: Completion — the block is fully memorized.
 /// Shows a summary of passed ayahs and retry count, then navigates back.
-class V2CompletionPage extends StatelessWidget {
-  const V2CompletionPage({super.key, required this.finalState});
+/// Loads the next step of today's plan; null when nothing remains.
+typedef V2NextStepLoader = Future<({String route, int remaining})?> Function();
+
+class V2CompletionPage extends StatefulWidget {
+  const V2CompletionPage({
+    super.key,
+    required this.finalState,
+    this.nextStepLoader,
+  });
 
   final V2SessionState finalState;
+
+  /// Visible for tests; production resolves today's plan via DI.
+  final V2NextStepLoader? nextStepLoader;
+
+  @override
+  State<V2CompletionPage> createState() => _V2CompletionPageState();
+}
+
+class _V2CompletionPageState extends State<V2CompletionPage> {
+  ({String route, int remaining})? _nextStep;
+
+  V2SessionState get finalState => widget.finalState;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadNextStep());
+  }
+
+  Future<void> _loadNextStep() async {
+    final loader =
+        widget.nextStepLoader ??
+        (getIt.isRegistered<MemorizationPlusRepository>()
+            ? MemorizationNavigationResolver(
+                getIt<MemorizationPlusRepository>(),
+              ).nextDailyPlanStep
+            : null);
+    if (loader == null) return;
+    try {
+      final next = await loader();
+      if (mounted) setState(() => _nextStep = next);
+    } catch (_) {
+      // The hub stays available; a lookup failure only hides the shortcut.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final l10n = context.l10n;
 
     return SafeArea(
@@ -38,12 +86,14 @@ class V2CompletionPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Spacer(),
-            // â”€â”€ Closing moment: Ø³ÙƒÙŠÙ†Ø© before statistics â”€â”€
+            // ── Closing moment: سكينة before statistics ──
             ClosingMomentAyahCard(
               key: const Key('v2_closing_moment'),
-              summary: l10n.closingSummaryMemorization(
-                finalState.passedAyahNumbers.length,
-              ),
+              summary: finalState.isReview
+                  ? l10n.closingSummaryReview
+                  : l10n.closingSummaryMemorization(
+                      finalState.passedAyahNumbers.length,
+                    ),
             ),
             const SizedBox(height: AppSpacing.lg),
             V2SummaryRow(
@@ -64,35 +114,54 @@ class V2CompletionPage extends StatelessWidget {
               icon: const Icon(Icons.volunteer_activism_rounded),
               label: Text(l10n.closingDuaButton),
             ),
+            if (!finalState.isReview) ...[
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () {
+                  final profileState = context.read<ProfileCubit>().state;
+                  final name =
+                      profileState is ProfileLoaded &&
+                          profileState.profile.hasName
+                      ? profileState.profile.displayName
+                      : null;
+                  final data = SocialShareData.memorization(
+                    ayahsCount: finalState.passedAyahNumbers.length,
+                    surahsCount: 0,
+                    userName: name,
+                  );
+                  SocialShareSheet.show(context, data);
+                },
+                icon: const Icon(Icons.share_rounded),
+                label: Text(context.l10n.shareMemorizationMilestone),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
-            OutlinedButton.icon(
-              onPressed: () {
-                final profileState = context.read<ProfileCubit>().state;
-                final name = profileState is ProfileLoaded &&
-                        profileState.profile.hasName
-                    ? profileState.profile.displayName
-                    : null;
-                final data = SocialShareData.memorization(
-                  ayahsCount: finalState.passedAyahNumbers.length,
-                  surahsCount: 0,
-                  userName: name,
-                );
-                SocialShareSheet.show(context, data);
-              },
-              icon: const Icon(Icons.share_rounded),
-              label: Text(context.l10n.shareMemorizationMilestone),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            FilledButton.icon(
-              onPressed: () => context.go(AppRoutes.memorizationHub),
-              style: FilledButton.styleFrom(backgroundColor: primary),
-              icon: const Icon(Icons.hub_rounded),
-              label: Text(context.l10n.v2MemorizationHub),
-            ),
+            if (_nextStep case final next?) ...[
+              FilledButton.icon(
+                key: const Key('v2_next_plan_item_button'),
+                // Replace this finished session so "back" returns to where
+                // the learner started, not to a completed screen.
+                onPressed: () => context.pushReplacement(next.route),
+                style: FilledButton.styleFrom(backgroundColor: primary),
+                icon: const Icon(Icons.skip_next_rounded),
+                label: Text(l10n.v2NextPlanItem(next.remaining)),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: () => context.go(AppRoutes.memorizationHub),
+                icon: const Icon(Icons.hub_rounded),
+                label: Text(context.l10n.v2MemorizationHub),
+              ),
+            ] else
+              FilledButton.icon(
+                onPressed: () => context.go(AppRoutes.memorizationHub),
+                style: FilledButton.styleFrom(backgroundColor: primary),
+                icon: const Icon(Icons.hub_rounded),
+                label: Text(context.l10n.v2MemorizationHub),
+              ),
           ],
         ),
       ),
     );
   }
-
 }

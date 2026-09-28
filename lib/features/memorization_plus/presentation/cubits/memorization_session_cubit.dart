@@ -24,6 +24,8 @@ import '../../../../core/memorization/v2/recitation_word_diff.dart';
 import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
 import '../../../../core/memorization/v2/review_outcome_committer.dart';
 import '../../../../core/memorization/v2/recitation_evaluator.dart';
+import '../../../../core/memorization/v2/listen_budget.dart';
+import '../../../../core/memorization/v2/self_grade.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
@@ -33,6 +35,8 @@ import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../../memorization_plus/domain/entities/custom_memorization_plan.dart';
+import '../../../memorization_plus/domain/services/plan_schedule_policy.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
@@ -155,10 +159,7 @@ class MSActive extends MemorizationSessionState {
 /// attempt. Carries the engine's [result] plus the word-level diff so the
 /// result sheet can render a colour-coded comparison.
 final class V2EvaluationFeedback extends Equatable {
-  const V2EvaluationFeedback({
-    required this.result,
-    required this.wordDiff,
-  });
+  const V2EvaluationFeedback({required this.result, required this.wordDiff});
 
   final V2RecitationResult result;
   final RecitationWordDiffResult wordDiff;
@@ -215,6 +216,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     AppSessionService? appSessionService,
   }) : _quranRepo = quranRepository,
        _memRepo = memorizationRepository,
+       _baseEngine = sessionEngine,
        _engine = sessionEngine,
        _reviewAdapter = reviewAdapter,
        _progressAdapter = progressAdapter,
@@ -239,7 +241,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   final QuranRepository _quranRepo;
   final MemorizationPlusRepository _memRepo;
-  final V2SessionEngine _engine;
+  final V2SessionEngine _baseEngine;
+
+  /// The engine for the current session; stricter for a challenging plan.
+  V2SessionEngine _engine;
   final V2SessionReviewAdapter _reviewAdapter;
   final V2SessionProgressAdapter _progressAdapter;
   final V2SessionGamificationAdapter _gamificationAdapter;
@@ -267,7 +272,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       // Speech recognition is unavailable on this device (e.g. no recogniser
       // installed). This is an expected, gracefully-handled degradation — the
       // session continues in manual-grade mode. Use warn, not error.
-      TaliaLogger.w('V2: Speech recognition unavailable on this device', e, stack);
+      TaliaLogger.w(
+        'V2: Speech recognition unavailable on this device',
+        e,
+        stack,
+      );
     }
   }
 
@@ -277,11 +286,31 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     emit(
       current.copyWith(
         isRecording: false,
-        speechIssue: error.permanent
-            ? V2SpeechIssue.unavailable
-            : V2SpeechIssue.permissionDenied,
+        speechIssue: _classifySpeechIssue(error),
       ),
     );
+  }
+
+  /// Maps plugin recognizer errors to honest user-facing categories.
+  ///
+  /// Reporting every transient error as a permission denial sent users to
+  /// fix permissions when the real cause was silence, a busy recognizer,
+  /// or a network hiccup.
+  V2SpeechIssue _classifySpeechIssue(SpeechRecognitionError error) {
+    switch (error.errorMsg) {
+      // Silence or no recognizable speech — reciting again is enough.
+      case 'error_no_match':
+      case 'error_speech_timeout':
+        return V2SpeechIssue.noSpeech;
+      // Recognizer-level permission failure. The pre-listen app permission
+      // check normally catches this first; kept for residual races.
+      case 'error_permission':
+        return V2SpeechIssue.permissionPermanentlyDenied;
+    }
+    // Everything else (network, busy recognizer, server, audio, unknown)
+    // is a temporary "unavailable" condition: the session continues in
+    // manual-grade mode and the learner can retry recording.
+    return V2SpeechIssue.unavailable;
   }
 
   void _handleSpeechStatus(String status) {
@@ -333,6 +362,22 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // receipt here heals an interrupted session without duplicating rewards.
     unawaited(_processPendingEffects());
 
+    // Plan difficulty: a challenging plan recites against a slightly
+    // stricter pass threshold (M-U4). Any read failure keeps the default.
+    _engine = _baseEngine;
+    try {
+      final planResult = await _memRepo.getCustomPlan();
+      final plan = planResult.fold((_) => null, (value) => value);
+      if (plan != null &&
+          plan.isActive &&
+          plan.targetUser == PlanTargetUser.adult &&
+          plan.difficulty == MemorizationDifficulty.challenging) {
+        _engine = _baseEngine.withPassThreshold(
+          PlanSchedulePolicy.passThreshold(plan.difficulty),
+        );
+      }
+    } catch (_) {}
+
     // 1. Determine blockReviewRequired from profile.
     bool blockReviewRequired = true; // safe default
     final profileResult = await _memRepo.getMemorizationProfile();
@@ -357,7 +402,16 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // restorable phase, rehydrate it instead of starting fresh. A terminal
     // checkpoint is safe to clear here only because the production committer
     // has already durably written its evidence and completion effect.
-    final savedOpt = await _progressAdapter.loadIfExists(surahId);
+    //
+    // The checkpoint may only take over navigation when the requested ayah
+    // belongs to the saved block and the saved intent matches — otherwise a
+    // stale checkpoint would silently swallow the explicit target (plan item,
+    // SmartCoach due ayah, review tap).
+    final isReview = _launchContext!.intent == LearningIntent.review;
+    final savedOpt = await _progressAdapter.loadIfExists(
+      surahId,
+      review: isReview,
+    );
     final saved = savedOpt.fold(() => null, (s) => s);
     if (saved != null) {
       final savedPhase = _phaseFromPersistedIndex(saved.phaseIndex);
@@ -365,9 +419,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // The event and outbox row—not this resumable UI checkpoint—are the
         // durable proof of completion. Clearing the checkpoint lets a learner
         // begin the next block without replaying the old result.
-        await _progressAdapter.clear(surahId);
+        await _progressAdapter.clear(surahId, review: isReview);
       } else if (savedPhase != V2SessionPhase.created &&
-          saved.blockAyahNumbers.isNotEmpty) {
+          saved.blockAyahNumbers.isNotEmpty &&
+          saved.blockAyahNumbers.contains(startAyah) &&
+          _isResumableIntent(saved.launchContext.intent, isReview)) {
         _launchContext = saved.launchContext;
         _sessionState = V2SessionProgressAdapter.restore(saved, allAyahs);
         emit(
@@ -387,12 +443,23 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           ),
         );
         return;
+      } else {
+        // Starting a different block in this lane replaces the stale
+        // checkpoint explicitly. Clearing it first gives the new session its
+        // own sessionId, so its outcomes are never mistaken for duplicates of
+        // the old session's already-committed tasks.
+        await _progressAdapter.clear(surahId, review: isReview);
       }
     }
 
-    // Slice block: from startAyah (1-based) for blockSize ayahs.
+    // Slice block: from startAyah (1-based) for blockSize ayahs. A review
+    // session targets exactly the due ayah — no adjacent-ayah expansion.
+    final effectiveBlockSize = isReview ? 1 : blockSize;
     final startIndex = (startAyah - 1).clamp(0, allAyahs.length - 1);
-    final endIndex = (startIndex + blockSize).clamp(0, allAyahs.length);
+    final endIndex = (startIndex + effectiveBlockSize).clamp(
+      0,
+      allAyahs.length,
+    );
     final blockAyahs = allAyahs.sublist(startIndex, endIndex);
 
     if (blockAyahs.isEmpty) {
@@ -405,10 +472,14 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       surahId: surahId,
       blockAyahs: blockAyahs,
       blockReviewRequired: blockReviewRequired,
+      isReview: isReview,
     );
 
-    // 4. Transition to learning (play audio for first ayah).
-    _sessionState = _engine.startLearning(_sessionState!);
+    // 4. Reviews start at active recall (reciting); memorization starts at
+    // learning (play audio for first ayah).
+    _sessionState = isReview
+        ? _engine.startReview(_sessionState!)
+        : _engine.startLearning(_sessionState!);
 
     emit(
       MSActive(
@@ -448,7 +519,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         _emitDiscardPersistenceIssue();
         return false;
       }
-      await _progressAdapter.clear(sessionState.surahId);
+      await _progressAdapter.clear(
+        sessionState.surahId,
+        review: sessionState.isReview,
+      );
       await _appSessionService?.clearLastRestorableLocation();
       _discardCommitted = true;
       return true;
@@ -486,7 +560,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // Stop audio if playing.
     if ((state as MSActive).isPlaying) await stopAudio();
     _sessionState = _engine.startReciting(_sessionState!);
-    _emitActive(clearRecognizedText: true);
+    // A stale speech issue (e.g. a previous "no speech detected") must not
+    // keep rendering in the reciting footer until the next recording.
+    _emitActive(clearRecognizedText: true, clearSpeechIssue: true);
     await _saveProgress(_sessionState!);
   }
 
@@ -498,7 +574,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (_sessionState!.phase != V2SessionPhase.remediation) return;
     if ((state as MSActive).isPlaying) await stopAudio();
     _sessionState = _engine.startReciting(_sessionState!);
-    _emitActive(clearRecognizedText: true, clearLastEvaluation: true);
+    _emitActive(
+      clearRecognizedText: true,
+      clearLastEvaluation: true,
+      clearSpeechIssue: true,
+    );
     await _saveProgress(_sessionState!);
   }
 
@@ -558,6 +638,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (!_speechEnabled) await _initSpeech();
 
     if (_speechEnabled) {
+      // Sized to the recitation so long block reviews are not cut off (A6).
+      final budget = V2ListenBudget.forState(st.sessionState);
       emit(
         st.copyWith(
           isRecording: true,
@@ -578,7 +660,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         },
         listenOptions: SpeechListenOptions(
           localeId: kArabicSpeechLocaleId,
-          pauseFor: const Duration(seconds: 5),
+          listenFor: budget.listenFor,
+          pauseFor: budget.pauseFor,
         ),
       );
     } else {
@@ -606,14 +689,15 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   /// from memory. Used when the microphone is denied, the recognizer is
   /// unavailable, or recognition keeps failing. No automatic score is
   /// fabricated; review scheduling behaves exactly like a normal pass.
-  Future<void> submitManualRecall() => _runEvaluationExclusive(() async {
-    _assertActive();
-    final st = state as MSActive;
-    if (st.isRecording || st.isEvaluating) return;
+  Future<void> submitManualRecall([V2SelfGrade grade = V2SelfGrade.mastered]) =>
+      _runEvaluationExclusive(() async {
+        _assertActive();
+        final st = state as MSActive;
+        if (st.isRecording || st.isEvaluating) return;
 
-    emit(st.copyWith(isEvaluating: true));
-    await _evaluateCurrentRecitation(manualGrade: true);
-  });
+        emit(st.copyWith(isEvaluating: true));
+        await _evaluateCurrentRecitation(manualGrade: true, selfGrade: grade);
+      });
 
   // ── Audio playback ────────────────────────────────────────────────────────
 
@@ -656,7 +740,6 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     };
     emit(st.copyWith(audioLoopMode: next));
   }
-
 
   /// Replays the current ayah when a loop mode is active.
   Future<void> _handlePlaybackCompleted() async {
@@ -707,7 +790,6 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       }
     }
   }
-
 
   /// Stops audio playback.
   Future<void> stopAudio() async {
@@ -780,6 +862,15 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     return null;
   }
 
+  /// A checkpoint may only resume a request of the same kind. Legacy rows
+  /// without a persisted launch context only match memorize requests, and
+  /// review requests only match review checkpoints — a stale memorize
+  /// session must never swallow a due-review tap.
+  bool _isResumableIntent(LearningIntent? saved, bool requestedIsReview) {
+    if (requestedIsReview) return saved == LearningIntent.review;
+    return saved == null || saved == LearningIntent.memorize;
+  }
+
   Future<void> _runEvaluationExclusive(
     Future<void> Function() operation,
   ) async {
@@ -793,7 +884,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   }
 
   /// Evaluates the current recitation based on session phase.
-  Future<void> _evaluateCurrentRecitation({bool manualGrade = false}) async {
+  Future<void> _evaluateCurrentRecitation({
+    bool manualGrade = false,
+    V2SelfGrade selfGrade = V2SelfGrade.mastered,
+  }) async {
     if (_sessionState == null || state is! MSActive) return;
     final spokenText = (state as MSActive).recognizedText;
     final previousState = _sessionState!;
@@ -803,7 +897,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (manualGrade) {
       switch (previousState.phase) {
         case V2SessionPhase.reciting:
-          newState = _engine.submitManualRecall(previousState);
+          newState = _engine.submitManualRecall(
+            previousState,
+            grade: selfGrade,
+          );
         case V2SessionPhase.blockReview:
           newState = _engine.submitManualBlockReview(previousState);
         default:
@@ -818,6 +915,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       );
       newState = _engine.evaluateRecitation(previousState, spokenText);
     } else if (previousState.phase == V2SessionPhase.blockReview) {
+      automaticEvidence = _engine.evaluateBlockReviewAttempt(
+        previousState,
+        spokenText,
+      );
       newState = _engine.evaluateBlockReview(previousState, spokenText);
     } else {
       // Not a recitation phase — ignore.
@@ -841,10 +942,15 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     } else if (manualGrade) {
       feedback = null; // manual/self-grade has no similarity evidence to diff
     } else if (automaticEvidence != null && !automaticEvidence.isNoAttempt) {
+      // Block review diffs against the joined block text; an individual
+      // recitation diffs against the single current ayah.
+      final targetText = previousState.phase == V2SessionPhase.blockReview
+          ? previousState.blockAyahs.map((a) => a.text).join(' ')
+          : previousState.currentAyah.text;
       feedback = V2EvaluationFeedback(
         result: automaticEvidence,
         wordDiff: const RecitationWordDiffer().diff(
-          targetText: previousState.currentAyah.text,
+          targetText: targetText,
           spokenText: spokenText,
         ),
       );
@@ -859,6 +965,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       previousState,
       newState,
       manuallyAssessed: manualGrade,
+      selfGrade: selfGrade,
       similarityScore: automaticEvidence?.similarityScore,
     );
     if (!persisted) {
@@ -867,6 +974,21 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     }
 
     if (newState.phase == V2SessionPhase.completed) {
+      // Surface the block-review verdict (score + word diff) before the
+      // completion screen takes over — the final gate gets the same
+      // feedback moment as every individual ayah. The result sheet stays
+      // open above the completion page until the learner acknowledges it.
+      _sessionState = newState;
+      emit(
+        (state as MSActive).copyWith(
+          sessionState: newState,
+          isEvaluating: false,
+          clearSpeechIssue: true,
+          clearPersistenceIssue: true,
+          lastEvaluation: feedback,
+          clearLastEvaluation: feedback == null,
+        ),
+      );
       final completed = await _onBlockCompleted(newState);
       if (!completed) _restoreAfterPersistenceFailure(previousState);
       return;
@@ -891,6 +1013,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     V2SessionState previousState,
     V2SessionState newState, {
     bool manuallyAssessed = false,
+    V2SelfGrade selfGrade = V2SelfGrade.mastered,
     double? similarityScore,
   }) async {
     final passedAyah = previousState.currentAyah;
@@ -900,8 +1023,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     final shouldRecordPass =
         previousState.phase == V2SessionPhase.reciting &&
         newlyPassedAyahs.contains(passedAyah.numberInSurah);
-    final isAutomaticRecitationFailure =
-        !manuallyAssessed &&
+    // Includes a self-graded "forgot": it is failure evidence too.
+    final isRecitationFailure =
         (previousState.phase == V2SessionPhase.reciting ||
             previousState.phase == V2SessionPhase.blockReview) &&
         newState.failureTracker.totalFailures >
@@ -922,6 +1045,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
             nextState: newState,
             taskId: 'ayah:${previousState.surahId}:${passedAyah.numberInSurah}',
             manuallyAssessed: manuallyAssessed,
+            selfGrade: selfGrade,
             similarityScore: evidenceSimilarity,
           );
           // The completion screen owns terminal processing so certificate
@@ -954,8 +1078,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           similarityScore: evidenceSimilarity,
         );
         return true;
-      } else if (isAutomaticRecitationFailure &&
-          _reviewOutcomeCommitter != null) {
+      } else if (isRecitationFailure && _reviewOutcomeCommitter != null) {
         final taskId = previousState.phase == V2SessionPhase.blockReview
             ? 'block-review:${previousState.surahId}'
             : 'ayah:${previousState.surahId}:${passedAyah.numberInSurah}';
@@ -963,6 +1086,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           previousState: previousState,
           nextState: newState,
           taskId: taskId,
+          manuallyAssessed: manuallyAssessed,
           similarityScore: evidenceSimilarity,
         );
         unawaited(_processPendingEffects());
@@ -990,7 +1114,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // this UI transition. Effects stay deferred to the durable Outbox;
         // clearing the UI checkpoint cannot lose them.
         try {
-          await _progressAdapter.clear(finalState.surahId);
+          await _progressAdapter.clear(
+            finalState.surahId,
+            review: finalState.isReview,
+          );
           await _appSessionService?.clearLastRestorableLocation();
         } catch (error, stack) {
           // A stale checkpoint is recoverable because its evidence/effects are
@@ -1014,7 +1141,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
       // Do this before any repeatable gamification effects. If it fails, keep
       // the in-flight session visible rather than granting a false completion.
-      await _progressAdapter.clear(finalState.surahId);
+      await _progressAdapter.clear(
+        finalState.surahId,
+        review: finalState.isReview,
+      );
       await _appSessionService?.clearLastRestorableLocation();
 
       final awards = await _gamificationAdapter.onBlockCompleted(finalState);

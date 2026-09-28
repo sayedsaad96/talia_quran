@@ -51,7 +51,9 @@ void main() {
       );
     });
 
-    testWidgets('journey house cards shrink on a 320px map (K7)', (tester) async {
+    testWidgets('journey house cards shrink on a 320px map (K7)', (
+      tester,
+    ) async {
       // K7: fixed 176px cards left only ~144px of path on a 320px screen;
       // the responsive segment must keep a real margin on both sides.
       tester.view.devicePixelRatio = 1;
@@ -61,13 +63,15 @@ void main() {
         tester.view.reset();
       });
 
-      await tester.pumpWidget(_ArabicTestApp(
-        child: KidsGamifiedJourneyContent(
-          state: _journeyState,
-          onBack: () {},
-          onStageSelected: (_) {},
+      await tester.pumpWidget(
+        _ArabicTestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _journeyState,
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
         ),
-      ));
+      );
       await tester.pump();
 
       final finder = find.byWidgetPredicate(
@@ -99,59 +103,56 @@ void main() {
     });
 
     testWidgets(
-        'review mission card renders at 320px without layout exceptions', (
-      tester,
-    ) async {
-      await _pumpNarrowArabic(
-        tester,
-        KidsGamifiedHomeContent(
-          state: _journeyState.copyWith(
-            nextMission: const KidsNextMission(
-              type: KidsMissionType.linkedReview,
-              surahId: 114,
-              ayahNumbers: [1, 2],
+      'review mission card renders at 320px without layout exceptions',
+      (tester) async {
+        await _pumpNarrowArabic(
+          tester,
+          KidsGamifiedHomeContent(
+            state: _journeyState.copyWith(
+              nextMission: const KidsNextMission(
+                type: KidsMissionType.linkedReview,
+                surahId: 114,
+                ayahNumbers: [1, 2],
+              ),
             ),
+            childName: 'يوسف',
+            onHomeTap: () {},
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
           ),
-          childName: 'يوسف',
-          onHomeTap: () {},
-          onMushafTap: () {},
-          onJourneyTap: () {},
-          onMissionTap: () {},
-        ),
-      );
-    });
+        );
+      },
+    );
 
     testWidgets(
-        'completed stage page renders at 320px without layout exceptions', (
-      tester,
-    ) async {
-      await _pumpNarrowArabic(
-        tester,
-        KidsGamifiedStageContent(
-          stage: _completedStage,
-          surahName: 'سورة الناس',
-          onBack: () {},
-          onStartMission: () {},
-        ),
-      );
-    });
+      'completed stage page renders at 320px without layout exceptions',
+      (tester) async {
+        await _pumpNarrowArabic(
+          tester,
+          KidsGamifiedStageContent(
+            stage: _completedStage,
+            surahName: 'سورة الناس',
+            onBack: () {},
+            onStartMission: () {},
+          ),
+        );
+      },
+    );
 
     testWidgets(
-        'empty journey map renders at 320px without layout exceptions', (
-      tester,
-    ) async {
-      await _pumpNarrowArabic(
-        tester,
-        KidsGamifiedJourneyContent(
-          state: _journeyState.copyWith(
-            stages: [],
-            clearNextMission: true,
+      'empty journey map renders at 320px without layout exceptions',
+      (tester) async {
+        await _pumpNarrowArabic(
+          tester,
+          KidsGamifiedJourneyContent(
+            state: _journeyState.copyWith(stages: [], clearNextMission: true),
+            onBack: () {},
+            onStageSelected: (_) {},
           ),
-          onBack: () {},
-          onStageSelected: (_) {},
-        ),
-      );
-    });
+        );
+      },
+    );
 
     testWidgets('listen page renders at 320px without layout exceptions', (
       tester,
@@ -180,6 +181,37 @@ void main() {
         ),
       );
     });
+
+    testWidgets('day-complete home and completion fit 320px (N3)', (
+      tester,
+    ) async {
+      await _pumpNarrowArabic(
+        tester,
+        KidsGamifiedHomeContent(
+          state: _journeyState.copyWith(
+            clearNextMission: true,
+            dailyGoalCap: 1,
+          ),
+          childName: 'يوسف',
+          onHomeTap: () {},
+          onMushafTap: () {},
+          onJourneyTap: () {},
+          onMissionTap: () {},
+        ),
+      );
+      await _pumpNarrowArabic(
+        tester,
+        KidsGamifiedCompletionContent(
+          starsEarned: 1,
+          pointsEarned: 15,
+          leveledUpTo: 3,
+          showNextButton: false,
+          dailyGoalCap: 1,
+          onNext: () {},
+          onReturnToMap: () {},
+        ),
+      );
+    });
   });
 }
 
@@ -192,13 +224,15 @@ Future<void> _pumpNarrowArabic(WidgetTester tester, Widget child) async {
   });
 
   await tester.pumpWidget(_ArabicTestApp(child: child));
-  await tester.pumpAndSettle();
+  // Celebration screens play continuous confetti, which never "settles" —
+  // pump fixed frames instead and assert layout health directly.
+  await tester.pump(const Duration(milliseconds: 300));
   expect(tester.takeException(), isNull);
 
   final scrollable = find.byType(Scrollable);
   if (scrollable.evaluate().isNotEmpty) {
     await tester.drag(scrollable.first, const Offset(0, -500));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
   }
 }

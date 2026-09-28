@@ -187,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
             }
             if (state is AuthError) {
               // Resolve the stable error code; unknown/legacy messages fall
-              // back to a generic localized error â€” never raw backend text.
+              // back to a generic localized error — never raw backend text.
               final code = _authCodeFromMessage(state.message);
               setState(
                 () => _feedback = _AuthFeedback(

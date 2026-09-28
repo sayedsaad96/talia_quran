@@ -46,6 +46,37 @@ class _PageQuranRepository implements QuranRepository {
       throw UnsupportedError('Not used by this widget test');
 }
 
+class _MappedPageQuranRepository implements QuranRepository {
+  const _MappedPageQuranRepository(this.pages);
+
+  final Map<int, QuranPageDetail> pages;
+
+  @override
+  Future<Either<Failure, QuranPageDetail>> getQuranPage(int pageNumber) async {
+    final page = pages[pageNumber];
+    if (page == null) {
+      return const Left(NotFoundFailure('Page not found'));
+    }
+    return Right(page);
+  }
+
+  @override
+  Future<Either<Failure, List<Ayah>>> searchAyahs(String query) =>
+      throw UnsupportedError('Not used by this widget test');
+
+  @override
+  Future<Either<Failure, List<Surah>>> getSurahs() =>
+      throw UnsupportedError('Not used by this widget test');
+
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) =>
+      throw UnsupportedError('Not used by this widget test');
+
+  @override
+  Future<Either<Failure, List<Surah>>> searchSurahs(String query) =>
+      throw UnsupportedError('Not used by this widget test');
+}
+
 class _UnusedSaveReadPageUsecase extends Fake implements SaveReadPageUsecase {}
 
 class _UnusedStreakService extends Fake implements StreakService {}
@@ -103,6 +134,7 @@ void main() {
       ..registerSingleton<AppSessionService>(AppSessionService(prefs))
       ..registerSingleton<BookmarkService>(BookmarkService(prefs))
       ..registerSingleton<QuranReciterService>(reciterService)
+      ..registerSingleton<QuranRepository>(repository)
       ..registerSingleton<QuranPageCubit>(
         QuranPageCubit(
           repository,
@@ -143,4 +175,93 @@ void main() {
     expect(find.text('﴿ نَصٌّ مُقَدَّسٌ ﴾'), findsOneWidget);
     expect(find.text('﴿ نَصٌّ مُقَدَّسٌ ١ ﴾'), findsNothing);
   });
+
+  testWidgets(
+    'long press loads the canonical page ayah when the displayed detail is stale',
+    (tester) async {
+      const initialAyah = Ayah(
+        number: 1,
+        surahId: 1,
+        text: 'محتوى الصفحة الأولى',
+        numberInSurah: 1,
+        page: 1,
+      );
+      const pressedAyah = Ayah(
+        number: 1236,
+        surahId: 9,
+        text: 'محتوى الآية المعتمد',
+        numberInSurah: 1,
+        page: 187,
+      );
+      const initialPage = QuranPageDetail(
+        pageNumber: 1,
+        ayahs: [initialAyah],
+        surahs: [],
+      );
+      const pressedPage = QuranPageDetail(
+        pageNumber: 187,
+        ayahs: [pressedAyah],
+        surahs: [],
+      );
+      const repository = _MappedPageQuranRepository({
+        1: initialPage,
+        187: pressedPage,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final reciterService = QuranReciterService(prefs);
+      final playerService = QuranContinuousPlayerService(
+        quranRepository: repository,
+        reciterService: reciterService,
+      );
+      final audioCubit = QuranAudioPlayerCubit(playerService);
+      addTearDown(() async {
+        await audioCubit.close();
+        playerService.dispose();
+      });
+      getIt
+        ..registerSingleton<SharedPreferences>(prefs)
+        ..registerSingleton<AppSessionService>(AppSessionService(prefs))
+        ..registerSingleton<BookmarkService>(BookmarkService(prefs))
+        ..registerSingleton<QuranReciterService>(reciterService)
+        ..registerSingleton<QuranRepository>(repository)
+        ..registerSingleton<QuranPageCubit>(
+          QuranPageCubit(
+            repository,
+            _UnusedSaveReadPageUsecase(),
+            _UnusedStreakService(),
+          ),
+        );
+
+      await tester.pumpWidget(
+        BlocProvider.value(
+          value: audioCubit,
+          child: const MaterialApp(
+            locale: Locale('ar'),
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: QuranReaderPage(pageNumber: 1),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final mushaf = tester.widget<AppQuranPageView>(
+        find.byType(AppQuranPageView),
+      );
+      mushaf.onLongPress!(
+        9,
+        1,
+        const LongPressStartDetails(globalPosition: Offset.zero),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('﴿ محتوى الآية المعتمد ﴾'), findsOneWidget);
+    },
+  );
 }

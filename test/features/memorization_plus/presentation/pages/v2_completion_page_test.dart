@@ -46,6 +46,51 @@ void main() {
       expect(find.text('Share memorization milestone'), findsOneWidget);
     });
 
+    testWidgets(
+      "offers the next item of today's plan as the primary action (M-U6)",
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: V2CompletionPage(
+              finalState: _completedState(passed: 3),
+              nextStepLoader: () async =>
+                  (route: '/memorization-v2?surahId=36', remaining: 4),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.byKey(const Key('v2_next_plan_item_button')), findsOneWidget);
+        expect(find.textContaining('4'), findsWidgets);
+      },
+    );
+
+    testWidgets('without remaining plan work only the hub is offered', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: V2CompletionPage(
+            finalState: _completedState(passed: 3),
+            nextStepLoader: () async => null,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const Key('v2_next_plan_item_button')), findsNothing);
+    });
+
     testWidgets('opening closing dua shows serene dua sheet', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1600);

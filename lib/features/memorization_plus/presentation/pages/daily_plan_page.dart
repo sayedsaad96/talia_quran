@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/pending_ayah_resolver.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -40,6 +43,8 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
     return _DailyPlanViewData(
       plan: plan,
       continueRoute: targets.todayPlanLocation,
+      hasActivePlan: targets.hasActiveAdultPlan,
+      blockSize: targets.memorizeBlockSize,
     );
   }
 
@@ -72,8 +77,18 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
 
           final data = snapshot.data!;
           final plan = data.plan;
+          if (!data.hasActivePlan) {
+            return _EmptyPlanView(
+              isDark: isDark,
+              hasPlan: false,
+              onCreatePlan: () async {
+                await context.push(AppRoutes.memorizationPlusCustomPlan);
+                if (mounted) _retry();
+              },
+            );
+          }
           if (plan == null || plan.totalItems == 0) {
-            return _EmptyPlanView(isDark: isDark);
+            return _EmptyPlanView(isDark: isDark, hasPlan: true);
           }
 
           return _DailyPlanBody(
@@ -81,7 +96,10 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
             isDark: isDark,
             onOpenAyah: (ayah) async {
               await context.push(
-                MemorizationNavigationResolver.dailyPlanAyahLocation(ayah),
+                MemorizationNavigationResolver.dailyPlanAyahLocation(
+                  ayah,
+                  blockSize: data.blockSize,
+                ),
               );
               if (mounted) _retry();
             },
@@ -99,10 +117,17 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
 }
 
 class _DailyPlanViewData {
-  const _DailyPlanViewData({required this.plan, required this.continueRoute});
+  const _DailyPlanViewData({
+    required this.plan,
+    required this.continueRoute,
+    required this.hasActivePlan,
+    this.blockSize,
+  });
 
   final DailyPlan? plan;
   final String continueRoute;
+  final bool hasActivePlan;
+  final int? blockSize;
 }
 
 class _DailyPlanBody extends StatelessWidget {
@@ -159,6 +184,75 @@ class _DailyPlanBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
+        if (plan.isReviewDay)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+            child: Container(
+              key: const Key('daily_plan_review_day_notice'),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.self_improvement_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      context.l10n.dailyPlanReviewDayNotice,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (plan.newMemorizationBlocked && plan.newAyahs.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.hourglass_top_rounded,
+                    color: AppColors.warning,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      context.l10n.dailyPlanBacklogNotice(plan.dueBacklogCount),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         if (plan.newAyahs.isNotEmpty)
           _PlanBucketSection(
             title: context.l10n.dailyPlanNewAyahs,
@@ -204,7 +298,11 @@ class _DailyPlanBody extends StatelessWidget {
           FilledButton.icon(
             onPressed: onContinue,
             icon: const Icon(Icons.play_arrow_rounded),
-            label: Text(context.l10n.continueMemorizing),
+            label: Text(
+              PendingAyahResolver.firstPendingPlanTarget(plan)?.isNew == false
+                  ? context.l10n.dailyPlanStartReview
+                  : context.l10n.continueMemorizing,
+            ),
           ),
         ],
       ],
@@ -271,39 +369,24 @@ class _PlanAyahTile extends StatelessWidget {
 
   /// Strength bucket colour: weak → error, settling → warning, strong →
   /// success. Colour is never the only signal — labels accompany it.
-  Color get _strengthColor {
-    final record = ayah.record;
-    if (record == null) return AppColors.primary;
-    if (record.strengthLevel <= 2) return AppColors.error;
-    if (record.strengthLevel <= 5) return AppColors.warning;
-    return AppColors.success;
-  }
+  Color get _strengthColor => switch (ayah.strengthBand) {
+    DailyPlanStrengthBand.unscheduled => AppColors.primary,
+    DailyPlanStrengthBand.weak => AppColors.error,
+    DailyPlanStrengthBand.learning => AppColors.warning,
+    DailyPlanStrengthBand.strong => AppColors.success,
+  };
 
-  String _strengthLabel(BuildContext context) {
-    final record = ayah.record;
-    if (record == null) return context.l10n.dailyPlanNewLabel;
-    if (record.strengthLevel <= 2) {
-      return context.l10n.dailyPlanStrengthWeak;
-    }
-    if (record.strengthLevel <= 5) {
-      return context.l10n.dailyPlanStrengthLearning;
-    }
-    return context.l10n.dailyPlanStrengthStrong;
-  }
-
-  int get _daysUntilReview {
-    final record = ayah.record;
-    if (record == null) return -1;
-    return record.nextReviewDate
-        .difference(DateTime.now().toUtc())
-        .inDays;
-  }
+  String _strengthLabel(BuildContext context) => switch (ayah.strengthBand) {
+    DailyPlanStrengthBand.unscheduled => context.l10n.dailyPlanNewLabel,
+    DailyPlanStrengthBand.weak => context.l10n.dailyPlanStrengthWeak,
+    DailyPlanStrengthBand.learning => context.l10n.dailyPlanStrengthLearning,
+    DailyPlanStrengthBand.strong => context.l10n.dailyPlanStrengthStrong,
+  };
 
   @override
   Widget build(BuildContext context) {
     final record = ayah.record;
-    final daysUntilReview = _daysUntilReview;
-    final showNextReview = record != null && daysUntilReview >= 0;
+    final daysUntilReview = ayah.daysUntilReview(DateTime.now().toUtc());
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -317,7 +400,14 @@ class _PlanAyahTile extends StatelessWidget {
           color: isCompleted ? AppColors.success : AppColors.primary,
         ),
         title: Text(
-          context.l10n.dailyPlanAyahTitle(ayah.ayahNumber),
+          // Plans mix surahs (new material + reviews), so the surah name is
+          // required to identify the ayah.
+          context.l10n.dailyPlanSurahAyahTitle(
+            context.isArabic
+                ? SurahNames.nameAr(ayah.surahId)
+                : SurahNames.nameEn(ayah.surahId),
+            ayah.ayahNumber,
+          ),
           style: AppTypography.bodyLarge,
         ),
         subtitle: record == null
@@ -342,21 +432,19 @@ class _PlanAyahTile extends StatelessWidget {
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: Text(
-                          '${_strengthLabel(context)} · '
-                          '${context.l10n.dailyPlanRecordStats(
-                            record.strengthLevel,
-                            record.totalReviews,
-                          )}',
+                          // A plain label; raw strength/review counts are
+                          // internal scheduling numbers, not learner-facing.
+                          _strengthLabel(context),
                           style: AppTypography.bodySmall,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  if (showNextReview)
+                  if (daysUntilReview != null)
                     Text(
                       context.l10n.dailyPlanNextReviewInDays(
-                        daysUntilReview.clamp(0, 999),
+                        daysUntilReview.clamp(1, 999),
                       ),
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark
@@ -372,9 +460,18 @@ class _PlanAyahTile extends StatelessWidget {
 }
 
 class _EmptyPlanView extends StatelessWidget {
-  const _EmptyPlanView({required this.isDark});
+  const _EmptyPlanView({
+    required this.isDark,
+    required this.hasPlan,
+    this.onCreatePlan,
+  });
 
   final bool isDark;
+
+  /// False when no active plan exists: invite the learner to create one
+  /// instead of congratulating them on an empty day.
+  final bool hasPlan;
+  final Future<void> Function()? onCreatePlan;
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +482,9 @@ class _EmptyPlanView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.event_available_rounded,
+              hasPlan
+                  ? Icons.event_available_rounded
+                  : Icons.edit_calendar_rounded,
               size: 64,
               color: isDark
                   ? AppColors.darkTextSecondary
@@ -393,13 +492,17 @@ class _EmptyPlanView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              context.l10n.dailyPlanEmptyTitle,
+              hasPlan
+                  ? context.l10n.dailyPlanEmptyTitle
+                  : context.l10n.dailyPlanNoPlanTitle,
               textAlign: TextAlign.center,
               style: AppTypography.titleMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              context.l10n.dailyPlanEmptySubtitle,
+              hasPlan
+                  ? context.l10n.dailyPlanEmptySubtitle
+                  : context.l10n.dailyPlanNoPlanSubtitle,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark
@@ -407,6 +510,15 @@ class _EmptyPlanView extends StatelessWidget {
                     : AppColors.lightTextSecondary,
               ),
             ),
+            if (!hasPlan && onCreatePlan != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                key: const Key('daily_plan_create_plan_button'),
+                onPressed: onCreatePlan,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(context.l10n.dailyPlanCreatePlanAction),
+              ),
+            ],
           ],
         ),
       ),

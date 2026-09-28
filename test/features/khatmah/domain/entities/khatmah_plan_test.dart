@@ -254,4 +254,75 @@ void main() {
       expect(entry1.dedication?.recipientName, 'Father');
     });
   });
+
+  group('pace (K-U5)', () {
+    KhatmahPlan paced({required int read}) => KhatmahPlan(
+      id: 'p',
+      title: 'P',
+      completedPages: {for (var page = 1; page <= read; page++) page},
+      targetPagesPerDay: 4,
+      targetDays: 151,
+      startDate: DateTime(2026, 1, 1),
+      expectedEndDate: DateTime(2026, 1, 10),
+    );
+
+    test('behind when remaining pages exceed what the pace can cover', () {
+      // Jan 6: 5 days left (6..10) x 4 = 20 pages of capacity.
+      final plan = paced(read: 560); // 44 remaining
+      expect(plan.pagesBehind(DateTime(2026, 1, 6, 9)), 24);
+    });
+
+    test('on schedule when the pace covers the remaining pages', () {
+      final plan = paced(read: 590); // 14 remaining
+      expect(plan.pagesBehind(DateTime(2026, 1, 6, 9)), 0);
+    });
+  });
+
+  group('starting from a chosen page (C7)', () {
+    KhatmahPlan from(int startPage, Iterable<int> read) => KhatmahPlan(
+      id: 's',
+      title: 'S',
+      startPage: startPage,
+      completedPages: read,
+      targetPagesPerDay: 4,
+      targetDays: 151,
+      startDate: DateTime(2026, 1, 1),
+      expectedEndDate: DateTime(2026, 6, 1),
+    );
+
+    test('reading begins at the start page', () {
+      final plan = from(300, const []);
+      expect(plan.nextUnreadPage, 300);
+      expect(plan.dailyTargetFor(DateTime(2026, 1, 1)), (
+        startPage: 300,
+        endPage: 303,
+      ));
+      expect(plan.currentPage, 0);
+    });
+
+    test('progress follows the reading order from the start page', () {
+      final plan = from(300, [for (var p = 300; p <= 310; p++) p]);
+      expect(plan.nextUnreadPage, 311);
+      expect(plan.currentPage, 310);
+    });
+
+    test('after page 604 it wraps to page 1', () {
+      final plan = from(300, [for (var p = 300; p <= 604; p++) p]);
+      expect(plan.nextUnreadPage, 1);
+      expect(plan.currentPage, 604);
+      expect(plan.isComplete, isFalse);
+    });
+
+    test('the khatmah completes only when every page is read', () {
+      final plan = from(300, [for (var p = 1; p <= 604; p++) p]);
+      expect(plan.isComplete, isTrue);
+      expect(plan.nextUnreadPage, 605);
+    });
+
+    test('starting at page 1 keeps the original behaviour', () {
+      final plan = from(1, [1, 2, 3, 5]);
+      expect(plan.nextUnreadPage, 4);
+      expect(plan.currentPage, 3);
+    });
+  });
 }

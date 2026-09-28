@@ -9,7 +9,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/router/app_router.dart';
@@ -67,27 +66,10 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     final planResult = await repository.getCachedDailyPlan();
     final plan = planResult.fold((_) => null, (value) => value);
 
-    // Count due adult reviews so the review card can show an actionable
-    // badge instead of a static description. Failure-tolerant: the hub is a
-    // launcher, and a review-store error must not block it.
-    var dueReviewCount = 0;
-    try {
-      final recordsResult = await repository.getAllReviewRecords(
-        scope: ReviewRecordReadScope.adult,
-      );
-      final records = recordsResult.fold(
-        (failure) => <AyahReviewRecord>[],
-        (value) => value,
-      );
-      dueReviewCount = records.where((record) => record.isDue).length;
-    } catch (_) {
-      dueReviewCount = 0;
-    }
-
     return _HubLoadResult(
       targets: targets,
       dailyPlan: plan,
-      dueReviewCount: dueReviewCount,
+      dueReviewCount: targets.adultDueReviewCount,
     );
   }
 
@@ -211,18 +193,19 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                 }
               },
               builder: (context, state) {
-                final isSelectingPath = state is MemorizationIdentityLoading;                    return FutureBuilder<_HubLoadResult>(
-                      future: _hubFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: LoadingWidget());
-                        }
-                        if (snapshot.hasError) {
-                          return ErrorStateWidget(
-                            message: context.l10n.errorOccurred,
-                            onRetry: _retryTargets,
-                          );
-                        }
+                final isSelectingPath = state is MemorizationIdentityLoading;
+                return FutureBuilder<_HubLoadResult>(
+                  future: _hubFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: LoadingWidget());
+                    }
+                    if (snapshot.hasError) {
+                      return ErrorStateWidget(
+                        message: context.l10n.errorOccurred,
+                        onRetry: _retryTargets,
+                      );
+                    }
                     final sections = _sectionsFor(
                       context,
                       snapshot.data?.targets,
@@ -258,8 +241,8 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                         ),
                       ],
                     );
-                      },
-                    );
+                  },
+                );
               },
             ),
       ),
@@ -276,6 +259,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
   ) {
     final profile = targets?.profile;
     if (profile?.isAdult == true) {
+      final hasPlan = targets?.hasActiveAdultPlan ?? false;
       return [
         _HubSectionHeader(
           title: context.l10n.dailyPlanHeaderTitle,
@@ -289,9 +273,13 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           const SizedBox(height: AppSpacing.sm),
         if (dailyPlan?.isRequiredPlanCompleted != true)
           _HubActionCard.primary(
-            icon: Icons.today_rounded,
-            title: context.l10n.homeContinueTodaysPlan,
-            description: context.l10n.memorizationHubContinuePlanDescription,
+            icon: hasPlan ? Icons.today_rounded : Icons.edit_calendar_rounded,
+            title: hasPlan
+                ? context.l10n.homeContinueTodaysPlan
+                : context.l10n.dailyPlanCreatePlanAction,
+            description: hasPlan
+                ? context.l10n.memorizationHubContinuePlanDescription
+                : context.l10n.dailyPlanNoPlanSubtitle,
             onTap: () => _openAdultTarget(isReview: false),
             isDark: isDark,
           ),
@@ -299,10 +287,12 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         _HubActionCard(
           icon: Icons.checklist_rounded,
           title: context.l10n.memorizationHubViewPlanTitle,
-          description: context.l10n.dailyPlanProgressCount(
-            dailyPlan?.requiredCompletedCount ?? 0,
-            dailyPlan?.totalItems ?? 0,
-          ),
+          description: hasPlan
+              ? context.l10n.dailyPlanProgressCount(
+                  dailyPlan?.requiredCompletedCount ?? 0,
+                  dailyPlan?.totalItems ?? 0,
+                )
+              : context.l10n.dailyPlanNoPlanTitle,
           route: AppRoutes.memorizationPlusDailyPlan,
           isDark: isDark,
         ),
@@ -674,8 +664,8 @@ class _HubActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = accentOverride ??
-        (isDark ? AppColors.primaryLight : AppColors.primary);
+    final accent =
+        accentOverride ?? (isDark ? AppColors.primaryLight : AppColors.primary);
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final textPrimary = isDark
         ? AppColors.darkTextPrimary

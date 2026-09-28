@@ -87,6 +87,28 @@ void main() {
     await expectation;
   });
 
+  test(
+    'checkLinkStatus keeps the pending QR card when the poll fails',
+    () async {
+      // Start from a displayed pairing session (the QR card).
+      when(
+        mockRepository.createGuardianPairingSession(),
+      ).thenAnswer((_) async => Right(testSession));
+      await cubit.createPairingSession();
+      expect(cubit.state, GuardianLinkingPending(session: testSession));
+
+      // A transient network error during the 30-second background poll must
+      // not destroy the card — the poll is silent by design.
+      when(
+        mockRepository.refreshChildGuardianLink(),
+      ).thenAnswer((_) async => const Left(CacheFailure('offline')));
+
+      await cubit.checkLinkStatus();
+
+      expect(cubit.state, GuardianLinkingPending(session: testSession));
+    },
+  );
+
   test('load emits timeout Error when initial guardian load hangs', () async {
     await cubit.close();
     cubit = GuardianLinkingCubit(

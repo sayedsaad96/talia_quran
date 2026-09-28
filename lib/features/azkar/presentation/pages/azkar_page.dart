@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -11,75 +12,45 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/azkar_completion_store.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
+import '../../data/datasources/smart_wird_progress_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
 import '../../domain/services/azkar_time_context.dart';
+import '../cubits/azkar_hub_cubit.dart';
 import '../widgets/free_tasbeeh_sheet.dart';
 
-class AzkarPage extends StatefulWidget {
+class AzkarPage extends StatelessWidget {
   const AzkarPage({super.key, this.currentTime});
 
   /// Optional injected date-time to explicitly drive morning/evening context in tests.
   final DateTime? currentTime;
 
   @override
-  State<AzkarPage> createState() => _AzkarPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AzkarHubCubit(
+        getIt<AzkarRepository>(),
+        getIt<AzkarCompletionStore>(),
+        getIt<AzkarPreferencesStore>(),
+        smartWirdStore: getIt<SmartWirdProgressStore>(),
+      )..load(currentTime),
+      child: const _AzkarHubView(),
+    );
+  }
 }
 
-class _AzkarPageState extends State<AzkarPage> {
-  late Future<Map<AzkarCategory, int>> _countsFuture;
-  AzkarCompletionStore? _completionStore;
-  late final AzkarPreferencesStore _prefsStore;
-
-  @override
-  void initState() {
-    super.initState();
-    _countsFuture = _loadCounts();
-
-    _completionStore = getIt.isRegistered<AzkarCompletionStore>()
-        ? getIt<AzkarCompletionStore>()
-        : null;
-
-    _prefsStore = getIt.isRegistered<AzkarPreferencesStore>()
-        ? getIt<AzkarPreferencesStore>()
-        : AzkarPreferencesStore();
-  }
-
-  Future<Map<AzkarCategory, int>> _loadCounts() async {
-    final repo = getIt<AzkarRepository>();
-    final results = await Future.wait(
-      AzkarCategory.values.map((category) => repo.getAzkar(category)),
-    );
-    final counts = <AzkarCategory, int>{};
-    var failures = 0;
-    for (var i = 0; i < AzkarCategory.values.length; i++) {
-      results[i].fold(
-        (_) => failures++,
-        (list) => counts[AzkarCategory.values[i]] = list.length,
-      );
-    }
-    if (counts.isEmpty && failures > 0) {
-      throw Exception('azkar counts unavailable');
-    }
-    return counts;
-  }
-
-  void _retry() {
-    setState(() => _countsFuture = _loadCounts());
-  }
+class _AzkarHubView extends StatelessWidget {
+  const _AzkarHubView();
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
-      body: FutureBuilder<Map<AzkarCategory, int>>(
-        future: _countsFuture,
-        builder: (context, snapshot) {
-          final counts = snapshot.data;
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: BlocBuilder<AzkarHubCubit, AzkarHubState>(
+        builder: (context, state) {
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -96,19 +67,28 @@ class _AzkarPageState extends State<AzkarPage> {
                     ),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        ...snapshot.hasError
-                            ? [
-                                SizedBox(
-                                  height: 320,
-                                  child: ErrorStateWidget(
-                                    message: context.localizedCubitMessage(
-                                      CubitMessageCodes.errorCache,
-                                    ),
-                                    onRetry: _retry,
+                        ...switch (state.status) {
+                          AzkarHubStatus.loading => const [
+                              SizedBox(
+                                height: 180,
+                                child: LoadingWidget(),
+                              ),
+                            ],
+                          AzkarHubStatus.error => [
+                              SizedBox(
+                                height: 320,
+                                child: ErrorStateWidget(
+                                  message: context.localizedCubitMessage(
+                                    CubitMessageCodes.errorCache,
                                   ),
+                                  onRetry: () =>
+                                      context.read<AzkarHubCubit>().load(),
                                 ),
-                              ]
-                            : _buildContent(context, counts, isDark),
+                              ),
+                            ],
+                          AzkarHubStatus.ready =>
+                            _buildContent(context, state, isDark),
+                        },
                       ]),
                     ),
                   ),
@@ -123,23 +103,17 @@ class _AzkarPageState extends State<AzkarPage> {
 
   List<Widget> _buildContent(
     BuildContext context,
-    Map<AzkarCategory, int>? counts,
+    AzkarHubState state,
     bool isDark,
   ) {
-    if (counts == null) {
-      return const [SizedBox(height: 180, child: LoadingWidget())];
-    }
-
+    final counts = state.counts;
     final morningCount = counts[AzkarCategory.morning] ?? 0;
     final eveningCount = counts[AzkarCategory.evening] ?? 0;
     final generalCount = counts[AzkarCategory.general] ?? 0;
     final duaCount = counts[AzkarCategory.duas] ?? 0;
 
-    // Strict religious safety gate: if no approved records exist, fail closed
-    if (morningCount == 0 &&
-        eveningCount == 0 &&
-        generalCount == 0 &&
-        duaCount == 0) {
+    // Strict religious safety gate: if no approved records exist, fail closed.
+    if (state.allEmpty) {
       return [
         EmptyStateWidget(
           key: const ValueKey('azkar-content-under-review'),
@@ -149,29 +123,22 @@ class _AzkarPageState extends State<AzkarPage> {
       ];
     }
 
-    final period = AzkarTimeContext.resolvePeriod(widget.currentTime);
-
-    // Pick contextual hero category based on period and availability
-    final AzkarCategory? heroCategory = switch (period) {
-      AzkarPeriod.morning when morningCount > 0 => AzkarCategory.morning,
-      AzkarPeriod.evening when eveningCount > 0 => AzkarCategory.evening,
-      _ => morningCount > 0
-          ? AzkarCategory.morning
-          : (eveningCount > 0 ? AzkarCategory.evening : null),
-    };
-
     final items = <Widget>[];
 
     // 1. Contextual Hero Card
+    final heroCategory = switch (state.period) {
+      AzkarPeriod.morning when morningCount > 0 => AzkarCategory.morning,
+      AzkarPeriod.evening when eveningCount > 0 => AzkarCategory.evening,
+      _ =>
+        morningCount > 0
+            ? AzkarCategory.morning
+            : (eveningCount > 0 ? AzkarCategory.evening : null),
+    };
+
     if (heroCategory != null) {
       final isMorningHero = heroCategory == AzkarCategory.morning;
       final heroCount = isMorningHero ? morningCount : eveningCount;
-      final isAllDone =
-          _completionStore?.isCategoryComplete(
-            heroCategory,
-            widget.currentTime,
-          ) ??
-          false;
+      final isAllDone = state.completion[heroCategory] ?? false;
 
       items.add(
         _ContextualHeroCard(
@@ -180,10 +147,10 @@ class _AzkarPageState extends State<AzkarPage> {
               ? context.l10n.morningAzkar
               : context.l10n.eveningAzkar,
           subtitle: isAllDone
-              ? 'اكتمل ورد اليوم بنجاح ✨'
+              ? context.l10n.azkarWirdCompletedToday
               : (isMorningHero
-                  ? 'ابدأ يومك بذكر الله وطمأنينة القلب'
-                  : 'اختم يومك بالسكينة والاستغفار'),
+                  ? context.l10n.azkarMorningHeroSubtitle
+                  : context.l10n.azkarEveningHeroSubtitle),
           countText: context.l10n.zikrCount(heroCount),
           isDone: isAllDone,
           icon: isMorningHero
@@ -257,19 +224,38 @@ class _AzkarPageState extends State<AzkarPage> {
       );
     }
 
+    // Smart Wird card — subtitle reflects the live daily state.
+    final smartWirdSubtitle = state.smartWirdCompletedToday
+        ? context.l10n.azkarSmartWirdDone(
+            state.smartWirdSessionCountToday,
+          )
+        : context.l10n.azkarSmartWirdSubtitle;
+    bentoCards.add(
+      _BentoGridCard(
+        key: const ValueKey('azkar-card-smart-wird'),
+        title: context.l10n.azkarSmartWird,
+        subtitle: smartWirdSubtitle,
+        icon: Icons.auto_awesome_rounded,
+        accentColor: AppColors.success,
+        route: 'smart',
+        isDark: isDark,
+      ),
+    );
+
     // Free Tasbeeh card
     bentoCards.add(
       _BentoGridCard(
         key: const ValueKey('azkar-card-tasbeeh'),
-        title: 'مسبحة حرة',
-        subtitle: 'تسبيح واستغفار حر',
+        title: context.l10n.azkarFreeTasbeeh,
+        subtitle: context.l10n.azkarFreeTasbeehSubtitle,
         icon: Icons.touch_app_rounded,
         accentColor: AppColors.goldDark,
-        onTap: () => FreeTasbeehSheet.show(
-          context,
-          store: _prefsStore,
-          isDark: isDark,
-        ),
+        onTap: () async {
+          await FreeTasbeehSheet.show(context, isDark: isDark);
+          if (context.mounted) {
+            context.read<AzkarHubCubit>().refreshTasbeehTally();
+          }
+        },
         isDark: isDark,
       ),
     );
@@ -279,7 +265,7 @@ class _AzkarPageState extends State<AzkarPage> {
       Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
         child: Text(
-          'الأقسام والخدمات',
+          context.l10n.azkarSectionsAndServices,
           style: AppTypography.titleMedium.copyWith(
             fontFamily: 'Amiri',
             fontWeight: FontWeight.w700,
@@ -319,9 +305,8 @@ class _AzkarPageState extends State<AzkarPage> {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -509,7 +494,9 @@ class _ContextualHeroCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              isDone ? 'مراجعة الورد' : 'ابدأ الورد الآن',
+                              isDone
+                                  ? context.l10n.azkarReviewWird
+                                  : context.l10n.azkarStartWirdNow,
                               style: AppTypography.labelMedium.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,

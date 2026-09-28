@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/prayer_times_service.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
@@ -64,7 +65,10 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     try {
       await _persistBase(skipped: true);
       await _prefs.setString(goalKey, OnboardingGoal.reading.storageValue);
-      await _prefs.setString(userTypeKey, OnboardingUserType.adult.storageValue);
+      await _prefs.setString(
+        userTypeKey,
+        OnboardingUserType.adult.storageValue,
+      );
       emit(
         state.copyWith(
           authIntent: OnboardingAuthIntent.guest,
@@ -109,6 +113,9 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   Future<void> _persistBase({required bool skipped}) async {
+    if (_prefs.getBool(PrayerTimesService.enabledKey) == null) {
+      await _prefs.setBool(PrayerTimesService.enabledKey, true);
+    }
     await _prefs.setBool(firstOpenKey, false);
     await _prefs.setBool(skippedKey, skipped);
     await _prefs.setString(
@@ -118,21 +125,20 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   Future<String> _routeAfterOnboarding(OnboardingAuthIntent intent) async {
-    if (intent == OnboardingAuthIntent.signIn) {
-      if (state.selectedUserType == OnboardingUserType.child) {
-        await _selectPath(MemorizationPath.child);
-      }
-      return AppRoutes.login;
-    }
-
+    // The fork answer must outlive onboarding: persist the chosen audience as
+    // the memorization path so the user is never asked the same question
+    // again in the Memorization hub. Children enter their journey; adults
+    // enter Talia Home on the adult track.
     if (state.selectedUserType == OnboardingUserType.child) {
       await _selectPath(MemorizationPath.child);
+      if (intent == OnboardingAuthIntent.signIn) return AppRoutes.login;
       return await MemorizationNavigationResolver(
         _memorizationRepository,
       ).childOnboardingLocation();
     }
 
-    // Adult guest flow: enter Talia Home directly
+    await _selectPath(MemorizationPath.adult);
+    if (intent == OnboardingAuthIntent.signIn) return AppRoutes.login;
     return AppRoutes.home;
   }
 

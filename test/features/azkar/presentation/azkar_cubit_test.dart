@@ -138,6 +138,10 @@ class _EmptyAzkarRepository implements AzkarRepository {
   @override
   Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async =>
       const Right([]);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async =>
+      const Right({});
 }
 
 class _SingleZikrRepository implements AzkarRepository {
@@ -155,6 +159,17 @@ class _SingleZikrRepository implements AzkarRepository {
           category: category,
         ),
       ]);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async {
+    final result = await getAzkar(AzkarCategory.morning);
+    return result.fold(
+      (failure) => Left(failure),
+      (items) => Right({
+            for (final category in AzkarCategory.values) category: items,
+          }),
+    );
+  }
 }
 
 class _TwoZikrRepository implements AzkarRepository {
@@ -180,4 +195,15 @@ class _TwoZikrRepository implements AzkarRepository {
           category: category,
         ),
       ]);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async {
+    final result = await getAzkar(AzkarCategory.morning);
+    return result.fold(
+      (failure) => Left(failure),
+      (items) => Right({
+            for (final category in AzkarCategory.values) category: items,
+          }),
+    );
+  }
 }

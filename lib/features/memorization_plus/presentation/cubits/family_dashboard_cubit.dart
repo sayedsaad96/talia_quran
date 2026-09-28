@@ -82,9 +82,25 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
   }
 
   Future<void> refresh({FamilyDashboardFeedback? feedback}) async {
+    final previous = state;
     final result = await _getFamilyDashboard();
     result.fold(
-      (failure) => emit(FamilyDashboardError(failure.message)),
+      (failure) {
+        // A transient refresh failure must not evict an already-loaded
+        // dashboard: the retry path would force the parent back through the
+        // PIN gate and blank the screen. Keep the retained data and surface
+        // the failure as feedback instead.
+        if (previous is FamilyDashboardLoaded) {
+          emit(
+            previous.copyWith(
+              feedback: FamilyDashboardFeedback.failure(failure.message),
+              feedbackEventId: _nextFeedbackEventId(),
+            ),
+          );
+          return;
+        }
+        emit(FamilyDashboardError(failure.message));
+      },
       (dashboard) => emit(
         FamilyDashboardLoaded(
           dashboard: dashboard,

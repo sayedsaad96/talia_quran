@@ -4,6 +4,10 @@ import 'ayah_review_record.dart';
 
 // ─── DailyPlan ────────────────────────────────────────────────────────────────
 
+/// Display band for a plan item's retention strength. Computed in the domain
+/// so presentation never compares raw review-record metrics.
+enum DailyPlanStrengthBand { unscheduled, weak, learning, strong }
+
 class DailyPlanAyah extends Equatable {
   const DailyPlanAyah({
     required this.surahId,
@@ -18,6 +22,25 @@ class DailyPlanAyah extends Equatable {
   final AyahReviewRecord? record;
 
   bool get isNew => record == null || record!.isNew;
+
+  DailyPlanStrengthBand get strengthBand {
+    final strength = record?.strengthLevel;
+    if (strength == null) return DailyPlanStrengthBand.unscheduled;
+    if (strength <= 2) return DailyPlanStrengthBand.weak;
+    if (strength <= 5) return DailyPlanStrengthBand.learning;
+    return DailyPlanStrengthBand.strong;
+  }
+
+  /// Whole days until the next review, rounded up so an item due later today
+  /// or tomorrow never reads as "in 0 days". Null when there is no record or
+  /// the review is already due.
+  int? daysUntilReview(DateTime nowUtc) {
+    final next = record?.nextReviewDate;
+    if (next == null || !next.isAfter(nowUtc)) return null;
+    final days = (next.difference(nowUtc).inMinutes / Duration.minutesPerDay)
+        .ceil();
+    return days < 1 ? 1 : days;
+  }
 
   @override
   List<Object?> get props => [surahId, ayahNumber, ayahText];
@@ -34,6 +57,9 @@ class DailyPlan extends Equatable {
     required this.completedAyahNums,
     this.retentionReview = const [],
     this.completedAyahKeys = const [],
+    this.dueBacklogCount = 0,
+    this.newMemorizationBlocked = false,
+    this.isReviewDay = false,
   });
 
   final DateTime generatedAt;
@@ -53,6 +79,18 @@ class DailyPlan extends Equatable {
 
   /// Memorized-due retention items scheduled as required daily work.
   final List<DailyPlanAyah> retentionReview;
+
+  /// Total due non-memorized ayahs behind today's plan — why new
+  /// memorization may be withheld. 0 on legacy cached plans.
+  final int dueBacklogCount;
+
+  /// Set by the generator when the review backlog exceeded the daily
+  /// capacity and new ayahs were withheld as a result. Surfaced so the UI
+  /// can explain itself instead of showing an unexplained empty section.
+  final bool newMemorizationBlocked;
+
+  /// A rest day in the learner's weekly schedule: reviews only, no new ayahs.
+  final bool isReviewDay;
 
   int get totalItems => requiredAyahs.length;
 
@@ -135,6 +173,9 @@ class DailyPlan extends Equatable {
           : completedAyahNums,
       retentionReview: retentionReview,
       completedAyahKeys: [...completedAyahKeys, key],
+      dueBacklogCount: dueBacklogCount,
+      newMemorizationBlocked: newMemorizationBlocked,
+      isReviewDay: isReviewDay,
     );
   }
 
@@ -149,5 +190,8 @@ class DailyPlan extends Equatable {
     completedAyahNums,
     retentionReview,
     completedAyahKeys,
+    dueBacklogCount,
+    newMemorizationBlocked,
+    isReviewDay,
   ];
 }

@@ -134,26 +134,49 @@ void main() {
       expect(find.text('Start mission'), findsOneWidget);
     });
     test('stage mission route carries the resolved mission type', () {
-      // An in-progress stage resumes its session instead of restarting.
+      // The current stage asks to resume: the session restores a paused run
+      // or resolves the ayah's real semantics (N1).
       expect(
         kidsNextMissionLocation(_stage),
         '${AppRoutes.memorizationPlusKids}'
         '?surahId=114&ayahNumber=4&missionType=resume',
       );
 
-      // A fresh stage starts a new memorization session.
+      // A fresh current stage uses the same resume-or-resolve contract, so a
+      // paused session on its first ayah is never overwritten.
       const freshStage = KidsJourneyStage(
         stageNumber: 1,
         surahId: 114,
         startAyah: 1,
         endAyah: 2,
         completedAyahs: [],
-        status: KidsJourneyStageStatus.current,      );
+        status: KidsJourneyStageStatus.current,
+      );
       expect(
         kidsNextMissionLocation(freshStage),
         '${AppRoutes.memorizationPlusKids}'
-        '?surahId=114&ayahNumber=1&missionType=newMemorization',
+        '?surahId=114&ayahNumber=1&missionType=resume',
       );
+
+      // Finished stages open a linked review from their first ayah.
+      for (final status in [
+        KidsJourneyStageStatus.completed,
+        KidsJourneyStageStatus.needsReview,
+      ]) {
+        final finished = KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 2,
+          completedAyahs: const [1, 2],
+          status: status,
+        );
+        expect(
+          kidsNextMissionLocation(finished),
+          '${AppRoutes.memorizationPlusKids}'
+          '?surahId=114&ayahNumber=1&missionType=linkedReview',
+        );
+      }
     });
   });
 }

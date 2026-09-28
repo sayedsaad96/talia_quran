@@ -314,6 +314,29 @@ class SocialShareData {
     );
   }
 
+  /// Factory for Azkar wird progress share. Displays completion counts only —
+  /// never composes or derives religious text; titles are localized by the
+  /// template layer.
+  factory SocialShareData.azkarWird({
+    required String categoryTitle,
+    required int completedCount,
+    required int totalCount,
+    String? userName,
+    bool showCharacter = true,
+  }) {
+    return SocialShareData(
+      content: '',
+      title: categoryTitle,
+      subtitle: null,
+      category: SocialShareCategory.azkar,
+      currentValue: completedCount,
+      targetValue: totalCount,
+      userName: userName,
+      showCharacter: showCharacter,
+      characterAssetPath: masterCharacterAsset,
+    );
+  }
+
   /// Factory for Memorization milestone
   factory SocialShareData.memorization({
     required int ayahsCount,

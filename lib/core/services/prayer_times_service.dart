@@ -114,10 +114,7 @@ class PrayerTimesService {
   bool get isMethodManual =>
       _prefs.getBool(methodManualKey) ?? _prefs.getString(methodKey) != null;
 
-  /// Prayer alerts must not be scheduled from an implicit fallback location or
-  /// calculation method. The prayer-times view can still use its display
-  /// defaults, but an alert is only trustworthy after the user has explicitly
-  /// configured both values.
+  /// Prayer alerts require a chosen city and a persisted calculation method.
   bool get isReadyForNotificationScheduling {
     final cityId = selectedCityId;
     final method = _prefs.getString(methodKey);
@@ -129,6 +126,8 @@ class PrayerTimesService {
   }
 
   Future<void> setEnabled(bool enabled) => _prefs.setBool(enabledKey, enabled);
+
+  Future<bool> clearCityId() => _prefs.remove(cityIdKey);
 
   /// Persists the city; when the method was never chosen manually it follows
   /// the new city country automatically.
@@ -229,15 +228,15 @@ class PrayerTimesService {
 
   Future<PrayerTimesSnapshot?> current({required bool isArabic}) async {
     if (!isEnabled) return null;
+    final id = selectedCityId;
+    if (id == null || id.isEmpty) return null;
     final all = await cities();
     if (all.isEmpty) return null;
-    final id = selectedCityId;
-    final city =
-        all.cast<PrayerCity?>().firstWhere(
-          (c) => c?.id == id,
-          orElse: () => all.first,
-        ) ??
-        all.first;
+    final city = all.cast<PrayerCity?>().firstWhere(
+      (c) => c?.id == id,
+      orElse: () => null,
+    );
+    if (city == null) return null;
     final location = tz.getLocation(city.timeZone);
     final now = tz.TZDateTime.from(_now(), location);
     final times = _calculate(city, now);
@@ -316,15 +315,15 @@ class PrayerTimesService {
   /// Calculates prayer times for a specific date using the active city and method.
   Future<List<({String key, String nameAr, String nameEn, DateTime time})>>
   timesForDate(DateTime date) async {
+    final id = selectedCityId;
+    if (id == null || id.isEmpty) return const [];
     final all = await cities();
     if (all.isEmpty) return const [];
-    final id = selectedCityId;
-    final city =
-        all.cast<PrayerCity?>().firstWhere(
-          (c) => c?.id == id,
-          orElse: () => all.first,
-        ) ??
-        all.first;
+    final city = all.cast<PrayerCity?>().firstWhere(
+      (c) => c?.id == id,
+      orElse: () => null,
+    );
+    if (city == null) return const [];
     final times = _calculate(city, date);
     return [
       (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr', time: times.fajr),

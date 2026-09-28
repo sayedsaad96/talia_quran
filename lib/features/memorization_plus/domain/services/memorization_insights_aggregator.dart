@@ -29,13 +29,15 @@ class MemorizationInsightsAggregator {
   MemorizationInsightsReport generateAdultProduction(
     List<AyahReviewRecord> records,
     DateTime now,
-  ) =>
-      generate(
-        records.where(ReviewRecordFilters.isAdultProductionCount).toList(),
-        now,
-      );
+  ) => generate(
+    records.where(ReviewRecordFilters.isAdultProductionCount).toList(),
+    now,
+  );
 
-  MemorizationInsightsReport generate(List<AyahReviewRecord> records, DateTime now) {
+  MemorizationInsightsReport generate(
+    List<AyahReviewRecord> records,
+    DateTime now,
+  ) {
     final retentionScore = retentionUsecase.analyze(records);
     final leechResult = leechUsecase.analyze(records);
     final workloadResult = workloadUsecase.analyze(records, now);

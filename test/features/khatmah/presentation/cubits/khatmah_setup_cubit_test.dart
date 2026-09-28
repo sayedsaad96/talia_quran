@@ -92,6 +92,49 @@ void main() {
     );
 
     blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'a duration-based khatmah keeps the chosen number of days (C7)',
+      build: () {
+        when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+        return buildCubit();
+      },
+      act: (cubit) => cubit.createPlan(pagesPerDay: 21, targetDays: 30),
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupDone>().having(
+          (s) => s.plan,
+          'plan',
+          isA<KhatmahPlan>()
+              .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 21)
+              .having((p) => p.targetDays, 'targetDays', 30)
+              .having(
+                (p) => p.expectedEndDate.difference(p.startDate).inDays,
+                'days until end',
+                29,
+              ),
+        ),
+      ],
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'a khatmah can begin at a chosen page (C7)',
+      build: () {
+        when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+        return buildCubit();
+      },
+      act: (cubit) => cubit.createPlan(pagesPerDay: 4, startPage: 282),
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupDone>().having(
+          (s) => s.plan,
+          'plan',
+          isA<KhatmahPlan>()
+              .having((p) => p.startPage, 'startPage', 282)
+              .having((p) => p.nextUnreadPage, 'nextUnreadPage', 282),
+        ),
+      ],
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
       'creates plan with dedication and sets recipient name as title',
       build: () {
         when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});

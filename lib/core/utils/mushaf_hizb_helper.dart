@@ -1,3 +1,5 @@
+import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
+
 /// Helper for Hizb and Juz calculations based on the standard
 /// 604-page Madinah Mushaf (King Fahd Complex) layout.
 abstract class MushafHizbHelper {
@@ -47,6 +49,12 @@ abstract class MushafHizbHelper {
 
   // ─── API ─────────────────────────────────────────────────────────────────────
 
+  /// Authentic hizb start pages (1-indexed) resolved lazily from the qcf
+  /// package's quarter data — the same source the mushaf header text uses.
+  /// Null until resolved; an empty list marks "resolution failed" so the
+  /// page-midpoint approximation remains as a fallback.
+  static List<int>? _hizbStartPages;
+
   /// Returns the Juz number (1-30) for a given Mushaf page (1-604).
   static int getJuz(int pageNumber) {
     final page = pageNumber.clamp(1, 604);
@@ -58,9 +66,49 @@ abstract class MushafHizbHelper {
 
   /// Returns the Hizb number (1-60) for a given Mushaf page (1-604).
   ///
-  /// Each Juz contains 2 Hizbs. The midpoint of a Juz separates Hizb n from n+1.
+  /// Hizb boundaries are fixed ayah positions, not page midpoints. The
+  /// authentic start pages come from the qcf package quarter table; the
+  /// old midpoint approximation is kept only as a fallback if that data
+  /// cannot be resolved.
   static int getHizb(int pageNumber) {
     final page = pageNumber.clamp(1, 604);
+    final starts = _resolveHizbStartPages();
+    if (starts.isNotEmpty) {
+      for (int i = starts.length - 1; i >= 0; i--) {
+        if (page >= starts[i]) return i + 1;
+      }
+      return 1;
+    }
+    return _hizbByMidpoint(page);
+  }
+
+  static List<int> _resolveHizbStartPages() {
+    final cached = _hizbStartPages;
+    if (cached != null) return cached;
+    return _hizbStartPages = _computeHizbStartPages();
+  }
+
+  static List<int> _computeHizbStartPages() {
+    try {
+      final quarters = qcf.quarters;
+      // Quarters are ordered 1..240 and every hizb starts at its first
+      // quarter (indices 0, 4, 8, ...).
+      final starts = <int>[];
+      for (var i = 0; i + 3 < quarters.length; i += 4) {
+        final quarter = quarters[i];
+        final page = qcf.getPageNumber(
+          quarter['surah'] as int,
+          quarter['ayah'] as int,
+        );
+        if (page >= 1 && page <= 604) starts.add(page);
+      }
+      // Sanity: the Madani mushaf has exactly 60 hizbs starting at page 1.
+      if (starts.length == 60 && starts.first == 1) return starts;
+    } catch (_) {}
+    return const [];
+  }
+
+  static int _hizbByMidpoint(int page) {
     final juz = getJuz(page);
     final juzStart = juzStartPages[juz - 1];
     final juzEnd = juz < 30 ? juzStartPages[juz] - 1 : 604;

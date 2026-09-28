@@ -10,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -18,7 +17,9 @@ import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/closing_moment.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
+import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../../domain/repositories/quran_repository.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
@@ -52,6 +53,19 @@ class QuranReaderPage extends StatefulWidget {
   final QuranReaderMode readerMode;
   final KhatmahCubit? khatmahCubit;
 
+  /// In khatmah mode, listening to the recitation of the page on screen is
+  /// engagement with that page (B3). The page's minimum reading time still
+  /// has to elapse, so a brief tap on play never confirms a page. Free
+  /// reading keeps requiring a touch.
+  static bool countsAsListening({
+    required QuranReaderMode mode,
+    required QuranAudioPlayerState audio,
+    required int currentPage,
+  }) =>
+      mode == QuranReaderMode.khatmah &&
+      audio.isPlaying &&
+      audio.currentPageNumber == currentPage;
+
   @override
   State<QuranReaderPage> createState() => _QuranReaderPageState();
 }
@@ -59,7 +73,10 @@ class QuranReaderPage extends StatefulWidget {
 class _QuranReaderPageState extends State<QuranReaderPage>
     with WidgetsBindingObserver {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _highlights = const <qcf.HighlightVerse>[];
+
+  /// Bookmarked ayahs on the current page — rendered as soft mushaf
+  /// highlights so saved marks are visible while reading.
+  List<BookmarkEntry> _pageBookmarks = const [];
 
   late final QuranPageCubit _quranPageCubit;
   KhatmahCubit? _khatmahCubit;
@@ -82,6 +99,11 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   int? _currentPageNumber;
   bool _hasNavigatedToCompletion = false;
   bool _hasShownWirdClosingMoment = false;
+
+  /// The closing moment celebrates finishing the wird in this reading
+  /// session. A wird already complete when the reader opens must not replay
+  /// the (non-dismissible) dialog on every open.
+  bool _sawIncompleteWird = false;
 
   final QuranReadConfirmationGate _readConfirmationGate =
       QuranReadConfirmationGate();
@@ -108,6 +130,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     }
 
     _khatmahCubit?.watchCalendar();
+    _sawIncompleteWird = _khatmahCubit?.state is KhatmahActive;
     _khatmahSubscription = _khatmahCubit?.stream.listen((state) {
       if (mounted) {
         _handleKhatmahState(context, state);
@@ -121,7 +144,9 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       _surahDetailCubit = getIt<SurahDetailCubit>()..loadSurah(widget.surahId!);
     }
     unawaited(_loadLongPressHintState());
-    unawaited(getIt<BookmarkService>().ensureLoaded());
+    final bookmarkService = getIt<BookmarkService>();
+    unawaited(bookmarkService.ensureLoaded());
+    bookmarkService.addListener(_onBookmarksChanged);
   }
 
   @override
@@ -136,6 +161,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    getIt<BookmarkService>().removeListener(_onBookmarksChanged);
     _khatmahCubit?.unwatchCalendar();
     _readTimer?.cancel();
     _readConfirmedFeedbackTimer?.cancel();
@@ -179,8 +205,26 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     }
     _saveCurrentPage(pageNumber);
     _loadPage(pageNumber);
+    _pageBookmarks = _bookmarksForPage(pageNumber);
     // Lazy-load QCF fonts for the current page and nearby pages.
     unawaited(qcf.QcfFontLoader.preloadPages(pageNumber, radius: 8));
+  }
+
+  void _onBookmarksChanged() {
+    final page = _currentPageNumber;
+    if (page == null) return;
+    _pageBookmarks = _bookmarksForPage(page);
+    if (mounted) setState(() {});
+  }
+
+  List<BookmarkEntry> _bookmarksForPage(int pageNumber) {
+    return getIt<BookmarkService>()
+        .getAll()
+        .where(
+          (entry) =>
+              qcf.getPageNumber(entry.surahId, entry.ayahNumber) == pageNumber,
+        )
+        .toList();
   }
 
   void _saveCurrentPage(int pageNumber) {
@@ -242,15 +286,19 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       pageNumber,
       recordOrdinaryReading: widget.readerMode != QuranReaderMode.khatmah,
     );
-    if (!confirmed) return;
+    if (!confirmed) {
+      // Not loaded yet or failed: release the page so a later interaction or
+      // timer can confirm it instead of leaving it pending forever (B4).
+      _readConfirmationGate.clearPending(pageNumber);
+      return;
+    }
     if (widget.readerMode == QuranReaderMode.khatmah) {
       await _khatmahCubit?.recordDigitalPage(pageNumber);
     } else {
-      // Free / daily-wird mode: persist progress so the next wird page is
-      // computed independently of any active khatmah plan.
-      unawaited(
-        getIt<AppSessionService>().saveDailyWirdLastCompletedPage(pageNumber),
-      );
+      // Free mode: only pages that belong to today's wird advance it, so
+      // browsing any surah never moves tomorrow's wird. Khatmah progress is
+      // separate and never touched here.
+      unawaited(getIt<AppSessionService>().advanceDailyWird(pageNumber));
     }
   }
 
@@ -279,7 +327,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       );
       return;
     }
-    if (state is KhatmahWirdCompleted && !_hasShownWirdClosingMoment) {
+    if (state is KhatmahActive) _sawIncompleteWird = true;
+    if (state is KhatmahWirdCompleted &&
+        _sawIncompleteWird &&
+        !_hasShownWirdClosingMoment) {
       _hasShownWirdClosingMoment = true;
       _showWirdClosingMoment(context, state.plan);
     }
@@ -302,8 +353,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       builder: (dialogContext) {
         final dialogL10n = dialogContext.l10n;
         return Dialog(
-          backgroundColor:
-              isDark ? AppColors.darkCard : AppColors.lightCard,
+          backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
@@ -372,9 +422,15 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     });
   }
 
-  Ayah _resolveAyah(int surahNumber, int verseNumber) {
-    final detail = _currentDetail;
-    if (detail != null) {
+  /// Resolves the pressed ayah using canonical local Quran data.
+  ///
+  /// The detail currently displayed can lag briefly while a page is loading.
+  /// In that case, load the QCF-mapped page from the repository instead of
+  /// exposing QCF glyph codes as Quran text in the options sheet.
+  Future<Ayah?> _resolveAyah(int surahNumber, int verseNumber) async {
+    final state = _quranPageCubit.state;
+    final loadedDetail = state is QuranPageLoaded ? state.detail : null;
+    for (final detail in [_currentDetail, loadedDetail].nonNulls) {
       for (final ayah in detail.ayahs) {
         if (ayah.surahId == surahNumber && ayah.numberInSurah == verseNumber) {
           return ayah;
@@ -382,44 +438,37 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       }
     }
 
-    return Ayah(
-      number: 0,
-      surahId: surahNumber,
-      text: qcf.getVerse(surahNumber, verseNumber),
-      numberInSurah: verseNumber,
-      juz: qcf.getJuzNumber(surahNumber, verseNumber),
-      page: qcf.getPageNumber(surahNumber, verseNumber),
+    final pageNumber = qcf.getPageNumber(surahNumber, verseNumber);
+    final result = await getIt<QuranRepository>().getQuranPage(pageNumber);
+    return result.fold(
+      (_) => null,
+      (page) => page.ayahs
+          .where(
+            (ayah) =>
+                ayah.surahId == surahNumber &&
+                ayah.numberInSurah == verseNumber,
+          )
+          .firstOrNull,
     );
   }
 
-  void _showAyahOptions(
+  Future<void> _showAyahOptions(
     BuildContext context,
     int surahNumber,
     int verseNumber,
     LongPressStartDetails _,
-  ) {
-    HapticFeedback.lightImpact();
-    if (_currentPageNumber != null) {
-      _registerPageInteraction(_currentPageNumber!, context);
+  ) async {
+    final pageNumber = _currentPageNumber;
+    if (pageNumber != null) {
+      _registerPageInteraction(pageNumber, context);
     }
-    final ayah = _resolveAyah(surahNumber, verseNumber);
     final audioCubit = context.read<QuranAudioPlayerCubit>();
 
-    // "Memorize this page" is offered only when every ayah on the page
-    // belongs to the same surah (V2 sessions are single-surah).
-    final detail = _currentDetail;
-    AyahReference? pageTarget;
-    if (detail != null && detail.ayahs.isNotEmpty) {
-      final pageSurahs = detail.ayahs.map((a) => a.surahId).toSet();
-      if (pageSurahs.length == 1) {
-        pageTarget = AyahReference(
-          surahId: detail.ayahs.first.surahId,
-          ayahNumber: detail.ayahs.first.numberInSurah,
-        );
-      }
-    }
+    await HapticFeedback.lightImpact();
+    final ayah = await _resolveAyah(surahNumber, verseNumber);
+    if (!mounted || !context.mounted || ayah == null) return;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
@@ -428,9 +477,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         child: AyahOptionsSheet(
           ayah: ayah,
           surahName: qcf.getSurahNameArabic(surahNumber),
-          pageMemorizationTarget: pageTarget,
           onInteraction: () {
-            if (_currentPageNumber != null) {
+            if (mounted && context.mounted && _currentPageNumber != null) {
               _registerPageInteraction(_currentPageNumber!, context);
             }
           },
@@ -471,10 +519,29 @@ class _QuranReaderPageState extends State<QuranReaderPage>
           body: BlocConsumer<SurahDetailCubit, SurahDetailState>(
             listener: (context, state) {
               if (state is SurahDetailLoaded && _pageController == null) {
-                final initialPage = _normalizePageNumber(
+                final surahStart = _normalizePageNumber(
                   state.detail.surah.page,
                 );
-                setState(() => _openAtPage(initialPage));
+                var target = surahStart;
+                // Resume inside the surah: when the saved ordinary-reading
+                // position lies within this surah's page range, land there
+                // instead of always restarting at the first page.
+                if (widget.readerMode != QuranReaderMode.khatmah) {
+                  final surahEnd = state.detail.ayahs.isEmpty
+                      ? surahStart
+                      : _normalizePageNumber(
+                          state.detail.ayahs.last.page ?? surahStart,
+                        );
+                  final saved = QuranWarmupService.parsePageFromLocation(
+                    getIt<AppSessionService>().getLastRestorableLocation(),
+                  );
+                  if (saved != null &&
+                      saved >= surahStart &&
+                      saved <= surahEnd) {
+                    target = saved;
+                  }
+                }
+                setState(() => _openAtPage(target));
               }
             },
             builder: (context, state) {
@@ -518,6 +585,15 @@ class _QuranReaderPageState extends State<QuranReaderPage>
               audioState.hasActiveAudio &&
               audioState.currentPageNumber != _currentPageNumber) {
             _openAtPage(audioState.currentPageNumber!);
+          }
+          final page = _currentPageNumber;
+          if (page != null &&
+              QuranReaderPage.countsAsListening(
+                mode: widget.readerMode,
+                audio: audioState,
+                currentPage: page,
+              )) {
+            _registerPageInteraction(page, context);
           }
         },
         child: BlocConsumer<QuranPageCubit, QuranPageState>(
@@ -588,7 +664,17 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           color: accent.withValues(alpha: 0.24),
                         ),
                       ]
-                    : _highlights;
+                    : [
+                        // Saved bookmarks stay visible on the page so the
+                        // learner can see their marks while reading.
+                        for (final entry in _pageBookmarks)
+                          qcf.HighlightVerse(
+                            surah: entry.surahId,
+                            verseNumber: entry.ayahNumber,
+                            page: pageNumber,
+                            color: accent.withValues(alpha: 0.14),
+                          ),
+                      ];
 
                 return Scaffold(
                   key: _scaffoldKey,
@@ -602,14 +688,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           builder: (context, isFocusMode, _) {
                             return Listener(
                               behavior: HitTestBehavior.translucent,
-                              onPointerDown: (_) => _registerPageInteraction(
-                                pageNumber,
-                                context,
-                              ),
-                              onPointerSignal: (_) => _registerPageInteraction(
-                                pageNumber,
-                                context,
-                              ),
+                              onPointerDown: (_) =>
+                                  _registerPageInteraction(pageNumber, context),
+                              onPointerSignal: (_) =>
+                                  _registerPageInteraction(pageNumber, context),
                               child: AppQuranPageView(
                                 pageController: _pageController!,
                                 highlights: currentHighlights,
@@ -623,6 +705,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                   _currentPageNumber = page;
                                   _currentPageNotifier.value = page;
                                   _saveCurrentPage(page);
+                                  _pageBookmarks = _bookmarksForPage(page);
                                   _registerPageInteraction(page, context);
                                   _loadPage(page);
                                   unawaited(
@@ -632,16 +715,14 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                     ),
                                   );
                                 },
-                                onLongPress: (
-                                  surahNumber,
-                                  verseNumber,
-                                  details,
-                                ) => _showAyahOptions(
-                                  context,
-                                  surahNumber,
-                                  verseNumber,
-                                  details,
-                                ),
+                                onLongPress:
+                                    (surahNumber, verseNumber, details) =>
+                                        _showAyahOptions(
+                                          context,
+                                          surahNumber,
+                                          verseNumber,
+                                          details,
+                                        ),
                                 topBar: isFocusMode
                                     ? null
                                     : Column(
@@ -654,8 +735,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                               currentPage: pageNumber,
                                             ),
                                           ReaderTopBar(
-                                            surahName:
-                                                firstSurah?.nameAr ?? '',
+                                            surahName: firstSurah?.nameAr ?? '',
                                             juzNumber: juzNumber,
                                             pageNumber: pageNumber,
                                             primary: accent,
@@ -669,14 +749,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                             },
                                             onOpenMenu: () =>
                                                 ReaderOverflowSheet.show(
-                                              context,
-                                              onEnterFocus: () {
-                                                HapticFeedback
-                                                    .selectionClick();
-                                                _isFocusModeNotifier.value =
-                                                    true;
-                                              },
-                                            ),
+                                                  context,
+                                                  onEnterFocus: () {
+                                                    HapticFeedback.selectionClick();
+                                                    _isFocusModeNotifier.value =
+                                                        true;
+                                                  },
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -692,8 +771,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                             pageNumber: pageNumber,
                                             hizbNumber:
                                                 MushafHizbHelper.getHizb(
-                                              pageNumber,
-                                            ),
+                                                  pageNumber,
+                                                ),
                                             accent: accent,
                                             bg: bg,
                                             showReadConfirmed:
@@ -726,9 +805,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                   HapticFeedback.selectionClick();
                                   _isFocusModeNotifier.value = false;
                                 },
-                                icon: const Icon(
-                                  Icons.fullscreen_exit_rounded,
-                                ),
+                                icon: const Icon(Icons.fullscreen_exit_rounded),
                                 style: IconButton.styleFrom(
                                   foregroundColor: accent,
                                   backgroundColor: bg.withValues(alpha: 0.92),

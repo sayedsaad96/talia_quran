@@ -389,6 +389,53 @@ void main() {
     expect(state.canContinueKhatmahReading, isFalse);
   });
 
+  test(
+    'khatmah progress refreshes the continue card without a full reload (C2)',
+    () async {
+      final changes = StreamController<void>.broadcast();
+      addTearDown(changes.close);
+      fakeGetActiveKhatmah.changeEvents = changes.stream;
+      fakeGetActiveKhatmah.planToReturn = testPlan;
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
+      await cubit!.load();
+      expect(
+        (cubit!.state as HomeLoaded).continueRecitation?.route,
+        '/quran/page/31?mode=khatmah',
+      );
+
+      fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
+        completedPages: {for (var page = 1; page <= 34; page++) page},
+      );
+      changes.add(null);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(
+        (cubit!.state as HomeLoaded).continueRecitation?.route,
+        '/quran/page/35?mode=khatmah',
+      );
+
+      fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
+        status: KhatmahStatus.paused,
+      );
+      changes.add(null);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect((cubit!.state as HomeLoaded).continueRecitation, isNull);
+    },
+  );
+
   test('HomeLoaded copyWith updates activeKhatmah', () {
     final initialState = HomeLoaded(
       progress: const OverallProgress(

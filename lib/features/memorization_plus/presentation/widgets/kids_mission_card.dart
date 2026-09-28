@@ -13,6 +13,7 @@ class KidsMissionCard extends StatelessWidget {
     this.surahName,
     this.onContinue,
     this.isReviewMission = false,
+    this.reviewAyahs,
   });
 
   final KidsJourneyStage? stage;
@@ -24,13 +25,26 @@ class KidsMissionCard extends StatelessWidget {
   /// "Ready for review" instead of "Last mission".
   final bool isReviewMission;
 
+  /// Ayahs the review mission actually opens. A due SRS review can target a
+  /// finished stage, so the card describes these ayahs instead of the
+  /// current memorization stage's range and progress (N7).
+  final List<int>? reviewAyahs;
+
   @override
   Widget build(BuildContext context) {
     final currentStage = stage;
-    final title = currentStage == null
+    final missionAyahs = isReviewMission ? reviewAyahs : null;
+    final title = missionAyahs != null && missionAyahs.isNotEmpty
+        ? (surahName ?? context.l10n.kidsGamifiedNeedsReview)
+        : currentStage == null
         ? context.l10n.kidsStartFirstStageToday
         : context.l10n.kidsGamifiedHouseTitle(currentStage.stageNumber);
-    final subtitle = currentStage == null
+    final subtitle = missionAyahs != null && missionAyahs.isNotEmpty
+        ? context.l10n.kidsGamifiedAyahRange(
+            missionAyahs.first,
+            missionAyahs.last,
+          )
+        : currentStage == null
         ? context.l10n.kidsFirstMissionSubtitle
         : [
             // ignore: use_null_aware_elements
@@ -62,7 +76,9 @@ class KidsMissionCard extends StatelessWidget {
               ? context.l10n.kidsGamifiedNeedsReview
               : context.l10n.kidsGamifiedLastMission,
           style: AppTypography.labelMedium.copyWith(
-            color: isReviewMission ? KidsTheme.reviewPurple : KidsTheme.forestGreen,
+            color: isReviewMission
+                ? KidsTheme.reviewPurple
+                : KidsTheme.forestGreen,
             letterSpacing: 0,
           ),
         ),

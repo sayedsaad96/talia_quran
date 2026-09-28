@@ -11,7 +11,9 @@ class QuranReciterService {
   final SharedPreferences _prefs;
   static const String _key = 'quran_selected_reciter_id';
 
-  final ValueNotifier<QuranReciter> currentReciter = ValueNotifier(QuranReciter.alafasy);
+  final ValueNotifier<QuranReciter> currentReciter = ValueNotifier(
+    QuranReciter.alafasy,
+  );
 
   void _loadReciter() {
     final storedId = _prefs.getString(_key);

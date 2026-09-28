@@ -43,6 +43,8 @@ class KidsModeLoaded extends KidsModeState {
     this.sessionStarsEarned = 0,
     this.sessionPointsEarned = 0,
     this.leveledUpTo,
+    this.lastMatchedWords = 0,
+    this.lastTargetWords = 0,
   });
 
   final int surahId;
@@ -75,13 +77,39 @@ class KidsModeLoaded extends KidsModeState {
   /// New level when this session triggered a level-up (K11); null otherwise.
   final int? leveledUpTo;
 
-  /// True only for technical failures. A textual recitation mismatch is never
-  /// eligible for guardian override.
+  /// Words the child got right in the latest failed recitation — the
+  /// child-friendly "X of Y words" progress feedback. Both zero hides the
+  /// feedback banner.
+  final int lastMatchedWords;
+
+  /// Total words in the latest evaluated recitation target.
+  final int lastTargetWords;
+
+  /// True when the latest mismatch carries usable, genuinely encouraging
+  /// word-level feedback — "you got X of Y" only makes sense when the child
+  /// actually got some words right.
+  bool get hasWordFeedback =>
+      recordingError == CubitMessageCodes.kidsRecitationMismatch &&
+      lastMatchedWords > 0 &&
+      lastTargetWords > 0;
+
+  /// After this many repeated recitation mismatches the guardian-verified
+  /// completion becomes available even though the failure is pedagogical —
+  /// a child-voice STT false-negative loop must never trap the child in an
+  /// unfailable mission.
+  static const int kGuardianFallbackAfterMismatches = 3;
+
+  /// True for technical failures, or once the same recitation mismatch has
+  /// repeated [kGuardianFallbackAfterMismatches] times. A single textual
+  /// mismatch is never eligible for guardian override on its own.
   bool get canUseGuardianFallback =>
       audioError != null ||
       recordingError == CubitMessageCodes.kidsMicPermissionDenied ||
       recordingError == CubitMessageCodes.kidsRecordingUnavailable ||
-      recordingError == CubitMessageCodes.kidsRecordingNotCaptured;
+      recordingError == CubitMessageCodes.kidsRecordingNotCaptured ||
+      (recordingError == CubitMessageCodes.kidsRecitationMismatch &&
+          sessionState.failureTracker.failureCountFor(surahId, ayahNumber) >=
+              kGuardianFallbackAfterMismatches);
 
   KidsModeLoaded copyWith({
     V2SessionState? sessionState,
@@ -102,6 +130,8 @@ class KidsModeLoaded extends KidsModeState {
     int? sessionPointsEarned,
     int? leveledUpTo,
     bool clearLevelUpTo = false,
+    int? lastMatchedWords,
+    int? lastTargetWords,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -124,6 +154,8 @@ class KidsModeLoaded extends KidsModeState {
     sessionStarsEarned: sessionStarsEarned ?? this.sessionStarsEarned,
     sessionPointsEarned: sessionPointsEarned ?? this.sessionPointsEarned,
     leveledUpTo: clearLevelUpTo ? null : (leveledUpTo ?? this.leveledUpTo),
+    lastMatchedWords: lastMatchedWords ?? this.lastMatchedWords,
+    lastTargetWords: lastTargetWords ?? this.lastTargetWords,
   );
 
   @override
@@ -145,5 +177,7 @@ class KidsModeLoaded extends KidsModeState {
     sessionStarsEarned,
     sessionPointsEarned,
     leveledUpTo,
+    lastMatchedWords,
+    lastTargetWords,
   ];
 }

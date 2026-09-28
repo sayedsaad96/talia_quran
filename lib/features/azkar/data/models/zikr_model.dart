@@ -16,6 +16,9 @@ class ZikrModel extends Zikr {
     super.tier,
     super.reviewStatus,
     super.datasetVersion = 'unversioned',
+    super.virtue,
+    super.audioUrl,
+    super.timeHint,
   });
 
   factory ZikrModel.fromJson(
@@ -59,6 +62,19 @@ class ZikrModel extends Zikr {
       throw const FormatException('Unsupported authenticityGrade');
     }
 
+    final virtue = json['virtue'];
+    if (virtue != null && virtue is! String) {
+      throw const FormatException('virtue must be a string when present');
+    }
+    final audioUrl = json['audioUrl'];
+    if (audioUrl != null && audioUrl is! String) {
+      throw const FormatException('audioUrl must be a string when present');
+    }
+    final timeHint = json['timeHint'];
+    if (timeHint != null && timeHint is! String) {
+      throw const FormatException('timeHint must be a string when present');
+    }
+
     return ZikrModel(
       id: id,
       text: text,
@@ -74,6 +90,9 @@ class ZikrModel extends Zikr {
       tier: tier,
       datasetVersion: datasetVersion,
       reviewStatus: ContentReviewStatus.approved,
+      virtue: virtue as String? ?? '',
+      audioUrl: audioUrl as String?,
+      timeHint: timeHint as String? ?? '',
     );
   }
 }

@@ -116,7 +116,7 @@
       "computedHash": "f4ea905ae155d1bca76f5431bf6ed31f31e3d40146493e7ae4285eac39ba4ffd"
     },
     "flutter-apply-architecture-best-practices": {
-      "source": "flutter/skills",
+      "source": "flutter/agent-plugins",
       "sourceType": "github",
       "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
       "computedHash": "baeb208b1cab90c559677626dbd101b96ba93f803cbed85122abdadeb3283a8b"

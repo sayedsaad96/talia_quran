@@ -20,6 +20,9 @@ class XpConstants {
   static const Map<String, int> rewards = {
     'ayah_memorized': 10,
     'v2_block_completed': 50,
+    'v2_review_completed': 10,
+    'azkar_wird_completed': 15,
+    'smart_wird_completed': 20,
   };
 
   static const List<XpLevel> levels = [

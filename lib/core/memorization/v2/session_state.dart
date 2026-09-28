@@ -22,7 +22,9 @@ final class V2SessionState extends Equatable {
     required this.hintTracker,
     required this.failureTracker,
     required this.blockReviewRequired,
+    this.isReview = false,
     this.lastRecitationResult,
+    this.nearMissCount = 0,
   });
 
   /// Creates the initial session state for a new block.
@@ -30,6 +32,7 @@ final class V2SessionState extends Equatable {
     required int surahId,
     required List<Ayah> blockAyahs,
     required bool blockReviewRequired,
+    bool isReview = false,
   }) {
     return V2SessionState(
       surahId: surahId,
@@ -40,6 +43,7 @@ final class V2SessionState extends Equatable {
       hintTracker: V2HintTracker.empty,
       failureTracker: V2AyahFailureTracker.empty,
       blockReviewRequired: blockReviewRequired,
+      isReview: isReview,
     );
   }
 
@@ -66,8 +70,17 @@ final class V2SessionState extends Equatable {
   /// Whether block review is required (false for children < 8 per §14.3).
   final bool blockReviewRequired;
 
+  /// True for an active-recall review session: starts straight at reciting,
+  /// offers no learning/hint stages, and completes without block review.
+  /// Derived from the persisted launch intent on resume — never user-set.
+  final bool isReview;
+
   /// Result of the most recent recitation evaluation.
   final V2RecitationResult? lastRecitationResult;
+
+  /// Near misses (retry verdicts) on the current ayah. Transient: not part
+  /// of the resume checkpoint, so a resumed session starts a fresh allowance.
+  final int nearMissCount;
 
   // ── Computed Properties ──────────────────────────────────
 
@@ -94,6 +107,7 @@ final class V2SessionState extends Equatable {
     V2AyahFailureTracker? failureTracker,
     V2RecitationResult? lastRecitationResult,
     bool clearLastResult = false,
+    int? nearMissCount,
   }) {
     return V2SessionState(
       surahId: surahId,
@@ -104,9 +118,11 @@ final class V2SessionState extends Equatable {
       hintTracker: hintTracker ?? this.hintTracker,
       failureTracker: failureTracker ?? this.failureTracker,
       blockReviewRequired: blockReviewRequired,
+      isReview: isReview,
       lastRecitationResult: clearLastResult
           ? null
           : (lastRecitationResult ?? this.lastRecitationResult),
+      nearMissCount: nearMissCount ?? this.nearMissCount,
     );
   }
 
@@ -120,6 +136,8 @@ final class V2SessionState extends Equatable {
     hintTracker,
     failureTracker,
     blockReviewRequired,
+    isReview,
     lastRecitationResult,
+    nearMissCount,
   ];
 }

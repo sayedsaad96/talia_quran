@@ -12,12 +12,15 @@ class AzkarPreferencesStore {
 
     final savedFontScale = _prefs?.getDouble(_keyFontScale) ?? 1.0;
     _fontScaleNotifier = ValueNotifier<double>(savedFontScale);
+
+    _quietNightNotifier = ValueNotifier<bool>(_prefs?.getBool(_keyQuietNight) ?? false);
   }
 
   static const _keyFavoriteDuas = 'azkar_favorite_duas';
   static const _keyAutoAdvance = 'azkar_auto_advance';
   static const _keyFontScale = 'azkar_font_scale';
   static const _keyTasbeehTarget = 'azkar_tasbeeh_target';
+  static const _keyQuietNight = 'azkar_quiet_night';
 
   final SharedPreferences? _prefs;
   int _inMemoryTasbeehTarget = 33;
@@ -25,6 +28,7 @@ class AzkarPreferencesStore {
   late final ValueNotifier<Set<String>> _favoritesNotifier;
   late final ValueNotifier<bool> _autoAdvanceNotifier;
   late final ValueNotifier<double> _fontScaleNotifier;
+  late final ValueNotifier<bool> _quietNightNotifier;
 
   // ─── Favorites ─────────────────────────────────────────────────────────────
   ValueListenable<Set<String>> get favoritesListenable => _favoritesNotifier;
@@ -42,7 +46,7 @@ class AzkarPreferencesStore {
     return isNowFavorite;
   }
 
-  // ─── Auto-Advance ──────────────────────────────────────────────────────────
+  // ─── Auto-Advance ──────────────────────────────────────────────────────
   ValueListenable<bool> get autoAdvanceListenable => _autoAdvanceNotifier;
 
   bool getAutoAdvance() => _autoAdvanceNotifier.value;
@@ -52,7 +56,7 @@ class AzkarPreferencesStore {
     _autoAdvanceNotifier.value = enabled;
   }
 
-  // ─── Font Scale ────────────────────────────────────────────────────────────
+  // ─── Font Scale ────────────────────────────────────────────────────
   ValueListenable<double> get fontScaleListenable => _fontScaleNotifier;
 
   double getFontScale() => _fontScaleNotifier.value;
@@ -62,7 +66,7 @@ class AzkarPreferencesStore {
     _fontScaleNotifier.value = scale;
   }
 
-  // ─── Free Tasbeeh Target ───────────────────────────────────────────────────
+  // ─── Free Tasbeeh Target ───────────────────────────────────────────
   int getLastTasbeehTarget() =>
       _prefs?.getInt(_keyTasbeehTarget) ?? _inMemoryTasbeehTarget;
 
@@ -70,4 +74,32 @@ class AzkarPreferencesStore {
     _inMemoryTasbeehTarget = target;
     await _prefs?.setInt(_keyTasbeehTarget, target);
   }
+
+  // ─── Quiet Night Mode ──────────────────────────────────────────────
+  ValueListenable<bool> get quietNightListenable => _quietNightNotifier;
+
+  bool getQuietNight() => _quietNightNotifier.value;
+
+  Future<void> setQuietNight(bool enabled) async {
+    await _prefs?.setBool(_keyQuietNight, enabled);
+    _quietNightNotifier.value = enabled;
+  }
+
+  // ─── Daily Tasbeeh Tally ───────────────────────────────────────────
+  String _tasbeehDayKey(DateTime now) => '${now.year}-${now.month}-${now.day}';
+
+  int getTasbeehTally([DateTime? now]) {
+    if (_prefs == null) return 0;
+    final day = _tasbeehDayKey(now ?? DateTime.now());
+    return _prefs.getInt('$_keyTasbeehPrefix$day') ?? 0;
+  }
+
+  Future<void> bumpTasbeehTally([DateTime? now]) async {
+    if (_prefs == null) return;
+    final day = _tasbeehDayKey(now ?? DateTime.now());
+    final current = _prefs.getInt('$_keyTasbeehPrefix$day') ?? 0;
+    await _prefs.setInt('$_keyTasbeehPrefix$day', current + 1);
+  }
+
+  static const _keyTasbeehPrefix = 'azkar_tasbeeh_tally_';
 }

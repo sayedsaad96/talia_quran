@@ -8,6 +8,16 @@ void main() {
   const candidatePath = 'assets/data/azkar.json';
   const releasePath = 'assets/data/azkar_release.json';
   const expansionVersion = 'v1-candidate-2';
+  const contextBatchVersion = 'v2-candidate-1';
+  const expectedContextBatchIds = {
+    'gen_new_garment_praise',
+    'gen_enter_masjid_forgiveness',
+    'gen_enter_masjid_uthman',
+    'gen_leave_home_protection',
+    'gen_distress_hayy_qayyum',
+    'gen_morning_evening_hayy_qayyum_full',
+    'gen_food_clothing_forgiveness',
+  };
   const expectedExpansionIds = {
     'gen_enter_toilet',
     'gen_leave_toilet',
@@ -51,7 +61,8 @@ void main() {
     test('adds exactly 24 records in the intended categories', () {
       expect((candidate['morning'] as List<dynamic>), hasLength(22));
       expect((candidate['evening'] as List<dynamic>), hasLength(22));
-      expect((candidate['general'] as List<dynamic>), hasLength(31));
+      // 19 base + 12 (v1-candidate-2 hadith) + 7 (v2-candidate-1).
+      expect((candidate['general'] as List<dynamic>), hasLength(38));
       expect((candidate['duas'] as List<dynamic>), hasLength(34));
       expect(expansionRecords, hasLength(24));
       expect(
@@ -139,7 +150,7 @@ void main() {
         for (final record in expansionRecords) record['id']: record,
       };
 
-      expect(releaseRecords, hasLength(109));
+      expect(releaseRecords, hasLength(116));
       expect(releasedExpansion, hasLength(24));
       expect(
         releasedExpansion.map((record) => record['id']).toSet(),
@@ -171,7 +182,73 @@ void main() {
       }
     });
 
-    test('manifest fingerprints the 109-record release allowlist', () {
+    test('publishes the approved v2 context batch with review evidence', () {
+      final contextRecords = allCandidateRecords
+          .where((record) => record['datasetVersion'] == contextBatchVersion)
+          .toList();
+
+      expect(contextRecords.map((record) => record['id']).toSet(),
+          expectedContextBatchIds);
+      final releaseRecords = _allRecords(_readJsonMap(releasePath));
+      final releaseById = {
+        for (final record in releaseRecords) record['id'] as String: record,
+      };
+      for (final record in contextRecords) {
+        // Provenance fields stay intact on the candidate side (policy §5).
+        for (final field in [
+          'text',
+          'reference',
+          'citation',
+          'sourceType',
+          'sourceUrl',
+          'retrievedAt',
+          'sourceNarrator',
+          'sourceGrader',
+        ]) {
+          expect(
+            (record[field] as String?)?.trim(),
+            isNotEmpty,
+            reason: '${record['id']} is missing $field',
+          );
+        }
+        expect(
+          record['sourceUrl'] as String,
+          startsWith('https://dorar.net/hadith/sharh/'),
+          reason: record['id'],
+        );
+
+        // The batch was approved by the project owner on 2026-09-25 and
+        // promoted as v2-reviewed-1 with review evidence on every record.
+        final released = releaseById[record['id'] as String];
+        expect(released, isNotNull, reason: record['id']);
+        expect(released!['reviewStatus'], 'approved', reason: record['id']);
+        expect(released['datasetVersion'], 'v2-reviewed-1',
+            reason: record['id']);
+        expect((released['reviewedBy'] as String?)?.trim(), isNotEmpty,
+            reason: record['id']);
+        expect((released['reviewedAt'] as String?)?.trim(), isNotEmpty,
+            reason: record['id']);
+        for (final field in [
+          'text',
+          'reference',
+          'citation',
+          'sourceType',
+          'sourceUrl',
+          'retrievedAt',
+          'sourceNarrator',
+          'sourceGrader',
+          'count',
+        ]) {
+          expect(
+            released[field],
+            record[field],
+            reason: '${record['id']} changed $field',
+          );
+        }
+      }
+    });
+
+    test('manifest fingerprints the 116-record release allowlist', () {
       final manifest = _readJsonMap('assets/data/content_manifest.json');
       final releaseEntry = (manifest['items'] as List<dynamic>)
           .cast<Map<String, dynamic>>()
@@ -182,7 +259,7 @@ void main() {
 
       expect(
         releaseEntry['sourceEdition'],
-        'all_109_records_project_owner_approved',
+        'all_116_records_project_owner_approved',
       );
       expect(releaseEntry['reviewStatus'], 'approved');
       expect(releaseEntry['sha256'], releaseDigest);

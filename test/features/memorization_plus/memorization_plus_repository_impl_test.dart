@@ -133,54 +133,60 @@ void main() {
       },
     );
 
-    test('a due review is logged without granting a second reward', () async {
-      final first = await repository.awardKidsPoints(
-        completionAuthorized: true,
-        sessionId: 'new-114-1',
-        surahId: 114,
-        ayahNumber: 1,
-        repeatsCompleted: 1,
-        masteryRating: PerformanceRating.excellent,
-      );
-      final review = await repository.awardKidsPoints(
-        sessionId: 'review-114-1',
-        surahId: 114,
-        ayahNumber: 1,
-        repeatsCompleted: 1,
-        missionType: KidsMissionType.dueReview,
-        durationSeconds: 45,
-        attemptCount: 2,
-        masteryRating: PerformanceRating.average,
-      );
+    test(
+      'a due review earns reduced points without a second canonical reward',
+      () async {
+        final first = await repository.awardKidsPoints(
+          completionAuthorized: true,
+          sessionId: 'new-114-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          masteryRating: PerformanceRating.excellent,
+        );
+        final review = await repository.awardKidsPoints(
+          sessionId: 'review-114-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          missionType: KidsMissionType.dueReview,
+          durationSeconds: 45,
+          attemptCount: 2,
+          masteryRating: PerformanceRating.average,
+        );
 
-      final firstResult = first.getOrElse(
-        () => throw StateError('Expected first completion to succeed'),
-      );
-      final reviewResult = review.getOrElse(
-        () => throw StateError('Expected due review to succeed'),
-      );
-      final progress = await datasource.getKidsProgress();
-      final logs = await datasource.getKidsSessionLogs();
+        final firstResult = first.getOrElse(
+          () => throw StateError('Expected first completion to succeed'),
+        );
+        final reviewResult = review.getOrElse(
+          () => throw StateError('Expected due review to succeed'),
+        );
+        final progress = await datasource.getKidsProgress();
+        final logs = await datasource.getKidsSessionLogs();
 
-      expect(firstResult.starsEarned, 3);
-      expect(reviewResult.alreadyCompleted, isTrue);
-      expect(reviewResult.pointsEarned, 0);
-      expect(reviewResult.starsEarned, 0);
-      expect(progress.totalPoints, 10);
-      expect(progress.starsEarned, 3);
-      expect(logs, hasLength(2));
-      final reviewLog = logs.singleWhere((log) => log.id == 'review-114-1');
-      expect(reviewLog.missionType, KidsMissionType.dueReview);
-      expect(reviewLog.pointsEarned, 0);
-      expect(reviewLog.masteryRating, PerformanceRating.average);
-    });
+        // New-memorization excellence: 10 base + 5 bonus.
+        expect(firstResult.starsEarned, 3);
+        // W2: a review pass is a distinct positive event — reduced points,
+        // never a second canonical reward or extra stars.
+        expect(reviewResult.alreadyCompleted, isFalse);
+        expect(reviewResult.pointsEarned, 5);
+        expect(reviewResult.starsEarned, 0);
+        expect(progress.totalPoints, 20); // 15 canonical + 5 review
+        expect(progress.starsEarned, 3);
+        expect(logs, hasLength(2));
+        final reviewLog = logs.singleWhere((log) => log.id == 'review-114-1');
+        expect(reviewLog.missionType, KidsMissionType.dueReview);
+        expect(reviewLog.pointsEarned, 5);
+        expect(reviewLog.masteryRating, PerformanceRating.average);
+      },
+    );
 
     for (final missionType in [
       KidsMissionType.dueReview,
       KidsMissionType.resume,
       KidsMissionType.linkedReview,
     ]) {
-      test('a first $missionType mission never grants a reward', () async {
+      test('a first $missionType mission earns only reduced review points', () async {
         final result = await repository.awardKidsPoints(
           sessionId: 'non-reward-${missionType.name}',
           surahId: 114,
@@ -198,11 +204,13 @@ void main() {
           surahId: 114,
         )).getOrElse(() => throw StateError('Expected journey'));
 
-        expect(completion.pointsEarned, 0);
+        // W2: reduced review points show progress, but never canonical
+        // memorization rewards (stars, completed-ayah counts, journey).
+        expect(completion.pointsEarned, 5);
         expect(completion.starsEarned, 0);
-        expect(progress.totalPoints, 0);
+        expect(progress.totalPoints, 5);
         expect(progress.ayahsCompleted, 0);
-        expect(logs.single.pointsEarned, 0);
+        expect(logs.single.pointsEarned, 5);
         expect(journey.first.completedAyahs, isEmpty);
       });
     }
@@ -440,12 +448,14 @@ void main() {
       final logs = await datasource.getKidsSessionLogs();
 
       expect(firstResult.alreadyCompleted, isFalse);
-      expect(firstResult.pointsEarned, 10);
+      // W2: a perfect first-try recitation (attempt 1, no hints) earns the
+      // excellence bonus on top of the base reward.
+      expect(firstResult.pointsEarned, 15);
       expect(firstResult.starsEarned, 3);
       expect(replayResult.alreadyCompleted, isTrue);
       expect(replayResult.pointsEarned, 0);
       expect(replayResult.starsEarned, 0);
-      expect(progress.totalPoints, 10);
+      expect(progress.totalPoints, 15);
       expect(progress.starsEarned, 3);
       expect(progress.ayahsCompleted, 1);
       expect(logs, hasLength(1));
@@ -586,13 +596,13 @@ void main() {
       );
       expect(
         completions.fold<int>(0, (sum, result) => sum + result.pointsEarned),
-        10,
+        15,
       );
       expect(
         completions.fold<int>(0, (sum, result) => sum + result.starsEarned),
         3,
       );
-      expect(progress.totalPoints, 10);
+      expect(progress.totalPoints, 15);
       expect(progress.starsEarned, 3);
       expect(progress.ayahsCompleted, 1);
       expect(logs, hasLength(1));

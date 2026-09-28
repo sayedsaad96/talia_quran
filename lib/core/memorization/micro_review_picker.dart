@@ -21,8 +21,9 @@ class MicroReviewPicker {
     if (eligible.isEmpty) return null;
 
     // Prefer upcoming (not-yet-due) ayahs; fall back to any memorized ayah.
-    final upcoming =
-        eligible.where((r) => r.nextReviewDate.isAfter(now)).toList();
+    final upcoming = eligible
+        .where((r) => r.nextReviewDate.isAfter(now))
+        .toList();
     final candidates = upcoming.isEmpty ? eligible : upcoming;
 
     // Rotate within the three oldest candidates so the pick changes daily

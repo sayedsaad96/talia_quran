@@ -61,12 +61,13 @@ class AdhanClipResolverTest {
     }
 
     @Test
-    fun `fajr-optimized profile is directly selectable as general`() {
-        // Choosing the Afasy fajr recording as the general muezzin is legal:
-        // it then plays for every prayer.
+    fun `bare legacy fajr profile is resolved for fajr only`() {
         assertEquals(
             "adhan_afasy_fajr",
-            AdhanClipResolver.rawResourceName("afasy_fajr", "dhuhr"),
+            AdhanClipResolver.rawResourceName("afasy_fajr", "fajr"),
         )
+        listOf("dhuhr", "asr", "maghrib", "isha").forEach { prayerKey ->
+            assertEquals("adhan", AdhanClipResolver.rawResourceName("afasy_fajr", prayerKey))
+        }
     }
 }

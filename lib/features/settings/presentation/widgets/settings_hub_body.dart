@@ -118,7 +118,8 @@ class SettingsHubBody extends StatelessWidget {
         _destination(
           context,
           icon: Icons.notifications_active_rounded,
-          title: l10n.settingsSectionProgressAchievements,
+          title: l10n.notifications,
+          subtitle: l10n.settingsHubReminders,
           page: const NotificationSettingsPage(),
         ),
       ],

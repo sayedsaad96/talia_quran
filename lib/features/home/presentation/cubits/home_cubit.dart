@@ -217,10 +217,39 @@ class HomeCubit extends Cubit<HomeState> {
       error = failure;
       plan = null;
     }
+    final recitation = await _khatmahRecitation(plan);
     final current = state;
     if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
-      emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
+      emit(
+        current.copyWith(
+          activeKhatmah: plan,
+          khatmahError: error,
+          continueRecitation: recitation,
+        ),
+      );
     }
+  }
+
+  /// Builds the khatmah "continue recitation" card from the khatmah's own
+  /// next unread page. The ordinary daily wird is a separate journey and
+  /// never feeds this card.
+  Future<ContinueRecitation?> _khatmahRecitation(KhatmahPlan? plan) async {
+    QuranPageDetail? page;
+    if (plan != null &&
+        plan.status == KhatmahStatus.active &&
+        plan.nextUnreadPage <= 604) {
+      try {
+        final result = await _getQuranPage(plan.nextUnreadPage);
+        page = result.fold((_) => null, (detail) => detail);
+      } catch (error, stackTrace) {
+        TaliaLogger.w('Failed to load khatmah page', error, stackTrace);
+      }
+    }
+    return const ContinueRecitationMapper().map(
+      isArabic: true,
+      activeKhatmah: plan,
+      khatmahPageDetail: page,
+    );
   }
 
   void _onProgressChanged(ProgressChangedReason reason) {
@@ -713,14 +742,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     final recent = await recentActivityFuture;
 
-    final continueRecitation = const ContinueRecitationMapper().map(
-      isArabic: true,
-      heroAction: heroAction,
-      lastRestorableLocation: lastLocation,
-      dailyWirdPageDetail: dailyWirdDetail,
-      activeKhatmah: activeKhatmah,
-      confirmedReadPages: progress?.readPagesCount ?? 0,
-    );
+    final continueRecitation = await _khatmahRecitation(activeKhatmah);
 
     return (
       greeting: occasion.greetingPeriod,

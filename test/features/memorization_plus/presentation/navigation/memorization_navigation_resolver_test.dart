@@ -118,6 +118,102 @@ void main() {
       },
     );
 
+    group('kidsMissionAfterCompletion', () {
+      const stage = KidsJourneyStage(
+        stageNumber: 1,
+        surahId: 114,
+        startAyah: 1,
+        endAyah: 6,
+        completedAyahs: [1, 2],
+        status: KidsJourneyStageStatus.current,
+      );
+      KidsSessionLog todayLog(String id, KidsMissionType type) =>
+          KidsSessionLog(
+            id: id,
+            surahId: 114,
+            ayahNumber: 1,
+            repeatsCompleted: 2,
+            pointsEarned: 10,
+            completedAt: DateTime.now(),
+            missionType: type,
+          );
+
+      test('ends the day instead of offering a refused mission (N3)', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsStages: const [stage],
+            // Default age-8 policy: two new ayahs per day, both done.
+            kidsLogs: [
+              todayLog('a', KidsMissionType.newMemorization),
+              todayLog('b', KidsMissionType.newMemorization),
+            ],
+          ),
+        );
+
+        final outcome = await resolver.kidsMissionAfterCompletion(
+          surahId: 114,
+          completedAyah: 2,
+        );
+
+        expect(outcome.mission, isNull);
+        expect(outcome.dailyGoalCap, 2);
+      });
+
+      test('honours the spent review budget like home does (N2)', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsStages: const [stage],
+            reviewRecords: [_dueKidsRecord(surahId: 114, ayahNumber: 1)],
+            // Default age-8 policy: three due reviews per day, all done.
+            kidsLogs: [
+              todayLog('a', KidsMissionType.dueReview),
+              todayLog('b', KidsMissionType.dueReview),
+              todayLog('c', KidsMissionType.dueReview),
+            ],
+          ),
+        );
+
+        final outcome = await resolver.kidsMissionAfterCompletion(
+          surahId: 114,
+          completedAyah: 2,
+        );
+
+        expect(outcome.mission?.type, KidsMissionType.newMemorization);
+        expect(outcome.mission?.startAyah, 3);
+        expect(outcome.dailyGoalCap, isNull);
+      });
+    });
+
+    test(
+      'a spent kids review budget hands the home surah back to the journey',
+      () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            reviewRecords: [_dueKidsRecord(surahId: 112, ayahNumber: 2)],
+            kidsLogs: [
+              for (final id in ['a', 'b', 'c'])
+                KidsSessionLog(
+                  id: id,
+                  surahId: 114,
+                  ayahNumber: 1,
+                  repeatsCompleted: 2,
+                  pointsEarned: 5,
+                  completedAt: DateTime.now(),
+                  missionType: KidsMissionType.dueReview,
+                ),
+            ],
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '114',
+        );
+      },
+    );
+
     test('custom adult plan opens both Today Plan and Review Quiz', () async {
       final resolver = MemorizationNavigationResolver(
         _FakeRepository(customPlan: _customPlan(3, PlanTargetUser.adult)),
@@ -213,6 +309,7 @@ class _FakeRepository implements MemorizationPlusRepository {
     this.kidsLogs = const [],
     this.reviewRecords = const [],
     this.parentSettings = const ParentSettings(),
+    this.kidsStages = const [],
   });
 
   final DailyPlan? cachedPlan;
@@ -220,6 +317,12 @@ class _FakeRepository implements MemorizationPlusRepository {
   final List<KidsSessionLog> kidsLogs;
   final List<AyahReviewRecord> reviewRecords;
   final ParentSettings parentSettings;
+  final List<KidsJourneyStage> kidsStages;
+
+  @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  }) async => Right(kidsStages);
 
   @override
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>

@@ -23,6 +23,29 @@ void main() {
       expect(MuezzinCatalog.isSupported('makkah'), isTrue);
       expect(MuezzinCatalog.isSupported('not_a_muezzin'), isFalse);
     });
+
+    test('Fajr-only recording is excluded from general selections', () {
+      expect(MuezzinCatalog.isGeneralSupported('makkah'), isTrue);
+      expect(MuezzinCatalog.isGeneralSupported('afasy_fajr'), isFalse);
+      expect(MuezzinCatalog.generalSelection('afasy_fajr'), 'default');
+    });
+
+    test('legacy Fajr-only general selection becomes a Fajr override', () {
+      expect(
+        MuezzinCatalog.fajrSelection(
+          generalMuezzinId: 'afasy_fajr',
+          fajrMuezzinId: '',
+        ),
+        'afasy_fajr',
+      );
+      expect(
+        MuezzinCatalog.fajrSelection(
+          generalMuezzinId: 'afasy_fajr',
+          fajrMuezzinId: 'default',
+        ),
+        'default',
+      );
+    });
   });
 
   group('soundProfileForPrayer', () {
@@ -34,6 +57,32 @@ void main() {
           fajrMuezzinId: 'qatami',
         ),
         'makkah',
+      );
+    });
+
+    test('legacy bare Fajr recording remains Fajr-only', () {
+      for (final prayerKey in <String>[
+        'dhuhr',
+        'asr',
+        'maghrib',
+        'isha',
+      ]) {
+        expect(
+          soundProfileForPrayer(
+            prayerKey: prayerKey,
+            muezzinId: 'afasy_fajr',
+            fajrMuezzinId: '',
+          ),
+          'default',
+        );
+      }
+      expect(
+        soundProfileForPrayer(
+          prayerKey: 'fajr',
+          muezzinId: 'afasy_fajr',
+          fajrMuezzinId: '',
+        ),
+        'fajr:afasy_fajr',
       );
     });
 
@@ -128,6 +177,29 @@ void main() {
         soundProfile: 'fajr:afasy_fajr',
       );
       expect(isha.androidSoundName, 'adhan');
+    });
+
+    test('bare legacy Fajr recording resolves only for Fajr', () {
+      final fajr = resolvePrayerSound(
+        athanEnabled: true,
+        prayerKey: 'fajr',
+        soundProfile: 'afasy_fajr',
+      );
+      expect(fajr.androidSoundName, 'adhan_afasy_fajr');
+
+      for (final prayerKey in <String>[
+        'dhuhr',
+        'asr',
+        'maghrib',
+        'isha',
+      ]) {
+        final nonFajr = resolvePrayerSound(
+          athanEnabled: true,
+          prayerKey: prayerKey,
+          soundProfile: 'afasy_fajr',
+        );
+        expect(nonFajr.androidSoundName, 'adhan');
+      }
     });
 
     test('unknown profile degrades to the default clip', () {

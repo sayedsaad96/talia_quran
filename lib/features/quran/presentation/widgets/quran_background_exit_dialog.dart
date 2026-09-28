@@ -26,9 +26,10 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
   final iconBgColor = (isDark ? AppColors.goldLight : AppColors.primary).withValues(alpha: 0.14);
   final primaryAccent = isDark ? AppColors.goldLight : AppColors.primary;
 
+  final l10n = context.l10n;
   final displayName = (surahName != null && surahName.isNotEmpty)
-      ? 'سورة $surahName'
-      : 'السورة الحالية';
+      ? '${l10n.surah} $surahName'
+      : l10n.currentSurah;
 
   return showDialog<QuranBackgroundExitAction>(
     context: context,
@@ -77,7 +78,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'التلاوة قيد التشغيل',
+                  l10n.exitDialogTitle,
                   style: AppTypography.titleMedium.copyWith(
                     color: titleColor,
                     fontWeight: FontWeight.bold,
@@ -91,7 +92,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'تستمع الآن إلى $displayName.\nهل تود استمرار الاستماع في الخلفية مع التحكم من شريط الإشعارات، أم إيقاف التلاوة والخروج؟',
+                l10n.exitDialogBody(displayName),
                 style: AppTypography.bodyMedium.copyWith(
                   color: subtitleColor,
                   height: 1.5,
@@ -109,7 +110,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                     QuranBackgroundExitAction.continueInBackground,
                   ),
                   icon: const Icon(Icons.play_circle_outline_rounded, size: 20),
-                  label: const Text('متابعة في الخلفية'),
+                  label: Text(l10n.exitDialogContinueBackground),
                   style: FilledButton.styleFrom(
                     backgroundColor: primaryAccent,
                     foregroundColor: isDark ? Colors.black : Colors.white,
@@ -126,7 +127,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                     QuranBackgroundExitAction.stopAndExit,
                   ),
                   icon: const Icon(Icons.stop_circle_outlined, size: 20),
-                  label: const Text('إيقاف التلاوة والخروج'),
+                  label: Text(l10n.exitDialogStopAndExit),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: BorderSide(
@@ -142,7 +143,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, null),
                   child: Text(
-                    'البقاء في التطبيق',
+                    l10n.exitDialogStayInApp,
                     style: TextStyle(color: subtitleColor),
                   ),
                 ),

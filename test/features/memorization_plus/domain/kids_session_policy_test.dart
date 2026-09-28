@@ -11,12 +11,13 @@ void main() {
       expect(policy.maxDueReviews, 1);
       expect(policy.maxSessionMinutes, 6);
       expect(policy.journeyStageSize, 3);
-      expect(policy.blockReviewRequired, isFalse);
       expect(policy.guidanceAudioDefault, isTrue);
-      expect(policy.maxListenRepetitions, 1);
+      // Pedagogically inverted: younger children need MORE listens, not
+      // fewer — three conscious repetitions before recall.
+      expect(policy.maxListenRepetitions, 3);
     });
 
-    test('ages eight to twelve require linked review and a larger stage', () {
+    test('ages eight to twelve get a larger quota and stage', () {
       final policy = KidsSessionPolicy.forAge(10);
 
       expect(policy.ageBand, KidsAgeBand.eightToTwelve);
@@ -24,10 +25,15 @@ void main() {
       expect(policy.maxDueReviews, 3);
       expect(policy.maxSessionMinutes, 10);
       expect(policy.journeyStageSize, 5);
-      expect(policy.blockReviewRequired, isTrue);
-      expect(policy.linkedReviewAyahs, 3);
       expect(policy.guidanceAudioDefault, isFalse);
       expect(policy.maxListenRepetitions, 2);
+    });
+
+    test('a missing or out-of-range stored age falls back to 8–12', () {
+      expect(KidsSessionPolicy.forChildAge(null), KidsSessionPolicy.forAge(8));
+      expect(KidsSessionPolicy.forChildAge(3), KidsSessionPolicy.forAge(8));
+      expect(KidsSessionPolicy.forChildAge(15), KidsSessionPolicy.forAge(8));
+      expect(KidsSessionPolicy.forChildAge(6), KidsSessionPolicy.forAge(6));
     });
 
     test('rejects ages outside the supported child path', () {

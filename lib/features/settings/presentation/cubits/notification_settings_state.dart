@@ -1,5 +1,7 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+
+enum NotificationSettingsFeedback { saveFailed, schedulingFailed }
 
 class NotificationSettingsState extends Equatable {
   const NotificationSettingsState({
@@ -23,6 +25,8 @@ class NotificationSettingsState extends Equatable {
     this.prayerAsr = true,
     this.prayerMaghrib = true,
     this.prayerIsha = true,
+    this.muezzinId = 'default',
+    this.fajrMuezzinId = '',
     this.quietHoursEnabled = false,
     this.quietHoursStart = 23,
     this.quietHoursEnd = 4,
@@ -38,6 +42,8 @@ class NotificationSettingsState extends Equatable {
     this.weeklyImpactTime = const TimeOfDay(hour: 16, minute: 0),
     this.tahajjudTime = const TimeOfDay(hour: 3, minute: 30),
     this.khatmahReminderTime = const TimeOfDay(hour: 17, minute: 0),
+    this.feedback,
+    this.feedbackRevision = 0,
   });
 
   final bool isLoading;
@@ -64,6 +70,8 @@ class NotificationSettingsState extends Equatable {
   final bool prayerAsr;
   final bool prayerMaghrib;
   final bool prayerIsha;
+  final String muezzinId;
+  final String fajrMuezzinId;
 
   final bool quietHoursEnabled;
   final int quietHoursStart;
@@ -82,6 +90,8 @@ class NotificationSettingsState extends Equatable {
   final TimeOfDay weeklyImpactTime;
   final TimeOfDay tahajjudTime;
   final TimeOfDay khatmahReminderTime;
+  final NotificationSettingsFeedback? feedback;
+  final int feedbackRevision;
 
   /// Counts the active reminders among the 10 main categories.
   int get enabledCount {
@@ -127,6 +137,8 @@ class NotificationSettingsState extends Equatable {
     bool? prayerAsr,
     bool? prayerMaghrib,
     bool? prayerIsha,
+    String? muezzinId,
+    String? fajrMuezzinId,
     bool? quietHoursEnabled,
     int? quietHoursStart,
     int? quietHoursEnd,
@@ -142,6 +154,8 @@ class NotificationSettingsState extends Equatable {
     TimeOfDay? tahajjudTime,
     TimeOfDay? weeklyImpactTime,
     TimeOfDay? khatmahReminderTime,
+    NotificationSettingsFeedback? feedback,
+    int? feedbackRevision,
   }) {
     return NotificationSettingsState(
       isLoading: isLoading ?? this.isLoading,
@@ -164,6 +178,8 @@ class NotificationSettingsState extends Equatable {
       prayerAsr: prayerAsr ?? this.prayerAsr,
       prayerMaghrib: prayerMaghrib ?? this.prayerMaghrib,
       prayerIsha: prayerIsha ?? this.prayerIsha,
+      muezzinId: muezzinId ?? this.muezzinId,
+      fajrMuezzinId: fajrMuezzinId ?? this.fajrMuezzinId,
       quietHoursEnabled: quietHoursEnabled ?? this.quietHoursEnabled,
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
@@ -179,6 +195,8 @@ class NotificationSettingsState extends Equatable {
       weeklyImpactTime: weeklyImpactTime ?? this.weeklyImpactTime,
       tahajjudTime: tahajjudTime ?? this.tahajjudTime,
       khatmahReminderTime: khatmahReminderTime ?? this.khatmahReminderTime,
+      feedback: feedback ?? this.feedback,
+      feedbackRevision: feedbackRevision ?? this.feedbackRevision,
     );
   }
 
@@ -204,6 +222,8 @@ class NotificationSettingsState extends Equatable {
     prayerAsr,
     prayerMaghrib,
     prayerIsha,
+    muezzinId,
+    fajrMuezzinId,
     quietHoursEnabled,
     quietHoursStart,
     quietHoursEnd,
@@ -219,5 +239,7 @@ class NotificationSettingsState extends Equatable {
     weeklyImpactTime,
     tahajjudTime,
     khatmahReminderTime,
+    feedback,
+    feedbackRevision,
   ];
 }

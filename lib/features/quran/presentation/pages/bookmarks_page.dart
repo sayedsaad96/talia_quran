@@ -159,9 +159,7 @@ class _EmptyBookmarks extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              context.isArabic
-                  ? 'لا توجد علامات مرجعية بعد'
-                  : 'No bookmarks yet',
+              context.l10n.emptyBookmarksTitle,
               style: AppTypography.titleMedium.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
@@ -169,9 +167,7 @@ class _EmptyBookmarks extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              context.isArabic
-                  ? 'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا'
-                  : 'Long-press any ayah while reading to save it as a bookmark',
+              context.l10n.emptyBookmarksHint,
               style: AppTypography.bodySmall.copyWith(
                 color: textColor,
                 height: 1.5,

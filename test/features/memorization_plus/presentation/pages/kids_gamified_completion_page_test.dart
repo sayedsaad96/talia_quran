@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,6 +60,30 @@ void main() {
         ),
       );
 
+      expect(find.text('Start mission'), findsNothing);
+      expect(find.text('Return to map'), findsOneWidget);
+    });
+
+    testWidgets('a used-up quota ends the day in place of Next (N3)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 1,
+            showNextButton: false,
+            dailyGoalCap: 1,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining("finished today's missions"), findsOneWidget);
       expect(find.text('Start mission'), findsNothing);
       expect(find.text('Return to map'), findsOneWidget);
     });
@@ -183,9 +208,7 @@ void main() {
         final mission = const KidsNextMissionResolver().resolve(
           activeSurahId: 114,
           stages: stages,
-          reviewRecords: [
-            _dueReviewRecord(surahId: 113, ayahNumber: 3),
-          ],
+          reviewRecords: [_dueReviewRecord(surahId: 113, ayahNumber: 3)],
           now: DateTime.utc(2026, 9, 24),
         );
 
@@ -194,6 +217,53 @@ void main() {
         expect(mission?.startAyah, 3);
       },
     );
+
+    testWidgets('the celebration fires confetti behind the reward card (W2)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 2,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+      // Confetti animates continuously, so pump a frame instead of
+      // settling — the widget is in the tree from the first build.
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // The completion moment is multi-sensory: a confetti burst plays
+      // behind the reward card.
+      expect(find.byType(ConfettiWidget), findsOneWidget);
+    });
+
+    testWidgets('a level-up celebration renders too (W2)', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 3,
+            pointsEarned: 15,
+            leveledUpTo: 2,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(ConfettiWidget), findsOneWidget);
+      expect(find.textContaining('Level'), findsOneWidget);
+    });
   });
 }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,6 +82,17 @@ abstract class MemorizationPlusLocalDatasource {
   Future<KidsProgressModel> getKidsLegacyCloudFloor();
   Future<void> saveKidsLegacyCloudFloor(KidsProgressModel progress);
   Future<List<KidsSessionLogModel>> getKidsSessionLogs();
+
+  /// Atomically mutates the kids session log list: the read, the mutation
+  /// and the write run under one per-owner lock so concurrent award and
+  /// cloud-sync writers can never lose each other's evidence.
+  Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
+    Future<List<KidsSessionLogModel>> Function(
+      List<KidsSessionLogModel> current,
+    )
+    mutate,
+  );
+
   Future<void> saveKidsSessionLog(KidsSessionLogModel log);
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs);
   Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds);

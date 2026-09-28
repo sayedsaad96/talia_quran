@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../entities/memorization_entities.dart';
+import '../services/kids_daily_budget.dart';
+import '../services/kids_due_review_policy.dart';
 
 /// The single actionable task shown on the kids home screen.
 final class KidsNextMission extends Equatable {
@@ -33,18 +35,22 @@ final class KidsNextMissionResolver {
     KidsNextMission? resumableMission,
     required List<AyahReviewRecord> reviewRecords,
     required DateTime now,
+    KidsDailyBudget budget = KidsDailyBudget.unlimited,
   }) {
     final dueReviews =
         reviewRecords
             .where(
               (record) =>
                   record.createdByMode == ReviewRecordCreatedByMode.kidsMode &&
-                  (record.lastRating == PerformanceRating.weak ||
-                      !record.nextReviewDate.toUtc().isAfter(now.toUtc())),
+                  KidsDueReviewPolicy.isDue(record, now),
             )
             .toList()
           ..sort((a, b) => a.nextReviewDate.compareTo(b.nextReviewDate));
-    if (dueReviews.isNotEmpty) {
+    // Due reviews lead the pipeline, but a daily budget keeps a persistent
+    // STT false-negative loop from starving the child of new memorization
+    // forever. An unlimited budget keeps the previous behavior — fail-open
+    // when policy or logs are unavailable to the caller.
+    if (dueReviews.isNotEmpty && !budget.dueReviewBudgetExhausted) {
       final record = dueReviews.first;
       return KidsNextMission(
         type: KidsMissionType.dueReview,
@@ -62,6 +68,10 @@ final class KidsNextMissionResolver {
         ayahNumbers: _completedOrRange(stage),
       );
     }
+
+    // Today's new-ayah quota is used up: never offer a mission the session
+    // gate would refuse (N3). Callers show the "day complete" card instead.
+    if (budget.newAyahLimitReached) return null;
 
     for (final stage in stages) {
       if (stage.status != KidsJourneyStageStatus.current) continue;
@@ -97,6 +107,7 @@ final class KidsNextMissionResolver {
     required DateTime now,
     required int justCompletedSurahId,
     required int justCompletedAyah,
+    KidsDailyBudget budget = KidsDailyBudget.unlimited,
   }) {
     final adjustedStages = stages
         .map(
@@ -111,6 +122,7 @@ final class KidsNextMissionResolver {
       resumableMission: resumableMission,
       reviewRecords: reviewRecords,
       now: now,
+      budget: budget,
     );
   }
 

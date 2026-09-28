@@ -22,9 +22,7 @@ class SupabaseRecordOwnerProvider implements RecordOwnerProvider {
   @override
   String get currentOwnerId {
     final id = _currentUserId();
-    return (id == null || id.isEmpty)
-        ? ReviewRecordIdentity.localOwnerId
-        : id;
+    return (id == null || id.isEmpty) ? ReviewRecordIdentity.localOwnerId : id;
   }
 
   @override

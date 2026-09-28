@@ -7,6 +7,7 @@ import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
 import '../../../../quran/domain/entities/quran_entities.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
+import '../../../domain/services/plan_schedule_policy.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -43,7 +44,6 @@ class MemorizationDailyPlanService {
 
       // BUG-7 FIX: Read custom plan settings and apply them
       final customPlan = await _datasource.getCustomPlan();
-      final effectiveNewPerDay = customPlan?.newAyahsPerDay ?? newAyahsPerDay;
       final nearRevisionLimit = customPlan?.nearRevisionCount ?? 10;
       final farRevisionLimit = customPlan?.farRevisionCount ?? 5;
       final reviewSelection = DailyPlanReviewQueue.select(
@@ -61,6 +61,24 @@ class MemorizationDailyPlanService {
       final retentionReview = await _planAyahsForRecords(
         reviewSelection.retention,
       );
+
+      // Plan settings drive the day: rest days serve reviews only, and new
+      // ayahs shrink to fit the session length after the required reviews.
+      final today = DateTime.now();
+      final isReviewDay =
+          customPlan != null &&
+          !PlanSchedulePolicy.isStudyDay(customPlan, today);
+      final effectiveNewPerDay = customPlan == null
+          ? newAyahsPerDay
+          : PlanSchedulePolicy.newAyahBudget(
+              customPlan,
+              reviewItemCount:
+                  weakRecovery.length +
+                  nearRevision.length +
+                  farRevision.length +
+                  retentionReview.length,
+              today: today,
+            );
 
       // Direction-aware memorization:
       //   startSurahId = where memorization BEGINS  (the "من" surah)
@@ -85,9 +103,10 @@ class MemorizationDailyPlanService {
 
       // New material remains direction-aware. Global reviews are selected
       // above, independently of this resume cursor.
-      while (isDescending
-          ? currentSurahId >= planEndSurahId
-          : currentSurahId <= planEndSurahId) {
+      while (effectiveNewPerDay > 0 &&
+          (isDescending
+              ? currentSurahId >= planEndSurahId
+              : currentSurahId <= planEndSurahId)) {
         final surahRecords = {
           for (final r in allRecords.where((r) => r.surahId == currentSurahId))
             r.ayahNumber: r,
@@ -154,6 +173,9 @@ class MemorizationDailyPlanService {
         farRevision: farRevision,
         completedAyahNums: const [],
         retentionReview: retentionReview,
+        dueBacklogCount: reviewSelection.dueBacklogCount,
+        newMemorizationBlocked: reviewSelection.blocksNewMemorization,
+        isReviewDay: isReviewDay,
       );
 
       // Cache the plan and mark it dirty so offline generates upload on reconnect.
@@ -201,8 +223,8 @@ class MemorizationDailyPlanService {
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async {
     try {
       final cached = await _datasource.getCachedDailyPlan();
-      final now = DateTime.now().toUtc();
-      if (cached != null && _isSameUtcDay(cached.generatedAt, now)) {
+      final now = DateTime.now();
+      if (cached != null && _isSameLocalDay(cached.generatedAt, now)) {
         return Right(cached);
       }
 
@@ -282,10 +304,14 @@ class MemorizationDailyPlanService {
     }
   }
 
-  bool _isSameUtcDay(DateTime a, DateTime b) {
-    final au = a.toUtc();
-    final bu = b.toUtc();
-    return au.year == bu.year && au.month == bu.month && au.day == bu.day;
+  /// The plan rolls over with the learner's local calendar day, matching the
+  /// local-day study keys used by the review evidence pipeline. A UTC day
+  /// comparison would regenerate (and wipe same-day completions) mid-afternoon
+  /// in UTC+13/+14 or mid-morning in UTC−11 zones.
+  bool _isSameLocalDay(DateTime a, DateTime b) {
+    final al = a.toLocal();
+    final bl = b.toLocal();
+    return al.year == bl.year && al.month == bl.month && al.day == bl.day;
   }
 
   bool _isSurahInCustomPlanRange(int surahId, CustomMemorizationPlan plan) {

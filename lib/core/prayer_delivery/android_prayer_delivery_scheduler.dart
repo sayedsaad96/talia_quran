@@ -24,8 +24,8 @@ abstract final class PrayerDeliveryContract {
 /// can stay on the legacy FLN path.
 class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
   AndroidPrayerDeliveryScheduler({MethodChannel? channel})
-      : _channel = channel ??
-            const MethodChannel(PrayerDeliveryContract.channelName);
+    : _channel =
+          channel ?? const MethodChannel(PrayerDeliveryContract.channelName);
 
   final MethodChannel _channel;
 
@@ -34,10 +34,7 @@ class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
     List<PrayerScheduledEvent> events,
   ) async {
     if (events.isEmpty) {
-      return const PrayerDeliveryResult(
-        success: true,
-        scheduledCount: 0,
-      );
+      return const PrayerDeliveryResult(success: true, scheduledCount: 0);
     }
     final result = await _invoke(
       PrayerDeliveryContract.methodScheduleEvents,
@@ -77,16 +74,14 @@ class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
 
   @override
   Future<void> cancelPrayerEvent(PrayerScheduledEvent event) async {
-    await _invoke(
-      PrayerDeliveryContract.methodCancelEvent,
-      <String, Object>{'event': event.toMap()},
-    );
+    await _invoke(PrayerDeliveryContract.methodCancelEvent, <String, Object>{
+      'event': event.toMap(),
+    });
   }
 
   @override
   Future<bool> canScheduleExact() async {
-    final result =
-        await _invoke(PrayerDeliveryContract.methodCanScheduleExact);
+    final result = await _invoke(PrayerDeliveryContract.methodCanScheduleExact);
     return result?['canScheduleExact'] == true;
   }
 
@@ -97,10 +92,7 @@ class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
     Map<String, Object>? arguments,
   ]) async {
     try {
-      final result = await _channel.invokeMethod<Object?>(
-        method,
-        arguments,
-      );
+      final result = await _channel.invokeMethod<Object?>(method, arguments);
       return result is Map<Object?, Object?> ? result : null;
     } on PlatformException catch (error, stack) {
       TaliaLogger.w(

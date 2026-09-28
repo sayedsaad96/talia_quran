@@ -560,6 +560,9 @@ class DailyPlanModel extends DailyPlan {
     required super.completedAyahNums,
     super.retentionReview = const [],
     super.completedAyahKeys = const [],
+    super.dueBacklogCount = 0,
+    super.newMemorizationBlocked = false,
+    super.isReviewDay = false,
   });
 
   factory DailyPlanModel.fromJson(Map<String, dynamic> json) {
@@ -590,6 +593,9 @@ class DailyPlanModel extends DailyPlan {
       completedAyahKeys: (json['completedAyahKeys'] as List<dynamic>? ?? [])
           .whereType<String>()
           .toList(),
+      dueBacklogCount: (json['dueBacklogCount'] as num?)?.toInt() ?? 0,
+      newMemorizationBlocked: json['newMemorizationBlocked'] as bool? ?? false,
+      isReviewDay: json['isReviewDay'] as bool? ?? false,
     );
   }
 
@@ -614,6 +620,9 @@ class DailyPlanModel extends DailyPlan {
       'completedAyahNums': completedAyahNums,
       'completedAyahKeys': completedAyahKeys,
       'retentionReview': toList(retentionReview),
+      'dueBacklogCount': dueBacklogCount,
+      'newMemorizationBlocked': newMemorizationBlocked,
+      'isReviewDay': isReviewDay,
     };
   }
 
@@ -627,6 +636,9 @@ class DailyPlanModel extends DailyPlan {
     completedAyahNums: p.completedAyahNums,
     retentionReview: p.retentionReview,
     completedAyahKeys: p.completedAyahKeys,
+    dueBacklogCount: p.dueBacklogCount,
+    newMemorizationBlocked: p.newMemorizationBlocked,
+    isReviewDay: p.isReviewDay,
   );
 }
 

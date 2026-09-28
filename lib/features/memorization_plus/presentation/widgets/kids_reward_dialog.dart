@@ -1,17 +1,24 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
-class KidsRewardDialog extends StatelessWidget {
+/// W2 — multi-sensory celebration: the reward card plays a confetti burst and
+/// a celebratory haptic when it appears. Both respect the platform's
+/// disable-animations setting; the haptic still fires for reduced-motion
+/// users because it is not visual motion.
+class KidsRewardDialog extends StatefulWidget {
   const KidsRewardDialog({
     super.key,
     required this.starsEarned,
     this.pointsEarned = 0,
     this.leveledUpTo,
     this.showNextButton = true,
+    this.dailyGoalCap,
     this.onNext,
     this.onReturnToMap,
   });
@@ -24,6 +31,110 @@ class KidsRewardDialog extends StatelessWidget {
   /// K11: new level when this session triggered a level-up; null otherwise.
   final int? leveledUpTo;
   final bool showNextButton;
+
+  /// Today's new-ayah quota when this completion used it up (N3); the card
+  /// then celebrates the finished day in place of the "Next" mission.
+  final int? dailyGoalCap;
+  final VoidCallback? onNext;
+  final VoidCallback? onReturnToMap;
+
+  @override
+  State<KidsRewardDialog> createState() => _KidsRewardDialogState();
+}
+
+class _KidsRewardDialogState extends State<KidsRewardDialog> {
+  late final ConfettiController _confetti;
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _confetti = ConfettiController(duration: const Duration(seconds: 3));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // A level-up is the strongest moment in the loop — pair it with a
+    // heavier haptic so the celebration is felt, not just seen.
+    final haptic = widget.leveledUpTo != null
+        ? HapticFeedback.heavyImpact
+        : HapticFeedback.mediumImpact;
+    haptic();
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      _confetti.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    return Stack(
+      children: [
+        _RewardCard(
+          starsEarned: widget.starsEarned,
+          pointsEarned: widget.pointsEarned,
+          leveledUpTo: widget.leveledUpTo,
+          showNextButton: widget.showNextButton,
+          dailyGoalCap: widget.dailyGoalCap,
+          onNext: widget.onNext,
+          onReturnToMap: widget.onReturnToMap,
+        ),
+        // Confetti bursts from behind the card's top edge — the visual peak
+        // of the celebration, skipped entirely for reduced-motion users.
+        if (!disableAnimations)
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confetti,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                numberOfParticles: widget.leveledUpTo != null ? 45 : 25,
+                maxBlastForce: 18,
+                minBlastForce: 8,
+                colors: const [
+                  KidsTheme.goldStar,
+                  KidsTheme.forestGreen,
+                  KidsTheme.mintGlow,
+                  KidsTheme.reviewPurple,
+                  KidsTheme.skyTop,
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _RewardCard extends StatelessWidget {
+  const _RewardCard({
+    required this.starsEarned,
+    required this.pointsEarned,
+    this.leveledUpTo,
+    this.showNextButton = true,
+    this.dailyGoalCap,
+    this.onNext,
+    this.onReturnToMap,
+  });
+
+  final int starsEarned;
+  final int pointsEarned;
+  final int? leveledUpTo;
+  final bool showNextButton;
+
+  /// Today's new-ayah quota when this completion used it up (N3); the card
+  /// then celebrates the finished day in place of the "Next" mission.
+  final int? dailyGoalCap;
   final VoidCallback? onNext;
   final VoidCallback? onReturnToMap;
 
@@ -90,6 +201,17 @@ class KidsRewardDialog extends StatelessWidget {
                 ),
             ],
           ),
+          if (dailyGoalCap != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.l10n.kidsGamifiedDailyLimitReached(dailyGoalCap!),
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [

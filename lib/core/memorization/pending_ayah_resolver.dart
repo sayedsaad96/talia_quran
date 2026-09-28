@@ -20,12 +20,17 @@ final class PendingAyahTarget {
     required this.startAyah,
     required this.blockSize,
     required this.intent,
+    this.isReview = false,
   });
 
   final int surahId;
   final int startAyah;
   final int blockSize;
   final PendingAyahIntent intent;
+
+  /// True when the target is recall work on an already-reviewed ayah, so it
+  /// must launch as a review rather than a memorize session.
+  final bool isReview;
 }
 
 /// Inputs for [PendingAyahResolver.resolve] — pure data, no I/O.
@@ -79,6 +84,7 @@ final class PendingAyahResolver {
           startAyah: pending.ayahNumber,
           blockSize: blockSize,
           intent: PendingAyahIntent.continueDailyPlan,
+          isReview: !pending.isNew,
         );
       }
     }

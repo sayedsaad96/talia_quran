@@ -230,6 +230,8 @@ void main() {
   ) async {
     await repository.createPlan(plan);
     await pump(tester);
+    await tester.tap(find.byKey(const Key('khatmah_dashboard_more_menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('khatmah_dashboard_abandon_button')));
     await tester.pumpAndSettle();
     await repository.deletePlan(expectedPlanId: 'p');
@@ -253,6 +255,9 @@ void main() {
     );
     await tester.ensureVisible(button);
     await tester.tap(button);
+    await tester.pumpAndSettle();
+    // Schedule changes are previewed first (K-U2).
+    await tester.tap(find.byKey(const Key('khatmah_adjust_apply_button')));
     await tester.pumpAndSettle();
     expect(find.text('End date recalibrated smoothly'), findsNothing);
     expect(cubit.state, isA<KhatmahProgressFailure>());

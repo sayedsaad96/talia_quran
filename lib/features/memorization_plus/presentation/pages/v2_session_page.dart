@@ -71,13 +71,28 @@ class V2SessionPage extends StatelessWidget {
             blockSize: blockSize,
             launchContext: launchContext,
           ),
-      child: const _V2SessionView(),
+      child: _V2SessionView(
+        surahId: surahId,
+        startAyah: startAyah,
+        blockSize: blockSize,
+        launchContext: launchContext,
+      ),
     );
   }
 }
 
 class _V2SessionView extends StatefulWidget {
-  const _V2SessionView();
+  const _V2SessionView({
+    required this.surahId,
+    required this.startAyah,
+    required this.blockSize,
+    required this.launchContext,
+  });
+
+  final int surahId;
+  final int startAyah;
+  final int blockSize;
+  final LearningLaunchContext launchContext;
 
   @override
   State<_V2SessionView> createState() => _V2SessionViewState();
@@ -105,9 +120,15 @@ class _V2SessionViewState extends State<_V2SessionView> {
     final cubit = context.read<MemorizationSessionCubit>();
     switch (action) {
       case V2RecitationResultAction.retryNow:
-        // The engine still sits in remediation after a failed attempt —
-        // jump straight back into the reciting phase.
-        await cubit.retryRecitationFromRemediation();
+        // A near miss stays in reciting: record again right away. After a
+        // real failure the engine sits in remediation — jump back to reciting.
+        final current = cubit.state;
+        if (current is MSActive &&
+            current.sessionState.phase == V2SessionPhase.reciting) {
+          await cubit.startRecording();
+        } else {
+          await cubit.retryRecitationFromRemediation();
+        }
       case V2RecitationResultAction.reviewAyah:
       case V2RecitationResultAction.dismiss:
       case null:
@@ -126,21 +147,30 @@ class _V2SessionViewState extends State<_V2SessionView> {
     final action = await showDialog<_V2SessionExitAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.memorizationExitSessionTitle),
         content: Text(l10n.memorizationExitSessionMessage),
+        actionsOverflowDirection: VerticalDirection.up,
+        actionsOverflowButtonSpacing: 4,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.cancel),
           ),
+          // Discarding is destructive: it is visually distinct from saving.
           TextButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, _V2SessionExitAction.saveAndLeave),
-            child: Text(l10n.memorizationSaveAndLeave),
-          ),
-          TextButton(
+            key: const Key('v2_exit_discard_button'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
             onPressed: () =>
                 Navigator.pop(dialogContext, _V2SessionExitAction.discard),
             child: Text(l10n.memorizationDiscardSession),
+          ),
+          FilledButton(
+            key: const Key('v2_exit_save_button'),
+            onPressed: () =>
+                Navigator.pop(dialogContext, _V2SessionExitAction.saveAndLeave),
+            child: Text(l10n.memorizationSaveAndLeave),
           ),
         ],
       ),
@@ -206,9 +236,7 @@ class _V2SessionViewState extends State<_V2SessionView> {
           return;
         }
         if (state is MSActive && state.lastEvaluation != null) {
-          unawaited(
-            _maybeShowResultSheet(context, state.lastEvaluation!),
-          );
+          unawaited(_maybeShowResultSheet(context, state.lastEvaluation!));
           return;
         }
         if (state is MSCompleted && state.awards.isNotEmpty) {
@@ -230,7 +258,11 @@ class _V2SessionViewState extends State<_V2SessionView> {
                 ? AppColors.darkBackground
                 : AppColors.lightBackground,
             appBar: AppBar(
-              title: Text(context.l10n.memorizationSessionTitle),
+              title: Text(
+                state is MSActive && state.sessionState.isReview
+                    ? context.l10n.v2ReviewSessionTitle
+                    : context.l10n.memorizationSessionTitle,
+              ),
               backgroundColor: isDark
                   ? AppColors.darkSurface
                   : AppColors.primary,
@@ -250,7 +282,15 @@ class _V2SessionViewState extends State<_V2SessionView> {
     if (state is MSError) {
       return ErrorStateWidget(
         message: context.localizedCubitMessage(state.message),
-        onRetry: () => context.go(AppRoutes.memorizationPlus),
+        // Retry the failed session start itself. Navigating away would
+        // re-enter the adult entry resolver, which can bounce the user
+        // straight back into the same failing session.
+        onRetry: () => context.read<MemorizationSessionCubit>().startSession(
+          surahId: widget.surahId,
+          startAyah: widget.startAyah,
+          blockSize: widget.blockSize,
+          launchContext: widget.launchContext,
+        ),
       );
     }
     if (state is MSCompleted) {

@@ -23,8 +23,7 @@ abstract final class PrayerDeliveryVersion {
   static const String prefsKey = 'prayer_delivery_version';
 
   /// Reads the persisted version, defaulting to [legacy].
-  static int read(SharedPreferences prefs) =>
-      prefs.getInt(prefsKey) ?? legacy;
+  static int read(SharedPreferences prefs) => prefs.getInt(prefsKey) ?? legacy;
 
   /// Persists a new version. Callers must only write [nativeAndroidV2]
   /// after verifying native scheduling succeeded (§22 step 5–6).

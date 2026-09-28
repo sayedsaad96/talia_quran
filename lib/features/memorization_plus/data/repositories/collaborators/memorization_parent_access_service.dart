@@ -406,8 +406,10 @@ class MemorizationParentAccessService {
   Future<Either<Failure, void>> setIsParentMode(bool value) async {
     try {
       final result = await setParentGuardianMode(value);
-      final Either<Failure, void> folded =
-          result.fold<Either<Failure, void>>(Left.new, (_) => const Right(null));
+      final Either<Failure, void> folded = result.fold<Either<Failure, void>>(
+        Left.new,
+        (_) => const Right(null),
+      );
       return folded;
     } catch (e) {
       return Left(CacheFailure.from(e));

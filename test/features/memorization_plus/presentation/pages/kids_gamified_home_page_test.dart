@@ -9,6 +9,7 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_day_complete_card.dart';
 
 void main() {
   setUpAll(() {
@@ -53,7 +54,9 @@ void main() {
       );
 
       expect(find.text('Welcome, memorization hero!'), findsOneWidget);
-      expect(find.text('Level 2 — 25/100'), findsOneWidget);
+      // New early curve: level 2 step costs 200 points with a 50-point
+      // first step, so 150 total points = 100/200 = 50% of level 2.
+      expect(find.text('Level 2 — 50/100'), findsOneWidget);
       expect(find.text('7 stars'), findsOneWidget);
       expect(find.text('Last mission'), findsOneWidget);
       expect(find.text('Memorization House 2'), findsOneWidget);
@@ -117,7 +120,46 @@ void main() {
       expect(location, isNot(AppRoutes.quran));
     });
 
-    testWidgets('due review mission is titled Ready for review, not Last mission', (
+    testWidgets(
+      'due review mission is titled Ready for review, not Last mission',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        final reviewState = _loadedState.copyWith(
+          nextMission: const KidsNextMission(
+            type: KidsMissionType.dueReview,
+            surahId: 114,
+            ayahNumbers: [2],
+          ),
+        );
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedHomeContent(
+              state: reviewState,
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+            ),
+          ),
+        );
+
+        // The SRS-first resolver surfaced a due review, so the card must not
+        // present it as yesterday's ("last") mission.
+        expect(find.text('Ready for review'), findsOneWidget);
+        expect(find.text('Last mission'), findsNothing);
+        // N7: the card describes the ayah the review opens (stage 1), never the
+        // current memorization stage's range and progress (stage 2).
+        expect(find.textContaining('Ayahs 2-2'), findsOneWidget);
+        expect(find.textContaining('Ayahs 3-4'), findsNothing);
+      },
+    );
+
+    testWidgets('a used-up daily quota shows the day-complete card (N3)', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
@@ -125,18 +167,15 @@ void main() {
       addTearDown(tester.view.reset);
       addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
-      final reviewState = _loadedState.copyWith(
-        nextMission: const KidsNextMission(
-          type: KidsMissionType.dueReview,
-          surahId: 114,
-          ayahNumbers: [2],
-        ),
+      final dayDoneState = _loadedState.copyWith(
+        clearNextMission: true,
+        dailyGoalCap: 1,
       );
 
       await tester.pumpWidget(
         _TestApp(
           child: KidsGamifiedHomeContent(
-            state: reviewState,
+            state: dayDoneState,
             onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
@@ -145,10 +184,11 @@ void main() {
         ),
       );
 
-      // The SRS-first resolver surfaced a due review, so the card must not
-      // present it as yesterday's ("last") mission.
-      expect(find.text('Ready for review'), findsOneWidget);
-      expect(find.text('Last mission'), findsNothing);
+      expect(find.byType(KidsDayCompleteCard), findsOneWidget);
+      expect(find.textContaining("finished today's missions"), findsOneWidget);
+      // No mission the session gate would refuse.
+      expect(find.byType(KidsMissionCard), findsNothing);
+      expect(find.text('Continue now'), findsNothing);
     });
 
     testWidgets('finished journey replaces the mission card with celebration', (
@@ -188,12 +228,15 @@ void main() {
 
       // No stage and no mission: celebrate instead of a stale CTA.
       expect(find.byType(KidsMissionCard), findsNothing);
-      expect(find.textContaining('completed the current memorization journey'),
-          findsOneWidget);
+      expect(
+        find.textContaining('completed the current memorization journey'),
+        findsOneWidget,
+      );
       expect(find.text('Continue now'), findsNothing);
     });
 
-    testWidgets('renders correctly with no completed stages (first-time user)',
+    testWidgets(
+      'renders correctly with no completed stages (first-time user)',
       (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(900, 1200);

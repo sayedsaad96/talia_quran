@@ -19,4 +19,21 @@ class AzkarRepositoryImpl implements AzkarRepository {
       return Left(CacheFailure.from(e));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async {
+    final results = <AzkarCategory, List<Zikr>>{};
+    for (final category in AzkarCategory.values) {
+      final result = await getAzkar(category);
+      var list = const <Zikr>[];
+      var failed = false;
+      result.fold(
+        (_) => failed = true,
+        (items) => list = items,
+      );
+      if (failed) return const Left(CacheFailure('Failed to load azkar corpus'));
+      results[category] = list;
+    }
+    return Right(results);
+  }
 }

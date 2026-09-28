@@ -32,6 +32,23 @@ class KidsProgress extends Equatable {
       ayahsCompleted = 0,
       lastSessionAt = null;
 
+  /// Points required to complete level step [level] (i.e. to move from
+  /// [level] to [level] + 1).
+  ///
+  /// The first step is deliberately cheap (50 points ≈ 5 sessions) so a
+  /// young child levels up within their first week — the strongest early
+  /// motivator — while later steps keep the linear [level] * 100 growth.
+  static int pointsForLevelStep(int level) => level <= 1 ? 50 : level * 100;
+
+  /// Total points required to reach [level] from zero.
+  static int cumulativePointsForLevel(int level) {
+    var total = 0;
+    for (var step = 1; step < level; step++) {
+      total += pointsForLevelStep(step);
+    }
+    return total;
+  }
+
   final int totalPoints;
   final int currentLevel;
   final int currentStreak;
@@ -39,17 +56,12 @@ class KidsProgress extends Equatable {
   final int ayahsCompleted;
   final DateTime? lastSessionAt;
 
-  /// Points needed to reach next level (exponential growth)
-  int get pointsForNextLevel => currentLevel * 100;
+  /// Points needed to reach the next level.
+  int get pointsForNextLevel => pointsForLevelStep(currentLevel);
 
-  /// Points earned in current level
-  int get pointsInCurrentLevel {
-    int spent = 0;
-    for (int i = 1; i < currentLevel; i++) {
-      spent += i * 100;
-    }
-    return totalPoints - spent;
-  }
+  /// Points earned in the current level.
+  int get pointsInCurrentLevel =>
+      totalPoints - cumulativePointsForLevel(currentLevel);
 
   double get levelProgress => pointsInCurrentLevel / pointsForNextLevel;
 
@@ -78,18 +90,13 @@ class KidsProgress extends Equatable {
   }
 
   KidsProgress addPoints(int points, {int stars = 1}) {
-    assert(stars >= 1 && stars <= 3);
+    final clampedStars = stars.clamp(0, 3);
     final newTotal = totalPoints + points;
+    // Levels are pure thresholds over the cumulative points; the shared
+    // curve in [pointsForLevelStep] keeps entity and projection consistent.
     int level = currentLevel;
-    int needed = level * 100;
-    int spent = 0;
-    for (int i = 1; i < level; i++) {
-      spent += i * 100;
-    }
-    while (newTotal - spent >= needed) {
-      spent += needed;
+    while (newTotal >= cumulativePointsForLevel(level + 1)) {
       level++;
-      needed = level * 100;
     }
 
     final now = DateTime.now().toUtc();
@@ -98,7 +105,7 @@ class KidsProgress extends Equatable {
       totalPoints: newTotal,
       currentLevel: level,
       currentStreak: currentStreak,
-      starsEarned: starsEarned + stars,
+      starsEarned: starsEarned + clampedStars,
       ayahsCompleted: ayahsCompleted + 1,
       lastSessionAt: now,
     );

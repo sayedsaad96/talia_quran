@@ -4,12 +4,26 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
 import '../../widgets/settings_group.dart';
+import '../../widgets/settings_prayer_notification_tiles.dart';
 import '../../widgets/settings_prayer_tiles.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
 
 /// Prayer times and Prayer Companion, kept in two separate groups.
 class PrayerSettingsPage extends StatelessWidget {
   const PrayerSettingsPage({super.key});
+
+  static final _prayerTimesSectionKey = GlobalKey();
+
+  void _scrollToPrayerTimes(BuildContext context) {
+    final targetContext = _prayerTimesSectionKey.currentContext;
+    if (targetContext == null) return;
+    Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +33,7 @@ class PrayerSettingsPage extends StatelessWidget {
       title: context.l10n.homePrayerTimes,
       children: [
         SettingsGroup(
+          key: _prayerTimesSectionKey,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -26,6 +41,15 @@ class PrayerSettingsPage extends StatelessWidget {
                 vertical: AppSpacing.sm,
               ),
               child: PrayerTimesSettingsSection(isDark: isDark),
+            ),
+          ],
+        ),
+        SettingsGroup(
+          title: context.l10n.settingsRemindersPrayer,
+          children: [
+            PrayerNotificationSettingsSection(
+              isDark: isDark,
+              onConfigurePrayerTimes: () => _scrollToPrayerTimes(context),
             ),
           ],
         ),

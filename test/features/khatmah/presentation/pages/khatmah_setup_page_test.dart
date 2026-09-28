@@ -72,18 +72,27 @@ void main() {
       expect(find.byKey(const Key('khatmah_setup_preset_20')), findsOneWidget);
 
       // Tap preset 2 (604 / 2 = 302 days)
+      await tester.ensureVisible(
+        find.byKey(const Key('khatmah_setup_preset_2')),
+      );
       await tester.tap(find.byKey(const Key('khatmah_setup_preset_2')));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('302'), findsOneWidget);
 
       // Tap preset 10 (604 / 10 = 61 days)
+      await tester.ensureVisible(
+        find.byKey(const Key('khatmah_setup_preset_10')),
+      );
       await tester.tap(find.byKey(const Key('khatmah_setup_preset_10')));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('61'), findsOneWidget);
 
       // Tap preset 20 (604 / 20 = 31 days)
+      await tester.ensureVisible(
+        find.byKey(const Key('khatmah_setup_preset_20')),
+      );
       await tester.tap(find.byKey(const Key('khatmah_setup_preset_20')));
       await tester.pumpAndSettle();
 
@@ -119,6 +128,7 @@ void main() {
       // Toggle dedication
       final toggle = find.byKey(const Key('khatmah_dedication_toggle'));
       expect(toggle, findsOneWidget);
+      await tester.ensureVisible(toggle);
       await tester.tap(toggle);
       await tester.pumpAndSettle();
 
@@ -162,6 +172,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final submitBtn = find.byKey(const Key('khatmah_setup_submit_button'));
+    await tester.ensureVisible(submitBtn);
     await tester.tap(submitBtn);
     await tester.pumpAndSettle();
 
@@ -193,9 +204,15 @@ void main() {
 
       await tester.pumpWidget(buildWidget(cubit: cubit));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('khatmah_setup_submit_button')),
+      );
       await tester.tap(find.byKey(const Key('khatmah_setup_submit_button')));
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(
+        find.byKey(const Key('khatmah_setup_abandon_existing_button')),
+      );
       await tester.tap(
         find.byKey(const Key('khatmah_setup_abandon_existing_button')),
       );
@@ -241,9 +258,13 @@ void main() {
     addTearDown(cubit.close);
     await tester.pumpWidget(buildWidget(cubit: cubit));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('khatmah_setup_submit_button')),
+    );
     await tester.tap(find.byKey(const Key('khatmah_setup_submit_button')));
     await tester.pumpAndSettle();
     final end = find.byKey(const Key('khatmah_setup_abandon_existing_button'));
+    await tester.ensureVisible(end);
     await tester.tap(end);
     await tester.pumpAndSettle();
     await tester.tap(
@@ -283,5 +304,59 @@ void main() {
           .onPressed,
       isNotNull,
     );
+  });
+
+  testWidgets('a Ramadan duration creates a 30-day khatmah (C7)', (
+    tester,
+  ) async {
+    when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+    final cubit = KhatmahSetupCubit(mockCreateKhatmah);
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+
+    final ramadan = find.byKey(const Key('khatmah_setup_duration_30'));
+    await tester.ensureVisible(ramadan);
+    await tester.tap(ramadan);
+    await tester.pumpAndSettle();
+    final submitBtn = find.byKey(const Key('khatmah_setup_submit_button'));
+    await tester.ensureVisible(submitBtn);
+    await tester.tap(submitBtn);
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockCreateKhatmah(
+        any(
+          that: isA<KhatmahPlan>()
+              .having((p) => p.targetDays, 'targetDays', 30)
+              .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 21),
+        ),
+      ),
+    ).called(1);
+  });
+
+  testWidgets('a start page begins the khatmah there (C7)', (tester) async {
+    when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+    final cubit = KhatmahSetupCubit(mockCreateKhatmah);
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+
+    final startPage = find.byKey(const Key('khatmah_setup_start_page_input'));
+    await tester.ensureVisible(startPage);
+    await tester.enterText(startPage, '٢٨٢');
+    await tester.pumpAndSettle();
+    final submitBtn = find.byKey(const Key('khatmah_setup_submit_button'));
+    await tester.ensureVisible(submitBtn);
+    await tester.tap(submitBtn);
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockCreateKhatmah(
+        any(
+          that: isA<KhatmahPlan>().having((p) => p.startPage, 'startPage', 282),
+        ),
+      ),
+    ).called(1);
   });
 }

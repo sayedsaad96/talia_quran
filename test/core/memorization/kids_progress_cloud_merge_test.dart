@@ -158,6 +158,57 @@ void main() {
     expect(rebuilt, const KidsProgress.initial());
   });
 
+  test('review points add progress without inflating stars or ayah counts', () {
+    final reward = KidsSessionLog(
+      id: 'reward-1',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 3,
+      pointsEarned: 10,
+      completedAt: DateTime.utc(2026, 8, 1),
+    );
+    final review = KidsSessionLog(
+      id: 'review-1',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 1,
+      pointsEarned: 5,
+      completedAt: DateTime.utc(2026, 8, 8),
+      missionType: KidsMissionType.dueReview,
+    );
+
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection([
+      reward,
+      review,
+    ]);
+
+    // The reduced review reward counts toward points (a review day is real
+    // work) but never toward mastery stars or completed-ayah totals.
+    expect(rebuilt.totalPoints, 15);
+    expect(rebuilt.starsEarned, 3);
+    expect(rebuilt.ayahsCompleted, 1);
+  });
+
+  test('the early level curve levels up after fifty points', () {
+    final logs = List.generate(
+      5,
+      (index) => KidsSessionLog(
+        id: 'reward-$index',
+        surahId: 114,
+        ayahNumber: index + 1,
+        repeatsCompleted: 1,
+        pointsEarned: 10,
+        completedAt: DateTime.utc(2026, 8, index + 1),
+      ),
+    );
+
+    // Five base-reward sessions (50 points) reach level 2 under the cheap
+    // first-step curve — a first-week level-up for young children.
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(logs);
+    expect(rebuilt.totalPoints, 50);
+    expect(rebuilt.currentLevel, 2);
+  });
+
   test('projection deduplicates the same rewarded ayah across devices', () {
     final local = KidsSessionLog(
       id: 'local',

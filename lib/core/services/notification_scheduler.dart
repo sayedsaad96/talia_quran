@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
+import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
 import '../prayer_delivery/android_prayer_delivery_scheduler.dart';
 import '../prayer_delivery/prayer_delivery_coordinator.dart';
@@ -109,12 +110,20 @@ class NotificationScheduler {
        _getActiveKhatmah = getActiveKhatmah,
        _prayerCompanionPlanner = prayerCompanionPlanner,
        _prayerCompanionPreferences = prayerCompanionPreferences,
-       _prayerDeliveryCoordinator = prayerDeliveryCoordinator ??
+       _prayerDeliveryCoordinator =
+           prayerDeliveryCoordinator ??
            (Platform.isAndroid
                ? PrayerDeliveryCoordinator(AndroidPrayerDeliveryScheduler())
                : null);
 
   String? _lastRollingDateKey;
+  Future<void> _refreshQueue = Future<void>.value();
+
+  Future<T> _enqueueRefresh<T>(Future<T> Function() refresh) {
+    final operation = _refreshQueue.then((_) => refresh());
+    _refreshQueue = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
+  }
 
   /// Reschedules every enabled reminder. Called from app resume, locale
   /// changes and first launch — none of which may surface plugin errors,
@@ -124,9 +133,23 @@ class NotificationScheduler {
     bool force = false,
   }) async {
     try {
-      await _refreshNotifications(l10n, force: force);
+      await _enqueueRefresh(() => _refreshNotifications(l10n, force: force));
     } catch (error, stack) {
       TaliaLogger.w('Notification refresh failed', error, stack);
+    }
+  }
+
+  /// Returns whether a settings change reached the notification scheduler.
+  Future<bool> refreshNotificationsForSettings(
+    AppLocalizations l10n, {
+    bool force = false,
+  }) async {
+    try {
+      await _enqueueRefresh(() => _refreshNotifications(l10n, force: force));
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.w('Settings notification refresh failed', error, stack);
+      return false;
     }
   }
 
@@ -137,7 +160,7 @@ class NotificationScheduler {
     bool force = false,
   }) async {
     try {
-      await _refreshNotifications(l10n, force: force);
+      await _enqueueRefresh(() => _refreshNotifications(l10n, force: force));
       return true;
     } catch (error, stack) {
       TaliaLogger.w('Background notification refresh failed', error, stack);
@@ -449,9 +472,7 @@ class NotificationScheduler {
       var daysWithQuran = 0;
       try {
         if (getIt.isRegistered<StreakService>()) {
-          final activity = await getIt<StreakService>().getActivityMap(
-            days: 7,
-          );
+          final activity = await getIt<StreakService>().getActivityMap(days: 7);
           daysWithQuran = activity.values.where((count) => count > 0).length;
         }
       } catch (e, stack) {
@@ -549,7 +570,7 @@ class NotificationScheduler {
         payload = '/quran/page/${target.startPage}?mode=khatmah';
       } else {
         body = l10n.notificationKhatmahBody;
-        payload = '/khatmah';
+        payload = AppRoutes.khatmahDashboard;
       }
 
       final quietTime = quiet(hour, minute);
@@ -565,6 +586,7 @@ class NotificationScheduler {
     }
 
     // Prayer Times (Rolling 7 Days)
+    var prayerDeliveryFailed = false;
     final prayerTimesEnabled =
         prefs.getBool(
           TaliaNotificationService.prayerNotificationsPreferenceKey,
@@ -597,6 +619,7 @@ class NotificationScheduler {
       try {
         await _service.cancelPrayerTimesReminders();
       } catch (e, stack) {
+        prayerDeliveryFailed = true;
         TaliaLogger.w(
           '[PrayerV2] failed to cancel legacy prayer reminders',
           e,
@@ -626,13 +649,11 @@ class NotificationScheduler {
         };
         final athanEnabled =
             prefs.getBool(TaliaNotificationService.prayerAthanKey) ?? false;
-        final muezzinId = prefs.getString(
-              TaliaNotificationService.prayerMuezzinKey,
-            ) ??
+        final muezzinId =
+            prefs.getString(TaliaNotificationService.prayerMuezzinKey) ??
             MuezzinCatalog.defaultId;
-        final fajrMuezzinId = prefs.getString(
-              TaliaNotificationService.prayerMuezzinFajrKey,
-            ) ??
+        final fajrMuezzinId =
+            prefs.getString(TaliaNotificationService.prayerMuezzinFajrKey) ??
             '';
 
         var handledNatively = false;
@@ -671,16 +692,17 @@ class NotificationScheduler {
         }
         if (!handledNatively) {
           try {
-          await _scheduleLegacyPrayerReminders(
-            l10n: l10n,
-            now: now,
-            prayerService: prayerService,
-            prayerFilter: prayerFilter,
-            athanEnabled: athanEnabled,
-            muezzinId: muezzinId,
-            fajrMuezzinId: fajrMuezzinId,
-          );
+            await _scheduleLegacyPrayerReminders(
+              l10n: l10n,
+              now: now,
+              prayerService: prayerService,
+              prayerFilter: prayerFilter,
+              athanEnabled: athanEnabled,
+              muezzinId: muezzinId,
+              fajrMuezzinId: fajrMuezzinId,
+            );
           } catch (e, stack) {
+            prayerDeliveryFailed = true;
             TaliaLogger.w(
               'Failed to schedule prayer times notifications',
               e,
@@ -697,6 +719,7 @@ class NotificationScheduler {
         try {
           await prayerDelivery.cancelNative();
         } catch (e, stack) {
+          prayerDeliveryFailed = true;
           TaliaLogger.w(
             '[PrayerV2] failed to cancel native prayer alarms',
             e,
@@ -709,11 +732,12 @@ class NotificationScheduler {
     // Prayer Companion (additive, after the legacy prayer block): shares the
     // same readiness check so a city/method reset cancels Companion events
     // on the same refresh path.
-    await _refreshPrayerCompanion(l10n, now, prayerService);
-
-    if (shouldRefreshRolling) {
-      _lastRollingDateKey = todayKey;
-    }
+    final companionUpdated = await _refreshPrayerCompanion(
+      l10n,
+      now,
+      prayerService,
+    );
+    prayerDeliveryFailed = prayerDeliveryFailed || !companionUpdated;
 
     // Smart Reminder (greenfield): schedule at the user's most frequent
     // app-open hour when they have a streak but no activity today.
@@ -735,6 +759,10 @@ class NotificationScheduler {
     } else {
       await _service.cancelSmartReminder();
     }
+    if (prayerDeliveryFailed) {
+      throw StateError('One or more prayer notification updates failed');
+    }
+    if (shouldRefreshRolling) _lastRollingDateKey = todayKey;
   }
 
   /// Legacy (V1) FLN prayer scheduling. Moved verbatim from the previous
@@ -786,7 +814,7 @@ class NotificationScheduler {
   /// is disabled, its dependencies are absent, or no city/method has been
   /// persisted, only the Companion namespace (2100–2129) is cancelled —
   /// legacy prayer notifications are never touched here.
-  Future<void> _refreshPrayerCompanion(
+  Future<bool> _refreshPrayerCompanion(
     AppLocalizations l10n,
     DateTime now,
     PrayerTimesService? prayerService,
@@ -800,7 +828,7 @@ class NotificationScheduler {
           prayerService == null ||
           !prayerService.isReadyForNotificationScheduling) {
         await _service.cancelPrayerCompanionReminders();
-        return;
+        return true;
       }
       final planned = await planner.plan(now: now);
       // Spec §4.4: a Companion event inside quiet hours is SUPPRESSED, never
@@ -854,6 +882,7 @@ class NotificationScheduler {
           };
         },
       );
+      return true;
     } catch (e, stack) {
       TaliaLogger.w(
         'Failed to refresh prayer companion notifications',
@@ -872,6 +901,7 @@ class NotificationScheduler {
           cancelStack,
         );
       }
+      return false;
     }
   }
 

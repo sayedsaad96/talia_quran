@@ -99,6 +99,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prevAyah => 'Previous Ayah';
 
   @override
+  String get playPageRecitation => 'Play Page';
+
+  @override
+  String get pauseRecitation => 'Pause Recitation';
+
+  @override
+  String get stopRecitation => 'Stop Recitation';
+
+  @override
+  String get changeReciter => 'Change Reciter';
+
+  @override
+  String get closePlayer => 'Close Player';
+
+  @override
+  String get moreOptions => 'More';
+
+  @override
+  String get reciterActiveChip => 'Active';
+
+  @override
+  String get emptyBookmarksTitle => 'No bookmarks yet';
+
+  @override
+  String get emptyBookmarksHint =>
+      'Long-press any ayah while reading to save it as a bookmark and reach it easily here';
+
+  @override
+  String get exitDialogTitle => 'Recitation is playing';
+
+  @override
+  String exitDialogBody(String surah) {
+    return 'You are listening to $surah.\nContinue listening in the background with notification controls, or stop the recitation and exit?';
+  }
+
+  @override
+  String get currentSurah => 'the current surah';
+
+  @override
+  String get exitDialogContinueBackground => 'Continue in background';
+
+  @override
+  String get exitDialogStopAndExit => 'Stop recitation and exit';
+
+  @override
+  String get exitDialogStayInApp => 'Stay in the app';
+
+  @override
   String get memorized => 'Memorized';
 
   @override
@@ -1040,6 +1088,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarCompletedTitle => 'Completed, by Allah\'s grace';
 
   @override
+  String get azkarSectionsAndServices => 'Explore more';
+
+  @override
+  String get azkarWirdCompletedToday => 'Today\'s wird is complete ✨';
+
+  @override
+  String get azkarMorningHeroSubtitle =>
+      'Begin your day with remembrance and peace of heart';
+
+  @override
+  String get azkarEveningHeroSubtitle =>
+      'End your day with serenity and forgiveness';
+
+  @override
+  String get azkarReviewWird => 'Review wird';
+
+  @override
+  String get azkarStartWirdNow => 'Start now';
+
+  @override
+  String get azkarFreeTasbeeh => 'Free Tasbeeh';
+
+  @override
+  String get azkarFreeTasbeehSubtitle => 'Count freely at your pace';
+
+  @override
+  String get azkarSearchHint => 'Search duas and azkar...';
+
+  @override
+  String get azkarFavorites => 'Favorites';
+
+  @override
+  String get azkarFavoritesEmptyTitle => 'No favorites yet';
+
+  @override
+  String get azkarFavoritesEmptyDesc =>
+      'Tap the bookmark icon next to any dua to save it here';
+
+  @override
+  String get azkarSearchNoResultsTitle => 'No matching results';
+
+  @override
+  String get azkarSearchNoResultsDesc =>
+      'We couldn\'t find any duas for your search';
+
+  @override
+  String get azkarSearchClear => 'Clear search';
+
+  @override
+  String get azkarVirtueOrSource => 'Virtue / Source';
+
+  @override
+  String get azkarVirtueAndSource => 'Virtue & Source';
+
+  @override
+  String get azkarVirtue => 'Virtue';
+
+  @override
+  String get azkarSource => 'Source';
+
+  @override
+  String get azkarAutoAdvanceOn => 'Auto-advance enabled';
+
+  @override
+  String get azkarAutoAdvanceOff => 'Auto-advance disabled';
+
+  @override
+  String get azkarSmartWird => 'Smart Wird';
+
+  @override
+  String get azkarSmartWirdSubtitle => 'A wird built for this moment';
+
+  @override
+  String azkarSmartWirdDone(int count) {
+    return 'Completed $count smart wird session(s) today';
+  }
+
+  @override
+  String get azkarSmartWirdResume => 'Resume';
+
+  @override
+  String get azkarSmartWirdCompleted => 'Smart wird complete';
+
+  @override
+  String get azkarQuietNight => 'Quiet Night';
+
+  @override
+  String get azkarQuietNightSubtitle => 'Flowing reading, no counter';
+
+  @override
+  String get azkarQuietNightExit => 'End quiet reading';
+
+  @override
+  String get azkarPlayRecitation => 'Play recitation';
+
+  @override
+  String get azkarPauseRecitation => 'Pause recitation';
+
+  @override
+  String get azkarShareWird => 'Share wird progress';
+
+  @override
+  String get azkarTasbeehResetTitle => 'Reset counter';
+
+  @override
+  String get azkarTasbeehResetDesc => 'Reset the tasbeeh counter to zero?';
+
+  @override
+  String get azkarTasbeehResetConfirm => 'Reset';
+
+  @override
+  String get azkarTasbeehResetTooltip => 'Reset counter';
+
+  @override
+  String get azkarTasbeehOpenTarget => 'Open';
+
+  @override
+  String azkarTasbeehTargetLabel(int target) {
+    return 'Target: $target';
+  }
+
+  @override
+  String azkarTasbeehRound(int round) {
+    return 'Round $round';
+  }
+
+  @override
+  String get azkarTasbeehTapHint => 'Tap anywhere in the circle to count';
+
+  @override
+  String azkarTasbeehTapSemantics(int count) {
+    return 'Tap to count, current $count';
+  }
+
+  @override
   String get azkarCompletedDesc => 'All azkar in this category are complete';
 
   @override
@@ -1386,7 +1569,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHubPractice => 'Practice';
 
   @override
-  String get settingsHubReminders => 'Reminders';
+  String get settingsHubReminders => 'Notifications & reminders';
 
   @override
   String get settingsHubSupport => 'Support';
@@ -1399,6 +1582,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsRemindersWorship => 'Worship';
+
+  @override
+  String get settingsRemindersPrayer => 'Prayer & Adhan';
 
   @override
   String get settingsRemindersProgress => 'Progress';
@@ -1429,6 +1615,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationTestInteractiveSubtitle =>
       'Send a sample reminder to confirm alerts work';
+
+  @override
+  String get notificationPrayerPermissionBlockedBody =>
+      'Prayer alerts will not arrive until notifications are allowed in phone settings.';
+
+  @override
+  String get notificationConfigurePrayerTimes => 'Configure prayer times';
+
+  @override
+  String get notificationTestPickerTitle => 'Select a notification to test';
+
+  @override
+  String get notificationTestPickerSubtitle =>
+      'You will receive a sample notification with action buttons.';
+
+  @override
+  String get notificationTestReviewTitle => 'Daily Review 📖';
+
+  @override
+  String get notificationTestReviewBody =>
+      'You have 5 ayahs due for review today ⚡';
+
+  @override
+  String get notificationTestStreakTitle => 'Streak Protection 🔥';
+
+  @override
+  String get notificationTestStreakBody =>
+      'You haven\'t reviewed today — protect your streak now 🔥';
+
+  @override
+  String get notificationTestSuccess => 'Test notification sent successfully ✨';
+
+  @override
+  String get notificationSettingsSaveFailed =>
+      'Your change could not be saved. Please try again.';
+
+  @override
+  String get notificationSettingsSchedulingFailed =>
+      'Your change was saved, but reminders could not be updated. Please try again.';
+
+  @override
+  String get prayerChooseCityForAccurateTimes =>
+      'Choose your city to show accurate prayer times.';
+
+  @override
+  String get prayerChooseCityAction => 'Choose city';
 
   @override
   String get settingsGuestStatusTitle => 'Using Talia as guest';
@@ -2681,6 +2913,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String dailyPlanSurahAyahTitle(String surah, int ayahNumber) {
+    return '$surah · Ayah $ayahNumber';
+  }
+
+  @override
   String dailyPlanRecordStats(int strength, int reviews) {
     return 'Strength: $strength • Reviews: $reviews';
   }
@@ -2694,6 +2931,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dailyPlanEmptySubtitle =>
       'Check again tomorrow to continue your schedule';
+
+  @override
+  String get dailyPlanNoPlanTitle =>
+      'You haven\'t created a memorization plan yet';
+
+  @override
+  String get dailyPlanNoPlanSubtitle =>
+      'Create your plan to see your daily memorization and review ayahs here.';
+
+  @override
+  String get dailyPlanCreatePlanAction => 'Create your plan';
 
   @override
   String get customPlanDeleteConfirmPhrase => 'Delete plan';
@@ -3026,6 +3274,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get memorizationExitSessionMessage =>
       'Save this session for later or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
+
+  @override
+  String get memorizationExitSessionTitle => 'Leave this session?';
 
   @override
   String get memorizationSaveAndLeave => 'Save & leave';
@@ -3595,7 +3846,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSettingsPrayerNeedsTimes =>
-      'Enable prayer times first';
+      'Set up prayer times and choose your city first';
 
   @override
   String get homeTourTitle => 'Need a quick tour?';
@@ -4384,6 +4635,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2ManualRecallAction => 'I recited it from memory (self-grade)';
 
   @override
+  String get v2SelfGradeAction => 'Grade your recitation yourself';
+
+  @override
+  String get v2SelfGradeTitle => 'How did your recitation from memory go?';
+
+  @override
+  String get v2SelfGradeMastered => 'Mastered';
+
+  @override
+  String get v2SelfGradeMasteredHint => 'Recited it fully without hesitation';
+
+  @override
+  String get v2SelfGradeHesitated => 'Hesitated a little';
+
+  @override
+  String get v2SelfGradeHesitatedHint =>
+      'Recited with a pause or small slip; it will come back soon';
+
+  @override
+  String get v2SelfGradeForgot => 'Could not recall it';
+
+  @override
+  String get v2SelfGradeForgotHint => 'We will go over it again now';
+
+  @override
   String get v2ManualRecallHint =>
       'No microphone? Confirm you recited from memory and your progress will be saved.';
 
@@ -4441,6 +4717,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get closingSummaryReview =>
+      'Your review is complete — may it stay firmly rooted in your heart.';
+
+  @override
+  String get v2ReviewSessionTitle => 'Review Session';
+
+  @override
+  String get v2HintSchedulingNotice =>
+      'Hints are recorded and shape your next review schedule.';
+
+  @override
+  String dailyPlanBacklogNotice(int count) {
+    return 'You have $count ayahs due for review. Finish today\'s reviews to unlock new ayahs.';
+  }
+
+  @override
+  String get dailyPlanStartReview => 'Start today\'s review';
+
+  @override
+  String get dailyPlanReviewDayNotice =>
+      'Today is a review day in your plan: no new ayahs, strengthen what you\'ve memorized.';
+
+  @override
   String closingSummaryKhatmahWird(String start, String end) {
     return 'You completed today\'s wird — pages $start to $end — a lasting impact, in shaa Allah.';
   }
@@ -4464,6 +4763,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get v2MemorizationHub => 'Memorization Hub';
+
+  @override
+  String v2NextPlanItem(int count) {
+    return 'Next in today\'s plan ($count left)';
+  }
 
   @override
   String get v2TryWithoutHint => 'Try without a hint first';
@@ -4512,6 +4816,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String v2BlockProgress(int passed, int total) {
     return '$passed/$total ayahs passed individually.';
+  }
+
+  @override
+  String v2AyahOfBlock(int current, int total) {
+    return 'Ayah $current of $total';
   }
 
   @override
@@ -4609,6 +4918,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsRecitationMismatch =>
       'The ayah did not match. Listen again and then record your recitation.';
+
+  @override
+  String kidsRecitationCloseMatch(int matched, int total) {
+    return 'So close! You got $matched of $total words right. Listen again and try once more.';
+  }
+
+  @override
+  String get kidsJourneyCompleteHint =>
+      'You completed the whole Juz Amma! Tell your parent about this great achievement.';
 
   @override
   String get kidsAyahAlreadyCompleted =>
@@ -4725,7 +5043,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahEndPlanAction => 'End Khatmah';
 
   @override
-  String get khatmahStartNewKhatmah => 'Start New Khatmah';
+  String get khatmahStartNewKhatmah => 'Start a new khatmah';
 
   @override
   String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
@@ -4741,6 +5059,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahOrCustomPagesPerDay => 'Or custom pages per day';
+
+  @override
+  String get khatmahOrChooseDuration => 'Or choose a duration';
+
+  @override
+  String get khatmahStartFromPage => 'Start from page (optional)';
+
+  @override
+  String get khatmahStartFromPageHint =>
+      'After page 604 you continue from page 1 until the khatmah is complete';
+
+  @override
+  String khatmahDurationDays(String days) {
+    return '$days days';
+  }
+
+  @override
+  String get khatmahDurationRamadan => 'Ramadan (30 days)';
 
   @override
   String get khatmahEG5 => 'e.g. 5';
@@ -4848,6 +5184,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahMildBoost => 'Mild Boost';
 
   @override
+  String get khatmahAdjustPreviewTitle => 'Adjust khatmah schedule';
+
+  @override
+  String khatmahAdjustPreviewBody(String pages, String date) {
+    return 'Daily wird: $pages pages\nExpected completion: $date';
+  }
+
+  @override
+  String get khatmahApplyAdjustment => 'Apply';
+
+  @override
+  String get khatmahLoadFailureHint =>
+      'Couldn\'t read the khatmah data on this device. Please try again.';
+
+  @override
   String get khatmahPause => 'Pause';
 
   @override
@@ -4948,7 +5299,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get khatmahSaveExit => 'Save & exit';
+  String get khatmahSaveExit => 'Finish reading';
+
+  @override
+  String get khatmahPaceOnTrack => 'On schedule — well done';
+
+  @override
+  String get khatmahRedistributeAction =>
+      'Redistribute to keep the finish date';
+
+  @override
+  String get khatmahRedistributed =>
+      'Pages redistributed to keep your finish date';
+
+  @override
+  String khatmahPaceBehind(String pages) {
+    return '$pages pages behind the finish date';
+  }
+
+  @override
+  String khatmahThroughWirdEnd(String page) {
+    return 'Through today\'s wird (p. $page)';
+  }
 
   @override
   String get khatmahCongratulations =>
@@ -5747,5 +6119,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String customPlanDirectionBackward(String from, String to) {
     return 'Memorization direction: backward (from $from to $to)';
+  }
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String fieldTooLong(int maxLength) {
+    return 'Cannot exceed $maxLength characters';
   }
 }

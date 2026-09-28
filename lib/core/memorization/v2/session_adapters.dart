@@ -53,19 +53,26 @@ final class V2SessionReviewAdapter {
   ///   none      → excellent
   ///   firstWord → average
   ///   fullAyah  → weak
+  ///
+  /// [rating] overrides that mapping when the caller already measured the
+  /// attempt's mastery (the kids path also weighs failed attempts), so SRS
+  /// schedules exactly what the reward log records.
   Future<Either<Failure, void>> recordPass({
     required int surahId,
     required int ayahNumber,
     required V2HintLevel hintLevel,
     ReviewRecordCreatedByMode createdByMode =
         ReviewRecordCreatedByMode.v2Session,
+    PerformanceRating? rating,
   }) async {
     // Map hint level to SM-2 performance rating.
-    final rating = switch (hintLevel) {
-      V2HintLevel.none => PerformanceRating.excellent,
-      V2HintLevel.firstWord => PerformanceRating.average,
-      V2HintLevel.fullAyah => PerformanceRating.weak,
-    };
+    final effectiveRating =
+        rating ??
+        switch (hintLevel) {
+          V2HintLevel.none => PerformanceRating.excellent,
+          V2HintLevel.firstWord => PerformanceRating.average,
+          V2HintLevel.fullAyah => PerformanceRating.weak,
+        };
 
     // Fetch existing record or build a fresh baseline.
     final readScope = ReviewRecordAudienceScope.scopeForWriteMode(
@@ -102,7 +109,7 @@ final class V2SessionReviewAdapter {
 
     // Apply SM-2 and preserve the production source tag.
     final scheduled = _scheduler
-        .schedule(baseRecord, rating)
+        .schedule(baseRecord, effectiveRating)
         .copyWith(createdByMode: createdByMode);
 
     final saveResult = await _repository.saveReviewRecord(scheduled);
@@ -227,6 +234,7 @@ final class V2SessionProgressAdapter {
       launchContext: launchContext,
       ownerId: _datasource.currentOwnerId,
       audience: _audience,
+      review: state.isReview,
     );
 
     await _datasource.saveSession(isar);
@@ -235,8 +243,15 @@ final class V2SessionProgressAdapter {
   /// Loads a persisted session for the given surah, if one exists.
   ///
   /// Returns [Some] if a saved session is found, [None] otherwise.
-  Future<Option<IsarV2Session>> loadIfExists(int surahId) async {
-    final session = await _datasource.getSession(surahId, audience: _audience);
+  Future<Option<IsarV2Session>> loadIfExists(
+    int surahId, {
+    bool review = false,
+  }) async {
+    final session = await _datasource.getSession(
+      surahId,
+      audience: _audience,
+      review: review,
+    );
     return session == null ? const None() : Some(session);
   }
 
@@ -276,6 +291,7 @@ final class V2SessionProgressAdapter {
         hintTracker: V2HintTracker.empty,
         failureTracker: V2AyahFailureTracker.empty,
         blockReviewRequired: saved.blockReviewRequired,
+        isReview: _isReviewIntent(saved),
       );
     }
 
@@ -364,8 +380,14 @@ final class V2SessionProgressAdapter {
       hintTracker: hintTracker,
       failureTracker: failureTracker,
       blockReviewRequired: saved.blockReviewRequired,
+      isReview: _isReviewIntent(saved),
     );
   }
+
+  /// A review session resumes as a review session — the persisted launch
+  /// intent is the single source of truth, so no schema change is needed.
+  static bool _isReviewIntent(IsarV2Session saved) =>
+      saved.launchContext.intent == LearningIntent.review;
 
   static int _firstUnpassedIndex(List<Ayah> block, Set<int> passed) {
     for (var index = 0; index < block.length; index++) {
@@ -375,8 +397,12 @@ final class V2SessionProgressAdapter {
   }
 
   /// Deletes the saved session after completion or explicit abandon.
-  Future<void> clear(int surahId) async {
-    await _datasource.clearSession(surahId, audience: _audience);
+  Future<void> clear(int surahId, {bool review = false}) async {
+    await _datasource.clearSession(
+      surahId,
+      audience: _audience,
+      review: review,
+    );
   }
 }
 
@@ -417,8 +443,11 @@ final class V2SessionGamificationAdapter {
       // 1. Streak — count each ayah in the block as an activity unit.
       await _streak.recordActivity(activityDelta: session.totalAyahsInBlock);
 
-      // 2. XP — single event per completed block.
-      await _xp.addXp('v2_block_completed');
+      // 2. XP — a quick single-ayah review must not be worth a full
+      //    memorization block, or due-review taps would farm block XP.
+      await _xp.addXp(
+        session.isReview ? 'v2_review_completed' : 'v2_block_completed',
+      );
 
       // 3. Certificates — reads adult-compatible AyahReviewRecords.
       //    V2 session records qualify per ReviewRecordFilters.

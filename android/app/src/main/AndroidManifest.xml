@@ -134,6 +134,12 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Required by speech_to_text on target SDK 30+: Android otherwise
+             hides installed speech-recognition services from the availability
+             check and initialization reports recognizerNotAvailable. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

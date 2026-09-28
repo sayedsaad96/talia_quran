@@ -7,6 +7,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
+import '../services/audio_lifecycle_manager.dart';
 import '../services/app_session_service.dart';
 import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
@@ -30,6 +31,7 @@ import '../services/activity_event_recorder.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
+import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_hifz_feature_flags.dart';
 import '../memorization/memorization_path_resolver.dart';
@@ -40,6 +42,7 @@ import '../memorization/memorization_progress_reader.dart';
 import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
+import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/review_outcome_committer.dart';
@@ -70,10 +73,14 @@ import '../../features/memorization_plus/presentation/cubits/practice_surah_cubi
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/datasources/azkar_completion_store.dart';
 import '../../features/azkar/data/datasources/azkar_preferences_store.dart';
+import '../../features/azkar/data/datasources/smart_wird_progress_store.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
+import '../../features/azkar/domain/usecases/compose_smart_wird_usecase.dart';
 import '../../features/azkar/presentation/cubits/azkar_cubit.dart';
+import '../../features/azkar/presentation/cubits/azkar_hub_cubit.dart';
+import '../../features/azkar/presentation/services/zikr_audio_service.dart';
 import '../journey/unified_journey_engine.dart';
 import '../../features/progress/data/datasources/progress_local_datasource.dart';
 import '../../features/progress/data/repositories/progress_repository_impl.dart';
@@ -319,6 +326,15 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<AzkarPreferencesStore>(
     () => AzkarPreferencesStore(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<ComposeSmartWirdUsecase>(
+    () => ComposeSmartWirdUsecase(getIt<AzkarRepository>()),
+  );
+  getIt.registerLazySingleton<SmartWirdProgressStore>(
+    () => SmartWirdProgressStore(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<ZikrAudioService>(
+    () => ZikrAudioService(lifecycleManager: AudioLifecycleManager.instance),
   );
   getIt.registerLazySingleton<AudioResumeStore>(
     () => AudioResumeStore(getIt<SharedPreferences>()),
@@ -756,6 +772,14 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<AzkarCompletionStore>(),
     ),
   );
+  getIt.registerFactory<AzkarHubCubit>(
+    () => AzkarHubCubit(
+      getIt<AzkarRepository>(),
+      getIt<AzkarCompletionStore>(),
+      getIt<AzkarPreferencesStore>(),
+      smartWirdStore: getIt<SmartWirdProgressStore>(),
+    ),
+  );
   getIt.registerFactory<GuardianLinkingCubit>(
     () => GuardianLinkingCubit(getIt<MemorizationPlusRepository>()),
   );
@@ -779,7 +803,14 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<AwardKidsPointsUsecase>(),
       getIt<AchievementService>(),
       getIt<QuranRepository>(),
-      getIt<V2SessionEngine>(),
+      // Kids voices need a more tolerant STT pass threshold than adults.
+      // V2SessionEngine is a pure stateless class, so a dedicated instance is
+      // safe and keeps the shared singleton (adult path) untouched.
+      V2SessionEngine(
+        evaluator: const V2RecitationEvaluator(
+          passThreshold: kKidsPassThreshold,
+        ),
+      ),
       getIt<V2SessionReviewAdapter>(),
       getIt<StreakService>(),
       null,
@@ -790,8 +821,9 @@ Future<void> configureDependencies({bool background = false}) async {
       () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getMemorizationProfile();
-        final age = result.fold((_) => 8, (profile) => profile.childAge ?? 8);
-        return KidsSessionPolicy.forAge(age >= 5 && age <= 12 ? age : 8);
+        return KidsSessionPolicy.forChildAge(
+          result.fold((_) => null, (profile) => profile.childAge),
+        );
       },
       // K15 — daily-limit gate reads the local kids session log; a read
       // failure fails open (null ⇒ limit not enforced).
@@ -820,6 +852,20 @@ Future<void> configureDependencies({bool background = false}) async {
             .getAllReviewRecords(scope: ReviewRecordReadScope.kids);
         return result.getOrElse(() => const []);
       },
+      sessionLogsLoader: () async {
+        // Daily due-review budget for the mission resolver; a read failure
+        // fails open (null ⇒ budget not enforced).
+        final result = await getIt<MemorizationPlusRepository>()
+            .getKidsSessionLogs();
+        return result.getOrElse(() => const <KidsSessionLog>[]);
+      },
+      policyLoader: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getMemorizationProfile();
+        return KidsSessionPolicy.forChildAge(
+          result.fold((_) => null, (profile) => profile.childAge),
+        );
+      },
       resumeMissionLoader: () async {
         final datasource = getIt<V2SessionLocalDatasource>();
         final saved = await datasource.getLatestSession(
@@ -836,6 +882,7 @@ Future<void> configureDependencies({bool background = false}) async {
           await datasource.clearSession(
             saved.surahId,
             audience: MemorizationAudience.kids,
+            review: saved.launchContext.intent == LearningIntent.review,
           );
           return null;
         }

@@ -212,6 +212,62 @@ void main() {
       },
     );
 
+    test('a used-up new-ayah quota reports the day as complete (N3)', () async {
+      await cubit.close();
+      cubit = KidsJourneyCubit(
+        mockGetJourney,
+        mockGetProgress,
+        mockQuranRepo,
+        sessionLogsLoader: () async => [
+          KidsSessionLog(
+            id: 'today',
+            surahId: tSurahId,
+            ayahNumber: 1,
+            repeatsCompleted: 3,
+            pointsEarned: 10,
+            completedAt: DateTime.now(),
+            missionType: KidsMissionType.newMemorization,
+          ),
+        ],
+        policyLoader: () async => KidsSessionPolicy.forAge(6),
+      );
+      when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+      when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+      when(
+        mockQuranRepo.getSurahDetail(tSurahId),
+      ).thenAnswer((_) async => const Right(tSurahDetail));
+
+      await cubit.load(surahId: tSurahId);
+
+      final loaded = cubit.state as KidsJourneyLoaded;
+      // No mission the session gate would refuse; home shows day-complete.
+      expect(loaded.nextMission, isNull);
+      expect(loaded.dailyGoalCap, 1);
+      expect(loaded.dailyGoalReached, isTrue);
+    });
+
+    test('an unreadable session log never reports the day complete', () async {
+      await cubit.close();
+      cubit = KidsJourneyCubit(
+        mockGetJourney,
+        mockGetProgress,
+        mockQuranRepo,
+        sessionLogsLoader: () async => throw StateError('storage'),
+        policyLoader: () async => KidsSessionPolicy.forAge(6),
+      );
+      when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+      when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+      when(
+        mockQuranRepo.getSurahDetail(tSurahId),
+      ).thenAnswer((_) async => const Right(tSurahDetail));
+
+      await cubit.load(surahId: tSurahId);
+
+      final loaded = cubit.state as KidsJourneyLoaded;
+      expect(loaded.nextMission?.type, KidsMissionType.newMemorization);
+      expect(loaded.dailyGoalReached, isFalse);
+    });
+
     test('resolves a due review as the single next mission', () async {
       final dueRecord = AyahReviewRecord(
         surahId: tSurahId,

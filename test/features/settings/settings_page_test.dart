@@ -257,14 +257,31 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
-    await _tapVisibleText(tester, 'Progress & Achievements');
+    await _tapVisibleText(tester, 'Notifications');
 
+    await _scrollUntilVisible(tester, 'Daily Review Reminder');
     expect(find.text('Daily Review Reminder'), findsOneWidget);
     expect(find.text('Streak Protection'), findsOneWidget);
     expect(find.text('Morning Azkar Reminder'), findsOneWidget);
     expect(find.text('Evening Azkar Reminder'), findsOneWidget);
     expect(find.text('Daily Dua'), findsOneWidget);
     expect(find.byType(Switch), findsAtLeastNWidgets(5));
+  });
+
+  testWidgets('Arabic settings hub remains usable at 2x text scale', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      locale: const Locale('ar'),
+      viewSize: const Size(360, 800),
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(find.text('الإعدادات'), findsOneWidget);
+    await _scrollUntilVisible(tester, 'التنبيهات والتذكيرات');
+    expect(find.text('التنبيهات والتذكيرات'), findsWidgets);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('reset path dialog appears and preserves confirmation behavior', (
@@ -364,6 +381,7 @@ Future<_FakeMemorizationRepository> _pumpSettings(
     buildNumber: '1',
   ),
   Size viewSize = const Size(1080, 1800),
+  TextScaler textScaler = TextScaler.noScaling,
 }) async {
   tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
@@ -384,6 +402,7 @@ Future<_FakeMemorizationRepository> _pumpSettings(
       router: _settingsRouter(),
       locale: locale,
       themeMode: themeMode,
+      textScaler: textScaler,
     ),
   );
   await tester.pumpAndSettle();
@@ -491,11 +510,13 @@ class _SettingsTestApp extends StatelessWidget {
     required this.router,
     required this.locale,
     required this.themeMode,
+    required this.textScaler,
   });
 
   final GoRouter router;
   final Locale locale;
   final ThemeMode themeMode;
+  final TextScaler textScaler;
 
   @override
   Widget build(BuildContext context) {
@@ -526,6 +547,10 @@ class _SettingsTestApp extends StatelessWidget {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        ),
       ),
     );
   }

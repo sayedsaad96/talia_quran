@@ -15,7 +15,7 @@ void main() {
   };
 
   group('adhkar release corpus contract', () {
-    test('releases all 109 reviewed records without altering their text', () {
+    test('releases all 116 reviewed records without altering their text', () {
       final candidate =
           jsonDecode(File('assets/data/azkar.json').readAsStringSync())
               as Map<String, dynamic>;
@@ -25,7 +25,8 @@ void main() {
       const expectedCounts = {
         'morning': 22,
         'evening': 22,
-        'general': 31,
+        // 19 base + 12 (v1-candidate-2) + 7 (v2-reviewed-1).
+        'general': 38,
         'duas': 34,
       };
 

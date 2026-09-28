@@ -12,7 +12,10 @@ import 'resume_session_presentation_mapper.dart';
 class UnifiedJourneyActionMapper {
   const UnifiedJourneyActionMapper();
 
-  JourneyPresentationData map(BuildContext context, UnifiedJourneyAction action) {
+  JourneyPresentationData map(
+    BuildContext context,
+    UnifiedJourneyAction action,
+  ) {
     if (action.actionType == UnifiedJourneyActionType.resumeSession) {
       return const ResumeSessionPresentationMapper().map(
         ResumeSessionPresentationInput(

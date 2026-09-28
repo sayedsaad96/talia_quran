@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/reciter_selector_sheet.dart';
 
@@ -19,7 +20,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: ReciterSelectorSheet())),
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ReciterSelectorSheet()),
+      ),
     );
     await tester.pump();
 

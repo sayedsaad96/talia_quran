@@ -93,15 +93,27 @@ class KidsSessionLogsCloudMerge {
 
   /// Rebuilds the repairable Kids aggregate from immutable positive evidence.
   ///
-  /// Cloud rows currently omit mastery, so callers merging legacy cloud data
-  /// retain the documented excellent-rating fallback supplied by the mapper.
+  /// Reward points come from canonical new-memorization logs (deduplicated
+  /// per ayah across devices) plus reduced review points from non-canonical
+  /// positive logs. Stars and ayah counts remain tied to canonical rewards
+  /// only, so reviews can add points but never inflate memorization
+  /// progress. Cloud rows currently omit mastery, so callers merging legacy
+  /// cloud data retain the documented excellent-rating fallback supplied by
+  /// the mapper.
   static KidsProgress rebuildProjection(Iterable<KidsSessionLog> logs) {
     final canonical = merge(local: logs, remote: const []);
     final rewards = canonical.where(isCanonicalRewardLog).toList();
-    final totalPoints = rewards.fold<int>(
+    final rewardPoints = rewards.fold<int>(
       0,
       (sum, log) => sum + log.pointsEarned,
     );
+    // Reduced review points: positive non-canonical logs (due/linked
+    // reviews). They persist locally and re-merge from the evidence log;
+    // the legacy cloud floor keeps cross-device totals from regressing.
+    final reviewPoints = canonical
+        .where((log) => !isCanonicalRewardLog(log) && log.pointsEarned > 0)
+        .fold<int>(0, (sum, log) => sum + log.pointsEarned);
+    final totalPoints = rewardPoints + reviewPoints;
     final stars = rewards.fold<int>(0, (sum, log) {
       final earned = switch (log.masteryRating) {
         PerformanceRating.excellent => 3,
@@ -117,9 +129,8 @@ class KidsSessionLogsCloudMerge {
       }
     }
     var level = 1;
-    var spent = 0;
-    while (totalPoints - spent >= level * 100) {
-      spent += level * 100;
+    // Same curve as KidsProgress: cheap first step, then linear growth.
+    while (totalPoints >= KidsProgress.cumulativePointsForLevel(level + 1)) {
       level++;
     }
     return KidsProgress(

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
@@ -62,6 +65,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
     setState(() {
       _counter++;
     });
+    unawaited(widget.prefsStore.bumpTasbeehTally());
 
     if (_target > 0 && _counter % _target == 0) {
       HapticFeedback.heavyImpact();
@@ -87,7 +91,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
         backgroundColor:
             widget.isDark ? AppColors.darkSurface : AppColors.lightSurface,
         title: Text(
-          'تصفير المسبحة',
+          context.l10n.azkarTasbeehResetTitle,
           style: AppTypography.titleMedium.copyWith(
             color: widget.isDark
                 ? AppColors.darkTextPrimary
@@ -96,7 +100,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
           ),
         ),
         content: Text(
-          'هل تريد إعادة تعيين العداد إلى الصفر؟',
+          context.l10n.azkarTasbeehResetDesc,
           style: AppTypography.bodyMedium.copyWith(
             color: widget.isDark
                 ? AppColors.darkTextSecondary
@@ -106,7 +110,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -114,7 +118,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('تصفير'),
+            child: Text(context.l10n.azkarTasbeehResetConfirm),
           ),
         ],
       ),
@@ -172,7 +176,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                 children: [
                   IconButton(
                     key: const ValueKey('free-tasbeeh-reset-button'),
-                    tooltip: 'تصفير العداد',
+                    tooltip: context.l10n.azkarTasbeehResetTooltip,
                     icon: Icon(
                       Icons.refresh_rounded,
                       color: hintColor,
@@ -181,7 +185,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                     onPressed: _resetCounter,
                   ),
                   Text(
-                    'مسبحة حرة',
+                    context.l10n.azkarFreeTasbeeh,
                     style: AppTypography.titleLarge.copyWith(
                       color: textColor,
                       fontFamily: 'Amiri',
@@ -196,9 +200,10 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               // Target Selector Chips
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: _targetOptions.map((opt) {
+                children: _targetOptions                .map((opt) {
                   final isSelected = _target == opt;
-                  final label = opt == 0 ? 'مفتوح' : '$opt';
+                  final label =
+                      opt == 0 ? context.l10n.azkarTasbeehOpenTarget : '$opt';
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: ChoiceChip(
@@ -231,7 +236,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               // Interactive Large Counter Button
               Semantics(
                 button: true,
-                label: 'انقر للتسبيح، العداد الحالي $_counter',
+                label: context.l10n.azkarTasbeehTapSemantics(_counter),
                 child: GestureDetector(
                   key: const ValueKey('free-tasbeeh-tap-area'),
                   onTap: _onTapCounter,
@@ -292,7 +297,10 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                             if (_target > 0) ...[
                               const SizedBox(height: 2),
                               Text(
-                                'الهدف: $_target${rounds > 0 ? ' (دورة $rounds)' : ''}',
+                                rounds > 0
+                                    ? '${context.l10n.azkarTasbeehTargetLabel(_target)} (${context.l10n.azkarTasbeehRound(rounds)})'
+                                    : context.l10n.azkarTasbeehTargetLabel(
+                                        _target),
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.white70,
                                 ),
@@ -308,7 +316,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               const SizedBox(height: 18),
 
               Text(
-                'انقر في أي مكان في الدائرة للتسبيح',
+                context.l10n.azkarTasbeehTapHint,
                 style: AppTypography.bodySmall.copyWith(
                   color: hintColor,
                 ),

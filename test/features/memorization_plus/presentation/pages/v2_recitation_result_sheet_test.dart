@@ -78,9 +78,10 @@ void main() {
   testWidgets(
     'result sheet shows word diff and retry actions on failure',
     (tester) async {
+      // Two of four words: a clear failure, below the near-miss band.
       final feedback = _feedback(
         target: 'الحمد لله رب العالمين',
-        spoken: 'الحمد لله العالمين',
+        spoken: 'الحمد العالمين',
       );
 
       V2RecitationResultAction? action;
@@ -98,6 +99,9 @@ void main() {
       expect(find.byKey(const Key('v2-result-retry-now')), findsOneWidget);
       expect(find.byKey(const Key('v2-result-review-ayah')), findsOneWidget);
       expect(find.text('رب'), findsOneWidget);
+      final word = tester.widget<Text>(find.text('رب'));
+      expect(word.style?.fontFamily, 'Amiri');
+      expect(word.style?.fontSize, 24);
 
       await tester.ensureVisible(
         find.byKey(const Key('v2-result-retry-now')),
@@ -108,4 +112,25 @@ void main() {
       expect(action, V2RecitationResultAction.retryNow);
     },
   );
+
+  testWidgets('a near miss offers only an immediate retry (A5)', (
+    tester,
+  ) async {
+    // Three of four words: inside the retry band.
+    final feedback = _feedback(
+      target: 'الحمد لله رب العالمين',
+      spoken: 'الحمد لله العالمين',
+    );
+
+    await tester.pumpWidget(
+      _host((context) async {
+        await showV2RecitationResultSheet(context, feedback);
+      }),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('v2-result-retry-now')), findsOneWidget);
+    expect(find.byKey(const Key('v2-result-review-ayah')), findsNothing);
+  });
 }

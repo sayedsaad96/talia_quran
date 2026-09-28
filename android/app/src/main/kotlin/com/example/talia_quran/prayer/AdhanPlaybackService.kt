@@ -73,13 +73,13 @@ class AdhanPlaybackService : Service() {
             stopPlayback()
             return START_NOT_STICKY
         }
-        startPlayback(soundProfile)
+        startPlayback(soundProfile, prayerKey)
         return START_NOT_STICKY
     }
 
-    private fun startPlayback(soundProfile: String) {
+    private fun startPlayback(soundProfile: String, prayerKey: String) {
         try {
-            val clip = AdhanClipResolver.rawResourceName(soundProfile, "")
+            val clip = AdhanClipResolver.rawResourceName(soundProfile, prayerKey)
             val resId = resources.getIdentifier(clip, "raw", packageName)
             if (resId == 0) {
                 Log.w(TAG, "bundled clip '$clip' not found")

@@ -8,11 +8,13 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
+import '../widgets/kids_journey_complete_card.dart';
+import '../widgets/kids_day_complete_card.dart';
+import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
@@ -46,14 +48,36 @@ String kidsMissionLocation(KidsNextMission mission) =>
     '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
     '&ayahNumber=${mission.startAyah}&missionType=${mission.type.name}';
 
-class _KidsGamifiedHomeView extends StatelessWidget {
+class _KidsGamifiedHomeView extends StatefulWidget {
   const _KidsGamifiedHomeView({required this.surahId, this.childName});
 
   final int surahId;
   final String? childName;
 
   @override
+  State<_KidsGamifiedHomeView> createState() => _KidsGamifiedHomeViewState();
+}
+
+class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
+  /// Guards against rapid double taps stacking two copies of the same
+  /// destination on top of each other — a very real pattern with children.
+  bool _destinationOpen = false;
+
+  Future<void> _openDestination(Future<void> Function() open) async {
+    if (_destinationOpen) return;
+    _destinationOpen = true;
+    try {
+      await open();
+    } finally {
+      if (mounted) {
+        _destinationOpen = false;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final surahId = widget.surahId;
     return Scaffold(
       backgroundColor: KidsTheme.nightSkyDark,
       body: BlocConsumer<KidsJourneyCubit, KidsJourneyState>(
@@ -66,12 +90,11 @@ class _KidsGamifiedHomeView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is KidsJourneyInitial || state is KidsJourneyLoading) {
-            return const Center(child: LoadingWidget());
+            return const Center(child: KidsLoadingWidget());
           }
 
           if (state is KidsJourneyError) {
-            return ErrorStateWidget(
-              message: state.message,
+            return KidsErrorWidget(
               onRetry: () =>
                   context.read<KidsJourneyCubit>().load(surahId: surahId),
             );
@@ -81,18 +104,25 @@ class _KidsGamifiedHomeView extends StatelessWidget {
 
           return KidsGamifiedHomeContent(
             state: state,
-            childName: childName,
-            onHomeTap: () => context.go(
-              '${AppRoutes.memorizationPlusKidsHome}?surahId=${state.surahId}',
-            ),
+            childName: widget.childName,
+            // The home tab is only ever tappable while the home screen is
+            // already visible: navigating to the same route would rebuild the
+            // page and flash a loading state at the child for no reason.
+            onHomeTap: () {},
             onRefresh: () =>
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
-            onMushafTap: () =>
-                context.push(kidsQuranReaderLocation(state.surahId)),
-            onJourneyTap: () => context.push(
-              '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
-            ),
-            onMissionTap: () => unawaited(_openCurrentMission(context, state)),
+            onMushafTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(kidsQuranReaderLocation(state.surahId));
+            }),
+            onJourneyTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(
+                '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
+              );
+            }),
+            onMissionTap: () =>
+                _openDestination(() => _openCurrentMission(context, state)),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
           );
@@ -107,10 +137,12 @@ class _KidsGamifiedHomeView extends StatelessWidget {
   ) async {
     final mission = state.nextMission;
     if (mission == null) {
+      if (!context.mounted) return;
       await context.push(
         '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
       );
     } else {
+      if (!context.mounted) return;
       await context.push(kidsMissionLocation(mission));
     }
 
@@ -182,17 +214,25 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           // first-time child who has not started yet.
                           state.progress.ayahsCompleted > 0) ...[
                         // No stage and no mission after real progress: the
-                        // journey is finished — celebrate instead of a CTA.
-                        EmptyStateWidget(
-                          message: context.l10n.kidsGamifiedJourneyComplete,
-                          icon: Icons.emoji_events_rounded,
-                        ),
+                        // journey is finished — a real celebration, not a
+                        // generic empty state (W2).
+                        const KidsJourneyCompleteCard(),
+                      ] else if (state.dailyGoalCap != null) ...[
+                        // Today's quota is used up: end the day with praise
+                        // instead of a mission the session would refuse (N3).
+                        KidsDayCompleteCard(dailyGoalCap: state.dailyGoalCap!),
                       ] else ...[
                         KidsMissionCard(
                           stage: state.currentStage,
+                          // A mission in another surah never borrows the
+                          // loaded surah's name.
                           surahName:
-                              state.surahName ??
-                              '${context.l10n.surah} ${state.surahId}',
+                              state.nextMission != null &&
+                                  state.nextMission!.surahId != state.surahId
+                              ? '${context.l10n.surah} '
+                                    '${state.nextMission!.surahId}'
+                              : state.surahName ??
+                                    '${context.l10n.surah} ${state.surahId}',
                           onContinue: onMissionTap,
                           // A due SRS review or linked stage review is today's
                           // task, so the card says "Ready for review".
@@ -201,6 +241,8 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                                   KidsMissionType.dueReview ||
                               state.nextMission?.type ==
                                   KidsMissionType.linkedReview,
+                          // Describe the ayahs the review really opens (N7).
+                          reviewAyahs: state.nextMission?.ayahNumbers,
                         ),
                       ],
                       const SizedBox(height: 96),

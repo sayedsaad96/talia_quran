@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
@@ -46,46 +47,14 @@ class HomeAyahOfDayCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Column(
                   children: [
-                    // Decorative quotation mark
-                    Text(
-                      '﴿',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 32,
-                        color: skin.gold.withValues(alpha: 0.5),
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    // Ayah text — editorial floating
-                    Text(
-                      ayah.text,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.quranMedium.copyWith(
-                        fontSize: 24,
-                        height: 2.0,
-                        color: skin.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    // Closing quotation mark
-                    Text(
-                      '﴾',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 32,
-                        color: skin.gold.withValues(alpha: 0.5),
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    // Surah reference
-                    Text(
-                      reference,
-                      style: AppTypography.labelSmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: skin.gold,
-                      ),
+                    MemorizationAyahDisplay(
+                      text: ayah.text,
+                      surahId: ayah.surahId,
+                      ayahNumber: ayah.ayahNumber,
+                      textColor: skin.textPrimary,
+                      decorationColor: skin.gold.withValues(alpha: 0.5),
+                      referenceColor: skin.gold,
+                      surahName: surahName,
                     ),
                     // Factual surah context (revelation type + ayah count) —
                     // governed data only, never authored interpretation.

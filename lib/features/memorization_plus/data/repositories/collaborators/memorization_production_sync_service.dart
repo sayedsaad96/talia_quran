@@ -62,7 +62,8 @@ class MemorizationProductionSyncService {
 
   bool get _cloudPullEnabled => _gateway.cloudPullEnabled;
 
-  bool get isReviewEvidenceTransportEnabled => _evidenceSync?.isEnabled ?? false;
+  bool get isReviewEvidenceTransportEnabled =>
+      _evidenceSync?.isEnabled ?? false;
 
   SupabaseClient get _supabase => _gateway.supabase;
 
@@ -232,6 +233,25 @@ class MemorizationProductionSyncService {
       remoteGeneratedAt: cloudGeneratedAt,
     )) {
       if (localDirty) {
+        // Same study day edited on two devices: union the completions so the
+        // next push carries both instead of silently dropping the other's.
+        final payload = row['payload'];
+        final merged = local != null && payload is Map<String, dynamic>
+            ? DailyPlanCloudMerge.mergeSameDay(
+                local: local,
+                remote: DailyPlanModel.fromJson(payload),
+              )
+            : null;
+        if (merged != null) {
+          // Equatable compares runtime types (model vs entity), so compare
+          // the completion count to detect a real change.
+          final changed = merged.completedCount != local!.completedCount;
+          if (changed) {
+            await _datasource.saveDailyPlan(DailyPlanModel.fromEntity(merged));
+          }
+          await _prefs.remove(_dailyPlanConflictKey);
+          return changed;
+        }
         await _prefs.setString(_dailyPlanConflictKey, jsonEncode(row));
       }
       return false;
@@ -540,10 +560,10 @@ class MemorizationProductionSyncService {
         if (response is List) {
           final acknowledgedKeys =
               ReviewRecordCloudPushAcknowledgement.storageKeys(
-              ownerUserId: _owner.currentOwnerId,
-              sentRecords: batch,
-              acknowledgedRows: response.whereType<Map<String, dynamic>>(),
-            );
+                ownerUserId: _owner.currentOwnerId,
+                sentRecords: batch,
+                acknowledgedRows: response.whereType<Map<String, dynamic>>(),
+              );
           for (final record in batch) {
             final scope = ReviewRecordAudienceScope.scopeForWriteMode(
               record.createdByMode,
@@ -555,8 +575,9 @@ class MemorizationProductionSyncService {
               ayahNumber: record.ayahNumber,
             ).storageKey;
             if (acknowledgedKeys.contains(storageKey)) {
-              acknowledgedVersions[storageKey] =
-                  record.lastReviewedAt.toUtc().millisecondsSinceEpoch;
+              acknowledgedVersions[storageKey] = record.lastReviewedAt
+                  .toUtc()
+                  .millisecondsSinceEpoch;
             }
           }
         }

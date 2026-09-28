@@ -12,6 +12,7 @@ import 'package:talia_quran/features/azkar/domain/repositories/azkar_repository.
 import 'package:talia_quran/features/azkar/domain/usecases/get_azkar_usecase.dart';
 import 'package:talia_quran/features/azkar/presentation/cubits/azkar_cubit.dart';
 import 'package:talia_quran/features/azkar/presentation/pages/azkar_category_page.dart';
+import 'package:talia_quran/features/azkar/presentation/services/zikr_audio_service.dart';
 import 'package:talia_quran/features/azkar/presentation/widgets/font_scale_selector_sheet.dart';
 
 void main() {
@@ -25,6 +26,7 @@ void main() {
     prefsStore = AzkarPreferencesStore(prefs);
     getIt.registerSingleton<SharedPreferences>(prefs);
     getIt.registerSingleton<AzkarPreferencesStore>(prefsStore);
+    getIt.registerSingleton<ZikrAudioService>(ZikrAudioService());
   });
 
   tearDown(() => getIt.reset());
@@ -189,4 +191,10 @@ class _FakeRepo implements AzkarRepository {
   @override
   Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async =>
       Right(items);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async =>
+      Right({
+        for (final category in AzkarCategory.values) category: items,
+      });
 }

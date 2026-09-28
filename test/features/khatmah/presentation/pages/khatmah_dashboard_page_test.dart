@@ -645,7 +645,9 @@ void main() {
     await tester.pumpWidget(buildWidget(cubit: cubit));
     await tester.pumpAndSettle();
 
-    // Tap abandon button
+    // End khatmah lives in the overflow menu (K-U6).
+    await tester.tap(find.byKey(const Key('khatmah_dashboard_more_menu')));
+    await tester.pumpAndSettle();
     final abandonBtn = find.byKey(
       const Key('khatmah_dashboard_abandon_button'),
     );
@@ -700,6 +702,9 @@ void main() {
       await tester.ensureVisible(calmBtn);
       await tester.tap(calmBtn);
       await tester.pumpAndSettle();
+      // Schedule changes are previewed first (K-U2).
+      await tester.tap(find.byKey(const Key('khatmah_adjust_apply_button')));
+      await tester.pumpAndSettle();
 
       verify(
         () => mockUpdateSchedule(
@@ -717,6 +722,9 @@ void main() {
       await tester.ensureVisible(mildBtn);
       await tester.tap(mildBtn);
       await tester.pumpAndSettle();
+      // Schedule changes are previewed first (K-U2).
+      await tester.tap(find.byKey(const Key('khatmah_adjust_apply_button')));
+      await tester.pumpAndSettle();
 
       verify(
         () => mockUpdateSchedule(
@@ -728,4 +736,29 @@ void main() {
       ).called(1);
     },
   );
+
+  testWidgets("mushaf logger offers a one-tap 'through today's wird' (K-U4)", (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+    final logMushafBtn = find.byKey(
+      const Key('khatmah_dashboard_log_mushaf_button'),
+    );
+    await tester.ensureVisible(logMushafBtn);
+    await tester.tap(logMushafBtn);
+    await tester.pumpAndSettle();
+
+    // Pages 1-20 read, 4 pages/day: today's wird ends on page 24.
+    await tester.tap(find.byKey(const Key('khatmah_mushaf_wird_end_chip')));
+    await tester.pumpAndSettle();
+
+    final input = tester.widget<TextFormField>(
+      find.byKey(const Key('khatmah_dashboard_mushaf_page_input')),
+    );
+    expect(input.controller?.text, '24');
+  });
 }

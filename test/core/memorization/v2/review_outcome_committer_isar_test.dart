@@ -8,6 +8,7 @@ import 'package:talia_quran/core/memorization/learning_launch_context.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/review_outcome_committer.dart';
+import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
@@ -159,20 +160,14 @@ void main() {
     );
 
     test(
-      'self-assessment completes its task without promoting the SM-2 record',
+      'a "mastered" self-assessment is a real review capped at average',
       () async {
-        await committer.commitAutomaticPass(
-          previousState: _recitingState,
-          nextState: _nextState,
-          taskId: 'automatic-baseline',
-        );
-        final before = await isar.isarAyahReviewRecords.where().findFirst();
-
         await committer.commitAutomaticPass(
           previousState: _recitingState,
           nextState: _nextState.copyWith(phase: V2SessionPhase.completed),
           taskId: 'self-assessment',
           manuallyAssessed: true,
+          selfGrade: V2SelfGrade.mastered,
         );
 
         final after = await isar.isarAyahReviewRecords.where().findFirst();
@@ -183,16 +178,105 @@ void main() {
               event.assessmentIndex == ReviewEvidenceAssessment.manual.index,
         );
 
-        expect(after?.strengthLevel, before?.strengthLevel);
-        expect(after?.intervalDays, before?.intervalDays);
-        expect(after?.totalReviews, before?.totalReviews);
-        expect(after?.lastRatingIndex, before?.lastRatingIndex);
-        expect(after?.nextReviewDate.toUtc(), DateTime.utc(2026, 9, 9, 12));
-        expect(selfAssessment.ratingIndex, isNull);
+        // Counts as a review: the ayah stops being "new" and leaves the
+        // new-memorization bucket (A1).
+        expect(after?.totalReviews, 1);
+        expect(after?.toModel().isNew, isFalse);
+        // Self-report never earns an "excellent" rating or a certificate.
+        expect(after?.lastRatingIndex, PerformanceRating.average.index);
+        expect(selfAssessment.ratingIndex, PerformanceRating.average.index);
         expect(
           effects.any((effect) => effect.effectType == 'certificate'),
           isFalse,
         );
+      },
+    );
+
+    test('a "hesitated" self-assessment is scheduled as weak', () async {
+      await committer.commitAutomaticPass(
+        previousState: _recitingState,
+        nextState: _nextState,
+        taskId: 'self-assessment-hesitated',
+        manuallyAssessed: true,
+        selfGrade: V2SelfGrade.hesitated,
+      );
+
+      final after = await isar.isarAyahReviewRecords.where().findFirst();
+      expect(after?.totalReviews, 1);
+      expect(after?.lastRatingIndex, PerformanceRating.weak.index);
+    });
+
+    test(
+      'a manual "forgot" attempt is stored as manual failure evidence',
+      () async {
+        final failed = _recitingState.copyWith(
+          phase: V2SessionPhase.remediation,
+          failureTracker: V2AyahFailureTracker.empty.recordFailure(
+            surahId: 1,
+            ayahNumber: 1,
+          ),
+        );
+
+        await committer.commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: failed,
+          taskId: 'ayah-1',
+          manuallyAssessed: true,
+        );
+
+        final event = await isar.isarReviewEvidenceEvents.where().findFirst();
+        expect(event?.assessmentIndex, ReviewEvidenceAssessment.manual.index);
+        expect(event?.outcomeIndex, ReviewEvidenceOutcome.failed.index);
+        expect(event?.similarityScore, isNull);
+      },
+    );
+
+    test(
+      'a review in the same surah never overwrites the memorization checkpoint (A3)',
+      () async {
+        // Memorizing ayahs 1-2 of surah 1: ayah 1 passed, checkpoint saved.
+        await committer.commitAutomaticPass(
+          previousState: _recitingState,
+          nextState: _nextState,
+          taskId: 'ayah:1:1',
+        );
+        final memorizeCheckpoint = await isar.isarV2Sessions
+            .where()
+            .findFirst();
+
+        // A due review of ayah 1 in the same surah.
+        const reviewReciting = V2SessionState(
+          surahId: 1,
+          blockAyahs: [
+            Ayah(number: 1, surahId: 1, text: 'a', numberInSurah: 1),
+          ],
+          currentAyahIndex: 0,
+          phase: V2SessionPhase.reciting,
+          passedAyahNumbers: {},
+          hintTracker: V2HintTracker.empty,
+          failureTracker: V2AyahFailureTracker.empty,
+          blockReviewRequired: false,
+          isReview: true,
+        );
+        final review = await committer.commitAutomaticPass(
+          previousState: reviewReciting,
+          nextState: reviewReciting.copyWith(
+            phase: V2SessionPhase.completed,
+            passedAyahNumbers: {1},
+          ),
+          taskId: 'ayah:1:1',
+        );
+
+        final sessions = await isar.isarV2Sessions.where().findAll();
+        final memorize = sessions.singleWhere(
+          (session) => session.id == memorizeCheckpoint!.id,
+        );
+        // The review is a new task, not a duplicate of the memorize pass.
+        expect(review.alreadyCommitted, isFalse);
+        expect(review.sessionId, isNot(memorizeCheckpoint!.sessionId));
+        expect(sessions, hasLength(2));
+        expect(memorize.phaseIndex, V2SessionPhase.learning.index);
+        expect(memorize.passedAyahNumbers, {1});
       },
     );
 
@@ -265,6 +349,59 @@ void main() {
         final event = await isar.isarReviewEvidenceEvents.where().findFirst();
         expect(event?.ayahNumber, 2);
         expect(event?.surahId, 1);
+      },
+    );
+
+    test(
+      'a failed block review demotes the remediated ayah once per session (A4)',
+      () async {
+        // Ayah 2 passed earlier in the block and was scheduled.
+        final passing = _recitingState.copyWith(currentAyahIndex: 1);
+        await committer.commitAutomaticPass(
+          previousState: passing,
+          nextState: passing.copyWith(
+            phase: V2SessionPhase.blockReviewPending,
+            passedAyahNumbers: {1, 2},
+          ),
+          taskId: 'ayah:1:2',
+        );
+        final remediation = _recitingState.copyWith(
+          phase: V2SessionPhase.remediation,
+          currentAyahIndex: 1,
+          passedAyahNumbers: {1, 2},
+          failureTracker: V2AyahFailureTracker.empty.recordFailure(
+            surahId: 1,
+            ayahNumber: 2,
+          ),
+        );
+
+        await committer.commitFailedAutomaticAttempt(
+          previousState: remediation.copyWith(
+            phase: V2SessionPhase.blockReview,
+            failureTracker: V2AyahFailureTracker.empty,
+          ),
+          nextState: remediation,
+          taskId: 'block-review:1',
+        );
+        final demoted = await isar.isarAyahReviewRecords.where().findFirst();
+        expect(demoted?.lastRatingIndex, PerformanceRating.weak.index);
+        expect(demoted?.lapses, 1);
+
+        // A second block failure in the same session must not stack demotions.
+        await committer.commitFailedAutomaticAttempt(
+          previousState: remediation.copyWith(
+            phase: V2SessionPhase.blockReview,
+          ),
+          nextState: remediation.copyWith(
+            failureTracker: remediation.failureTracker.recordFailure(
+              surahId: 1,
+              ayahNumber: 2,
+            ),
+          ),
+          taskId: 'block-review:1',
+        );
+        final after = await isar.isarAyahReviewRecords.where().findFirst();
+        expect(after?.lapses, 1);
       },
     );
 

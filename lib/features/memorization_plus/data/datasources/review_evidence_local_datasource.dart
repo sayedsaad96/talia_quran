@@ -68,10 +68,9 @@ final class ReviewEvidenceLocalDatasource {
         .filter()
         .ownerIdEqualTo(expectedOwner)
         .findAll();
-    final pending = events
-        .where((event) => pendingIds.contains(event.eventId))
-        .toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final pending =
+        events.where((event) => pendingIds.contains(event.eventId)).toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
     return pending.take(limit).toList(growable: false);
   }
 
@@ -129,10 +128,9 @@ final class ReviewEvidenceLocalDatasource {
     Set<String> acceptedIds,
   ) async {
     if (!_isSyncableOwner(expectedOwner) || acceptedIds.isEmpty) return;
-    final sent = {
-      for (final event in sentSnapshot) event.eventId: event,
-    };
-    if (sent.length != sentSnapshot.length || !acceptedIds.every(sent.containsKey)) {
+    final sent = {for (final event in sentSnapshot) event.eventId: event};
+    if (sent.length != sentSnapshot.length ||
+        !acceptedIds.every(sent.containsKey)) {
       throw StateError('Invalid evidence acknowledgement snapshot');
     }
     await _isar.writeTxn(() async {
@@ -171,7 +169,8 @@ final class ReviewEvidenceLocalDatasource {
     final key = _receiptKey(event.eventId);
     final existing = await _isar.isarReviewEffectOutboxs.getByReceiptKey(key);
     if (existing != null) {
-      if (existing.ownerId != expectedOwner || existing.eventId != event.eventId) {
+      if (existing.ownerId != expectedOwner ||
+          existing.eventId != event.eventId) {
         throw StateError('Cloud evidence receipt conflict');
       }
       if (existing.processedAt == null) {
@@ -292,14 +291,20 @@ abstract final class ReviewEvidenceWire {
         !_validText(event.taskId, 240) ||
         (event.audience != 'adult' && event.audience != 'kids') ||
         !_validAyah(event.surahId, event.ayahNumber) ||
-        event.eventTypeIndex < 0 || event.eventTypeIndex > 1 ||
-        event.assessmentIndex < 0 || event.assessmentIndex > 1 ||
-        event.outcomeIndex < 0 || event.outcomeIndex > 2 ||
+        event.eventTypeIndex < 0 ||
+        event.eventTypeIndex > 1 ||
+        event.assessmentIndex < 0 ||
+        event.assessmentIndex > 1 ||
+        event.outcomeIndex < 0 ||
+        event.outcomeIndex > 2 ||
         (event.ratingIndex != null &&
             (event.ratingIndex! < 0 || event.ratingIndex! > 2)) ||
-        event.attemptCount < 1 || event.attemptCount > 1000 ||
-        event.failureCount < 0 || event.failureCount > event.attemptCount ||
-        event.hintLevelIndex < 0 || event.hintLevelIndex > 2 ||
+        event.attemptCount < 1 ||
+        event.attemptCount > 1000 ||
+        event.failureCount < 0 ||
+        event.failureCount > event.attemptCount ||
+        event.hintLevelIndex < 0 ||
+        event.hintLevelIndex > 2 ||
         !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(event.studyDayKey) ||
         (event.similarityScore != null &&
             (!event.similarityScore!.isFinite ||
@@ -359,22 +364,129 @@ abstract final class ReviewEvidenceWire {
   static bool _isPositiveInteger(Object? value) =>
       _isInteger(value) && (value as num) > 0;
 
-  static double? _normalizedScore(double? value) => value == null
-      ? null
-      : (value * 10000).roundToDouble() / 10000;
+  static double? _normalizedScore(double? value) =>
+      value == null ? null : (value * 10000).roundToDouble() / 10000;
 
   static bool _validAyah(int surah, int ayah) =>
-      surah >= 1 && surah <= _ayahCounts.length && ayah >= 1 && ayah <= _ayahCounts[surah - 1];
+      surah >= 1 &&
+      surah <= _ayahCounts.length &&
+      ayah >= 1 &&
+      ayah <= _ayahCounts[surah - 1];
 
   static const _ayahCounts = <int>[
-    7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52,
-    99, 128, 111, 110, 98, 135, 112, 78, 118, 64, 77, 227, 93, 88,
-    69, 60, 34, 30, 73, 54, 45, 83, 182, 88, 75, 85, 54, 53,
-    89, 59, 37, 35, 38, 29, 18, 45, 60, 49, 62, 55, 78, 96,
-    29, 22, 24, 13, 14, 11, 11, 18, 12, 12, 30, 52, 52, 44,
-    28, 28, 20, 56, 40, 31, 50, 40, 46, 42, 29, 19, 36, 25,
-    22, 17, 19, 26, 30, 20, 15, 21, 11, 8, 8, 19, 5, 8,
-    8, 11, 11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4,
-    5, 6,
+    7,
+    286,
+    200,
+    176,
+    120,
+    165,
+    206,
+    75,
+    129,
+    109,
+    123,
+    111,
+    43,
+    52,
+    99,
+    128,
+    111,
+    110,
+    98,
+    135,
+    112,
+    78,
+    118,
+    64,
+    77,
+    227,
+    93,
+    88,
+    69,
+    60,
+    34,
+    30,
+    73,
+    54,
+    45,
+    83,
+    182,
+    88,
+    75,
+    85,
+    54,
+    53,
+    89,
+    59,
+    37,
+    35,
+    38,
+    29,
+    18,
+    45,
+    60,
+    49,
+    62,
+    55,
+    78,
+    96,
+    29,
+    22,
+    24,
+    13,
+    14,
+    11,
+    11,
+    18,
+    12,
+    12,
+    30,
+    52,
+    52,
+    44,
+    28,
+    28,
+    20,
+    56,
+    40,
+    31,
+    50,
+    40,
+    46,
+    42,
+    29,
+    19,
+    36,
+    25,
+    22,
+    17,
+    19,
+    26,
+    30,
+    20,
+    15,
+    21,
+    11,
+    8,
+    8,
+    19,
+    5,
+    8,
+    8,
+    11,
+    11,
+    8,
+    3,
+    9,
+    5,
+    4,
+    7,
+    3,
+    6,
+    3,
+    5,
+    4,
+    5,
+    6,
   ];
 }

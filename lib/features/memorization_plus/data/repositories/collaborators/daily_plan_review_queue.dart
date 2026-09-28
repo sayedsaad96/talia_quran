@@ -15,9 +15,12 @@ class DailyPlanReviewQueue {
     required bool includeNear,
     required bool includeFar,
   }) {
+    // Never-reviewed records are new material served by the new-ayah bucket.
+    // Counting them as review backlog would block new memorization while
+    // listing nothing to review (they fit no weak/near/far bucket).
     final due = records
         .where(ReviewRecordFilters.isAdultCompatible)
-        .where((record) => record.classifyAt(now).isDue)
+        .where((record) => record.classifyAt(now).isVisibleForReview)
         .toList();
     final required =
         due.where((record) => !record.classifyAt(now).isMemorized).toList()
@@ -28,7 +31,23 @@ class DailyPlanReviewQueue {
 
     final reviewCapacity =
         (includeNear ? nearLimit : 0) + (includeFar ? farLimit : 0);
-    final selected = required.take(reviewCapacity).toList();
+    // The toggles must filter, not just shrink capacity: with near revision
+    // disabled, near items may not fill the remaining far slots.
+    final eligible = required.where((record) {
+      if (_isWeakRecovery(record)) return true; // recovery is always due work
+      final classification = record.classifyAt(now);
+      if (classification.isNearRevision) return includeNear;
+      if (classification.isFarRevision) return includeFar;
+      return true; // overdue-but-unclassified required work stays schedulable
+    }).toList();
+    // Weak recovery is mandatory consolidation work: it keeps a capacity
+    // floor even when both routine revision toggles are off, so the plan
+    // never dead-ends (a blocking backlog with nothing scheduled to do).
+    final weakDueCount = required.where(_isWeakRecovery).length;
+    final effectiveCapacity = weakDueCount > reviewCapacity
+        ? weakDueCount
+        : reviewCapacity;
+    final selected = eligible.take(effectiveCapacity).toList();
     final weak = selected.where(_isWeakRecovery).toList();
     final near = selected
         .where((record) => !_isWeakRecovery(record))
@@ -43,10 +62,20 @@ class DailyPlanReviewQueue {
       weak: weak,
       near: near,
       far: far,
-      retention: retention.take(retentionLimit).toList(),
+      retention: retention
+          .take(_adaptiveRetentionLimit(retention.length, retentionLimit))
+          .toList(),
       dueBacklogCount: required.length,
       reviewCapacity: reviewCapacity,
     );
+  }
+
+  /// Retention catch-up: a fixed 3/day cap lets a growing backlog of overdue
+  /// memorized ayahs drift indefinitely. Serve more per day as the backlog
+  /// grows, bounded so the plan never drowns the learner.
+  static int _adaptiveRetentionLimit(int overdueCount, int configured) {
+    if (overdueCount <= configured * 2) return configured;
+    return (configured + overdueCount ~/ 4).clamp(configured, 15);
   }
 
   static bool _isWeakRecovery(AyahReviewRecord record) =>

@@ -8,7 +8,7 @@ import '../../features/streak/domain/entities/streak_result.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import 'milestone_notification.dart';
-import 'streak_mercy_policy.dart';
+import 'streak_day.dart';
 import 'streak_reader.dart';
 
 class StreakService implements StreakReader {
@@ -16,9 +16,6 @@ class StreakService implements StreakReader {
 
   final Isar _isar;
   final ProgressEventsBus _progressEvents;
-
-  /// "يوم الرحمة" (Mercy Day) grace rule — see [StreakMercyPolicy].
-  static const StreakMercyPolicy _mercyPolicy = StreakMercyPolicy();
 
   static const List<int> _milestones = [3, 7, 14, 30, 60, 100, 365];
 
@@ -37,71 +34,35 @@ class StreakService implements StreakReader {
   }
 
   Future<StreakResult> recordActivity({int activityDelta = 1}) async {
-    // BUG-006 FIX: Use UTC to avoid timezone-related date comparison bugs
-    final now = DateTime.now().toUtc();
-    final todayDate = DateTime.utc(now.year, now.month, now.day);
-
-    // Compute dayKey as int YYYYMMDD for O(1) Isar lookup
-    final dayKey =
-        todayDate.year * 10000 + todayDate.month * 100 + todayDate.day;
+    // One shared rule: the learner's local calendar day (see [StreakDay]).
+    final todayDate = StreakDay.of(DateTime.now());
+    final dayKey = StreakDay.dayKey(todayDate);
 
     final result = await _isar.writeTxn(() async {
-      // ── 1. Update Streak record ────────────────────────────────────────────
-      var mercyApplied = false;
       final data = await _isar.streakIsars.get(1) ?? StreakIsar();
-      final lastDate = data.lastActivityDate;
+      final next = StreakDay.transition(
+        currentStreak: data.currentStreak,
+        longestStreak: data.longestStreak,
+        lastDay: data.lastActivityDate,
+        lastMercyDay: data.lastMercyDate,
+        today: todayDate,
+      );
 
-      if (lastDate != null) {
-        final lastNormalized = DateTime.utc(
-          lastDate.year,
-          lastDate.month,
-          lastDate.day,
-        );
-
-        // Same day → increment daily activity but don't change streak
-        if (lastNormalized == todayDate) {
-          // Still update the daily counter below
-          await _upsertDailyActivity(dayKey, activityDelta);
-          _progressEvents.notify(ProgressChangedReason.streak);
-          return const StreakResult.sameDay();
-        }
-
-        final yesterday = todayDate.subtract(const Duration(days: 1));
-
-        if (lastNormalized == yesterday) {
-          // Consecutive day
-          data.currentStreak += 1;
-        } else {
-          // Streak broken. "يوم الرحمة" (Mercy Day): missing exactly one day
-          // is forgiven at most once per week — the streak is re-lit instead
-          // of reset, because الله رحيم and so is Talia.
-          final missedDays = todayDate.difference(lastNormalized).inDays - 1;
-          final mercyGranted = _mercyPolicy.allowsMercy(
-            missedDays: missedDays,
-            lastMercyDate: data.lastMercyDate,
-            today: todayDate,
-          );
-          if (mercyGranted) {
-            data.currentStreak += 1;
-            data.lastMercyDate = todayDate;
-            mercyApplied = true;
-          } else {
-            data.currentStreak = 1;
-          }
-        }
-      } else {
-        // First time
-        data.currentStreak = 1;
+      // Same day → increment daily activity but don't change streak.
+      if (!next.isNewDay) {
+        await _upsertDailyActivity(dayKey, activityDelta);
+        _progressEvents.notify(ProgressChangedReason.streak);
+        return const StreakResult.sameDay();
       }
 
-      final isNewRecord = data.currentStreak > data.longestStreak;
-      if (isNewRecord) data.longestStreak = data.currentStreak;
-
+      data.currentStreak = next.currentStreak;
+      data.longestStreak = next.longestStreak;
+      data.lastMercyDate = next.lastMercyDay;
       data.lastActivityDate = todayDate;
       data.cloudDirty = true;
       await _isar.streakIsars.put(data);
 
-      // ── 2. Record into DailyActivityIsar for the heatmap ──────────────────
+      // Record into DailyActivityIsar for the heatmap.
       await _upsertDailyActivity(dayKey, activityDelta);
 
       _progressEvents.notify(ProgressChangedReason.streak);
@@ -110,11 +71,11 @@ class StreakService implements StreakReader {
         currentStreak: data.currentStreak,
         longestStreak: data.longestStreak,
         isNewActivity: true,
-        isNewRecord: isNewRecord,
+        isNewRecord: next.isNewRecord,
         milestoneReached: _milestones.contains(data.currentStreak)
             ? data.currentStreak
             : null,
-        mercyApplied: mercyApplied,
+        mercyApplied: next.mercyApplied,
       );
     });
 
@@ -147,9 +108,10 @@ class StreakService implements StreakReader {
 
   /// Read activity map for the last [days] days. Returns Map<'YYYY-MM-DD', count>.
   Future<Map<String, int>> getActivityMap({int days = 365}) async {
-    final now = DateTime.now().toUtc();
-    final since = now.subtract(Duration(days: days - 1));
-    final sinceKey = since.year * 10000 + since.month * 100 + since.day;
+    final since = StreakDay.of(
+      DateTime.now(),
+    ).subtract(Duration(days: days - 1));
+    final sinceKey = StreakDay.dayKey(since);
 
     final records = await _isar.dailyActivityIsars
         .where()

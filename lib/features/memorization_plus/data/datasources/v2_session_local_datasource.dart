@@ -41,11 +41,13 @@ class V2SessionLocalDatasource {
   Future<IsarV2Session?> getSession(
     int surahId, {
     MemorizationAudience audience = MemorizationAudience.adult,
+    bool review = false,
   }) async {
     final key = IsarV2Session.keyFor(
       ownerId: currentOwnerId,
       audience: audience,
       surahId: surahId,
+      review: review,
     );
     final sessions = await _isar.isarV2Sessions.where().findAll();
     for (final session in sessions) {
@@ -97,8 +99,13 @@ class V2SessionLocalDatasource {
   Future<void> clearSession(
     int surahId, {
     MemorizationAudience audience = MemorizationAudience.adult,
+    bool review = false,
   }) async {
-    final session = await getSession(surahId, audience: audience);
+    final session = await getSession(
+      surahId,
+      audience: audience,
+      review: review,
+    );
     if (session == null) return;
     await _isar.writeTxn(() async {
       await _isar.isarV2Sessions.delete(session.id);

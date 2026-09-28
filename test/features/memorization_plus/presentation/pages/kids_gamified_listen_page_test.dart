@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
@@ -35,6 +36,7 @@ void main() {
       );
 
       expect(find.byType(KidsAyahCard), findsOneWidget);
+      expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
       expect(find.text('Ayah 3'), findsOneWidget);
       expect(find.text('Listen and repeat'), findsWidgets);
       expect(find.text('Record your recitation'), findsOneWidget);
@@ -245,6 +247,75 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets(
+      'a near-miss recitation shows the friendly word-progress banner',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1400);
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedListenContent(
+              state: _baseState.copyWith(
+                recordingError: CubitMessageCodes.kidsRecitationMismatch,
+                lastMatchedWords: 8,
+                lastTargetWords: 10,
+              ),
+              onBack: () {},
+              onPlayPause: () {},
+              onRecordRecitation: () {},
+              onStopRecording: () {},
+            ),
+          ),
+        );
+
+        expect(
+          find.byKey(const ValueKey('kids-close-match-feedback')),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'So close! You got 8 of 10 words right. '
+            'Listen again and try once more.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'a total mismatch without matched words shows no misleading banner',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1400);
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedListenContent(
+              state: _baseState.copyWith(
+                recordingError: CubitMessageCodes.kidsRecitationMismatch,
+                lastMatchedWords: 0,
+                lastTargetWords: 2,
+              ),
+              onBack: () {},
+              onPlayPause: () {},
+              onRecordRecitation: () {},
+              onStopRecording: () {},
+            ),
+          ),
+        );
+
+        // "You got 0 of 2 words" is not encouraging feedback — hide the
+        // banner and let the generic message speak instead.
+        expect(
+          find.byKey(const ValueKey('kids-close-match-feedback')),
+          findsNothing,
+        );
+      },
+    );
     testWidgets(
       'isRecording=true shows recording indicator and disables play',
       (tester) async {

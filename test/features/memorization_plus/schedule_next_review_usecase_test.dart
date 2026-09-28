@@ -115,10 +115,22 @@ void main() {
       expect(updated.strengthLevel, equals(4));
     });
 
-    test('average does not change strength', () {
+    test('average grows strength below the memorized threshold', () {
       final base = _newRecord(strengthLevel: 5);
       final updated = _scheduler.schedule(base, PerformanceRating.average);
-      expect(updated.strengthLevel, equals(5));
+      expect(updated.strengthLevel, equals(6));
+    });
+
+    test('average never grows strength at or above the memorized threshold', () {
+      final base = _newRecord(strengthLevel: 6);
+      final updated = _scheduler.schedule(base, PerformanceRating.average);
+      expect(updated.strengthLevel, equals(6));
+
+      final strong = _scheduler.schedule(
+        _newRecord(strengthLevel: 8),
+        PerformanceRating.average,
+      );
+      expect(strong.strengthLevel, equals(8));
     });
 
     test('weak decreases strength by 1', () {
@@ -304,6 +316,54 @@ void main() {
         final updated = _scheduler.schedule(_newRecord(), rating);
         expect(updated.lastRating, equals(rating));
       }
+    });
+  });
+
+  // ─── Lapse decay ────────────────────────────────────────────────────────────
+
+  group('ScheduleNextReviewUsecase — lapse decay', () {
+    AyahReviewRecordModel lapsedRecord({int lapses = 3}) =>
+        AyahReviewRecordModel(
+          surahId: 1,
+          ayahNumber: 1,
+          strengthLevel: 5,
+          intervalDays: 10,
+          lastReviewedAt: DateTime.now().toUtc(),
+          nextReviewDate: DateTime.now().toUtc(),
+          totalReviews: 10,
+          lastRating: PerformanceRating.weak,
+          lapses: lapses,
+        );
+
+    test('excellent forgives one historical lapse per pass', () {
+      final updated = _scheduler.schedule(
+        lapsedRecord(lapses: 3),
+        PerformanceRating.excellent,
+      );
+      expect(updated.lapses, equals(2));
+    });
+
+    test('repeated excellent reviews drain lapses to zero', () {
+      AyahReviewRecord record = lapsedRecord(lapses: 2);
+      record = _scheduler.schedule(record, PerformanceRating.excellent);
+      record = _scheduler.schedule(record, PerformanceRating.excellent);
+      expect(record.lapses, equals(0));
+    });
+
+    test('weak still increments lapses', () {
+      final updated = _scheduler.schedule(
+        lapsedRecord(lapses: 1),
+        PerformanceRating.weak,
+      );
+      expect(updated.lapses, equals(2));
+    });
+
+    test('average leaves lapses untouched', () {
+      final updated = _scheduler.schedule(
+        lapsedRecord(lapses: 2),
+        PerformanceRating.average,
+      );
+      expect(updated.lapses, equals(2));
     });
   });
 

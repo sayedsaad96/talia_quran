@@ -11,7 +11,11 @@ part 'cloud_sync_queue_item.g.dart';
 class CloudSyncQueueItem {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, replace: true, composite: [CompositeIndex('ownerUserId')])
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [CompositeIndex('ownerUserId')],
+  )
   late String kind;
 
   /// Supabase user id of the account that enqueued this item.

@@ -60,4 +60,32 @@ void main() {
     );
     await cubit.close();
   });
+
+  test(
+    'khatmah reading counts for the streak but never touches free reading (C1)',
+    () async {
+      final cubit = QuranPageCubit(repository, saveRead, streak);
+      await cubit.loadPage(11);
+
+      final confirmed = await cubit.confirmRead(
+        11,
+        recordOrdinaryReading: false,
+      );
+
+      expect(confirmed, isTrue);
+      verify(() => streak.recordActivity()).called(1);
+      // Free-reading stats, the reading log and the daily wird stay separate.
+      verifyNever(() => saveRead(any()));
+      await cubit.close();
+    },
+  );
+
+  test('a failed streak write never blocks khatmah confirmation', () async {
+    when(() => streak.recordActivity()).thenThrow(StateError('isar'));
+    final cubit = QuranPageCubit(repository, saveRead, streak);
+    await cubit.loadPage(11);
+
+    expect(await cubit.confirmRead(11, recordOrdinaryReading: false), isTrue);
+    await cubit.close();
+  });
 }

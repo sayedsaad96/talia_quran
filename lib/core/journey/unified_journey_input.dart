@@ -1,11 +1,7 @@
 import '../../features/memorization_plus/domain/entities/memorization_recommendation.dart';
 import '../memorization/smart_coach_recommendation.dart';
 
-enum SmartPlanType {
-  continueMemorization,
-  reviewPlan,
-  customPlan,
-}
+enum SmartPlanType { continueMemorization, reviewPlan, customPlan }
 
 class UnifiedJourneyInput {
   const UnifiedJourneyInput({

@@ -39,10 +39,8 @@ mixin MemorizationIdentityStorageMixin on MemorizationLocalStorageMixin {
   String? getSelectedTrack() =>
       _prefs.getString(MemorizationPlusLocalDatasourceImpl._kTrack);
 
-  Future<void> saveSelectedTrack(String track) => _setStringOrThrow(
-    MemorizationPlusLocalDatasourceImpl._kTrack,
-    track,
-  );
+  Future<void> saveSelectedTrack(String track) =>
+      _setStringOrThrow(MemorizationPlusLocalDatasourceImpl._kTrack, track);
 
   Future<void> clearSelectedTrack() =>
       _removeOrThrow(MemorizationPlusLocalDatasourceImpl._kTrack);

@@ -5,13 +5,8 @@ class SupabaseConfig {
       'taliaquran://auth/update-password';
 
   static const fromDartDefine = SupabaseConfig(
-    url: String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: '',
-    ),
-    anonKey: String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-    ),
+    url: String.fromEnvironment('SUPABASE_URL', defaultValue: ''),
+    anonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
 
   static const passwordRecoveryRedirectTo = String.fromEnvironment(

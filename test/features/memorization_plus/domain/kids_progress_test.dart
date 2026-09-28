@@ -48,4 +48,37 @@ void main() {
       expect(progress.ayahsCompleted, 2);
     });
   });
+
+  group('KidsProgress level curve', () {
+    test('the first level step is deliberately cheap', () {
+      expect(KidsProgress.pointsForLevelStep(1), 50);
+      expect(KidsProgress.pointsForLevelStep(2), 200);
+      expect(KidsProgress.cumulativePointsForLevel(1), 0);
+      expect(KidsProgress.cumulativePointsForLevel(2), 50);
+      expect(KidsProgress.cumulativePointsForLevel(3), 250);
+    });
+
+    test('fifty points level a fresh child up immediately', () {
+      var progress = const KidsProgress.initial();
+      for (var i = 0; i < 5; i++) {
+        progress = progress.addPoints(10);
+      }
+
+      expect(progress.totalPoints, 50);
+      expect(progress.currentLevel, 2);
+      expect(progress.pointsInCurrentLevel, 0);
+      expect(progress.pointsForNextLevel, 200);
+    });
+
+    test('level thresholds match the cumulative curve', () {
+      var progress = const KidsProgress.initial();
+      for (var i = 0; i < 25; i++) {
+        progress = progress.addPoints(10);
+      }
+
+      // 250 points = cumulative threshold for level 3.
+      expect(progress.totalPoints, 250);
+      expect(progress.currentLevel, 3);
+    });
+  });
 }

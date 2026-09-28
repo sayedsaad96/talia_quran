@@ -236,7 +236,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                       ? AppColors.darkTextSecondary
                                       : AppColors.lightTextSecondary,
                                 ),
-                                tooltip: context.isArabic ? 'الآية السابقة' : 'Previous Ayah',
+                                tooltip: context.l10n.prevAyah,
                                 onPressed: () {
                                   HapticFeedback.selectionClick();
                                   context.read<QuranAudioPlayerCubit>().previousAyah();
@@ -263,7 +263,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                       ? AppColors.darkTextSecondary
                                       : AppColors.lightTextSecondary,
                                 ),
-                                tooltip: context.isArabic ? 'الآية التالية' : 'Next Ayah',
+                                tooltip: context.l10n.nextAyah,
                                 onPressed: () {
                                   HapticFeedback.selectionClick();
                                   context.read<QuranAudioPlayerCubit>().nextAyah();
@@ -280,7 +280,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                     ? AppColors.darkTextHint
                                     : AppColors.lightTextHint,
                               ),
-                              tooltip: context.isArabic ? 'تغيير القارئ' : 'Change Reciter',
+                              tooltip: context.l10n.changeReciter,
                               onPressed: () => ReciterSelectorSheet.show(context),
                               visualDensity: VisualDensity.compact,
                             ),
@@ -294,7 +294,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                     ? AppColors.darkTextHint
                                     : AppColors.lightTextHint,
                               ),
-                              tooltip: context.isArabic ? 'إغلاق المشغل' : 'Close Player',
+                              tooltip: context.l10n.closePlayer,
                               onPressed: () {
                                 HapticFeedback.lightImpact();
                                 context.read<QuranAudioPlayerCubit>().stop();

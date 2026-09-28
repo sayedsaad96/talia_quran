@@ -258,7 +258,8 @@ class TaliaNotificationService {
 
   /// Optional Fajr-only muezzin override. Empty string = same as the
   /// general muezzin.
-  static const String prayerMuezzinFajrKey = 'notifications_prayer_muezzin_fajr';
+  static const String prayerMuezzinFajrKey =
+      'notifications_prayer_muezzin_fajr';
   static const String quietHoursPreferenceKey = 'notifications_quiet_hours';
   static const String quietHoursStartKey = 'notifications_quiet_start';
   static const String quietHoursEndKey = 'notifications_quiet_end';
@@ -997,7 +998,10 @@ class TaliaNotificationService {
   /// separate channel id because Android freezes a channel's sound at
   /// creation: reusing the legacy id would keep the old sound on
   /// already-installed apps.
-  NotificationDetails _prayerAthanDetails(String prayerKey, {String soundProfile = MuezzinCatalog.defaultId}) {
+  NotificationDetails _prayerAthanDetails(
+    String prayerKey, {
+    String soundProfile = MuezzinCatalog.defaultId,
+  }) {
     final sound = resolvePrayerSound(
       athanEnabled: true,
       prayerKey: prayerKey,
@@ -1821,7 +1825,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       notificationDetails: _milestoneCelebrationNotificationDetails,
-      payload: '/home',
+      payload: '/',
     );
   }
 

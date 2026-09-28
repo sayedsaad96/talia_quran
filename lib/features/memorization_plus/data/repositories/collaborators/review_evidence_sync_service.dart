@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/identity/account_data_barrier.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/cloud_sync_feature_flags.dart';
+import '../../../../../core/utils/talia_logger.dart';
 import '../../datasources/review_evidence_local_datasource.dart';
 import '../../models/isar_review_evidence_event.dart';
 import 'memorization_cloud_gateway.dart';
@@ -81,11 +82,16 @@ final class SupabaseReviewEvidenceTransport implements ReviewEvidenceTransport {
   }
 }
 
-/// Safe, full-history reconciliation for immutable review evidence.
+/// Safe reconciliation for immutable review evidence.
 ///
-/// The deployed sequence is allocated before transaction commit, so successful
-/// runs intentionally restart at sequence zero instead of storing a permanent
-/// high-water mark that could miss a late commit.
+/// The deployed sequence is allocated before transaction commit, so a lower
+/// sequence can become visible after a higher one. A strict high-water cursor
+/// could therefore miss a late commit forever. Instead (S-2):
+/// * a full reconciliation from zero runs at least every
+///   [fullReconcileInterval] (and on the first pull);
+/// * in between, pulls resume [overlapSequences] below the highest sequence
+///   seen, re-reading a window wide enough for late commits. Merging is
+///   idempotent, so the overlap costs only bandwidth.
 final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
   ReviewEvidenceSyncService({
     required ReviewEvidenceLocalDatasource local,
@@ -93,17 +99,43 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     required SharedPreferences prefs,
     required ReviewEvidenceTransport transport,
     AccountDataBarrier? barrier,
+    DateTime Function()? now,
   }) : _local = local,
        _owner = owner,
        _prefs = prefs,
        _transport = transport,
-       _barrier = barrier ?? AccountDataBarrier.forPreferences(prefs);
+       _barrier = barrier ?? AccountDataBarrier.forPreferences(prefs),
+       _now = now ?? DateTime.now;
+
+  static const int overlapSequences = 1000;
+  static const Duration fullReconcileInterval = Duration(hours: 24);
 
   final ReviewEvidenceLocalDatasource _local;
   final RecordOwnerProvider _owner;
   final SharedPreferences _prefs;
   final ReviewEvidenceTransport _transport;
   final AccountDataBarrier _barrier;
+  final DateTime Function() _now;
+
+  String _highWaterKey(String owner) => 'review_evidence_pull_hw_$owner';
+  String _fullPullKey(String owner) => 'review_evidence_full_pull_at_$owner';
+
+  /// Where this pull starts: zero for a (periodic) full reconciliation,
+  /// otherwise the overlap window below the highest sequence seen.
+  (int, bool) _pullStart(String owner) {
+    final lastFullRaw = _prefs.getString(_fullPullKey(owner));
+    final lastFull = lastFullRaw == null
+        ? null
+        : DateTime.tryParse(lastFullRaw);
+    final highWater = _prefs.getInt(_highWaterKey(owner));
+    if (lastFull == null ||
+        highWater == null ||
+        _now().toUtc().difference(lastFull.toUtc()) >= fullReconcileInterval) {
+      return (0, true);
+    }
+    final start = highWater - overlapSequences;
+    return (start < 0 ? 0 : start, false);
+  }
 
   @override
   bool get isEnabled =>
@@ -145,6 +177,7 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     lease.check();
     _ensureOwner(expectedOwner);
     final batch = _boundedBatch(pending);
+    if (batch.isEmpty) return;
     final payload = batch.map(ReviewEvidenceWire.toRpcPayload).toList();
     lease.check();
     _ensureOwner(expectedOwner);
@@ -190,8 +223,20 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     if (!isEnabled || !_owner.isSignedIn) return;
     final expectedOwner = _owner.currentOwnerId;
     final lease = _barrier.capture();
-    var cursorSequence = 0;
+    final (startSequence, isFull) = _pullStart(expectedOwner);
+    var cursorSequence = startSequence;
     var cursorEventId = '';
+    var highest = _prefs.getInt(_highWaterKey(expectedOwner)) ?? 0;
+    Future<void> complete() async {
+      await _prefs.setInt(_highWaterKey(expectedOwner), highest);
+      if (isFull) {
+        await _prefs.setString(
+          _fullPullKey(expectedOwner),
+          _now().toUtc().toIso8601String(),
+        );
+      }
+    }
+
     while (true) {
       lease.check();
       _ensureOwner(expectedOwner);
@@ -205,7 +250,7 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
       if (rows.length > 500) {
         throw const FormatException('Evidence pull page exceeds server limit');
       }
-      if (rows.isEmpty) return;
+      if (rows.isEmpty) return complete();
       var previousCursor = (cursorSequence, cursorEventId);
       for (final row in rows) {
         final rowCursor = _pageCursor(row);
@@ -229,22 +274,37 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
       _ensureOwner(expectedOwner);
       cursorSequence = last.$1;
       cursorEventId = last.$2;
-      if (rows.length < 500) return;
+      if (last.$1 > highest) highest = last.$1;
+      if (rows.length < 500) return complete();
     }
   }
 
+  /// Up to 100 events within the payload budget. An event that is invalid or
+  /// alone exceeds the budget is skipped, not thrown (S-3): it stays pending
+  /// locally (never deleted) instead of blocking every later upload.
   List<IsarReviewEvidenceEvent> _boundedBatch(
     List<IsarReviewEvidenceEvent> pending,
   ) {
+    const budget = 240 * 1024;
     final batch = <IsarReviewEvidenceEvent>[];
     var bytes = 2; // []
-    for (final event in pending.take(100)) {
-      final encoded = jsonEncode(ReviewEvidenceWire.toRpcPayload(event));
-      final additional = utf8.encode(encoded).length + (batch.isEmpty ? 0 : 1);
-      if (batch.isNotEmpty && bytes + additional > 240 * 1024) break;
-      if (batch.isEmpty && bytes + additional > 240 * 1024) {
-        throw const FormatException('Evidence event exceeds payload budget');
+    for (final event in pending) {
+      if (batch.length >= 100) break;
+      final int size;
+      try {
+        size = utf8
+            .encode(jsonEncode(ReviewEvidenceWire.toRpcPayload(event)))
+            .length;
+      } on FormatException catch (error, stack) {
+        TaliaLogger.w('Skipping invalid review evidence event', error, stack);
+        continue;
       }
+      final additional = size + (batch.isEmpty ? 0 : 1);
+      if (2 + size > budget) {
+        TaliaLogger.w('Skipping review evidence event over payload budget');
+        continue;
+      }
+      if (bytes + additional > budget) break;
       batch.add(event);
       bytes += additional;
     }

@@ -112,8 +112,8 @@ class ReaderTopBar extends StatelessWidget {
                   context.read<QuranAudioPlayerCubit>().playPage(pageNumber);
                 },
                 tooltip: isPlaying
-                    ? (context.isArabic ? 'إيقاف التلاوة' : 'Pause Recitation')
-                    : (context.isArabic ? 'تلاوة الصفحة' : 'Play Page'),
+                    ? context.l10n.pauseRecitation
+                    : context.l10n.playPageRecitation,
                 icon: isLoading
                     ? SizedBox(
                         width: 18,
@@ -145,7 +145,7 @@ class ReaderTopBar extends StatelessWidget {
               HapticFeedback.selectionClick();
               onOpenMenu();
             },
-            tooltip: context.isArabic ? 'المزيد' : 'More',
+            tooltip: context.l10n.moreOptions,
             icon: const Icon(Icons.more_vert_rounded),
             color: primary,
             style: IconButton.styleFrom(minimumSize: const Size(48, 48)),

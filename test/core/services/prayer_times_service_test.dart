@@ -203,6 +203,25 @@ void main() {
   });
 
   test(
+    'enabled service waits for a chosen city before showing times',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        PrayerTimesService.enabledKey: true,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final service = PrayerTimesService(prefs);
+
+    expect(await service.current(isArabic: true), isNull);
+    expect(await service.timesForDate(DateTime(2026, 9, 12)), isEmpty);
+    await service.setCityId('unknown_city');
+    expect(await service.current(isArabic: true), isNull);
+    expect(await service.timesForDate(DateTime(2026, 9, 12)), isEmpty);
+      await service.setCityId('cairo');
+      expect(await service.current(isArabic: true), isNotNull);
+    },
+  );
+
+  test(
     'notification scheduling requires explicit city and calculation method',
     () async {
       SharedPreferences.setMockInitialValues({
@@ -223,6 +242,7 @@ void main() {
   test('exposes all six computed times in canonical order', () async {
     SharedPreferences.setMockInitialValues({
       PrayerTimesService.enabledKey: true,
+      PrayerTimesService.cityIdKey: 'makkah',
     });
     final prefs = await SharedPreferences.getInstance();
     final service = PrayerTimesService(
@@ -259,6 +279,7 @@ void main() {
   test('next-prayer wraps to tomorrow fajr after isha', () async {
     SharedPreferences.setMockInitialValues({
       PrayerTimesService.enabledKey: true,
+      PrayerTimesService.cityIdKey: 'makkah',
     });
     final prefs = await SharedPreferences.getInstance();
     final service = PrayerTimesService(

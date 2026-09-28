@@ -110,7 +110,9 @@ class AppShell extends StatelessWidget {
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
                 ),
                 Expanded(
                   child: Stack(
@@ -144,10 +146,22 @@ class AppShell extends StatelessWidget {
             ),
           );
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) => _handlePopScope(context, didPop),
-      child: scaffold,
+    return BlocListener<QuranAudioPlayerCubit, QuranAudioPlayerState>(
+      // Audio failures are otherwise silent: the docked reader bar and the
+      // mini player hide themselves once playback becomes inactive (error is
+      // not "active audio"). The shell listener stays alive under pushed
+      // root-level readers too, so every surface gets the same feedback.
+      listener: (context, audioState) {
+        if (!audioState.isError) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.audioPlayError)));
+      },
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) => _handlePopScope(context, didPop),
+        child: scaffold,
+      ),
     );
   }
 }
@@ -338,8 +352,9 @@ class _TaliaNavItem extends StatelessWidget {
       child: InkResponse(
         onTap: onTap,
         highlightColor: Colors.transparent,
-        splashColor: (isDark ? AppColors.gold : AppColors.primary)
-            .withValues(alpha: 0.08),
+        splashColor: (isDark ? AppColors.gold : AppColors.primary).withValues(
+          alpha: 0.08,
+        ),
         radius: 36,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),

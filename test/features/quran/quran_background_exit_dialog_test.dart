@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_background_exit_dialog.dart';
 
 void main() {
@@ -7,6 +9,14 @@ void main() {
     required void Function(BuildContext) onOpenDialog,
   }) {
     return MaterialApp(
+      locale: const Locale('ar'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Builder(
           builder: (context) => Center(

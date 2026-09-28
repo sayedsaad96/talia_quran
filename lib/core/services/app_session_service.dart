@@ -40,8 +40,22 @@ class AppSessionService {
     final barrier = AccountDataBarrier.forPreferences(_prefs);
     final authority = barrier.capture();
     await barrier.run<void>((lease) async {
-      await _prefs.setInt(_dailyWirdTargetKey(date), pageNumber);
+      final key = _dailyWirdTargetKey(date);
+      await _prefs.setInt(key, pageNumber);
       lease.check();
+      // Only today's target is ever read; drop older days so the keys do not
+      // accumulate forever.
+      for (final stale
+          in _prefs
+              .getKeys()
+              .where(
+                (candidate) =>
+                    candidate.startsWith(_dailyWirdTargetPrefix) &&
+                    candidate != key,
+              )
+              .toList()) {
+        await _prefs.remove(stale);
+      }
     }, authority: authority);
   }
 
@@ -66,6 +80,21 @@ class AppSessionService {
       await _prefs.setInt(_dailyWirdLastCompletedKey, pageNumber);
       lease.check();
     }, authority: authority);
+  }
+
+  /// Advances the daily wird after a confirmed free-mode page, but only when
+  /// the page belongs to the wird: today's target or the page right after the
+  /// wird cursor. Reading anywhere else (Al-Kahf on Friday, going back, a
+  /// surah the user picked) never moves tomorrow's wird. Returns whether the
+  /// wird advanced.
+  Future<bool> advanceDailyWird(int pageNumber, {DateTime? now}) async {
+    final target = getDailyWirdTarget(now ?? DateTime.now());
+    if (target == null) return false;
+    final last = getDailyWirdLastCompletedPage();
+    final cursor = last != null && last >= target ? last : target - 1;
+    if (pageNumber != cursor + 1) return false;
+    await saveDailyWirdLastCompletedPage(pageNumber);
+    return true;
   }
 
   String _dailyWirdTargetKey(DateTime date) {
@@ -94,7 +123,6 @@ class AppSessionService {
         return _isValidSurahId(_readInt(uri, 'surahId'));
       case '/family-dashboard':
         return true;
-
     }
 
     final segments = uri.pathSegments;
@@ -104,6 +132,10 @@ class AppSessionService {
       return _isValidSurahId(int.tryParse(segments[2]));
     }
     if (segments.length == 3 && segments[0] == 'quran') {
+      // Khatmah reading progress is owned by the khatmah plan itself. A
+      // khatmah-mode page must never become the ordinary reading continue
+      // position (and vice versa), so those locations are not restorable.
+      if (uri.queryParameters['mode'] == 'khatmah') return false;
       final value = int.tryParse(segments[2]);
       if (segments[1] == 'surah') return _isValidSurahId(value);
       if (segments[1] == 'page') {

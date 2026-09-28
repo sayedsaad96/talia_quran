@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/qcf_hifz_verse_view.dart';
+import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../theme/kids_theme.dart';
 
 class KidsAyahCard extends StatelessWidget {
@@ -79,20 +79,16 @@ class KidsAyahCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            // The card always has a cream/parchment background, so we
-            // always use a dark text color for readability — even in dark
-            // mode where the theme's default text color would be too light.
-            Theme(
-              data: Theme.of(context).copyWith(brightness: Brightness.light),
-              child: QcfHifzVerseView(
-                surahNumber: surahId,
-                verseNumber: ayahNumber,
-                fallbackText: ayahText,
-                isUnlocked: true,
-                isMemorized: isCompleted,
-                displayMode: HifzVerseDisplayMode.single,
-                textAlign: TextAlign.center,
-              ),
+            // The card always has a parchment background, so its Quran text
+            // stays dark even when the app itself uses a dark theme.
+            MemorizationAyahDisplay(
+              text: ayahText,
+              surahId: surahId,
+              ayahNumber: ayahNumber,
+              textColor: KidsTheme.nightSkyDark,
+              decorationColor: KidsTheme.houseBrown.withValues(alpha: 0.5),
+              referenceColor: KidsTheme.forestGreen,
+              isCompleted: isCompleted,
             ),
             if (audioMessage != null) ...[
               const SizedBox(height: AppSpacing.lg),

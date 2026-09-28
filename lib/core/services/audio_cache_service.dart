@@ -21,8 +21,16 @@ class AudioCacheService {
   );
 
   /// Returns a local file path for the given ayah audio.
-  Future<String> getAudioPath(int surahId, int ayahNumber, {QuranReciter? reciter}) async {
-    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
+  Future<String> getAudioPath(
+    int surahId,
+    int ayahNumber, {
+    QuranReciter? reciter,
+  }) async {
+    final url = QuranAudioService.buildUrl(
+      surahId,
+      ayahNumber,
+      reciter: reciter,
+    );
     final fileInfo = await _cacheManager.getFileFromCache(url);
     if (fileInfo != null) {
       return fileInfo.file.path;
@@ -32,8 +40,16 @@ class AudioCacheService {
   }
 
   /// Returns a URL or cached file path suitable for audio player.
-  Future<String> getAudioSource(int surahId, int ayahNumber, {QuranReciter? reciter}) async {
-    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
+  Future<String> getAudioSource(
+    int surahId,
+    int ayahNumber, {
+    QuranReciter? reciter,
+  }) async {
+    final url = QuranAudioService.buildUrl(
+      surahId,
+      ayahNumber,
+      reciter: reciter,
+    );
     final fileInfo = await _cacheManager.getFileFromCache(url);
     if (fileInfo != null) {
       return fileInfo.file.path;
@@ -50,7 +66,11 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
-    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
+    final url = QuranAudioService.buildUrl(
+      surahId,
+      ayahNumber,
+      reciter: reciter,
+    );
     final fileInfo = await _cacheManager.getFileFromCache(url);
     return fileInfo?.file.path;
   }
@@ -71,7 +91,11 @@ class AudioCacheService {
       // Process batch concurrently
       await Future.wait(
         batch.map((ayahNumber) async {
-          final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
+          final url = QuranAudioService.buildUrl(
+            surahId,
+            ayahNumber,
+            reciter: reciter,
+          );
           try {
             await _cacheManager.getSingleFile(url);
           } catch (_) {

@@ -56,8 +56,22 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
         if (showMaskedCard) ...[
           V2MaskedWordsCard(
             text: session.currentAyah.text,
+            surahId: session.surahId,
+            ayahNumber: ayahNumber,
             revealed: _maskedRevealed,
-            onToggle: () => setState(() => _maskedRevealed = !_maskedRevealed),
+            onToggle: () {
+              // Reveal = seeing the full ayah, identical to the "show
+              // ayah" hint button. It must reach the hint tracker so the
+              // eventual pass is not graded as a hint-free recall.
+              if (!_maskedRevealed) {
+                unawaited(
+                  context
+                      .read<MemorizationSessionCubit>()
+                      .useHint(V2HintLevel.fullAyah),
+                );
+              }
+              setState(() => _maskedRevealed = !_maskedRevealed);
+            },
           ),
         ] else
           V2HintCard(session: session, hintLevel: hintLevel),
@@ -94,6 +108,14 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          context.l10n.v2HintSchedulingNotice,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

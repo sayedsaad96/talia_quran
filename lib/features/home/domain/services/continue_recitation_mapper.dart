@@ -14,14 +14,18 @@ class ContinueRecitationMapper {
 
   static const totalQuranPages = 604;
 
-  /// [heroAction], [lastRestorableLocation] and [confirmedReadPages] are
-  /// retained for source compatibility with existing call sites; they no
-  /// longer influence the result.
+  /// [khatmahPageDetail] must be the khatmah's own next unread page — the
+  /// ordinary daily wird page is a different journey and is never shown on
+  /// the khatmah card. [heroAction], [lastRestorableLocation],
+  /// [dailyWirdPageDetail] and [confirmedReadPages] are retained for source
+  /// compatibility with existing call sites; they no longer influence the
+  /// result.
   ContinueRecitation? map({
     required bool isArabic,
     UnifiedJourneyAction? heroAction,
     String? lastRestorableLocation,
     QuranPageDetail? dailyWirdPageDetail,
+    QuranPageDetail? khatmahPageDetail,
     KhatmahPlan? activeKhatmah,
     DateTime? now,
     int confirmedReadPages = 0,
@@ -34,7 +38,9 @@ class ContinueRecitationMapper {
     return _fromKhatmah(
       isArabic: isArabic,
       plan: activeKhatmah,
-      page: dailyWirdPageDetail,
+      page: khatmahPageDetail?.pageNumber == activeKhatmah.nextUnreadPage
+          ? khatmahPageDetail
+          : null,
       now: moment,
     );
   }

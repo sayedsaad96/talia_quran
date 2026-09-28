@@ -33,8 +33,9 @@ class KhatmahPlan extends Equatable {
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
-       currentPage = _highestContiguousPage(
+       currentPage = _lastContiguousPage(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
+         startPage,
        );
 
   final String id;
@@ -65,11 +66,22 @@ class KhatmahPlan extends Equatable {
   int get remainingPages =>
       KhatmahSchedulingEngine.totalPages - completedPagesCount;
 
+  /// First unread page in reading order: from [startPage] to 604, then
+  /// wrapping to page 1 (a khatmah may begin anywhere in the mushaf).
   int get nextUnreadPage {
-    for (var page = 1; page <= KhatmahSchedulingEngine.totalPages; page++) {
+    for (final page in readingOrder(startPage)) {
       if (!completedPages.contains(page)) return page;
     }
     return KhatmahSchedulingEngine.totalPages + 1;
+  }
+
+  /// Every page once, starting at [startPage] and wrapping after page 604.
+  static Iterable<int> readingOrder(int startPage) sync* {
+    const total = KhatmahSchedulingEngine.totalPages;
+    final first = startPage.clamp(1, total);
+    for (var offset = 0; offset < total; offset++) {
+      yield (first - 1 + offset) % total + 1;
+    }
   }
 
   bool get isComplete =>
@@ -105,6 +117,19 @@ class KhatmahPlan extends Equatable {
   bool isDailyTargetComplete(DateTime date) {
     final target = dailyTargetFor(date);
     return dailyCompletedPages(date) == target.endPage - target.startPage + 1;
+  }
+
+  /// Pages the learner is behind the planned finish date at the current
+  /// daily pace; 0 when on schedule. Counts [today] and the end date.
+  int pagesBehind(DateTime today) {
+    final start = KhatmahSchedulingEngine.localDate(today);
+    final end = KhatmahSchedulingEngine.localDate(expectedEndDate);
+    final daysLeft = end.isBefore(start)
+        ? 0
+        : KhatmahSchedulingEngine.elapsedCalendarDays(start, end);
+    final capacity = daysLeft * targetPagesPerDay;
+    final behind = remainingPages - capacity;
+    return behind > 0 ? behind : 0;
   }
 
   KhatmahPlan anchorDailyTarget(DateTime date) {
@@ -202,10 +227,13 @@ class KhatmahPlan extends Equatable {
     };
   }
 
-  static int _highestContiguousPage(Set<int> pages) {
+  /// Last page of the unbroken run read from [startPage] in reading order;
+  /// 0 when the start page itself is unread.
+  static int _lastContiguousPage(Set<int> pages, int startPage) {
     var current = 0;
-    while (pages.contains(current + 1)) {
-      current++;
+    for (final page in readingOrder(startPage)) {
+      if (!pages.contains(page)) break;
+      current = page;
     }
     return current;
   }

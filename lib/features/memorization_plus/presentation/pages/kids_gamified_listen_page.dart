@@ -8,17 +8,18 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
+import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedListenPage extends StatelessWidget {
@@ -124,13 +125,22 @@ class _KidsGamifiedListenView extends StatelessWidget {
             return;
           }
           if (state.recordingError != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.localizedCubitMessage(state.recordingError!),
+            // W2: a near-miss recitation shows the friendly word-progress
+            // banner instead of the generic snackbar — a single clear
+            // message instead of double feedback.
+            final mismatchWithWordFeedback =
+                state.recordingError ==
+                    CubitMessageCodes.kidsRecitationMismatch &&
+                state.hasWordFeedback;
+            if (!mismatchWithWordFeedback) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.localizedCubitMessage(state.recordingError!),
+                  ),
                 ),
-              ),
-            );
+              );
+            }
             return;
           }
           if (state.isCompleted) {
@@ -139,18 +149,32 @@ class _KidsGamifiedListenView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is KidsModeInitial || state is KidsModeLoading) {
-            return const Center(child: LoadingWidget());
+            return const Center(child: KidsLoadingWidget());
           }
 
           if (state is KidsModeError) {
-            return ErrorStateWidget(
+            // Retrying cannot lift today's quota: lead the child back home,
+            // where the day-complete card is waiting (N3).
+            final isDailyLimit = state.message.startsWith(
+              CubitMessageCodes.kidsDailySessionLimitPrefix,
+            );
+            return KidsErrorWidget(
               message: context.localizedCubitMessage(state.message),
-              onRetry: () => context.read<KidsModeCubit>().load(
-                surahId,
-                ayahNumber,
-                ayahText,
-                missionType: missionType,
-              ),
+              actionLabel: isDailyLimit ? context.l10n.goBack : null,
+              onRetry: isDailyLimit
+                  ? () => context.canPop()
+                        ? context.pop()
+                        : context.go(
+                            MemorizationNavigationResolver.kidsHomeFallbackLocation(
+                              surahId,
+                            ),
+                          )
+                  : () => context.read<KidsModeCubit>().load(
+                      surahId,
+                      ayahNumber,
+                      ayahText,
+                      missionType: missionType,
+                    ),
             );
           }
 
@@ -203,7 +227,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
 
-  /// V1-M8 â€” manual/self-grade completion route (null hides the action).
+  /// V1-M8 — manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
 
   @override
@@ -248,6 +272,17 @@ class KidsGamifiedListenContent extends StatelessWidget {
                               isAudioLoading: state.isBuffering,
                               audioUnavailable: audioUnavailable,
                             ),
+                          // W2: friendly word-level progress after a near
+                          // miss — "you got X of Y words" instead of a bare
+                          // failure.
+                          if (state.hasWordFeedback) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            _CloseMatchFeedbackBanner(
+                              key: const ValueKey('kids-close-match-feedback'),
+                              matched: state.lastMatchedWords,
+                              total: state.lastTargetWords,
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.lg),
                           _KidsGamifiedLoopIndicator(state: state),
                           const SizedBox(height: AppSpacing.xl),
@@ -267,6 +302,56 @@ class KidsGamifiedListenContent extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// W2 — child-friendly near-miss feedback: celebrates how close the child
+/// was and guides the next attempt, instead of a bare "did not match".
+class _CloseMatchFeedbackBanner extends StatelessWidget {
+  const _CloseMatchFeedbackBanner({
+    super.key,
+    required this.matched,
+    required this.total,
+  });
+
+  final int matched;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.l10n.kidsRecitationCloseMatch(matched, total),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: KidsTheme.goldStar.withValues(alpha: 0.13),
+          borderRadius: KidsTheme.cardRadius,
+          border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.emoji_events_rounded,
+              color: KidsTheme.goldStar,
+              size: 26,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                context.l10n.kidsRecitationCloseMatch(matched, total),
+                style: AppTypography.titleSmall.copyWith(
+                  color: Colors.white,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -385,7 +470,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
 
-  /// V1-M8 â€” manual/self-grade completion route (null hides the action).
+  /// V1-M8 — manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
 
   @override
@@ -395,7 +480,8 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     final micDisabled = state.isCompleted || isRecording || !loopsComplete;
     // K8: a listen-gated mic is never silent — the button area itself carries
     // a persistent hint, instead of relying on a one-shot SnackBar.
-    final showListenFirstHint = !state.isCompleted && !isRecording && !loopsComplete;
+    final showListenFirstHint =
+        !state.isCompleted && !isRecording && !loopsComplete;
     final showManualComplete =
         !state.isCompleted &&
         !isRecording &&
@@ -443,30 +529,26 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                   onDone: onStopRecording,
                 )
               : showListenFirstHint
-                  ? _ListenFirstMicHint(
-                      key: const ValueKey(
-                        'kids-gamified-record-recitation-idle',
-                      ),
-                      remainingListens: state.maxLoops - state.currentLoop,
-                      // Tapping the hint plays the audio (never records).
-                      onPlayPressed: onPlayPause,
-                    )
-                  : FilledButton.icon(
-                      key: const ValueKey(
-                        'kids-gamified-record-recitation-idle',
-                      ),
-                      onPressed: micDisabled ? null : onRecordRecitation,
-                      icon: const Icon(Icons.mic_rounded),
-                      label: Text(context.l10n.kidsGamifiedRecordYourVoice),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: KidsTheme.forestGreen,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(56),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: KidsTheme.buttonRadius,
-                        ),
-                      ),
+              ? _ListenFirstMicHint(
+                  key: const ValueKey('kids-gamified-record-recitation-idle'),
+                  remainingListens: state.maxLoops - state.currentLoop,
+                  // Tapping the hint plays the audio (never records).
+                  onPlayPressed: onPlayPause,
+                )
+              : FilledButton.icon(
+                  key: const ValueKey('kids-gamified-record-recitation-idle'),
+                  onPressed: micDisabled ? null : onRecordRecitation,
+                  icon: const Icon(Icons.mic_rounded),
+                  label: Text(context.l10n.kidsGamifiedRecordYourVoice),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KidsTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: KidsTheme.buttonRadius,
                     ),
+                  ),
+                ),
         ),
         if (showManualComplete) ...[
           const SizedBox(height: AppSpacing.md),
@@ -779,4 +861,3 @@ class _GuardianPinConfirmationDialogState
     );
   }
 }
-

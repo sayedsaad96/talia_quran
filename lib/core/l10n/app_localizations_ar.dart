@@ -99,6 +99,54 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prevAyah => 'الآية السابقة';
 
   @override
+  String get playPageRecitation => 'تلاوة الصفحة';
+
+  @override
+  String get pauseRecitation => 'إيقاف التلاوة مؤقتاً';
+
+  @override
+  String get stopRecitation => 'إيقاف التلاوة';
+
+  @override
+  String get changeReciter => 'تغيير القارئ';
+
+  @override
+  String get closePlayer => 'إغلاق المشغل';
+
+  @override
+  String get moreOptions => 'المزيد';
+
+  @override
+  String get reciterActiveChip => 'المحدد';
+
+  @override
+  String get emptyBookmarksTitle => 'لا توجد علامات مرجعية بعد';
+
+  @override
+  String get emptyBookmarksHint =>
+      'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا';
+
+  @override
+  String get exitDialogTitle => 'التلاوة قيد التشغيل';
+
+  @override
+  String exitDialogBody(String surah) {
+    return 'تستمع الآن إلى $surah.\nهل تود استمرار الاستماع في الخلفية مع التحكم من شريط الإشعارات، أم إيقاف التلاوة والخروج؟';
+  }
+
+  @override
+  String get currentSurah => 'السورة الحالية';
+
+  @override
+  String get exitDialogContinueBackground => 'متابعة في الخلفية';
+
+  @override
+  String get exitDialogStopAndExit => 'إيقاف التلاوة والخروج';
+
+  @override
+  String get exitDialogStayInApp => 'البقاء في التطبيق';
+
+  @override
   String get memorized => 'محفوظة';
 
   @override
@@ -1037,6 +1085,138 @@ class AppLocalizationsAr extends AppLocalizations {
   String get azkarCompletedTitle => 'تم بحمد الله';
 
   @override
+  String get azkarSectionsAndServices => 'استكشف المزيد';
+
+  @override
+  String get azkarWirdCompletedToday => 'اكتمل ورد اليوم بنجاح ✨';
+
+  @override
+  String get azkarMorningHeroSubtitle => 'ابدأ يومك بذكر الله وطمأنينة القلب';
+
+  @override
+  String get azkarEveningHeroSubtitle => 'اختم يومك بالسكينة والاستغفار';
+
+  @override
+  String get azkarReviewWird => 'مراجعة الورد';
+
+  @override
+  String get azkarStartWirdNow => 'ابدأ الورد الآن';
+
+  @override
+  String get azkarFreeTasbeeh => 'مسبحة حرة';
+
+  @override
+  String get azkarFreeTasbeehSubtitle => 'تسبيح واستغفار حر';
+
+  @override
+  String get azkarSearchHint => 'ابحث في الأدعية والأذكار...';
+
+  @override
+  String get azkarFavorites => 'المفضلة';
+
+  @override
+  String get azkarFavoritesEmptyTitle => 'لا توجد أدعية في المفضلة';
+
+  @override
+  String get azkarFavoritesEmptyDesc =>
+      'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا';
+
+  @override
+  String get azkarSearchNoResultsTitle => 'لا توجد نتائج مطابقة';
+
+  @override
+  String get azkarSearchNoResultsDesc => 'لم نجد أي أدعية تطابق بحثك';
+
+  @override
+  String get azkarSearchClear => 'مسح البحث';
+
+  @override
+  String get azkarVirtueOrSource => 'فضل الذكر / المصدر';
+
+  @override
+  String get azkarVirtueAndSource => 'فضل الذكر والمصدر';
+
+  @override
+  String get azkarVirtue => 'فضل الذكر';
+
+  @override
+  String get azkarSource => 'المصدر';
+
+  @override
+  String get azkarAutoAdvanceOn => 'الانتقال التلقائي مفعّل';
+
+  @override
+  String get azkarAutoAdvanceOff => 'الانتقال التلقائي معطّل';
+
+  @override
+  String get azkarSmartWird => 'ورد ذكي';
+
+  @override
+  String get azkarSmartWirdSubtitle => 'ورد مبني على وقتك الآن';
+
+  @override
+  String azkarSmartWirdDone(int count) {
+    return 'أكملت $count من الورد الذكي اليوم';
+  }
+
+  @override
+  String get azkarSmartWirdResume => 'متابعة';
+
+  @override
+  String get azkarSmartWirdCompleted => 'اكتمل الورد الذكي';
+
+  @override
+  String get azkarQuietNight => 'الليلة الهادئة';
+
+  @override
+  String get azkarQuietNightSubtitle => 'قراءة متدفقة بلا عدّاد';
+
+  @override
+  String get azkarQuietNightExit => 'إنهاء القراءة الهادئة';
+
+  @override
+  String get azkarPlayRecitation => 'تشغيل التلاوة';
+
+  @override
+  String get azkarPauseRecitation => 'إيقاف التلاوة مؤقتًا';
+
+  @override
+  String get azkarShareWird => 'شارك تقدم الورد';
+
+  @override
+  String get azkarTasbeehResetTitle => 'تصفير المسبحة';
+
+  @override
+  String get azkarTasbeehResetDesc => 'هل تريد إعادة تعيين العداد إلى الصفر؟';
+
+  @override
+  String get azkarTasbeehResetConfirm => 'تصفير';
+
+  @override
+  String get azkarTasbeehResetTooltip => 'تصفير العداد';
+
+  @override
+  String get azkarTasbeehOpenTarget => 'مفتوح';
+
+  @override
+  String azkarTasbeehTargetLabel(int target) {
+    return 'الهدف: $target';
+  }
+
+  @override
+  String azkarTasbeehRound(int round) {
+    return 'دورة $round';
+  }
+
+  @override
+  String get azkarTasbeehTapHint => 'انقر في أي مكان في الدائرة للتسبيح';
+
+  @override
+  String azkarTasbeehTapSemantics(int count) {
+    return 'انقر للتسبيح، العداد الحالي $count';
+  }
+
+  @override
   String get azkarCompletedDesc => 'اكتملت جميع الأذكار في هذه الفئة';
 
   @override
@@ -1381,7 +1561,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHubPractice => 'الممارسة';
 
   @override
-  String get settingsHubReminders => 'التنبيهات';
+  String get settingsHubReminders => 'التنبيهات والتذكيرات';
 
   @override
   String get settingsHubSupport => 'الدعم';
@@ -1394,6 +1574,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsRemindersWorship => 'الأذكار والعبادة';
+
+  @override
+  String get settingsRemindersPrayer => 'الصلاة والأذان';
 
   @override
   String get settingsRemindersProgress => 'التقدم';
@@ -1424,6 +1607,52 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationTestInteractiveSubtitle =>
       'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل';
+
+  @override
+  String get notificationPrayerPermissionBlockedBody =>
+      'لن تصلك تنبيهات الصلاة حتى تسمح بالإشعارات من إعدادات الهاتف.';
+
+  @override
+  String get notificationConfigurePrayerTimes => 'إعداد مواقيت الصلاة';
+
+  @override
+  String get notificationTestPickerTitle => 'اختر إشعارًا لتجربته';
+
+  @override
+  String get notificationTestPickerSubtitle =>
+      'سيصلك إشعار تجريبي مع أزرار تفاعل.';
+
+  @override
+  String get notificationTestReviewTitle => 'مراجعة اليوم 📖';
+
+  @override
+  String get notificationTestReviewBody =>
+      'لديك 5 آيات مستحقة للمراجعة اليوم ⚡';
+
+  @override
+  String get notificationTestStreakTitle => 'حماية المواظبة 🔥';
+
+  @override
+  String get notificationTestStreakBody =>
+      'لم تراجع اليوم بعد — حافظ على مواظبتك الآن 🔥';
+
+  @override
+  String get notificationTestSuccess => 'تم إرسال الإشعار التجريبي بنجاح ✨';
+
+  @override
+  String get notificationSettingsSaveFailed =>
+      'تعذر حفظ التغيير. حاول مرة أخرى.';
+
+  @override
+  String get notificationSettingsSchedulingFailed =>
+      'تم حفظ التغيير، لكن تعذر تحديث التنبيهات. حاول مرة أخرى.';
+
+  @override
+  String get prayerChooseCityForAccurateTimes =>
+      'اختر مدينتك لإظهار مواقيت صلاة دقيقة.';
+
+  @override
+  String get prayerChooseCityAction => 'اختيار المدينة';
 
   @override
   String get settingsGuestStatusTitle => 'تستخدم تالية كضيف';
@@ -2661,6 +2890,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String dailyPlanSurahAyahTitle(String surah, int ayahNumber) {
+    return '$surah · آية $ayahNumber';
+  }
+
+  @override
   String dailyPlanRecordStats(int strength, int reviews) {
     return 'قوة: $strength • مراجعات: $reviews';
   }
@@ -2673,6 +2907,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dailyPlanEmptySubtitle => 'تفقّد غداً لمتابعة جدولك';
+
+  @override
+  String get dailyPlanNoPlanTitle => 'لم تنشئ خطة حفظ بعد';
+
+  @override
+  String get dailyPlanNoPlanSubtitle =>
+      'أنشئ خطتك لتظهر لك هنا آيات الحفظ والمراجعة كل يوم.';
+
+  @override
+  String get dailyPlanCreatePlanAction => 'أنشئ خطتك';
 
   @override
   String get customPlanDeleteConfirmPhrase => 'حذف الخطة';
@@ -2995,6 +3239,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get memorizationExitSessionMessage =>
       'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
+
+  @override
+  String get memorizationExitSessionTitle => 'الخروج من الجلسة؟';
 
   @override
   String get memorizationSaveAndLeave => 'حفظ وخروج';
@@ -3558,7 +3805,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationSettingsPrayerNeedsTimes => 'فعّل مواقيت الصلاة أولًا';
+  String get notificationSettingsPrayerNeedsTimes =>
+      'أكمل إعداد مواقيت الصلاة واختر مدينتك أولًا';
 
   @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';
@@ -4444,6 +4692,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2ManualRecallAction => 'أتممت التسميع من حفظي (تقييم ذاتي)';
 
   @override
+  String get v2SelfGradeAction => 'قيّم تسميعك بنفسك';
+
+  @override
+  String get v2SelfGradeTitle => 'كيف كان تسميعك من حفظك؟';
+
+  @override
+  String get v2SelfGradeMastered => 'أتقنتها';
+
+  @override
+  String get v2SelfGradeMasteredHint => 'سمّعتها كاملة دون تردّد';
+
+  @override
+  String get v2SelfGradeHesitated => 'تردّدت قليلاً';
+
+  @override
+  String get v2SelfGradeHesitatedHint =>
+      'سمّعتها مع توقف أو خطأ بسيط؛ ستُراجَع قريباً';
+
+  @override
+  String get v2SelfGradeForgot => 'لم أتذكّرها';
+
+  @override
+  String get v2SelfGradeForgotHint => 'سنعيدها معك الآن';
+
+  @override
   String get v2ManualRecallHint =>
       'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.';
 
@@ -4500,6 +4773,29 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get closingSummaryReview =>
+      'أتممتَ مراجعتك بثبات — ثبتها الله في قلبك.';
+
+  @override
+  String get v2ReviewSessionTitle => 'مراجعة الحفظ';
+
+  @override
+  String get v2HintSchedulingNotice =>
+      'التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.';
+
+  @override
+  String dailyPlanBacklogNotice(int count) {
+    return 'لديك $count آية مستحقة للمراجعة. أكمل مراجعات اليوم لتُفتح الآيات الجديدة.';
+  }
+
+  @override
+  String get dailyPlanStartReview => 'ابدأ مراجعة اليوم';
+
+  @override
+  String get dailyPlanReviewDayNotice =>
+      'اليوم يوم مراجعة في خطتك: لا آيات جديدة، ثبّت ما حفظت.';
+
+  @override
   String closingSummaryKhatmahWird(String start, String end) {
     return 'أتممتَ ورد اليوم — من صفحة $start إلى $end — أثرٌ باقٍ بإذن الله.';
   }
@@ -4522,6 +4818,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get v2MemorizationHub => 'مركز الحفظ';
+
+  @override
+  String v2NextPlanItem(int count) {
+    return 'التالي في خطة اليوم ($count متبقية)';
+  }
 
   @override
   String get v2TryWithoutHint => 'حاول من غير تلميح';
@@ -4567,6 +4868,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String v2BlockProgress(int passed, int total) {
     return 'تم اجتياز $passed/$total آيات.';
+  }
+
+  @override
+  String v2AyahOfBlock(int current, int total) {
+    return 'الآية $current من $total';
   }
 
   @override
@@ -4663,6 +4969,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kidsRecitationMismatch =>
       'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.';
+
+  @override
+  String kidsRecitationCloseMatch(int matched, int total) {
+    return 'أنت قريب جدًا! أصبت $matched من $total كلمات. استمع مرة أخرى وحاول من جديد.';
+  }
+
+  @override
+  String get kidsJourneyCompleteHint =>
+      'أتممت جزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
   String get kidsAyahAlreadyCompleted =>
@@ -4779,7 +5094,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahEndPlanAction => 'إنهاء الختمة';
 
   @override
-  String get khatmahStartNewKhatmah => 'بدء ختمة جديدة';
+  String get khatmahStartNewKhatmah => 'ابدأ ختمة جديدة';
 
   @override
   String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
@@ -4795,6 +5110,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get khatmahOrCustomPagesPerDay => 'أو عدد مخصص يومياً';
+
+  @override
+  String get khatmahOrChooseDuration => 'أو اختر مدة الختمة';
+
+  @override
+  String get khatmahStartFromPage => 'ابدأ من الصفحة (اختياري)';
+
+  @override
+  String get khatmahStartFromPageHint =>
+      'بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة';
+
+  @override
+  String khatmahDurationDays(String days) {
+    return '$days يوماً';
+  }
+
+  @override
+  String get khatmahDurationRamadan => 'رمضان (٣٠ يوماً)';
 
   @override
   String get khatmahEG5 => 'مثال: 5';
@@ -4901,6 +5234,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahMildBoost => 'تعويض خفيف';
 
   @override
+  String get khatmahAdjustPreviewTitle => 'تعديل جدول الختمة';
+
+  @override
+  String khatmahAdjustPreviewBody(String pages, String date) {
+    return 'الورد اليومي: $pages صفحة\nالختام المتوقع: $date';
+  }
+
+  @override
+  String get khatmahApplyAdjustment => 'تطبيق';
+
+  @override
+  String get khatmahLoadFailureHint =>
+      'تعذّرت قراءة بيانات الختمة على هذا الجهاز. أعد المحاولة.';
+
+  @override
   String get khatmahPause => 'إيقاف مؤقت';
 
   @override
@@ -5000,7 +5348,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get khatmahSaveExit => 'حفظ وخروج';
+  String get khatmahSaveExit => 'إنهاء القراءة';
+
+  @override
+  String get khatmahPaceOnTrack => 'في الموعد — أحسنت';
+
+  @override
+  String get khatmahRedistributeAction => 'أعد التوزيع للحفاظ على الموعد';
+
+  @override
+  String get khatmahRedistributed =>
+      'أُعيد توزيع الصفحات للحفاظ على موعد الختام';
+
+  @override
+  String khatmahPaceBehind(String pages) {
+    return 'متأخر $pages صفحة عن موعد الختام';
+  }
+
+  @override
+  String khatmahThroughWirdEnd(String page) {
+    return 'حتى نهاية ورد اليوم (ص $page)';
+  }
 
   @override
   String get khatmahCongratulations => 'مبارك ختم القرآن الكريم';
@@ -5787,5 +6155,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String customPlanDirectionBackward(String from, String to) {
     return 'اتجاه الحفظ: تنازلي (من $from إلى $to)';
+  }
+
+  @override
+  String get fieldRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String fieldTooLong(int maxLength) {
+    return 'لا يمكن أن يتجاوز $maxLength حرفاً';
   }
 }

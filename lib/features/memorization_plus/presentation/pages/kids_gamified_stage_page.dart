@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -26,21 +26,28 @@ class KidsGamifiedStagePage extends StatefulWidget {
 
   @override
   State<KidsGamifiedStagePage> createState() => _KidsGamifiedStagePageState();
-}/// Route the stage page navigates to when the child starts this stage's
-/// mission. Carries the resolved mission type (resume for in-progress stages,
-/// otherwise new memorization) so the V2 session restores its correct phase.
+}
+
+/// Route the stage page navigates to when the child starts this stage's
+/// mission. A finished stage (completed or awaiting review) opens a linked
+/// review. The current stage always asks to `resume`: the kids session
+/// restores a paused session when one exists, and otherwise resolves the
+/// ayah's real semantics (first pass → canonical new memorization under the
+/// daily cap, already rewarded → review), so progress is never downgraded.
 @visibleForTesting
 String kidsNextMissionLocation(KidsJourneyStage stage) {
-  final missionType = stage.completedAyahs.isEmpty
-      ? KidsMissionType.newMemorization
-      : KidsMissionType.resume;
+  final missionType = switch (stage.status) {
+    KidsJourneyStageStatus.completed ||
+    KidsJourneyStageStatus.needsReview => KidsMissionType.linkedReview,
+    KidsJourneyStageStatus.current ||
+    KidsJourneyStageStatus.locked => KidsMissionType.resume,
+  };
   return '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}'
       '&ayahNumber=${stage.nextAyahToStart}'
       '&missionType=${missionType.name}';
 }
 
-class _KidsGamifiedStagePageState
-    extends State<KidsGamifiedStagePage> {
+class _KidsGamifiedStagePageState extends State<KidsGamifiedStagePage> {
   late KidsJourneyStage _stage;
 
   @override

@@ -558,8 +558,7 @@ class MemorizationPlusRepositoryImpl
     final kidsLogs = await _datasource.getKidsSessionLogs();
     if (kidsLogs.any(
       (log) =>
-          !log.isSynced &&
-          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+          !log.isSynced && KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
     )) {
       return true;
     }

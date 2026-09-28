@@ -38,6 +38,9 @@ class Zikr extends Equatable {
     this.tier,
     this.reviewStatus = ContentReviewStatus.pendingReview,
     this.datasetVersion = 'unversioned',
+    this.virtue = '',
+    this.audioUrl,
+    this.timeHint = '',
   });
 
   final String id;
@@ -66,6 +69,19 @@ class Zikr extends Equatable {
   /// Frozen dataset version this record was reviewed under.
   final String datasetVersion;
 
+  /// Narrated virtue / benefit of the zikr, copied verbatim from the approved
+  /// dataset. Kept separate from [reference] so the display can distinguish
+  /// "فضل الذكر" from the takhrij. Empty when the dataset provides none.
+  final String virtue;
+
+  /// Optional fully-qualified audio asset or URL for recitation. Null when the
+  /// approved dataset does not ship audio for this record.
+  final String? audioUrl;
+
+  /// Coarse time hint for when this zikr is traditionally recited, e.g.
+  /// "after_fajr" or "after_prayer". Metadata only; never alters the text.
+  final String timeHint;
+
   @override
   List<Object?> get props => [
     id,
@@ -77,6 +93,8 @@ class Zikr extends Equatable {
     authenticityGrade,
     tier,
     reviewStatus,
+    virtue,
+    timeHint,
   ];
 }
 

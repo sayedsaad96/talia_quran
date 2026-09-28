@@ -35,7 +35,11 @@ MilestoneNotificationData? mapCertificateAwardToMilestone(
           award.juzNumber ??
           int.tryParse(award.id.substring('cert_juz_'.length));
       if (juz == null || juz < 1 || juz > 30) return null;
-      return (type: MilestoneNotificationType.juz, juzNumber: juz, surahName: null);
+      return (
+        type: MilestoneNotificationType.juz,
+        juzNumber: juz,
+        surahName: null,
+      );
     case CertificateType.surah:
       final name = (award.surahNameEn ?? award.surahNameAr)?.trim();
       if (name == null || name.isEmpty) return null;
@@ -86,7 +90,7 @@ Future<void> fireStreakMercyCelebration() async {
     await getIt<TaliaNotificationService>().showMilestoneCelebration(
       title: l10n.notificationStreakMercyTitle,
       body: l10n.notificationStreakMercyBody,
-      payload: '/home',
+      payload: '/',
     );
   } catch (error, stack) {
     TaliaLogger.w('Streak mercy celebration failed', error, stack);
@@ -128,8 +132,10 @@ Future<void> fireMilestoneCelebration(MilestoneNotificationData data) async {
         l10n.notificationMilestoneStreakBody,
       ),
     };
-    await getIt<TaliaNotificationService>()
-        .showMilestoneCelebration(title: title, body: body);
+    await getIt<TaliaNotificationService>().showMilestoneCelebration(
+      title: title,
+      body: body,
+    );
   } catch (error, stack) {
     TaliaLogger.w('Milestone celebration notification failed', error, stack);
   }

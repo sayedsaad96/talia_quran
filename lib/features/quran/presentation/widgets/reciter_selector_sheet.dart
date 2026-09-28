@@ -7,6 +7,7 @@ import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../cubits/quran_audio_player_cubit.dart';
 
 class ReciterSelectorSheet extends StatelessWidget {
   const ReciterSelectorSheet({super.key});
@@ -67,7 +68,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    context.isArabic ? 'اختر القارئ المفضل' : 'Select Reciter',
+                    context.l10n.selectReciter,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.titleMedium.copyWith(
@@ -110,6 +111,12 @@ class ReciterSelectorSheet extends StatelessWidget {
                           onTap: () {
                             HapticFeedback.selectionClick();
                             reciterService.setReciter(reciter);
+                            // Apply to ongoing recitation immediately; when
+                            // nothing is playing this is a no-op and the
+                            // preference takes effect on the next playback.
+                            getIt<QuranAudioPlayerCubit>().changeReciter(
+                              reciter,
+                            );
                             Navigator.pop(context);
                           },
                           leading: Container(
@@ -154,7 +161,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    context.isArabic ? 'المحدد' : 'Active',
+                                    context.l10n.reciterActiveChip,
                                     style: AppTypography.labelSmall.copyWith(
                                       color: primary,
                                       fontWeight: FontWeight.bold,

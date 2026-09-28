@@ -50,6 +50,9 @@ object AdhanClipResolver {
                 clipFor(override) ?: DEFAULT_CLIP
             }
         }
+        if (profile == PROFILE_AFASY_FAJR) {
+            return if (prayerKey == "fajr") clipFor(profile) ?: DEFAULT_CLIP else DEFAULT_CLIP
+        }
         return clipFor(profile) ?: DEFAULT_CLIP // unknown profile → bundled clip
     }
 

@@ -1,4 +1,6 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
+
 import '../../../../../core/error/app_failure.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -48,7 +50,21 @@ class MemorizationFamilyService {
           surahId: activeSurahId,
         );
         final stages = journeyResult.getOrElse(() => const []);
-        final localChildId = profile.linkedChildId ?? 'local-child';
+        final localChildId =
+            profile.linkedChildId ??
+            () {
+              assert(() {
+                // In debug builds this surfaces as a visible warning rather than
+                // a silent fallback that could confuse cloud-sync operations.
+                debugPrint(
+                  '[MemorizationFamilyService] WARNING: parent-guardian device has '
+                  'no linkedChildId — using synthetic "local-child" id. '
+                  'Cloud sync will use this device-local identity only.',
+                );
+                return true;
+              }());
+              return 'local-child';
+            }();
         final localDashboard = ParentDashboard(
           progress: progress,
           stages: stages,

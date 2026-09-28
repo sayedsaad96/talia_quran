@@ -61,6 +61,7 @@ class HomeLoaded extends HomeState {
 
   static const Object _khatmahSentinel = Object();
   static const Object _microReviewSentinel = Object();
+  static const Object _continueRecitationSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -96,7 +97,7 @@ class HomeLoaded extends HomeState {
     int? weeklyActivityCount,
     String? recentBookmarkRoute,
     int? heroMinutes,
-    ContinueRecitation? continueRecitation,
+    Object? continueRecitation = _continueRecitationSentinel,
     List<ActivityEvent>? recentActivity,
     Object? microReview = _microReviewSentinel,
   }) {
@@ -141,7 +142,10 @@ class HomeLoaded extends HomeState {
       weeklyActivityCount: weeklyActivityCount ?? this.weeklyActivityCount,
       recentBookmarkRoute: recentBookmarkRoute ?? this.recentBookmarkRoute,
       heroMinutes: heroMinutes ?? this.heroMinutes,
-      continueRecitation: continueRecitation ?? this.continueRecitation,
+      continueRecitation:
+          identical(continueRecitation, _continueRecitationSentinel)
+          ? this.continueRecitation
+          : continueRecitation as ContinueRecitation?,
       recentActivity: recentActivity ?? this.recentActivity,
       microReview: identical(microReview, _microReviewSentinel)
           ? this.microReview

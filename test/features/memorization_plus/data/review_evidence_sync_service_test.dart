@@ -99,7 +99,7 @@ void main() {
     );
 
     test(
-      'each reconciliation starts from zero and imports without an upload receipt',
+      'first pull reconciles from zero and imports without an upload receipt',
       () async {
         transport.pullPages = [
           [_cloudRow('remote-a', 1), _cloudRow('remote-b', 2)],
@@ -107,11 +107,92 @@ void main() {
         ];
 
         await service.pull();
-        await service.pull();
 
-        expect(transport.pullCursors, everyElement((cursor) => cursor.$1 == 0));
+        expect(transport.pullCursors.first.$1, 0);
         expect(await service.pendingEvents(), isEmpty);
         expect(await isar.isarReviewEvidenceEvents.count(), 2);
+      },
+    );
+
+    test(
+      'later pulls resume from the high-water mark minus a safety overlap (S-2)',
+      () async {
+        var now = DateTime.utc(2026, 9, 27, 8);
+        final timed = ReviewEvidenceSyncService(
+          local: ReviewEvidenceLocalDatasource(isar),
+          owner: const FixedRecordOwnerProvider('owner-a'),
+          prefs: prefs,
+          transport: transport,
+          now: () => now,
+        );
+        transport.pullPages = [
+          [_cloudRow('remote-a', 5000)],
+          const [],
+        ];
+        await timed.pull();
+        transport.pullCursors.clear();
+
+        now = now.add(const Duration(hours: 2));
+        await timed.pull();
+
+        expect(
+          transport.pullCursors.first.$1,
+          5000 - ReviewEvidenceSyncService.overlapSequences,
+        );
+      },
+    );
+
+    test(
+      'a full reconciliation from zero still runs at least daily (S-2)',
+      () async {
+        var now = DateTime.utc(2026, 9, 27, 8);
+        final timed = ReviewEvidenceSyncService(
+          local: ReviewEvidenceLocalDatasource(isar),
+          owner: const FixedRecordOwnerProvider('owner-a'),
+          prefs: prefs,
+          transport: transport,
+          now: () => now,
+        );
+        transport.pullPages = [
+          [_cloudRow('remote-a', 5000)],
+          const [],
+        ];
+        await timed.pull();
+        transport.pullCursors.clear();
+
+        now = now.add(const Duration(hours: 25));
+        await timed.pull();
+
+        expect(transport.pullCursors.first.$1, 0);
+      },
+    );
+
+    test(
+      'an unsendable event stays local but never blocks later uploads (S-3)',
+      () async {
+        final oversized = _event(id: 'event-huge', taskId: 'x' * 250000);
+        final normal = _event(id: 'event-b', taskId: 'task-b');
+        await isar.writeTxn(() async {
+          await isar.isarReviewEvidenceEvents.put(oversized);
+          await isar.isarReviewEvidenceEvents.put(normal);
+        });
+        transport.onAppend = (events) async => [
+          for (final event in events)
+            {
+              'event_id': event['event_id'],
+              'result': 'applied',
+              'server_sequence': 7,
+            },
+        ];
+
+        await service.pushPending();
+
+        expect(
+          transport.appendPayloads.single.map((event) => event['event_id']),
+          ['event-b'],
+        );
+        final pending = await service.pendingEvents();
+        expect(pending.map((event) => event.eventId), ['event-huge']);
       },
     );
 

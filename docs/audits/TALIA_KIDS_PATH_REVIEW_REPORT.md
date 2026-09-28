@@ -59,9 +59,9 @@
 
 | # | الخطورة | المشكلة | الموقع | الحالة |
 | --- | --- | --- | --- | --- |
-| K14 | 🔴 | عدد تكرارات الاستماع ثابت `1` يدوياً بغض النظر عن العمر | `kids_mode_cubit.dart` — `_maxLoops` ثابت قديم | ✅ أُغلقت — المرحلة 1: `maxListenRepetitions` في `KidsSessionPolicy` (5–7 → 1، 8–12 → 2) ويضبط الكيوبت `maxLoops` في `load()` + 19/19 اختبار |
-| K15 | 🟡 | `maxNewAyahs` و`maxDueReviews` لا يستهلكهما أحد عند بدء الجلسات (حدود حصة العمر غير مفروضة)؛ `maxSessionMinutes` يُستهلك فقط كهدف عرضي | بحث المستهلكين: فقط `memorization_identity_cubit.dart:101` (`sessionGoalMinutes`) | ✅ أُغلقت — المرحلة 4: بوابة يومية في `load()` تمنع جلسة `newMemorization` جديدة بعد بلوغ `maxNewAyahs` (من سجل الجلسات المحلي، وفشل القراءة يفتح البوابة)؛ الاستئناف والمراجعات لا تُحجب أبداً. أما `maxDueReviews` فهي حجم جدولة يملكه المحلّل (مراجعة واحدة مستحقة في كل مرة) لا حجب تحميل — لتعذُّر حجب SRS جوهرياً |
-| K16 | 🟡 | `blockReviewRequired` مفروض عبر `V2SessionState.initial` لكن لا يوجد اختبار واجهة يثبت حجب التقدم قبل المراجعة المرتبطة للأعمار 8–12 | `kids_mode_cubit.dart` (`load`) + اختبارات الكيوبت | ✅ أُغلقت — المرحلة 4: كشف الاختبار فجوة أعمق — `markCompleted` كان يُصدر `isCompleted: true` رغم أن المحرك في `blockReviewPending`. أصبح الإكمال مقيّداً بالطور النهائي للمحرك (`_sessionReachedCompletion`) + اختبار كيوبت يثبت البقاء محجوزاً |
+| K14 | 🔴 | عدد تكرارات الاستماع ثابت `1` يدوياً بغض النظر عن العمر | `kids_mode_cubit.dart` — `_maxLoops` ثابت قديم | ✅ أُغلقت — المرحلة 1: `maxListenRepetitions` في `KidsSessionPolicy` ويضبط الكيوبت `maxLoops` في `load()`. **تصحيح 2026-09-27:** القيم الحالية 5–7 → **3** و8–12 → 2 (عكس تربوي مقصود وموثق في الكود)، لا 1 و2 كما كُتب أولاً |
+| K15 | 🟡 | `maxNewAyahs` و`maxDueReviews` لا يستهلكهما أحد عند بدء الجلسات (حدود حصة العمر غير مفروضة)؛ `maxSessionMinutes` يُستهلك فقط كهدف عرضي | بحث المستهلكين: فقط `memorization_identity_cubit.dart:101` (`sessionGoalMinutes`) | ✅ أُغلقت — المرحلة 4: بوابة يومية في `load()` تمنع جلسة `newMemorization` جديدة بعد بلوغ `maxNewAyahs` (من سجل الجلسات المحلي، وفشل القراءة يفتح البوابة)؛ الاستئناف والمراجعات لا تُحجب أبداً. أما `maxDueReviews` فهي حجم جدولة يملكه المحلّل لا حجب تحميل. **تحديث 2026-09-27:** الحدّان معاً صارا عقداً واحداً `KidsDailyBudget` يقرؤه المحلّل في الرئيسية وشاشة الإكمال وبوابة الجلسة (راجع N2/N3 في خطة الإصلاح) |
+| K16 | 🟡 | `blockReviewRequired` مفروض عبر `V2SessionState.initial` لكن لا يوجد اختبار واجهة يثبت حجب التقدم قبل المراجعة المرتبطة للأعمار 8–12 | `kids_mode_cubit.dart` (`load`) + اختبارات الكيوبت | ✅ أُغلقت — المرحلة 4: كشف الاختبار فجوة أعمق — `markCompleted` كان يُصدر `isCompleted: true` رغم أن المحرك في `blockReviewPending`. أصبح الإكمال مقيّداً بالطور النهائي للمحرك (`_sessionReachedCompletion`). **تحديث 2026-09-27:** تجاوزه الكود لاحقاً — جلسات الطفل أحادية الآية تمرر `blockReviewRequired: false` دائماً، والجلسات القديمة المتوقفة عند `blockReviewPending` تُرقّى إلى `completed` عند الاستئناف (بلا مكافأة مضاعفة). حُذف الحقلان الميتان `blockReviewRequired` و`linkedReviewAyahs` من `KidsSessionPolicy` |
 
 ---
 
@@ -127,9 +127,16 @@ flutter test test/features/memorization_plus/domain/kids_next_mission_resolver_t
   test/features/memorization_plus/presentation/pages/kids_gamified_rtl_narrow_test.dart \
   test/features/memorization_plus/presentation/pages/kids_gamified_completion_page_test.dart \
   test/features/memorization_plus/presentation/widgets/kids_progress_header_test.dart \
+  test/features/memorization_plus/domain/kids_progress_test.dart \
+  test/features/memorization_plus/presentation/cubits/kids_journey_cubit_test.dart \
+  test/features/memorization_plus/presentation/widgets/kids_house_card_test.dart \
+  test/features/memorization_plus/presentation/widgets/kids_journey_complete_card_test.dart \
+  test/features/memorization_plus/presentation/widgets/kids_loading_widget_test.dart \
+  test/features/memorization_plus/presentation/navigation/memorization_navigation_resolver_test.dart \
   --reporter compact
 ```
 - الحالة المرجعية بعد المرحلة 4: **92/92** (بعد المرحلة 3 كانت 88/88 وبعد المرحلة 2 كانت 62/62 على نطاق أضيق).
+- بعد خطة الإصلاح (2026-09-27) اتسع الجناح إلى 17 ملفاً أعلاه — العدد المرجعي الحالي في `TALIA_KIDS_PATH_FIX_PLAN_2026-09-27.md`.
 - عند لمس عقد الربط أضف: `guardian_linking_page_test.dart` و`memorization_plus_repository_impl_test.dart` و`kids_qr_link_contract_test.dart` (مرجع المرحلة 1: 72/72 + 6/6).
 
 ### 4.3 مصفوفة الاختبار اليدوي (قبل الإطلاق)
@@ -138,7 +145,7 @@ flutter test test/features/memorization_plus/domain/kids_next_mission_resolver_t
 | ربط QR عبر جهازين | ولٍ يولّد QR → طفل يمسح | الرابط يعمل بالبادئة الجديدة، والكود الورقي القديم يقبل |
 | استئناف جلسة متوقفة | أوقف جلسة منتصف مرحلة → افتح من صفحة المرحلة | تستأنف من موضعها (`missionType=resume`) |
 | مراجعة مستحقة | خلّد مراجعة متأخرة → افتح الرئيسية | البطاقة «جاهز للمراجعة» و«التالي» في الإكمال يوافقها |
-| بوابة الاستماع | عمر 6 مقابل عمر 9 | الأول يسمع مرة والثاني مرتين قبل تفعيل الميكروفون |
+| بوابة الاستماع | عمر 6 مقابل عمر 9 | الأول يسمع **3 مرات** والثاني مرتين قبل تفعيل الميكروفون |
 | شاشة 320px عربية | افتح الرئيسية/الرحلة/المرحلة/الاستماع/الإكمال | بلا Overflow أو استثناءات |
 | رحلة مكتملة | أتمّ كل المراحل | احتفال في الرئيسية والخريطة بلا CTA قديم |
 | مسار الكبار | دورة حفظ كاملة للكبار | لا أي تغيير سلوكي أو بصري |
@@ -158,3 +165,4 @@ flutter test test/features/memorization_plus/domain/kids_next_mission_resolver_t
 | 2026-09-25 | إغلاق المرحلة 3 (بنود K4، K5، K8، K11، K12)؛ الجناح الكامل 88/88 وanalyze نظيف؛ مرجع جناح الانحدار الجديد في §4.2 |
 | 2026-09-25 | إغلاق المرحلة 4 (بنود K7، K15، K16) مع إصلاح دلالة الإكمال في `markCompleted`؛ الجناح الكامل 92/92 |
 | 2026-09-25 | إغلاق المرحلة 5 (K13 + تقسيم خريطة الرحلة + تنظيف التعليقات)؛ 92/92 بلا تعديل أي اختبار — اكتملت المراحل الخمس جميعها |
+| 2026-09-27 | مراجعة التقرير مقابل الكود: تصحيح K14 وK15 وK16 ومصفوفة §4.3 وتوسيع جناح §4.2؛ المشاكل الجديدة (N1–N9) ومعالجتها في `TALIA_KIDS_PATH_FIX_PLAN_2026-09-27.md` |

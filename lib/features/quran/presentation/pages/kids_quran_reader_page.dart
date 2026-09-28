@@ -11,9 +11,9 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../../memorization_plus/presentation/theme/kids_theme.dart';
+import '../../../memorization_plus/presentation/widgets/kids_loading_widget.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../widgets/app_quran_page_view.dart';
 import '../widgets/quran_page_font_guard.dart';
@@ -94,8 +94,10 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
           }
           if (detail == null && state is QuranPageError) {
             return Scaffold(
-              body: ErrorStateWidget(
-                message: state.message,
+              // The kids reader keeps the dark night-sky look regardless of
+              // the app brightness — keep the error screen on it too.
+              backgroundColor: KidsTheme.nightSkyDark,
+              body: KidsErrorWidget(
                 onRetry: () => _loadPage(_currentPageNumber),
               ),
             );

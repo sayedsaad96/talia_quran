@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/features/home/domain/entities/ayah_of_day.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_ayah_of_day.dart';
@@ -70,6 +71,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Medinan · 286 ayahs'), findsOneWidget);
+    expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
+    expect(find.text('﴿'), findsOneWidget);
+    expect(find.text('﴾'), findsOneWidget);
+    expect(find.text('Surah Al-Baqarah, Ayah 255'), findsOneWidget);
   });
 
   testWidgets('shows the meccan label for meccan surahs', (tester) async {

@@ -69,18 +69,19 @@ class MemorizationKidsCloudSyncService {
       final remote = _mappers.progressFromCloud(
         progressRows.isEmpty ? null : progressRows.first,
       );
-      final localLogs = await _datasource.getKidsSessionLogs();
       final remoteLogs = logRows
           .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
           .toList();
-      final mergedLogs = KidsSessionLogsCloudMerge.merge(
-        local: localLogs,
-        remote: remoteLogs,
-      );
-      // Evidence is persisted before its projection. If interrupted, the next
-      // read/sync deterministically repairs the aggregate from these logs.
-      await _datasource.saveKidsSessionLogs(
-        mergedLogs.map(KidsSessionLogModel.fromEntity).toList(),
+      // Evidence is persisted before its projection. The merge runs as one
+      // atomic read-modify-write so a concurrent award can never be dropped
+      // between the local read and the merged write-back. If interrupted, the
+      // next read/sync deterministically repairs the aggregate from these
+      // logs.
+      final mergedLogs = await _datasource.updateKidsSessionLogs(
+        (localLogs) async => KidsSessionLogsCloudMerge.merge(
+          local: localLogs,
+          remote: remoteLogs,
+        ).map(KidsSessionLogModel.fromEntity).toList(),
       );
       _ensureOwner(ownerId);
       final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(mergedLogs);

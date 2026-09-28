@@ -95,19 +95,25 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
   StreamSubscription<void>? _changes;
   Future<void>? _abandonInFlight;
 
+  /// Creates a plan by daily pace, or — when [targetDays] is given (e.g. a
+  /// 30-day Ramadan khatmah) — by duration, keeping that finish date.
   Future<void> createPlan({
     required int pagesPerDay,
     KhatmahDedication dedication = const KhatmahDedication(),
+    int? targetDays,
+    int startPage = 1,
   }) async {
     if (isClosed || state is KhatmahSetupSaving) return;
     emit(const KhatmahSetupSaving());
     try {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final days = KhatmahSchedulingEngine.calculateDaysFromPages(
-        KhatmahSchedulingEngine.totalPages,
-        pagesPerDay,
-      );
+      final days =
+          targetDays ??
+          KhatmahSchedulingEngine.calculateDaysFromPages(
+            KhatmahSchedulingEngine.totalPages,
+            pagesPerDay,
+          );
       final endDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
 
       final title =
@@ -120,6 +126,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
       final plan = KhatmahPlan(
         id: _uuid.v4(),
         title: title,
+        startPage: startPage.clamp(1, KhatmahSchedulingEngine.totalPages),
         targetPagesPerDay: pagesPerDay,
         targetDays: days,
         startDate: today,

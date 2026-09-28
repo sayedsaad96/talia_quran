@@ -36,12 +36,16 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
   }
 
   Future<void> checkLinkStatus() async {
-    await _refreshLinkStatus(emitPendingSession: false);
+    // The 30-second background poll must never destroy the displayed QR
+    // card: a transient network error keeps the current state instead of
+    // switching the whole linking screen to an error view.
+    await _refreshLinkStatus(emitPendingSession: false, silentErrors: true);
   }
 
   Future<void> _refreshLinkStatus({
     required bool emitPendingSession,
     bool Function()? canEmit,
+    bool silentErrors = false,
   }) async {
     bool canUpdate() => canEmit?.call() ?? !isClosed;
     void emitIfActive(GuardianLinkingState state) {
@@ -50,7 +54,11 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
 
     final profileResult = await _repository.refreshChildGuardianLink();
     await profileResult.fold(
-      (failure) async => emitIfActive(GuardianLinkingError(failure.message)),
+      (failure) async {
+        if (!silentErrors) {
+          emitIfActive(GuardianLinkingError(failure.message));
+        }
+      },
       (profile) async {
         if (!canUpdate()) return;
         if (profile.isGuardianLinked) {
@@ -59,7 +67,11 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
         }
         final sessionResult = await _repository.refreshPairingSession();
         sessionResult.fold(
-          (failure) => emitIfActive(GuardianLinkingError(failure.message)),
+          (failure) {
+            if (!silentErrors) {
+              emitIfActive(GuardianLinkingError(failure.message));
+            }
+          },
           (session) {
             if (!canUpdate()) return;
             if (session == null) {

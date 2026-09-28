@@ -33,6 +33,12 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   final List<AyahReviewRecordModel> records;
 
   @override
+  Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
+    Future<List<KidsSessionLogModel>> Function(List<KidsSessionLogModel> current)
+        mutate,
+  ) async => mutate(const []);
+
+  @override
   Future<MemorizationProfileModel> getMemorizationProfile() async =>
       MemorizationProfileModel.empty();
   @override

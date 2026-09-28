@@ -224,6 +224,18 @@ Future<_PersistenceOutcome<T>> _detachedPersistenceOutcome<T>(
   return outcome.future;
 }
 
+/// Schedule changes offered on the dashboard.
+enum KhatmahAdjustment {
+  /// Keep the daily pace; move the finish date to match the remaining pages.
+  calm,
+
+  /// Add one page a day; the finish date moves earlier.
+  mildBoost,
+
+  /// Keep the finish date; raise the daily pace to cover the remaining pages.
+  keepEndDate,
+}
+
 class KhatmahCubit extends Cubit<KhatmahState> {
   KhatmahCubit(
     this._getActive,
@@ -259,7 +271,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
         return;
       }
       if (_pendingRecordRequests.isEmpty && state is! KhatmahCompleted) {
-        unawaited(load());
+        // Background refresh: keep the current plan on screen instead of
+        // flashing a full-screen loader (dashboard) or hiding the reader bar.
+        unawaited(load(showLoading: _lastKnownPlan == null));
       }
     });
   }
@@ -365,9 +379,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     _shutdownSignal.signal();
   }
 
-  Future<void> load() async {
+  Future<void> load({bool showLoading = true}) async {
     final version = ++_loadVersion;
-    _emitIfOpen(const KhatmahLoading());
+    if (showLoading) _emitIfOpen(const KhatmahLoading());
     try {
       _checkAuthority();
       final plan = await _getActive();
@@ -658,7 +672,51 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     }
   }
 
-  Future<bool> calmAdjustment() => _adjustSchedule((plan) {
+  /// Upper bound for the daily load reachable through "mild boost".
+  static const maxPagesPerDay = 20;
+
+  /// Whether another mild boost stays within [maxPagesPerDay].
+  bool get canBoost {
+    final plan = _recordingPlan;
+    return plan != null && plan.targetPagesPerDay < maxPagesPerDay;
+  }
+
+  /// The plan an adjustment would produce, without saving anything — lets
+  /// the dashboard show the new pace and end date before the learner agrees.
+  KhatmahPlan? previewAdjustment({required KhatmahAdjustment kind}) {
+    final plan = _recordingPlan;
+    if (plan == null) return null;
+    return switch (kind) {
+      KhatmahAdjustment.calm => _calmTransform(plan),
+      KhatmahAdjustment.mildBoost => canBoost ? _mildTransform(plan, 1) : null,
+      KhatmahAdjustment.keepEndDate => _keepEndDateTransform(plan),
+    };
+  }
+
+  /// Applies [kind]; see [previewAdjustment] for what it will change.
+  Future<bool> applyAdjustment(KhatmahAdjustment kind) => switch (kind) {
+    KhatmahAdjustment.calm => calmAdjustment(),
+    KhatmahAdjustment.mildBoost => mildCompensation(),
+    KhatmahAdjustment.keepEndDate => _adjustSchedule(_keepEndDateTransform),
+  };
+
+  Future<bool> calmAdjustment() => _adjustSchedule(_calmTransform);
+
+  Future<bool> mildCompensation([int extraPages = 1]) {
+    if (!canBoost) return Future<bool>.value(false);
+    return _adjustSchedule((plan) => _mildTransform(plan, extraPages));
+  }
+
+  /// Restores the pace and end date from before the last adjustment.
+  Future<bool> undoScheduleAdjustment(KhatmahPlan previous) => _adjustSchedule(
+    (plan) => plan.copyWith(
+      targetPagesPerDay: previous.targetPagesPerDay,
+      targetDays: previous.targetDays,
+      expectedEndDate: previous.expectedEndDate,
+    ),
+  );
+
+  KhatmahPlan _calmTransform(KhatmahPlan plan) {
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
       plan.remainingPages,
       plan.targetPagesPerDay,
@@ -669,12 +727,36 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       targetDays: days,
       expectedEndDate: KhatmahSchedulingEngine.calculateEndDate(today, days),
     );
-  });
+  }
 
-  Future<bool> mildCompensation([int extraPages = 1]) => _adjustSchedule((
-    plan,
-  ) {
-    final target = plan.targetPagesPerDay + extraPages;
+  /// Redistributes the remaining pages over the days left before the planned
+  /// finish date (C7). The pace is capped at [maxPagesPerDay]; when even the
+  /// cap cannot make it, the finish date moves to what the cap allows.
+  KhatmahPlan _keepEndDateTransform(KhatmahPlan plan) {
+    final now = _now();
+    final today = DateTime(now.year, now.month, now.day);
+    final end = KhatmahSchedulingEngine.localDate(plan.expectedEndDate);
+    final daysLeft = end.isBefore(today)
+        ? 1
+        : KhatmahSchedulingEngine.elapsedCalendarDays(today, end);
+    final needed = (plan.remainingPages / daysLeft).ceil();
+    final target = needed.clamp(plan.targetPagesPerDay, maxPagesPerDay);
+    final days = KhatmahSchedulingEngine.calculateDaysFromPages(
+      plan.remainingPages,
+      target,
+    );
+    return plan.copyWith(
+      targetPagesPerDay: target,
+      targetDays: days,
+      expectedEndDate: KhatmahSchedulingEngine.calculateEndDate(today, days),
+    );
+  }
+
+  KhatmahPlan _mildTransform(KhatmahPlan plan, int extraPages) {
+    final target = (plan.targetPagesPerDay + extraPages).clamp(
+      1,
+      maxPagesPerDay,
+    );
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
       plan.remainingPages,
       target,
@@ -686,7 +768,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       targetDays: days,
       expectedEndDate: KhatmahSchedulingEngine.calculateEndDate(today, days),
     );
-  });
+  }
 
   Future<bool> _adjustSchedule(
     KhatmahPlan Function(KhatmahPlan) transform,

@@ -3,10 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/router/app_router.dart';
-import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../widgets/kids_reward_dialog.dart';
 import '../widgets/kids_ui.dart';
@@ -43,6 +42,7 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
 class _KidsGamifiedCompletionPageState
     extends State<KidsGamifiedCompletionPage> {
   KidsNextMission? _nextMission;
+  int? _dailyGoalCap;
 
   @override
   void initState() {
@@ -55,26 +55,21 @@ class _KidsGamifiedCompletionPageState
   /// "Next" never contradicts the mission the child was shown on home. The
   /// just-completed ayah is presumed completed before resolving (K5), which
   /// both skips reopening it and keeps due reviews ahead of new memorization.
+  /// The same daily budget applies, so a used-up quota ends the day with a
+  /// celebration instead of offering a mission the session would refuse.
   Future<void> _loadNextMission() async {
-    final journeyResult = await getIt<MemorizationPlusRepository>().getKidsJourney(
-      surahId: widget.surahId,
-    );
-    final reviewResult = await getIt<MemorizationPlusRepository>()
-        .getAllReviewRecords(scope: ReviewRecordReadScope.kids);
+    final outcome =
+        await MemorizationNavigationResolver(
+          getIt<MemorizationPlusRepository>(),
+        ).kidsMissionAfterCompletion(
+          surahId: widget.surahId,
+          completedAyah: widget.completedAyahNumber,
+        );
     if (!mounted) return;
-
-    final stages = journeyResult.getOrElse(() => const <KidsJourneyStage>[]);
-    final reviewRecords = reviewResult.getOrElse(() => const []);
-    final mission = const KidsNextMissionResolver().resolveSkippingAyah(
-      activeSurahId: widget.surahId,
-      stages: stages,
-      reviewRecords: reviewRecords,
-      now: DateTime.now().toUtc(),
-      justCompletedSurahId: widget.surahId,
-      justCompletedAyah: widget.completedAyahNumber,
-    );
-    if (!mounted) return;
-    setState(() => _nextMission = mission);
+    setState(() {
+      _nextMission = outcome.mission;
+      _dailyGoalCap = outcome.dailyGoalCap;
+    });
   }
 
   @override
@@ -84,6 +79,7 @@ class _KidsGamifiedCompletionPageState
       pointsEarned: widget.pointsEarned,
       leveledUpTo: widget.leveledUpTo,
       showNextButton: _nextMission != null,
+      dailyGoalCap: _dailyGoalCap,
       onNext: widget.onNext ?? () => _openNextMission(context),
       onReturnToMap: widget.onReturnToMap ?? () => _returnToMap(context),
     );
@@ -118,6 +114,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
     this.pointsEarned = 0,
     this.leveledUpTo,
     this.showNextButton = true,
+    this.dailyGoalCap,
     required this.onNext,
     required this.onReturnToMap,
   });
@@ -126,6 +123,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
   final int pointsEarned;
   final int? leveledUpTo;
   final bool showNextButton;
+  final int? dailyGoalCap;
   final VoidCallback onNext;
   final VoidCallback onReturnToMap;
 
@@ -143,6 +141,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
                 pointsEarned: pointsEarned,
                 leveledUpTo: leveledUpTo,
                 showNextButton: showNextButton,
+                dailyGoalCap: dailyGoalCap,
                 onNext: onNext,
                 onReturnToMap: onReturnToMap,
               ),

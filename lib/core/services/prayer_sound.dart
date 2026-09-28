@@ -29,7 +29,8 @@ class Muezzin {
   /// Marks the Fajr-specific recording in the picker.
   final bool fajrOptimized;
 
-  String name(String localeName) => localeName.startsWith('ar') ? nameAr : nameEn;
+  String name(String localeName) =>
+      localeName.startsWith('ar') ? nameAr : nameEn;
 
   String? origin(String localeName) =>
       localeName.startsWith('ar') ? originAr : originEn;
@@ -60,11 +61,7 @@ class MuezzinCatalog {
       originAr: 'القاهرة',
       originEn: 'Cairo',
     ),
-    Muezzin(
-      id: 'qatami',
-      nameAr: 'ناصر القطامي',
-      nameEn: 'Nasser Al Qatami',
-    ),
+    Muezzin(id: 'qatami', nameAr: 'ناصر القطامي', nameEn: 'Nasser Al Qatami'),
     Muezzin(
       id: 'suraihi',
       nameAr: 'عبدالمجيد السريحي',
@@ -88,6 +85,32 @@ class MuezzinCatalog {
   }
 
   static bool isSupported(String id) => byId(id) != null;
+
+  /// The only bundled recording intended solely for Fajr.
+  static const String profileAfasyFajr = 'afasy_fajr';
+
+  /// Fajr-only recordings are supported, but cannot be a general selection.
+  static bool isGeneralSupported(String id) =>
+      isSupported(id) && id != profileAfasyFajr;
+
+  /// Normalizes a general selection while keeping Fajr-only recordings from
+  /// reaching the other prayers.
+  static String generalSelection(String id) =>
+      isGeneralSupported(id) ? id : defaultId;
+
+  /// Resolves the Fajr selection shown and persisted by the picker.
+  ///
+  /// Earlier app versions stored [profileAfasyFajr] as the general choice.
+  /// With no separate Fajr override, preserve that user's intended Fajr sound
+  /// while moving the general selection to the default recording.
+  static String fajrSelection({
+    required String generalMuezzinId,
+    required String fajrMuezzinId,
+  }) {
+    final fajr = fajrMuezzinId.trim();
+    if (isSupported(fajr)) return fajr;
+    return generalMuezzinId.trim() == profileAfasyFajr ? profileAfasyFajr : '';
+  }
 }
 
 /// Resolves the `soundProfile` payload for one prayer occurrence:
@@ -102,11 +125,13 @@ String soundProfileForPrayer({
   required String muezzinId,
   required String fajrMuezzinId,
 }) {
-  final general = MuezzinCatalog.isSupported(muezzinId)
-      ? muezzinId
-      : MuezzinCatalog.defaultId;
+  final rawGeneral = muezzinId.trim();
+  final general = MuezzinCatalog.generalSelection(rawGeneral);
   if (prayerKey != 'fajr') return general;
-  final fajr = fajrMuezzinId.trim();
+  final fajr = MuezzinCatalog.fajrSelection(
+    generalMuezzinId: rawGeneral,
+    fajrMuezzinId: fajrMuezzinId,
+  );
   if (fajr.isEmpty || fajr == general) return general;
   if (fajr == MuezzinCatalog.defaultId) return MuezzinCatalog.defaultId;
   if (!MuezzinCatalog.isSupported(fajr)) return general;
@@ -181,5 +206,8 @@ String _clipForProfile(String profile, String prayerKey) {
     if (override.isEmpty || override == MuezzinCatalog.defaultId) return 'adhan';
     return MuezzinCatalog.isSupported(override) ? 'adhan_$override' : 'adhan';
   }
-  return MuezzinCatalog.isSupported(p) ? 'adhan_$p' : 'adhan';
+  if (p == MuezzinCatalog.profileAfasyFajr) {
+    return prayerKey == 'fajr' ? 'adhan_$p' : 'adhan';
+  }
+  return MuezzinCatalog.isGeneralSupported(p) ? 'adhan_$p' : 'adhan';
 }

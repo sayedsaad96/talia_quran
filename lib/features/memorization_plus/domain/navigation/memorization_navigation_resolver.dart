@@ -6,6 +6,18 @@ import '../../../../core/router/app_router.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 import '../usecases/get_last_reviewed_surah_id_usecase.dart';
+import '../services/kids_daily_budget.dart';
+import '../services/kids_due_review_policy.dart';
+import '../services/plan_schedule_policy.dart';
+import 'kids_next_mission_resolver.dart';
+
+/// The completion screen's "Next" outcome: the mission to open, or — when
+/// none is left because today's new-ayah quota is used up — that quota, so
+/// the child sees an encouraging day-complete end instead of a dead button.
+typedef KidsMissionAfterCompletion = ({
+  KidsNextMission? mission,
+  int? dailyGoalCap,
+});
 
 class MemorizationNavigationTargets {
   const MemorizationNavigationTargets({
@@ -14,6 +26,9 @@ class MemorizationNavigationTargets {
     required this.reviewQuizLocation,
     required this.kidsHomeLocation,
     required this.kidsJourneyLocation,
+    this.adultDueReviewCount = 0,
+    this.hasActiveAdultPlan = false,
+    this.memorizeBlockSize,
   });
 
   final MemorizationProfile? profile;
@@ -21,6 +36,16 @@ class MemorizationNavigationTargets {
   final String reviewQuizLocation;
   final String kidsHomeLocation;
   final String kidsJourneyLocation;
+
+  /// Adult review records currently due; 0 for child profiles.
+  final int adultDueReviewCount;
+
+  /// Whether an active adult custom plan exists. Without one there is no
+  /// daily plan, which must not be presented as "nothing due today".
+  final bool hasActiveAdultPlan;
+
+  /// Block size from the active adult plan's difficulty; null without one.
+  final int? memorizeBlockSize;
 }
 
 /// Resolves memorization entry routes (domain layer — may read repository).
@@ -59,6 +84,7 @@ class MemorizationNavigationResolver {
         intent: PendingAyahIntent.continueDailyPlan,
         cachedPlan: cachedPlan,
         reviewRecords: reviewRecords,
+        customPlan: customPlan,
       ),
       reviewQuizLocation:
           dueReview?.route ??
@@ -70,6 +96,49 @@ class MemorizationNavigationResolver {
           ),
       kidsHomeLocation: _kidsHomeLocation(kidsSurahId),
       kidsJourneyLocation: _kidsJourneyLocation(kidsSurahId),
+      hasActiveAdultPlan:
+          customPlan != null &&
+          customPlan.isActive &&
+          customPlan.targetUser == PlanTargetUser.adult,
+      memorizeBlockSize:
+          customPlan != null &&
+              customPlan.isActive &&
+              customPlan.targetUser == PlanTargetUser.adult
+          ? PlanSchedulePolicy.blockSize(customPlan)
+          : null,
+      adultDueReviewCount: profile?.isChild == true
+          ? 0
+          : reviewRecords.where((record) => record.isVisibleForReview).length,
+    );
+  }
+
+  /// Next kids mission after finishing [completedAyah], using the same
+  /// SRS-first priority and daily budget as the kids home screen (N2), so
+  /// "Next" never contradicts home or offers a mission the gate refuses.
+  Future<KidsMissionAfterCompletion> kidsMissionAfterCompletion({
+    required int surahId,
+    required int completedAyah,
+    DateTime? now,
+  }) async {
+    final at = now ?? DateTime.now();
+    final journeyResult = await _repository.getKidsJourney(surahId: surahId);
+    final reviewRecords = await _reviewRecords(ReviewRecordReadScope.kids);
+    final stages = journeyResult.getOrElse(() => const <KidsJourneyStage>[]);
+    final budget = await _kidsDailyBudget(at);
+    final mission = const KidsNextMissionResolver().resolveSkippingAyah(
+      activeSurahId: surahId,
+      stages: stages,
+      reviewRecords: reviewRecords,
+      now: at.toUtc(),
+      justCompletedSurahId: surahId,
+      justCompletedAyah: completedAyah,
+      budget: budget,
+    );
+    return (
+      mission: mission,
+      dailyGoalCap: mission == null && budget.newAyahLimitReached
+          ? budget.maxNewAyahsPerDay
+          : null,
     );
   }
 
@@ -85,6 +154,23 @@ class MemorizationNavigationResolver {
       intent: PendingAyahIntent.continueDailyPlan,
       cachedPlan: cachedPlan,
       reviewRecords: reviewRecords,
+      customPlan: customPlan,
+    );
+  }
+
+  /// The next session in today's plan and how many items remain, or null
+  /// when the plan is finished (or absent) — drives the "next" action on the
+  /// session completion screen so the learner never detours via the hub.
+  Future<({String route, int remaining})?> nextDailyPlanStep() async {
+    final plan = await _cachedPlan();
+    if (plan == null || plan.totalItems == 0 || plan.isRequiredPlanCompleted) {
+      return null;
+    }
+    final location = await adultEntryLocation();
+    if (!location.startsWith(AppRoutes.memorizationV2Session)) return null;
+    return (
+      route: location,
+      remaining: plan.totalItems - plan.requiredCompletedCount,
     );
   }
 
@@ -101,6 +187,7 @@ class MemorizationNavigationResolver {
       cachedPlan: cachedPlan,
       reviewRecords: reviewRecords,
       surahAyahCount: surahAyahCount,
+      customPlan: await _customPlan(),
     );
   }
 
@@ -179,16 +266,22 @@ class MemorizationNavigationResolver {
     // A due or weak kids review is always the next mission before adding new
     // memorization or reopening the latest journey position.
     final reviewRecords = await _reviewRecords(ReviewRecordReadScope.kids);
+    final now = DateTime.now();
     final dueReviews =
         reviewRecords
             .where(
               (record) =>
                   record.createdByMode == ReviewRecordCreatedByMode.kidsMode &&
-                  (record.isDue || record.lastRating == PerformanceRating.weak),
+                  KidsDueReviewPolicy.isDue(record, now),
             )
             .toList()
           ..sort((a, b) => a.nextReviewDate.compareTo(b.nextReviewDate));
-    if (dueReviews.isNotEmpty) return dueReviews.first.surahId;
+    // A spent review budget hands the day back to the journey, matching the
+    // mission the home resolver will pick for this surah.
+    if (dueReviews.isNotEmpty &&
+        !(await _kidsDailyBudget(now)).dueReviewBudgetExhausted) {
+      return dueReviews.first.surahId;
+    }
 
     final logsResult = await _repository.getKidsSessionLogs();
     final logs = logsResult.fold((_) => <KidsSessionLog>[], (logs) {
@@ -215,6 +308,20 @@ class MemorizationNavigationResolver {
     return KidsJourneyCursor.initial.activeSurahId;
   }
 
+  /// Same age-band budget the home screen and session gate use; a log read
+  /// failure is unlimited (fail-open).
+  Future<KidsDailyBudget> _kidsDailyBudget(DateTime now) async {
+    final logsResult = await _repository.getKidsSessionLogs();
+    final logs = logsResult.fold((_) => null, (logs) => logs);
+    if (logs == null) return KidsDailyBudget.unlimited;
+    final profile = await _profile();
+    return KidsDailyBudget.fromLogs(
+      logs: logs,
+      policy: KidsSessionPolicy.forChildAge(profile?.childAge),
+      now: now,
+    );
+  }
+
   Future<DailyPlan?> _cachedPlan() async {
     final result = await _repository.getCachedDailyPlan();
     return result.fold((_) => null, (plan) => plan);
@@ -238,6 +345,7 @@ class MemorizationNavigationResolver {
     required DailyPlan? cachedPlan,
     required List<AyahReviewRecord> reviewRecords,
     int? surahAyahCount,
+    CustomMemorizationPlan? customPlan,
   }) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
 
@@ -258,12 +366,16 @@ class MemorizationNavigationResolver {
       ),
     );
     final launchContext = switch (intent) {
+      // Same rule as [dailyPlanAyahLocation]: recall work on a reviewed ayah
+      // is a review; launching it as memorize would re-teach known material.
       PendingAyahIntent.continueDailyPlan => LearningLaunchContext(
         ayah: AyahReference(
           surahId: target.surahId,
           ayahNumber: target.startAyah,
         ),
-        intent: LearningIntent.memorize,
+        intent: target.isReview
+            ? LearningIntent.review
+            : LearningIntent.memorize,
         origin: LearningOrigin.dailyPlan,
       ),
       PendingAyahIntent.reviewSession => LearningLaunchContext(
@@ -284,9 +396,22 @@ class MemorizationNavigationResolver {
       ),
     };
 
+    // Memorization blocks follow the plan's difficulty (M-U4); reviews always
+    // target a single ayah.
+    final adultPlan =
+        customPlan != null &&
+            customPlan.isActive &&
+            customPlan.targetUser == PlanTargetUser.adult
+        ? customPlan
+        : null;
     return Uri(
       path: AppRoutes.memorizationV2Session,
-      queryParameters: launchContext.toRouteQuery(),
+      queryParameters: {
+        ...launchContext.toRouteQuery(),
+        if (adultPlan != null &&
+            launchContext.intent == LearningIntent.memorize)
+          'blockSize': '${PlanSchedulePolicy.blockSize(adultPlan)}',
+      },
     ).toString();
   }
 
@@ -315,15 +440,21 @@ class MemorizationNavigationResolver {
         : KidsJourneyCursor.initial.activeSurahId,
   );
 
-  static String dailyPlanAyahLocation(DailyPlanAyah ayah) {
+  static String dailyPlanAyahLocation(DailyPlanAyah ayah, {int? blockSize}) {
+    // Plan items with an existing record are recall work — launching them
+    // as "memorize" would force the learner through listen/hint stages and
+    // re-learn material they already know.
     final launchContext = LearningLaunchContext(
       ayah: AyahReference(surahId: ayah.surahId, ayahNumber: ayah.ayahNumber),
-      intent: LearningIntent.memorize,
+      intent: ayah.isNew ? LearningIntent.memorize : LearningIntent.review,
       origin: LearningOrigin.dailyPlan,
     );
     return Uri(
       path: AppRoutes.memorizationV2Session,
-      queryParameters: launchContext.toRouteQuery(),
+      queryParameters: {
+        ...launchContext.toRouteQuery(),
+        if (ayah.isNew && blockSize != null) 'blockSize': '$blockSize',
+      },
     ).toString();
   }
 }

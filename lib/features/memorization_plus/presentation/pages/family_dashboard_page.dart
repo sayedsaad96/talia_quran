@@ -311,7 +311,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
   }
 }
 
-// â”€â”€â”€ Loaded body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Loaded body ──────────────────────────────────────────────────────────────
 
 class _FamilyLoadedBody extends StatelessWidget {
   const _FamilyLoadedBody({required this.dashboard});
@@ -323,13 +323,13 @@ class _FamilyLoadedBody extends StatelessWidget {
       onRefresh: () => context.read<FamilyDashboardCubit>().refresh(),
       child: CustomScrollView(
         slivers: [
-          // â”€â”€â”€ Family summary banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ─── Family summary banner ───────────────────────────────────────
           if (dashboard.hasAnyChild)
             SliverToBoxAdapter(
               child: _FamilySummaryBanner(dashboard: dashboard),
             ),
 
-          // â”€â”€â”€ Section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ─── Section label ───────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -345,7 +345,7 @@ class _FamilyLoadedBody extends StatelessWidget {
             ),
           ),
 
-          // â”€â”€â”€ Children grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ─── Children grid ───────────────────────────────────────────────
           if (!dashboard.hasAnyChild)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -380,7 +380,7 @@ class _FamilyLoadedBody extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Family summary banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Family summary banner ────────────────────────────────────────────────────
 
 class _FamilySummaryBanner extends StatelessWidget {
   const _FamilySummaryBanner({required this.dashboard});
@@ -452,7 +452,7 @@ class _FamilySummaryBanner extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Child card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Child card ───────────────────────────────────────────────────────────────
 
 class _ChildCard extends StatelessWidget {
   const _ChildCard({required this.child});
@@ -464,150 +464,156 @@ class _ChildCard extends StatelessWidget {
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final isActive = child.isActiveToday;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => context.push('/family-dashboard/child', extra: child),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive
-                ? AppColors.primary.withValues(alpha: 0.4)
-                : Colors.transparent,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Semantics(
+      label:
+          '${child.displayName}${isActive ? ' — ${context.l10n.familyDashboardChildActiveToday(child.todayPoints)}' : ''}',
+      button: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => context.push('/family-dashboard/child', extra: child),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isActive
+                  ? AppColors.primary.withValues(alpha: 0.4)
+                  : Colors.transparent,
+              width: 1.5,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar + active indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    child.avatarEmoji ??
-                        (child.isLocal ? 'ðŸ‘¨â€ðŸ‘§' : 'ðŸ§’'),
-                    style: AppTypography.headlineLarge,
-                  ),
-                ),
-                if (isActive)
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Name
-            Text(
-              child.displayName,
-              style: AppTypography.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            // Local badge
-            if (child.isLocal) ...[
-              const SizedBox(height: 2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  context.l10n.familyDashboardLocalBadge,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
-
-            const Spacer(),
-
-            // Level progress bar
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Lv.${child.currentLevel}',
-                      style: AppTypography.labelSmall.copyWith(
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar + active indicator
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      child.avatarEmoji ??
+                          (child.isLocal ? '👨‍👧' : '🧒'),
+                      style: AppTypography.headlineLarge,
+                    ),
+                  ),
+                  if (isActive)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    if (child.currentStreak > 0)
-                      Text(
-                        'ðŸ”¥ ${child.currentStreak}',
-                        style: AppTypography.labelSmall,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: child.levelProgress.clamp(0.0, 1.0),
-                    minHeight: 6,
-                    backgroundColor: const Color(
-                      0xFF0D5C53,
-                    ).withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Name
+              Text(
+                child.displayName,
+                style: AppTypography.titleSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Local badge
+              if (child.isLocal) ...[
+                const SizedBox(height: 2),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  isActive
-                      ? context.l10n.familyDashboardChildActiveToday(
-                          child.todayPoints,
-                        )
-                      : context.l10n.familyDashboardChildNoActivity,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isActive
-                        ? AppColors.primary
-                        : (isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary),
+                  child: Text(
+                    context.l10n.familyDashboardLocalBadge,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-            ),
-          ],
+
+              const Spacer(),
+
+              // Level progress bar
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.kidsLevelValue(child.currentLevel),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (child.currentStreak > 0)
+                        Text(
+                          '🔥 ${child.currentStreak}',
+                          style: AppTypography.labelSmall,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: child.levelProgress.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: const Color(
+                        0xFF0D5C53,
+                      ).withValues(alpha: 0.12),
+                      valueColor:
+                          const AlwaysStoppedAnimation(AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isActive
+                        ? context.l10n
+                            .familyDashboardChildActiveToday(child.todayPoints)
+                        : context.l10n.familyDashboardChildNoActivity,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isActive
+                          ? AppColors.primary
+                          : (isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// â”€â”€â”€ Add child card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Add child card ───────────────────────────────────────────────────────────
 
 class _AddChildCard extends StatelessWidget {
   @override
@@ -660,7 +666,7 @@ class _AddChildCard extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Empty placeholder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Empty placeholder ────────────────────────────────────────────────────────
 
 class _EmptyFamilyPlaceholder extends StatelessWidget {
   @override
@@ -701,7 +707,7 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ PIN Gate (reused from parent dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PIN Gate (reused from parent dashboard) ──────────────────────────────────
 
 class _PinGate extends StatefulWidget {
   const _PinGate({
@@ -814,7 +820,7 @@ class _PinGateState extends State<_PinGate> {
   }
 }
 
-// â”€â”€â”€ Add Child Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Add Child Logic ──────────────────────────────────────────────────────────
 
 void _showAddChildOptions(BuildContext context) {
   showModalBottomSheet(

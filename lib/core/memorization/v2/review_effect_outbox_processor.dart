@@ -11,6 +11,7 @@ import '../../identity/record_owner_provider.dart';
 import '../../progress/progress_changed_reason.dart';
 import '../../progress/progress_events_bus.dart';
 import '../../services/achievement_service.dart';
+import '../../services/streak_day.dart';
 
 /// Consumes durable review effects without replaying rewards after a crash.
 ///
@@ -72,10 +73,16 @@ final class V2ReviewEffectOutboxProcessor {
 
   Future<List<CertificateAward>> _processSnapshot() async {
     final ownerId = _owner.currentOwnerId;
+    // `sync` rows stay pending until the evidence upload acknowledges them
+    // (a guest keeps them for a later sign-in); this processor never handles
+    // them, so it must not load that ever-growing set on every drain (A8).
     final effects =
         await _isar.isarReviewEffectOutboxs
               .filter()
               .processedAtIsNull()
+              .ownerIdEqualTo(ownerId)
+              .not()
+              .effectTypeEqualTo('sync')
               .findAll()
           ..sort((a, b) => a.id.compareTo(b.id));
     final awards = <CertificateAward>[];
@@ -90,7 +97,8 @@ final class V2ReviewEffectOutboxProcessor {
     try {
       return switch (effect.effectType) {
         'dailyPlanReconciliation' => await _processDailyPlan(effect),
-        'xp' => await _processXp(effect),
+        'xp' => await _processXp(effect, 'v2_block_completed'),
+        'xpReview' => await _processXp(effect, 'v2_review_completed'),
         'streak' => await _processStreak(effect),
         'certificate' => await _processCertificate(effect),
         'completion' => await _markProcessed(effect.id),
@@ -123,13 +131,14 @@ final class V2ReviewEffectOutboxProcessor {
 
   Future<List<CertificateAward>> _processXp(
     IsarReviewEffectOutbox effect,
+    String rewardKey,
   ) async {
     final applied = await _isar.writeTxn(() async {
       final current = await _isar.isarReviewEffectOutboxs.get(effect.id);
       if (current == null || current.processedAt != null) return false;
       if (current.ownerId != _owner.currentOwnerId) return false;
       final xp = await _isar.xpIsars.get(1) ?? XpIsar();
-      xp.totalXp += XpConstants.rewards['v2_block_completed'] ?? 0;
+      xp.totalXp += XpConstants.rewards[rewardKey] ?? 0;
       xp.cloudDirty = true;
       await _isar.xpIsars.put(xp);
       current.processedAt = _now().toUtc();
@@ -148,27 +157,24 @@ final class V2ReviewEffectOutboxProcessor {
       final current = await _isar.isarReviewEffectOutboxs.get(effect.id);
       if (current == null || current.processedAt != null) return false;
       if (current.ownerId != _owner.currentOwnerId) return false;
-      final day = _utcDay(current.createdAt);
-      final dayKey = day.year * 10000 + day.month * 100 + day.day;
+      // Same rule as StreakService (local calendar day + mercy day), so
+      // memorization and reading can never disagree about the streak.
+      final day = StreakDay.of(current.createdAt);
+      final dayKey = StreakDay.dayKey(day);
       final delta = current.activityDelta ?? 1;
       final streak = await _isar.streakIsars.get(1) ?? StreakIsar();
-      final previous = streak.lastActivityDate;
-      if (previous == null) {
-        streak.currentStreak = 1;
-        streak.longestStreak = 1;
+      final next = StreakDay.transition(
+        currentStreak: streak.currentStreak,
+        longestStreak: streak.longestStreak,
+        lastDay: streak.lastActivityDate,
+        lastMercyDay: streak.lastMercyDate,
+        today: day,
+      );
+      if (next.isNewDay) {
+        streak.currentStreak = next.currentStreak;
+        streak.longestStreak = next.longestStreak;
+        streak.lastMercyDate = next.lastMercyDay;
         streak.lastActivityDate = day;
-      } else {
-        final previousDay = _utcDay(previous);
-        if (previousDay.isBefore(day)) {
-          final yesterday = day.subtract(const Duration(days: 1));
-          streak.currentStreak = previousDay == yesterday
-              ? streak.currentStreak + 1
-              : 1;
-          streak.longestStreak = streak.longestStreak > streak.currentStreak
-              ? streak.longestStreak
-              : streak.currentStreak;
-          streak.lastActivityDate = day;
-        }
       }
       streak.cloudDirty = true;
       await _isar.streakIsars.put(streak);
@@ -247,10 +253,5 @@ final class V2ReviewEffectOutboxProcessor {
       await _isar.isarReviewEffectOutboxs.put(effect);
     });
     return const [];
-  }
-
-  static DateTime _utcDay(DateTime value) {
-    final utc = value.toUtc();
-    return DateTime.utc(utc.year, utc.month, utc.day);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
@@ -62,6 +63,37 @@ void main() {
     test('is ignored outside the reciting phase', () {
       final created = _initialState();
       expect(engine.submitManualRecall(created), same(created));
+    });
+
+    test('a hesitant self-grade still passes the ayah', () {
+      var state = _initialState(blockReviewRequired: false);
+      state = engine.startLearning(state);
+      state = engine.startMemorizing(state);
+      state = engine.startReciting(state);
+
+      state = engine.submitManualRecall(state, grade: V2SelfGrade.hesitated);
+
+      expect(state.passedAyahNumbers, contains(1));
+      expect(state.failureTracker.failureCountFor(1, 1), 0);
+    });
+
+    test('"forgot" is a real failure that routes to remediation', () {
+      var state = _initialState(blockReviewRequired: false);
+      state = engine.startLearning(state);
+      state = engine.startMemorizing(state);
+      state = engine.startReciting(state);
+
+      state = engine.submitManualRecall(state, grade: V2SelfGrade.forgot);
+
+      expect(state.phase, V2SessionPhase.remediation);
+      expect(state.passedAyahNumbers, isNot(contains(1)));
+      expect(state.failureTracker.failureCountFor(1, 1), 1);
+      expect(state.lastRecitationResult?.passed, isFalse);
+      expect(
+        state.lastRecitationResult?.assessmentMethod,
+        V2AssessmentMethod.manual,
+      );
+      expect(state.lastRecitationResult?.similarityScore, isNull);
     });
   });
 

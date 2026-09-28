@@ -44,6 +44,9 @@ void main() {
       completedAyahNums: const [1],
     );
     await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+    await datasource.saveCustomPlan(
+      CustomMemorizationPlanModel.fromEntity(_activeAdultPlan),
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -71,6 +74,46 @@ void main() {
     expect(find.textContaining('1 completed'), findsOneWidget);
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
     expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+  });
+
+  testWidgets('without an active plan it invites creating one (M-U2)', (
+    tester,
+  ) async {
+    final repository = await _repositoryForPlan(
+      DailyPlan(
+        generatedAt: DateTime.now().toUtc(),
+        surahId: 1,
+        newAyahs: const [],
+        nearRevision: const [],
+        farRevision: const [],
+        completedAyahNums: const [],
+      ),
+      withActivePlan: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: DailyPlanPage(repositoryOverride: repository),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("You haven't created a memorization plan yet"),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('daily_plan_create_plan_button')),
+      findsOneWidget,
+    );
+    expect(find.text('Well done! No reviews are due today'), findsNothing);
   });
 
   testWidgets('tapping a plan ayah opens its exact surah and ayah', (
@@ -126,7 +169,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Ayah 3'));
+    await tester.tap(find.text('Ya-Sin · Ayah 3'));
     await tester.pumpAndSettle();
 
     expect(find.text('36:3'), findsOneWidget);
@@ -134,12 +177,18 @@ void main() {
 }
 
 Future<MemorizationPlusRepositoryImpl> _repositoryForPlan(
-  DailyPlan plan,
-) async {
+  DailyPlan plan, {
+  bool withActivePlan = true,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   final datasource = MemorizationPlusLocalDatasourceImpl(prefs);
   await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+  if (withActivePlan) {
+    await datasource.saveCustomPlan(
+      CustomMemorizationPlanModel.fromEntity(_activeAdultPlan),
+    );
+  }
   return MemorizationPlusRepositoryImpl(
     datasource,
     _UnusedQuranRepository(),
@@ -159,3 +208,19 @@ class _UnusedQuranRepository implements QuranRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
+
+final _activeAdultPlan = CustomMemorizationPlan(
+  name: 'plan',
+  startSurahId: 67,
+  endSurahId: 114,
+  newAyahsPerDay: 3,
+  availableDaysPerWeek: 7,
+  sessionMinutes: 30,
+  difficulty: MemorizationDifficulty.moderate,
+  enableNearRevision: true,
+  enableFarRevision: true,
+  nearRevisionCount: 5,
+  farRevisionCount: 3,
+  startAyah: 1,
+  createdAt: DateTime.utc(2026, 9, 1),
+);

@@ -60,7 +60,10 @@ class DailyReadingLogService {
     }, authority: authority);
   }
 
-  Future<void> prune({int olderThan = _retentionDays, DateTime? relativeTo}) async {
+  Future<void> prune({
+    int olderThan = _retentionDays,
+    DateTime? relativeTo,
+  }) async {
     final authority = _barrier.capture();
     await _barrier.run<void>(
       (lease) => _prune(
@@ -78,9 +81,13 @@ class DailyReadingLogService {
     required AccountDataLease authority,
   }) async {
     final origin = relativeTo ?? _now();
-    final cutoff = DateTime(origin.year, origin.month, origin.day)
-        .subtract(Duration(days: olderThan));
-    final keys = _prefs.getKeys()
+    final cutoff = DateTime(
+      origin.year,
+      origin.month,
+      origin.day,
+    ).subtract(Duration(days: olderThan));
+    final keys = _prefs
+        .getKeys()
         .where((key) => key.startsWith(_prefix))
         .toList(growable: false);
     for (final key in keys) {

@@ -13,6 +13,7 @@ import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
+import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/services/audio_cache_service.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
@@ -129,6 +130,10 @@ void main() {
       (_) async => Right(SurahDetail(surah: defaultSurah, ayahs: defaultAyahs)),
     );
     when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => null);
+    // Review sessions checkpoint in their own lane (A3).
+    when(
+      mockLocalDatasource.getSession(1, review: true),
+    ).thenAnswer((_) async => null);
     when(mockLocalDatasource.saveSession(any)).thenAnswer((_) async {});
     when(
       mockAudioCache.prefetchSession(
@@ -591,6 +596,19 @@ void main() {
           (cubit.state as MSActive).sessionState.lastRecitationResult;
       expect(result?.assessmentMethod, V2AssessmentMethod.manual);
       verify(mockMemRepo.saveReviewRecord(any)).called(1);
+    });
+
+    test('self-graded "forgot" remediates and records no pass', () async {
+      stubReviewWrite();
+      await moveToReciting();
+
+      await cubit.submitManualRecall(V2SelfGrade.forgot);
+
+      final session = (cubit.state as MSActive).sessionState;
+      expect(session.phase, V2SessionPhase.remediation);
+      expect(session.passedAyahNumbers, isEmpty);
+      expect(session.failureTracker.totalFailures, 1);
+      verifyNever(mockMemRepo.saveReviewRecord(any));
     });
   });
 

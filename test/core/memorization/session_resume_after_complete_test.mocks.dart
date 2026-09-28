@@ -1653,12 +1653,16 @@ class MockV2SessionLocalDatasource extends _i1.Mock
   _i10.Future<_i20.IsarV2Session?> getSession(
     int? surahId, {
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
+    bool? review = false,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getSession,
           [surahId],
-          {#audience: audience},
+          {
+            #audience: audience,
+            #review: review,
+          },
         ),
         returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
       ) as _i10.Future<_i20.IsarV2Session?>);
@@ -1678,12 +1682,16 @@ class MockV2SessionLocalDatasource extends _i1.Mock
   _i10.Future<void> clearSession(
     int? surahId, {
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
+    bool? review = false,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #clearSession,
           [surahId],
-          {#audience: audience},
+          {
+            #audience: audience,
+            #review: review,
+          },
         ),
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),

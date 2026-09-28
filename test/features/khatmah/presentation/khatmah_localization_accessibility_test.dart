@@ -469,7 +469,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.textContaining(ar ? 'ورد اليوم' : "today's wird"),
+        find.descendant(
+          of: find.byType(KhatmahReaderSessionBar),
+          matching: find.textContaining(ar ? 'ورد اليوم' : "today's wird"),
+        ),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);

@@ -48,8 +48,7 @@ void cloudSyncCallbackDispatcher() {
 class BackgroundSyncScheduler {
   static const _uniqueNamePrefix = 'talia-cloud-sync-';
 
-  bool get _isSupported =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get _isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   Future<void> initialize() async {
     if (!_isSupported) return;

@@ -7,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_store.dart';
+import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
+import 'package:talia_quran/features/azkar/data/datasources/smart_wird_progress_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/azkar/domain/repositories/azkar_repository.dart';
 import 'package:talia_quran/features/azkar/domain/usecases/get_azkar_usecase.dart';
@@ -14,6 +17,7 @@ import 'package:talia_quran/features/azkar/presentation/cubits/azkar_cubit.dart'
 import 'package:talia_quran/features/azkar/presentation/pages/azkar_category_page.dart';
 import 'package:talia_quran/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:talia_quran/features/azkar/presentation/pages/general_azkar_page.dart';
+import 'package:talia_quran/features/azkar/presentation/services/zikr_audio_service.dart';
 
 void main() {
   setUp(() async {
@@ -26,7 +30,7 @@ void main() {
   testWidgets('keeps the Azkar feature visible with a safe review state', (
     tester,
   ) async {
-    _registerRepository(const _FakeAzkarRepository());
+    await _registerRepository(const _FakeAzkarRepository());
 
     await tester.pumpWidget(_localizedApp(const AzkarPage()));
     await tester.pumpAndSettle();
@@ -43,7 +47,7 @@ void main() {
   testWidgets('shows only categories that contain approved records', (
     tester,
   ) async {
-    _registerRepository(
+    await _registerRepository(
       const _FakeAzkarRepository({
         AzkarCategory.morning: [_approvedMorningZikr],
       }),
@@ -64,7 +68,7 @@ void main() {
     const repository = _FakeAzkarRepository({
       AzkarCategory.morning: [_pendingGradedMorningZikr],
     });
-    _registerRepository(repository);
+    await _registerRepository(repository);
     final preferences = await SharedPreferences.getInstance();
     getIt.registerFactory<AzkarCubit>(
       () => AzkarCubit(GetAzkarUsecase(repository), preferences),
@@ -115,7 +119,7 @@ void main() {
     const repository = _FakeAzkarRepository({
       AzkarCategory.morning: [zikr],
     });
-    _registerRepository(repository);
+    await _registerRepository(repository);
     final preferences = await SharedPreferences.getInstance();
     getIt.registerFactory<AzkarCubit>(
       () => AzkarCubit(GetAzkarUsecase(repository), preferences),
@@ -144,7 +148,7 @@ void main() {
       tester,
     ) async {
       const repository = _FakeAzkarRepository();
-      _registerRepository(repository);
+      await _registerRepository(repository);
       final preferences = await SharedPreferences.getInstance();
       getIt.registerFactory<AzkarCubit>(
         () => AzkarCubit(GetAzkarUsecase(repository), preferences),
@@ -162,7 +166,16 @@ void main() {
   }
 }
 
-void _registerRepository(AzkarRepository repository) {
+Future<void> _registerRepository(AzkarRepository repository) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(prefs);
+  getIt.registerSingleton<AzkarCompletionStore>(AzkarCompletionStore(prefs));
+  getIt.registerSingleton<AzkarPreferencesStore>(AzkarPreferencesStore(prefs));
+  getIt.registerSingleton<SmartWirdProgressStore>(
+    SmartWirdProgressStore(prefs),
+  );
+  getIt.registerSingleton<ZikrAudioService>(ZikrAudioService());
   getIt.registerSingleton<AzkarRepository>(repository);
 }
 
@@ -186,6 +199,13 @@ class _FakeAzkarRepository implements AzkarRepository {
   @override
   Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async =>
       Right(records[category] ?? const []);
+
+  @override
+  Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async =>
+      Right({
+        for (final category in AzkarCategory.values)
+          category: records[category] ?? const [],
+      });
 }
 
 const _approvedMorningZikr = Zikr(

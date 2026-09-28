@@ -24,15 +24,21 @@ class SocialShareCopy {
       isArabic ? 'رفيقك في رحلة القرآن' : 'Your Quran companion';
   String brandPromise(bool isKids, SocialShareCategory category) {
     if (isKids) {
-      return isArabic ? 'نغرس القرآن في القلب بحب' : 'Planting the Quran in hearts with love';
+      return isArabic
+          ? 'نغرس القرآن في القلب بحب'
+          : 'Planting the Quran in hearts with love';
     }
     switch (category) {
       case SocialShareCategory.quranAyah:
       case SocialShareCategory.dua:
       case SocialShareCategory.azkar:
-        return isArabic ? 'تالية... رفيقك للذكر والهداية' : 'Talia... your companion for remembrance and guidance';
+        return isArabic
+            ? 'تالية... رفيقك للذكر والهداية'
+            : 'Talia... your companion for remembrance and guidance';
       default:
-        return isArabic ? 'تالية... قرآنٌ يصنعُ جيلاً أفضل' : 'Talia... Quran shapes a better generation';
+        return isArabic
+            ? 'تالية... قرآنٌ يصنعُ جيلاً أفضل'
+            : 'Talia... Quran shapes a better generation';
     }
   }
 
@@ -46,9 +52,12 @@ class SocialShareCopy {
       case SocialShareCategory.azkar:
         return isArabic ? 'رفيقك للذكر والهداية' : 'Companion for guidance';
       default:
-        return isArabic ? 'قرآنٌ يصنعُ جيلاً أفضل' : 'Quran shapes a better generation';
+        return isArabic
+            ? 'قرآنٌ يصنعُ جيلاً أفضل'
+            : 'Quran shapes a better generation';
     }
   }
+
   String get appDomain => Uri.parse(SocialShareData.landingPageUrl).host;
 
   // ─── Marketing & CTA copy ─────────────────────────────────────────────────

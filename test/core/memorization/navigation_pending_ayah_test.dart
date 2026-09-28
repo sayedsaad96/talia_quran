@@ -212,6 +212,101 @@ void main() {
       },
     );
 
+    test(
+      'continuing the plan on a review item launches a review, not memorize (A2)',
+      () async {
+        final reviewed = AyahReviewRecord(
+          surahId: 36,
+          ayahNumber: 10,
+          strengthLevel: 2,
+          intervalDays: 1,
+          lastReviewedAt: DateTime.utc(2026, 7, 6),
+          nextReviewDate: DateTime.utc(2026, 7, 7),
+          totalReviews: 3,
+          lastRating: PerformanceRating.weak,
+          createdByMode: ReviewRecordCreatedByMode.v2Session,
+        );
+        final nav = MemorizationNavigationResolver(
+          _FakeRepository(
+            cachedPlan: DailyPlan(
+              generatedAt: DateTime.utc(2026, 7, 8),
+              surahId: 2,
+              newAyahs: const [
+                DailyPlanAyah(
+                  surahId: 2,
+                  ayahNumber: 4,
+                  ayahText: 'text',
+                  record: null,
+                ),
+              ],
+              weakRecovery: [
+                DailyPlanAyah(
+                  surahId: 36,
+                  ayahNumber: 10,
+                  ayahText: 'text',
+                  record: reviewed,
+                ),
+              ],
+              nearRevision: const [],
+              farRevision: const [],
+              completedAyahNums: const [],
+            ),
+          ),
+        );
+
+        final targets = await nav.resolve();
+        final query = Uri.parse(targets.todayPlanLocation).queryParameters;
+
+        expect(query['surahId'], '36');
+        expect(query['startAyah'], '10');
+        expect(query['intent'], 'review');
+        expect(query['origin'], 'dailyPlan');
+      },
+    );
+
+    test('memorize blocks follow the plan difficulty (M-U4)', () async {
+      final nav = MemorizationNavigationResolver(
+        _FakeRepository(
+          cachedPlan: DailyPlan(
+            generatedAt: DateTime.utc(2026, 7, 8),
+            surahId: 67,
+            newAyahs: const [
+              DailyPlanAyah(
+                surahId: 67,
+                ayahNumber: 4,
+                ayahText: 'text',
+                record: null,
+              ),
+            ],
+            nearRevision: const [],
+            farRevision: const [],
+            completedAyahNums: const [],
+          ),
+          customPlan: CustomMemorizationPlan(
+            name: 'p',
+            startSurahId: 67,
+            endSurahId: 114,
+            newAyahsPerDay: 10,
+            availableDaysPerWeek: 7,
+            sessionMinutes: 60,
+            difficulty: MemorizationDifficulty.easy,
+            enableNearRevision: true,
+            enableFarRevision: true,
+            nearRevisionCount: 5,
+            farRevisionCount: 3,
+            startAyah: 1,
+            createdAt: DateTime.utc(2026, 7, 1),
+          ),
+        ),
+      );
+
+      final targets = await nav.resolve();
+      final query = Uri.parse(targets.todayPlanLocation).queryParameters;
+
+      expect(query['intent'], 'memorize');
+      expect(query['blockSize'], '3');
+    });
+
     test('completed daily plan does not open a V2 session at ayah 1', () async {
       final nav = MemorizationNavigationResolver(
         _FakeRepository(
@@ -257,9 +352,10 @@ void main() {
 }
 
 class _FakeRepository implements MemorizationPlusRepository {
-  _FakeRepository({this.cachedPlan});
+  _FakeRepository({this.cachedPlan, this.customPlan});
 
   final DailyPlan? cachedPlan;
+  final CustomMemorizationPlan? customPlan;
 
   @override
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>
@@ -276,7 +372,7 @@ class _FakeRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() async =>
-      const Right(null);
+      Right(customPlan);
 
   @override
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async =>

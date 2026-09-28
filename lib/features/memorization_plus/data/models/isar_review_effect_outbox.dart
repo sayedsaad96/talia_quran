@@ -22,6 +22,7 @@ class IsarReviewEffectOutbox {
   late String audience;
   @Index()
   late String effectType;
+
   /// The deterministic activity amount used by idempotent reward effects.
   ///
   /// Kept on the effect rather than reconstructed from a session checkpoint so

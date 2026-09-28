@@ -1,4 +1,6 @@
-﻿import 'dart:ui';
+import 'dart:ui';
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,6 +96,9 @@ void main() {
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelPrayerTimesReminders(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelPrayerCompanionReminders(),
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelDailyReviewReminder(),
@@ -237,6 +242,63 @@ void main() {
   });
 
   tearDown(() => getIt.reset());
+
+  group('refresh ordering and outcome', () {
+    test('a later refresh waits until the first refresh finishes', () async {
+      SharedPreferences.setMockInitialValues({});
+      final firstEntered = Completer<void>();
+      final releaseFirst = Completer<void>();
+      var timezoneCalls = 0;
+      when(() => mockNotificationService.configureLocalTimezone()).thenAnswer((
+        _,
+      ) async {
+        timezoneCalls++;
+        if (timezoneCalls == 1) {
+          firstEntered.complete();
+          await releaseFirst.future;
+        }
+      });
+      final scheduler = NotificationScheduler(mockNotificationService);
+      final l10n = lookupAppLocalizations(const Locale('ar'));
+
+      final first = scheduler.refreshNotificationsForSettings(
+        l10n,
+        force: true,
+      );
+      await firstEntered.future;
+      final second = scheduler.refreshNotificationsForSettings(
+        l10n,
+        force: true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(timezoneCalls, 1);
+
+      releaseFirst.complete();
+      expect(await first, isTrue);
+      expect(await second, isTrue);
+      expect(timezoneCalls, 2);
+    });
+
+    test(
+      'a failed refresh reports failure and leaves the queue usable',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        var attempts = 0;
+        when(() => mockNotificationService.configureLocalTimezone()).thenAnswer(
+          (_) async {
+            attempts++;
+            if (attempts == 1) throw StateError('timezone unavailable');
+          },
+        );
+        final scheduler = NotificationScheduler(mockNotificationService);
+        final l10n = lookupAppLocalizations(const Locale('ar'));
+
+        expect(await scheduler.refreshNotificationsForSettings(l10n), isFalse);
+        expect(await scheduler.refreshNotificationsForSettings(l10n), isTrue);
+        expect(attempts, 2);
+      },
+    );
+  });
 
   group('Friday Surah Al-Kahf reminder', () {
     test('schedules Friday Kahf reminder when enabled', () async {
@@ -392,6 +454,39 @@ void main() {
   });
 
   group('Prayer times rolling reminders', () {
+    test(
+      'legacy prayer failure is reported and retried on the next refresh',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          TaliaNotificationService.prayerNotificationsPreferenceKey: true,
+        });
+        when(
+          () => mockPrayerTimesService.isReadyForNotificationScheduling,
+        ).thenReturn(true);
+        when(
+          () => mockPrayerTimesService.timesForDate(any()),
+        ).thenAnswer((_) async => []);
+        var attempts = 0;
+        when(
+          () => mockNotificationService.schedulePrayerTimesReminders(
+            prayers: any(named: 'prayers'),
+          ),
+        ).thenAnswer((_) async {
+          attempts++;
+          if (attempts == 1) throw StateError('schedule failed');
+        });
+        final scheduler = NotificationScheduler(
+          mockNotificationService,
+          prayerTimesService: mockPrayerTimesService,
+        );
+        final l10n = lookupAppLocalizations(const Locale('ar'));
+
+        expect(await scheduler.refreshNotificationsForSettings(l10n), isFalse);
+        expect(await scheduler.refreshNotificationsForSettings(l10n), isTrue);
+        expect(attempts, 2);
+      },
+    );
+
     test(
       'cancels prayer reminders until the prayer location is configured',
       () async {
@@ -620,10 +715,13 @@ void main() {
         final scheduledList =
             captured.first as List<ScheduledPrayerNotification>;
         expect(scheduledList.length, 35);
-        expect(
-          scheduledList.take(5).map((p) => p.prayerKey),
-          ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'],
-        );
+        expect(scheduledList.take(5).map((p) => p.prayerKey), [
+          'fajr',
+          'dhuhr',
+          'asr',
+          'maghrib',
+          'isha',
+        ]);
         for (final prayer in scheduledList) {
           final time = prayer.scheduledDate as TZDateTime;
           expect(

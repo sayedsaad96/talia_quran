@@ -20,9 +20,7 @@ class SkeletonBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: isDark
-          ? AppColors.shimmerBase
-          : AppColors.shimmerBaseLight,
+      baseColor: isDark ? AppColors.shimmerBase : AppColors.shimmerBaseLight,
       highlightColor: isDark
           ? AppColors.shimmerHighlight
           : AppColors.shimmerHighlightLight,

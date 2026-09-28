@@ -355,9 +355,13 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         if (!completion.isValidCompletion) return;
                         String? userName;
                         try {
-                          final profileState = context.read<ProfileCubit>().state;
+                          final profileState = context
+                              .read<ProfileCubit>()
+                              .state;
                           if (profileState is ProfileLoaded &&
-                              profileState.profile.displayName.trim().isNotEmpty) {
+                              profileState.profile.displayName
+                                  .trim()
+                                  .isNotEmpty) {
                             userName = profileState.profile.displayName.trim();
                           }
                         } catch (_) {}
@@ -432,6 +436,24 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  // The natural next step after a khatmah is the next one.
+                  OutlinedButton.icon(
+                    key: const Key('khatmah_completion_new_khatmah_button'),
+                    onPressed: () => context.go(AppRoutes.khatmahSetup),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.replay_rounded),
+                    label: Text(context.l10n.khatmahStartNewKhatmah),
                   ),
 
                   const SizedBox(height: AppSpacing.md),

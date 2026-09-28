@@ -12,6 +12,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../prayer_companion/application/prayer_companion_controller.dart';
+import '../../../settings/presentation/pages/subpages/prayer_settings_page.dart';
 import '../../domain/services/home_occasion_service.dart';
 import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
@@ -55,6 +56,12 @@ class HomeNightHeader extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               _ConsolidatedBadge(state: state, skin: skin),
+              if (state.prayerSnapshot == null &&
+                  getIt.isRegistered<PrayerTimesService>() &&
+                  getIt<PrayerTimesService>().isEnabled) ...[
+                const SizedBox(height: AppSpacing.md),
+                _PrayerCitySetupPrompt(skin: skin),
+              ],
               if (state.prayerSnapshot != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 HomePrayerTimeline(
@@ -77,6 +84,54 @@ class HomeNightHeader extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrayerCitySetupPrompt extends StatelessWidget {
+  const _PrayerCitySetupPrompt({required this.skin});
+
+  final HomeSkin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: skin.onHeroFill,
+        border: Border.all(color: skin.onHeroBorder),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.prayerChooseCityForAccurateTimes,
+              style: AppTypography.bodyMedium.copyWith(color: skin.textOnHero),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrayerSettingsPage(),
+                  ),
+                );
+                if (context.mounted) {
+                  unawaited(context.read<HomeCubit>().load());
+                }
+              },
+              icon: const Icon(Icons.location_on_outlined),
+              label: Text(context.l10n.prayerChooseCityAction),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: skin.textOnHero,
+                minimumSize: const Size(48, 48),
+              ),
+            ),
+          ],
         ),
       ),
     );

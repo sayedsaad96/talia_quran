@@ -9,6 +9,8 @@ import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/quran_ayah_display_text.dart';
+import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../../memorization_plus/domain/entities/ayah_review_record.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
@@ -77,15 +79,17 @@ class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             child: _revealed
-                ? Text(
-                    qcf.getVerse(record.surahId, record.ayahNumber),
+                ? MemorizationAyahDisplay(
                     key: const ValueKey('revealed'),
-                    textAlign: TextAlign.center,
-                    style: AppTypography.headlineSmall.copyWith(
-                      fontFamily: 'Amiri',
-                      color: skin.textPrimary,
-                      height: 2,
+                    text: QuranAyahDisplayText.withoutTrailingNumber(
+                      qcf.getVerse(record.surahId, record.ayahNumber),
+                      ayahNumber: record.ayahNumber,
                     ),
+                    surahId: record.surahId,
+                    ayahNumber: record.ayahNumber,
+                    textColor: skin.textPrimary,
+                    decorationColor: skin.accent.withValues(alpha: 0.5),
+                    referenceColor: skin.accent,
                   )
                 : InkWell(
                     key: const ValueKey('hidden'),
@@ -126,15 +130,18 @@ class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  reference,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: skin.textSecondary,
+              if (_revealed)
+                const Spacer()
+              else
+                Flexible(
+                  child: Text(
+                    reference,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: skin.textSecondary,
+                    ),
                   ),
                 ),
-              ),
               TextButton.icon(
                 key: const Key('home_micro_review_recite'),
                 onPressed: () => context.push(

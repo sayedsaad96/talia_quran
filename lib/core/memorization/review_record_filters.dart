@@ -142,7 +142,6 @@ class ReviewRecordFilters {
   static bool isLearning(AyahReviewRecord record) =>
       isStarted(record) && !isMemorized(record);
 
-
   /// Tie-breaker for memorized-due ordering (Smart Coach + Daily Plan).
   ///
   /// 1. oldest [AyahReviewRecord.nextReviewDate]

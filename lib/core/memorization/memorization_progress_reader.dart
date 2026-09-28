@@ -41,9 +41,8 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
 
     final reviewRecords = await _readOptional(
       label: 'Smart Coach review records',
-      read: () => _memorizationPlusRepository.getAllReviewRecords(
-        scope: reviewScope,
-      ),
+      read: () =>
+          _memorizationPlusRepository.getAllReviewRecords(scope: reviewScope),
       fallback: const <AyahReviewRecord>[],
     );
     final cachedDailyPlan = await _readOptional<DailyPlan?>(

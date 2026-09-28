@@ -72,6 +72,71 @@ void main() {
       expect(find.text('Talia'), findsOneWidget);
       expect(find.text('Link New Child'), findsOneWidget);
     });
+
+    testWidgets('dashboard renders multiple children in the grid', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases();
+      usecases.settings = const ParentSettings(pinHash: 'secure-v2');
+      usecases.dashboard = _dashboardWithChildren([
+        const FamilyChildEntry(
+          childUserId: 'child-1',
+          displayName: 'Ahmad',
+          isLocal: true,
+          localData: ParentDashboard(
+            progress: KidsProgress.initial(),
+            stages: [],
+            logs: [],
+            rewards: [],
+            settings: ParentSettings(pinHash: 'secure-v2'),
+          ),
+        ),
+        const FamilyChildEntry(
+          childUserId: 'child-2',
+          displayName: 'Fatima',
+          isLocal: false,
+        ),
+        const FamilyChildEntry(
+          childUserId: 'child-3',
+          displayName: 'Yusuf',
+          isLocal: false,
+        ),
+      ]);
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+
+      // All three children must be visible in the grid.
+      expect(find.text('Ahmad'), findsOneWidget);
+      expect(find.text('Fatima'), findsOneWidget);
+      expect(find.text('Yusuf'), findsOneWidget);
+      // The add-child card still appears after the list.
+      expect(find.text('Link New Child'), findsOneWidget);
+    });
+
+    testWidgets('empty state shows placeholder and link-child button', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases();
+      usecases.settings = const ParentSettings(pinHash: 'secure-v2');
+      usecases.dashboard = const FamilyDashboard(
+        children: [],
+        settings: ParentSettings(pinHash: 'secure-v2'),
+      );
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+
+      // Empty-state title and CTA must be visible; no child cards.
+      expect(find.text('No children linked yet'), findsOneWidget);
+      expect(find.text('Link New Child'), findsWidgets);
+    });
   });
 }
 
@@ -99,6 +164,13 @@ FamilyDashboard _dashboard() {
         ),
       ),
     ],
+  );
+}
+
+FamilyDashboard _dashboardWithChildren(List<FamilyChildEntry> children) {
+  return FamilyDashboard(
+    settings: const ParentSettings(pinHash: 'secure-v2'),
+    children: children,
   );
 }
 

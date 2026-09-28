@@ -50,6 +50,24 @@ Future<void> _initializeKidsResumeIsarCoreForTests() async {
   _kidsResumeIsarCoreInitialized = true;
 }
 
+Future<V2SessionProgressAdapter> _openKidsResumeAdapter() async {
+  await _initializeKidsResumeIsarCoreForTests();
+  final tempDir = await Directory.systemTemp.createTemp('talia_kids_resume_');
+  final isar = await Isar.open(
+    [IsarV2SessionSchema],
+    directory: tempDir.path,
+    name: 'kids_resume_${DateTime.now().microsecondsSinceEpoch}',
+  );
+  addTearDown(() async {
+    await isar.close(deleteFromDisk: true);
+    if (tempDir.existsSync()) await tempDir.delete(recursive: true);
+  });
+  return V2SessionProgressAdapter(
+    datasource: V2SessionLocalDatasource(isar),
+    audience: MemorizationAudience.kids,
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -208,10 +226,260 @@ void main() {
       await cubit.markCompleted(automaticSpokenText: 'ayah text');
 
       expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
-      expect(repository.lastMissionType, KidsMissionType.resume);
+      // The interrupted ayah was never rewarded, so the resumed session
+      // keeps its original fresh-memorization award semantics (H3).
+      expect(repository.lastMissionType, KidsMissionType.newMemorization);
       final savedAfterCompletion = await adapter.loadIfExists(114);
       expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
     });
+
+    test(
+      'resuming an already-rewarded ayah earns reduced review points',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 5,
+                starsEarned: 0,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          kidsSessionLogs: [
+            KidsSessionLog(
+              id: 'earlier-reward',
+              surahId: 114,
+              ayahNumber: 1,
+              repeatsCompleted: 2,
+              pointsEarned: 10,
+              completedAt: DateTime.now().toUtc(),
+              missionType: KidsMissionType.newMemorization,
+            ),
+          ],
+        );
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+        cubit.debugSetLoopCount(3);
+
+        await cubit.markCompleted(automaticSpokenText: 'ayah text');
+
+        // The canonical reward log proves the ayah was already paid out, so
+        // the resumed run behaves like a review: reduced points, never a
+        // second full reward.
+        expect(repository.lastMissionType, KidsMissionType.resume);
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isCompleted, isTrue);
+        expect(loaded.sessionPointsEarned, 5);
+      },
+    );
+
+    test(
+      'a session whose ayah text cannot be loaded refuses to start',
+      () async {
+        // The placeholder text can never pass recitation evaluation; a
+        // session built on it would trap the child in an unwinnable mission.
+        await cubit.load(114, 1, 'النص غير متوفر');
+
+        expect(cubit.state, isA<KidsModeError>());
+        expect(
+          (cubit.state as KidsModeError).message,
+          CubitMessageCodes.v2SurahLoadFailed,
+        );
+        expect(repository.awardCalls, 0);
+      },
+    );
+
+    test(
+      'three repeated mismatches unlock the guardian-verified completion',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.captured(
+              words: 'different words',
+            ),
+          ),
+          policy: KidsSessionPolicy.forAge(6),
+        );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.startRecording();
+        var state = cubit.state as KidsModeLoaded;
+        expect(state.canUseGuardianFallback, isFalse); // first mismatch
+
+        await cubit.startRecording();
+        await cubit.startRecording();
+        state = cubit.state as KidsModeLoaded;
+        expect(state.recordingError, CubitMessageCodes.kidsRecitationMismatch);
+        expect(state.canUseGuardianFallback, isTrue); // escape valve opened
+
+        expect(await cubit.submitManualCompletion(guardianPin: '1234'), isTrue);
+        expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      },
+    );
+
+    test(
+      'manual completion during an active recording finishes silently',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        await cubit.close();
+        final recorder = _PrecompletedKidsRecitationRecorder();
+        cubit = buildCubit(
+          recorder: recorder,
+          policy: KidsSessionPolicy.forAge(6),
+        );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        final recording = cubit.startRecording();
+        await recorder.captureStarted.future;
+
+        // The session completes (guardian-verified flow) while the mic is
+        // still open.
+        await cubit.markCompleted(manualGrade: true);
+
+        // The late capture resolves with wrong words, but a finished session
+        // must never evaluate a stale capture or emit a confusing error.
+        recorder.finishCapture.complete(
+          const KidsRecitationCaptureResult.captured(
+            words: 'totally wrong words',
+          ),
+        );
+        await recording;
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isCompleted, isTrue);
+        expect(state.recordingError, isNull);
+        expect(state.isRecording, isFalse);
+      },
+    );
+
+    test(
+      'a session parked at blockReviewPending completes on resume',
+      () async {
+        await _initializeKidsResumeIsarCoreForTests();
+        final tempDir = await Directory.systemTemp.createTemp(
+          'talia_kids_resume_pending_',
+        );
+        final isar = await Isar.open(
+          [IsarV2SessionSchema],
+          directory: tempDir.path,
+          name: 'kids_resume_pending_${DateTime.now().microsecondsSinceEpoch}',
+        );
+        addTearDown(() async {
+          await isar.close(deleteFromDisk: true);
+          if (tempDir.existsSync()) await tempDir.delete(recursive: true);
+        });
+        final adapter = V2SessionProgressAdapter(
+          datasource: V2SessionLocalDatasource(isar),
+          audience: MemorizationAudience.kids,
+        );
+        await adapter.save(
+          V2SessionState.initial(
+            surahId: 114,
+            blockAyahs: const [
+              Ayah(
+                number: 1,
+                surahId: 114,
+                text: 'ayah text',
+                numberInSurah: 1,
+              ),
+            ],
+            blockReviewRequired: true,
+          ).copyWith(
+            phase: V2SessionPhase.blockReviewPending,
+            passedAyahNumbers: const {1},
+          ),
+        );
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 5,
+                starsEarned: 0,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.captured(
+              words: 'ayah text',
+            ),
+          ),
+          quran: const _ResumeQuranRepository(),
+          progressAdapter: adapter,
+          kidsSessionLogs: [
+            KidsSessionLog(
+              id: 'already-rewarded',
+              surahId: 114,
+              ayahNumber: 1,
+              repeatsCompleted: 2,
+              pointsEarned: 10,
+              completedAt: DateTime.now().toUtc(),
+              missionType: KidsMissionType.newMemorization,
+            ),
+          ],
+        );
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+
+        var state = cubit.state as KidsModeLoaded;
+        // The pre-fix session was parked after a passed, already-rewarded
+        // ayah — resuming it must promote straight to the terminal phase.
+        expect(state.sessionState.phase, V2SessionPhase.completed);
+        expect(state.isCompleted, isFalse); // celebration needs one recite
+
+        cubit.debugSetLoopCount(2);
+        await cubit.markCompleted(automaticSpokenText: 'ayah text');
+
+        state = cubit.state as KidsModeLoaded;
+        expect(state.isCompleted, isTrue);
+        expect(repository.lastMissionType, KidsMissionType.resume);
+      },
+    );
     test(
       'review record failure keeps the kids session retryable without awards',
       () async {
@@ -248,38 +516,32 @@ void main() {
       },
     );
 
-    test(
-      'load defaults to the age-8 policy listen repetitions',
-      () async {
-        await cubit.load(114, 1, 'ayah text');
+    test('load defaults to the age-8 policy listen repetitions', () async {
+      await cubit.load(114, 1, 'ayah text');
 
-        final loaded = cubit.state as KidsModeLoaded;
-        // Default policy resolves to age 8 → two conscious listens.
-        expect(loaded.maxLoops, 2);
-      },
-    );
-    test(
-      'listen repetitions follow the age-band policy',
-      () async {
-        // Older band (8–12) repeats twice per policy before reciting.
-        await cubit.close();
-        cubit = buildCubit(
-          recorder: _FakeKidsRecitationRecorder(),
-          policy: KidsSessionPolicy.forAge(8),
-        );
-        await cubit.load(114, 1, 'ayah text');
-        expect((cubit.state as KidsModeLoaded).maxLoops, 2);
+      final loaded = cubit.state as KidsModeLoaded;
+      // Default policy resolves to age 8 → two conscious listens.
+      expect(loaded.maxLoops, 2);
+    });
+    test('listen repetitions follow the age-band policy', () async {
+      // Older band (8–12) repeats twice per policy before reciting.
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(),
+        policy: KidsSessionPolicy.forAge(8),
+      );
+      await cubit.load(114, 1, 'ayah text');
+      expect((cubit.state as KidsModeLoaded).maxLoops, 2);
 
-        // Younger band (5–7) listens once.
-        await cubit.close();
-        cubit = buildCubit(
-          recorder: _FakeKidsRecitationRecorder(),
-          policy: KidsSessionPolicy.forAge(6),
-        );
-        await cubit.load(114, 1, 'ayah text');
-        expect((cubit.state as KidsModeLoaded).maxLoops, 1);
-      },
-    );
+      // Younger band (5–7) needs more listens, not fewer.
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(),
+        policy: KidsSessionPolicy.forAge(6),
+      );
+      await cubit.load(114, 1, 'ayah text');
+      expect((cubit.state as KidsModeLoaded).maxLoops, 3);
+    });
     test(
       'recording stays locked until every required listen is completed',
       () async {
@@ -297,18 +559,12 @@ void main() {
         // One of two required listens done → recording must be refused.
         cubit.debugSetLoopCount(1);
         await cubit.startRecording();
-        expect(
-          (cubit.state as KidsModeLoaded).recordingError,
-          isNull,
-        );
-        expect(
-          (cubit.state as KidsModeLoaded).mustListenFirst,
-          isTrue,
-        );
+        expect((cubit.state as KidsModeLoaded).recordingError, isNull);
+        expect((cubit.state as KidsModeLoaded).mustListenFirst, isTrue);
         expect(repository.awardCalls, 0);
       },
     );
-    test('ages eight to twelve require linked block review', () async {
+    test('kids single-ayah sessions never require a block review', () async {
       await cubit.close();
       cubit = buildCubit(
         recorder: _FakeKidsRecitationRecorder(),
@@ -318,7 +574,10 @@ void main() {
       await cubit.load(114, 1, 'ayah text');
 
       final loaded = cubit.state as KidsModeLoaded;
-      expect(loaded.sessionState.blockReviewRequired, isTrue);
+      // Kids blocks are single-ayah: a block review would only repeat the
+      // recitation the child just passed, and no kids UI drives it — so the
+      // session must complete directly instead of dead-ending.
+      expect(loaded.sessionState.blockReviewRequired, isFalse);
     });
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
@@ -360,9 +619,8 @@ void main() {
               ayahNumber: 1,
               repeatsCompleted: 1,
               pointsEarned: 10,
-              completedAt: DateTime.now().subtract(
-                const Duration(hours: 1),
-              ),
+              completedAt:
+                  DateTime.now(), // always "today", even just past midnight
               missionType: KidsMissionType.newMemorization,
             ),
           ],
@@ -389,7 +647,8 @@ void main() {
             ayahNumber: 1,
             repeatsCompleted: 1,
             pointsEarned: 10,
-            completedAt: DateTime.now().subtract(const Duration(hours: 1)),
+            completedAt:
+                DateTime.now(), // always "today", even just past midnight
             missionType: KidsMissionType.newMemorization,
           ),
         ];
@@ -408,10 +667,11 @@ void main() {
         );
         expect(cubit.state, isA<KidsModeLoaded>());
 
-        // Resuming an interrupted session must always stay reachable.
+        // Re-opening an already-rewarded ayah is review work, never new
+        // memorization, so the cap never blocks it.
         await cubit.load(
           114,
-          3,
+          1,
           'ayah text',
           missionType: KidsMissionType.resume,
         );
@@ -420,7 +680,131 @@ void main() {
     );
 
     test(
-      'ages eight to twelve stay blocked at blockReviewPending until block review (K16)',
+      'a restored interrupted session stays reachable after the daily cap',
+      () async {
+        final adapter = await _openKidsResumeAdapter();
+        await adapter.save(
+          V2SessionState.initial(
+            surahId: 114,
+            blockAyahs: const [
+              Ayah(
+                number: 1,
+                surahId: 114,
+                text: 'ayah text',
+                numberInSurah: 1,
+              ),
+            ],
+            blockReviewRequired: false,
+          ).copyWith(phase: V2SessionPhase.reciting),
+        );
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          quran: const _ResumeQuranRepository(),
+          progressAdapter: adapter,
+          policy: KidsSessionPolicy.forAge(5), // maxNewAyahs = 1 already hit
+          kidsSessionLogs: [
+            KidsSessionLog(
+              id: 'earlier-today',
+              surahId: 114,
+              ayahNumber: 2,
+              repeatsCompleted: 1,
+              pointsEarned: 10,
+              completedAt:
+                  DateTime.now(), // always "today", even just past midnight
+              missionType: KidsMissionType.newMemorization,
+            ),
+          ],
+        );
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+
+        expect(cubit.state, isA<KidsModeLoaded>());
+        expect(
+          (cubit.state as KidsModeLoaded).sessionState.phase,
+          V2SessionPhase.reciting,
+        );
+      },
+    );
+
+    test('resume without a saved session on a never-rewarded ayah is new '
+        'memorization (N1)', () async {
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 14,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(),
+        kidsSessionLogs: const [],
+      );
+
+      // The stage page opens an in-progress stage with `resume`; with no
+      // paused session this is the child's first pass on the next ayah.
+      await cubit.load(
+        114,
+        1,
+        'ayah text',
+        missionType: KidsMissionType.resume,
+      );
+      cubit.debugSetLoopCount(3);
+      await cubit.markCompleted(automaticSpokenText: 'ayah text');
+
+      // Only a canonical new-memorization log advances the journey, so a
+      // first pass must never be downgraded to a zero-star review award.
+      expect(repository.lastMissionType, KidsMissionType.newMemorization);
+    });
+
+    test(
+      'resume without a saved session is gated by the daily new-ayah cap (N1)',
+      () async {
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          policy: KidsSessionPolicy.forAge(5), // maxNewAyahs = 1 already hit
+          kidsSessionLogs: [
+            KidsSessionLog(
+              id: 'earlier-today',
+              surahId: 114,
+              ayahNumber: 1,
+              repeatsCompleted: 1,
+              pointsEarned: 10,
+              completedAt:
+                  DateTime.now(), // always "today", even just past midnight
+              missionType: KidsMissionType.newMemorization,
+            ),
+          ],
+        );
+
+        await cubit.load(
+          114,
+          2,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+
+        expect(cubit.state, isA<KidsModeError>());
+        expect(
+          (cubit.state as KidsModeError).message,
+          "${CubitMessageCodes.kidsDailySessionLimitPrefix}1",
+        );
+      },
+    );
+
+    test(
+      'ages eight to twelve complete directly after passing the single-ayah block',
       () async {
         await cubit.close();
         repository.awardCompleter = Completer()
@@ -448,11 +832,10 @@ void main() {
         await cubit.startRecording();
 
         final state = cubit.state as KidsModeLoaded;
-        // The single-ayah block passed but progress must NOT be completed:
-        // blockReviewRequired=true forces blockReviewPending until the linked
-        // review runs — the completion screen never fires for this session.
-        expect(state.sessionState.phase, V2SessionPhase.blockReviewPending);
-        expect(state.isCompleted, isFalse);
+        // Kids blocks are single-ayah, so no block review is required: the
+        // session reaches its terminal phase and the celebration fires.
+        expect(state.sessionState.phase, V2SessionPhase.completed);
+        expect(state.isCompleted, isTrue);
       },
     );
 
@@ -594,6 +977,97 @@ void main() {
       expect(repository.markCalls, 0);
     });
 
+    test(
+      'a near-miss recitation carries word feedback that a clean retry clears',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            Right(
+              KidsCompletionResult(
+                progress: const KidsProgress.initial().addPoints(10),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        await cubit.close();
+        final recorder = _MutableKidsRecitationRecorder();
+        cubit = buildCubit(
+          recorder: recorder,
+          policy: KidsSessionPolicy.forAge(6),
+        );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        // First attempt: partially correct recitation ("ayah word" vs the
+        // two-word target "ayah text") — one of two words right.
+        recorder.result = const KidsRecitationCaptureResult.captured(
+          words: 'ayah word',
+        );
+        await cubit.startRecording();
+
+        var state = cubit.state as KidsModeLoaded;
+        expect(state.recordingError, CubitMessageCodes.kidsRecitationMismatch);
+        expect(state.lastMatchedWords, 1);
+        expect(state.lastTargetWords, 2);
+        expect(state.hasWordFeedback, isTrue);
+
+        // Second attempt: perfect recitation — the celebration replaces the
+        // stale feedback, which must not linger on the completion state.
+        recorder.result = const KidsRecitationCaptureResult.captured(
+          words: 'ayah text',
+        );
+        await cubit.startRecording();
+
+        state = cubit.state as KidsModeLoaded;
+        expect(state.isCompleted, isTrue);
+        expect(state.lastMatchedWords, 0);
+        expect(state.lastTargetWords, 0);
+        expect(state.hasWordFeedback, isFalse);
+      },
+    );
+
+    test('two misses then a clean pass schedule the same rating as the reward '
+        '(N4)', () async {
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 10,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+      await cubit.close();
+      final recorder = _MutableKidsRecitationRecorder();
+      cubit = buildCubit(
+        recorder: recorder,
+        policy: KidsSessionPolicy.forAge(6),
+      );
+
+      await cubit.load(114, 1, 'ayah text');
+      cubit.debugSetLoopCount(3);
+      recorder.result = const KidsRecitationCaptureResult.captured(
+        words: 'different words',
+      );
+      await cubit.startRecording();
+      await cubit.startRecording();
+      recorder.result = const KidsRecitationCaptureResult.captured(
+        words: 'ayah text',
+      );
+      await cubit.startRecording();
+
+      // The attempt revealed real difficulty: SRS must see the same weak
+      // mastery the reward log records, not an "excellent" derived from
+      // the hint level alone.
+      expect(repository.lastMasteryRating, PerformanceRating.weak);
+      expect(repository.lastSavedReview?.lastRating, PerformanceRating.weak);
+    });
+
     test('three mismatches escalate the ayah to weak remediation', () async {
       await cubit.close();
       cubit = buildCubit(
@@ -732,31 +1206,20 @@ void main() {
     );
 
     test(
-      'review of an already-completed ayah refreshes SRS without new rewards',
+      'review of an already-completed ayah earns reduced review points',
       () async {
         repository.awardCompleter = Completer()
           ..complete(
             const Right(
               KidsCompletionResult(
                 progress: KidsProgress.initial(),
-                pointsEarned: 0,
+                pointsEarned: 5,
                 starsEarned: 0,
-                alreadyCompleted: true,
+                alreadyCompleted: false,
               ),
             ),
           );
 
-        await cubit.load(
-          114,
-          1,
-          'ayah text',
-          missionType: KidsMissionType.dueReview,
-        );
-        cubit.debugSetLoopCount(3);
-
-        // Review refresh path also completes via _completeV2Session; the
-        // default age-8 policy parks it at blockReviewPending, which the
-        // K16 test covers, so pin the younger completion-first policy here.
         await cubit.close();
         cubit = buildCubit(
           recorder: _FakeKidsRecitationRecorder(),
@@ -774,7 +1237,10 @@ void main() {
 
         expect(cubit.state, isA<KidsModeLoaded>());
         final loaded = cubit.state as KidsModeLoaded;
+        // A review pass is real work: the celebration fires with the reduced
+        // review reward so review days show visible progress.
         expect(loaded.isCompleted, isTrue);
+        expect(loaded.sessionPointsEarned, 5);
         expect(loaded.sessionStarsEarned, 0);
         expect(loaded.recordingError, isNull);
         expect(repository.awardCalls, 1);
@@ -1074,6 +1540,24 @@ class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   });
 
   final KidsRecitationCaptureResult result;
+
+  @override
+  Future<KidsRecitationCaptureResult> capture({
+    Completer<KidsRecitationCaptureResult>? externalCompleter,
+  }) async => result;
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
+/// Recorder whose capture result can change between attempts — models a
+/// child improving between tries.
+class _MutableKidsRecitationRecorder implements KidsRecitationRecorder {
+  KidsRecitationCaptureResult result =
+      const KidsRecitationCaptureResult.stoppedByUser();
 
   @override
   Future<KidsRecitationCaptureResult> capture({

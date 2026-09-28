@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/constants/xp_constants.dart';
 import 'package:isar/isar.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
@@ -165,6 +166,37 @@ void main() {
       verify(
         achievements.checkAndUnlockCertificatesStrict(isKids: false),
       ).called(1);
+    });
+
+    test('a completed review earns review XP, not block XP (A7)', () async {
+      when(
+        achievements.checkAndUnlockCertificatesStrict(isKids: false),
+      ).thenAnswer((_) async => const []);
+      final reviewing = V2SessionState(
+        surahId: _reciting.surahId,
+        blockAyahs: [_reciting.blockAyahs.first],
+        currentAyahIndex: 0,
+        phase: V2SessionPhase.reciting,
+        passedAyahNumbers: const {},
+        hintTracker: _reciting.hintTracker,
+        failureTracker: _reciting.failureTracker,
+        blockReviewRequired: false,
+        isReview: true,
+      );
+      await committer.commitAutomaticPass(
+        previousState: reviewing,
+        nextState: reviewing.copyWith(
+          phase: V2SessionPhase.completed,
+          passedAyahNumbers: {reviewing.currentAyah.numberInSurah},
+        ),
+        taskId: 'ayah:1:1',
+        eventId: 'review-event',
+      );
+
+      await processor.processPending();
+
+      final xp = await isar.xpIsars.get(1);
+      expect(xp?.totalXp, XpConstants.rewards['v2_review_completed']);
     });
 
     test('a certificate failure remains pending for a later retry', () async {

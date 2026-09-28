@@ -36,6 +36,10 @@ Read [Talia Product Context](references/talia-product-context.md), [Engineering 
 
 For freshness-sensitive decisions use [Source Authority](references/source-authority.md) and [Freshness & Upgrades](references/freshness-and-upgrades.md).
 
+## Islamic Content Source Gate
+
+Before adding, editing, importing, translating, caching, sharing, or changing the display of Islamic content, read [Islamic Content Sources Policy](../../../docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md). Apply its source priority for the content type, exact-text and provenance rules, reuse-rights check, conflict process, and scholarly review gate. If required evidence or review is missing, keep the item blocked rather than publishing it.
+
 ## Living Knowledge Rule
 
 Use `knowledge/` as a navigation accelerator. Refresh task-relevant entries when stale. If knowledge conflicts with repository evidence, repository evidence wins and verified knowledge is corrected after the task.

@@ -278,6 +278,96 @@ abstract class AppLocalizations {
   /// **'الآية السابقة'**
   String get prevAyah;
 
+  /// No description provided for @playPageRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوة الصفحة'**
+  String get playPageRecitation;
+
+  /// No description provided for @pauseRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التلاوة مؤقتاً'**
+  String get pauseRecitation;
+
+  /// No description provided for @stopRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التلاوة'**
+  String get stopRecitation;
+
+  /// No description provided for @changeReciter.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير القارئ'**
+  String get changeReciter;
+
+  /// No description provided for @closePlayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق المشغل'**
+  String get closePlayer;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In ar, this message translates to:
+  /// **'المزيد'**
+  String get moreOptions;
+
+  /// No description provided for @reciterActiveChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحدد'**
+  String get reciterActiveChip;
+
+  /// No description provided for @emptyBookmarksTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد علامات مرجعية بعد'**
+  String get emptyBookmarksTitle;
+
+  /// No description provided for @emptyBookmarksHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا'**
+  String get emptyBookmarksHint;
+
+  /// No description provided for @exitDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التلاوة قيد التشغيل'**
+  String get exitDialogTitle;
+
+  /// No description provided for @exitDialogBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستمع الآن إلى {surah}.\nهل تود استمرار الاستماع في الخلفية مع التحكم من شريط الإشعارات، أم إيقاف التلاوة والخروج؟'**
+  String exitDialogBody(String surah);
+
+  /// No description provided for @currentSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'السورة الحالية'**
+  String get currentSurah;
+
+  /// No description provided for @exitDialogContinueBackground.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة في الخلفية'**
+  String get exitDialogContinueBackground;
+
+  /// No description provided for @exitDialogStopAndExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التلاوة والخروج'**
+  String get exitDialogStopAndExit;
+
+  /// No description provided for @exitDialogStayInApp.
+  ///
+  /// In ar, this message translates to:
+  /// **'البقاء في التطبيق'**
+  String get exitDialogStayInApp;
+
   /// No description provided for @memorized.
   ///
   /// In ar, this message translates to:
@@ -2013,6 +2103,252 @@ abstract class AppLocalizations {
   /// **'تم بحمد الله'**
   String get azkarCompletedTitle;
 
+  /// No description provided for @azkarSectionsAndServices.
+  ///
+  /// In ar, this message translates to:
+  /// **'استكشف المزيد'**
+  String get azkarSectionsAndServices;
+
+  /// No description provided for @azkarWirdCompletedToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتمل ورد اليوم بنجاح ✨'**
+  String get azkarWirdCompletedToday;
+
+  /// No description provided for @azkarMorningHeroSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ يومك بذكر الله وطمأنينة القلب'**
+  String get azkarMorningHeroSubtitle;
+
+  /// No description provided for @azkarEveningHeroSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختم يومك بالسكينة والاستغفار'**
+  String get azkarEveningHeroSubtitle;
+
+  /// No description provided for @azkarReviewWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة الورد'**
+  String get azkarReviewWird;
+
+  /// No description provided for @azkarStartWirdNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الورد الآن'**
+  String get azkarStartWirdNow;
+
+  /// No description provided for @azkarFreeTasbeeh.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسبحة حرة'**
+  String get azkarFreeTasbeeh;
+
+  /// No description provided for @azkarFreeTasbeehSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسبيح واستغفار حر'**
+  String get azkarFreeTasbeehSubtitle;
+
+  /// No description provided for @azkarSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث في الأدعية والأذكار...'**
+  String get azkarSearchHint;
+
+  /// No description provided for @azkarFavorites.
+  ///
+  /// In ar, this message translates to:
+  /// **'المفضلة'**
+  String get azkarFavorites;
+
+  /// No description provided for @azkarFavoritesEmptyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد أدعية في المفضلة'**
+  String get azkarFavoritesEmptyTitle;
+
+  /// No description provided for @azkarFavoritesEmptyDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا'**
+  String get azkarFavoritesEmptyDesc;
+
+  /// No description provided for @azkarSearchNoResultsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد نتائج مطابقة'**
+  String get azkarSearchNoResultsTitle;
+
+  /// No description provided for @azkarSearchNoResultsDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم نجد أي أدعية تطابق بحثك'**
+  String get azkarSearchNoResultsDesc;
+
+  /// No description provided for @azkarSearchClear.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح البحث'**
+  String get azkarSearchClear;
+
+  /// No description provided for @azkarVirtueOrSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'فضل الذكر / المصدر'**
+  String get azkarVirtueOrSource;
+
+  /// No description provided for @azkarVirtueAndSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'فضل الذكر والمصدر'**
+  String get azkarVirtueAndSource;
+
+  /// No description provided for @azkarVirtue.
+  ///
+  /// In ar, this message translates to:
+  /// **'فضل الذكر'**
+  String get azkarVirtue;
+
+  /// No description provided for @azkarSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصدر'**
+  String get azkarSource;
+
+  /// No description provided for @azkarAutoAdvanceOn.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانتقال التلقائي مفعّل'**
+  String get azkarAutoAdvanceOn;
+
+  /// No description provided for @azkarAutoAdvanceOff.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانتقال التلقائي معطّل'**
+  String get azkarAutoAdvanceOff;
+
+  /// No description provided for @azkarSmartWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد ذكي'**
+  String get azkarSmartWird;
+
+  /// No description provided for @azkarSmartWirdSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد مبني على وقتك الآن'**
+  String get azkarSmartWirdSubtitle;
+
+  /// No description provided for @azkarSmartWirdDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكملت {count} من الورد الذكي اليوم'**
+  String azkarSmartWirdDone(int count);
+
+  /// No description provided for @azkarSmartWirdResume.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get azkarSmartWirdResume;
+
+  /// No description provided for @azkarSmartWirdCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتمل الورد الذكي'**
+  String get azkarSmartWirdCompleted;
+
+  /// No description provided for @azkarQuietNight.
+  ///
+  /// In ar, this message translates to:
+  /// **'الليلة الهادئة'**
+  String get azkarQuietNight;
+
+  /// No description provided for @azkarQuietNightSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة متدفقة بلا عدّاد'**
+  String get azkarQuietNightSubtitle;
+
+  /// No description provided for @azkarQuietNightExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء القراءة الهادئة'**
+  String get azkarQuietNightExit;
+
+  /// No description provided for @azkarPlayRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل التلاوة'**
+  String get azkarPlayRecitation;
+
+  /// No description provided for @azkarPauseRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التلاوة مؤقتًا'**
+  String get azkarPauseRecitation;
+
+  /// No description provided for @azkarShareWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'شارك تقدم الورد'**
+  String get azkarShareWird;
+
+  /// No description provided for @azkarTasbeehResetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفير المسبحة'**
+  String get azkarTasbeehResetTitle;
+
+  /// No description provided for @azkarTasbeehResetDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد إعادة تعيين العداد إلى الصفر؟'**
+  String get azkarTasbeehResetDesc;
+
+  /// No description provided for @azkarTasbeehResetConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفير'**
+  String get azkarTasbeehResetConfirm;
+
+  /// No description provided for @azkarTasbeehResetTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفير العداد'**
+  String get azkarTasbeehResetTooltip;
+
+  /// No description provided for @azkarTasbeehOpenTarget.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفتوح'**
+  String get azkarTasbeehOpenTarget;
+
+  /// No description provided for @azkarTasbeehTargetLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الهدف: {target}'**
+  String azkarTasbeehTargetLabel(int target);
+
+  /// No description provided for @azkarTasbeehRound.
+  ///
+  /// In ar, this message translates to:
+  /// **'دورة {round}'**
+  String azkarTasbeehRound(int round);
+
+  /// No description provided for @azkarTasbeehTapHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'انقر في أي مكان في الدائرة للتسبيح'**
+  String get azkarTasbeehTapHint;
+
+  /// No description provided for @azkarTasbeehTapSemantics.
+  ///
+  /// In ar, this message translates to:
+  /// **'انقر للتسبيح، العداد الحالي {count}'**
+  String azkarTasbeehTapSemantics(int count);
+
   /// No description provided for @azkarCompletedDesc.
   ///
   /// In ar, this message translates to:
@@ -2652,7 +2988,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHubReminders.
   ///
   /// In ar, this message translates to:
-  /// **'التنبيهات'**
+  /// **'التنبيهات والتذكيرات'**
   String get settingsHubReminders;
 
   /// No description provided for @settingsHubSupport.
@@ -2678,6 +3014,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الأذكار والعبادة'**
   String get settingsRemindersWorship;
+
+  /// No description provided for @settingsRemindersPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصلاة والأذان'**
+  String get settingsRemindersPrayer;
 
   /// No description provided for @settingsRemindersProgress.
   ///
@@ -2726,6 +3068,84 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل'**
   String get notificationTestInteractiveSubtitle;
+
+  /// No description provided for @notificationPrayerPermissionBlockedBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لن تصلك تنبيهات الصلاة حتى تسمح بالإشعارات من إعدادات الهاتف.'**
+  String get notificationPrayerPermissionBlockedBody;
+
+  /// No description provided for @notificationConfigurePrayerTimes.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعداد مواقيت الصلاة'**
+  String get notificationConfigurePrayerTimes;
+
+  /// No description provided for @notificationTestPickerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر إشعارًا لتجربته'**
+  String get notificationTestPickerTitle;
+
+  /// No description provided for @notificationTestPickerSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيصلك إشعار تجريبي مع أزرار تفاعل.'**
+  String get notificationTestPickerSubtitle;
+
+  /// No description provided for @notificationTestReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة اليوم 📖'**
+  String get notificationTestReviewTitle;
+
+  /// No description provided for @notificationTestReviewBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك 5 آيات مستحقة للمراجعة اليوم ⚡'**
+  String get notificationTestReviewBody;
+
+  /// No description provided for @notificationTestStreakTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حماية المواظبة 🔥'**
+  String get notificationTestStreakTitle;
+
+  /// No description provided for @notificationTestStreakBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تراجع اليوم بعد — حافظ على مواظبتك الآن 🔥'**
+  String get notificationTestStreakBody;
+
+  /// No description provided for @notificationTestSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال الإشعار التجريبي بنجاح ✨'**
+  String get notificationTestSuccess;
+
+  /// No description provided for @notificationSettingsSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ التغيير. حاول مرة أخرى.'**
+  String get notificationSettingsSaveFailed;
+
+  /// No description provided for @notificationSettingsSchedulingFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ التغيير، لكن تعذر تحديث التنبيهات. حاول مرة أخرى.'**
+  String get notificationSettingsSchedulingFailed;
+
+  /// No description provided for @prayerChooseCityForAccurateTimes.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مدينتك لإظهار مواقيت صلاة دقيقة.'**
+  String get prayerChooseCityForAccurateTimes;
+
+  /// No description provided for @prayerChooseCityAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار المدينة'**
+  String get prayerChooseCityAction;
 
   /// No description provided for @settingsGuestStatusTitle.
   ///
@@ -4867,6 +5287,12 @@ abstract class AppLocalizations {
   /// **'آية {ayahNumber}'**
   String dailyPlanAyahTitle(int ayahNumber);
 
+  /// No description provided for @dailyPlanSurahAyahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah} · آية {ayahNumber}'**
+  String dailyPlanSurahAyahTitle(String surah, int ayahNumber);
+
   /// No description provided for @dailyPlanRecordStats.
   ///
   /// In ar, this message translates to:
@@ -4890,6 +5316,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تفقّد غداً لمتابعة جدولك'**
   String get dailyPlanEmptySubtitle;
+
+  /// No description provided for @dailyPlanNoPlanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تنشئ خطة حفظ بعد'**
+  String get dailyPlanNoPlanTitle;
+
+  /// No description provided for @dailyPlanNoPlanSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنشئ خطتك لتظهر لك هنا آيات الحفظ والمراجعة كل يوم.'**
+  String get dailyPlanNoPlanSubtitle;
+
+  /// No description provided for @dailyPlanCreatePlanAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنشئ خطتك'**
+  String get dailyPlanCreatePlanAction;
 
   /// No description provided for @customPlanDeleteConfirmPhrase.
   ///
@@ -5478,6 +5922,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.'**
   String get memorizationExitSessionMessage;
+
+  /// No description provided for @memorizationExitSessionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخروج من الجلسة؟'**
+  String get memorizationExitSessionTitle;
 
   /// No description provided for @memorizationSaveAndLeave.
   ///
@@ -6442,7 +6892,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsPrayerNeedsTimes.
   ///
   /// In ar, this message translates to:
-  /// **'فعّل مواقيت الصلاة أولًا'**
+  /// **'أكمل إعداد مواقيت الصلاة واختر مدينتك أولًا'**
   String get notificationSettingsPrayerNeedsTimes;
 
   /// No description provided for @homeTourTitle.
@@ -7939,6 +8389,54 @@ abstract class AppLocalizations {
   /// **'أتممت التسميع من حفظي (تقييم ذاتي)'**
   String get v2ManualRecallAction;
 
+  /// No description provided for @v2SelfGradeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيّم تسميعك بنفسك'**
+  String get v2SelfGradeAction;
+
+  /// No description provided for @v2SelfGradeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف كان تسميعك من حفظك؟'**
+  String get v2SelfGradeTitle;
+
+  /// No description provided for @v2SelfGradeMastered.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتقنتها'**
+  String get v2SelfGradeMastered;
+
+  /// No description provided for @v2SelfGradeMasteredHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّعتها كاملة دون تردّد'**
+  String get v2SelfGradeMasteredHint;
+
+  /// No description provided for @v2SelfGradeHesitated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تردّدت قليلاً'**
+  String get v2SelfGradeHesitated;
+
+  /// No description provided for @v2SelfGradeHesitatedHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّعتها مع توقف أو خطأ بسيط؛ ستُراجَع قريباً'**
+  String get v2SelfGradeHesitatedHint;
+
+  /// No description provided for @v2SelfGradeForgot.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم أتذكّرها'**
+  String get v2SelfGradeForgot;
+
+  /// No description provided for @v2SelfGradeForgotHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنعيدها معك الآن'**
+  String get v2SelfGradeForgotHint;
+
   /// No description provided for @v2ManualRecallHint.
   ///
   /// In ar, this message translates to:
@@ -8035,6 +8533,42 @@ abstract class AppLocalizations {
   /// **'حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
   String closingSummaryMemorization(int count);
 
+  /// No description provided for @closingSummaryReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممتَ مراجعتك بثبات — ثبتها الله في قلبك.'**
+  String get closingSummaryReview;
+
+  /// No description provided for @v2ReviewSessionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة الحفظ'**
+  String get v2ReviewSessionTitle;
+
+  /// No description provided for @v2HintSchedulingNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.'**
+  String get v2HintSchedulingNotice;
+
+  /// No description provided for @dailyPlanBacklogNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك {count} آية مستحقة للمراجعة. أكمل مراجعات اليوم لتُفتح الآيات الجديدة.'**
+  String dailyPlanBacklogNotice(int count);
+
+  /// No description provided for @dailyPlanStartReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ مراجعة اليوم'**
+  String get dailyPlanStartReview;
+
+  /// No description provided for @dailyPlanReviewDayNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم يوم مراجعة في خطتك: لا آيات جديدة، ثبّت ما حفظت.'**
+  String get dailyPlanReviewDayNotice;
+
   /// No description provided for @closingSummaryKhatmahWird.
   ///
   /// In ar, this message translates to:
@@ -8076,6 +8610,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مركز الحفظ'**
   String get v2MemorizationHub;
+
+  /// No description provided for @v2NextPlanItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي في خطة اليوم ({count} متبقية)'**
+  String v2NextPlanItem(int count);
 
   /// No description provided for @v2TryWithoutHint.
   ///
@@ -8154,6 +8694,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم اجتياز {passed}/{total} آيات.'**
   String v2BlockProgress(int passed, int total);
+
+  /// No description provided for @v2AyahOfBlock.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية {current} من {total}'**
+  String v2AyahOfBlock(int current, int total);
 
   /// No description provided for @v2EvaluatingBlock.
   ///
@@ -8334,6 +8880,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.'**
   String get kidsRecitationMismatch;
+
+  /// Child-friendly progress feedback after a near-miss recitation
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت قريب جدًا! أصبت {matched} من {total} كلمات. استمع مرة أخرى وحاول من جديد.'**
+  String kidsRecitationCloseMatch(int matched, int total);
+
+  /// No description provided for @kidsJourneyCompleteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت جزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
+  String get kidsJourneyCompleteHint;
 
   /// No description provided for @kidsAyahAlreadyCompleted.
   ///
@@ -8524,7 +9082,7 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahStartNewKhatmah.
   ///
   /// In ar, this message translates to:
-  /// **'بدء ختمة جديدة'**
+  /// **'ابدأ ختمة جديدة'**
   String get khatmahStartNewKhatmah;
 
   /// No description provided for @khatmahChooseYourDailyReadingPaceToCompleteThe.
@@ -8550,6 +9108,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أو عدد مخصص يومياً'**
   String get khatmahOrCustomPagesPerDay;
+
+  /// No description provided for @khatmahOrChooseDuration.
+  ///
+  /// In ar, this message translates to:
+  /// **'أو اختر مدة الختمة'**
+  String get khatmahOrChooseDuration;
+
+  /// No description provided for @khatmahStartFromPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ من الصفحة (اختياري)'**
+  String get khatmahStartFromPage;
+
+  /// No description provided for @khatmahStartFromPageHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة'**
+  String get khatmahStartFromPageHint;
+
+  /// No description provided for @khatmahDurationDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{days} يوماً'**
+  String khatmahDurationDays(String days);
+
+  /// No description provided for @khatmahDurationRamadan.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمضان (٣٠ يوماً)'**
+  String get khatmahDurationRamadan;
 
   /// No description provided for @khatmahEG5.
   ///
@@ -8737,6 +9325,30 @@ abstract class AppLocalizations {
   /// **'تعويض خفيف'**
   String get khatmahMildBoost;
 
+  /// No description provided for @khatmahAdjustPreviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل جدول الختمة'**
+  String get khatmahAdjustPreviewTitle;
+
+  /// No description provided for @khatmahAdjustPreviewBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'الورد اليومي: {pages} صفحة\nالختام المتوقع: {date}'**
+  String khatmahAdjustPreviewBody(String pages, String date);
+
+  /// No description provided for @khatmahApplyAdjustment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق'**
+  String get khatmahApplyAdjustment;
+
+  /// No description provided for @khatmahLoadFailureHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّرت قراءة بيانات الختمة على هذا الجهاز. أعد المحاولة.'**
+  String get khatmahLoadFailureHint;
+
   /// No description provided for @khatmahPause.
   ///
   /// In ar, this message translates to:
@@ -8920,8 +9532,38 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahSaveExit.
   ///
   /// In ar, this message translates to:
-  /// **'حفظ وخروج'**
+  /// **'إنهاء القراءة'**
   String get khatmahSaveExit;
+
+  /// No description provided for @khatmahPaceOnTrack.
+  ///
+  /// In ar, this message translates to:
+  /// **'في الموعد — أحسنت'**
+  String get khatmahPaceOnTrack;
+
+  /// No description provided for @khatmahRedistributeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعد التوزيع للحفاظ على الموعد'**
+  String get khatmahRedistributeAction;
+
+  /// No description provided for @khatmahRedistributed.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُعيد توزيع الصفحات للحفاظ على موعد الختام'**
+  String get khatmahRedistributed;
+
+  /// No description provided for @khatmahPaceBehind.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخر {pages} صفحة عن موعد الختام'**
+  String khatmahPaceBehind(String pages);
+
+  /// No description provided for @khatmahThroughWirdEnd.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى نهاية ورد اليوم (ص {page})'**
+  String khatmahThroughWirdEnd(String page);
 
   /// No description provided for @khatmahCongratulations.
   ///
@@ -10290,6 +10932,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اتجاه الحفظ: تنازلي (من {from} إلى {to})'**
   String customPlanDirectionBackward(String from, String to);
+
+  /// Validation: field must not be empty
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحقل مطلوب'**
+  String get fieldRequired;
+
+  /// Validation: field exceeds max length
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن أن يتجاوز {maxLength} حرفاً'**
+  String fieldTooLong(int maxLength);
 }
 
 class _AppLocalizationsDelegate

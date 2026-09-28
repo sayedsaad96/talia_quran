@@ -100,7 +100,7 @@ class _CardBody extends StatelessWidget {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final label =
-        '${context.l10n.continueReading}، $subtitle';
+        '${context.l10n.continueReading} • $subtitle';
 
     return Semantics(
       button: true,

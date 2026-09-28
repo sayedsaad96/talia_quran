@@ -7,13 +7,14 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
+import '../widgets/kids_journey_complete_card.dart';
 import '../widgets/kids_journey_painters.dart';
 import '../widgets/kids_journey_segment.dart';
+import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_progress_header.dart';
 import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
@@ -51,12 +52,11 @@ class _KidsGamifiedJourneyView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is KidsJourneyInitial || state is KidsJourneyLoading) {
-            return const Center(child: LoadingWidget());
+            return const Center(child: KidsLoadingWidget());
           }
 
           if (state is KidsJourneyError) {
-            return ErrorStateWidget(
-              message: state.message,
+            return KidsErrorWidget(
               onRetry: () =>
                   context.read<KidsJourneyCubit>().load(surahId: surahId),
             );
@@ -119,9 +119,14 @@ class _KidsGamifiedJourneyContentState
   final GlobalKey _activeStageKey = GlobalKey();
   bool _didAutoScroll = false;
 
+  /// Cached once per state change — the active index used to be recomputed
+  /// inside every segment's build, an O(n²) scan on each rebuild.
+  late int _activeStageIndex;
+
   @override
   void initState() {
     super.initState();
+    _activeStageIndex = _resolveActiveIndex(widget.state.stages);
     _scheduleAutoScroll();
   }
 
@@ -130,24 +135,42 @@ class _KidsGamifiedJourneyContentState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.state.surahId != widget.state.surahId) {
       _didAutoScroll = false;
+      _activeStageIndex = _resolveActiveIndex(widget.state.stages);
       _scheduleAutoScroll();
     }
   }
 
+  static int _resolveActiveIndex(List<KidsJourneyStage> stages) =>
+      stages.indexWhere(
+        (stage) =>
+            stage.status == KidsJourneyStageStatus.current ||
+            stage.status == KidsJourneyStageStatus.needsReview,
+      );
+
   void _scheduleAutoScroll() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _didAutoScroll) return;
+    // The stages live in a lazy SliverList: the active segment's context may
+    // not exist in the first frame (a long journey scrolls far below), so
+    // retry on the next frames instead of silently dropping the child's
+    // place on the map.
+    var attempts = 0;
+    void tryScroll() {
+      if (!mounted || _didAutoScroll || attempts > 8) return;
+      attempts++;
       final activeContext = _activeStageKey.currentContext;
-      if (activeContext != null) {
-        _didAutoScroll = true;
-        Scrollable.ensureVisible(
-          activeContext,
-          alignment: 0.28,
-          duration: const Duration(milliseconds: 650),
-          curve: Curves.easeInOutCubic,
-        );
+      if (activeContext == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => tryScroll());
+        return;
       }
-    });
+      _didAutoScroll = true;
+      Scrollable.ensureVisible(
+        activeContext,
+        alignment: 0.28,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => tryScroll());
   }
 
   @override
@@ -204,13 +227,9 @@ class _KidsGamifiedJourneyContentState
                               if (widget.state.stages.isEmpty) ...[
                                 const SizedBox(height: AppSpacing.lg),
                                 // No stages for this surah at all (e.g. the
-                                // whole Juz Amma journey is done) — celebrate
-                                // instead of rendering an empty map.
-                                EmptyStateWidget(
-                                  message:
-                                      context.l10n.kidsGamifiedJourneyComplete,
-                                  icon: Icons.emoji_events_rounded,
-                                ),
+                                // whole Juz Amma journey is done) — a real
+                                // celebration instead of an empty map (W2).
+                                const KidsJourneyCompleteCard(),
                               ],
                             ],
                           ),
@@ -221,13 +240,7 @@ class _KidsGamifiedJourneyContentState
                             itemCount: widget.state.stages.length,
                             itemBuilder: (context, index) {
                               final stage = widget.state.stages[index];
-                              final activeIndex = widget.state.stages.indexWhere(
-                                (s) =>
-                                    s.status == KidsJourneyStageStatus.current ||
-                                    s.status ==
-                                        KidsJourneyStageStatus.needsReview,
-                              );
-                              final isActive = index == activeIndex;
+                              final isActive = index == _activeStageIndex;
                               final isLeft = index.isEven;
                               final showSignpost = (index + 1) % 4 == 0 &&
                                   index != widget.state.stages.length - 1;

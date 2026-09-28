@@ -12,7 +12,7 @@ class NotificationSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsSubpageScaffold(
-      title: context.l10n.settingsSectionProgressAchievements,
+      title: context.l10n.notifications,
       children: [
         SettingsGroup(
           children: [

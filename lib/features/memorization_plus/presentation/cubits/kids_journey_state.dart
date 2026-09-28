@@ -34,6 +34,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.qrPayload,
     this.message,
     this.isCreatingLink = false,
+    this.dailyGoalCap,
   });
 
   final int surahId;
@@ -44,6 +45,13 @@ class KidsJourneyLoaded extends KidsJourneyState {
   final String? qrPayload;
   final String? message;
   final bool isCreatingLink;
+
+  /// Today's new-ayah quota when it is used up and nothing else is pending;
+  /// null otherwise. Home then shows the "day complete" card instead of a
+  /// mission the session gate would refuse (N3).
+  final int? dailyGoalCap;
+
+  bool get dailyGoalReached => dailyGoalCap != null;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
@@ -67,6 +75,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     String? message,
     bool clearMessage = false,
     bool? isCreatingLink,
+    int? dailyGoalCap,
+    bool clearDailyGoalCap = false,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -76,6 +86,9 @@ class KidsJourneyLoaded extends KidsJourneyState {
     qrPayload: clearQrPayload ? null : (qrPayload ?? this.qrPayload),
     message: clearMessage ? null : (message ?? this.message),
     isCreatingLink: isCreatingLink ?? this.isCreatingLink,
+    dailyGoalCap: clearDailyGoalCap
+        ? null
+        : (dailyGoalCap ?? this.dailyGoalCap),
   );
 
   @override
@@ -88,5 +101,6 @@ class KidsJourneyLoaded extends KidsJourneyState {
     qrPayload,
     message,
     isCreatingLink,
+    dailyGoalCap,
   ];
 }

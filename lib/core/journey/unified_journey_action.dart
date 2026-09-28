@@ -1,13 +1,6 @@
 import '../memorization/smart_coach_recommendation.dart';
 
-enum JourneyIntent {
-  resume,
-  review,
-  memorize,
-  reading,
-  azkar,
-  explore,
-}
+enum JourneyIntent { resume, review, memorize, reading, azkar, explore }
 
 enum UnifiedJourneyPriority {
   p1ActiveSession,

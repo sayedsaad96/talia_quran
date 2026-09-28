@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/prayer_sound.dart';
 import 'notification_settings_state.dart';
 
 class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
@@ -24,10 +25,13 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
 
   /// Loads all notification settings from persistent preferences and OS permission state.
   Future<void> load() async {
+    if (isClosed) return;
     emit(state.copyWith(isLoading: true));
 
-    final permissionGranted =
-        await _notificationService.areNotificationsGranted();
+    final permissionGranted = await _notificationService
+        .areNotificationsGranted()
+        .catchError((_) => false);
+    if (isClosed) return;
 
     final dailyReview =
         _prefs.getBool(TaliaNotificationService.dailyReviewPreferenceKey) ??
@@ -49,7 +53,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         _prefs.getBool(TaliaNotificationService.kidsReminderPreferenceKey) ??
         false;
     final fridayKahf =
-        _prefs.getBool(TaliaNotificationService.fridayKahfPreferenceKey) ?? true;
+        _prefs.getBool(TaliaNotificationService.fridayKahfPreferenceKey) ??
+        true;
     final weeklyImpact =
         _prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
         true;
@@ -86,6 +91,17 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     final smartReminder =
         _prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey) ??
         false;
+    final rawMuezzin = _prefs.getString(
+      TaliaNotificationService.prayerMuezzinKey,
+    );
+    final muezzinId =
+        (rawMuezzin != null && MuezzinCatalog.isSupported(rawMuezzin))
+        ? rawMuezzin
+        : MuezzinCatalog.defaultId;
+    final rawFajr =
+        _prefs.getString(TaliaNotificationService.prayerMuezzinFajrKey) ?? '';
+    final fajrMuezzinId =
+        (rawFajr.isEmpty || MuezzinCatalog.isSupported(rawFajr)) ? rawFajr : '';
 
     emit(
       state.copyWith(
@@ -109,6 +125,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         prayerAsr: prayerAsr,
         prayerMaghrib: prayerMaghrib,
         prayerIsha: prayerIsha,
+        muezzinId: muezzinId,
+        fajrMuezzinId: fajrMuezzinId,
         quietHoursEnabled: quietHoursEnabled,
         quietHoursStart: quietHoursStart,
         quietHoursEnd: quietHoursEnd,
@@ -174,9 +192,10 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
 
   /// Re-checks system notification permission status from the OS.
   Future<void> checkPermission() async {
-    final permissionGranted =
-        await _notificationService.areNotificationsGranted();
-    if (permissionGranted != state.hasSystemPermission) {
+    final permissionGranted = await _notificationService
+        .areNotificationsGranted()
+        .catchError((_) => false);
+    if (!isClosed && permissionGranted != state.hasSystemPermission) {
       emit(state.copyWith(hasSystemPermission: permissionGranted));
     }
   }
@@ -187,68 +206,78 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     bool value, {
     AppLocalizations? l10n,
   }) async {
-    await _prefs.setBool(preferenceKey, value);
+    final saved = await _writeBool(preferenceKey, value);
+    if (!saved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+      return;
+    }
+    final persistedValue = value;
 
     final updatedState = switch (preferenceKey) {
       TaliaNotificationService.dailyReviewPreferenceKey => state.copyWith(
-        dailyReview: value,
+        dailyReview: persistedValue,
       ),
       TaliaNotificationService.streakAlertPreferenceKey => state.copyWith(
-        streakAlert: value,
+        streakAlert: persistedValue,
       ),
       TaliaNotificationService.dailyAyahPreferenceKey => state.copyWith(
-        dailyAyah: value,
+        dailyAyah: persistedValue,
       ),
       TaliaNotificationService.morningAzkarPreferenceKey => state.copyWith(
-        morningAzkar: value,
+        morningAzkar: persistedValue,
       ),
       TaliaNotificationService.eveningAzkarPreferenceKey => state.copyWith(
-        eveningAzkar: value,
+        eveningAzkar: persistedValue,
       ),
       TaliaNotificationService.dailyDuaPreferenceKey => state.copyWith(
-        dailyDua: value,
+        dailyDua: persistedValue,
       ),
       TaliaNotificationService.kidsReminderPreferenceKey => state.copyWith(
-        kidsReminder: value,
+        kidsReminder: persistedValue,
       ),
       TaliaNotificationService.fridayKahfPreferenceKey => state.copyWith(
-        fridayKahf: value,
+        fridayKahf: persistedValue,
       ),
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
-        weeklyImpact: value,
+        weeklyImpact: persistedValue,
       ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
-        tahajjud: value,
+        tahajjud: persistedValue,
       ),
       TaliaNotificationService.khatmahReminderPreferenceKey => state.copyWith(
-        khatmahReminder: value,
+        khatmahReminder: persistedValue,
       ),
       TaliaNotificationService.prayerNotificationsPreferenceKey =>
-        state.copyWith(prayerNotifications: value),
+        state.copyWith(prayerNotifications: persistedValue),
       TaliaNotificationService.prayerAthanKey => state.copyWith(
-        prayerAthan: value,
+        prayerAthan: persistedValue,
       ),
       TaliaNotificationService.quietHoursPreferenceKey => state.copyWith(
-        quietHoursEnabled: value,
+        quietHoursEnabled: persistedValue,
       ),
       TaliaNotificationService.smartReminderPreferenceKey => state.copyWith(
-        smartReminder: value,
+        smartReminder: persistedValue,
       ),
       _ => state,
     };
 
-    emit(updatedState);
+    if (!isClosed) emit(updatedState);
     await _reschedule(l10n);
   }
 
   /// Updates the selected muezzin for the full adhan playback and
   /// reschedules prayer events so the new clip applies within seconds —
   /// without waiting for the next rolling-window refresh.
-  Future<void> setMuezzin(
-    String muezzinId, {
-    AppLocalizations? l10n,
-  }) async {
-    await _prefs.setString(TaliaNotificationService.prayerMuezzinKey, muezzinId);
+  Future<void> setMuezzin(String muezzinId, {AppLocalizations? l10n}) async {
+    final saved = await _writeString(
+      TaliaNotificationService.prayerMuezzinKey,
+      muezzinId,
+    );
+    if (!saved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+      return;
+    }
+    if (!isClosed) emit(state.copyWith(muezzinId: muezzinId));
     await _reschedule(l10n);
   }
 
@@ -258,11 +287,57 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     String fajrMuezzinId, {
     AppLocalizations? l10n,
   }) async {
-    await _prefs.setString(
+    final saved = await _writeString(
       TaliaNotificationService.prayerMuezzinFajrKey,
       fajrMuezzinId,
     );
+    if (!saved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+      return;
+    }
+    if (!isClosed) emit(state.copyWith(fajrMuezzinId: fajrMuezzinId));
     await _reschedule(l10n);
+  }
+
+  /// Saves the general and Fajr choices and refreshes prayer notifications.
+  Future<void> setMuezzinSelection({
+    required String muezzinId,
+    required String fajrMuezzinId,
+    AppLocalizations? l10n,
+  }) async {
+    final previousMuezzin = _prefs.getString(
+      TaliaNotificationService.prayerMuezzinKey,
+    );
+    final previousFajr = _prefs.getString(
+      TaliaNotificationService.prayerMuezzinFajrKey,
+    );
+    final generalSaved = await _writeString(
+      TaliaNotificationService.prayerMuezzinKey,
+      muezzinId,
+    );
+    final fajrSaved = await _writeString(
+      TaliaNotificationService.prayerMuezzinFajrKey,
+      fajrMuezzinId,
+    );
+    final persistedMuezzin =
+        _prefs.getString(TaliaNotificationService.prayerMuezzinKey) ??
+        MuezzinCatalog.defaultId;
+    final persistedFajr =
+        _prefs.getString(TaliaNotificationService.prayerMuezzinFajrKey) ?? '';
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          muezzinId: persistedMuezzin,
+          fajrMuezzinId: persistedFajr,
+        ),
+      );
+    }
+    if (persistedMuezzin != previousMuezzin || persistedFajr != previousFajr) {
+      await _reschedule(l10n);
+    }
+    if (!generalSaved || !fajrSaved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+    }
   }
 
   /// Updates the scheduled hour and minute for a reminder.
@@ -271,48 +346,77 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     TimeOfDay time, {
     AppLocalizations? l10n,
   }) async {
-    await _prefs.setInt('${preferenceKey}_hour', time.hour);
-    await _prefs.setInt('${preferenceKey}_minute', time.minute);
+    final previousTime = switch (preferenceKey) {
+      TaliaNotificationService.dailyReviewPreferenceKey =>
+        state.dailyReviewTime,
+      TaliaNotificationService.streakAlertPreferenceKey =>
+        state.streakAlertTime,
+      TaliaNotificationService.dailyAyahPreferenceKey => state.dailyAyahTime,
+      TaliaNotificationService.morningAzkarPreferenceKey =>
+        state.morningAzkarTime,
+      TaliaNotificationService.eveningAzkarPreferenceKey =>
+        state.eveningAzkarTime,
+      TaliaNotificationService.dailyDuaPreferenceKey => state.dailyDuaTime,
+      TaliaNotificationService.kidsReminderPreferenceKey =>
+        state.kidsReminderTime,
+      TaliaNotificationService.fridayKahfPreferenceKey => state.fridayKahfTime,
+      TaliaNotificationService.weeklyImpactPreferenceKey =>
+        state.weeklyImpactTime,
+      TaliaNotificationService.tahajjudPreferenceKey => state.tahajjudTime,
+      TaliaNotificationService.khatmahReminderPreferenceKey =>
+        state.khatmahReminderTime,
+      _ => time,
+    };
+    final hourSaved = await _writeInt('${preferenceKey}_hour', time.hour);
+    final minuteSaved = await _writeInt('${preferenceKey}_minute', time.minute);
+    final persistedTime = _readTime(
+      preferenceKey,
+      defaultHour: previousTime.hour,
+      defaultMinute: previousTime.minute,
+    );
 
     final updatedState = switch (preferenceKey) {
       TaliaNotificationService.dailyReviewPreferenceKey => state.copyWith(
-        dailyReviewTime: time,
+        dailyReviewTime: persistedTime,
       ),
       TaliaNotificationService.streakAlertPreferenceKey => state.copyWith(
-        streakAlertTime: time,
+        streakAlertTime: persistedTime,
       ),
       TaliaNotificationService.dailyAyahPreferenceKey => state.copyWith(
-        dailyAyahTime: time,
+        dailyAyahTime: persistedTime,
       ),
       TaliaNotificationService.morningAzkarPreferenceKey => state.copyWith(
-        morningAzkarTime: time,
+        morningAzkarTime: persistedTime,
       ),
       TaliaNotificationService.eveningAzkarPreferenceKey => state.copyWith(
-        eveningAzkarTime: time,
+        eveningAzkarTime: persistedTime,
       ),
       TaliaNotificationService.dailyDuaPreferenceKey => state.copyWith(
-        dailyDuaTime: time,
+        dailyDuaTime: persistedTime,
       ),
       TaliaNotificationService.kidsReminderPreferenceKey => state.copyWith(
-        kidsReminderTime: time,
+        kidsReminderTime: persistedTime,
       ),
       TaliaNotificationService.fridayKahfPreferenceKey => state.copyWith(
-        fridayKahfTime: time,
+        fridayKahfTime: persistedTime,
       ),
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
-        weeklyImpactTime: time,
+        weeklyImpactTime: persistedTime,
       ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
-        tahajjudTime: time,
+        tahajjudTime: persistedTime,
       ),
       TaliaNotificationService.khatmahReminderPreferenceKey => state.copyWith(
-        khatmahReminderTime: time,
+        khatmahReminderTime: persistedTime,
       ),
       _ => state,
     };
 
-    emit(updatedState);
-    await _reschedule(l10n);
+    if (!isClosed) emit(updatedState);
+    if (persistedTime != previousTime) await _reschedule(l10n);
+    if (!hourSaved || !minuteSaved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+    }
   }
 
   /// Toggles an individual prayer notification in the prayer filter.
@@ -321,28 +425,33 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     bool value, {
     AppLocalizations? l10n,
   }) async {
-    await _prefs.setBool(prayerKey, value);
+    final saved = await _writeBool(prayerKey, value);
+    if (!saved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+      return;
+    }
+    final persistedValue = value;
 
     final updatedState = switch (prayerKey) {
       TaliaNotificationService.prayerFajrKey => state.copyWith(
-        prayerFajr: value,
+        prayerFajr: persistedValue,
       ),
       TaliaNotificationService.prayerDhuhrKey => state.copyWith(
-        prayerDhuhr: value,
+        prayerDhuhr: persistedValue,
       ),
       TaliaNotificationService.prayerAsrKey => state.copyWith(
-        prayerAsr: value,
+        prayerAsr: persistedValue,
       ),
       TaliaNotificationService.prayerMaghribKey => state.copyWith(
-        prayerMaghrib: value,
+        prayerMaghrib: persistedValue,
       ),
       TaliaNotificationService.prayerIshaKey => state.copyWith(
-        prayerIsha: value,
+        prayerIsha: persistedValue,
       ),
       _ => state,
     };
 
-    emit(updatedState);
+    if (!isClosed) emit(updatedState);
     await _reschedule(l10n);
   }
 
@@ -368,12 +477,35 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     required int endHour,
     AppLocalizations? l10n,
   }) async {
-    await _prefs.setInt(TaliaNotificationService.quietHoursStartKey, startHour);
-    await _prefs.setInt(TaliaNotificationService.quietHoursEndKey, endHour);
-    emit(
-      state.copyWith(quietHoursStart: startHour, quietHoursEnd: endHour),
+    final previousStart = state.quietHoursStart;
+    final previousEnd = state.quietHoursEnd;
+    final startSaved = await _writeInt(
+      TaliaNotificationService.quietHoursStartKey,
+      startHour,
     );
-    await _reschedule(l10n);
+    final endSaved = await _writeInt(
+      TaliaNotificationService.quietHoursEndKey,
+      endHour,
+    );
+    final persistedStart =
+        _prefs.getInt(TaliaNotificationService.quietHoursStartKey) ??
+        previousStart;
+    final persistedEnd =
+        _prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? previousEnd;
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          quietHoursStart: persistedStart,
+          quietHoursEnd: persistedEnd,
+        ),
+      );
+    }
+    if (persistedStart != previousStart || persistedEnd != previousEnd) {
+      await _reschedule(l10n);
+    }
+    if (!startSaved || !endSaved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+    }
   }
 
   TimeOfDay _readTime(
@@ -396,8 +528,52 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       final languageCode = _prefs.getString('app_locale') ?? 'ar';
       effectiveL10n = lookupAppLocalizations(Locale(languageCode));
     }
+    final scheduled = await _scheduler.refreshNotificationsForSettings(
+      effectiveL10n,
+      force: true,
+    );
+    if (!scheduled) {
+      _emitFeedback(state, NotificationSettingsFeedback.schedulingFailed);
+    }
+  }
+
+  Future<bool> _writeBool(String key, bool value) async {
     try {
-      await _scheduler.refreshNotifications(effectiveL10n, force: true);
-    } catch (_) {}
+      final saved = await _prefs.setBool(key, value);
+      return saved && _prefs.getBool(key) == value;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _writeString(String key, String value) async {
+    try {
+      final saved = await _prefs.setString(key, value);
+      return saved && _prefs.getString(key) == value;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _writeInt(String key, int value) async {
+    try {
+      final saved = await _prefs.setInt(key, value);
+      return saved && _prefs.getInt(key) == value;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _emitFeedback(
+    NotificationSettingsState nextState,
+    NotificationSettingsFeedback feedback,
+  ) {
+    if (isClosed) return;
+    emit(
+      nextState.copyWith(
+        feedback: feedback,
+        feedbackRevision: state.feedbackRevision + 1,
+      ),
+    );
   }
 }

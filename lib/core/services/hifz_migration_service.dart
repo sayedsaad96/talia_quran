@@ -39,9 +39,9 @@ final class HifzMigrationService {
     required HifzRepository hifzRepository,
     required MemorizationPlusRepository memPlusRepository,
     required SharedPreferences prefs,
-  })  : _hifzRepo = hifzRepository,
-        _memPlusRepo = memPlusRepository,
-        _prefs = prefs;
+  }) : _hifzRepo = hifzRepository,
+       _memPlusRepo = memPlusRepository,
+       _prefs = prefs;
 
   final HifzRepository _hifzRepo;
   final MemorizationPlusRepository _memPlusRepo;
@@ -260,7 +260,8 @@ final class HifzMigrationService {
   }
 
   AyahReviewRecord _repairRecord(AyahReviewRecord record) {
-    final needsTag = record.createdByMode == ReviewRecordCreatedByMode.v2Session;
+    final needsTag =
+        record.createdByMode == ReviewRecordCreatedByMode.v2Session;
     final needsStrengthLift =
         record.strengthLevel == 5 && record.lastRating == null;
 
@@ -302,7 +303,11 @@ final class HifzMigrationService {
         'HifzMigration: Backup written to ${file.path} (${records.length} records).',
       );
     } catch (e, stack) {
-      TaliaLogger.w('HifzMigration: Backup write failed (non-fatal).', e, stack);
+      TaliaLogger.w(
+        'HifzMigration: Backup write failed (non-fatal).',
+        e,
+        stack,
+      );
     }
   }
 }

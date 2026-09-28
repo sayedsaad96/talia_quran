@@ -14,16 +14,16 @@ import '../../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../../core/memorization/v2/session_state.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
-import '../../../../../core/widgets/qcf_hifz_verse_view.dart';
+import '../../../../../core/widgets/memorization_ayah_display.dart';
 import '../../cubits/memorization_session_cubit.dart';
 
 // ─── Base card ────────────────────────────────────────────────────────────────
 
 class V2PhaseCard extends StatelessWidget {
-  const V2PhaseCard({super.key, required this.child, required this.footer});
+  const V2PhaseCard({super.key, required this.child, this.footer});
 
   final Widget child;
-  final Widget footer;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +41,17 @@ class V2PhaseCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(child: child),
-          const SizedBox(height: AppSpacing.md),
-          DefaultTextStyle(
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+          if (footer != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            DefaultTextStyle(
+              style: AppTypography.bodyMedium.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+              child: footer!,
             ),
-            child: footer,
-          ),
+          ],
         ],
       ),
     );
@@ -71,12 +73,40 @@ class V2ProgressHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    return LinearProgressIndicator(
-      value: session.blockProgress,
-      minHeight: 8,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-      backgroundColor: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-      valueColor: AlwaysStoppedAnimation<Color>(primary),
+    final position = context.l10n.v2AyahOfBlock(
+      session.currentAyahIndex + 1,
+      session.totalAyahsInBlock,
+    );
+    // The bar alone says nothing to a screen reader or at a glance; the
+    // text names where the learner is in the block.
+    return Semantics(
+      label: position,
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LinearProgressIndicator(
+            value: session.blockProgress,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            backgroundColor: isDark
+                ? AppColors.darkDivider
+                : AppColors.lightDivider,
+            valueColor: AlwaysStoppedAnimation<Color>(primary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            position,
+            key: const Key('v2_ayah_of_block'),
+            textAlign: TextAlign.center,
+            style: AppTypography.labelMedium.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -111,40 +141,58 @@ class V2PhaseScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    // The primary action is pinned below the scrolling content so it is
+    // reachable without scrolling past long ayahs on small screens.
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      child: Column(
         children: [
-          V2ProgressHeader(session: session, primary: primary),
-          const SizedBox(height: AppSpacing.lg),
-          Icon(icon, color: primary, size: 40),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: AppTypography.headlineLarge.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.pagePadding),
+              children: [
+                V2ProgressHeader(session: session, primary: primary),
+                const SizedBox(height: AppSpacing.lg),
+                Icon(icon, color: primary, size: 40),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.headlineLarge.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ...children,
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.sm,
+              AppSpacing.pagePadding,
+              AppSpacing.pagePadding,
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ...children,
-          const SizedBox(height: AppSpacing.xl),
-          FilledButton.icon(
-            onPressed: primaryActionEnabled ? onPrimaryAction : null,
-            icon: Icon(primaryActionIcon),
-            label: Text(primaryActionLabel),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: primaryActionEnabled ? onPrimaryAction : null,
+                icon: Icon(primaryActionIcon),
+                label: Text(primaryActionLabel),
+              ),
+            ),
           ),
         ],
       ),
@@ -164,22 +212,17 @@ class V2AyahTextCard extends StatelessWidget {
     final ayah = session.currentAyah;
     final isDark = context.isDark;
     return V2PhaseCard(
-      child: QcfHifzVerseView(
-        surahNumber: session.surahId,
-        verseNumber: ayah.numberInSurah,
-        fallbackText: ayah.text,
-        isUnlocked: true,
-        isMemorized: session.passedAyahNumbers.contains(ayah.numberInSurah),
-        displayMode: HifzVerseDisplayMode.single,
-        textAlign: TextAlign.center,
+      child: MemorizationAyahDisplay(
+        text: ayah.text,
+        surahId: session.surahId,
+        ayahNumber: ayah.numberInSurah,
+        textColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+        decorationColor: (isDark ? AppColors.primaryLight : AppColors.primary)
+            .withValues(alpha: 0.5),
+        referenceColor: isDark ? AppColors.primaryLight : AppColors.primary,
+        isCompleted: session.passedAyahNumbers.contains(ayah.numberInSurah),
       ),
-      footer: Text(
-        context.l10n.hifzAyahNumberLabel(ayah.numberInSurah),
-        textAlign: TextAlign.center,
-        style: AppTypography.labelMedium.copyWith(
-          color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
-        ),
-      ),
+      footer: null,
     );
   }
 }
@@ -216,7 +259,7 @@ class V2HintCard extends StatelessWidget {
         child: Text(
           firstWord,
           textAlign: TextAlign.center,
-          style: AppTypography.quranLarge,
+          style: MemorizationAyahDisplay.textStyle(),
         ),
         footer: Text(
           context.l10n.v2FirstWordRevealed,
@@ -432,11 +475,12 @@ class _SpeechIssueFooter extends StatelessWidget {
       V2SpeechIssue.permissionPermanentlyDenied =>
         context.l10n.v2MicrophoneOpenSettings,
       V2SpeechIssue.unavailable => context.l10n.v2MicrophoneUnavailable,
-      null => isEvaluating
-          ? evaluatingLabel
-          : isRecording
-          ? recordingLabel
-          : context.l10n.v2PressRecord,
+      null =>
+        isEvaluating
+            ? evaluatingLabel
+            : isRecording
+            ? recordingLabel
+            : context.l10n.v2PressRecord,
     };
 
     return Column(
@@ -498,18 +542,18 @@ class V2AudioAction extends StatelessWidget {
             style: IconButton.styleFrom(
               side: BorderSide(
                 color: loopMode == V2AudioLoopMode.off
-                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.4)
                     : Theme.of(context).colorScheme.primary,
               ),
             ),
             icon: Badge(
               isLabelVisible: loopMode != V2AudioLoopMode.off,
-              label: Text(
-                switch (loopMode) {
-                  V2AudioLoopMode.threeTimes => '3',
-                  _ => '∞',
-                },
-              ),
+              label: Text(switch (loopMode) {
+                V2AudioLoopMode.threeTimes => '3',
+                _ => '∞',
+              }),
               child: Icon(
                 loopMode == V2AudioLoopMode.off
                     ? Icons.repeat_rounded
@@ -532,26 +576,38 @@ class V2MaskedWordsCard extends StatelessWidget {
   const V2MaskedWordsCard({
     super.key,
     required this.text,
+    required this.surahId,
+    required this.ayahNumber,
     required this.revealed,
     required this.onToggle,
   });
 
   final String text;
+  final int surahId;
+  final int ayahNumber;
   final bool revealed;
   final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final hintColor =
-        isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
 
     return V2PhaseCard(
       child: revealed
-          ? Text(
-              text,
-              textAlign: TextAlign.center,
-              style: AppTypography.quranLarge,
+          ? MemorizationAyahDisplay(
+              text: text,
+              surahId: surahId,
+              ayahNumber: ayahNumber,
+              textColor: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+              decorationColor:
+                  (isDark ? AppColors.primaryLight : AppColors.primary)
+                      .withValues(alpha: 0.5),
+              referenceColor: isDark
+                  ? AppColors.primaryLight
+                  : AppColors.primary,
             )
           : Wrap(
               spacing: AppSpacing.sm,
@@ -563,7 +619,7 @@ class V2MaskedWordsCard extends StatelessWidget {
                   Text(
                     _mask(word),
                     textAlign: TextAlign.center,
-                    style: AppTypography.quranLarge.copyWith(
+                    style: MemorizationAyahDisplay.textStyle().copyWith(
                       color: hintColor,
                       letterSpacing: 2,
                     ),

@@ -35,4 +35,16 @@ void main() {
       expect(gate.registerTimerElapsed(2), isFalse);
     });
   });
+
+  test('a released pending page can be confirmed again (B4)', () {
+    final gate = QuranReadConfirmationGate();
+    gate.registerInteraction(7);
+    gate.registerTimerElapsed(7);
+    gate.markPending(7);
+    expect(gate.shouldConfirm(7), isFalse);
+
+    gate.clearPending(7);
+
+    expect(gate.shouldConfirm(7), isTrue);
+  });
 }

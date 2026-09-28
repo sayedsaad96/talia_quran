@@ -194,10 +194,7 @@ class IslamicOctagramPainter extends CustomPainter {
   final Color color;
   final double density;
 
-  const IslamicOctagramPainter({
-    required this.color,
-    this.density = 64.0,
-  });
+  const IslamicOctagramPainter({required this.color, this.density = 64.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -220,7 +217,10 @@ class IslamicOctagramPainter extends CustomPainter {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(45 * math.pi / 180);
-    canvas.drawRect(Rect.fromCircle(center: Offset.zero, radius: radius), paint);
+    canvas.drawRect(
+      Rect.fromCircle(center: Offset.zero, radius: radius),
+      paint,
+    );
     canvas.restore();
   }
 
@@ -234,10 +234,7 @@ class MihrabArchPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
 
-  const MihrabArchPainter({
-    required this.color,
-    this.strokeWidth = 1.2,
-  });
+  const MihrabArchPainter({required this.color, this.strokeWidth = 1.2});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -286,10 +283,7 @@ class GoldenCornerPainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  const GoldenCornerPainter({
-    required this.color,
-    this.opacity = 0.55,
-  });
+  const GoldenCornerPainter({required this.color, this.opacity = 0.55});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -301,10 +295,7 @@ class GoldenCornerPainter extends CustomPainter {
     final path = Path()
       ..moveTo(0, size.height)
       ..lineTo(0, 4)
-      ..arcToPoint(
-        const Offset(4, 0),
-        radius: const Radius.circular(4),
-      )
+      ..arcToPoint(const Offset(4, 0), radius: const Radius.circular(4))
       ..lineTo(size.width, 0);
 
     canvas.drawPath(path, paint);
@@ -317,10 +308,7 @@ class GoldenCornerPainter extends CustomPainter {
     final innerPath = Path()
       ..moveTo(0, size.height * 0.62)
       ..lineTo(0, 7)
-      ..arcToPoint(
-        const Offset(7, 0),
-        radius: const Radius.circular(7),
-      )
+      ..arcToPoint(const Offset(7, 0), radius: const Radius.circular(7))
       ..lineTo(size.width * 0.62, 0);
     canvas.drawPath(innerPath, inner);
 
@@ -329,8 +317,11 @@ class GoldenCornerPainter extends CustomPainter {
       ..color = color.withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(5, 5), 2.2, dotPaint);
-    canvas.drawCircle(Offset(size.width * 0.34, size.height * 0.34), 1.2,
-        dotPaint..color = color.withValues(alpha: opacity * 0.7));
+    canvas.drawCircle(
+      Offset(size.width * 0.34, size.height * 0.34),
+      1.2,
+      dotPaint..color = color.withValues(alpha: opacity * 0.7),
+    );
   }
 
   @override
@@ -371,8 +362,9 @@ class StarFieldPainter extends CustomPainter {
         if (roll > 0.84) {
           final arm = r * 3.4;
           final sparkle = Paint()
-            ..color = sparkleColor
-                .withValues(alpha: (0.3 + rng.next() * 0.4) * opacity)
+            ..color = sparkleColor.withValues(
+              alpha: (0.3 + rng.next() * 0.4) * opacity,
+            )
             ..strokeWidth = 0.8
             ..strokeCap = StrokeCap.round;
           canvas.drawLine(Offset(px - arm, py), Offset(px + arm, py), sparkle);
@@ -382,8 +374,9 @@ class StarFieldPainter extends CustomPainter {
             Offset(px, py),
             r,
             Paint()
-              ..color =
-                  color.withValues(alpha: (0.16 + rng.next() * 0.4) * opacity),
+              ..color = color.withValues(
+                alpha: (0.16 + rng.next() * 0.4) * opacity,
+              ),
           );
         }
       }
@@ -415,10 +408,7 @@ class CrescentMoonPainter extends CustomPainter {
   final Color color;
   final double glowOpacity;
 
-  const CrescentMoonPainter({
-    required this.color,
-    this.glowOpacity = 0.14,
-  });
+  const CrescentMoonPainter({required this.color, this.glowOpacity = 0.14});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -426,29 +416,38 @@ class CrescentMoonPainter extends CustomPainter {
     final r = size.shortestSide / 2;
 
     // Layered halo reads as atmospheric glow without a blur filter.
-    canvas.drawCircle(c, r * 1.85,
-        Paint()..color = color.withValues(alpha: glowOpacity * 0.4));
-    canvas.drawCircle(c, r * 1.4,
-        Paint()..color = color.withValues(alpha: glowOpacity * 0.8));
     canvas.drawCircle(
-        c, r * 1.12, Paint()..color = color.withValues(alpha: glowOpacity));
+      c,
+      r * 1.85,
+      Paint()..color = color.withValues(alpha: glowOpacity * 0.4),
+    );
+    canvas.drawCircle(
+      c,
+      r * 1.4,
+      Paint()..color = color.withValues(alpha: glowOpacity * 0.8),
+    );
+    canvas.drawCircle(
+      c,
+      r * 1.12,
+      Paint()..color = color.withValues(alpha: glowOpacity),
+    );
 
     final moon = Path.combine(
       PathOperation.difference,
       Path()..addOval(Rect.fromCircle(center: c, radius: r * 0.66)),
-      Path()
-        ..addOval(Rect.fromCircle(
+      Path()..addOval(
+        Rect.fromCircle(
           center: Offset(c.dx - r * 0.3, c.dy - r * 0.12),
           radius: r * 0.58,
-        )),
+        ),
+      ),
     );
     canvas.drawPath(moon, Paint()..color = color.withValues(alpha: 0.92));
   }
 
   @override
   bool shouldRepaint(covariant CrescentMoonPainter oldDelegate) =>
-      oldDelegate.color != color ||
-      oldDelegate.glowOpacity != glowOpacity;
+      oldDelegate.color != color || oldDelegate.glowOpacity != glowOpacity;
 }
 
 /// A single hanging lantern: thin gold string, ring, domed body, warm glow.
@@ -480,10 +479,16 @@ class HangingLanternPainter extends CustomPainter {
     final bodyRadius = size.width * 0.22;
 
     // Warm halo behind the lamp body.
-    canvas.drawCircle(bodyCenter, bodyRadius * 2.4,
-        Paint()..color = glow.withValues(alpha: 0.12));
-    canvas.drawCircle(bodyCenter, bodyRadius * 1.6,
-        Paint()..color = glow.withValues(alpha: 0.2));
+    canvas.drawCircle(
+      bodyCenter,
+      bodyRadius * 2.4,
+      Paint()..color = glow.withValues(alpha: 0.12),
+    );
+    canvas.drawCircle(
+      bodyCenter,
+      bodyRadius * 1.6,
+      Paint()..color = glow.withValues(alpha: 0.2),
+    );
 
     final stroke = Paint()
       ..color = gold.withValues(alpha: 0.85)
@@ -492,13 +497,21 @@ class HangingLanternPainter extends CustomPainter {
     final fill = Paint()..color = glow.withValues(alpha: 0.3);
 
     // Hanging ring.
-    canvas.drawCircle(Offset(cx, stringEnd + 3), 1.6, stroke..style = PaintingStyle.fill);
+    canvas.drawCircle(
+      Offset(cx, stringEnd + 3),
+      1.6,
+      stroke..style = PaintingStyle.fill,
+    );
 
     // Domed top.
     final dome = Path()
       ..moveTo(cx - bodyRadius * 0.8, stringEnd + size.height * 0.14)
-      ..quadraticBezierTo(cx, stringEnd + size.height * 0.02,
-          cx + bodyRadius * 0.8, stringEnd + size.height * 0.14);
+      ..quadraticBezierTo(
+        cx,
+        stringEnd + size.height * 0.02,
+        cx + bodyRadius * 0.8,
+        stringEnd + size.height * 0.14,
+      );
     canvas.drawPath(dome, stroke..style = PaintingStyle.stroke);
 
     // Body with a soft warm interior.
@@ -507,8 +520,10 @@ class HangingLanternPainter extends CustomPainter {
       width: bodyRadius * 2,
       height: size.height * 0.4,
     );
-    final rrect =
-        RRect.fromRectAndRadius(body, Radius.circular(body.width * 0.3));
+    final rrect = RRect.fromRectAndRadius(
+      body,
+      Radius.circular(body.width * 0.3),
+    );
     canvas.drawRRect(rrect, fill);
     canvas.drawRRect(rrect, stroke);
 
@@ -533,10 +548,7 @@ class BotanicalSprigPainter extends CustomPainter {
   final Color color;
   final bool mirror;
 
-  const BotanicalSprigPainter({
-    required this.color,
-    this.mirror = false,
-  });
+  const BotanicalSprigPainter({required this.color, this.mirror = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -623,12 +635,18 @@ class RadialRaysPainter extends CustomPainter {
       final spread = math.pi / rayCount * 0.42;
       final reach = i.isEven ? outer : outer * 0.78;
       final ray = Path()
-        ..moveTo(center.dx + math.cos(angle - spread) * inner,
-            center.dy + math.sin(angle - spread) * inner)
-        ..lineTo(center.dx + math.cos(angle) * reach,
-            center.dy + math.sin(angle) * reach)
-        ..lineTo(center.dx + math.cos(angle + spread) * inner,
-            center.dy + math.sin(angle + spread) * inner)
+        ..moveTo(
+          center.dx + math.cos(angle - spread) * inner,
+          center.dy + math.sin(angle - spread) * inner,
+        )
+        ..lineTo(
+          center.dx + math.cos(angle) * reach,
+          center.dy + math.sin(angle) * reach,
+        )
+        ..lineTo(
+          center.dx + math.cos(angle + spread) * inner,
+          center.dy + math.sin(angle + spread) * inner,
+        )
         ..close();
       canvas.drawPath(ray, paint);
     }
@@ -703,10 +721,7 @@ class GeometricRosettePainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  const GeometricRosettePainter({
-    required this.color,
-    this.opacity = 0.09,
-  });
+  const GeometricRosettePainter({required this.color, this.opacity = 0.09});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -756,10 +771,7 @@ class CalligraphyBorderPainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  const CalligraphyBorderPainter({
-    required this.color,
-    this.opacity = 0.08,
-  });
+  const CalligraphyBorderPainter({required this.color, this.opacity = 0.08});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -774,13 +786,45 @@ class CalligraphyBorderPainter extends CustomPainter {
     const margin = 8.0;
 
     // Top edge arches.
-    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.top);
+    _drawEdgeArches(
+      canvas,
+      paint,
+      size,
+      archWidth,
+      archHeight,
+      margin,
+      _Edge.top,
+    );
     // Bottom edge arches (mirrored).
-    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.bottom);
+    _drawEdgeArches(
+      canvas,
+      paint,
+      size,
+      archWidth,
+      archHeight,
+      margin,
+      _Edge.bottom,
+    );
     // Left edge arches.
-    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.left);
+    _drawEdgeArches(
+      canvas,
+      paint,
+      size,
+      archWidth,
+      archHeight,
+      margin,
+      _Edge.left,
+    );
     // Right edge arches.
-    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.right);
+    _drawEdgeArches(
+      canvas,
+      paint,
+      size,
+      archWidth,
+      archHeight,
+      margin,
+      _Edge.right,
+    );
 
     // Corner diamonds.
     const ds = 6.0;
@@ -794,8 +838,15 @@ class CalligraphyBorderPainter extends CustomPainter {
     }
   }
 
-  void _drawEdgeArches(Canvas canvas, Paint paint, Size size,
-      double archWidth, double archHeight, double margin, _Edge edge) {
+  void _drawEdgeArches(
+    Canvas canvas,
+    Paint paint,
+    Size size,
+    double archWidth,
+    double archHeight,
+    double margin,
+    _Edge edge,
+  ) {
     final isHorizontal = edge == _Edge.top || edge == _Edge.bottom;
     final length = isHorizontal ? size.width : size.height;
     final count = ((length - margin * 2) / archWidth).floor();
@@ -808,18 +859,36 @@ class CalligraphyBorderPainter extends CustomPainter {
       switch (edge) {
         case _Edge.top:
           path.moveTo(t, margin);
-          path.quadraticBezierTo(t + archWidth / 2, margin + archHeight, t + archWidth, margin);
+          path.quadraticBezierTo(
+            t + archWidth / 2,
+            margin + archHeight,
+            t + archWidth,
+            margin,
+          );
         case _Edge.bottom:
           path.moveTo(t, size.height - margin);
           path.quadraticBezierTo(
-              t + archWidth / 2, size.height - margin - archHeight, t + archWidth, size.height - margin);
+            t + archWidth / 2,
+            size.height - margin - archHeight,
+            t + archWidth,
+            size.height - margin,
+          );
         case _Edge.left:
           path.moveTo(margin, t);
-          path.quadraticBezierTo(margin + archHeight, t + archWidth / 2, margin, t + archWidth);
+          path.quadraticBezierTo(
+            margin + archHeight,
+            t + archWidth / 2,
+            margin,
+            t + archWidth,
+          );
         case _Edge.right:
           path.moveTo(size.width - margin, t);
           path.quadraticBezierTo(
-              size.width - margin - archHeight, t + archWidth / 2, size.width - margin, t + archWidth);
+            size.width - margin - archHeight,
+            t + archWidth / 2,
+            size.width - margin,
+            t + archWidth,
+          );
       }
       canvas.drawPath(path, paint);
     }

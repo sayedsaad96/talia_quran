@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
+import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_session_cubit.dart';
@@ -36,9 +37,15 @@ void main() {
           final action = find.byKey(const ValueKey('v2-manual-recall'));
           expect(action, findsOneWidget);
           await tester.tap(action);
-          await tester.pump();
+          await tester.pumpAndSettle();
+
+          // An honest verdict is required — no silent pass.
+          expect(cubit.manualRecallCalls, 0);
+          await tester.tap(find.byKey(const ValueKey('v2-self-grade-forgot')));
+          await tester.pumpAndSettle();
 
           expect(cubit.manualRecallCalls, 1);
+          expect(cubit.lastSelfGrade, V2SelfGrade.forgot);
         },
       );
     }
@@ -136,6 +143,7 @@ class _FakeMemorizationSessionCubit extends Cubit<MemorizationSessionState>
   int startRecordingCalls = 0;
   int stopRecordingCalls = 0;
   int manualRecallCalls = 0;
+  V2SelfGrade? lastSelfGrade;
 
   @override
   Future<void> startBlockReview() async {
@@ -153,8 +161,11 @@ class _FakeMemorizationSessionCubit extends Cubit<MemorizationSessionState>
   }
 
   @override
-  Future<void> submitManualRecall() async {
+  Future<void> submitManualRecall([
+    V2SelfGrade grade = V2SelfGrade.mastered,
+  ]) async {
     manualRecallCalls += 1;
+    lastSelfGrade = grade;
   }
 
   @override

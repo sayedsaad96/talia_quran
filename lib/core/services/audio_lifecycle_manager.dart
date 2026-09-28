@@ -10,8 +10,8 @@ import 'package:just_audio/just_audio.dart';
 class AudioLifecycleManager {
   AudioLifecycleManager._() {
     _listener = AppLifecycleListener(
-      onHide: _pauseAll,     // Android: home / recents
-      onPause: _pauseAll,    // iOS: home / lock screen
+      onHide: _pauseAll, // Android: home / recents
+      onPause: _pauseAll, // iOS: home / lock screen
       onInactive: _pauseAll, // incoming call / task switcher overlay
     );
   }
@@ -33,7 +33,9 @@ class AudioLifecycleManager {
   void unregister(AudioPlayer player) => _players.remove(player);
 
   void _pauseAll() {
-    for (final entry in Map<AudioPlayer, bool Function()?>.from(_players).entries) {
+    for (final entry in Map<AudioPlayer, bool Function()?>.from(
+      _players,
+    ).entries) {
       final player = entry.key;
       final shouldPause = entry.value;
       if (shouldPause != null && !shouldPause()) {

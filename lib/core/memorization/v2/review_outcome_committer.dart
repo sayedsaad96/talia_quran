@@ -13,6 +13,7 @@ import '../../../features/home/domain/entities/activity_event.dart';
 import '../../services/activity_event_recorder.dart';
 import 'hint_usage.dart';
 import 'review_outcome_commit_support.dart';
+import 'self_grade.dart';
 import 'session_phase.dart';
 import 'session_state.dart';
 
@@ -69,6 +70,7 @@ final class V2ReviewOutcomeCommitter {
     required V2SessionState nextState,
     required String taskId,
     bool manuallyAssessed = false,
+    V2SelfGrade selfGrade = V2SelfGrade.mastered,
     double? similarityScore,
     String? eventId,
   }) async {
@@ -78,6 +80,7 @@ final class V2ReviewOutcomeCommitter {
       ownerId: ownerId,
       audience: MemorizationAudience.adult,
       surahId: nextState.surahId,
+      review: nextState.isReview,
     );
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
@@ -117,7 +120,11 @@ final class V2ReviewOutcomeCommitter {
 
       final currentAyah = previousState.currentAyah;
       final rating = manuallyAssessed
-          ? null
+          ? V2ReviewOutcomeCommitSupport.manualRatingFor(
+              previousState,
+              currentAyah.numberInSurah,
+              selfGrade,
+            )
           : V2ReviewOutcomeCommitSupport.ratingFor(
               previousState,
               currentAyah.numberInSurah,
@@ -136,11 +143,11 @@ final class V2ReviewOutcomeCommitter {
             previousState.surahId,
             currentAyah.numberInSurah,
           ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
-      final scheduled = manuallyAssessed
-          ? V2ReviewOutcomeCommitSupport.manualSchedule(base, now)
-          : _scheduler
-                .schedule(base, rating!, now)
-                .copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
+      // Self-assessments are real reviews (they advance totalReviews so the
+      // ayah leaves the new bucket) but their rating is capped above.
+      final scheduled = _scheduler
+          .schedule(base, rating, now)
+          .copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
       final projection =
           IsarAyahReviewRecord.fromModel(
               AyahReviewRecordModel.fromEntity(scheduled),
@@ -168,7 +175,7 @@ final class V2ReviewOutcomeCommitter {
                     : ReviewEvidenceAssessment.automatic)
                 .index
         ..outcomeIndex = ReviewEvidenceOutcome.passed.index
-        ..ratingIndex = rating?.index
+        ..ratingIndex = rating.index
         ..similarityScore = manuallyAssessed ? null : similarityScore
         ..attemptCount =
             previousState.failureTracker.failureCountFor(
@@ -222,6 +229,7 @@ final class V2ReviewOutcomeCommitter {
           activityDelta: nextState.totalAyahsInBlock,
           includeCertificate: !manuallyAssessed,
           createdAt: now,
+          isReview: nextState.isReview,
         );
       }
 
@@ -263,6 +271,7 @@ final class V2ReviewOutcomeCommitter {
       ownerId: ownerId,
       audience: MemorizationAudience.adult,
       surahId: nextState.surahId,
+      review: nextState.isReview,
     );
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
@@ -372,6 +381,7 @@ final class V2ReviewOutcomeCommitter {
     required V2SessionState previousState,
     required V2SessionState nextState,
     required String taskId,
+    bool manuallyAssessed = false,
     double? similarityScore,
     String? eventId,
   }) async {
@@ -381,6 +391,7 @@ final class V2ReviewOutcomeCommitter {
       ownerId: ownerId,
       audience: MemorizationAudience.adult,
       surahId: previousState.surahId,
+      review: previousState.isReview,
     );
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
@@ -430,6 +441,48 @@ final class V2ReviewOutcomeCommitter {
         );
       }
 
+      // A failed block review is real forgetting of an ayah that already
+      // passed (and was scheduled) earlier in this block. Demote it once per
+      // session so repeated block attempts do not stack lapses.
+      final demote =
+          previousState.phase == V2SessionPhase.blockReview &&
+          await _isar.isarReviewEvidenceEvents
+                  .filter()
+                  .sessionIdEqualTo(sessionId)
+                  .surahIdEqualTo(nextState.surahId)
+                  .ayahNumberEqualTo(currentAyah.numberInSurah)
+                  .eventTypeIndexEqualTo(ReviewEvidenceEventType.attempt.index)
+                  .ratingIndexEqualTo(PerformanceRating.weak.index)
+                  .findFirst() ==
+              null;
+      if (demote) {
+        final identity = ReviewRecordIdentity(
+          ownerUserId: ownerId,
+          audience: audience,
+          surahId: nextState.surahId,
+          ayahNumber: currentAyah.numberInSurah,
+        );
+        final existing = await _isar.isarAyahReviewRecords.getByCompositeKey(
+          identity.storageKey,
+        );
+        if (existing != null) {
+          final demoted = _scheduler
+              .schedule(existing.toModel(), PerformanceRating.weak, now)
+              .copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
+          await _isar.isarAyahReviewRecords.put(
+            IsarAyahReviewRecord.fromModel(
+                AyahReviewRecordModel.fromEntity(demoted),
+              )
+              ..id = existing.id
+              ..compositeKey = identity.storageKey
+              ..ownerUserId = ownerId
+              ..audience = audience.name
+              ..cloudDirty = true
+              ..lastSyncedAt = null,
+          );
+        }
+      }
+
       await _isar.isarReviewEvidenceEvents.put(
         IsarReviewEvidenceEvent()
           ..eventId = requestedEventId
@@ -441,9 +494,14 @@ final class V2ReviewOutcomeCommitter {
           ..surahId = nextState.surahId
           ..ayahNumber = currentAyah.numberInSurah
           ..eventTypeIndex = ReviewEvidenceEventType.attempt.index
-          ..assessmentIndex = ReviewEvidenceAssessment.automatic.index
+          ..assessmentIndex =
+              (manuallyAssessed
+                      ? ReviewEvidenceAssessment.manual
+                      : ReviewEvidenceAssessment.automatic)
+                  .index
           ..outcomeIndex = ReviewEvidenceOutcome.failed.index
-          ..similarityScore = similarityScore
+          ..ratingIndex = demote ? PerformanceRating.weak.index : null
+          ..similarityScore = manuallyAssessed ? null : similarityScore
           ..attemptCount = attemptNumber
           ..failureCount = recordedFailures
           ..hintLevelIndex = previousState.hintTracker

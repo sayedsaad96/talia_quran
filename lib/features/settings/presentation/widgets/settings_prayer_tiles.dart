@@ -49,12 +49,7 @@ class _PrayerTimesSettingsSectionState
       if (!mounted) return;
       setState(() {
         _countries = countries;
-        _countryId =
-            _countryFor(_cityId)?.id ??
-            (countries.isEmpty ? null : countries.first.id);
-        _cityId ??= _citiesOf(_countryId).isEmpty
-            ? null
-            : _citiesOf(_countryId).first.id;
+        _countryId = _countryFor(_cityId)?.id;
         if (_methodAuto) _method = service.calculationMethod;
       });
     });
@@ -76,10 +71,15 @@ class _PrayerTimesSettingsSectionState
 
   Future<void> _refreshNotifications() async {
     if (getIt.isRegistered<NotificationScheduler>()) {
-      await getIt<NotificationScheduler>().refreshNotifications(
-        context.l10n,
-        force: true,
-      );
+      final updated = await getIt<NotificationScheduler>()
+          .refreshNotificationsForSettings(context.l10n, force: true);
+      if (!updated && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.notificationSettingsSchedulingFailed),
+          ),
+        );
+      }
     }
   }
 
@@ -87,25 +87,33 @@ class _PrayerTimesSettingsSectionState
     final service = _service;
     if (service == null) return;
     await service.setEnabled(value);
-    // A visible default in the dropdowns is not a confirmed location. Persist
-    // the currently chosen location and method as soon as prayer times are
-    // enabled, so reminder scheduling never falls back to Makkah implicitly.
-    if (value && _cityId != null) {
-      await service.setCityId(_cityId!);
-      if (!_methodAuto) await service.setCalculationMethod(_method);
-      _method = service.calculationMethod;
-    }
     if (!mounted) return;
     setState(() => _enabled = value);
     await _refreshNotifications();
   }
 
   Future<void> _setCountry(String? id) async {
-    if (id == null) return;
+    if (id == null || id == _countryId) return;
     final cities = _citiesOf(id);
     if (cities.isEmpty) return;
-    setState(() => _countryId = id);
-    await _setCity(cities.first.id);
+    try {
+      if (await _service?.clearCityId() != true) {
+        throw StateError('Failed to clear selected prayer city');
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.notificationSettingsSaveFailed)),
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _countryId = id;
+      _cityId = null;
+    });
+    await _refreshNotifications();
   }
 
   Future<void> _setCity(String? id) async {
@@ -168,9 +176,8 @@ class _PrayerTimesSettingsSectionState
             title: Text(context.l10n.homePrayerCountry),
             subtitle: DropdownButton<String>(
               isExpanded: true,
-              value: _countries.any((c) => c.id == _countryId)
-                  ? _countryId
-                  : (_countries.isEmpty ? null : _countries.first.id),
+              value: _countryId,
+              hint: Text(context.l10n.homePrayerCountry),
               items: [
                 for (final country in _countries)
                   DropdownMenuItem(
@@ -189,9 +196,8 @@ class _PrayerTimesSettingsSectionState
             title: Text(context.l10n.homePrayerCity),
             subtitle: DropdownButton<String>(
               isExpanded: true,
-              value: cities.any((c) => c.id == _cityId)
-                  ? _cityId
-                  : (cities.isEmpty ? null : cities.first.id),
+              value: cities.any((city) => city.id == _cityId) ? _cityId : null,
+              hint: Text(context.l10n.prayerChooseCityAction),
               items: [
                 for (final city in cities)
                   DropdownMenuItem(

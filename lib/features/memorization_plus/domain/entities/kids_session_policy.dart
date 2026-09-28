@@ -6,6 +6,11 @@ enum KidsAgeBand { fiveToSeven, eightToTwelve }
 
 enum KidsMissionType { dueReview, resume, newMemorization, linkedReview }
 
+/// Age-band limits for kids missions.
+///
+/// There is deliberately no block-review or linked-review-length setting:
+/// kids missions are single-ayah sessions (see `KidsModeCubit.load`), and a
+/// policy value that no session honours would only mislead (N8, K16).
 final class KidsSessionPolicy extends Equatable {
   const KidsSessionPolicy({
     required this.ageBand,
@@ -13,8 +18,6 @@ final class KidsSessionPolicy extends Equatable {
     required this.maxDueReviews,
     required this.maxSessionMinutes,
     required this.journeyStageSize,
-    required this.blockReviewRequired,
-    required this.linkedReviewAyahs,
     required this.guidanceAudioDefault,
     this.maxListenRepetitions = 1,
   });
@@ -28,10 +31,11 @@ final class KidsSessionPolicy extends Equatable {
         maxDueReviews: 1,
         maxSessionMinutes: 6,
         journeyStageSize: 3,
-        blockReviewRequired: false,
-        linkedReviewAyahs: 2,
         guidanceAudioDefault: true,
-        maxListenRepetitions: 1,
+        // Pedagogically inverted on purpose: younger children need MORE
+        // audio repetitions before recall, not fewer — their working memory
+        // and auditory encoding are still developing.
+        maxListenRepetitions: 3,
       );
     }
     return const KidsSessionPolicy(
@@ -40,20 +44,21 @@ final class KidsSessionPolicy extends Equatable {
       maxDueReviews: 3,
       maxSessionMinutes: 10,
       journeyStageSize: 5,
-      blockReviewRequired: true,
-      linkedReviewAyahs: 3,
       guidanceAudioDefault: false,
       maxListenRepetitions: 2,
     );
   }
+
+  /// Policy for a stored child age; a missing or out-of-range age falls back
+  /// to the 8–12 band, the same default every kids surface already assumed.
+  factory KidsSessionPolicy.forChildAge(int? age) =>
+      KidsSessionPolicy.forAge(age != null && age >= 5 && age <= 12 ? age : 8);
 
   final KidsAgeBand ageBand;
   final int maxNewAyahs;
   final int maxDueReviews;
   final int maxSessionMinutes;
   final int journeyStageSize;
-  final bool blockReviewRequired;
-  final int linkedReviewAyahs;
   final bool guidanceAudioDefault;
 
   /// Required listen repetitions before the child may record a recitation.
@@ -68,8 +73,6 @@ final class KidsSessionPolicy extends Equatable {
     maxDueReviews,
     maxSessionMinutes,
     journeyStageSize,
-    blockReviewRequired,
-    linkedReviewAyahs,
     guidanceAudioDefault,
     maxListenRepetitions,
   ];

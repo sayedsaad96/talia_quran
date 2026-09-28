@@ -157,5 +157,50 @@ void main() {
         throwsA(isA<AssertionError>()),
       );
     });
+
+    // ── Child-friendly word counts (W2) ──────────────────────────────────────
+
+    test('a perfect recitation reports every word as matched', () {
+      final result = evaluator.evaluate(
+        targetText: 'مالك يوم الدين',
+        spokenText: 'مالك يوم الدين',
+      );
+
+      expect(result.targetWordCount, 3);
+      expect(result.matchedWordCount, 3);
+    });
+
+    test('a near miss reports the words the child got right', () {
+      // 'بسم الله الرحمن الرحيم' (4 words) vs 'بسم الله الرحمن' (3 words):
+      // the child recalled 3 of 4 words in order.
+      final result = evaluator.evaluate(
+        targetText: 'بسم الله الرحمن الرحيم',
+        spokenText: 'بسم الله الرحمن',
+      );
+
+      expect(result.targetWordCount, 4);
+      expect(result.matchedWordCount, 3);
+    });
+
+    test('a zero-overlap recitation reports zero matched words', () {
+      final result = evaluator.evaluate(
+        targetText: 'بسم الله الرحمن الرحيم',
+        spokenText: 'مالك يوم الدين',
+      );
+
+      expect(result.targetWordCount, 4);
+      expect(result.matchedWordCount, 0);
+    });
+
+    test('no-attempt results carry no word feedback', () {
+      final result = evaluator.evaluate(
+        targetText: 'مالك يوم الدين',
+        spokenText: '',
+      );
+
+      expect(result.isNoAttempt, isTrue);
+      expect(result.targetWordCount, 0);
+      expect(result.matchedWordCount, 0);
+    });
   });
 }

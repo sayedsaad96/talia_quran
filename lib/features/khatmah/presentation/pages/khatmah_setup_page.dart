@@ -36,6 +36,15 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
 
   static const List<int> _presets = [2, 4, 10, 20];
 
+  /// Duration presets (C7): a khatmah planned by days, e.g. Ramadan.
+  static const List<int> _durationPresets = [30, 60, 90, 120];
+
+  /// Set when the learner picked a duration; null when planning by pages.
+  int? _selectedDays;
+
+  /// Optional start page (C7); empty means page 1.
+  final TextEditingController _startPageController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -54,14 +63,24 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   @override
   void dispose() {
     _customController.dispose();
+    _startPageController.dispose();
     if (_createdOwnCubit) {
       _cubit.close();
     }
     super.dispose();
   }
 
+  void _onDurationSelected(int days) {
+    setState(() {
+      _selectedDays = days;
+      _selectedPages = (KhatmahSchedulingEngine.totalPages / days).ceil();
+      _customController.clear();
+    });
+  }
+
   void _onPresetSelected(int pages) {
     setState(() {
+      _selectedDays = null;
       _selectedPages = pages;
       _customController.clear();
     });
@@ -73,13 +92,19 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
         parsed > 0 &&
         parsed <= KhatmahSchedulingEngine.totalPages) {
       setState(() {
+        _selectedDays = null;
         _selectedPages = parsed;
       });
     }
   }
 
   void _onSubmit() {
-    _cubit.createPlan(pagesPerDay: _selectedPages, dedication: _dedication);
+    _cubit.createPlan(
+      pagesPerDay: _selectedPages,
+      dedication: _dedication,
+      targetDays: _selectedDays,
+      startPage: parseKhatmahPageInput(_startPageController.text) ?? 1,
+    );
   }
 
   void _showAbandonExistingConfirmDialog(KhatmahSetupConflict conflict) {
@@ -122,10 +147,12 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
-    final estimatedDays = KhatmahSchedulingEngine.calculateDaysFromPages(
-      KhatmahSchedulingEngine.totalPages,
-      _selectedPages,
-    );
+    final estimatedDays =
+        _selectedDays ??
+        KhatmahSchedulingEngine.calculateDaysFromPages(
+          KhatmahSchedulingEngine.totalPages,
+          _selectedPages,
+        );
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final endDate = KhatmahSchedulingEngine.calculateEndDate(
@@ -303,6 +330,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             runSpacing: AppSpacing.xs,
                             children: _presets.map((pages) {
                               final isSelected =
+                                  _selectedDays == null &&
                                   _selectedPages == pages &&
                                   _customController.text.isEmpty;
                               final pagesStr = isArabic
@@ -355,6 +383,60 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               ),
                             ),
                             onChanged: _onCustomChanged,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            context.l10n.khatmahOrChooseDuration,
+                            style: AppTypography.labelLarge,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Wrap(
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.xs,
+                            children: _durationPresets.map((days) {
+                              final daysStr = isArabic
+                                  ? MushafHizbHelper.toArabicNumber(days)
+                                  : days.toString();
+                              return ChoiceChip(
+                                key: Key('khatmah_setup_duration_$days'),
+                                label: Text(
+                                  days == 30
+                                      ? context.l10n.khatmahDurationRamadan
+                                      : context.l10n.khatmahDurationDays(
+                                          daysStr,
+                                        ),
+                                ),
+                                selected: _selectedDays == days,
+                                selectedColor: AppColors.gold.withValues(
+                                  alpha: 0.25,
+                                ),
+                                onSelected: (_) => _onDurationSelected(days),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            key: const Key('khatmah_setup_start_page_input'),
+                            controller: _startPageController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[0-9٠-٩]'),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: context.l10n.khatmahStartFromPage,
+                              helperText: context.l10n.khatmahStartFromPageHint,
+                              helperMaxLines: 2,
+                              prefixIcon: const Icon(
+                                Icons.bookmark_outline_rounded,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

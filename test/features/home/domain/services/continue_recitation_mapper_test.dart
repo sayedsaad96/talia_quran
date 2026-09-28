@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/home/domain/entities/continue_recitation.dart';
 import 'package:talia_quran/features/home/domain/services/continue_recitation_mapper.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   const mapper = ContinueRecitationMapper();
@@ -79,4 +80,52 @@ void main() {
 
     expect(recitation, isNull);
   });
+
+  test(
+    'khatmah card names the khatmah page, never the ordinary wird page (C2)',
+    () {
+      const wirdPage = QuranPageDetail(
+        pageNumber: 293,
+        ayahs: [],
+        surahs: [
+          Surah(
+            id: 18,
+            nameAr: 'الكهف',
+            nameEn: 'Al-Kahf',
+            ayahCount: 110,
+            juz: 15,
+            type: 'meccan',
+            page: 293,
+          ),
+        ],
+      );
+      const khatmahPage = QuranPageDetail(
+        pageNumber: 12,
+        ayahs: [],
+        surahs: [
+          Surah(
+            id: 2,
+            nameAr: 'البقرة',
+            nameEn: 'Al-Baqarah',
+            ayahCount: 286,
+            juz: 1,
+            type: 'medinan',
+            page: 2,
+          ),
+        ],
+      );
+
+      final recitation = mapper.map(
+        isArabic: true,
+        activeKhatmah: planWith(),
+        dailyWirdPageDetail: wirdPage,
+        khatmahPageDetail: khatmahPage,
+        now: now,
+      );
+
+      expect(recitation!.surahName, 'البقرة');
+      expect(recitation.surahId, 2);
+      expect(recitation.route, '/quran/page/12?mode=khatmah');
+    },
+  );
 }

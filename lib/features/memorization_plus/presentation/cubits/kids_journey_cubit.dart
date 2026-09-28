@@ -5,12 +5,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 part 'kids_journey_state.dart';
 
 typedef KidsReviewRecordsLoader = Future<List<AyahReviewRecord>> Function();
 typedef KidsResumeMissionLoader = Future<KidsNextMission?> Function();
+
+/// Reads the local kids session log for today's mission budget.
+/// Optional: when unavailable (or throwing) the budget is not enforced.
+typedef KidsJourneySessionLogsLoader = Future<List<KidsSessionLog>?> Function();
+
+/// Loads the age-band policy that owns the daily mission caps.
+typedef KidsJourneyPolicyLoader = Future<KidsSessionPolicy> Function();
 
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
@@ -19,10 +27,14 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     this._quranRepository, {
     KidsReviewRecordsLoader? reviewRecordsLoader,
     KidsResumeMissionLoader? resumeMissionLoader,
+    KidsJourneySessionLogsLoader? sessionLogsLoader,
+    KidsJourneyPolicyLoader? policyLoader,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
        _resumeMissionLoader = resumeMissionLoader,
+       _sessionLogsLoader = sessionLogsLoader,
+       _policyLoader = policyLoader,
        _missionResolver = missionResolver,
        _v2Enabled = v2Enabled,
        super(const KidsJourneyInitial());
@@ -32,6 +44,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final QuranRepository _quranRepository;
   final KidsReviewRecordsLoader? _reviewRecordsLoader;
   final KidsResumeMissionLoader? _resumeMissionLoader;
+  final KidsJourneySessionLogsLoader? _sessionLogsLoader;
+  final KidsJourneyPolicyLoader? _policyLoader;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -70,6 +84,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         // A corrupt or unavailable resume row must not block today's mission.
       }
     }
+    final budget = _v2Enabled
+        ? await _loadDailyBudget()
+        : KidsDailyBudget.unlimited;
     final nextMission = _v2Enabled
         ? _missionResolver.resolve(
             activeSurahId: surahId,
@@ -77,6 +94,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
             resumableMission: resumableMission,
             reviewRecords: reviewRecords,
             now: DateTime.now().toUtc(),
+            budget: budget,
           )
         : _legacyMission(stages);
 
@@ -87,6 +105,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         progress: progressResult.getOrElse(() => const KidsProgress.initial()),
         surahName: surahName,
         nextMission: nextMission,
+        dailyGoalCap: nextMission == null && budget.newAyahLimitReached
+            ? budget.maxNewAyahsPerDay
+            : null,
       ),
     );
   }
@@ -102,5 +123,29 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       }
     }
     return null;
+  }
+
+  /// Today's age-band budget from the local session log. Each part fails
+  /// open independently so a storage glitch can never lock a child out of
+  /// their mission pipeline.
+  Future<KidsDailyBudget> _loadDailyBudget() async {
+    List<KidsSessionLog>? logs;
+    try {
+      logs = await _sessionLogsLoader?.call();
+    } catch (_) {
+      logs = null;
+    }
+    KidsSessionPolicy? policy;
+    try {
+      policy = await _policyLoader?.call();
+    } catch (_) {
+      policy = null;
+    }
+    if (logs == null) return KidsDailyBudget.unlimited;
+    return KidsDailyBudget.fromLogs(
+      logs: logs,
+      policy: policy,
+      now: DateTime.now(),
+    );
   }
 }

@@ -10,6 +10,7 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/speech_constants.dart';
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
@@ -24,6 +25,7 @@ import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
 import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
@@ -99,15 +101,20 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   late final StreamSubscription<PlayerState> _playerSub;
   late final StreamSubscription<ProcessingState> _bufferingSub;
 
-  // Evaluates recognized speech against the ayah text — same logic as adult path.
-  final V2RecitationEvaluator _evaluator = const V2RecitationEvaluator();
+  // Evaluates recognized speech against the ayah text. The kids flow uses a
+  // child-voice-tolerant pass threshold (STT is consistently harsher on
+  // child voices); the adult path keeps the stricter default.
+  final V2RecitationEvaluator _evaluator = const V2RecitationEvaluator(
+    passThreshold: kKidsPassThreshold,
+  );
 
   int _loopCount = 0;
   final Set<String> _completionsInFlight = <String>{};
 
   /// Listen-before-recite repetitions, resolved from the age-band policy in
-  /// [load] instead of a hard-coded constant, so younger children get a
-  /// single listen and older children repeat per their session policy.
+  /// [load] instead of a hard-coded constant, so younger children repeat the
+  /// audio more (their auditory encoding is still developing) while older
+  /// children need fewer conscious listens.
   @visibleForTesting
   int maxLoops = KidsSessionPolicy.forAge(5).maxListenRepetitions;
   DateTime? _sessionStartedAt;
@@ -148,24 +155,6 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
-    // K15 — daily session-limit gate. Only genuinely new work (new
-    // memorization) counts against maxNewAyahs; resuming an interrupted
-    // session, a due SRS review, or a linked block review must always be
-    // reachable regardless of how many sessions ran earlier today.
-    if (missionType == KidsMissionType.newMemorization) {
-      final policy = await _loadSessionPolicy();
-      final newToday = await _countNewMemorizationSessionsToday();
-      if (newToday >= policy.maxNewAyahs) {
-        emit(
-          KidsModeError(
-            '${CubitMessageCodes.kidsDailySessionLimitPrefix}'
-            '${policy.maxNewAyahs}',
-          ),
-        );
-        return;
-      }
-    }
-
     String resolvedText = ayahText;
     if (resolvedText.isEmpty ||
         resolvedText == '...' ||
@@ -178,8 +167,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
               .text;
         });
       } catch (_) {}
-      if (resolvedText.isEmpty || resolvedText == '...') {
-        resolvedText = 'النص غير متوفر';
+      if (resolvedText.isEmpty ||
+          resolvedText == '...' ||
+          resolvedText == 'النص غير متوفر') {
+        // A session built on a placeholder text can never pass recitation
+        // evaluation and would trap the child in an unwinnable mission —
+        // refuse to start it instead.
+        emit(const KidsModeError(CubitMessageCodes.v2SurahLoadFailed));
+        return;
       }
     }
 
@@ -199,15 +194,47 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? await _restoreKidsSession(surahId, fallbackAyah)
         : null;
     final resumed = sessionState != null;
+    // A `resume` request without a paused session (e.g. the stage page
+    // opening an in-progress stage) is really a first pass or a review of
+    // this ayah: resolve its original semantics now so a first pass earns
+    // the canonical reward that advances the journey (N1).
+    final effectiveMissionType = missionType == KidsMissionType.resume
+        ? await _originalMissionTypeForResume(
+            surahId,
+            sessionState?.currentAyah.numberInSurah ?? ayahNumber,
+          )
+        : missionType;
     final policy = await _loadSessionPolicy();
-    // The listen-repetition gate follows the age-band policy so a 5-year-old
-    // listens once while an 8–12 year-old repeats per policy guidance.
+
+    // K15 — daily session-limit gate. Only genuinely new work (new
+    // memorization) counts against maxNewAyahs; a restored interrupted
+    // session, a due SRS review, or a linked block review must always be
+    // reachable regardless of how many sessions ran earlier today.
+    if (!resumed && effectiveMissionType == KidsMissionType.newMemorization) {
+      final budget = await _loadDailyBudget(policy);
+      if (budget.newAyahLimitReached) {
+        emit(
+          KidsModeError(
+            '${CubitMessageCodes.kidsDailySessionLimitPrefix}'
+            '${policy.maxNewAyahs}',
+          ),
+        );
+        return;
+      }
+    }
+
+    // The listen-repetition gate follows the age-band policy: a 5–7 year-old
+    // repeats the audio three times before recall, an 8–12 year-old twice.
     maxLoops = policy.maxListenRepetitions;
     sessionState ??= _sessionEngine.startLearning(
       V2SessionState.initial(
         surahId: surahId,
         blockAyahs: [fallbackAyah],
-        blockReviewRequired: policy.blockReviewRequired,
+        // Kids missions are single-ayah blocks: a "block review" would only
+        // repeat the recitation the child just passed, and no kids UI drives
+        // startBlockReview — requiring it parks the session at
+        // blockReviewPending and the celebration never fires.
+        blockReviewRequired: false,
       ),
     );
     await _saveKidsSession(sessionState);
@@ -217,7 +244,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _sessionStartedAt = startedAt;
     _sessionId =
         'kids_${startedAt.microsecondsSinceEpoch}_${surahId}_$ayahNumber';
-    _missionType = resumed ? KidsMissionType.resume : missionType;
+    // A resumed session must not silently downgrade a fresh memorization to
+    // a zero-point "resume" award (H3): restore the original semantics.
+    _missionType = effectiveMissionType;
 
     emit(
       KidsModeLoaded(
@@ -234,25 +263,21 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     );
   }
 
-  /// K15 — how many new-memorization ayahs were completed today. The local
-  /// session log is the single source of truth for "what the child did"; any
-  /// read failure fails open (limit not enforced) so a storage glitch never
-  /// locks a child out of learning.
-  Future<int> _countNewMemorizationSessionsToday() async {
+  /// K15 — today's budget from the local session log, the same one the
+  /// home and completion screens resolve missions with. Any read failure
+  /// fails open (limit not enforced) so a storage glitch never locks a child
+  /// out of learning.
+  Future<KidsDailyBudget> _loadDailyBudget(KidsSessionPolicy policy) async {
     try {
-      final logsResult = await _kidsSessionLogsLoader?.call();
-      if (logsResult == null) return 0;
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      return logsResult
-          .where(
-            (log) =>
-                !log.completedAt.isBefore(startOfDay) &&
-                log.missionType == KidsMissionType.newMemorization,
-          )
-          .length;
+      final logs = await _kidsSessionLogsLoader?.call();
+      if (logs == null) return KidsDailyBudget.unlimited;
+      return KidsDailyBudget.fromLogs(
+        logs: logs,
+        policy: policy,
+        now: DateTime.now(),
+      );
     } catch (_) {
-      return 0;
+      return KidsDailyBudget.unlimited;
     }
   }
 
@@ -261,6 +286,36 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return await _sessionPolicyLoader?.call() ?? KidsSessionPolicy.forAge(8);
     } catch (_) {
       return KidsSessionPolicy.forAge(8);
+    }
+  }
+
+  /// Restores the award semantics of the mission the child originally
+  /// started before the interruption (H3).
+  ///
+  /// The first pass of any kids ayah is always recorded as a canonical
+  /// new-memorization log, so the presence of such a log means the ayah was
+  /// already rewarded and the resumed run behaves like a review (zero
+  /// points). Without it the child still earns the full reward they were
+  /// interrupted away from. The award service's canonical-log idempotency
+  /// makes a failed log read fail-open (full reward) and never double-award.
+  Future<KidsMissionType> _originalMissionTypeForResume(
+    int surahId,
+    int ayahNumber,
+  ) async {
+    try {
+      final logs = await _kidsSessionLogsLoader?.call();
+      if (logs == null) return KidsMissionType.newMemorization;
+      final alreadyRewarded = logs.any(
+        (log) =>
+            log.surahId == surahId &&
+            log.ayahNumber == ayahNumber &&
+            KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+      );
+      return alreadyRewarded
+          ? KidsMissionType.resume
+          : KidsMissionType.newMemorization;
+    } catch (_) {
+      return KidsMissionType.newMemorization;
     }
   }
 
@@ -297,7 +352,15 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           .map((ayah) => ayah.numberInSurah)
           .toSet();
       if (!saved.blockAyahNumbers.every(availableNumbers.contains)) return null;
-      return V2SessionProgressAdapter.restore(saved, allAyahs);
+      final restored = V2SessionProgressAdapter.restore(saved, allAyahs);
+      // Sessions persisted before the kids single-ayah completion fix can be
+      // parked at blockReviewPending with the ayah already passed and
+      // rewarded. Kids blocks are single-ayah, so promote such resumes to
+      // the terminal phase instead of dead-ending the child again.
+      if (restored.phase == V2SessionPhase.blockReviewPending) {
+        return restored.copyWith(phase: V2SessionPhase.completed);
+      }
+      return restored;
     } catch (_) {
       return null;
     }
@@ -323,12 +386,17 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
 
-    _loopCount = 0;
+    // An optional replay after the mandatory listen gate has opened must not
+    // re-close the microphone or regress the loop progress dots (M1); only a
+    // replay before completing the required listens restarts the sequence.
+    if (_loopCount < maxLoops) {
+      _loopCount = 0;
+    }
     emit(
       st.copyWith(
         isPlaying: true,
         isBuffering: true,
-        currentLoop: 1,
+        currentLoop: _loopCount < maxLoops ? 1 : maxLoops,
         clearAudioError: true,
       ),
     );
@@ -427,6 +495,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         isRecording: true,
         recordingSeconds: 0,
         clearRecordingError: true,
+        // Fresh attempt: stale word feedback from the previous try must not
+        // linger on the screen.
+        lastMatchedWords: 0,
+        lastTargetWords: 0,
       ),
     );
     await _saveKidsSession(recitingSession);
@@ -453,6 +525,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (isClosed || state is! KidsModeLoaded) return;
     final current = state as KidsModeLoaded;
 
+    // The guardian may have completed the session manually while the mic was
+    // still open (M7); a finished session must never evaluate a late capture
+    // or surface a confusing post-completion error.
+    if (current.isCompleted) return;
+
     // ── Error cases (permission denied, mic unavailable) ──────────────────
     if (capture.isError) {
       emit(
@@ -478,6 +555,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           isRecording: false,
           recordingSeconds: 0,
           recordingError: CubitMessageCodes.kidsRecordingNotCaptured,
+          lastMatchedWords: 0,
+          lastTargetWords: 0,
         ),
       );
       return;
@@ -489,12 +568,17 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         current.sessionState,
         capture.recognizedWords,
       );
+      // W2: carry the child-friendly word-level progress ("X of Y words")
+      // alongside the generic mismatch so the UI can show how close the
+      // recitation was instead of a bare failure.
       emit(
         current.copyWith(
           sessionState: evaluatedSession,
           isRecording: false,
           recordingSeconds: 0,
           recordingError: CubitMessageCodes.kidsRecitationMismatch,
+          lastMatchedWords: evalResult.matchedWordCount,
+          lastTargetWords: evalResult.targetWordCount,
         ),
       );
       await _saveKidsSession(evaluatedSession);
@@ -507,6 +591,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         isRecording: false,
         recordingSeconds: 0,
         clearRecordingError: true,
+        lastMatchedWords: 0,
+        lastTargetWords: 0,
       ),
     );
 
@@ -552,7 +638,15 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       await _recitationRecorder.stop();
       _recordingTimer?.cancel();
       _recordingTimer = null;
+      final pendingCapture = _recordingCompleter;
       _recordingCompleter = null;
+      // Unblock the pending startRecording() await instead of letting it hang
+      // until the STT timeout after the session has already completed (M7).
+      if (pendingCapture != null && !pendingCapture.isCompleted) {
+        pendingCapture.complete(
+          const KidsRecitationCaptureResult.stoppedByUser(),
+        );
+      }
       emit(st.copyWith(isRecording: false, recordingSeconds: 0));
     }
     await markCompleted(manualGrade: true);
@@ -623,6 +717,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ayahNumber: st.ayahNumber,
         hintLevel: effectiveHint,
         createdByMode: ReviewRecordCreatedByMode.kidsMode,
+        // One mastery measure for both SRS and the reward log (N4).
+        rating: masteryRating,
       );
       final reviewFailure = reviewResult.fold(
         (failure) => failure,
@@ -671,6 +767,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
             progress: completion.progress,
             isCompleted: _sessionReachedCompletion(completedSession),
             sessionState: completedSession,
+            // Completion always settles the mic flag — even when the session
+            // finished while a capture was still in flight.
+            isRecording: false,
             sessionStarsEarned: 0,
             clearRecordingError: true,
           ),
@@ -701,11 +800,15 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           // blockReviewPending session awaits the linked review instead.
           isCompleted: _sessionReachedCompletion(completedSession),
           sessionState: completedSession,
+          // Completion always settles the mic flag — even when the session
+          // finished while a capture was still in flight.
+          isRecording: false,
           newAwards: newAwards,
           sessionStarsEarned: completion.starsEarned,
           // K11: surface session points and any level-up on completion.
           sessionPointsEarned: completion.pointsEarned,
-          leveledUpTo: completion.progress.currentLevel > st.progress.currentLevel
+          leveledUpTo:
+              completion.progress.currentLevel > st.progress.currentLevel
               ? completion.progress.currentLevel
               : null,
         ),
@@ -777,10 +880,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return current;
   }
 
-  /// K16 — the completion screen (stars, next-mission navigation) must only
-  /// fire when the V2 session actually reached its terminal phase. A session
-  /// parked at `blockReviewPending` awaits the linked block review that the
-  /// age-8–12 policy requires, so it stays retryable instead of completing.
+  /// The completion screen (stars, next-mission navigation) only fires when
+  /// the V2 session actually reached its terminal phase. Kids sessions never
+  /// require a block review (single-ayah blocks), so a passing recitation
+  /// reaches [V2SessionPhase.completed] directly.
   bool _sessionReachedCompletion(V2SessionState session) =>
       session.phase == V2SessionPhase.completed;
 

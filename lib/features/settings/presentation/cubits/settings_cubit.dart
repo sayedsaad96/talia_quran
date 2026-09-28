@@ -21,6 +21,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final AppVersionInfoProvider _versionInfoProvider;
 
   Future<void> load({bool showPathResetSuccess = false}) async {
+    if (isClosed) return;
     emit(
       state.copyWith(
         isLoading: true,
@@ -42,6 +43,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       // fallback: leave null so UI shows '—'
     }
 
+    if (isClosed) return;
     emit(
       SettingsState(
         memorizationProfile: profile,
@@ -61,6 +63,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   Future<void> toggleParentMode(bool value) async {
     final result = await _repository.setParentGuardianMode(value);
+    if (isClosed) return;
     final failure = result.fold((failure) => failure, (_) => null);
     if (failure != null) {
       emit(
@@ -73,11 +76,12 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
 
     await load();
-    emit(state.copyWith(isParentMode: value));
+    if (!isClosed) emit(state.copyWith(isParentMode: value));
   }
 
   Future<void> resetMemorizationIdentity() async {
     final result = await _repository.resetMemorizationIdentity();
+    if (isClosed) return;
     final failure = result.fold((failure) => failure, (_) => null);
     if (failure != null) {
       emit(
@@ -94,6 +98,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   }
 
   void clearTransientMessages() {
+    if (isClosed) return;
     emit(
       state.copyWith(clearError: true, showMemorizationPathResetSuccess: false),
     );

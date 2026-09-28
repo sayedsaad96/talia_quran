@@ -6,18 +6,17 @@ abstract class AppDecorations {
   /// Shared header gradient for memorization feature pages (hub, practice
   /// picker, plan setup). Centralizes the duplicated gradients so all entry
   /// headers stay visually identical in both themes.
-  static LinearGradient memorizationHeader({required bool isDark}) =>
-      isDark
-          ? const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
-            )
-          : const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryLight, AppColors.accentBlue],
-            );
+  static LinearGradient memorizationHeader({required bool isDark}) => isDark
+      ? const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
+        )
+      : const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primaryLight, AppColors.accentBlue],
+        );
   static BoxDecoration card({
     required bool isDark,
     double radius = AppSpacing.radiusLg,
@@ -27,9 +26,7 @@ abstract class AppDecorations {
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: isDark 
-            ? AppColors.darkDivider 
-            : AppColors.lightDivider,
+        color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         width: 0.8,
       ),
       boxShadow: elevated
@@ -47,7 +44,10 @@ abstract class AppDecorations {
     );
   }
 
-  static BoxDecoration royalGlass({required bool isDark, double radius = AppSpacing.radiusLg}) {
+  static BoxDecoration royalGlass({
+    required bool isDark,
+    double radius = AppSpacing.radiusLg,
+  }) {
     return BoxDecoration(
       gradient: isDark
           ? AppColors.surfaceGlassDark
@@ -84,14 +84,13 @@ abstract class AppDecorations {
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: isDark
-            ? AppColors.glassBorderDark
-            : AppColors.glassBorderLight,
+        color: isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight,
         width: 1.0,
       ),
       boxShadow: [
         BoxShadow(
-          color: accentGlow ??
+          color:
+              accentGlow ??
               (isDark
                   ? Colors.black.withValues(alpha: 0.35)
                   : AppColors.primary.withValues(alpha: 0.05)),
@@ -113,9 +112,7 @@ abstract class AppDecorations {
           : AppColors.lightSurface.withValues(alpha: 0.90),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: isDark
-            ? AppColors.glassBorderDark
-            : AppColors.glassBorderLight,
+        color: isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight,
         width: 1.0,
       ),
       boxShadow: [

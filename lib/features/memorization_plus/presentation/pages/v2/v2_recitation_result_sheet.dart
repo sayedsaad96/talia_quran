@@ -13,6 +13,7 @@ import '../../../../../core/memorization/v2/recitation_word_diff.dart';
 import '../../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../../core/widgets/memorization_ayah_display.dart';
 import '../../cubits/memorization_session_cubit.dart';
 
 /// Shows the modal result sheet for the latest evaluation feedback.
@@ -29,8 +30,7 @@ Future<V2RecitationResultAction?> showV2RecitationResultSheet(
     isDismissible: false,
     enableDrag: false,
     backgroundColor: Colors.transparent,
-    builder: (sheetContext) =>
-        V2RecitationResultSheet(feedback: feedback),
+    builder: (sheetContext) => V2RecitationResultSheet(feedback: feedback),
   );
 }
 
@@ -55,9 +55,7 @@ class V2RecitationResultSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
@@ -116,13 +114,12 @@ class _ResultHeader extends StatelessWidget {
         ? Icons.check_circle_rounded
         : Icons.error_outline_rounded;
     final title = result.passed
-        ? (result.similarityScore != null &&
-                result.similarityScore! >= 0.999
-            ? context.l10n.v2ResultExcellent
-            : context.l10n.v2ResultPassed)
+        ? (result.similarityScore != null && result.similarityScore! >= 0.999
+              ? context.l10n.v2ResultExcellent
+              : context.l10n.v2ResultPassed)
         : (result.verdict == RecitationVerdict.retry
-            ? context.l10n.v2ResultRetrying
-            : context.l10n.v2ResultNeedsWork);
+              ? context.l10n.v2ResultRetrying
+              : context.l10n.v2ResultNeedsWork);
 
     return Column(
       children: [
@@ -184,14 +181,10 @@ class _WordDiffView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurface
-            : AppColors.lightSurface,
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark
-              ? AppColors.darkDivider
-              : AppColors.lightDivider,
+          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         ),
       ),
       child: Wrap(
@@ -203,18 +196,16 @@ class _WordDiffView extends StatelessWidget {
           for (final word in diff.words)
             Text(
               word.display,
-              style: AppTypography.quranLarge.copyWith(
-                fontSize: 20,
+              style: MemorizationAyahDisplay.textStyle().copyWith(
                 color: _colorFor(word.status),
                 fontWeight: word.status == RecitationWordStatus.match
                     ? FontWeight.w600
                     : FontWeight.w800,
                 // Missing words get a dotted underline so gaps are visible
                 // even where the word itself is absent.
-                decoration:
-                    word.status == RecitationWordStatus.missing
-                        ? TextDecoration.underline
-                        : TextDecoration.none,
+                decoration: word.status == RecitationWordStatus.missing
+                    ? TextDecoration.underline
+                    : TextDecoration.none,
                 decorationStyle: TextDecorationStyle.dotted,
               ),
             ),
@@ -237,29 +228,13 @@ class _DiffLegend extends StatelessWidget {
         : AppColors.lightTextSecondary;
 
     final entries = <(String, int, Color)>[
-      (
-        context.l10n.v2ResultWordsCorrect,
-        diff.matchCount,
-        AppColors.success,
-      ),
+      (context.l10n.v2ResultWordsCorrect, diff.matchCount, AppColors.success),
       if (diff.missingCount > 0)
-        (
-          context.l10n.v2ResultWordsMissing,
-          diff.missingCount,
-          AppColors.error,
-        ),
+        (context.l10n.v2ResultWordsMissing, diff.missingCount, AppColors.error),
       if (diff.wrongCount > 0)
-        (
-          context.l10n.v2ResultWordsWrong,
-          diff.wrongCount,
-          AppColors.error,
-        ),
+        (context.l10n.v2ResultWordsWrong, diff.wrongCount, AppColors.error),
       if (diff.extraCount > 0)
-        (
-          context.l10n.v2ResultWordsExtra,
-          diff.extraCount,
-          AppColors.warning,
-        ),
+        (context.l10n.v2ResultWordsExtra, diff.extraCount, AppColors.warning),
     ];
 
     return Wrap(
@@ -274,17 +249,12 @@ class _DiffLegend extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 4),
               Text(
                 '$label: $count',
-                style: AppTypography.labelMedium.copyWith(
-                  color: secondary,
-                ),
+                style: AppTypography.labelMedium.copyWith(color: secondary),
               ),
             ],
           ),
@@ -305,9 +275,8 @@ class _ResultActions extends StatelessWidget {
       return FilledButton.icon(
         key: const Key('v2-result-continue'),
         style: FilledButton.styleFrom(backgroundColor: accent),
-        onPressed: () => Navigator.of(context).pop(
-          V2RecitationResultAction.dismiss,
-        ),
+        onPressed: () =>
+            Navigator.of(context).pop(V2RecitationResultAction.dismiss),
         icon: const Icon(Icons.arrow_forward_rounded),
         label: Text(context.l10n.v2ResultContinue),
       );
@@ -319,21 +288,22 @@ class _ResultActions extends StatelessWidget {
         FilledButton.icon(
           key: const Key('v2-result-retry-now'),
           style: FilledButton.styleFrom(backgroundColor: accent),
-          onPressed: () => Navigator.of(context).pop(
-            V2RecitationResultAction.retryNow,
-          ),
+          onPressed: () =>
+              Navigator.of(context).pop(V2RecitationResultAction.retryNow),
           icon: const Icon(Icons.mic_rounded),
           label: Text(context.l10n.v2ResultRetryNow),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        OutlinedButton.icon(
-          key: const Key('v2-result-review-ayah'),
-          onPressed: () => Navigator.of(context).pop(
-            V2RecitationResultAction.reviewAyah,
+        // A near miss keeps the learner in recitation — no remediation step.
+        if (result.verdict != RecitationVerdict.retry) ...[
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            key: const Key('v2-result-review-ayah'),
+            onPressed: () =>
+                Navigator.of(context).pop(V2RecitationResultAction.reviewAyah),
+            icon: const Icon(Icons.menu_book_rounded),
+            label: Text(context.l10n.v2ResultReviewAyah),
           ),
-          icon: const Icon(Icons.menu_book_rounded),
-          label: Text(context.l10n.v2ResultReviewAyah),
-        ),
+        ],
       ],
     );
   }

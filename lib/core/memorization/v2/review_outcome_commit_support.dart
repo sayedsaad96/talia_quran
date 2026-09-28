@@ -8,6 +8,7 @@ import '../../../features/memorization_plus/domain/entities/ayah_review_record.d
 import '../../../features/memorization_plus/domain/entities/kids_session_policy.dart';
 import '../learning_launch_context.dart';
 import 'hint_usage.dart';
+import 'self_grade.dart';
 import 'session_state.dart';
 
 /// Stateless construction helpers for the review-outcome transaction.
@@ -41,6 +42,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
       audience: MemorizationAudience.adult,
       sessionId: sessionId,
       launchContext: launchContext,
+      review: state.isReview,
     );
   }
 
@@ -62,14 +64,19 @@ abstract final class V2ReviewOutcomeCommitSupport {
     return PerformanceRating.excellent;
   }
 
-  static AyahReviewRecord manualSchedule(AyahReviewRecord base, DateTime now) {
-    return base.copyWith(
-      // A self-assessment does not alter strength, interval, ease, review
-      // count, or automatic rating. It only creates a conservative next-day
-      // reminder and remains visible as self-assessed evidence.
-      lastReviewedAt: now,
-      nextReviewDate: now.add(const Duration(days: 1)),
-    );
+  /// SM-2 rating for a self-assessed pass. Self-report is less reliable than
+  /// automatic evidence, so it never exceeds [PerformanceRating.average] and
+  /// still reflects hints/failures recorded during the same task.
+  static PerformanceRating manualRatingFor(
+    V2SessionState state,
+    int ayahNumber,
+    V2SelfGrade grade,
+  ) {
+    if (grade != V2SelfGrade.mastered) return PerformanceRating.weak;
+    final evidence = ratingFor(state, ayahNumber);
+    return evidence == PerformanceRating.excellent
+        ? PerformanceRating.average
+        : evidence;
   }
 
   static String? nonEmpty(String? value) =>
@@ -133,6 +140,7 @@ final class ReviewEffectOutboxWriter {
     required int activityDelta,
     required bool includeCertificate,
     required DateTime createdAt,
+    bool isReview = false,
   }) async {
     await put(
       eventId: eventId,
@@ -147,7 +155,8 @@ final class ReviewEffectOutboxWriter {
       eventId: eventId,
       ownerId: ownerId,
       audience: audience,
-      effectType: 'xp',
+      // A one-ayah review is lighter work than a memorized block (A7).
+      effectType: isReview ? 'xpReview' : 'xp',
       receiptKey: 'xp:$sessionId',
       activityDelta: activityDelta,
       createdAt: createdAt,

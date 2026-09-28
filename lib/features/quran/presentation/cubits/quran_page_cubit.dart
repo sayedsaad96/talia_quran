@@ -65,9 +65,9 @@ class QuranPageCubit extends Cubit<QuranPageState> {
 
   /// Confirms a page read in the ordinary Quran-reading journey.
   ///
-  /// Khatmah progress is owned by [KhatmahCubit]. Its reader only needs the
-  /// confirmation gate to succeed; it must not enter this generic pipeline,
-  /// because generic read pages feed the daily-wird state and reading metrics.
+  /// Khatmah progress is owned by [KhatmahCubit]. Its reader records only the
+  /// streak here; it must not enter the rest of this generic pipeline, because
+  /// generic read pages feed the daily-wird state and reading metrics.
   Future<bool> confirmRead(
     int pageNumber, {
     bool recordOrdinaryReading = true,
@@ -77,6 +77,15 @@ class QuranPageCubit extends Cubit<QuranPageState> {
     if (current.isReadConfirmed) return true;
 
     if (!recordOrdinaryReading) {
+      // Khatmah reading is real reading for the streak, but it must stay
+      // separate from free reading: no read-page stats, reading log, or
+      // daily-wird progress — those belong to the ordinary journey.
+      try {
+        await _streakService.recordActivity();
+      } catch (_) {
+        // Streak recording is supplementary and must not invalidate reading.
+      }
+      if (isClosed) return true;
       emit(
         QuranPageLoaded(
           current.detail,

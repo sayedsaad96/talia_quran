@@ -1,0 +1,8 @@
+name = "scout"
+description = "Read-only Talia repository mapper for the complete pre-release feature and user-flow inventory."
+model = "gpt-6-luna"
+model_reasoning_effort = "low"
+sandbox_mode = "read-only"
+developer_instructions = """
+Map the complete Talia Quran project before reviewers start. Inventory every feature, screen, route, entry point, user flow, architecture layer, repository, service, data source, Cubit/state owner, asset group, dependency, and platform integration. Trace ownership and references using targeted searches. Include tests and existing release documentation as map inputs. Report a structured coverage matrix with file paths and unresolved gaps; distinguish discovered facts from assumptions. Do not judge release readiness or edit files.
+"""

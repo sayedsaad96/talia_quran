@@ -15,10 +15,8 @@ import 'prayer_scheduled_event.dart';
 /// returns true from [refreshNativeDelivery], the legacy FLN block MUST NOT
 /// also run.
 class PrayerDeliveryCoordinator {
-  PrayerDeliveryCoordinator(
-    this._scheduler, {
-    bool Function()? isAndroid,
-  }) : _isAndroid = isAndroid?.call() ?? Platform.isAndroid;
+  PrayerDeliveryCoordinator(this._scheduler, {bool Function()? isAndroid})
+    : _isAndroid = isAndroid?.call() ?? Platform.isAndroid;
 
   final PrayerDeliveryScheduler _scheduler;
   final bool _isAndroid;
@@ -29,7 +27,8 @@ class PrayerDeliveryCoordinator {
   /// Whether native V2 currently owns delivery per persisted state.
   bool isNativeOwner(SharedPreferences prefs) =>
       _isAndroid &&
-      PrayerDeliveryVersion.read(prefs) == PrayerDeliveryVersion.nativeAndroidV2;
+      PrayerDeliveryVersion.read(prefs) ==
+          PrayerDeliveryVersion.nativeAndroidV2;
 
   /// Cancels every native prayer alarm (used when prayer notifications are
   /// disabled while V2 is the owner).
@@ -58,7 +57,8 @@ class PrayerDeliveryCoordinator {
   }) async {
     if (!_isAndroid) return false;
     final nativeOwner =
-        PrayerDeliveryVersion.read(prefs) == PrayerDeliveryVersion.nativeAndroidV2;
+        PrayerDeliveryVersion.read(prefs) ==
+        PrayerDeliveryVersion.nativeAndroidV2;
 
     if (events.isEmpty) {
       if (nativeOwner) {
@@ -96,7 +96,10 @@ class PrayerDeliveryCoordinator {
       return true;
     }
     // §22 step 6: persist only after verified success.
-    await PrayerDeliveryVersion.save(prefs, PrayerDeliveryVersion.nativeAndroidV2);
+    await PrayerDeliveryVersion.save(
+      prefs,
+      PrayerDeliveryVersion.nativeAndroidV2,
+    );
     TaliaLogger.i(
       '[PrayerV2] migration complete: native delivery owns prayer alarms',
     );

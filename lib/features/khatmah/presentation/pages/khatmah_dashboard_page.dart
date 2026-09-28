@@ -141,7 +141,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
       final resumed = await _cubit.resume();
       if (!mounted || resumed == null) return;
       await context.push('/quran/page/${resumed.nextUnreadPage}?mode=khatmah');
-      if (mounted) await _cubit.load();
+      if (mounted) await _cubit.load(showLoading: false);
     } finally {
       _resumeNavigationInFlight = false;
     }
@@ -160,22 +160,83 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     );
   }
 
-  Future<void> _adjust(bool compensation) async {
+  String _formatDate(DateTime date) {
+    String part(int value, [int width = 2]) {
+      final padded = value.toString().padLeft(width, '0');
+      return context.isArabic
+          ? MushafHizbHelper.toArabicNumber(
+              int.parse(padded),
+            ).padLeft(width, '٠')
+          : padded;
+    }
+
+    return '${part(date.year, 4)}/${part(date.month)}/${part(date.day)}';
+  }
+
+  /// Shows the new pace and end date first; applies only on confirmation,
+  /// then offers an undo.
+  Future<void> _adjust(KhatmahAdjustment kind) async {
     if (_adjusting) return;
+    final previous = _recordingPlanFrom(_cubit.state);
+    final preview = _cubit.previewAdjustment(kind: kind);
+    if (previous == null || preview == null) return;
+    final pages = context.isArabic
+        ? MushafHizbHelper.toArabicNumber(preview.targetPagesPerDay)
+        : '${preview.targetPagesPerDay}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.khatmahAdjustPreviewTitle),
+        content: Text(
+          dialogContext.l10n.khatmahAdjustPreviewBody(
+            pages,
+            _formatDate(preview.expectedEndDate),
+          ),
+          key: const Key('khatmah_adjust_preview'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.khatmahCancel),
+          ),
+          FilledButton(
+            key: const Key('khatmah_adjust_apply_button'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(dialogContext.l10n.khatmahApplyAdjustment),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => _adjusting = true);
-    final saved = compensation
-        ? await _cubit.mildCompensation(1)
-        : await _cubit.calmAdjustment();
+    final saved = await _cubit.applyAdjustment(kind);
     if (!mounted) return;
     setState(() => _adjusting = false);
     if (saved) {
-      context.showSnackBar(
-        compensation
-            ? context.l10n.khatmahAdded1PageDayMildCompensation
-            : context.l10n.khatmahEndDateRecalibratedSmoothly,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(switch (kind) {
+            KhatmahAdjustment.mildBoost =>
+              context.l10n.khatmahAdded1PageDayMildCompensation,
+            KhatmahAdjustment.calm =>
+              context.l10n.khatmahEndDateRecalibratedSmoothly,
+            KhatmahAdjustment.keepEndDate => context.l10n.khatmahRedistributed,
+          }),
+          action: SnackBarAction(
+            label: context.l10n.undo,
+            onPressed: () => _cubit.undoScheduleAdjustment(previous),
+          ),
+        ),
       );
     }
   }
+
+  static KhatmahPlan? _recordingPlanFrom(KhatmahState state) => switch (state) {
+    final KhatmahActive active => active.plan,
+    final KhatmahWirdCompleted completed => completed.plan,
+    final KhatmahProgressFailure failure => failure.plan,
+    _ => null,
+  };
 
   Widget _buildProgressFailureBanner(
     BuildContext context,
@@ -308,7 +369,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        context.l10n.khatmahCheckYourConnectionAndTryAgain,
+                        // Offline-first: a load failure is local (storage or
+                        // account switch), never a connectivity problem.
+                        context.l10n.khatmahLoadFailureHint,
                         textAlign: TextAlign.center,
                         style: AppTypography.bodySmall,
                       ),
@@ -438,11 +501,31 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
               elevation: 0,
               actions: [
                 ..._historyAction(context),
-                IconButton(
-                  key: const Key('khatmah_dashboard_abandon_button'),
-                  tooltip: context.l10n.khatmahEndKhatmah,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  onPressed: () => _showAbandonConfirmDialog(context, plan),
+                // A destructive action belongs in the overflow menu, not
+                // beside everyday navigation like history.
+                PopupMenuButton<void>(
+                  key: const Key('khatmah_dashboard_more_menu'),
+                  itemBuilder: (menuContext) => [
+                    PopupMenuItem<void>(
+                      key: const Key('khatmah_dashboard_abandon_button'),
+                      onTap: () => _showAbandonConfirmDialog(context, plan),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_outline_rounded,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            context.l10n.khatmahEndKhatmah,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -495,6 +578,14 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
 
                     // Progress Gauge
                     KhatmahProgressGauge(plan: plan),
+                    if (plan.status == KhatmahStatus.active)
+                      _PaceLine(
+                        behind: plan.pagesBehind(_cubit.displayDate),
+                        isArabic: isArabic,
+                        onRedistribute: _adjusting
+                            ? null
+                            : () => _adjust(KhatmahAdjustment.keepEndDate),
+                      ),
                     const SizedBox(height: AppSpacing.md),
 
                     // Today's Wird Card
@@ -691,7 +782,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                 plan.status != KhatmahStatus.active ||
                                     _adjusting
                                 ? null
-                                : () => _adjust(false),
+                                : () => _adjust(KhatmahAdjustment.calm),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.sm,
@@ -719,9 +810,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                             ),
                             onPressed:
                                 plan.status != KhatmahStatus.active ||
-                                    _adjusting
+                                    _adjusting ||
+                                    !_cubit.canBoost
                                 ? null
-                                : () => _adjust(true),
+                                : () => _adjust(KhatmahAdjustment.mildBoost),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.sm,
@@ -857,6 +949,9 @@ class _PhysicalMushafLoggerDialogState
         page != null && page >= widget.plan.nextUnreadPage && page <= 604;
     String number(int value) =>
         isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
+    final wirdEnd = widget.plan
+        .dailyTargetFor(widget.cubit.displayDate)
+        .endPage;
     return AlertDialog(
       title: Row(
         children: [
@@ -892,7 +987,7 @@ class _PhysicalMushafLoggerDialogState
               decoration: InputDecoration(
                 labelText: context.l10n.khatmahPageNumber,
                 hintText: context.l10n.khatmahEG(
-                  widget.plan.nextUnreadPage.toString(),
+                  number(widget.plan.nextUnreadPage),
                 ),
                 prefixIcon: const Icon(Icons.bookmark_outline_rounded),
                 border: OutlineInputBorder(
@@ -900,6 +995,19 @@ class _PhysicalMushafLoggerDialogState
                 ),
               ),
             ),
+            if (wirdEnd >= widget.plan.nextUnreadPage) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ActionChip(
+                key: const Key('khatmah_mushaf_wird_end_chip'),
+                avatar: const Icon(Icons.flag_rounded, size: 18),
+                label: Text(
+                  context.l10n.khatmahThroughWirdEnd(number(wirdEnd)),
+                ),
+                onPressed: _isSaving
+                    ? null
+                    : () => setState(() => _controller.text = '$wirdEnd'),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             Semantics(
               liveRegion: true,
@@ -943,6 +1051,68 @@ class _PhysicalMushafLoggerDialogState
                 ? context.l10n.khatmahSaving
                 : context.l10n.khatmahSaveProgress,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One calm line telling the learner whether the finish date still holds.
+class _PaceLine extends StatelessWidget {
+  const _PaceLine({
+    required this.behind,
+    required this.isArabic,
+    this.onRedistribute,
+  });
+
+  final int behind;
+  final bool isArabic;
+
+  /// Offered when behind: spread the remaining pages to keep the end date.
+  final VoidCallback? onRedistribute;
+
+  @override
+  Widget build(BuildContext context) {
+    final onTrack = behind == 0;
+    final color = onTrack ? AppColors.success : AppColors.warning;
+    final pages = isArabic
+        ? MushafHizbHelper.toArabicNumber(behind)
+        : behind.toString();
+    final line = Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Row(
+        key: const Key('khatmah_dashboard_pace'),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            onTrack
+                ? Icons.check_circle_outline_rounded
+                : Icons.schedule_rounded,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              onTrack
+                  ? context.l10n.khatmahPaceOnTrack
+                  : context.l10n.khatmahPaceBehind(pages),
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(color: color),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (onTrack) return line;
+    return Column(
+      children: [
+        line,
+        TextButton.icon(
+          key: const Key('khatmah_dashboard_redistribute_button'),
+          onPressed: onRedistribute,
+          icon: const Icon(Icons.balance_rounded, size: 18),
+          label: Text(context.l10n.khatmahRedistributeAction),
         ),
       ],
     );

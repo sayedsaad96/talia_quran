@@ -35,7 +35,10 @@ void main() {
       tester.view.physicalSize = const Size(900, 1800);
       addTearDown(tester.view.reset);
 
-      final repo = _ProfileRepository(_profile(MemorizationPath.adult));
+      final repo = _ProfileRepository(
+        _profile(MemorizationPath.adult),
+        customPlan: _activeAdultPlan,
+      );
       getIt.registerSingleton<MemorizationPlusRepository>(repo);
       getIt.registerLazySingleton<MemorizationPathResolver>(
         () => MemorizationPathResolver(repo),
@@ -156,9 +159,10 @@ MemorizationProfile _profile(MemorizationPath path) {
 }
 
 class _ProfileRepository implements MemorizationPlusRepository {
-  const _ProfileRepository(this.profile);
+  const _ProfileRepository(this.profile, {this.customPlan});
 
   final MemorizationProfile? profile;
+  final CustomMemorizationPlan? customPlan;
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
@@ -172,13 +176,12 @@ class _ProfileRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() async =>
-      const Right(null);
+      Right(customPlan);
 
   @override
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async =>
-      const Right([]);
+  }) async => const Right([]);
 
   @override
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async =>
@@ -194,3 +197,19 @@ class _ProfileRepository implements MemorizationPlusRepository {
   @override
   Future<bool> hasPendingCloudWork() async => false;
 }
+
+final _activeAdultPlan = CustomMemorizationPlan(
+  name: 'plan',
+  startSurahId: 67,
+  endSurahId: 114,
+  newAyahsPerDay: 3,
+  availableDaysPerWeek: 7,
+  sessionMinutes: 30,
+  difficulty: MemorizationDifficulty.moderate,
+  enableNearRevision: true,
+  enableFarRevision: true,
+  nearRevisionCount: 5,
+  farRevisionCount: 3,
+  startAyah: 1,
+  createdAt: DateTime.utc(2026, 9, 1),
+);

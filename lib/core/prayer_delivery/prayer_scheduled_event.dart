@@ -35,7 +35,7 @@ abstract final class PrayerAlarmIdentity {
   static int requestCodeFor(DateTime date, String prayerKey) {
     final epochDay =
         DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
-            Duration.millisecondsPerDay;
+        Duration.millisecondsPerDay;
     final daySlot = epochDay % dayBuckets;
     final prayerSlot = _prayerSlot(prayerKey);
     return rangeStart + daySlot * prayerOrder.length + prayerSlot;
@@ -106,21 +106,22 @@ class PrayerScheduledEvent extends Equatable {
   static String buildEventId(DateTime cityLocalDate, String prayerKey) {
     final mm = cityLocalDate.month.toString().padLeft(2, '0');
     final dd = cityLocalDate.day.toString().padLeft(2, '0');
-    return '${cityLocalDate.year}-$mm-$dd' '_$prayerKey';
+    return '${cityLocalDate.year}-$mm-$dd'
+        '_$prayerKey';
   }
 
   /// MethodChannel-safe encoding. All values are JSON primitives.
   Map<String, Object> toMap() => <String, Object>{
-        'eventId': eventId,
-        'prayerKey': prayerKey,
-        'scheduledAtUtc': scheduledAtUtc.toUtc().toIso8601String(),
-        'localPrayerTime': localPrayerTime,
-        'timezoneId': timezoneId,
-        'notificationEnabled': notificationEnabled,
-        'adhanEnabled': adhanEnabled,
-        'soundProfile': soundProfile,
-        'payload': payload,
-      };
+    'eventId': eventId,
+    'prayerKey': prayerKey,
+    'scheduledAtUtc': scheduledAtUtc.toUtc().toIso8601String(),
+    'localPrayerTime': localPrayerTime,
+    'timezoneId': timezoneId,
+    'notificationEnabled': notificationEnabled,
+    'adhanEnabled': adhanEnabled,
+    'soundProfile': soundProfile,
+    'payload': payload,
+  };
 
   /// Inverse of [toMap]. Tolerates a locally-stored [scheduledAtUtc]
   /// (no `Z` suffix) by re-interpreting it as UTC.
@@ -150,14 +151,14 @@ class PrayerScheduledEvent extends Equatable {
 
   @override
   List<Object?> get props => <Object?>[
-        eventId,
-        prayerKey,
-        scheduledAtUtc,
-        localPrayerTime,
-        timezoneId,
-        notificationEnabled,
-        adhanEnabled,
-        soundProfile,
-        payload,
-      ];
+    eventId,
+    prayerKey,
+    scheduledAtUtc,
+    localPrayerTime,
+    timezoneId,
+    notificationEnabled,
+    adhanEnabled,
+    soundProfile,
+    payload,
+  ];
 }

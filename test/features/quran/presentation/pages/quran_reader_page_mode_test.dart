@@ -599,6 +599,44 @@ void main() {
 
   group('QuranReaderPage wird closing moment', () {
     testWidgets(
+      'does not replay the closing moment when opening an already-completed wird (C3)',
+      (tester) async {
+        final wirdStates = StreamController<KhatmahState>.broadcast();
+        addTearDown(wirdStates.close);
+        // Production path: a fresh cubit is still loading when the reader
+        // opens, then reports that today's wird was completed earlier.
+        when(() => mockKhatmahCubit.state).thenReturn(const KhatmahLoading());
+        when(
+          () => mockKhatmahCubit.stream,
+        ).thenAnswer((_) => wirdStates.stream);
+
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = const Size(1200, 2400);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          buildReaderApp(
+            pageNumber: 44,
+            readerMode: QuranReaderMode.khatmah,
+            khatmahCubit: mockKhatmahCubit,
+            locale: const Locale('en'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+
+        wirdStates.add(KhatmahWirdCompleted(plan: testPlan));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(
+          find.byKey(const Key('khatmah_wird_closing_moment')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
       'shows serene closing moment when the daily wird completes',
       (tester) async {
         final wirdStates = StreamController<KhatmahState>.broadcast();
@@ -720,7 +758,7 @@ void main() {
           home: Scaffold(
             body: KhatmahReaderSessionBar(
               cubit: mockKhatmahCubit,
-              currentPage: 42,
+              currentPage: 44,
               onExit: () => exitCalled = true,
             ),
           ),
@@ -731,12 +769,44 @@ void main() {
 
       expect(find.text('Test Khatmah'), findsOneWidget);
       expect(find.text('إهداء إلى: والدتي'), findsOneWidget);
-      expect(find.text('صفحة ٤٢ (٢ من ٤ من ورد اليوم)'), findsOneWidget);
+      // Shows the page on screen (44), not the plan's contiguous cursor.
+      expect(find.text('صفحة ٤٤ (٢ من ٤ من ورد اليوم)'), findsOneWidget);
 
-      final exitBtn = find.text('حفظ وخروج');
+      final exitBtn = find.text('إنهاء القراءة');
       expect(exitBtn, findsOneWidget);
       await tester.tap(exitBtn);
       expect(exitCalled, isTrue);
+    });
+
+    testWidgets('a paused khatmah offers resume right in the reader (C7)', (
+      tester,
+    ) async {
+      when(
+        () => mockKhatmahCubit.state,
+      ).thenReturn(KhatmahPaused(plan: testPlan));
+      when(() => mockKhatmahCubit.resume()).thenAnswer((_) async => testPlan);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: Scaffold(
+            body: KhatmahReaderSessionBar(cubit: mockKhatmahCubit),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(
+        find.byKey(const Key('khatmah_session_bar_resume_button')),
+      );
+      verify(() => mockKhatmahCubit.resume()).called(1);
     });
 
     testWidgets('renders nothing if state is not KhatmahActive', (

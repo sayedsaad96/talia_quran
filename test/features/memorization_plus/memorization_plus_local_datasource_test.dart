@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' show Abi;
 import 'dart:io';
@@ -344,6 +345,105 @@ void main() {
       expect(settings.dailySchedule, 'after-fajr');
       expect(settings.reviewDays, [1, 3, 5]);
       expect(settings.ayahIsolationEnabled, isTrue);
+    });
+
+    test('concurrent kids log updates never lose evidence', () async {
+      KidsSessionLogModel logFor(String id) => KidsSessionLogModel(
+        id: id,
+        surahId: 114,
+        ayahNumber: id == 'a' ? 1 : 2,
+        repeatsCompleted: 1,
+        pointsEarned: 10,
+        completedAt: DateTime.utc(2026, 9, 20),
+      );
+
+      // Hold the first writer inside its mutation; without a per-owner lock
+      // the second read-modify-write would silently drop the first log.
+      final holdFirstWriter = Completer<void>();
+      final first = datasource.updateKidsSessionLogs((logs) async {
+        await holdFirstWriter.future;
+        return [...logs, logFor('a')];
+      });
+      final second = datasource.updateKidsSessionLogs(
+        (logs) async => [...logs, logFor('b')],
+      );
+      await Future<void>.delayed(Duration.zero);
+      holdFirstWriter.complete();
+
+      await Future.wait([first, second]);
+      final stored = await datasource.getKidsSessionLogs();
+      expect(stored.map((log) => log.id).toSet(), {'a', 'b'});
+    });
+
+    test('partially corrupt kids log payload keeps salvageable entries', () async {
+      await datasource.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'good-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 20),
+        ),
+      );
+      final logKey = prefs
+          .getKeys()
+          .firstWhere((key) => key.startsWith('mem_plus_kids_session_logs'));
+      final payload = prefs.getString(logKey)!;
+      // Simulate a partially corrupted list: one valid entry + junk entry.
+      final corruptPayload = jsonEncode([...jsonDecode(payload), 'not-a-map']);
+      await prefs.setString(logKey, corruptPayload);
+
+      final logs = await datasource.getKidsSessionLogs();
+      // The salvageable entry survives instead of the whole history
+      // collapsing to an empty list.
+      expect(logs.map((log) => log.id), ['good-1']);
+
+      // The raw corrupt payload is preserved under a quarantine key so the
+      // next write can never wipe it forever.
+      final quarantineKey = prefs
+          .getKeys()
+          .singleWhere((key) => key.startsWith('mem_plus_kids_session_logs') && key.endsWith('|corrupt'));
+      expect(prefs.getString(quarantineKey), corruptPayload);
+
+      // A later write keeps the salvaged history alongside the new log.
+      await datasource.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'good-2',
+          surahId: 114,
+          ayahNumber: 2,
+          repeatsCompleted: 1,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 21),
+        ),
+      );
+      final after = await datasource.getKidsSessionLogs();
+      expect(after.map((log) => log.id).toSet(), {'good-1', 'good-2'});
+    });
+
+    test('fully corrupt kids log JSON is quarantined, not silently wiped', () async {
+      await datasource.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'x',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 20),
+        ),
+      );
+      final logKey = prefs
+          .getKeys()
+          .firstWhere((key) => key.startsWith('mem_plus_kids_session_logs') && !key.contains('|corrupt'));
+      await prefs.setString(logKey, '{not valid json');
+
+      final logs = await datasource.getKidsSessionLogs();
+      expect(logs, isEmpty);
+
+      final quarantineKey = prefs
+          .getKeys()
+          .singleWhere((key) => key.startsWith('mem_plus_kids_session_logs') && key.endsWith('|corrupt'));
+      expect(prefs.getString(quarantineKey), '{not valid json');
     });
   });
 }

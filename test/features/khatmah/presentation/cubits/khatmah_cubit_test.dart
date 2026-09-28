@@ -93,6 +93,30 @@ void main() {
     await cubit.close();
   });
 
+  test(
+    'external plan changes refresh silently without a loading flash (C5)',
+    () async {
+      final changes = StreamController<void>.broadcast();
+      addTearDown(changes.close);
+      when(() => getActive.changes).thenAnswer((_) => changes.stream);
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      final cubit = buildCubit();
+      await cubit.load();
+
+      final emitted = <KhatmahState>[];
+      final sub = cubit.stream.listen(emitted.add);
+      final updated = activePlan.copyWith(completedPages: {1, 2});
+      when(() => getActive()).thenAnswer((_) async => updated);
+      changes.add(null);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(emitted.whereType<KhatmahLoading>(), isEmpty);
+      expect((cubit.state as KhatmahActive).plan, updated);
+      await sub.cancel();
+      await cubit.close();
+    },
+  );
+
   test('loads a paused plan into the distinct paused state', () async {
     when(() => getActive()).thenAnswer(
       (_) async => activePlan.copyWith(status: KhatmahStatus.paused),
@@ -884,6 +908,99 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('schedule preview never persists anything (K-U2)', () async {
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    final cubit = buildCubit();
+    await cubit.load();
+
+    final preview = cubit.previewAdjustment(kind: KhatmahAdjustment.mildBoost);
+
+    expect(preview?.targetPagesPerDay, activePlan.targetPagesPerDay + 1);
+    verifyNever(
+      () => updateSchedule(
+        planId: any(named: 'planId'),
+        targetPagesPerDay: any(named: 'targetPagesPerDay'),
+        targetDays: any(named: 'targetDays'),
+        expectedEndDate: any(named: 'expectedEndDate'),
+      ),
+    );
+    await cubit.close();
+  });
+
+  test('undo restores the previous schedule (K-U2)', () async {
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => updateSchedule(
+        planId: activePlan.id,
+        targetPagesPerDay: any(named: 'targetPagesPerDay'),
+        targetDays: any(named: 'targetDays'),
+        expectedEndDate: any(named: 'expectedEndDate'),
+      ),
+    ).thenAnswer((_) async => activePlan);
+    final cubit = buildCubit();
+    await cubit.load();
+
+    await cubit.undoScheduleAdjustment(activePlan);
+
+    verify(
+      () => updateSchedule(
+        planId: activePlan.id,
+        targetPagesPerDay: activePlan.targetPagesPerDay,
+        targetDays: activePlan.targetDays,
+        expectedEndDate: activePlan.expectedEndDate,
+      ),
+    ).called(1);
+    await cubit.close();
+  });
+
+  test(
+    'redistribution keeps the finish date by raising the pace (C7)',
+    () async {
+      // 603 pages left, 4/day, end in 10 days → needs 61/day, capped at 20.
+      final behind = activePlan.copyWith(
+        expectedEndDate: DateTime(2026, 1, 10),
+      );
+      when(() => getActive()).thenAnswer((_) async => behind);
+      final cubit = KhatmahCubit(
+        getActive,
+        recordReading,
+        pauseResume,
+        deleteKhatmah,
+        updateSchedule: updateSchedule,
+        now: () => DateTime(2026, 1, 1, 9),
+      );
+      await cubit.load();
+
+      final preview = cubit.previewAdjustment(
+        kind: KhatmahAdjustment.keepEndDate,
+      );
+
+      expect(preview?.targetPagesPerDay, KhatmahCubit.maxPagesPerDay);
+      await cubit.close();
+    },
+  );
+
+  test('mild boost is capped at a sustainable daily load (K-U2)', () async {
+    final heavy = activePlan.copyWith(
+      targetPagesPerDay: KhatmahCubit.maxPagesPerDay,
+    );
+    when(() => getActive()).thenAnswer((_) async => heavy);
+    final cubit = buildCubit();
+    await cubit.load();
+
+    expect(cubit.canBoost, isFalse);
+    expect(await cubit.mildCompensation(), isFalse);
+    verifyNever(
+      () => updateSchedule(
+        planId: any(named: 'planId'),
+        targetPagesPerDay: any(named: 'targetPagesPerDay'),
+        targetDays: any(named: 'targetDays'),
+        expectedEndDate: any(named: 'expectedEndDate'),
+      ),
+    );
+    await cubit.close();
+  });
 
   test(
     'load failure after abandonment does not resurrect the old plan',

@@ -103,7 +103,7 @@ class ThemeOption extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 104,
+          height: 104 * MediaQuery.textScalerOf(context).scale(1),
           padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: isSelected
@@ -163,7 +163,7 @@ class LocaleSettingTile extends StatelessWidget {
         final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: const EdgeInsetsDirectional.fromSTEB(
             AppSpacing.md,
             AppSpacing.sm,
             AppSpacing.md,
@@ -243,7 +243,7 @@ class LocaleOption extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 78,
+          height: 78 * MediaQuery.textScalerOf(context).scale(1),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           decoration: BoxDecoration(
             color: isSelected

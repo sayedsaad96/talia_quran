@@ -5,6 +5,7 @@ import '../security/parent_pin_secure_store.dart';
 import '../security/encrypted_account_preferences_store.dart';
 import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
+import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_identity.dart';
 import '../services/audio_resume_store.dart';
 import 'record_owner_provider.dart';
@@ -303,6 +304,7 @@ class AccountDataReset {
           ownerId: ReviewRecordIdentity.localOwnerId,
           audience: audience,
           surahId: row.surahId,
+          review: row.learningIntentName == LearningIntent.review.name,
         );
         final existing = await _isar.isarV2Sessions
             .filter()

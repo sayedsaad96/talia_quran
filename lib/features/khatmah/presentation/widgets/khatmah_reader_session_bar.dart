@@ -41,10 +41,15 @@ class KhatmahReaderSessionBar extends StatelessWidget {
       bloc: resolvedCubit,
       builder: (context, state) {
         if (state is KhatmahPaused) {
+          // Pages read while paused are not recorded — offer to resume here
+          // instead of letting the learner read unrecorded.
           return _statusBar(
             context,
             context.l10n.khatmahIsPaused,
             Icons.pause_circle_outline_rounded,
+            onRetry: () => resolvedCubit!.resume(),
+            actionLabel: context.l10n.khatmahResume,
+            actionKey: const Key('khatmah_session_bar_resume_button'),
           );
         }
         if (state is KhatmahProgressFailure) {
@@ -66,10 +71,19 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         final gold = isDark ? AppColors.primaryLight : AppColors.primary;
         final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
-        final current = plan.currentPage;
         final target = state is KhatmahActive
             ? (startPage: state.wirdStartPage, endPage: state.wirdEndPage)
             : plan.dailyTargetFor(resolvedCubit!.displayDate);
+        // Inside today's wird, describe the page on screen; browsing far
+        // outside it keeps showing the persisted progress.
+        final onScreen = currentPage;
+        final current =
+            onScreen != null &&
+                onScreen >= target.startPage &&
+                onScreen <= target.endPage
+            ? onScreen
+            : plan.currentPage;
+
         final dailyTarget = target.endPage - target.startPage + 1;
         final wirdIndex = plan.completedPages
             .where((page) => page >= target.startPage && page <= target.endPage)
@@ -209,6 +223,8 @@ class KhatmahReaderSessionBar extends StatelessWidget {
     String message,
     IconData icon, {
     VoidCallback? onRetry,
+    String? actionLabel,
+    Key? actionKey,
   }) {
     final isDark = context.isDark;
     final color = isDark ? AppColors.primaryLight : AppColors.primary;
@@ -228,8 +244,9 @@ class KhatmahReaderSessionBar extends StatelessWidget {
             Expanded(child: Text(message, style: AppTypography.bodySmall)),
             if (onRetry != null)
               TextButton(
+                key: actionKey,
                 onPressed: onRetry,
-                child: Text(context.l10n.khatmahRetry),
+                child: Text(actionLabel ?? context.l10n.khatmahRetry),
               ),
           ],
         ),

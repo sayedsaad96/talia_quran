@@ -66,10 +66,10 @@ class FsrsAnalyticsService {
 
       validRecords++;
       final gap = record.schedulerVsFsrsGapDays!;
-      
+
       totalGap += gap;
       totalRatio += record.schedulerVsFsrsRatio!;
-      
+
       if (record.schedulerEarlierThanFsrs == true) {
         schedulerEarlier++;
       } else if (record.schedulerEarlierThanFsrs == false) {
@@ -94,7 +94,7 @@ class FsrsAnalyticsService {
     }
 
     if (validRecords == 0) {
-       return const FsrsAnalyticsReport(
+      return const FsrsAnalyticsReport(
         totalRecords: 0,
         averageGapDays: 0.0,
         averageRatio: 0.0,

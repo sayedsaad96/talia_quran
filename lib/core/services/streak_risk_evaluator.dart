@@ -34,10 +34,12 @@ class StreakRiskEvaluator {
     final moment = now ?? _now();
     final today = DateTime(moment.year, moment.month, moment.day);
     final last = streak.lastActivityDate;
-    final hasActivityToday = last != null &&
-        DateTime(last.toLocal().year, last.toLocal().month, last.toLocal().day) ==
-            today;
-    final isAtRisk = streak.currentStreak > 0 &&
+    // Stored days carry the local calendar fields (see StreakDay); comparing
+    // them after toLocal() would shift the day in negative UTC offsets.
+    final hasActivityToday =
+        last != null && DateTime(last.year, last.month, last.day) == today;
+    final isAtRisk =
+        streak.currentStreak > 0 &&
         !hasActivityToday &&
         moment.hour >= riskHour;
     return StreakRisk(

@@ -11,6 +11,7 @@ import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/app_initializer.dart';
+import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/onboarding/presentation/cubits/onboarding_cubit.dart';
@@ -63,24 +64,25 @@ void main() {
       await _tapVisible(tester, 'Start Your Journey');
     }
 
-    testWidgets(
-      'adult guest flow routes directly to Home and saves preferences',
-      (tester) async {
-        final repo = await _registerCore();
-        await _pumpOnboarding(tester);
+    testWidgets('adult guest flow persists the adult path and routes to Home', (
+      tester,
+    ) async {
+      final repo = await _registerCore();
+      await _pumpOnboarding(tester);
 
-        await navigateToFork(tester);
-        // Step 3: Adult is selected by default -> Continue as guest
-        await _tapVisible(tester, 'Continue as guest');
-        await tester.pumpAndSettle();
+      await navigateToFork(tester);
+      // Step 3: Adult is selected by default -> Continue as guest
+      await _tapVisible(tester, 'Continue as guest');
+      await tester.pumpAndSettle();
 
-        expect(find.text('home route'), findsOneWidget);
-        expect(repo.selectedPaths, isEmpty);
-        _expectCompletedPrefs(goal: 'reading', userType: 'adult');
-      },
-    );
+      expect(find.text('home route'), findsOneWidget);
+      // The fork answer is durable: the adult track is pre-selected so
+      // the Memorization hub never re-asks this question.
+      expect(repo.selectedPaths, [MemorizationPath.adult]);
+      _expectCompletedPrefs(goal: 'reading', userType: 'adult');
+    });
 
-    testWidgets('adult sign-in routes to Login and saves preferences', (
+    testWidgets('adult sign-in persists the adult path and routes to Login', (
       tester,
     ) async {
       final repo = await _registerCore();
@@ -91,7 +93,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('login route'), findsOneWidget);
-      expect(repo.selectedPaths, isEmpty);
+      expect(repo.selectedPaths, [MemorizationPath.adult]);
       _expectCompletedPrefs(goal: 'reading', userType: 'adult');
     });
 
@@ -139,7 +141,23 @@ void main() {
       final prefs = getIt<SharedPreferences>();
       expect(prefs.getBool('isFirstTimeAppOpen'), isFalse);
       expect(prefs.getBool('onboarding_skipped'), isTrue);
+      expect(prefs.getBool(PrayerTimesService.enabledKey), isTrue);
       expect(prefs.getString('onboarding_completed_at'), isNotNull);
+    });
+
+    testWidgets('onboarding preserves an explicit prayer-times choice', (
+      tester,
+    ) async {
+      await _registerCore(initialPrefs: {PrayerTimesService.enabledKey: false});
+      await _pumpOnboarding(tester);
+
+      await _tapVisible(tester, 'Skip');
+      await tester.pumpAndSettle();
+
+      expect(
+        getIt<SharedPreferences>().getBool(PrayerTimesService.enabledKey),
+        isFalse,
+      );
     });
 
     testWidgets('English onboarding is LTR', (tester) async {
@@ -167,35 +185,37 @@ void main() {
       expect(find.text('Your Daily Quran Sanctuary'), findsOneWidget);
     });
 
-    testWidgets('first slide displays Mushaf sanctuary and recitation bento cards', (
-      tester,
-    ) async {
-      await _registerCore();
-      await _pumpOnboarding(tester);
+    testWidgets(
+      'first slide displays Mushaf sanctuary and recitation bento cards',
+      (tester) async {
+        await _registerCore();
+        await _pumpOnboarding(tester);
 
-      expect(find.text('Surat Al-Fatihah'), findsOneWidget);
-      expect(find.text('Masterful Recitation'), findsOneWidget);
-      expect(find.text('Easy Tafsir'), findsOneWidget);
-    });
+        expect(find.text('Surat Al-Fatihah'), findsOneWidget);
+        expect(find.text('Masterful Recitation'), findsOneWidget);
+        expect(find.text('Easy Tafsir'), findsOneWidget);
+      },
+    );
 
-    testWidgets('second and third slides showcase smart memorization and habit continuity', (
-      tester,
-    ) async {
-      await _registerCore();
-      await _pumpOnboarding(tester);
+    testWidgets(
+      'second and third slides showcase smart memorization and habit continuity',
+      (tester) async {
+        await _registerCore();
+        await _pumpOnboarding(tester);
 
-      // Advance to Slide 1: Memorization
-      await _tapVisible(tester, 'Next');
-      expect(find.text('Smart Memorization & Mastery'), findsOneWidget);
-      expect(find.text('Mastery & Retention'), findsOneWidget);
-      expect(find.text('Active Recall'), findsOneWidget);
+        // Advance to Slide 1: Memorization
+        await _tapVisible(tester, 'Next');
+        expect(find.text('Smart Memorization & Mastery'), findsOneWidget);
+        expect(find.text('Mastery & Retention'), findsOneWidget);
+        expect(find.text('Active Recall'), findsOneWidget);
 
-      // Advance to Slide 2: Habit
-      await _tapVisible(tester, 'Next');
-      expect(find.text('Daily Habit & Family Journeys'), findsOneWidget);
-      expect(find.text('Daily Streak'), findsOneWidget);
-      expect(find.text('Talia Kids Journey'), findsOneWidget);
-    });
+        // Advance to Slide 2: Habit
+        await _tapVisible(tester, 'Next');
+        expect(find.text('Daily Habit & Family Journeys'), findsOneWidget);
+        expect(find.text('Daily Streak'), findsOneWidget);
+        expect(find.text('Talia Kids Journey'), findsOneWidget);
+      },
+    );
 
     testWidgets('fork shows living previews, trust line, and waypoints', (
       tester,
@@ -331,6 +351,7 @@ void _expectCompletedPrefs({required String goal, required String userType}) {
   final prefs = getIt<SharedPreferences>();
   expect(prefs.getBool('isFirstTimeAppOpen'), isFalse);
   expect(prefs.getBool('onboarding_skipped'), isFalse);
+  expect(prefs.getBool(PrayerTimesService.enabledKey), isTrue);
   expect(prefs.getString('user_primary_goal'), goal);
   expect(prefs.getString('onboarding_user_type'), userType);
   expect(prefs.getString('onboarding_completed_at'), isNotNull);

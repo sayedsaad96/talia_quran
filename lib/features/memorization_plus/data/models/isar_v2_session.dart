@@ -130,11 +130,18 @@ class IsarV2Session {
 
   // ── Factory ──────────────────────────────────────────────
 
+  /// Memorization and review checkpoints live in separate lanes so a review
+  /// of one ayah never overwrites (or clears) an in-progress memorization
+  /// block in the same surah. The memorize lane keeps the historical key so
+  /// existing checkpoints stay resumable.
   static String keyFor({
     required String ownerId,
     required MemorizationAudience audience,
     required int surahId,
-  }) => '$ownerId|${audience.name}|$surahId';
+    bool review = false,
+  }) => review
+      ? '$ownerId|${audience.name}|$surahId|review'
+      : '$ownerId|${audience.name}|$surahId';
   static IsarV2Session create({
     required int surahId,
     required List<int> blockAyahNumbers,
@@ -148,6 +155,7 @@ class IsarV2Session {
     String? sessionId,
     String ownerId = ReviewRecordIdentity.localOwnerId,
     MemorizationAudience audience = MemorizationAudience.adult,
+    bool review = false,
   }) {
     final firstBlockAyah = blockAyahNumbers.isEmpty
         ? 1
@@ -156,7 +164,7 @@ class IsarV2Session {
         launchContext ??
         LearningLaunchContext(
           ayah: AyahReference(surahId: surahId, ayahNumber: firstBlockAyah),
-          intent: LearningIntent.memorize,
+          intent: review ? LearningIntent.review : LearningIntent.memorize,
           origin: LearningOrigin.unknown,
         );
     return IsarV2Session()
@@ -164,6 +172,7 @@ class IsarV2Session {
         ownerId: ownerId,
         audience: audience,
         surahId: surahId,
+        review: review,
       )
       ..sessionId = sessionId
       ..ownerId = ownerId

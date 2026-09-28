@@ -8,8 +8,7 @@ import 'prayer_serenity_policy.dart';
 /// Provides the canonical prayer times for today (fajr, dhuhr, asr, maghrib,
 /// isha). Returns null when prayer times are unavailable (no city selected,
 /// disabled service, offline failure) — the watcher simply stays quiet.
-typedef PrayerSerenityTimesProvider =
-    Future<Map<String, DateTime>?> Function();
+typedef PrayerSerenityTimesProvider = Future<Map<String, DateTime>?> Function();
 
 /// Pauses any playing recitation. Must be best-effort and silent on failure.
 typedef PrayerSerenityPauseCallback = Future<void> Function();
@@ -82,10 +81,7 @@ class PrayerSerenityWatcher {
       final times = await _prayerTimesProvider();
       if (times == null || times.isEmpty) return;
 
-      final key = _policy.activeOccurrenceKey(
-        prayerTimes: times,
-        now: _now(),
-      );
+      final key = _policy.activeOccurrenceKey(prayerTimes: times, now: _now());
       if (key == null || key == _lastHandledKey) return;
       _lastHandledKey = key;
 

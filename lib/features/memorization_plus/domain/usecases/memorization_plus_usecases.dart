@@ -54,6 +54,9 @@ class ScheduleNextReviewUsecase {
       case PerformanceRating.excellent:
         newStrength = (record.strengthLevel + 1).clamp(0, 10);
         newEaseFactor = (record.easeFactor + 0.15).clamp(1.3, 3.3);
+        // A confident recall forgives one historical lapse. Without decay
+        // a single lapse pins the ayah to weak-recovery priority forever.
+        newLapses = math.max(0, record.lapses - 1);
         if (record.strengthLevel == 0) {
           newInterval = 1;
         } else {
@@ -64,7 +67,12 @@ class ScheduleNextReviewUsecase {
           ).clamp(1, 180);
         }
       case PerformanceRating.average:
-        newStrength = record.strengthLevel; // no change
+        // A one-prompt recall still makes progress toward memorization: it
+        // grows strength while below the memorized threshold but never
+        // cements mastery on its own.
+        newStrength = record.strengthLevel < 6
+            ? (record.strengthLevel + 1).clamp(0, 6)
+            : record.strengthLevel;
         newEaseFactor = (record.easeFactor - 0.10).clamp(1.3, 3.3);
         if (record.strengthLevel == 0) {
           newInterval = 1;

@@ -9,6 +9,8 @@ import 'session_phase.dart';
 import 'session_state.dart';
 import 'hint_usage.dart';
 import 'recitation_evaluator.dart';
+import 'recitation_word_diff.dart';
+import 'self_grade.dart';
 
 /// Pure domain session engine for Memorization V2.
 ///
@@ -20,12 +22,32 @@ final class V2SessionEngine {
 
   final V2RecitationEvaluator _evaluator;
 
+  /// A copy of this engine with a different recitation pass threshold (the
+  /// retry band stays unchanged).
+  V2SessionEngine withPassThreshold(double passThreshold) => V2SessionEngine(
+    evaluator: V2RecitationEvaluator(passThreshold: passThreshold),
+  );
+
+  /// Near misses allowed per ayah before one counts as a real failure. A
+  /// retry-band score is often a speech-recognition slip, not forgetting.
+  static const maxNearMisses = 2;
+
   // ── Phase Transitions ────────────────────────────────────
 
   /// Transitions from [created] → [learning].
   V2SessionState startLearning(V2SessionState state) {
     if (state.phase != V2SessionPhase.created) return state;
     return state.copyWith(phase: V2SessionPhase.learning);
+  }
+
+  /// Starts a review session: [created] → [reciting] with no learning or
+  /// hint stages. Active recall of already-memorized material — a due
+  /// review must not re-run the full memorization pipeline (which would
+  /// both distort the review UX and feed SRS "excellent" passes over
+  /// material re-learned seconds earlier).
+  V2SessionState startReview(V2SessionState state) {
+    if (state.phase != V2SessionPhase.created) return state;
+    return state.copyWith(phase: V2SessionPhase.reciting);
   }
 
   /// Transitions from [learning] → [memorizing].
@@ -83,13 +105,34 @@ final class V2SessionEngine {
       return state.copyWith(phase: V2SessionPhase.reciting);
     }
 
-    final stateWithResult = state.copyWith(lastRecitationResult: result);
+    if (result.verdict == RecitationVerdict.retry &&
+        state.nearMissCount < maxNearMisses) {
+      return state.copyWith(
+        phase: V2SessionPhase.reciting,
+        lastRecitationResult: result,
+        nearMissCount: state.nearMissCount + 1,
+      );
+    }
 
     if (result.passed) {
-      return _handlePass(stateWithResult);
-    } else {
-      return _handleFail(stateWithResult);
+      return _handlePass(state.copyWith(lastRecitationResult: result));
     }
+    // Out of near-miss allowance (or clearly off): a real failure.
+    return _handleFail(
+      state.copyWith(
+        lastRecitationResult: result.verdict == RecitationVerdict.retry
+            ? V2RecitationResult(
+                passed: false,
+                similarityScore: result.similarityScore,
+                normalizedTarget: result.normalizedTarget,
+                normalizedSpoken: result.normalizedSpoken,
+                verdict: RecitationVerdict.remediate,
+                targetWordCount: result.targetWordCount,
+                matchedWordCount: result.matchedWordCount,
+              )
+            : result,
+      ),
+    );
   }
 
   /// Returns the exact automatic metric used by [evaluateRecitation].
@@ -103,6 +146,20 @@ final class V2SessionEngine {
     String spokenText,
   ) => _evaluator.evaluate(
     targetText: state.currentAyah.text,
+    spokenText: spokenText,
+  );
+
+  /// Returns the exact automatic metric used by [evaluateBlockReview].
+  ///
+  /// Symmetric to [evaluateRecitationAttempt]: lets the Cubit capture the
+  /// block-level evidence (score + diff target) before the transition,
+  /// because the completion path would otherwise discard the verdict the
+  /// learner never gets to see.
+  V2RecitationResult evaluateBlockReviewAttempt(
+    V2SessionState state,
+    String spokenText,
+  ) => _evaluator.evaluate(
+    targetText: state.blockAyahs.map((a) => a.text).join(' '),
     spokenText: spokenText,
   );
 
@@ -131,9 +188,10 @@ final class V2SessionEngine {
       );
     }
 
-    // On block review fail: identify a concrete ayah for targeted remediation.
-    // A failed block review must never be promoted to completion.
-    final weakAyahNumber = _findFirstRemediationAyah(state);
+    // On block review fail: remediate the ayah where the recitation
+    // actually broke (word-diff targeting). A failed block review must
+    // never be promoted to completion.
+    final weakAyahNumber = _findRemediationAyah(state, spokenText);
 
     final weakIndex = state.blockAyahs.indexWhere(
       (a) => a.numberInSurah == weakAyahNumber,
@@ -166,13 +224,22 @@ final class V2SessionEngine {
 
   // ── Manual / self-grade route (V1-M8) ────────────────────
 
-  /// Records a self-graded pass for the current ayah.
+  /// Records a self-graded outcome for the current ayah.
   ///
-  /// Used when STT or the network is unavailable. The learner explicitly
-  /// confirms they recited the ayah from memory; no automatic score is
-  /// fabricated and review scheduling behaves exactly like a normal pass.
-  V2SessionState submitManualRecall(V2SessionState state) {
+  /// Used when STT or the network is unavailable. No automatic score is
+  /// fabricated. [V2SelfGrade.mastered] and [V2SelfGrade.hesitated] pass the
+  /// ayah (the committer schedules them conservatively);
+  /// [V2SelfGrade.forgot] is a real failure that routes to remediation.
+  V2SessionState submitManualRecall(
+    V2SessionState state, {
+    V2SelfGrade grade = V2SelfGrade.mastered,
+  }) {
     if (state.phase != V2SessionPhase.reciting) return state;
+    if (grade == V2SelfGrade.forgot) {
+      return _handleFail(
+        state.copyWith(lastRecitationResult: _manualFailResult()),
+      );
+    }
     return _handlePass(
       state.copyWith(lastRecitationResult: _manualPassResult()),
     );
@@ -195,6 +262,14 @@ final class V2SessionEngine {
     assessmentMethod: V2AssessmentMethod.manual,
   );
 
+  static V2RecitationResult _manualFailResult() => const V2RecitationResult(
+    passed: false,
+    similarityScore: null,
+    normalizedTarget: '',
+    normalizedSpoken: '',
+    assessmentMethod: V2AssessmentMethod.manual,
+  );
+
   // ── Private Helpers ──────────────────────────────────────
 
   V2SessionState _handlePass(V2SessionState state) {
@@ -203,21 +278,33 @@ final class V2SessionEngine {
     final allPassed = newPassed.length >= state.blockAyahs.length;
 
     if (allPassed) {
-      // All ayahs individually passed — determine next phase.
-      final nextPhase = state.blockReviewRequired
-          ? V2SessionPhase.blockReviewPending
-          : V2SessionPhase.completed;
-
-      return state.copyWith(phase: nextPhase, passedAyahNumbers: newPassed);
+      // Review sessions complete after the target ayah — a block review of
+      // already-memorized material would re-run a gate that adds no signal.
+      if (state.isReview || !state.blockReviewRequired) {
+        return state.copyWith(
+          phase: V2SessionPhase.completed,
+          passedAyahNumbers: newPassed,
+          nearMissCount: 0,
+        );
+      }
+      return state.copyWith(
+        phase: V2SessionPhase.blockReviewPending,
+        passedAyahNumbers: newPassed,
+        nearMissCount: 0,
+      );
     }
 
-    // Advance to next un-passed ayah.
+    // Advance to next un-passed ayah. In review mode the next ayah goes
+    // straight back to reciting — no learning detour.
     final nextIndex = _nextUnpassedIndex(state, newPassed);
     return state.copyWith(
-      phase: V2SessionPhase.learning, // restart cycle for next ayah
+      phase: state.isReview
+          ? V2SessionPhase.reciting
+          : V2SessionPhase.learning, // restart cycle for next ayah
       currentAyahIndex: nextIndex,
       passedAyahNumbers: newPassed,
       clearLastResult: true,
+      nearMissCount: 0,
     );
   }
 
@@ -231,6 +318,7 @@ final class V2SessionEngine {
     return state.copyWith(
       phase: V2SessionPhase.remediation,
       failureTracker: newTracker,
+      nearMissCount: 0,
     );
   }
 
@@ -241,16 +329,61 @@ final class V2SessionEngine {
     return state.currentAyahIndex;
   }
 
-  int _findFirstRemediationAyah(V2SessionState state) {
-    for (final record in state.failureTracker.weakAyahs) {
-      return record.ayahNumber;
+  /// Picks the remediation ayah for a failed block review.
+  ///
+  /// Targeting is word-diff aware: the first wrong/missing target word is
+  /// attributed to its ayah, so the learner re-memorizes the part that
+  /// actually broke instead of looping on a historically weak — possibly
+  /// already passed — ayah.
+  int _findRemediationAyah(V2SessionState state, String spokenText) {
+    final targetText = state.blockAyahs.map((a) => a.text).join(' ');
+    final diff = const RecitationWordDiffer().diff(
+      targetText: targetText,
+      spokenText: spokenText,
+    );
+
+    // Word counts per ayah in target order; walk the diff and count
+    // consumed target words (extra words belong to no target position).
+    final wordsPerAyah = state.blockAyahs
+        .map((ayah) => _tokenCount(ayah.text))
+        .toList(growable: false);
+    var consumedTargetWords = 0;
+    for (final word in diff.words) {
+      if (word.status == RecitationWordStatus.extra) continue;
+      if (word.status == RecitationWordStatus.wrong ||
+          word.status == RecitationWordStatus.missing) {
+        final ayahIndex = _ayahIndexForTargetWord(
+          wordsPerAyah,
+          consumedTargetWords,
+        );
+        if (ayahIndex >= 0) return state.blockAyahs[ayahIndex].numberInSurah;
+        break;
+      }
+      consumedTargetWords++;
     }
-    // If no explicitly weak ayahs, return first un-passed.
+
+    // No usable diff signal (e.g. empty recitation): prioritize work that
+    // still remains — the first unpassed ayah — before any weak history.
     for (final ayah in state.blockAyahs) {
       if (!state.passedAyahNumbers.contains(ayah.numberInSurah)) {
         return ayah.numberInSurah;
       }
     }
+    for (final record in state.failureTracker.weakAyahs) {
+      return record.ayahNumber;
+    }
     return state.blockAyahs.first.numberInSurah;
   }
+
+  int _ayahIndexForTargetWord(List<int> wordsPerAyah, int targetWordIndex) {
+    var consumed = 0;
+    for (var i = 0; i < wordsPerAyah.length; i++) {
+      consumed += wordsPerAyah[i];
+      if (targetWordIndex < consumed) return i;
+    }
+    return -1;
+  }
+
+  int _tokenCount(String text) =>
+      text.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).length;
 }

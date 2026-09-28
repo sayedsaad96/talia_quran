@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -9,6 +9,8 @@ import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../quran/domain/entities/quran_entities.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../cubits/practice_surah_cubit.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/practice_surah_hub_banner.dart';
@@ -29,8 +31,30 @@ class PracticeSurahPage extends StatelessWidget {
   }
 }
 
-class _PracticeSurahView extends StatelessWidget {
+class _PracticeSurahView extends StatefulWidget {
   const _PracticeSurahView();
+
+  @override
+  State<_PracticeSurahView> createState() => _PracticeSurahViewState();
+}
+
+class _PracticeSurahViewState extends State<_PracticeSurahView> {
+  String _query = '';
+
+  /// Matches the surah number or its Arabic/English name (diacritic-free
+  /// display names; this filters a list and never alters Quran text).
+  List<Surah> _filter(List<Surah> surahs) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return surahs;
+    return surahs
+        .where(
+          (surah) =>
+              '${surah.id}' == query ||
+              surah.nameAr.contains(query) ||
+              surah.nameEn.toLowerCase().contains(query),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +62,9 @@ class _PracticeSurahView extends StatelessWidget {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: BlocBuilder<PracticeSurahCubit, PracticeSurahState>(
         builder: (context, state) {
           return CustomScrollView(
@@ -60,7 +85,7 @@ class _PracticeSurahView extends StatelessWidget {
               if (state is PracticeSurahError)
                 SliverFillRemaining(
                   child: ErrorStateWidget(
-                    message: state.message,
+                    message: context.localizedCubitMessage(state.message),
                     onRetry: () => context.read<PracticeSurahCubit>().load(),
                   ),
                 ),
@@ -71,6 +96,11 @@ class _PracticeSurahView extends StatelessWidget {
                     child: EmptyStateWidget(
                       icon: Icons.route_rounded,
                       message: context.l10n.chooseMemorizationPath,
+                      actionLabel: context.l10n.changeMemorizationPath,
+                      onAction: () => showMemorizationPathSettingsSheet(
+                        context,
+                        isDark: isDark,
+                      ),
                     ),
                   ),
                 ] else ...[
@@ -83,6 +113,41 @@ class _PracticeSurahView extends StatelessWidget {
                       child: SectionHeader(title: context.l10n.selectSurah),
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pagePadding,
+                        0,
+                        AppSpacing.pagePadding,
+                        AppSpacing.sm,
+                      ),
+                      child: TextField(
+                        key: const Key('practice_surah_search'),
+                        onChanged: (value) => setState(() => _query = value),
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: context.l10n.searchSurah,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          isDense: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_filter(state.surahs).isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Text(
+                          context.l10n.homeSearchNoResults,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.pagePadding,
@@ -93,11 +158,11 @@ class _PracticeSurahView extends StatelessWidget {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (ctx, i) => PracticeSurahTile(
-                          surah: state.surahs[i],
+                          surah: _filter(state.surahs)[i],
                           isDark: isDark,
                           primary: primary,
                         ),
-                        childCount: state.surahs.length,
+                        childCount: _filter(state.surahs).length,
                       ),
                     ),
                   ),
@@ -129,8 +194,9 @@ class _PracticeSurahAppBar extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(

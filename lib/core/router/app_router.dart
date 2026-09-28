@@ -34,6 +34,7 @@ import '../../features/memorization_plus/presentation/pages/practice_surah_page.
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
+import '../../features/azkar/presentation/pages/smart_wird_page.dart';
 import '../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
@@ -569,6 +570,9 @@ abstract class AppRouter {
         path: '/azkar/:category',
         builder: (context, state) {
           final category = state.pathParameters['category'] ?? 'morning';
+          if (category == 'smart') {
+            return const SmartWirdPage();
+          }
           if (category == 'general' || category == 'duas') {
             return GeneralAzkarPage(
               category: category == 'duas'
@@ -797,15 +801,11 @@ abstract class AppRouter {
           // K11: session points and level-up travel with the route.
           final pointsEarned =
               extra?['pointsEarned'] as int? ??
-              int.tryParse(
-                state.uri.queryParameters['pointsEarned'] ?? '',
-              ) ??
+              int.tryParse(state.uri.queryParameters['pointsEarned'] ?? '') ??
               0;
           final leveledUpTo =
               extra?['leveledUpTo'] as int? ??
-              int.tryParse(
-                state.uri.queryParameters['leveledUpTo'] ?? '',
-              );
+              int.tryParse(state.uri.queryParameters['leveledUpTo'] ?? '');
           return KidsGamifiedCompletionPage(
             surahId: surahId!,
             completedAyahNumber: completedAyahNumber,

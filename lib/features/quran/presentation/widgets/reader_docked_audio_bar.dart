@@ -84,21 +84,21 @@ class ReaderDockedAudioBar extends StatelessWidget {
                 ),
               ),
               if (state.hasPrevious)
-                IconButton(
-                  icon: Icon(
-                    context.isArabic
-                        ? Icons.skip_next_rounded
-                        : Icons.skip_previous_rounded,
-                    size: 20,
-                    color: primary,
-                  ),
-                  tooltip: context.isArabic ? 'الآية السابقة' : 'Previous Ayah',
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    context.read<QuranAudioPlayerCubit>().previousAyah();
-                  },
-                  visualDensity: VisualDensity.compact,
+              IconButton(
+                icon: Icon(
+                  context.isArabic
+                      ? Icons.skip_next_rounded
+                      : Icons.skip_previous_rounded,
+                  size: 20,
+                  color: primary,
                 ),
+                tooltip: context.l10n.prevAyah,
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  context.read<QuranAudioPlayerCubit>().previousAyah();
+                },
+                visualDensity: VisualDensity.compact,
+              ),
               if (state.hasNext)
                 IconButton(
                   icon: Icon(
@@ -108,7 +108,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
                     size: 20,
                     color: primary,
                   ),
-                  tooltip: context.isArabic ? 'الآية التالية' : 'Next Ayah',
+                  tooltip: context.l10n.nextAyah,
                   onPressed: () {
                     HapticFeedback.selectionClick();
                     context.read<QuranAudioPlayerCubit>().nextAyah();
@@ -157,7 +157,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
                       ? AppColors.darkTextHint
                       : AppColors.lightTextHint,
                 ),
-                tooltip: context.isArabic ? 'إيقاف التلاوة' : 'Stop Recitation',
+                tooltip: context.l10n.stopRecitation,
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   context.read<QuranAudioPlayerCubit>().stop();

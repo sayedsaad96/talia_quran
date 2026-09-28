@@ -41,8 +41,22 @@ class KidsLoadingWidget extends StatelessWidget {
 
 /// Gamified Error Widget for Kids Mode
 class KidsErrorWidget extends StatelessWidget {
-  const KidsErrorWidget({super.key, required this.onRetry});
+  const KidsErrorWidget({
+    super.key,
+    required this.onRetry,
+    this.message,
+    this.actionLabel,
+  });
+
   final VoidCallback onRetry;
+
+  /// Label for the action button; defaults to "Try again". A state that a
+  /// retry cannot fix (e.g. the daily limit) passes "Go back" instead.
+  final String? actionLabel;
+
+  /// Optional specific (already localized) message; when null a generic
+  /// child-friendly text is shown instead of raw failure details.
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +67,8 @@ class KidsErrorWidget extends StatelessWidget {
           const Icon(Icons.home_rounded, size: 64, color: KidsTheme.goldStar),
           const SizedBox(height: AppSpacing.md),
           Text(
-            context.l10n.kidsUnexpectedError,
+            message ?? context.l10n.kidsUnexpectedError,
+            textAlign: TextAlign.center,
             style: AppTypography.titleMedium.copyWith(
               fontFamily: 'Amiri',
               color: Colors.white,
@@ -64,9 +79,10 @@ class KidsErrorWidget extends StatelessWidget {
             onPressed: onRetry,
             style: FilledButton.styleFrom(
               backgroundColor: KidsTheme.goldStar,
-              foregroundColor: Colors.black,
+              foregroundColor: KidsTheme.nightSkyDark,
+              minimumSize: const Size.fromHeight(52),
             ),
-            child: Text(context.l10n.tryAgain),
+            child: Text(actionLabel ?? context.l10n.tryAgain),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -14,13 +15,24 @@ import '../utils/talia_logger.dart';
 ///   resource into a playable source (native MediaPlayer preview). The
 ///   native side owns the player lifecycle for reliability.
 class AdhanPreviewService {
-  AdhanPreviewService();
-
-  static const MethodChannel _channel = MethodChannel('talia/adhan_preview');
+  AdhanPreviewService({
+    TargetPlatform? platform,
+    MethodChannel? channel,
+    AudioPlayer Function()? createIosPlayer,
+    Future<String?> Function(String)? resolveIosAsset,
+  }) : _platform = platform ?? defaultTargetPlatform,
+       _channel = channel ?? const MethodChannel('talia/adhan_preview'),
+       _createIosPlayer = createIosPlayer ?? AudioPlayer.new,
+       _resolveIosAsset = resolveIosAsset;
 
   static const String _assetPrefix = 'res/raw/';
 
-  bool _nativePlaying = false;
+  final TargetPlatform _platform;
+  final MethodChannel _channel;
+  final AudioPlayer Function() _createIosPlayer;
+  final Future<String?> Function(String)? _resolveIosAsset;
+  Future<void> _nativeQueue = Future<void>.value();
+  int _request = 0;
   AudioPlayer? _iosPlayer;
 
   /// Resolves the playable asset path for a muezzin profile (iOS only —
@@ -42,8 +54,12 @@ class AdhanPreviewService {
     // `fajr:x` previews the x recording itself.
     final p = soundProfile.trim();
     const prefix = MuezzinCatalog.fajrOverridePrefix;
-    final effective = p.startsWith(prefix) ? p.substring(prefix.length).trim() : p;
-    if (effective.isEmpty || effective == MuezzinCatalog.defaultId) return 'adhan';
+    final effective = p.startsWith(prefix)
+        ? p.substring(prefix.length).trim()
+        : p;
+    if (effective.isEmpty || effective == MuezzinCatalog.defaultId) {
+      return 'adhan';
+    }
     if (!MuezzinCatalog.isSupported(effective)) return 'adhan';
     return 'adhan_$effective';
   }
@@ -51,31 +67,42 @@ class AdhanPreviewService {
   /// Starts preview playback for [muezzinId]. Stops any current preview
   /// first. Returns true when playback actually started.
   Future<bool> start(String muezzinId) async {
-    await stop();
-    if (Platform.isAndroid) {
-      try {
-        final started = await _channel.invokeMethod<bool>('previewStart', {
-          'soundProfile': muezzinId,
-        });
-        _nativePlaying = started ?? false;
-        return _nativePlaying;
-      } on PlatformException catch (e, stack) {
-        TaliaLogger.w('[AdhanPreview] native preview failed', e, stack);
-        return false;
-      }
+    final request = ++_request;
+    if (_platform == TargetPlatform.android) {
+      return _queueNative(() async {
+        await _stopNative();
+        if (request != _request) return false;
+        try {
+          final started = await _channel.invokeMethod<bool>('previewStart', {
+            'soundProfile': muezzinId,
+          });
+          if (request != _request) {
+            await _stopNative();
+            return false;
+          }
+          return started ?? false;
+        } on PlatformException catch (error, stack) {
+          TaliaLogger.w('[AdhanPreview] native preview failed', error, stack);
+          return false;
+        }
+      });
     }
-    if (Platform.isIOS) {
-      final asset = await _iosAssetFor(muezzinId);
-      if (asset == null) return false;
+    if (_platform == TargetPlatform.iOS) {
+      await _disposeIos();
+      if (request != _request) return false;
+      final asset =
+          await (_resolveIosAsset?.call(muezzinId) ?? _iosAssetFor(muezzinId));
+      if (asset == null || request != _request) return false;
+      final player = _createIosPlayer();
+      _iosPlayer = player;
       try {
-        final player = AudioPlayer();
         await player.setAsset(asset);
-        await player.play();
-        _iosPlayer = player;
+        if (request != _request || !identical(_iosPlayer, player)) return false;
+        unawaited(_playIos(player));
         return true;
-      } catch (e, stack) {
-        TaliaLogger.w('[AdhanPreview] ios preview failed', e, stack);
-        await _disposeIos();
+      } catch (error, stack) {
+        TaliaLogger.w('[AdhanPreview] ios preview failed', error, stack);
+        await _disposeIosPlayer(player);
         return false;
       }
     }
@@ -84,24 +111,47 @@ class AdhanPreviewService {
 
   /// Stops any running preview (native or Dart player).
   Future<void> stop() async {
-    if (Platform.isAndroid && _nativePlaying) {
-      try {
-        await _channel.invokeMethod<void>('previewStop');
-      } on PlatformException catch (e, stack) {
-        TaliaLogger.w('[AdhanPreview] native stop failed', e, stack);
-      }
-      _nativePlaying = false;
-      return;
-    }
-    if (Platform.isIOS) {
+    ++_request;
+    if (_platform == TargetPlatform.android) {
+      await _queueNative(_stopNative);
+    } else if (_platform == TargetPlatform.iOS) {
       await _disposeIos();
+    }
+  }
+
+  Future<T> _queueNative<T>(Future<T> Function() action) {
+    final operation = _nativeQueue.then((_) => action());
+    _nativeQueue = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
+  }
+
+  Future<void> _stopNative() async {
+    try {
+      await _channel.invokeMethod<void>('previewStop');
+    } on PlatformException catch (error, stack) {
+      TaliaLogger.w('[AdhanPreview] native stop failed', error, stack);
+    }
+  }
+
+  Future<void> _playIos(AudioPlayer player) async {
+    try {
+      await player.play();
+    } catch (error, stack) {
+      TaliaLogger.w('[AdhanPreview] ios preview failed', error, stack);
+    } finally {
+      await _disposeIosPlayer(player);
     }
   }
 
   Future<void> _disposeIos() async {
     final player = _iosPlayer;
-    _iosPlayer = null;
     if (player == null) return;
+    await _disposeIosPlayer(player);
+  }
+
+  Future<void> _disposeIosPlayer(AudioPlayer player) async {
+    if (!identical(_iosPlayer, player)) return;
+    _iosPlayer = null;
     try {
       await player.stop();
       await player.dispose();
