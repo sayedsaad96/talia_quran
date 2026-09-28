@@ -34,30 +34,10 @@
   "lib/core/widgets/skeleton_loader.dart": {
     "isDarkBranch": 2
   },
-  "lib/core/widgets/social_share/share_card_shell.dart": {
-    "hexColor": 5,
-    "radiusLiteral": 5,
-    "isDarkBranch": 7
-  },
-  "lib/core/widgets/social_share/share_card_widgets.dart": {
-    "radiusLiteral": 1
-  },
   "lib/core/widgets/social_share/social_share_sheet.dart": {
-    "fontSizeLiteral": 2,
-    "radiusLiteral": 7,
-    "isDarkBranch": 12
-  },
-  "lib/core/widgets/social_share/social_share_theme.dart": {
-    "hexColor": 96
-  },
-  "lib/core/widgets/social_share/templates/achievement_template.dart": {
-    "radiusLiteral": 1
-  },
-  "lib/core/widgets/social_share/templates/certificate_template.dart": {
-    "radiusLiteral": 2
-  },
-  "lib/core/widgets/social_share/templates/memorization_template.dart": {
-    "radiusLiteral": 2
+    "fontSizeLiteral": 1,
+    "radiusLiteral": 5,
+    "isDarkBranch": 11
   },
   "lib/core/widgets/state_widgets.dart": {
     "isDarkBranch": 3

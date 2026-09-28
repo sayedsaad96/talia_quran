@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 
 import 'share_card_palette.dart';
 import 'social_share_model.dart';
-import 'social_share_theme.dart';
 
 /// Share-card copy is intentionally isolated from domain data.  The selected
 /// app locale controls labels; Quran and Azkar text remain untouched.
@@ -23,59 +22,6 @@ class SocialShareCopy {
   TextDirection get direction =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
 
-  // ─── Brand identity ──────────────────────────────────────────────────────
-  String get appName => isArabic ? 'تالية' : 'Talia';
-  String get tagline =>
-      isArabic ? 'رفيقك في رحلة القرآن' : 'Your Quran companion';
-  String brandPromise(bool isKids, SocialShareCategory category) {
-    if (isKids) {
-      return isArabic
-          ? 'نغرس القرآن في القلب بحب'
-          : 'Planting the Quran in hearts with love';
-    }
-    switch (category) {
-      case SocialShareCategory.quranAyah:
-      case SocialShareCategory.dua:
-      case SocialShareCategory.azkar:
-        return isArabic
-            ? 'تالية... رفيقك للذكر والهداية'
-            : 'Talia... your companion for remembrance and guidance';
-      default:
-        return isArabic
-            ? 'تالية... قرآنٌ يصنعُ جيلاً أفضل'
-            : 'Talia... Quran shapes a better generation';
-    }
-  }
-
-  String compactBrandPromise(bool isKids, SocialShareCategory category) {
-    if (isKids) {
-      return isArabic ? 'نغرس القرآن بحب' : 'Planting Quran with love';
-    }
-    switch (category) {
-      case SocialShareCategory.quranAyah:
-      case SocialShareCategory.dua:
-      case SocialShareCategory.azkar:
-        return isArabic ? 'رفيقك للذكر والهداية' : 'Companion for guidance';
-      default:
-        return isArabic
-            ? 'قرآنٌ يصنعُ جيلاً أفضل'
-            : 'Quran shapes a better generation';
-    }
-  }
-
-  String get appDomain => Uri.parse(SocialShareData.landingPageUrl).host;
-
-  // ─── Marketing & CTA copy ─────────────────────────────────────────────────
-  /// Strong CTA label shown inside the footer download pill.
-  String get downloadCTA => isArabic ? 'حمّل تالية مجاناً' : 'Get Talia Free';
-
-  /// Short CTA variant for compact square format.
-  String get downloadCTAShort => isArabic ? 'حمّل تالية' : 'Get Talia';
-
-  /// Motivational sub-label under the CTA in the footer.
-  String get startJourney =>
-      isArabic ? 'ابدأ رحلتك مع القرآن' : 'Start your Quran journey';
-
   /// Plain share text footer — stronger marketing copy with app download invite.
   String get plainShareFooter => isArabic
       ? '✨ شاركني في رحلة حفظ القرآن مع تالية\n'
@@ -87,48 +33,13 @@ class SocialShareCopy {
 
   String journeyFor(String name) =>
       isArabic ? 'رحلة $name مع القرآن' : "$name's Quran journey";
-  String get kidsLabel =>
-      isArabic ? 'رحلة الأبطال الصغار' : 'Little champions journey';
-  String get kidsEncouragement => isArabic
-      ? 'أحسنت! استمر يا بطل 🌟'
-      : 'Great job! Keep going, champion 🌟';
 
   // ─── Category badges ─────────────────────────────────────────────────────
   String get quranBadge => isArabic ? 'آية قرآنية' : 'Quran verse';
   String get duaBadge => isArabic ? 'دعاء' : 'Dua';
   String get dhikrBadge => isArabic ? 'ذِكر' : 'Dhikr';
   String get achievementBadge => isArabic ? 'إنجاز جديد' : 'New achievement';
-  String get memorizationBadge =>
-      isArabic ? 'إنجاز الحفظ' : 'Memorization milestone';
-  String get streakBadge =>
-      isArabic ? 'استمرارية متواصلة' : 'Consistency streak';
-  String get progressBadge => isArabic ? 'حصاد التقدم' : 'Progress snapshot';
-  String get certificateBadge =>
-      isArabic ? 'شهادة إتمام ومواظبة' : 'Completion certificate';
   String get khatmahBadge => isArabic ? 'ختمة القرآن' : 'Quran Khatmah';
-
-  String localizedBadge(SocialShareCategory category) {
-    switch (category) {
-      case SocialShareCategory.quranAyah:
-        return quranBadge;
-      case SocialShareCategory.azkar:
-        return dhikrBadge;
-      case SocialShareCategory.dua:
-        return duaBadge;
-      case SocialShareCategory.achievement:
-        return achievementBadge;
-      case SocialShareCategory.memorization:
-        return memorizationBadge;
-      case SocialShareCategory.streak:
-        return streakBadge;
-      case SocialShareCategory.progress:
-        return progressBadge;
-      case SocialShareCategory.certificate:
-        return certificateBadge;
-      case SocialShareCategory.khatmah:
-        return khatmahBadge;
-    }
-  }
 
   // ─── Quran verse template ────────────────────────────────────────────────
   String surah(String name) => isArabic ? 'سورة $name' : 'Surah $name';
@@ -142,21 +53,7 @@ class SocialShareCopy {
   String get achievementComplete =>
       isArabic ? 'تم الإنجاز' : 'Achievement unlocked';
 
-  // ─── Memorization template ───────────────────────────────────────────────
-  String get memorizationTitle =>
-      isArabic ? 'إنجاز في مسيرة الحفظ' : 'Memorization milestone';
-  String get ayahsLabel => isArabic ? 'آية محفوظة' : 'ayahs memorized';
-  String get surahsLabel => isArabic ? 'سورة مكتملة' : 'surahs completed';
-  String ayahs(int value) =>
-      isArabic ? '$value آية محفوظة' : '$value ayahs memorized';
-  String surahs(int value) =>
-      isArabic ? '$value سور مكتملة' : '$value surahs completed';
-
   // ─── Streak template ─────────────────────────────────────────────────────
-  String get streakTitle => isArabic ? 'استمرارية مباركة' : 'A blessed streak';
-  String get consecutiveDays => isArabic ? 'أيام متواصلة' : 'consecutive days';
-  String get quranCommitment =>
-      isArabic ? 'عهد مع القرآن الكريم' : 'A steady Quran habit';
   String longestStreak(int value) =>
       isArabic ? 'أطول سلسلة: $value يوم' : 'Longest streak: $value days';
   String get newRecord =>
@@ -173,13 +70,8 @@ class SocialShareCopy {
       isArabic ? '$value صفحة مقروءة' : '$value pages read';
 
   // ─── Certificate template ────────────────────────────────────────────────
-  String get certificateTitle =>
-      isArabic ? 'شهادة إتمام ومواظبة' : 'Completion certificate';
   String verificationCode(String code) =>
       isArabic ? 'رقم التوثيق: $code' : 'Verification code: $code';
-  String certificateSentence(String awardTitle) => isArabic
-      ? 'حصلت على $awardTitle تقديراً لإنجازك في تالية للقرآن الكريم ✨'
-      : 'I earned $awardTitle for my progress with Talia Quran ✨';
 
   // ─── Dawn card copy ──────────────────────────────────────────────────────
   // App-authored invitation copy: no Quran, hadith or dua text lives here.
@@ -353,6 +245,4 @@ class SocialShareCopy {
 
   String formatName(SocialShareFormat format) =>
       isArabic ? format.nameAr : format.nameEn;
-  String themeName(SocialShareThemeType type) =>
-      isArabic ? type.nameAr : type.nameEn;
 }
