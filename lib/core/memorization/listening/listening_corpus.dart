@@ -36,9 +36,14 @@ final class ListeningCorpus {
     );
   }
 
+  /// Comparison key: normalized Arabic letters and single spaces only, so
+  /// Quranic marks the normalizer keeps (۞ rub el hizb, ۩ sajdah, ۝ ayah end,
+  /// BOM) can never make two identical ayahs look different.
   static String normalizedKey(String text) => ArabicNormalizer.normalize(
-    text.replaceAll('﻿', ''),
-  ).replaceAll(RegExp(r'\s+'), ' ').trim();
+    text,
+  ).replaceAll(_nonLetter, ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  static final _nonLetter = RegExp(r'[^\p{L}\s]', unicode: true);
 
   final Map<int, List<String>> _texts;
   final Set<String> _crossSurahDuplicates;

@@ -5,9 +5,15 @@ import 'package:talia_quran/core/memorization/listening/listening_corpus.dart';
 import 'package:talia_quran/core/memorization/listening/listening_question.dart';
 import 'package:talia_quran/core/memorization/listening/listening_quiz_engine.dart';
 
+// Keys compare letters only, so spell numbers as letters (a=0 … j=9).
+String _letters(int n) =>
+    n.toString().split('').map((d) => 'abcdefghij'[int.parse(d)]).join();
+
 ListeningCorpus _corpus() => ListeningCorpus.fromTexts({
   for (var s = 1; s <= 114; s++)
-    s: [for (var a = 1; a <= 5; a++) 'surah $s ayah $a'],
+    s: [
+      for (var a = 1; a <= 5; a++) 'surah ${_letters(s)} ayah ${_letters(a)}',
+    ],
 });
 
 List<ListeningAyahRef> _prompts(int surahId) => [

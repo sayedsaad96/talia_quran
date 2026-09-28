@@ -22,10 +22,17 @@ class _MockAudio extends Mock implements ListeningAudio {}
 
 class _MockCapture extends Mock implements ListeningRecitationCapture {}
 
+// Keys compare letters only, so spell numbers as letters (a=0 … j=9).
+String _letters(int n) =>
+    n.toString().split('').map((d) => 'abcdefghij'[int.parse(d)]).join();
+
 ListeningQuizMaterial _material({int promptCount = 12}) {
   final corpus = ListeningCorpus.fromTexts({
     for (var s = 1; s <= 114; s++)
-      s: [for (var a = 1; a <= 20; a++) 'surah $s ayah $a'],
+      s: [
+        for (var a = 1; a <= 20; a++)
+          'surah ${_letters(s)} ayah ${_letters(a)}',
+      ],
   });
   return ListeningQuizMaterial(
     corpus: corpus,
