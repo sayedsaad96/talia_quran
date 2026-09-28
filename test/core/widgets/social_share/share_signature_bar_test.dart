@@ -10,8 +10,7 @@ import 'package:talia_quran/core/widgets/social_share/talia_share_tokens.dart';
 import 'share_test_harness.dart';
 
 void main() {
-  const url =
-      'https://taliaapp.com/?utm_source=talia_app&utm_medium=share_card&utm_campaign=quranAyah';
+  const url = 'https://taliaapp.com/?utm_source=tc&utm_campaign=quranAyah';
 
   Widget bar(SocialShareFormat format, String languageCode, String invitation) {
     return ShareSignatureBar(

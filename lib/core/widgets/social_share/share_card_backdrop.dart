@@ -44,7 +44,7 @@ class ShareCardBackdrop extends StatelessWidget {
                 palette.glow.withValues(alpha: palette.glowStrength * 0.35),
                 palette.glow.withValues(alpha: 0),
               ],
-              stops: const [0, 0.4, 1],
+              stops: const [0, 0.32, 1],
             ),
           ),
         ),
@@ -95,15 +95,15 @@ class ShareArchPainter extends CustomPainter {
     final w = right - left;
     final top = size.height * 0.09;
     final bottom = size.height - bottomInset;
-    final shoulder = top + w * 0.46;
+    final shoulder = top + w * 0.36;
     double x(double f) => left + w * f;
     return Path()
       ..moveTo(left, bottom)
       ..lineTo(left, shoulder)
-      ..quadraticBezierTo(left, top + w * 0.22, x(0.26), top + w * 0.14)
-      ..quadraticBezierTo(x(0.46), top + w * 0.09, x(0.5), top)
-      ..quadraticBezierTo(x(0.54), top + w * 0.09, x(0.74), top + w * 0.14)
-      ..quadraticBezierTo(right, top + w * 0.22, right, shoulder)
+      ..quadraticBezierTo(left, top + w * 0.17, x(0.26), top + w * 0.11)
+      ..quadraticBezierTo(x(0.46), top + w * 0.07, x(0.5), top)
+      ..quadraticBezierTo(x(0.54), top + w * 0.07, x(0.74), top + w * 0.11)
+      ..quadraticBezierTo(right, top + w * 0.17, right, shoulder)
       ..lineTo(right, bottom);
   }
 

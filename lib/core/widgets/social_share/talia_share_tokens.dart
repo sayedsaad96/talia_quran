@@ -88,9 +88,9 @@ class TaliaShareMetrics {
   static const square = TaliaShareMetrics._(
     padding: EdgeInsets.all(16),
     eyebrowSize: 10,
-    signatureHeight: 46,
-    logoSize: 34,
-    qrSize: 38,
+    signatureHeight: 52,
+    logoSize: 36,
+    qrSize: 46,
     wordmarkSize: 11,
     invitationSize: 9,
     referenceSize: 11,
@@ -105,15 +105,15 @@ class TaliaShareMetrics {
     heroInset: 14,
     medalSize: 64,
     gap: 6,
-    verseSizes: [21, 18, 15.5, 13],
+    verseSizes: [22, 19, 16, 13],
   );
 
   static const portrait = TaliaShareMetrics._(
     padding: EdgeInsets.all(20),
     eyebrowSize: 11,
-    signatureHeight: 54,
+    signatureHeight: 58,
     logoSize: 40,
-    qrSize: 46,
+    qrSize: 51,
     wordmarkSize: 12.5,
     invitationSize: 10,
     referenceSize: 12,
@@ -128,16 +128,16 @@ class TaliaShareMetrics {
     heroInset: 18,
     medalSize: 80,
     gap: 8,
-    verseSizes: [24, 21, 18, 15],
+    verseSizes: [26, 22, 19, 15.5],
   );
 
   /// Story keeps clear of platform UI: 40 top, 56 bottom.
   static const story = TaliaShareMetrics._(
     padding: EdgeInsets.fromLTRB(24, 40, 24, 56),
     eyebrowSize: 13,
-    signatureHeight: 66,
+    signatureHeight: 70,
     logoSize: 48,
-    qrSize: 58,
+    qrSize: 62,
     wordmarkSize: 14,
     invitationSize: 11.5,
     referenceSize: 14,
@@ -152,7 +152,7 @@ class TaliaShareMetrics {
     heroInset: 22,
     medalSize: 104,
     gap: 12,
-    verseSizes: [28, 25, 22, 18],
+    verseSizes: [30, 26, 23, 18.5],
   );
 
   static TaliaShareMetrics of(SocialShareFormat format) {
@@ -285,4 +285,3 @@ abstract class TaliaShareTypography {
     );
   }
 }
-

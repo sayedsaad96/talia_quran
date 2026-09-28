@@ -12,17 +12,16 @@ void main() {
     test('builds a campaign URL per category on the landing page', () {
       expect(
         ShareCardLinks.forCategory(SocialShareCategory.quranAyah),
-        'https://taliaapp.com/?utm_source=talia_app&utm_medium=share_card&utm_campaign=quranAyah',
+        'https://taliaapp.com/?utm_source=tc&utm_campaign=quranAyah',
       );
     });
 
-    test('never carries anything but the three campaign parameters', () {
+    test('never carries anything but the two campaign parameters', () {
       for (final c in SocialShareCategory.values) {
         final uri = Uri.parse(ShareCardLinks.forCategory(c));
         expect(uri.host, 'taliaapp.com');
         expect(uri.queryParameters.keys.toSet(), {
           'utm_source',
-          'utm_medium',
           'utm_campaign',
         });
       }

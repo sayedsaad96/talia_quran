@@ -134,7 +134,7 @@ class ShareQrCode extends StatelessWidget {
       key: const ValueKey('share-qr'),
       width: size,
       height: size,
-      padding: EdgeInsets.all(size * 0.07),
+      padding: EdgeInsets.all(size * 0.1),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(TaliaShareMetrics.qrRadius),
