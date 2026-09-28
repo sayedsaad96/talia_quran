@@ -37,4 +37,34 @@ void main() {
     ]);
     expect(result.weakLinks, isEmpty);
   });
+
+  test('tallies each question type separately', () {
+    const result = ListeningRoundResult([
+      ListeningAnswer(surahQ, ListeningOutcome.correct),
+      ListeningAnswer(surahQ, ListeningOutcome.wrong),
+      ListeningAnswer(nextQ, ListeningOutcome.correct),
+    ]);
+    expect(result.whichSurahTally, (correct: 1, scored: 2));
+    expect(result.nextAyahTally, (correct: 1, scored: 1));
+  });
+
+  test(
+    'a missed continuation without a review record links to the heard ayah',
+    () {
+      const result = ListeningRoundResult([
+        ListeningAnswer(nextQ, ListeningOutcome.wrong),
+      ]);
+      // 3:8 has no review record → never open a review for an unlearned ayah.
+      expect(result.weakLinksWithin({const ListeningAyahRef(3, 7)}), const [
+        ListeningAyahRef(3, 7),
+      ]);
+      expect(
+        result.weakLinksWithin({
+          const ListeningAyahRef(3, 7),
+          const ListeningAyahRef(3, 8),
+        }),
+        const [ListeningAyahRef(3, 8)],
+      );
+    },
+  );
 }

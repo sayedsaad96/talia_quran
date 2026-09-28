@@ -33,26 +33,27 @@ void main() {
     expect(store('a').read().hasPlayed, isFalse);
   });
 
-  test('records last round and keeps the best percent', () async {
-    await store('a').record(_result(8, 2));
-    await store('a').record(_result(5, 5));
-    expect(
-      store('a').read(),
-      const ListeningReviewStats(
-        lastCorrect: 5,
-        lastScored: 10,
-        bestPercent: 80,
-      ),
-    );
+  test('records last round and keeps the best percent per mode', () async {
+    await store('a').record(_result(8, 2), mode: ListeningQuizMode.whichSurah);
+    await store('a').record(_result(5, 5), mode: ListeningQuizMode.whichSurah);
+    await store('a').record(_result(3, 7), mode: ListeningQuizMode.nextAyah);
+    final stats = store('a').read();
+    expect(stats.lastCorrect, 3);
+    expect(stats.lastScored, 10);
+    expect(stats.bestPercentFor(ListeningQuizMode.whichSurah), 80);
+    expect(stats.bestPercentFor(ListeningQuizMode.nextAyah), 30);
+    expect(stats.bestPercentFor(ListeningQuizMode.mixed), isNull);
   });
 
   test('a round with nothing scored is not recorded', () async {
-    await store('a').record(const ListeningRoundResult([]));
+    await store(
+      'a',
+    ).record(const ListeningRoundResult([]), mode: ListeningQuizMode.mixed);
     expect(store('a').read().hasPlayed, isFalse);
   });
 
   test('stats are isolated per account', () async {
-    await store('a').record(_result(9, 1));
+    await store('a').record(_result(9, 1), mode: ListeningQuizMode.mixed);
     expect(store('b').read().hasPlayed, isFalse);
   });
 

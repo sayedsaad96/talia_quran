@@ -2763,6 +2763,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewNewRound => 'New round';
 
   @override
+  String get listeningReviewAudioPlaying => 'Playing the ayah…';
+
+  @override
+  String listeningReviewBreakdownWhichSurah(int correct, int total) {
+    return 'Which surah?: $correct of $total';
+  }
+
+  @override
+  String listeningReviewBreakdownNextAyah(int correct, int total) {
+    return 'Continue the next ayah: $correct of $total';
+  }
+
+  @override
   String get memorizationHubSettingsSectionSubtitle =>
       'Adjust the plan without changing memorization systems.';
 

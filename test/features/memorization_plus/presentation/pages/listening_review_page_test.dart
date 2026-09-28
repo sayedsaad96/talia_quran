@@ -129,4 +129,52 @@ void main() {
     expect(find.text('Links to review'), findsOneWidget);
     expect(find.text('Surah S2 · Ayah 2'), findsOneWidget);
   });
+
+  testWidgets('playing audio is announced as a live status', (tester) async {
+    await _pump(
+      tester,
+      const ListeningReviewInRound(
+        mode: ListeningQuizMode.whichSurah,
+        questions: [_q],
+        index: 0,
+        isPlaying: true,
+      ),
+    );
+    expect(find.text('Playing the ayah…'), findsOneWidget);
+  });
+
+  testWidgets('mixed result shows a breakdown per question type', (
+    tester,
+  ) async {
+    const nextQ = NextAyahQuestion(ListeningAyahRef(2, 1), nextAyahText: 'b');
+    await _pump(
+      tester,
+      const ListeningReviewFinished(
+        ListeningRoundResult([
+          ListeningAnswer(_q, ListeningOutcome.correct),
+          ListeningAnswer(nextQ, ListeningOutcome.wrong),
+        ]),
+      ),
+    );
+    expect(find.text('Which surah?: 1 of 1'), findsOneWidget);
+    expect(find.text('Continue the next ayah: 0 of 1'), findsOneWidget);
+  });
+
+  testWidgets(
+    'weak link for an unlearned continuation targets the heard ayah',
+    (tester) async {
+      const nextQ = NextAyahQuestion(ListeningAyahRef(2, 1), nextAyahText: 'b');
+      await _pump(
+        tester,
+        const ListeningReviewFinished(
+          ListeningRoundResult([
+            ListeningAnswer(nextQ, ListeningOutcome.wrong),
+          ]),
+        ),
+      );
+      // _material.prompts is empty → 2:2 has no review record.
+      expect(find.text('Surah S2 · Ayah 1'), findsOneWidget);
+      expect(find.text('Surah S2 · Ayah 2'), findsNothing);
+    },
+  );
 }

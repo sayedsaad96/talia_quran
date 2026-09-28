@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:dartz/dartz.dart';
@@ -26,12 +27,15 @@ class _MockCapture extends Mock implements ListeningRecitationCapture {}
 String _letters(int n) =>
     n.toString().split('').map((d) => 'abcdefghij'[int.parse(d)]).join();
 
-ListeningQuizMaterial _material({int promptCount = 12}) {
+ListeningQuizMaterial _material({
+  int promptCount = 12,
+  bool hizbMarks = false,
+}) {
   final corpus = ListeningCorpus.fromTexts({
     for (var s = 1; s <= 114; s++)
       s: [
         for (var a = 1; a <= 20; a++)
-          'surah ${_letters(s)} ayah ${_letters(a)}',
+          '${hizbMarks ? '۞ ' : ''}surah ${_letters(s)} ayah ${_letters(a)}',
       ],
   });
   return ListeningQuizMaterial(
@@ -50,6 +54,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const ListeningAyahRef(1, 1));
     registerFallbackValue((String _) {}); // for capture.start(any())
+    registerFallbackValue(() {}); // for onStopped
   });
 
   setUp(() async {
@@ -136,16 +141,78 @@ void main() {
     verify(() => audio.play(round.question.prompt)).called(3);
   });
 
-  test('audio failure skips the question without scoring it', () async {
-    when(() => source.load()).thenAnswer((_) async => Right(_material()));
+  test('audio failure replaces the question from the spare pool', () async {
+    when(
+      () => source.load(),
+    ).thenAnswer((_) async => Right(_material(promptCount: 20)));
     var calls = 0;
     when(() => audio.play(any())).thenAnswer((_) async => calls++ != 0);
     final cubit = build();
     await cubit.load();
     await cubit.startRound(ListeningQuizMode.whichSurah);
     final round = cubit.state as ListeningReviewInRound;
-    expect(round.index, 1);
-    expect(round.answers.single.outcome, ListeningOutcome.skipped);
+    expect(round.index, 0);
+    expect(round.answers, isEmpty);
+    expect(round.questions, hasLength(10));
+    expect(calls, 2);
+  });
+
+  test(
+    'a round with fewer than 5 playable questions ends in not-enough',
+    () async {
+      when(() => source.load()).thenAnswer((_) async => Right(_material()));
+      when(() => audio.play(any())).thenAnswer((_) async => false);
+      final cubit = build();
+      await cubit.load();
+      await cubit.startRound(ListeningQuizMode.whichSurah);
+      expect(cubit.state, isA<ListeningReviewNotEnough>());
+    },
+  );
+
+  test(
+    'answering during playback stops audio; a late failure is ignored',
+    () async {
+      when(() => source.load()).thenAnswer((_) async => Right(_material()));
+      final playing = Completer<bool>();
+      when(() => audio.play(any())).thenAnswer((_) => playing.future);
+      final cubit = build();
+      await cubit.load();
+      final round = cubit.startRound(ListeningQuizMode.whichSurah);
+      await pumpEventQueue();
+      final q =
+          (cubit.state as ListeningReviewInRound).question
+              as WhichSurahQuestion;
+      cubit.answerSurah(q.prompt.surahId);
+      verify(() => audio.stop()).called(1);
+      playing.complete(false);
+      await round;
+      final after = cubit.state as ListeningReviewInRound;
+      expect(after.index, 0);
+      expect(after.answers.single.outcome, ListeningOutcome.correct);
+    },
+  );
+
+  test('closing while audio plays does not emit after close', () async {
+    when(() => source.load()).thenAnswer((_) async => Right(_material()));
+    final playing = Completer<bool>();
+    when(() => audio.play(any())).thenAnswer((_) => playing.future);
+    final cubit = build();
+    await cubit.load();
+    final round = cubit.startRound(ListeningQuizMode.whichSurah);
+    await pumpEventQueue();
+    await cubit.close();
+    playing.complete(true);
+    await expectLater(round, completes);
+  });
+
+  test('closing while loading does not emit after close', () async {
+    final loading = Completer<Either<Failure, ListeningQuizMaterial>>();
+    when(() => source.load()).thenAnswer((_) => loading.future);
+    final cubit = build();
+    final load = cubit.load();
+    await cubit.close();
+    loading.complete(Right(_material()));
+    await expectLater(load, completes);
   });
 
   test('finishing a round writes stats and emits the result', () async {
@@ -162,7 +229,7 @@ void main() {
     }
     final finished = cubit.state as ListeningReviewFinished;
     expect(finished.result.correct, 10);
-    expect(stats.read().bestPercent, 100);
+    expect(stats.read().bestPercentFor(ListeningQuizMode.whichSurah), 100);
   });
 
   test(
@@ -172,7 +239,9 @@ void main() {
       when(
         () => capture.prepare(),
       ).thenAnswer((_) async => ListeningCaptureReadiness.ready);
-      when(() => capture.start(any())).thenAnswer((_) async {});
+      when(
+        () => capture.start(any(), onStopped: any(named: 'onStopped')),
+      ).thenAnswer((_) async {});
       final cubit = build();
       await cubit.load();
       await cubit.startRound(ListeningQuizMode.nextAyah);
@@ -193,7 +262,9 @@ void main() {
     when(
       () => capture.prepare(),
     ).thenAnswer((_) async => ListeningCaptureReadiness.ready);
-    when(() => capture.start(any())).thenAnswer((_) async {});
+    when(
+      () => capture.start(any(), onStopped: any(named: 'onStopped')),
+    ).thenAnswer((_) async {});
     when(() => capture.stop()).thenAnswer((_) async => '');
     final cubit = build();
     await cubit.load();
@@ -227,4 +298,67 @@ void main() {
       ListeningOutcome.hesitant,
     );
   });
+
+  test(
+    'next-ayah: Quranic marks in the target do not fail a correct recitation',
+    () async {
+      when(
+        () => source.load(),
+      ).thenAnswer((_) async => Right(_material(hizbMarks: true)));
+      when(
+        () => capture.prepare(),
+      ).thenAnswer((_) async => ListeningCaptureReadiness.ready);
+      when(
+        () => capture.start(any(), onStopped: any(named: 'onStopped')),
+      ).thenAnswer((_) async {});
+      final cubit = build();
+      await cubit.load();
+      await cubit.startRound(ListeningQuizMode.nextAyah);
+      final q =
+          (cubit.state as ListeningReviewInRound).question as NextAyahQuestion;
+      expect(q.nextAyahText, startsWith('۞ '));
+      when(
+        () => capture.stop(),
+      ).thenAnswer((_) async => q.nextAyahText.substring(2));
+
+      await cubit.startRecording();
+      await cubit.stopRecording();
+
+      expect(
+        (cubit.state as ListeningReviewInRound).current!.outcome,
+        ListeningOutcome.correct,
+      );
+    },
+  );
+
+  test(
+    'next-ayah: recognizer stopping by itself evaluates the recitation',
+    () async {
+      when(() => source.load()).thenAnswer((_) async => Right(_material()));
+      when(
+        () => capture.prepare(),
+      ).thenAnswer((_) async => ListeningCaptureReadiness.ready);
+      void Function()? onStopped;
+      when(
+        () => capture.start(any(), onStopped: any(named: 'onStopped')),
+      ).thenAnswer((inv) async {
+        onStopped = inv.namedArguments[#onStopped] as void Function();
+      });
+      final cubit = build();
+      await cubit.load();
+      await cubit.startRound(ListeningQuizMode.nextAyah);
+      final q =
+          (cubit.state as ListeningReviewInRound).question as NextAyahQuestion;
+      when(() => capture.stop()).thenAnswer((_) async => q.nextAyahText);
+
+      await cubit.startRecording();
+      onStopped!();
+      await pumpEventQueue();
+
+      expect(
+        (cubit.state as ListeningReviewInRound).current!.outcome,
+        ListeningOutcome.correct,
+      );
+    },
+  );
 }

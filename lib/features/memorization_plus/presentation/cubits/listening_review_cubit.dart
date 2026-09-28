@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/memorization/listening/listening_corpus.dart';
 import '../../../../core/memorization/listening/listening_question.dart';
 import '../../../../core/memorization/listening/listening_quiz_engine.dart';
 import '../../../../core/memorization/listening/listening_round_result.dart';
@@ -43,16 +45,25 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
   ListeningQuizMaterial? _material;
   ListeningQuizMaterial? get material => _material;
 
+  /// Built but unused candidates; they replace questions whose audio fails.
+  List<ListeningQuestion> _spares = const [];
+
+  /// Page may be closed while audio, speech or loading is in flight.
+  void _emit(ListeningReviewState next) {
+    if (!isClosed) emit(next);
+  }
+
   Future<void> load() async {
-    emit(const ListeningReviewLoading());
+    _emit(const ListeningReviewLoading());
     final result = await _source.load();
-    result.fold((_) => emit(const ListeningReviewError()), (material) {
+    if (isClosed) return;
+    result.fold((_) => _emit(const ListeningReviewError()), (material) {
       _material = material;
       final eligible = _engine.eligiblePromptCount(
         material.corpus,
         material.prompts,
       );
-      emit(
+      _emit(
         eligible < ListeningQuizEngine.minQuestions
             ? const ListeningReviewNotEnough()
             : ListeningReviewIdle(_stats.read()),
@@ -62,7 +73,7 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
 
   Future<void> startRound(ListeningQuizMode mode) async {
     final material = _material;
-    if (material == null) return;
+    if (material == null || state is! ListeningReviewIdle) return;
     final candidates = _engine.buildRound(
       corpus: material.corpus,
       prompts: material.prompts,
@@ -74,16 +85,16 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
     final uncached = <ListeningQuestion>[];
     for (final q in candidates) {
       (await _audio.isCached(q.prompt) ? cached : uncached).add(q);
+      if (isClosed) return;
     }
-    final questions = [
-      ...cached,
-      ...uncached,
-    ].take(ListeningQuizEngine.roundSize).toList();
+    final ordered = [...cached, ...uncached];
+    final questions = ordered.take(ListeningQuizEngine.roundSize).toList();
+    _spares = ordered.skip(questions.length).toList();
     if (questions.length < ListeningQuizEngine.minQuestions) {
-      emit(const ListeningReviewNotEnough());
+      _emit(const ListeningReviewNotEnough());
       return;
     }
-    emit(ListeningReviewInRound(mode: mode, questions: questions, index: 0));
+    _emit(ListeningReviewInRound(mode: mode, questions: questions, index: 0));
     await _playCurrent();
   }
 
@@ -112,32 +123,40 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
     }
     if (st.isPlaying) await _audio.stop();
     final readiness = await _capture.prepare();
+    if (isClosed) return;
     if (readiness != ListeningCaptureReadiness.ready) {
-      emit(st.copyWith(selfGradeMode: true, isPlaying: false));
+      _emit(st.copyWith(selfGradeMode: true, isPlaying: false));
       return;
     }
-    emit(st.copyWith(isRecording: true, recognizedText: '', isPlaying: false));
-    await _capture.start((words) {
-      final current = state;
-      if (current is ListeningReviewInRound && current.isRecording) {
-        emit(current.copyWith(recognizedText: words));
-      }
-    });
+    _emit(st.copyWith(isRecording: true, recognizedText: '', isPlaying: false));
+    await _capture.start(
+      (words) {
+        final current = state;
+        if (current is ListeningReviewInRound && current.isRecording) {
+          _emit(current.copyWith(recognizedText: words));
+        }
+      },
+      // Silence timeout or recognizer error: evaluate what was heard.
+      onStopped: () => unawaited(stopRecording()),
+    );
   }
 
   Future<void> stopRecording() async {
     final st = state;
     if (st is! ListeningReviewInRound || !st.isRecording) return;
     final spoken = await _capture.stop();
+    if (isClosed) return;
     final question = st.question as NextAyahQuestion;
     final result = _evaluator.evaluate(
-      targetText: question.nextAyahText,
+      // Letters-only target: marks such as ۞ are not recited, so they must
+      // not count as missing words. Display still uses the canonical text.
+      targetText: ListeningCorpus.normalizedKey(question.nextAyahText),
       spokenText: spoken,
     );
     final stopped = st.copyWith(isRecording: false, recognizedText: spoken);
     if (result.isNoAttempt) {
       final attempts = stopped.emptyAttempts + 1;
-      emit(
+      _emit(
         stopped.copyWith(emptyAttempts: attempts, selfGradeMode: attempts >= 2),
       );
       return;
@@ -151,14 +170,14 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
   void useSelfGrade() {
     final st = state;
     if (st is ListeningReviewInRound && !st.isAnswered) {
-      emit(st.copyWith(selfGradeMode: true));
+      _emit(st.copyWith(selfGradeMode: true));
     }
   }
 
   void revealForSelfGrade() {
     final st = state;
     if (st is ListeningReviewInRound && st.selfGradeMode && !st.isAnswered) {
-      emit(st.copyWith(selfGradeRevealed: true));
+      _emit(st.copyWith(selfGradeRevealed: true));
     }
   }
 
@@ -181,16 +200,26 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
 
   Future<void> backToStart() async {
     await _audio.stop();
+    if (isClosed) return;
     if (_material == null) {
       await load();
       return;
     }
-    emit(ListeningReviewIdle(_stats.read()));
+    _emit(ListeningReviewIdle(_stats.read()));
   }
 
   void _answer(ListeningReviewInRound st, ListeningOutcome outcome) {
+    // Answering ends the listening part: stop the ayah so the next
+    // question's audio starts from a stopped player.
+    if (st.isPlaying) unawaited(_audio.stop());
     final answer = ListeningAnswer(st.question, outcome);
-    emit(st.copyWith(current: answer, answers: [...st.answers, answer]));
+    _emit(
+      st.copyWith(
+        current: answer,
+        answers: [...st.answers, answer],
+        isPlaying: false,
+      ),
+    );
   }
 
   Future<void> _playCurrent() async {
@@ -198,22 +227,54 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
     if (st is! ListeningReviewInRound ||
         st.isPlaying ||
         st.isRecording ||
+        st.isAnswered ||
         st.playsLeft <= 0) {
       return;
     }
-    emit(st.copyWith(isPlaying: true, playsUsed: st.playsUsed + 1));
+    _emit(st.copyWith(isPlaying: true, playsUsed: st.playsUsed + 1));
     final played = await _audio.play(st.question.prompt);
+    if (isClosed) return;
     final after = state;
-    if (after is! ListeningReviewInRound || after.index != st.index) return;
-    if (played) {
-      emit(after.copyWith(isPlaying: false));
+    if (after is! ListeningReviewInRound ||
+        after.index != st.index ||
+        after.question != st.question) {
       return;
     }
-    // Audio unavailable (e.g. offline, not cached): skip without scoring.
-    await _advance(after, [
-      ...after.answers,
-      ListeningAnswer(after.question, ListeningOutcome.skipped),
-    ]);
+    if (played || after.isAnswered) {
+      // A failure after the learner already answered changes nothing.
+      if (after.isPlaying) _emit(after.copyWith(isPlaying: false));
+      return;
+    }
+    await _replaceUnplayable(after);
+  }
+
+  /// Swaps an unplayable question for a spare, or drops it when none is
+  /// left. Never scored: an audio failure is not the learner's mistake.
+  Future<void> _replaceUnplayable(ListeningReviewInRound st) async {
+    final questions = [...st.questions];
+    if (_spares.isNotEmpty) {
+      questions[st.index] = _spares.first;
+      _spares = _spares.skip(1).toList();
+    } else {
+      questions.removeAt(st.index);
+    }
+    if (questions.length < ListeningQuizEngine.minQuestions) {
+      _emit(const ListeningReviewNotEnough());
+      return;
+    }
+    if (st.index >= questions.length) {
+      await _finish(st.mode, st.answers);
+      return;
+    }
+    _emit(
+      ListeningReviewInRound(
+        mode: st.mode,
+        questions: questions,
+        index: st.index,
+        answers: st.answers,
+      ),
+    );
+    await _playCurrent();
   }
 
   Future<void> _advance(
@@ -221,12 +282,10 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
     List<ListeningAnswer> answers,
   ) async {
     if (st.index + 1 >= st.questions.length) {
-      final result = ListeningRoundResult(answers);
-      await _stats.record(result);
-      emit(ListeningReviewFinished(result));
+      await _finish(st.mode, answers);
       return;
     }
-    emit(
+    _emit(
       ListeningReviewInRound(
         mode: st.mode,
         questions: st.questions,
@@ -235,6 +294,15 @@ class ListeningReviewCubit extends Cubit<ListeningReviewState> {
       ),
     );
     await _playCurrent();
+  }
+
+  Future<void> _finish(
+    ListeningQuizMode mode,
+    List<ListeningAnswer> answers,
+  ) async {
+    final result = ListeningRoundResult(answers);
+    await _stats.record(result, mode: mode);
+    _emit(ListeningReviewFinished(result));
   }
 
   @override

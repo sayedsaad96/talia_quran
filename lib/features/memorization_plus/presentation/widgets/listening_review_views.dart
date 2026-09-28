@@ -182,6 +182,17 @@ class ListeningQuestionView extends StatelessWidget {
           ),
           label: Text(l10n.listeningReviewReplay(round.playsLeft)),
         ),
+        // Announced to screen readers when playback starts and ends.
+        Semantics(
+          liveRegion: true,
+          child: Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
+              round.isPlaying ? l10n.listeningReviewAudioPlaying : '',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         if (round.isAnswered)
           _Reveal(round: round)
@@ -373,7 +384,11 @@ class ListeningResultView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<ListeningReviewCubit>();
     final l10n = context.l10n;
-    final weak = result.weakLinks;
+    final reviewable = cubit.material?.prompts.toSet() ?? const {};
+    final weak = result.weakLinksWithin(reviewable);
+    final surahTally = result.whichSurahTally;
+    final nextTally = result.nextAyahTally;
+    final showBreakdown = surahTally.scored > 0 && nextTally.scored > 0;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
@@ -388,6 +403,23 @@ class ListeningResultView extends StatelessWidget {
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
+        if (showBreakdown) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.listeningReviewBreakdownWhichSurah(
+              surahTally.correct,
+              surahTally.scored,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            l10n.listeningReviewBreakdownNextAyah(
+              nextTally.correct,
+              nextTally.scored,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         Text(
           l10n.listeningReviewWeakLinksTitle,

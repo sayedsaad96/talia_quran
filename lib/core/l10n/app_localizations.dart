@@ -5042,6 +5042,24 @@ abstract class AppLocalizations {
   /// **'جولة جديدة'**
   String get listeningReviewNewRound;
 
+  /// No description provided for @listeningReviewAudioPlaying.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ تشغيل الآية…'**
+  String get listeningReviewAudioPlaying;
+
+  /// No description provided for @listeningReviewBreakdownWhichSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من أي سورة؟: {correct} من {total}'**
+  String listeningReviewBreakdownWhichSurah(int correct, int total);
+
+  /// No description provided for @listeningReviewBreakdownNextAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل التالية: {correct} من {total}'**
+  String listeningReviewBreakdownNextAyah(int correct, int total);
+
   /// No description provided for @memorizationHubSettingsSectionSubtitle.
   ///
   /// In ar, this message translates to:

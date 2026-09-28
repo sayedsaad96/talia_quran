@@ -2738,6 +2738,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get listeningReviewNewRound => 'جولة جديدة';
 
   @override
+  String get listeningReviewAudioPlaying => 'جارٍ تشغيل الآية…';
+
+  @override
+  String listeningReviewBreakdownWhichSurah(int correct, int total) {
+    return 'من أي سورة؟: $correct من $total';
+  }
+
+  @override
+  String listeningReviewBreakdownNextAyah(int correct, int total) {
+    return 'أكمل التالية: $correct من $total';
+  }
+
+  @override
   String get memorizationHubSettingsSectionSubtitle =>
       'اضبط خطة الحفظ بدون تغيير المسار.';
 
