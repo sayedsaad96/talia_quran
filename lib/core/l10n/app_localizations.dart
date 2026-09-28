@@ -9823,6 +9823,12 @@ abstract class AppLocalizations {
   /// **'XP'**
   String get xpLabel;
 
+  /// No description provided for @countOfTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} من {total}'**
+  String countOfTotal(int count, int total);
+
   /// No description provided for @homeTodayTitle.
   ///
   /// In ar, this message translates to:

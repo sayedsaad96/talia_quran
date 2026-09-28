@@ -13,7 +13,7 @@ class ActivityHeatmap extends StatelessWidget {
 
   Color _getColor(int count, ColorScheme cs) {
     if (count == 0) {
-      return cs.surfaceContainerHighest.withValues(alpha: 0.3);
+      return cs.surfaceContainerHighest;
     }
     if (count < 5) {
       return cs.primary.withValues(alpha: 0.25);

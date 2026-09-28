@@ -2367,6 +2367,7 @@
   "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}},
   "brandName": "تاليــة",
   "xpLabel": "XP",
+  "countOfTotal": "{count} of {total}",
   "homeTodayTitle": "Today",
   "homeTodayReading": "Daily reading",
   "homeTodayMemorize": "Memorize",

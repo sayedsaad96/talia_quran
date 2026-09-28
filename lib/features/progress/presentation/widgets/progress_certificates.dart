@@ -73,12 +73,10 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
+              color: context.tokens.card,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
               border: Border.all(
-                color: widget.isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
+                color: context.tokens.divider,
               ),
             ),
             child: Center(
@@ -94,9 +92,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
                     context.l10n.earnCertificatesHint,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: widget.isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                 ],
@@ -200,9 +196,7 @@ class _CertificateCard extends StatelessWidget {
               context.localizedCertificateTitle(cert),
               textAlign: TextAlign.center,
               style: AppTypography.labelMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
                 fontWeight: FontWeight.bold,
               ),
               maxLines: 2,
@@ -212,9 +206,7 @@ class _CertificateCard extends StatelessWidget {
             Text(
               '${cert.earnedAt.day}/${cert.earnedAt.month}/${cert.earnedAt.year}',
               style: AppTypography.labelSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
               ),
             ),
           ],

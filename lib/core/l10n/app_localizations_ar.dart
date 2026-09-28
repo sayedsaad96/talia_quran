@@ -5525,6 +5525,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get xpLabel => 'XP';
 
   @override
+  String countOfTotal(int count, int total) {
+    return '$count من $total';
+  }
+
+  @override
   String get homeTodayTitle => 'اليوم';
 
   @override

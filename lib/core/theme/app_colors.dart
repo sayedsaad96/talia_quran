@@ -20,6 +20,7 @@ abstract class AppColors {
   // ─── Feature Accent Colors ──────────────────────────────────────────────────
   /// Streak / activity orange — used for streak counters and activity tiles
   static const Color streakOrange = Color(0xFFFF8C42);
+  static const Color streakOrangeDeep = Color(0xFFFF5500);
 
   /// Accent blue — used for Quran reading stats and informational tiles
   static const Color accentBlue = Color(0xFF2D5A8E);

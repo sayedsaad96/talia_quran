@@ -101,16 +101,10 @@
     "radiusLiteral": 1,
     "isDarkBranch": 12
   },
-  "lib/features/certificate/presentation/pages/certificate_page.dart": {
-    "hexColor": 5,
-    "radiusLiteral": 2,
-    "isDarkBranch": 3
-  },
   "lib/features/certificate/presentation/widgets/certificate_celebration_dialog.dart": {
-    "isDarkBranch": 5
+    "isDarkBranch": 1
   },
   "lib/features/certificate/presentation/widgets/certificate_widget.dart": {
-    "hexColor": 34,
     "fontSizeLiteral": 10,
     "radiusLiteral": 4
   },
@@ -264,28 +258,12 @@
   "lib/features/onboarding/presentation/widgets/onboarding_mushaf_bento_view.dart": {
     "fontSizeLiteral": 1
   },
-  "lib/features/progress/presentation/pages/progress_page.dart": {
-    "hexColor": 4,
-    "isDarkBranch": 5
-  },
   "lib/features/progress/presentation/widgets/progress_achievements.dart": {
-    "hexColor": 19,
-    "fontSizeLiteral": 1,
     "radiusLiteral": 1,
-    "isDarkBranch": 13
-  },
-  "lib/features/progress/presentation/widgets/progress_certificates.dart": {
-    "isDarkBranch": 6
-  },
-  "lib/features/progress/presentation/widgets/progress_detailed_card.dart": {
-    "isDarkBranch": 6
-  },
-  "lib/features/progress/presentation/widgets/progress_smart_memorization.dart": {
     "isDarkBranch": 3
   },
-  "lib/features/progress/presentation/widgets/progress_stat_cards.dart": {
-    "hexColor": 1,
-    "isDarkBranch": 5
+  "lib/features/progress/presentation/widgets/progress_certificates.dart": {
+    "isDarkBranch": 1
   },
   "lib/features/quran/presentation/pages/bookmarks_page.dart": {
     "isDarkBranch": 7

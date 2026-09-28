@@ -49,11 +49,9 @@ class _DetailedProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
+    final textPrimary = context.tokens.textPrimary;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -148,9 +146,7 @@ class _DetailedProgressCard extends StatelessWidget {
                         Text(
                           chip.label,
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
+                            color: context.tokens.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -183,10 +179,8 @@ class _ProgressBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final hintColor = context.tokens.textHint;
+    final textPrimary = context.tokens.textPrimary;
 
     return Column(
       children: [
@@ -207,7 +201,7 @@ class _ProgressBarRow extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              '${row.current} / ${row.total}',
+              context.l10n.countOfTotal(row.current, row.total),
               style: AppTypography.labelSmall.copyWith(
                 color: textPrimary,
                 fontWeight: FontWeight.w600,

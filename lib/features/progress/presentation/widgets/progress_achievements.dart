@@ -32,7 +32,7 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
 
     final tabLabels = [
       context.l10n.all,
@@ -130,10 +130,10 @@ class _AchievementTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unlocked = achievement.isUnlocked;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final primary = context.tokens.accent;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
+    final hintColor = context.tokens.textHint;
     final title = context.localizedAchievementTitle(achievement);
 
     return Semantics(
@@ -169,7 +169,6 @@ class _AchievementTile extends StatelessWidget {
               style: AppTypography.labelSmall.copyWith(
                 color: unlocked ? primary : hintColor,
                 fontWeight: unlocked ? FontWeight.w600 : FontWeight.w400,
-                fontSize: 10,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -198,7 +197,10 @@ class _AchievementTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '${achievement.currentValue}/${achievement.targetValue}',
+                context.l10n.countOfTotal(
+                  achievement.currentValue,
+                  achievement.targetValue,
+                ),
                 style: AppTypography.labelSmall.copyWith(
                   color: hintColor,
                 ),
@@ -213,16 +215,12 @@ class _AchievementTile extends StatelessWidget {
 
   void _showAchievementDetail(BuildContext context) {
     final isDark = this.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final primary = context.tokens.accent;
+    final surface = context.tokens.card;
     final title = context.localizedAchievementTitle(achievement);
     final description = context.localizedAchievementDescription(achievement);
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     showModalBottomSheet(
       context: context,
@@ -244,9 +242,7 @@ class _AchievementTile extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
+                  color: context.tokens.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -285,7 +281,10 @@ class _AchievementTile extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                '${achievement.currentValue} / ${achievement.targetValue}',
+                context.l10n.countOfTotal(
+                  achievement.currentValue,
+                  achievement.targetValue,
+                ),
                 style: AppTypography.labelMedium.copyWith(
                   color: textSecondary,
                   fontWeight: FontWeight.w600,
@@ -496,37 +495,18 @@ class _AchievementBadgeShape extends StatelessWidget {
       }
     }
 
-    List<Color> gradientColors;
-    Color glowColor;
+    final List<Color> gradientColors;
+    final Color glowColor;
 
     if (!isUnlocked) {
       gradientColors = isDark
-          ? [const Color(0xFF303030), const Color(0xFF1A1A1A)]
-          : [const Color(0xFFE0E0E0), const Color(0xFFBDBDBD)];
+          ? AchievementTierPalette.lockedDark
+          : AchievementTierPalette.lockedLight;
       glowColor = Colors.transparent;
     } else {
-      switch (rank) {
-        case 4: // Legendary (Purple/Gold)
-          gradientColors = [const Color(0xFFE5C158), const Color(0xFF8A2BE2)];
-          glowColor = const Color(0xFF8A2BE2);
-          break;
-        case 3: // Diamond (Cyan/Blue)
-          gradientColors = [const Color(0xFF00F2FE), const Color(0xFF4FACFE)];
-          glowColor = const Color(0xFF00F2FE);
-          break;
-        case 2: // Gold (Yellow/Orange)
-          gradientColors = [const Color(0xFFFFD700), const Color(0xFFFFA500)];
-          glowColor = const Color(0xFFFFD700);
-          break;
-        case 1: // Silver (Grey/Blueish)
-          gradientColors = [const Color(0xFFE0E0E0), const Color(0xFF9E9E9E)];
-          glowColor = const Color(0xFF9E9E9E);
-          break;
-        default: // Bronze (Brown/Orange)
-          gradientColors = [const Color(0xFFCD7F32), const Color(0xFF8B4513)];
-          glowColor = const Color(0xFFCD7F32);
-          break;
-      }
+      final tier = AchievementTierPalette.forRank(rank);
+      gradientColors = tier.gradient;
+      glowColor = tier.glow;
     }
 
     return Container(

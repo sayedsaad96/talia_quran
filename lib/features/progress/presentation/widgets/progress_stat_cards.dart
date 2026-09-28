@@ -13,7 +13,7 @@ class _StreakCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.streakOrange, Color(0xFFFF5500)],
+          colors: [AppColors.streakOrange, AppColors.streakOrangeDeep],
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
@@ -75,8 +75,8 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -93,24 +93,20 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.displaySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+              color: context.tokens.textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
           Text(
             unit,
             style: AppTypography.bodySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+              color: context.tokens.textHint,
             ),
           ),
         ],

@@ -2308,6 +2308,8 @@
   "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}},
   "brandName": "تاليــة",
   "xpLabel": "XP",
+  "countOfTotal": "{count} من {total}",
+  "@countOfTotal": { "placeholders": { "count": { "type": "int" }, "total": { "type": "int" } } },
   "homeTodayTitle": "اليوم",
   "homeTodayReading": "ورد القراءة",
   "homeTodayMemorize": "الحفظ",

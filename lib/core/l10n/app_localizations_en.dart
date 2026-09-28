@@ -5482,6 +5482,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xpLabel => 'XP';
 
   @override
+  String countOfTotal(int count, int total) {
+    return '$count of $total';
+  }
+
+  @override
   String get homeTodayTitle => 'Today';
 
   @override

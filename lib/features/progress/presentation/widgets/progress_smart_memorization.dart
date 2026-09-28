@@ -7,10 +7,8 @@ class _SmartMemorizationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final surface = context.tokens.card;
+    final textPrimary = context.tokens.textPrimary;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -117,9 +115,7 @@ class _StatBox extends StatelessWidget {
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],

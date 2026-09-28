@@ -207,14 +207,9 @@ class _CertificatePageState extends State<CertificatePage> {
   }
 
   void _showSaveOptions() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sheetColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final dividerColor = isDark
-        ? AppColors.darkDivider
-        : AppColors.lightDivider;
+    final sheetColor = context.tokens.card;
+    final textColor = context.tokens.textPrimary;
+    final dividerColor = context.tokens.divider;
 
     showModalBottomSheet(
       context: context,
@@ -277,7 +272,7 @@ class _CertificatePageState extends State<CertificatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D131A),
+      backgroundColor: CertificatePagePalette.background,
       body: Stack(
         children: [
           // 1. Certificate Viewer (Full Screen, Arabic layout)
@@ -374,7 +369,7 @@ class _CertificatePageState extends State<CertificatePage> {
       ),
       decoration: BoxDecoration(
         color: Colors.black87,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         border: Border.all(color: Colors.white24, width: 1),
         boxShadow: [
           BoxShadow(
@@ -403,7 +398,7 @@ class _CertificatePageState extends State<CertificatePage> {
                 ),
               ),
               selected: isSelected,
-              selectedColor: const Color(0xFFE5C158),
+              selectedColor: CertificatePagePalette.gold,
               backgroundColor: Colors.white12,
               onSelected: (selected) {
                 if (selected) {
@@ -427,7 +422,7 @@ class _CertificatePageState extends State<CertificatePage> {
           shape: BoxShape.circle,
         ),
         child: const CircularProgressIndicator(
-          color: Color(0xFFC9A84C),
+          color: CertificatePagePalette.goldMuted,
           strokeWidth: 2,
         ),
       );
@@ -446,14 +441,11 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFC9A84C),
+            backgroundColor: CertificatePagePalette.goldMuted,
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(
               vertical: 10,
               horizontal: 14,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
@@ -464,7 +456,7 @@ class _CertificatePageState extends State<CertificatePage> {
           tooltip: 'بطاقة سوشيال ميديا',
           style: IconButton.styleFrom(
             backgroundColor: Colors.white24,
-            foregroundColor: const Color(0xFFE5C158),
+            foregroundColor: CertificatePagePalette.gold,
             padding: const EdgeInsets.all(AppSpacing.sm),
           ),
         ),

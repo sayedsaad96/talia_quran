@@ -146,7 +146,7 @@ class _CertificateCelebrationDialogState
                 constraints: const BoxConstraints(maxWidth: 460),
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                  color: context.tokens.card,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                   border: Border.all(
                     color: AppColors.gold.withValues(alpha: 0.5),
@@ -173,9 +173,7 @@ class _CertificateCelebrationDialogState
                       subtitle,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -203,9 +201,7 @@ class _CertificateCelebrationDialogState
                       child: Text(
                         context.l10n.continueMemorizing,
                         style: AppTypography.labelLarge.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
                     ),
@@ -269,9 +265,7 @@ class _AwardTile extends StatelessWidget {
             child: Text(
               award.titleAr,
               style: AppTypography.titleMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
                 fontFamily: 'Amiri',
               ),
             ),

@@ -22,6 +22,7 @@ import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/achievement_tier_palette.dart';
 
 part '../widgets/progress_stat_cards.dart';
 part '../widgets/progress_detailed_card.dart';
@@ -49,9 +50,7 @@ class _ProgressView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       body: BlocBuilder<ProgressCubit, ProgressState>(
         builder: (context, state) {
           return CustomScrollView(
@@ -93,9 +92,7 @@ class _ProgressView extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       actions: [
@@ -140,17 +137,7 @@ class _ProgressView extends StatelessWidget {
         collapseMode: CollapseMode.pin,
         background: Container(
           decoration: BoxDecoration(
-            gradient: isDark
-                ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
-                  )
-                : const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A6B5A), Color(0xFF2E4B3A)],
-                  ),
+            gradient: context.tokens.heroGradient,
           ),
           child: SafeArea(
             child: Padding(
@@ -307,7 +294,7 @@ class _ProgressContentState extends State<_ProgressContent>
                     child: _StatCard(
                       label: context.l10n.xpLabel,
                       value: '${widget.totalXp}',
-                      unit: context.l10n.xpLabel,
+                      unit: context.l10n.points,
                       icon: Icons.bolt_rounded,
                       isDark: isDark,
                       color: AppColors.primary,
@@ -551,18 +538,19 @@ class _ProgressContentState extends State<_ProgressContent>
                     ),
                     decoration: BoxDecoration(
                       color:
-                          (isDark ? AppColors.primaryLight : AppColors.primary)
+                          context.tokens.accent
                               .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusFull,
                       ),
                     ),
                     child: Text(
-                      '${p.unlockedAchievements} / ${p.achievements.length}',
+                      context.l10n.countOfTotal(
+                        p.unlockedAchievements,
+                        p.achievements.length,
+                      ),
                       style: AppTypography.labelSmall.copyWith(
-                        color: isDark
-                            ? AppColors.primaryLight
-                            : AppColors.primary,
+                        color: context.tokens.accent,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
