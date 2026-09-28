@@ -136,7 +136,6 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
                           style: AppTypography.labelSmall.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 11,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 1,

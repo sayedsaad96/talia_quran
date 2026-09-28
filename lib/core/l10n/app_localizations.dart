@@ -1563,6 +1563,42 @@ abstract class AppLocalizations {
   /// **'تعرف على كل مزايا التطبيق وطريقة استخدامها'**
   String get tutorialGuideSubtitle;
 
+  /// No description provided for @tutorialGuideHeroSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز المعرفة وشرح مزايا تالية'**
+  String get tutorialGuideHeroSubtitle;
+
+  /// No description provided for @tutorialGuideTopicsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المواضيع: {count}'**
+  String tutorialGuideTopicsCount(int count);
+
+  /// No description provided for @tutorialGuideTipsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'النصائح والشروح: {count}'**
+  String tutorialGuideTipsCount(int count);
+
+  /// No description provided for @tutorialGuideSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث عن ميزة أو خطوة استخدام...'**
+  String get tutorialGuideSearchHint;
+
+  /// No description provided for @tutorialGuideNoResults.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد نتائج مطابقة'**
+  String get tutorialGuideNoResults;
+
+  /// No description provided for @tutorialGuideNoResultsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.'**
+  String get tutorialGuideNoResultsHint;
+
   /// No description provided for @arabicNameHint.
   ///
   /// In ar, this message translates to:

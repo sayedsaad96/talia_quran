@@ -294,6 +294,41 @@ Landed:
   baseline in `design_token_baseline.json`. Regenerate it (shrink-only)
   with `UPDATE_DESIGN_BASELINE=1`.
 
+### Phase 1 — implementation notes (onboarding, splash, auth, tutorial guide)
+
+- D3, global change: `AppTypography.labelSmall` goes from 10 to 11 (the
+  Material default and the minimum legible Naskh size). This updates 4
+  home goldens (a ~3–5% pixel diff, because small labels grow and content
+  below shifts by 1px) and the 5 onboarding shots in `.impeccable/shots/`.
+- Onboarding: 37 font literals snap to the scale. Slide titles use
+  `OnboardingStyles.titleBase` (24 Arabic / 20 English). The night-scene
+  colors move, with unchanged values, into `onboarding_palette.dart`.
+  **The Quranic snippets and their styles are deliberately untouched.**
+- Splash: its colors move into `splash_palette.dart`, and the tagline
+  changes from 22 to `headlineMedium` (20).
+- Auth: removed `OutlineInputBorder(radius 12)` overrides on 4 inputs and
+  the duplicate button shape, so both now follow the theme.
+- Tutorial guide: all colors now come from tokens (0 `isDark` color
+  branches left), and 6 hardcoded Arabic strings move to l10n
+  (`tutorialGuide*`). The hero badge counts are now computed: 12 topics
+  and 101 tips, where the old hardcoded text said "80+". The back button is
+  now `TaliaBackButton`, with fallback `/settings`; it was `maybePop`,
+  which was dead on a deep link. Verified on device (OLED on): the page
+  follows the pure-black theme automatically.
+- New findings, outside this pass:
+  - **CONTENT-1 (policy, owner decision):** onboarding previews hardcode
+    Quranic text: the Basmala and Al-Fatiha 1:2 in
+    `onboarding_mushaf_bento_view.dart`, and Al-Muzzammil 73:4 in
+    `experience_fork_view.dart`. The policy requires Quran text from the
+    approved source (`quran.json`), so these should be loaded through the
+    Quran datasource or explicitly signed off.
+  - **TEST-1:** the golden `failures/` folders under `test/features/**` are
+    tracked in git, so every golden run dirties the tree. Suggest adding
+    `**/failures/` to `.gitignore`.
+  - Hardcoded bilingual ternaries (`context.isArabic ? '…' : '…'`) remain
+    in the onboarding previews. They are localized but bypass the ARB
+    files; move them in a later copy pass.
+
 ## 8. Out of scope
 
 Quran text, ayah numbering, tafsir, azkar/dua wording, Mushaf page

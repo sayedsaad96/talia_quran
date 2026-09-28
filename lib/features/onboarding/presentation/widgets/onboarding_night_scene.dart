@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import 'onboarding_palette.dart';
 
 /// The committed night ground of the onboarding journey: a deep-teal sky,
 /// a seeded star field, and the path of light rising from the bottom. The
@@ -89,7 +90,7 @@ class _PathOfLight extends StatelessWidget {
             gradient: RadialGradient(
               center: Alignment(0, 1.15),
               radius: 0.95,
-              colors: [Color(0x2EF59E0B), Color(0x00F59E0B)],
+              colors: OnboardingPalette.moonGlow,
             ),
           ),
         ),

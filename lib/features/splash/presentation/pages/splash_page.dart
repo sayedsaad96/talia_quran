@@ -12,6 +12,7 @@ import '../../../../core/services/app_initializer.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
+import 'splash_palette.dart';
 
 /// Serene, brand-first splash screen for Talia.
 ///
@@ -87,9 +88,9 @@ class _SplashPageState extends State<SplashPage> {
     // Honor the system "remove animations" accessibility setting.
     final animate = !MediaQuery.disableAnimationsOf(context);
     // Align background with deep nocturnal palette to prevent any bright visual flash
-    const background = Color(0xFF030D09);
-    const primary = Color(0xFF5CD2A5);
-    const subTextColor = Color(0xFFD4E0D9);
+    const background = SplashPalette.background;
+    const primary = SplashPalette.primary;
+    const subTextColor = SplashPalette.subText;
 
     return Scaffold(
       backgroundColor: background,
@@ -180,11 +181,10 @@ class _SplashPageState extends State<SplashPage> {
                     Text(
                           'رفيقك في رحاب القرآن',
                           textAlign: TextAlign.center,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: const Color(0xFFEAEAEA),
+                          style: AppTypography.headlineMedium.copyWith(
+                            color: SplashPalette.tagline,
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.w700,
-                            fontSize: 22,
                             letterSpacing: 0.2,
                             shadows: [
                               Shadow(
@@ -214,7 +214,7 @@ class _SplashPageState extends State<SplashPage> {
                           vertical: AppSpacing.sm,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF071B14).withValues(alpha: 0.92),
+                          color: SplashPalette.errorSurface.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),

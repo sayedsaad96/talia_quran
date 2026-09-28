@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
 import '../tutorial_guide_mapper.dart';
 import '../widgets/tutorial_guide_quick_start_card.dart';
 import '../widgets/tutorial_guide_section_card.dart';
@@ -49,18 +50,15 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final sections = _filteredSections;
 
     return Directionality(
       textDirection: context.textDirection,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
+        backgroundColor: context.tokens.background,
         body: CustomScrollView(
           slivers: [
-            _buildAppBar(context, isDark),
+            _buildAppBar(context),
             SliverPadding(
               padding: const EdgeInsetsDirectional.fromSTEB(
                 AppSpacing.pagePadding,
@@ -113,26 +111,23 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
     );
   }
 
-  SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
-    final titleText = context.l10n.tutorialGuideTitle;
+  SliverAppBar _buildAppBar(BuildContext context) {
+    final l10n = context.l10n;
+    final tokens = context.tokens;
+    final tipCount = _allSections.fold<int>(
+      0,
+      (sum, s) => sum + s.steps.length + s.tips.length + s.notes.length,
+    );
 
     return SliverAppBar(
       pinned: true,
       expandedHeight: 180,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0.5,
-      leading: IconButton(
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        icon: Icon(
-          Directionality.of(context) == TextDirection.rtl
-              ? Icons.arrow_forward_rounded
-              : Icons.arrow_back_rounded,
-          color: Colors.white,
-        ),
-        onPressed: () => Navigator.of(context).maybePop(),
+      leading: const TaliaBackButton(
+        fallbackLocation: AppRoutes.settings,
+        color: Colors.white,
       ),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsetsDirectional.fromSTEB(
@@ -142,12 +137,10 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
           AppSpacing.md,
         ),
         title: Text(
-          titleText,
-          style: AppTypography.titleLarge.copyWith(
+          l10n.tutorialGuideTitle,
+          style: AppTypography.headlineMedium.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
             fontFamily: context.isArabic ? 'Amiri' : null,
-            fontSize: 20,
           ),
         ),
         background: Stack(
@@ -155,9 +148,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: isDark
-                      ? AppColors.heroGradientDark
-                      : AppColors.heroGradientLight,
+                  gradient: tokens.heroGradient,
                 ),
               ),
             ),
@@ -178,23 +169,24 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'مركز المعرفة وشرح مزايا تالية',
+                    l10n.tutorialGuideHeroSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 12,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Row(
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
                     children: [
                       _AppBarBadge(
                         icon: Icons.topic_rounded,
-                        label: '12 موضوعاً',
+                        label: l10n.tutorialGuideTopicsCount(
+                          _allSections.length,
+                        ),
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: AppSpacing.xs),
                       _AppBarBadge(
                         icon: Icons.auto_awesome_rounded,
-                        label: '80+ نصيحة وشرح',
+                        label: l10n.tutorialGuideTipsCount(tipCount),
                       ),
                     ],
                   ),
@@ -233,7 +225,6 @@ class _AppBarBadge extends StatelessWidget {
             style: AppTypography.labelSmall.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 10,
             ),
           ),
         ],
@@ -255,19 +246,16 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final tokens = context.tokens;
+    final primary = tokens.accent;
 
     return TextField(
       controller: controller,
       onChanged: onChanged,
       textDirection: context.textDirection,
       decoration: InputDecoration(
-        hintText: 'ابحث عن ميزة أو خطوة استخدام...',
-        hintStyle: AppTypography.bodyMedium.copyWith(
-          color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
-          fontSize: 13,
-        ),
+        hintText: context.l10n.tutorialGuideSearchHint,
+        hintStyle: AppTypography.bodyMedium.copyWith(color: tokens.textHint),
         prefixIcon: Icon(Icons.search_rounded, color: primary, size: 20),
         suffixIcon: controller.text.isEmpty
             ? null
@@ -277,22 +265,18 @@ class _SearchField extends StatelessWidget {
                 onPressed: onClear,
               ),
         filled: true,
-        fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        fillColor: tokens.card,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          borderSide: BorderSide(
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          ),
+          borderSide: BorderSide(color: tokens.divider),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          borderSide: BorderSide(
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          ),
+          borderSide: BorderSide(color: tokens.divider),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -316,8 +300,8 @@ class _CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final tokens = context.tokens;
+    final primary = tokens.accent;
 
     return SizedBox(
       height: 36,
@@ -334,21 +318,12 @@ class _CategoryChips extends StatelessWidget {
             showCheckmark: false,
             onSelected: (_) => onSelected(category),
             selectedColor: primary,
-            backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-            side: BorderSide(
-              color: isSelected
-                  ? primary
-                  : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
-            ),
+            backgroundColor: tokens.card,
+            side: BorderSide(color: isSelected ? primary : tokens.divider),
             padding: const EdgeInsets.symmetric(horizontal: 10),
             labelStyle: AppTypography.labelMedium.copyWith(
-              color: isSelected
-                  ? Colors.white
-                  : (isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+              color: isSelected ? Colors.white : tokens.textSecondary,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              fontSize: 12,
             ),
           );
         },
@@ -362,39 +337,32 @@ class _EmptyGuideSearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final tokens = context.tokens;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: tokens.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-        ),
+        border: Border.all(color: tokens.divider),
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded, color: primary, size: 44),
+          Icon(Icons.search_off_rounded, color: tokens.accent, size: 44),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'لا توجد نتائج مطابقة',
+            context.l10n.tutorialGuideNoResults,
             style: AppTypography.titleMedium.copyWith(
               fontWeight: FontWeight.bold,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+              color: tokens.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.',
+            context.l10n.tutorialGuideNoResultsHint,
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: tokens.textSecondary,
             ),
           ),
         ],

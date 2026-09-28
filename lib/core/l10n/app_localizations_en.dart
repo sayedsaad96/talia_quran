@@ -792,6 +792,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialGuideSubtitle => 'Learn every feature and how to use it';
 
   @override
+  String get tutorialGuideHeroSubtitle =>
+      'Talia\'s knowledge hub and feature guide';
+
+  @override
+  String tutorialGuideTopicsCount(int count) {
+    return 'Topics: $count';
+  }
+
+  @override
+  String tutorialGuideTipsCount(int count) {
+    return 'Tips & explanations: $count';
+  }
+
+  @override
+  String get tutorialGuideSearchHint => 'Search for a feature or a step...';
+
+  @override
+  String get tutorialGuideNoResults => 'No matching results';
+
+  @override
+  String get tutorialGuideNoResultsHint =>
+      'Try a shorter word, like: Quran, memorization, azkar, notifications.';
+
+  @override
   String get arabicNameHint =>
       '💡 It is better to enter the name in Arabic to appear nicely in certificates';
 

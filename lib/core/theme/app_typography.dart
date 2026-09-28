@@ -120,7 +120,7 @@ abstract class AppTypography {
 
   static TextStyle get labelSmall => const TextStyle(
     fontFamily: 'Noto_Naskh_Arabic',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
     height: 1.3,

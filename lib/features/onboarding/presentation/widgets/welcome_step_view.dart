@@ -58,7 +58,6 @@ class WelcomeStepView extends StatelessWidget {
                       style: AppTypography.displaySmall.copyWith(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.w800,
-                        fontSize: context.isArabic ? 30 : 26,
                         color: AppColors.darkTextPrimary,
                         height: 1.25,
                       ),
@@ -70,7 +69,6 @@ class WelcomeStepView extends StatelessWidget {
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.darkTextSecondary,
                         height: 1.7,
-                        fontSize: 14.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),

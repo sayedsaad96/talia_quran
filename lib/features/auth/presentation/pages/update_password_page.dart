@@ -151,9 +151,6 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -209,9 +206,6 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                             onPressed: isLoading ? null : _submit,
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
                             child: isLoading
                                 ? const SizedBox(

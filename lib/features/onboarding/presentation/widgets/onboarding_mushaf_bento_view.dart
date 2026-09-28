@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
+import 'onboarding_palette.dart';
 
 /// Slide 1 — The Mushaf Sanctuary Bento View.
 /// Highlights authentic Mushaf reading, audio recitation, and easy tafsir.
@@ -53,7 +54,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                     Text(
                       l10n.onboardingPillarReadTitle,
                       style: AppTypography.labelSmall.copyWith(
-                        color: const Color(0xFF3BD6BC),
+                        color: OnboardingPalette.nightTealText,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.3,
                       ),
@@ -71,10 +72,9 @@ class OnboardingMushafBentoView extends StatelessWidget {
             child: Text(
               l10n.onboardingSlide1Title,
               textAlign: TextAlign.center,
-              style: AppTypography.headlineMedium.copyWith(
+              style: OnboardingStyles.titleBase(context).copyWith(
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.w800,
-                fontSize: context.isArabic ? 25 : 22,
                 color: AppColors.darkTextPrimary,
                 height: 1.3,
               ),
@@ -89,7 +89,6 @@ class OnboardingMushafBentoView extends StatelessWidget {
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.darkTextSecondary,
                 height: 1.55,
-                fontSize: 13,
               ),
             ),
           ),
@@ -143,11 +142,10 @@ class OnboardingMushafBentoView extends StatelessWidget {
                         ),
                         child: Text(
                           l10n.onboardingBentoMushafSurah,
-                          style: AppTypography.labelSmall.copyWith(
+                          style: AppTypography.labelMedium.copyWith(
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.bold,
                             color: AppColors.inkDeep,
-                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -199,7 +197,6 @@ class OnboardingMushafBentoView extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: AppTypography.labelSmall.copyWith(
                         color: AppColors.inkDeep.withValues(alpha: 0.75),
-                        fontSize: 11,
                         fontStyle: context.isArabic
                             ? FontStyle.normal
                             : FontStyle.italic,
@@ -249,7 +246,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                               child: const Icon(
                                 Icons.headphones_rounded,
                                 size: 17,
-                                color: Color(0xFF3BD6BC),
+                                color: OnboardingPalette.nightTealText,
                               ),
                             ),
                             // Mini audio wave simulation
@@ -265,7 +262,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                                       ),
                                       decoration: BoxDecoration(
                                         color: AppColors.goldLight,
-                                        borderRadius: BorderRadius.circular(1),
+                                        borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                                       ),
                                     ),
                                   )
@@ -280,10 +277,9 @@ class OnboardingMushafBentoView extends StatelessWidget {
                               l10n.onboardingBentoListeningTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleSmall.copyWith(
+                              style: AppTypography.titleMedium.copyWith(
                                 color: AppColors.darkTextPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -293,7 +289,6 @@ class OnboardingMushafBentoView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.darkTextSecondary,
-                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -352,7 +347,6 @@ class OnboardingMushafBentoView extends StatelessWidget {
                                 'تفسير ميسر',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: AppColors.goldLight,
-                                  fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -366,10 +360,9 @@ class OnboardingMushafBentoView extends StatelessWidget {
                               l10n.onboardingBentoTafsirTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleSmall.copyWith(
+                              style: AppTypography.titleMedium.copyWith(
                                 color: AppColors.darkTextPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -379,7 +372,6 @@ class OnboardingMushafBentoView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.darkTextSecondary,
-                                fontSize: 11,
                               ),
                             ),
                           ],

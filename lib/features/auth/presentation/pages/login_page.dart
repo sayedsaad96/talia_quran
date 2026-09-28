@@ -346,9 +346,6 @@ class _LoginPageState extends State<LoginPage> {
                                 prefixIcon: const Icon(
                                   Icons.person_outline_rounded,
                                 ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
                               ),
                               validator: (v) => (v == null || v.trim().isEmpty)
                                   ? context.l10n.enterName
@@ -364,9 +361,6 @@ class _LoginPageState extends State<LoginPage> {
                             decoration: InputDecoration(
                               labelText: context.l10n.email,
                               prefixIcon: const Icon(Icons.email_outlined),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
@@ -404,9 +398,6 @@ class _LoginPageState extends State<LoginPage> {
                                 onPressed: () => setState(
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             validator: (v) {
@@ -461,9 +452,6 @@ class _LoginPageState extends State<LoginPage> {
                               style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               child: isLoading

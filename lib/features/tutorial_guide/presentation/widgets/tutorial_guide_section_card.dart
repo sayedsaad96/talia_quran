@@ -61,16 +61,9 @@ class TutorialGuideSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final primary =
-        section.accentColor ??
-        (isDark ? AppColors.primaryLight : AppColors.primary);
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = section.accentColor ?? context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return AppCard(
       borderRadius: BorderRadiusDirectional.circular(AppSpacing.radiusLg),
@@ -104,10 +97,9 @@ class TutorialGuideSectionCard extends StatelessWidget {
             ),
             title: Text(
               section.title,
-              style: AppTypography.titleMedium.copyWith(
+              style: AppTypography.titleLarge.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
               ),
             ),
             subtitle: Row(
@@ -126,7 +118,6 @@ class TutorialGuideSectionCard extends StatelessWidget {
                     style: AppTypography.labelSmall.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 11,
                     ),
                   ),
                 ),
@@ -201,9 +192,7 @@ class _GuideBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final subtextColor = context.tokens.textSecondary;
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
@@ -224,7 +213,6 @@ class _GuideBlock extends StatelessWidget {
               style: AppTypography.bodySmall.copyWith(
                 color: subtextColor,
                 height: 1.55,
-                fontSize: 12.5,
               ),
             ),
           ],
@@ -249,10 +237,7 @@ class _GuideStepListBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final subtextColor = context.tokens.textSecondary;
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
@@ -280,7 +265,6 @@ class _GuideStepListBlock extends StatelessWidget {
                       style: AppTypography.labelSmall.copyWith(
                         color: color,
                         fontWeight: FontWeight.bold,
-                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -291,7 +275,6 @@ class _GuideStepListBlock extends StatelessWidget {
                       style: AppTypography.bodySmall.copyWith(
                         color: subtextColor,
                         height: 1.5,
-                        fontSize: 12.5,
                       ),
                     ),
                   ),
@@ -322,10 +305,7 @@ class _GuidePillListBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final subtextColor = context.tokens.textSecondary;
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
@@ -355,7 +335,6 @@ class _GuidePillListBlock extends StatelessWidget {
                         style: AppTypography.bodySmall.copyWith(
                           color: subtextColor,
                           height: 1.45,
-                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -383,7 +362,6 @@ class _BlockTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       children: [
@@ -391,12 +369,9 @@ class _BlockTitle extends StatelessWidget {
         const SizedBox(width: AppSpacing.xs),
         Text(
           title,
-          style: AppTypography.labelMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+          style: AppTypography.labelLarge.copyWith(
+            color: context.tokens.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 13,
           ),
         ),
       ],

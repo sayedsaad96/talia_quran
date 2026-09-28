@@ -69,12 +69,6 @@
   "lib/core/widgets/state_widgets.dart": {
     "isDarkBranch": 3
   },
-  "lib/features/auth/presentation/pages/login_page.dart": {
-    "radiusLiteral": 4
-  },
-  "lib/features/auth/presentation/pages/update_password_page.dart": {
-    "radiusLiteral": 2
-  },
   "lib/features/azkar/presentation/pages/azkar_category_page.dart": {
     "hexColor": 1,
     "fontSizeLiteral": 3,
@@ -265,27 +259,9 @@
     "isDarkBranch": 5
   },
   "lib/features/onboarding/presentation/widgets/experience_fork_view.dart": {
-    "hexColor": 2,
-    "fontSizeLiteral": 7
-  },
-  "lib/features/onboarding/presentation/widgets/onboarding_habit_bento_view.dart": {
-    "hexColor": 5,
-    "fontSizeLiteral": 7
-  },
-  "lib/features/onboarding/presentation/widgets/onboarding_memorize_bento_view.dart": {
-    "hexColor": 7,
-    "fontSizeLiteral": 10,
-    "radiusLiteral": 1
+    "fontSizeLiteral": 1
   },
   "lib/features/onboarding/presentation/widgets/onboarding_mushaf_bento_view.dart": {
-    "hexColor": 2,
-    "fontSizeLiteral": 9,
-    "radiusLiteral": 1
-  },
-  "lib/features/onboarding/presentation/widgets/onboarding_night_scene.dart": {
-    "hexColor": 2
-  },
-  "lib/features/onboarding/presentation/widgets/welcome_step_view.dart": {
     "fontSizeLiteral": 1
   },
   "lib/features/progress/presentation/pages/progress_page.dart": {
@@ -424,19 +400,7 @@
   "lib/features/settings/presentation/widgets/settings_subpage_scaffold.dart": {
     "isDarkBranch": 2
   },
-  "lib/features/splash/presentation/pages/splash_page.dart": {
-    "hexColor": 5,
-    "fontSizeLiteral": 1
-  },
-  "lib/features/tutorial_guide/presentation/pages/tutorial_guide_page.dart": {
-    "fontSizeLiteral": 5,
-    "isDarkBranch": 17
-  },
-  "lib/features/tutorial_guide/presentation/widgets/tutorial_guide_quick_start_card.dart": {
-    "fontSizeLiteral": 1
-  },
   "lib/features/tutorial_guide/presentation/widgets/tutorial_guide_section_card.dart": {
-    "fontSizeLiteral": 7,
-    "isDarkBranch": 8
+    "isDarkBranch": 1
   }
 }

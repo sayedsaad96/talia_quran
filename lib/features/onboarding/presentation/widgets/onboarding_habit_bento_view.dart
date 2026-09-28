@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
+import 'onboarding_palette.dart';
 
 /// Slide 3 — The Habit, Offline & Kids Bento View.
 /// Highlights daily portion continuity, unbreakable streaks, 100% offline-first privacy,
@@ -72,10 +73,9 @@ class OnboardingHabitBentoView extends StatelessWidget {
             child: Text(
               l10n.onboardingSlide3Title,
               textAlign: TextAlign.center,
-              style: AppTypography.headlineMedium.copyWith(
+              style: OnboardingStyles.titleBase(context).copyWith(
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.w800,
-                fontSize: context.isArabic ? 25 : 22,
                 color: AppColors.darkTextPrimary,
                 height: 1.3,
               ),
@@ -90,7 +90,6 @@ class OnboardingHabitBentoView extends StatelessWidget {
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.darkTextSecondary,
                 height: 1.55,
-                fontSize: 13,
               ),
             ),
           ),
@@ -147,10 +146,9 @@ class OnboardingHabitBentoView extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             l10n.onboardingBentoStreakTitle,
-                            style: AppTypography.titleSmall.copyWith(
+                            style: AppTypography.titleMedium.copyWith(
                               color: AppColors.darkTextPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -175,7 +173,6 @@ class OnboardingHabitBentoView extends StatelessWidget {
                           style: AppTypography.labelSmall.copyWith(
                             color: AppColors.streakOrange,
                             fontWeight: FontWeight.bold,
-                            fontSize: 11,
                           ),
                         ),
                       ),
@@ -232,7 +229,6 @@ class OnboardingHabitBentoView extends StatelessWidget {
                               color: isToday
                                   ? AppColors.streakOrange
                                   : AppColors.darkTextSecondary,
-                              fontSize: 10,
                               fontWeight: isToday
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -251,12 +247,12 @@ class OnboardingHabitBentoView extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.10),
+                      color: OnboardingPalette.emerald.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusFull,
                       ),
                       border: Border.all(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.28),
+                        color: OnboardingPalette.emerald.withValues(alpha: 0.28),
                         width: 0.8,
                       ),
                     ),
@@ -266,14 +262,13 @@ class OnboardingHabitBentoView extends StatelessWidget {
                         const Icon(
                           Icons.cloud_off_rounded,
                           size: 14,
-                          color: Color(0xFF34D399),
+                          color: OnboardingPalette.emeraldText,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           l10n.onboardingBentoOfflineBadge,
                           style: AppTypography.labelSmall.copyWith(
-                            color: const Color(0xFF34D399),
-                            fontSize: 11,
+                            color: OnboardingPalette.emeraldText,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -297,7 +292,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF0C2B27),
+                    OnboardingPalette.previewSurface,
                     AppColors.darkSurface,
                   ],
                 ),
@@ -336,10 +331,9 @@ class OnboardingHabitBentoView extends StatelessWidget {
                                   l10n.onboardingBentoKidsTeaserTitle,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.titleSmall.copyWith(
+                                  style: AppTypography.titleMedium.copyWith(
                                     color: AppColors.darkTextPrimary,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 13.5,
                                   ),
                                 ),
                               ),
@@ -352,7 +346,6 @@ class OnboardingHabitBentoView extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.darkTextSecondary,
-                              fontSize: 11,
                               height: 1.4,
                             ),
                           ),

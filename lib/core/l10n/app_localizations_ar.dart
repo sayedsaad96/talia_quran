@@ -790,6 +790,29 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعرف على كل مزايا التطبيق وطريقة استخدامها';
 
   @override
+  String get tutorialGuideHeroSubtitle => 'مركز المعرفة وشرح مزايا تالية';
+
+  @override
+  String tutorialGuideTopicsCount(int count) {
+    return 'المواضيع: $count';
+  }
+
+  @override
+  String tutorialGuideTipsCount(int count) {
+    return 'النصائح والشروح: $count';
+  }
+
+  @override
+  String get tutorialGuideSearchHint => 'ابحث عن ميزة أو خطوة استخدام...';
+
+  @override
+  String get tutorialGuideNoResults => 'لا توجد نتائج مطابقة';
+
+  @override
+  String get tutorialGuideNoResultsHint =>
+      'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.';
+
+  @override
   String get arabicNameHint =>
       '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات';
 

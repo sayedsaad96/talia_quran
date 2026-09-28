@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
+import 'onboarding_palette.dart';
 
 /// Slide 2 — The Smart Memorization Bento View.
 /// Highlights intelligent spaced repetition, mastery tracking, and active recall.
@@ -71,10 +72,9 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
             child: Text(
               l10n.onboardingSlide2Title,
               textAlign: TextAlign.center,
-              style: AppTypography.headlineMedium.copyWith(
+              style: OnboardingStyles.titleBase(context).copyWith(
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.w800,
-                fontSize: context.isArabic ? 25 : 22,
                 color: AppColors.darkTextPrimary,
                 height: 1.3,
               ),
@@ -89,7 +89,6 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.darkTextSecondary,
                 height: 1.55,
-                fontSize: 13,
               ),
             ),
           ),
@@ -144,10 +143,9 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             l10n.onboardingBentoMasteryTitle,
-                            style: AppTypography.titleSmall.copyWith(
+                            style: AppTypography.titleMedium.copyWith(
                               color: AppColors.darkTextPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -158,21 +156,20 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                          color: OnboardingPalette.emerald.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusFull,
                           ),
                           border: Border.all(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                            color: OnboardingPalette.emerald.withValues(alpha: 0.35),
                             width: 0.8,
                           ),
                         ),
                         child: Text(
                           l10n.onboardingBentoMasteryValue,
                           style: AppTypography.labelSmall.copyWith(
-                            color: const Color(0xFF34D399),
+                            color: OnboardingPalette.emeraldText,
                             fontWeight: FontWeight.bold,
-                            fontSize: 11,
                           ),
                         ),
                       ),
@@ -189,7 +186,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                         children: [
                           Expanded(
                             flex: 75,
-                            child: Container(color: const Color(0xFF10B981)),
+                            child: Container(color: OnboardingPalette.emerald),
                           ),
                           const SizedBox(width: 2),
                           Expanded(
@@ -211,7 +208,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _statusDot(const Color(0xFF10B981), context.isArabic ? 'متقن راسخ' : 'Mastered'),
+                      _statusDot(OnboardingPalette.emerald, context.isArabic ? 'متقن راسخ' : 'Mastered'),
                       _statusDot(AppColors.goldLight, context.isArabic ? 'مراجعة قريبة' : 'Due Soon'),
                       _statusDot(AppColors.primaryLight, context.isArabic ? 'جديد' : 'New'),
                     ],
@@ -259,7 +256,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               child: const Icon(
                                 Icons.visibility_off_rounded,
                                 size: 16,
-                                color: Color(0xFF3BD6BC),
+                                color: OnboardingPalette.nightTealText,
                               ),
                             ),
                             Container(
@@ -271,14 +268,13 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                                 color: AppColors.primaryLight.withValues(
                                   alpha: 0.12,
                                 ),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                               ),
                               child: Text(
                                 'مَالِكِ [ ... ] الدِّينِ',
                                 style: AppTypography.labelSmall.copyWith(
                                   fontFamily: 'Amiri',
-                                  color: const Color(0xFF3BD6BC),
-                                  fontSize: 10,
+                                  color: OnboardingPalette.nightTealText,
                                 ),
                               ),
                             ),
@@ -291,10 +287,9 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               l10n.onboardingBentoActiveRecallTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleSmall.copyWith(
+                              style: AppTypography.titleMedium.copyWith(
                                 color: AppColors.darkTextPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -304,7 +299,6 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.darkTextSecondary,
-                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -363,7 +357,6 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                                 context.isArabic ? 'تذكير ذكي' : 'Smart Alert',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: AppColors.goldLight,
-                                  fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -377,10 +370,9 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               l10n.onboardingBentoReviewScheduleTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleSmall.copyWith(
+                              style: AppTypography.titleMedium.copyWith(
                                 color: AppColors.darkTextPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -390,7 +382,6 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.darkTextSecondary,
-                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -422,7 +413,6 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
           label,
           style: AppTypography.labelSmall.copyWith(
             color: AppColors.darkTextSecondary,
-            fontSize: 10.5,
           ),
         ),
       ],

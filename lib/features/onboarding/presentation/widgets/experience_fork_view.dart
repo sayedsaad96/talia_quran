@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/onboarding_cubit.dart';
 import 'onboarding_cta.dart';
+import 'onboarding_palette.dart';
 
 /// Step 2 — the fork. The journey splits into two living destinations, each
 /// proven by a real window into its world: a parchment mushaf ayah for the
@@ -38,10 +39,9 @@ class ExperienceForkView extends StatelessWidget {
             child: Text(
               l10n.onboardingChooseExpTitle,
               textAlign: TextAlign.center,
-              style: AppTypography.headlineMedium.copyWith(
+              style: OnboardingStyles.titleBase(context).copyWith(
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.w800,
-                fontSize: context.isArabic ? 25 : 23,
                 color: AppColors.darkTextPrimary,
                 height: 1.3,
               ),
@@ -56,7 +56,6 @@ class ExperienceForkView extends StatelessWidget {
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.darkTextSecondary,
                 height: 1.6,
-                fontSize: 13.5,
               ),
             ),
           ),
@@ -68,7 +67,7 @@ class ExperienceForkView extends StatelessWidget {
             child: _DestinationShrine(
               selected: isAdult,
               accentColor: AppColors.primaryLight,
-              textAccentColor: _nightTealText,
+              textAccentColor: OnboardingPalette.nightTealText,
               onAccentColor: Colors.white,
               preview: const _MushafWindow(),
               title: l10n.onboardingAdultPathTitle,
@@ -121,7 +120,7 @@ class ExperienceForkView extends StatelessWidget {
               ),
               child: Text(
                 l10n.onboardingErrorGeneric,
-                style: AppTypography.bodySmall.copyWith(color: _nightErrorText),
+                style: AppTypography.bodySmall.copyWith(color: OnboardingPalette.nightErrorText),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -156,7 +155,6 @@ class ExperienceForkView extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.darkTextSecondary,
-                    fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -180,12 +178,6 @@ class ExperienceForkView extends StatelessWidget {
     );
   }
 }
-
-/// Night-ground interactive text accents: #148275 teal and #C0392B error
-/// lack 4.5:1 headroom as small-text colors on #021210, so their labels
-/// lift to these lighter siblings while borders and tints stay on-token.
-const _nightTealText = Color(0xFF3BD6BC);
-const _nightErrorText = Color(0xFFE57368);
 
 /// A destination at the fork: a living preview window, its name, and — once
 /// chosen — the unfolded details of that path. Radius 24 marks it as a
@@ -260,10 +252,9 @@ class _DestinationShrine extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: AppTypography.titleMedium.copyWith(
+                            style: AppTypography.titleLarge.copyWith(
                               color: AppColors.darkTextPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -272,7 +263,6 @@ class _DestinationShrine extends StatelessWidget {
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.darkTextSecondary,
                               height: 1.45,
-                              fontSize: 12.5,
                             ),
                           ),
                         ],
@@ -332,7 +322,6 @@ class _DestinationShrine extends StatelessWidget {
                                       chip,
                                       style: AppTypography.labelSmall.copyWith(
                                         color: textAccentColor,
-                                        fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -425,7 +414,6 @@ class _MushafWindow extends StatelessWidget {
             context.l10n.onboardingAyahReference,
             style: AppTypography.labelSmall.copyWith(
               color: AppColors.inkDeep.withValues(alpha: 0.72),
-              fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,
             ),
@@ -561,7 +549,7 @@ class _TonalSignInButton extends StatelessWidget {
                 const Icon(
                   Icons.login_rounded,
                   size: 18,
-                  color: _nightTealText,
+                  color: OnboardingPalette.nightTealText,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Flexible(
@@ -569,7 +557,7 @@ class _TonalSignInButton extends StatelessWidget {
                     context.l10n.onboardingSignInAccount,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.titleSmall.copyWith(
-                      color: _nightTealText,
+                      color: OnboardingPalette.nightTealText,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
