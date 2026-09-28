@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
 import 'onboarding_palette.dart';
+import 'onboarding_source_ayah.dart';
 
 /// Slide 2 — The Smart Memorization Bento View.
 /// Highlights intelligent spaced repetition, mastery tracking, and active recall.
@@ -270,12 +271,22 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                                 ),
                                 borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                               ),
-                              child: Text(
-                                'مَالِكِ [ ... ] الدِّينِ',
-                                style: AppTypography.labelSmall.copyWith(
-                                  fontFamily: 'Amiri',
-                                  color: OnboardingPalette.nightTealText,
-                                ),
+                              // First and last words verbatim from the
+                              // source; the middle is hidden, as in the
+                              // real word-hiding exercise.
+                              child: OnboardingSourceAyah(
+                                surah: 1,
+                                ayah: 4,
+                                builder: (context, text) {
+                                  final words = text.split(' ');
+                                  return Text(
+                                    '${words.first} [ ... ] ${words.last}',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      fontFamily: 'Amiri',
+                                      color: OnboardingPalette.nightTealText,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ],

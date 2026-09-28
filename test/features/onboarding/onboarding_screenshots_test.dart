@@ -15,6 +15,10 @@ import 'package:talia_quran/features/memorization_plus/domain/repositories/memor
 import 'package:talia_quran/features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import 'package:talia_quran/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:talia_quran/features/onboarding/presentation/widgets/onboarding_cta.dart';
+import 'package:talia_quran/features/quran/data/datasources/quran_local_datasource.dart';
+import 'package:talia_quran/features/quran/data/repositories/quran_repository_impl.dart';
+import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
+import 'package:talia_quran/features/onboarding/presentation/widgets/onboarding_source_ayah.dart';
 
 /// Renders the onboarding with real fonts and real assets and captures
 /// golden screenshots for visual inspection. Run with --update-goldens to
@@ -28,6 +32,7 @@ void main() {
 
   setUp(() async {
     await getIt.reset();
+    OnboardingSourceAyah.resetCacheForTest();
     SharedPreferences.setMockInitialValues({});
     await _registerCore();
   });
@@ -46,6 +51,12 @@ void main() {
 
   for (final (name, locale, step, selectChild) in variants) {
     testWidgets('capture $name', (tester) async {
+      // Asset I/O doesn't complete under fake async: warm the verse cache.
+      await tester.runAsync(() async {
+        for (final (surah, ayah) in const [(1, 1), (1, 2), (1, 4), (73, 4)]) {
+          await OnboardingSourceAyah.load(surah, ayah);
+        }
+      });
       await _bindPhoneSurface(tester);
       // Real image decoding needs real async IO; fake-async never resolves
       // it. Pump a throwaway app to get a context, precache every asset the
@@ -81,6 +92,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 150));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 200));
+      // The warmed verse futures completed in the real zone; let it deliver
+      // them to the FutureBuilders, then paint.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump();
 
       await expectLater(
         find.byType(OnboardingPage),
@@ -169,6 +184,10 @@ Future<void> _registerCore() async {
   final resolver = MemorizationPathResolver(repo);
 
   getIt.registerSingleton<SharedPreferences>(prefs);
+  // Real canonical Quran text so previews render verbatim ayahs.
+  getIt.registerSingleton<QuranRepository>(
+    QuranRepositoryImpl(QuranLocalDatasourceImpl()),
+  );
   getIt.registerSingleton<MemorizationPlusRepository>(repo);
   getIt.registerSingleton<MemorizationPathResolver>(resolver);
   getIt.registerFactory<OnboardingCubit>(

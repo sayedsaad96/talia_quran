@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
 import 'onboarding_palette.dart';
+import 'onboarding_source_ayah.dart';
 
 /// Slide 1 — The Mushaf Sanctuary Bento View.
 /// Highlights authentic Mushaf reading, audio recitation, and easy tafsir.
@@ -155,27 +156,36 @@ class OnboardingMushafBentoView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
 
                   // Ayah Text in Amiri
-                  Text(
-                    'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.titleMedium.copyWith(
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.inkDeep.withValues(alpha: 0.85),
-                      height: 1.5,
+                  OnboardingSourceAyah(
+                    surah: 1,
+                    ayah: 1,
+                    builder: (context, text) => Text(
+                      text,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.titleMedium.copyWith(
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.inkDeep.withValues(alpha: 0.85),
+                        height: 1.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ﴿٢﴾',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.titleLarge.copyWith(
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w800,
-                      fontSize: context.isArabic ? 22 : 18,
-                      color: AppColors.inkDeep,
-                      height: 1.6,
+                  OnboardingSourceAyah(
+                    surah: 1,
+                    ayah: 2,
+                    // The ﴿٢﴾ end-of-ayah marker is UI numbering, not text.
+                    builder: (context, text) => Text(
+                      '$text ﴿٢﴾',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.titleLarge.copyWith(
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.w800,
+                        fontSize: context.isArabic ? 22 : 18,
+                        color: AppColors.inkDeep,
+                        height: 1.6,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -192,16 +202,31 @@ class OnboardingMushafBentoView extends StatelessWidget {
                         AppSpacing.radiusFull,
                       ),
                     ),
-                    child: Text(
-                      l10n.onboardingBentoMushafAyah,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.inkDeep.withValues(alpha: 0.75),
-                        fontStyle: context.isArabic
-                            ? FontStyle.normal
-                            : FontStyle.italic,
-                      ),
-                    ),
+                    // Arabic shows the ayah itself, so it comes from the
+                    // source; English shows the (localized) translation.
+                    child: context.isArabic
+                        ? OnboardingSourceAyah(
+                            surah: 1,
+                            ayah: 2,
+                            builder: (context, text) => Text(
+                              text,
+                              textAlign: TextAlign.center,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.inkDeep.withValues(
+                                  alpha: 0.75,
+                                ),
+                                fontStyle: FontStyle.normal,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            l10n.onboardingBentoMushafAyah,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.inkDeep.withValues(alpha: 0.75),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                   ),
                 ],
               ),

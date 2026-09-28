@@ -316,7 +316,14 @@ Landed:
   which was dead on a deep link. Verified on device (OLED on): the page
   follows the pure-black theme automatically.
 - New findings, outside this pass:
-  - **CONTENT-1 (policy, owner decision):** onboarding previews hardcode
+  - **CONTENT-1 — RESOLVED 2026-09-29:** the onboarding verses now load
+    verbatim from `quran.json` via `OnboardingSourceAyah` (same Amiri
+    styles, fail-closed). The hardcoded copies differed from the source:
+    73:4 was a fragment with non-Uthmani spelling (`ٱلْقُرْآنَ` vs
+    `ٱلْقُرْءَانَ`), 1:4 had a non-Uthmani spelling, and 1:1/1:2 had
+    different diacritic order. Still open (CONTENT-2): the English value
+    of `onboardingBentoMushafAyah` is a translation with no recorded
+    source. Original finding: onboarding previews hardcode
     Quranic text: the Basmala and Al-Fatiha 1:2 in
     `onboarding_mushaf_bento_view.dart`, and Al-Muzzammil 73:4 in
     `experience_fork_view.dart`. The policy requires Quran text from the

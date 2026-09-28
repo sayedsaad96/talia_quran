@@ -8,6 +8,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../cubits/onboarding_cubit.dart';
 import 'onboarding_cta.dart';
 import 'onboarding_palette.dart';
+import 'onboarding_source_ayah.dart';
 
 /// Step 2 — the fork. The journey splits into two living destinations, each
 /// proven by a real window into its world: a parchment mushaf ayah for the
@@ -373,15 +374,26 @@ class _MushafWindow extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'وَرَتِّلِ ٱلْقُرْآنَ تَرْتِيلًا',
-            textAlign: TextAlign.center,
-            style: AppTypography.titleLarge.copyWith(
-              fontFamily: 'Amiri',
-              fontWeight: FontWeight.bold,
-              fontSize: 21,
-              height: 1.9,
-              color: AppColors.inkDeep,
+          // The full ayah (not a fragment), verbatim from the source. Same
+          // Amiri style; scaled down only if it can't fit the fixed card.
+          Flexible(
+            child: OnboardingSourceAyah(
+              surah: 73,
+              ayah: 4,
+              builder: (context, text) => FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.titleLarge.copyWith(
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 21,
+                    height: 1.9,
+                    color: AppColors.inkDeep,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),

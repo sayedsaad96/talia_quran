@@ -17,6 +17,10 @@ import 'package:talia_quran/features/memorization_plus/domain/repositories/memor
 import 'package:talia_quran/features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import 'package:talia_quran/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:talia_quran/features/splash/presentation/pages/splash_page.dart';
+import 'package:talia_quran/features/onboarding/presentation/widgets/onboarding_source_ayah.dart';
+import 'package:talia_quran/features/quran/data/datasources/quran_local_datasource.dart';
+import 'package:talia_quran/features/quran/data/repositories/quran_repository_impl.dart';
+import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -221,12 +225,26 @@ void main() {
       tester,
     ) async {
       await _registerCore();
-      await _pumpOnboarding(tester);
+      // The preview ayah must come verbatim from the canonical source
+      // (assets/data/quran.json), never from text typed into the widget.
+      getIt.registerSingleton<QuranRepository>(
+        QuranRepositoryImpl(QuranLocalDatasourceImpl()),
+      );
+      OnboardingSourceAyah.resetCacheForTest();
+      final muzzammil4 = await tester.runAsync(
+        () => OnboardingSourceAyah.load(73, 4),
+      );
+      expect(muzzammil4, isNotNull);
+      expect(muzzammil4, startsWith('أَوْ زِدْ عَلَيْهِ'));
 
+      await _pumpOnboarding(tester);
       await navigateToFork(tester);
+      // Warmed futures completed in the real zone; let them deliver.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump();
 
       // The mushaf window and the child night window prove both worlds.
-      expect(find.text('وَرَتِّلِ ٱلْقُرْآنَ تَرْتِيلًا'), findsOneWidget);
+      expect(find.text(muzzammil4!), findsOneWidget);
       expect(
         find.image(
           const AssetImage(
