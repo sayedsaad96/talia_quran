@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'share_card_palette.dart';
 import 'social_share_model.dart';
 import 'social_share_theme.dart';
 
@@ -13,6 +14,10 @@ class SocialShareCopy {
 
   factory SocialShareCopy.of(BuildContext context) =>
       SocialShareCopy._(Localizations.localeOf(context).languageCode == 'ar');
+
+  /// Entry point outside a widget tree (tests, background export).
+  factory SocialShareCopy.forLanguage(String languageCode) =>
+      SocialShareCopy._(languageCode == 'ar');
 
   final bool isArabic;
   TextDirection get direction =>
@@ -175,6 +180,147 @@ class SocialShareCopy {
   String certificateSentence(String awardTitle) => isArabic
       ? 'حصلت على $awardTitle تقديراً لإنجازك في تالية للقرآن الكريم ✨'
       : 'I earned $awardTitle for my progress with Talia Quran ✨';
+
+  // ─── Dawn card copy ──────────────────────────────────────────────────────
+  // App-authored invitation copy: no Quran, hadith or dua text lives here.
+  String get wordmark => isArabic ? 'تالية القرآن' : 'Talia Quran';
+
+  String eyebrow(SocialShareData data) {
+    if (data.audience == SocialShareAudience.kids) {
+      return isArabic ? 'أبطال تالية الصغار' : 'Little Talia champions';
+    }
+    final title = data.title?.trim() ?? '';
+    switch (data.category) {
+      case SocialShareCategory.quranAyah:
+        return quranBadge;
+      case SocialShareCategory.dua:
+        return title.isEmpty ? duaBadge : '$duaBadge · $title';
+      case SocialShareCategory.azkar:
+        if (data.isAzkarWirdProgress) {
+          return title.isEmpty ? dhikrBadge : title;
+        }
+        return title.isEmpty ? dhikrBadge : '$dhikrBadge · $title';
+      case SocialShareCategory.achievement:
+        return achievementBadge;
+      case SocialShareCategory.memorization:
+        return isArabic ? 'حفظ القرآن' : 'Memorization';
+      case SocialShareCategory.streak:
+        return isArabic ? 'استمرارية' : 'Streak';
+      case SocialShareCategory.progress:
+        return isArabic ? 'حصاد التقدم' : 'My progress';
+      case SocialShareCategory.certificate:
+        return isArabic ? 'شهادة إتمام' : 'Certificate';
+      case SocialShareCategory.khatmah:
+        return khatmahBadge;
+    }
+  }
+
+  /// Faint background word for text cards: the surah name or a category
+  /// word, never a fragment of Quran or azkar text.
+  String? watermark(SocialShareData data) {
+    switch (data.category) {
+      case SocialShareCategory.quranAyah:
+        return data.surahName;
+      case SocialShareCategory.dua:
+        return isArabic ? 'دعاء' : 'Dua';
+      case SocialShareCategory.azkar:
+        if (data.isAzkarWirdProgress) return null;
+        return isArabic ? 'ذِكر' : 'Dhikr';
+      default:
+        return null;
+    }
+  }
+
+  String invitation(SocialShareData data) {
+    if (data.audience == SocialShareAudience.kids) {
+      return isArabic
+          ? 'بطلٌ صغير يحفظ القرآن'
+          : 'A little champion memorizing Quran';
+    }
+    switch (data.category) {
+      case SocialShareCategory.quranAyah:
+        return isArabic
+            ? 'شاركها… لعلّها تهدي قلبًا'
+            : 'Share it — it may guide a heart';
+      case SocialShareCategory.dua:
+        return isArabic ? 'ادعُ بها لمن تحب' : 'Pray it for someone you love';
+      case SocialShareCategory.azkar:
+        if (data.isAzkarWirdProgress) {
+          return isArabic ? 'حافظ على أذكارك معي' : 'Keep your adhkar with me';
+        }
+        return isArabic ? 'ذكّر بها من تحب' : 'Remind someone you love';
+      case SocialShareCategory.achievement:
+      case SocialShareCategory.progress:
+        return isArabic ? 'رافقني في رحلتي مع القرآن' : 'Join my Quran journey';
+      case SocialShareCategory.memorization:
+        return isArabic
+            ? 'احفظ معي… خطوة كل يوم'
+            : 'Memorize with me, one step a day';
+      case SocialShareCategory.streak:
+        return isArabic ? 'ابدأ وِردك اليوم' : 'Start your daily wird today';
+      case SocialShareCategory.certificate:
+        return isArabic
+            ? 'رحلة إتقان مع تالية'
+            : 'A journey of mastery with Talia';
+      case SocialShareCategory.khatmah:
+        return isArabic ? 'ابدأ ختمتك القادمة' : 'Start your next khatmah';
+    }
+  }
+
+  String moodName(SocialShareMood mood) {
+    switch (mood) {
+      case SocialShareMood.auto:
+        return isArabic ? 'تلقائي' : 'Auto';
+      case SocialShareMood.night:
+        return isArabic ? 'ليل' : 'Night';
+      case SocialShareMood.day:
+        return isArabic ? 'نهار' : 'Day';
+    }
+  }
+
+  String ayahReference(String? surahName, int? ayahNumber) {
+    final surahPart = surahName == null ? holyQuran : surah(surahName);
+    return ayahNumber == null ? surahPart : '$surahPart · ${ayah(ayahNumber)}';
+  }
+
+  /// Arabic noun agreement: 1, 2, 3–10, and 0 / 11+.
+  static String arabicCountWord(
+    int n, {
+    required String one,
+    required String two,
+    required String few,
+    required String many,
+  }) {
+    if (n == 1) return one;
+    if (n == 2) return two;
+    if (n >= 3 && n <= 10) return few;
+    return many;
+  }
+
+  String streakHeroLabel(int days) => isArabic
+      ? '${arabicCountWord(days, one: 'يوم', two: 'يومان', few: 'أيام', many: 'يومًا')} مع القرآن'
+      : '${days == 1 ? 'day' : 'days'} with the Quran';
+
+  String memorizedAyahsHeroLabel(int ayahs) => isArabic
+      ? '${arabicCountWord(ayahs, one: 'آية', two: 'آيتان', few: 'آيات', many: 'آيةً')} في صدري'
+      : '${ayahs == 1 ? 'ayah' : 'ayahs'} memorized';
+
+  String surahsCompleted(int count) => isArabic
+      ? '$count ${arabicCountWord(count, one: 'سورة مكتملة', two: 'سورتان مكتملتان', few: 'سور مكتملة', many: 'سورة مكتملة')}'
+      : '$count ${count == 1 ? 'surah' : 'surahs'} completed';
+
+  String khatmahDaysLabel(int days) => isArabic
+      ? arabicCountWord(
+          days,
+          one: 'يوم',
+          two: 'يومان',
+          few: 'أيام',
+          many: 'يومًا',
+        )
+      : (days == 1 ? 'day' : 'days');
+
+  String get wirdCompletedLabel =>
+      isArabic ? 'أذكار أتممتُها' : 'adhkar completed';
 
   // ─── Share sheet chrome ──────────────────────────────────────────────────
   String get sheetTitle =>

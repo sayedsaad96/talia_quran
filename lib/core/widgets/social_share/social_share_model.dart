@@ -550,3 +550,9 @@ class SocialShareData {
 /// Alias for domain consistency
 typedef ShareCardData = SocialShareData;
 typedef ShareCardType = SocialShareCategory;
+
+extension SocialShareDataKind on SocialShareData {
+  /// Azkar wird completion shares carry counts only, never dhikr text.
+  bool get isAzkarWirdProgress =>
+      category == SocialShareCategory.azkar && content.trim().isEmpty;
+}
