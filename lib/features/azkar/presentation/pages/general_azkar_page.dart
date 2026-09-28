@@ -78,9 +78,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       body: BlocBuilder<AzkarCubit, AzkarState>(
         builder: (context, state) {
           if (state is AzkarLoading) {
@@ -212,17 +210,17 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         decoration: InputDecoration(
           hintText: context.l10n.azkarSearchHint,
           hintStyle: AppTypography.bodyMedium.copyWith(
-            color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+            color: context.tokens.textHint,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+            color: context.tokens.textHint,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   key: const ValueKey('search-suffix-clear'),
                   icon: const Icon(Icons.clear_rounded, size: 20),
-                  color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                  color: context.tokens.textHint,
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -230,19 +228,19 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 )
               : null,
           filled: true,
-          fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+          fillColor: context.tokens.card,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+              color: context.tokens.divider,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+              color: context.tokens.divider,
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -258,7 +256,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   }
 
   Widget _buildCategoriesFilter(List<String> tabs, bool isDark) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     return SizedBox(
       height: 56,
       child: ListView.separated(
@@ -306,14 +304,12 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             side: BorderSide(
               color: selected
                   ? primary
-                  : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                  : context.tokens.divider,
             ),
             labelStyle: AppTypography.labelMedium.copyWith(
               color: selected
                   ? Colors.white
-                  : (isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+                  : context.tokens.textSecondary,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             ),
           );
@@ -335,15 +331,13 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 Icon(
                   Icons.bookmark_border_rounded,
                   size: 56,
-                  color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                  color: context.tokens.textHint,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.azkarFavoritesEmptyTitle,
                   style: AppTypography.titleMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -351,9 +345,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 Text(
                   context.l10n.azkarFavoritesEmptyDesc,
                   style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.tokens.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -375,23 +367,19 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               Icon(
                 Icons.search_off_rounded,
                 size: 56,
-                color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                color: context.tokens.textHint,
               ),
               const SizedBox(height: 16),                Text(
                   context.l10n.azkarSearchNoResultsTitle,
                 style: AppTypography.titleMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 8),                Text(
                   context.l10n.azkarSearchNoResultsDesc,
                 style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.tokens.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -443,9 +431,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
           ),
         ),
       ],
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -515,15 +501,11 @@ class _ZikrCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
+    final primary = context.tokens.accent;
 
     return Container(
       decoration: BoxDecoration(

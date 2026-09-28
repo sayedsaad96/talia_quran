@@ -21,12 +21,10 @@ class SettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final caption = isDark ? AppColors.primaryLight : AppColors.primary;
-    final subtitleColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
+    final caption = context.tokens.accent;
+    final subtitleColor = context.tokens.textSecondary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,9 +101,8 @@ class SettingsInListHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return ColoredBox(
-      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+      color: context.tokens.surfaceVariant,
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(
           AppSpacing.md,
@@ -118,7 +115,7 @@ class SettingsInListHeader extends StatelessWidget {
           child: Text(
             title,
             style: AppTypography.labelMedium.copyWith(
-              color: isDark ? AppColors.primaryLight : AppColors.primary,
+              color: context.tokens.accent,
               fontWeight: FontWeight.w700,
             ),
           ),

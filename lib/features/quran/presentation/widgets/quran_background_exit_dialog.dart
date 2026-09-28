@@ -21,8 +21,8 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
   String? surahName,
 }) {
   final isDark = context.isDark;
-  final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-  final subtitleColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+  final titleColor = context.tokens.textPrimary;
+  final subtitleColor = context.tokens.textSecondary;
   final iconBgColor = (isDark ? AppColors.goldLight : AppColors.primary).withValues(alpha: 0.14);
   final primaryAccent = isDark ? AppColors.goldLight : AppColors.primary;
 
@@ -41,7 +41,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
-          backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+          backgroundColor: context.tokens.card,
           titlePadding: const EdgeInsets.fromLTRB(
             AppSpacing.pagePadding,
             AppSpacing.lg,

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../../domain/entities/juz_summary.dart';
@@ -130,19 +129,12 @@ class _JuzCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     final title = '${context.l10n.juz} ${context.localizedJuzName(juzNumber)}';
     final pageLabel = '${context.l10n.page} $initialPage';
-    final surface = isDark
-        ? AppColors.darkSurfaceVariant
-        : AppColors.lightSurfaceVariant;
-    final primaryText = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryText = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final surface = context.tokens.surfaceVariant;
+    final primaryText = context.tokens.textPrimary;
+    final secondaryText = context.tokens.textSecondary;
 
     return Semantics(
       button: true,

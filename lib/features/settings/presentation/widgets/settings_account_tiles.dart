@@ -44,13 +44,13 @@ class ProfileSettingTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: (isDark ? AppColors.primaryLight : AppColors.primary)
+                    color: context.tokens.accent
                         .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.person_outline_rounded,
-                    color: isDark ? AppColors.primaryLight : AppColors.primary,
+                    color: context.tokens.accent,
                     size: 24,
                   ),
                 ),
@@ -64,9 +64,7 @@ class ProfileSettingTile extends StatelessWidget {
                             ? profile.displayName
                             : context.l10n.name,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
+                          color: context.tokens.textPrimary,
                           fontWeight: profile.hasName
                               ? FontWeight.w600
                               : FontWeight.w400,
@@ -76,18 +74,14 @@ class ProfileSettingTile extends StatelessWidget {
                         Text(
                           '${context.l10n.age}: ${profile.age}',
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
+                            color: context.tokens.textSecondary,
                           ),
                         )
                       else
                         Text(
                           context.l10n.editProfile,
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint,
+                            color: context.tokens.textHint,
                           ),
                         ),
                     ],
@@ -155,19 +149,16 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
 
     return AlertDialog(
-      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      backgroundColor: context.tokens.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       title: Text(
         context.l10n.editProfile,
         style: AppTypography.titleLarge.copyWith(
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          color: context.tokens.textPrimary,
         ),
       ),
       content: SingleChildScrollView(
@@ -177,9 +168,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             TextField(
               controller: _nameController,
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
               ),
               decoration: InputDecoration(
                 labelText: context.l10n.name,
@@ -195,7 +184,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               child: Text(
                 context.l10n.arabicNameHint,
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDark ? AppColors.primaryLight : AppColors.primary,
+                  color: context.tokens.accent,
                 ),
               ),
             ),
@@ -204,9 +193,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               controller: _ageController,
               keyboardType: TextInputType.number,
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
               ),
               decoration: InputDecoration(
                 labelText: context.l10n.age,
@@ -222,9 +209,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           child: Text(
             context.l10n.cancel,
             style: AppTypography.labelLarge.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
         ),
@@ -280,7 +265,7 @@ class AccountAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
 
     return Container(
       width: 58,
@@ -337,13 +322,9 @@ class AccountSection extends StatefulWidget {
 class _AccountSectionState extends State<AccountSection> {
   @override
   Widget build(BuildContext context) {
-    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = widget.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = widget.isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -456,9 +437,7 @@ class _AccountSectionState extends State<AccountSection> {
               ),
               Divider(
                 height: 0.5,
-                color: widget.isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
+                color: context.tokens.divider,
                 indent: 16,
                 endIndent: 16,
               ),
@@ -619,28 +598,23 @@ class _AccountSectionState extends State<AccountSection> {
   }
 
   void _confirmForceSignOut(BuildContext context) {
-    final isDark = context.isDark;
     showDialog<void>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        backgroundColor: context.tokens.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         title: Text(
           context.l10n.signOutPendingDataTitle,
           style: AppTypography.titleLarge.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
         ),
         content: Text(
           context.l10n.signOutPendingDataWarning,
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.tokens.textSecondary,
           ),
         ),
         actions: [
@@ -662,28 +636,23 @@ class _AccountSectionState extends State<AccountSection> {
   }
 
   void _confirmSignOut(BuildContext context) {
-    final isDark = context.isDark;
     showDialog<void>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        backgroundColor: context.tokens.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         title: Text(
           context.l10n.signOut,
           style: AppTypography.titleLarge.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
         ),
         content: Text(
           context.l10n.signOutWarning,
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.tokens.textSecondary,
           ),
         ),
         actions: [
@@ -762,9 +731,7 @@ class DeleteAccountTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final subtextColor = context.tokens.textSecondary;
 
     return InkWell(
       onTap: () => _confirmDeleteAccount(context, email),

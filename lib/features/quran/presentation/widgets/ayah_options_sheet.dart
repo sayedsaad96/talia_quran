@@ -13,7 +13,6 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/quran_ayah_display_text.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
@@ -81,9 +80,8 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final surface = context.tokens.surface;
+    final primary = context.tokens.accent;
     final reciterService = getIt<QuranReciterService>();
     final displayedAyahText = QuranAyahDisplayText.withVerseBrackets(
       widget.ayah.text,

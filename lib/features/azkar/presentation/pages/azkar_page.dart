@@ -48,7 +48,7 @@ class _AzkarHubView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          context.tokens.background,
       body: BlocBuilder<AzkarHubCubit, AzkarHubState>(
         builder: (context, state) {
           return Align(
@@ -269,9 +269,7 @@ class _AzkarHubView extends StatelessWidget {
           style: AppTypography.titleMedium.copyWith(
             fontFamily: 'Amiri',
             fontWeight: FontWeight.w700,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
         ),
       ),
@@ -306,7 +304,7 @@ class _AzkarHubView extends StatelessWidget {
       expandedHeight: 140,
       pinned: true,
       backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -548,13 +546,13 @@ class _BentoGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaceColor =
-        isDark ? AppColors.darkCard : AppColors.lightCard;
+        context.tokens.card;
     final borderColor =
-        isDark ? AppColors.darkDivider : AppColors.lightDivider;
+        context.tokens.divider;
     final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        context.tokens.textPrimary;
     final subColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        context.tokens.textSecondary;
 
     return InkWell(
       onTap: onTap ?? () => context.push('/azkar/$route'),

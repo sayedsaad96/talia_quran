@@ -68,9 +68,7 @@ class _SettingsView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          final background = isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground;
+          final background = context.tokens.background;
 
           return Scaffold(
             backgroundColor: background,
@@ -107,9 +105,7 @@ class _SettingsView extends StatelessWidget {
     bool isDark,
     Color background,
   ) {
-    final titleColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final titleColor = context.tokens.textPrimary;
 
     return SliverAppBar(
       pinned: true,

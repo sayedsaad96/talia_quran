@@ -321,13 +321,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
 
   @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = widget.isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
+    final primary = context.tokens.accent;
 
     return BlocConsumer<NotificationSettingsCubit, NotificationSettingsState>(
       bloc: _cubit,
@@ -704,13 +700,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
   }
 
   Future<void> _showTestNotificationPicker(BuildContext context) async {
-    final surface = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = widget.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = widget.isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final surface = context.tokens.card;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     await showModalBottomSheet<void>(
       context: context,

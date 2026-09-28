@@ -98,7 +98,7 @@ class _QuranViewState extends State<_QuranView>
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final bg = context.tokens.background;
 
     return Scaffold(
       backgroundColor: bg,
@@ -163,8 +163,8 @@ class _QuranViewState extends State<_QuranView>
   }
 
   Widget _buildTypeFilter(BuildContext context, bool isDark) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final hint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final primary = context.tokens.accent;
+    final hint = context.tokens.textHint;
     final options = <String?>[
       null,
       'meccan',
@@ -197,9 +197,7 @@ class _QuranViewState extends State<_QuranView>
                 selected: _surahType == type,
                 onSelected: (_) => setState(() => _surahType = type),
                 selectedColor: primary.withValues(alpha: 0.14),
-                backgroundColor: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightSurfaceVariant,
+                backgroundColor: context.tokens.surfaceVariant,
                 labelStyle: AppTypography.labelMedium.copyWith(
                   color: _surahType == type ? primary : hint,
                   fontWeight: _surahType == type
@@ -209,9 +207,7 @@ class _QuranViewState extends State<_QuranView>
                 side: BorderSide(
                   color: _surahType == type
                       ? primary.withValues(alpha: 0.5)
-                      : (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
+                      : context.tokens.divider,
                 ),
                 showCheckmark: false,
               ),
@@ -222,7 +218,7 @@ class _QuranViewState extends State<_QuranView>
   }
 
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     final reciterService = getIt<QuranReciterService>();
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.5);
     final bottomHeight = 96 + ((textScale - 1) * 32);
@@ -244,9 +240,8 @@ class _QuranViewState extends State<_QuranView>
       ),
       title: Text(
         context.l10n.quran,
-        style: AppTypography.displaySmall.copyWith(
+        style: AppTypography.headlineMedium.copyWith(
           color: Colors.white,
-          fontSize: 22,
         ),
       ),
       actions: [
@@ -280,7 +275,7 @@ class _QuranViewState extends State<_QuranView>
       bottom: PreferredSize(
         preferredSize: Size.fromHeight(bottomHeight),
         child: Container(
-          color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          color: context.tokens.background,
           child: Column(
             children: [
               Padding(
@@ -298,9 +293,7 @@ class _QuranViewState extends State<_QuranView>
               TabBar(
                 controller: _tabCtrl,
                 labelColor: primary,
-                unselectedLabelColor: isDark
-                    ? AppColors.darkTextHint
-                    : AppColors.lightTextHint,
+                unselectedLabelColor: context.tokens.textHint,
                 labelStyle: AppTypography.labelLarge.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -355,36 +348,31 @@ class _SearchBarState extends State<_SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 44),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkSurfaceVariant
-              : AppColors.lightSurfaceVariant,
+          color: context.tokens.surfaceVariant,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+            color: context.tokens.divider,
           ),
         ),
         child: TextField(
           controller: widget.controller,
           onChanged: widget.onChanged,
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: context.l10n.searchSurah,
             hintStyle: AppTypography.bodyMedium.copyWith(
-              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+              color: context.tokens.textHint,
             ),
             prefixIcon: Icon(
               Icons.search_rounded,
-              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+              color: context.tokens.textHint,
               size: 20,
             ),
             suffixIcon: _hasText
@@ -392,9 +380,7 @@ class _SearchBarState extends State<_SearchBar> {
                     tooltip: context.l10n.clearSearch,
                     icon: Icon(
                       Icons.close_rounded,
-                      color: isDark
-                          ? AppColors.darkTextHint
-                          : AppColors.lightTextHint,
+                      color: context.tokens.textHint,
                       size: 18,
                     ),
                     onPressed: () {
@@ -462,9 +448,9 @@ class _SurahTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final primary = context.tokens.accent;
+    final surface = context.tokens.card;
+    final border = context.tokens.divider;
 
     return Material(
       color: surface,
@@ -499,10 +485,9 @@ class _SurahTile extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '${surah.id}',
-                    style: AppTypography.labelMedium.copyWith(
+                    style: AppTypography.labelLarge.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
                     ),
                   ),
                 ),
@@ -522,9 +507,7 @@ class _SurahTile extends StatelessWidget {
                               height: 1.2,
                             )
                           : AppTypography.titleMedium.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                              color: context.tokens.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                     ),
@@ -540,10 +523,7 @@ class _SurahTile extends StatelessWidget {
                         Text(
                           '${surah.ayahCount} ${context.l10n.ayahs}',
                           style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint,
-                            fontSize: 12,
+                            color: context.tokens.textHint,
                           ),
                         ),
                       ],
@@ -584,9 +564,7 @@ class _SurahTile extends StatelessWidget {
                               size: 26,
                               color: isCurrentSurah
                                   ? primary
-                                  : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary),
+                                  : context.tokens.textSecondary,
                             ),
                       tooltip: isPlaying
                           ? (context.isArabic ? 'إيقاف مؤقت' : 'Pause')
@@ -608,9 +586,7 @@ class _SurahTile extends StatelessWidget {
                     ? Icons.arrow_back_ios_new_rounded
                     : Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: isDark
-                    ? AppColors.darkTextHint
-                    : AppColors.lightTextHint,
+                color: context.tokens.textHint,
               ),
             ],
           ),
@@ -634,7 +610,7 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = isMeccan
-        ? (isDark ? AppColors.primaryLight : AppColors.primary)
+        ? context.tokens.accent
         : (isDark ? AppColors.success : AppColors.primaryDark);
 
     return Container(
@@ -649,7 +625,6 @@ class _Chip extends StatelessWidget {
         style: AppTypography.labelSmall.copyWith(
           color: chipColor,
           fontWeight: FontWeight.bold,
-          fontSize: 11,
         ),
       ),
     );

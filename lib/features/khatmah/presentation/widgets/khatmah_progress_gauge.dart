@@ -21,7 +21,6 @@ class KhatmahProgressGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final isArabic = context.isArabic;
     final percent = (plan.progressPercentage * 100)
         .clamp(0, 100)
@@ -73,9 +72,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                     size: Size(size, size),
                     painter: _GaugePainter(
                       progress: plan.progressPercentage.clamp(0.0, 1.0),
-                      trackColor: isDark
-                          ? AppColors.darkSurfaceVariant
-                          : AppColors.lightSurfaceVariant,
+                      trackColor: context.tokens.surfaceVariant,
                       progressColor: AppColors.gold,
                       progressEndColor: AppColors.goldLight,
                     ),
@@ -98,9 +95,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                         '$completedPages / $totalPages',
                         key: const Key('khatmah_progress_pages_count'),
                         style: AppTypography.labelMedium.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
+                          color: context.tokens.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -111,10 +106,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                         ),
                         key: const Key('khatmah_progress_remaining_pages'),
                         style: AppTypography.bodySmall.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                          fontSize: 11,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
                     ],
@@ -129,9 +121,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                 Icon(
                   Icons.calendar_today_rounded,
                   size: 14,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.tokens.textSecondary,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Flexible(
@@ -139,9 +129,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                     expectedCompletionLabel,
                     key: const Key('khatmah_progress_end_date'),
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

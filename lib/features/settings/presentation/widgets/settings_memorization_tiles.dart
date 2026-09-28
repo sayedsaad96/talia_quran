@@ -22,13 +22,9 @@ class MemorizationPathSummaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
     final selectedPath = profile?.selectedPath;
     final hasPath = selectedPath != null;
     final title = switch (selectedPath) {
@@ -154,26 +150,20 @@ class ResetMemorizationPathTile extends StatelessWidget {
                   Text(
                     context.l10n.resetMemorizationPathTileTitle,
                     style: AppTypography.titleMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: context.tokens.textPrimary,
                     ),
                   ),
                   Text(
                     context.l10n.resetMemorizationPathTileSubtitle,
                     style: AppTypography.labelSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
             SettingsTrailingChevron(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ],
         ),
@@ -331,10 +321,8 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = context.tokens.textPrimary;
+    final primary = context.tokens.accent;
 
     final titles = [
       context.l10n.accuracyEasyTitle,
@@ -410,12 +398,8 @@ class AccuracyOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textColor = context.tokens.textPrimary;
+    final subTextColor = context.tokens.textSecondary;
 
     return Semantics(
       button: true,

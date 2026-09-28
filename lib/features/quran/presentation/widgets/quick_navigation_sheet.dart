@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../../domain/entities/juz_summary.dart';
@@ -92,10 +91,9 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final hint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final surface = context.tokens.surface;
+    final primary = context.tokens.accent;
+    final hint = context.tokens.textHint;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -433,8 +431,7 @@ class _Grid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

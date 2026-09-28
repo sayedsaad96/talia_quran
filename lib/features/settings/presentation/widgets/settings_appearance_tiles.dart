@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/locale_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/pure_black_cubit.dart';
 import '../../../../core/theme/theme_cubit.dart';
@@ -16,7 +15,7 @@ class ThemeSettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, themeMode) {
-        final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+        final primary = context.tokens.accent;
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -128,9 +127,7 @@ class ThemeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final textColor = context.tokens.textPrimary;
 
     return Semantics(
       label: label,
@@ -147,9 +144,7 @@ class ThemeOption extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? color.withValues(alpha: isDark ? 0.2 : 0.11)
-                : (isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSurfaceVariant),
+                : context.tokens.surfaceVariant,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: isSelected
@@ -199,7 +194,7 @@ class LocaleSettingTile extends StatelessWidget {
     return BlocBuilder<LocaleCubit, Locale>(
       builder: (context, locale) {
         final isAr = locale.languageCode == 'ar';
-        final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+        final primary = context.tokens.accent;
 
         return Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(
@@ -265,12 +260,8 @@ class LocaleOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextHint
-        : AppColors.lightTextHint;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textHint;
 
     return Semantics(
       label: label,
@@ -287,9 +278,7 @@ class LocaleOption extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? color.withValues(alpha: isDark ? 0.18 : 0.09)
-                : (isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSurfaceVariant),
+                : context.tokens.surfaceVariant,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: isSelected
@@ -305,9 +294,7 @@ class LocaleOption extends StatelessWidget {
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkBackground
-                      : AppColors.lightBackground,
+                  color: context.tokens.background,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(flag, style: AppTypography.titleLarge),

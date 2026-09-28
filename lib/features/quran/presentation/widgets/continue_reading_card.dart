@@ -6,7 +6,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/app_session_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/services/quran_warmup_service.dart';
 import '../../domain/entities/quran_entities.dart';
@@ -97,8 +96,8 @@ class _CardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final primary = context.tokens.accent;
+    final surface = context.tokens.card;
     final label =
         '${context.l10n.continueReading} • $subtitle';
 
@@ -162,9 +161,7 @@ class _CardBody extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodySmall.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
                     ],

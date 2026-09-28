@@ -89,22 +89,18 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor:
-            widget.isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            context.tokens.surface,
         title: Text(
           context.l10n.azkarTasbeehResetTitle,
           style: AppTypography.titleMedium.copyWith(
-            color: widget.isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
             fontFamily: 'Amiri',
           ),
         ),
         content: Text(
           context.l10n.azkarTasbeehResetDesc,
           style: AppTypography.bodyMedium.copyWith(
-            color: widget.isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.tokens.textSecondary,
           ),
         ),
         actions: [
@@ -133,12 +129,10 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
   @override
   Widget build(BuildContext context) {
     final surfaceColor =
-        widget.isDark ? AppColors.darkSurface : AppColors.lightSurface;
+        context.tokens.surface;
     final textColor =
-        widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final hintColor = widget.isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+        context.tokens.textPrimary;
+    final hintColor = context.tokens.textSecondary;
 
     final progress = _target > 0 ? (_counter % _target) / _target : 0.0;
     final rounds = _target > 0 ? _counter ~/ _target : 0;
@@ -161,9 +155,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: (widget.isDark
-                          ? AppColors.darkTextHint
-                          : AppColors.lightTextHint)
+                  color: context.tokens.textHint
                       .withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(99),
                 ),
@@ -212,15 +204,11 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                       showCheckmark: false,
                       onSelected: (_) => _selectTarget(opt),
                       selectedColor: AppColors.primary,
-                      backgroundColor: widget.isDark
-                          ? AppColors.darkCard
-                          : AppColors.lightCard,
+                      backgroundColor: context.tokens.card,
                       side: BorderSide(
                         color: isSelected
                             ? AppColors.primary
-                            : (widget.isDark
-                                ? AppColors.darkDivider
-                                : AppColors.lightDivider),
+                            : context.tokens.divider,
                       ),
                       labelStyle: AppTypography.labelMedium.copyWith(
                         color: isSelected ? Colors.white : hintColor,
@@ -251,9 +239,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                           child: CircularProgressIndicator(
                             value: progress == 0.0 && _counter > 0 ? 1.0 : progress,
                             strokeWidth: 8,
-                            backgroundColor: widget.isDark
-                                ? AppColors.darkDivider
-                                : AppColors.lightDivider,
+                            backgroundColor: context.tokens.divider,
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               AppColors.gold,
                             ),

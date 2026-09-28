@@ -4,6 +4,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
+import '../../../../core/extensions/context_extensions.dart';
 
 class FontScaleSelectorSheet extends StatelessWidget {
   const FontScaleSelectorSheet({
@@ -53,11 +54,11 @@ class FontScaleSelectorSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaceColor =
-        isDark ? AppColors.darkSurface : AppColors.lightSurface;
+        context.tokens.surface;
     final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        context.tokens.textPrimary;
     final hintColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        context.tokens.textSecondary;
 
     final scales = [
       (label: 'صغير', scale: 0.85, sampleSize: 18.0),
@@ -83,7 +84,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: (isDark ? AppColors.darkTextHint : AppColors.lightTextHint)
+                  color: context.tokens.textHint
                       .withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(99),
                 ),
@@ -120,10 +121,10 @@ class FontScaleSelectorSheet extends StatelessWidget {
                   vertical: 18,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                  color: context.tokens.card,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                    color: context.tokens.divider,
                   ),
                 ),
                 alignment: Alignment.center,
@@ -157,9 +158,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark
-                                    ? AppColors.darkSurfaceVariant
-                                    : AppColors.lightSurfaceVariant),
+                                : context.tokens.surfaceVariant,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected

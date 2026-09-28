@@ -326,8 +326,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     final isDark = context.isDark;
     final isArabic = context.isArabic;
     final l10n = context.l10n;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final primary = context.tokens.accent;
+    final cardBg = context.tokens.card;
 
     return BlocProvider<KhatmahCubit>.value(
       value: _cubit,
@@ -419,9 +419,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                       Text(
                         l10n.khatmahNoPlanDescription,
                         style: AppTypography.bodySmall.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: context.tokens.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -653,9 +651,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                               (wirdEndStr).toString(),
                             ),
                             style: AppTypography.bodyMedium.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -763,9 +759,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                       context.l10n.khatmahCalmAdaptiveControls,
                       style: AppTypography.labelLarge.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),

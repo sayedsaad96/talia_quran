@@ -89,9 +89,7 @@ class _BookmarksTabState extends State<BookmarksTab> {
               child: Text(
                 context.l10n.noData,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ),
@@ -134,10 +132,8 @@ class _EmptyBookmarks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = context.tokens.textSecondary;
+    final primary = context.tokens.accent;
 
     return Center(
       child: Padding(
@@ -198,14 +194,10 @@ class _SurahBookmarkGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final cardColor = context.tokens.card;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../../cubits/settings_cubit.dart';
@@ -67,14 +66,9 @@ class _BackgroundPlaybackSettingTileState
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<QuranAudioPlayerCubit>();
-    final isDark = widget.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
     final isEnabled = cubit.isBackgroundPlaybackEnabled;
 
     return Padding(

@@ -5,7 +5,6 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 
@@ -24,9 +23,8 @@ class ReciterSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final surface = context.tokens.surface;
+    final primary = context.tokens.accent;
     final reciterService = getIt<QuranReciterService>();
 
     return Container(
@@ -90,9 +88,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                       child: Material(
                         color: isSelected
                             ? primary.withValues(alpha: 0.08)
-                            : (isDark
-                                  ? AppColors.darkCard
-                                  : AppColors.lightCard),
+                            : context.tokens.card,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
@@ -100,9 +96,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                           side: BorderSide(
                             color: isSelected
                                 ? primary
-                                : (isDark
-                                      ? AppColors.darkDivider
-                                      : AppColors.lightDivider),
+                                : context.tokens.divider,
                             width: isSelected ? 1.5 : 0.5,
                           ),
                         ),
@@ -138,16 +132,13 @@ class ReciterSelectorSheet extends StatelessWidget {
                           ),
                           title: Text(
                             context.isArabic ? reciter.nameAr : reciter.nameEn,
-                            style: AppTypography.titleMedium.copyWith(
-                              fontSize: 15,
+                            style: AppTypography.titleLarge.copyWith(
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                               color: isSelected
                                   ? primary
-                                  : (isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.lightTextPrimary),
+                                  : context.tokens.textPrimary,
                             ),
                           ),
                           trailing: isSelected

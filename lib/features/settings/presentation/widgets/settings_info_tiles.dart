@@ -17,13 +17,9 @@ class TutorialGuideTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return InkWell(
       onTap: () => context.push(AppRoutes.tutorialGuide),
@@ -58,9 +54,8 @@ class TutorialGuideTile extends StatelessWidget {
                   ),
                   Text(
                     context.l10n.tutorialGuideSubtitle,
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.labelMedium.copyWith(
                       color: subtextColor,
-                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -80,12 +75,8 @@ class PrivacyPolicyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return InkWell(
       onTap: () => context.push(AppRoutes.privacyPolicy),
@@ -120,9 +111,8 @@ class PrivacyPolicyTile extends StatelessWidget {
                   ),
                   Text(
                     context.l10n.settingsPrivacyPolicySubtitle,
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.labelMedium.copyWith(
                       color: subtextColor,
-                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -203,7 +193,6 @@ class AboutTile extends StatelessWidget {
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -220,7 +209,6 @@ class AboutTile extends StatelessWidget {
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white.withValues(alpha: 0.85),
                   height: 1.45,
-                  fontSize: 12,
                 ),
               ),
             ],
@@ -238,13 +226,9 @@ class ShareAppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return InkWell(
       onTap: () {
@@ -285,9 +269,8 @@ class ShareAppTile extends StatelessWidget {
                     context.isArabic
                         ? 'شارك تجربة تالية مع أهلك وأصدقائك'
                         : 'Share the Talia experience with friends',
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.labelMedium.copyWith(
                       color: subtextColor,
-                      fontSize: 12,
                     ),
                   ),
                 ],

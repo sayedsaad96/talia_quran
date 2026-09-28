@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/app_colors.dart';
 import 'settings_section.dart';
+import '../../../../core/extensions/context_extensions.dart';
 
 /// A premium Apple/M3 style navigation tile for the settings hub.
 ///
@@ -34,13 +34,13 @@ class SettingsNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveIconColor =
-        iconColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
+        iconColor ?? context.tokens.accent;
     final effectiveIconBg =
         iconBackgroundColor ?? effectiveIconColor.withValues(alpha: 0.12);
     final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        context.tokens.textPrimary;
     final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        context.tokens.textSecondary;
 
     return Material(
       color: Colors.transparent,
@@ -79,10 +79,9 @@ class SettingsNavTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTypography.titleSmall.copyWith(
+                      style: AppTypography.titleLarge.copyWith(
                         color: textPrimary,
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
                       ),
                     ),
                     if (subtitle != null && subtitle!.isNotEmpty) ...[
@@ -91,7 +90,6 @@ class SettingsNavTile extends StatelessWidget {
                         subtitle!,
                         style: AppTypography.bodySmall.copyWith(
                           color: textSecondary,
-                          fontSize: 12,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

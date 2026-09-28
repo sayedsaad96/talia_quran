@@ -340,7 +340,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   /// the reader silently continue, pause on serenity — an ayah of
   /// tranquility, the wird page range as a quiet summary, and a closing dua.
   void _showWirdClosingMoment(BuildContext context, KhatmahPlan plan) {
-    final isDark = context.isDark;
     final isArabic = context.isArabic;
     final date = _khatmahCubit?.displayDate ?? DateTime.now();
     final wird = plan.dailyTargetFor(date);
@@ -353,7 +352,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       builder: (dialogContext) {
         final dialogL10n = dialogContext.l10n;
         return Dialog(
-          backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+          backgroundColor: context.tokens.card,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
@@ -383,9 +382,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                     key: const Key('khatmah_wird_closing_done_button'),
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     style: FilledButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppColors.primaryLight
-                          : AppColors.primary,
+                      backgroundColor: context.tokens.accent,
                     ),
                     child: Text(dialogL10n.closingDone),
                   ),
@@ -513,9 +510,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       return BlocProvider.value(
         value: _surahDetailCubit!,
         child: Scaffold(
-          backgroundColor: context.isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
+          backgroundColor: context.tokens.background,
           body: BlocConsumer<SurahDetailCubit, SurahDetailState>(
             listener: (context, state) {
               if (state is SurahDetailLoaded && _pageController == null) {
@@ -575,7 +570,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
     // Primary guidance color (not gold): routine reader chrome uses primary
     // per DESIGN.md; gold stays reserved for achievement surfaces.
-    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
+    final accent = context.tokens.accent;
 
     final content = BlocProvider.value(
       value: _quranPageCubit,

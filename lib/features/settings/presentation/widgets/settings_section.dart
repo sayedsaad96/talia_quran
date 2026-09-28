@@ -40,18 +40,14 @@ class _SettingsSectionState extends State<SettingsSection> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = (isDark ? AppColors.darkDivider : AppColors.lightDivider)
+    final surface = context.tokens.card;
+    final border = context.tokens.divider
         .withValues(alpha: isDark ? 0.55 : 0.8);
     final accent =
         widget.accentColor ??
-        (isDark ? AppColors.primaryLight : AppColors.primary);
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+        context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
 
     return Material(
       color: surface,
@@ -102,10 +98,9 @@ class _SettingsSectionState extends State<SettingsSection> {
                           children: [
                             Text(
                               widget.title,
-                              style: AppTypography.titleMedium.copyWith(
+                              style: AppTypography.titleLarge.copyWith(
                                 color: textColor,
                                 fontWeight: FontWeight.w700,
-                                fontSize: 15,
                               ),
                             ),
                             if (widget.subtitle case final subtitle?) ...[
@@ -203,7 +198,7 @@ class SettingsDivider extends StatelessWidget {
     return Divider(
       height: 0.5,
       thickness: 0.5,
-      color: (isDark ? AppColors.darkDivider : AppColors.lightDivider)
+      color: context.tokens.divider
           .withValues(alpha: 0.6),
       indent: indent,
     );
@@ -241,10 +236,8 @@ class SettingsInlineHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final iconColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = context.tokens.textSecondary;
+    final iconColor = context.tokens.accent;
 
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
@@ -265,7 +258,6 @@ class SettingsInlineHeader extends StatelessWidget {
               style: AppTypography.labelMedium.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
               ),
             ),
           ),

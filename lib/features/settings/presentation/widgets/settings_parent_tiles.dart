@@ -56,27 +56,21 @@ class ParentDashboardTile extends StatelessWidget {
                   Text(
                     context.l10n.parentDashboardTitle,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: context.tokens.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: AppTypography.labelSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
             SettingsTrailingChevron(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ],
         ),
@@ -127,7 +121,7 @@ class ParentModeToggle extends StatelessWidget {
             ),
             child: Icon(
               Icons.family_restroom_rounded,
-              color: isDark ? AppColors.primaryLight : AppColors.primary,
+              color: context.tokens.accent,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -138,18 +132,14 @@ class ParentModeToggle extends StatelessWidget {
                 Text(
                   context.l10n.parentGuardianMode,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   context.l10n.parentModeSubtitle,
                   style: AppTypography.labelSmall.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
               ],
@@ -157,9 +147,7 @@ class ParentModeToggle extends StatelessWidget {
           ),
           Switch(
             value: isParentMode,
-            activeThumbColor: isDark
-                ? AppColors.primaryLight
-                : AppColors.primary,
+            activeThumbColor: context.tokens.accent,
             onChanged: onChanged,
           ),
         ],

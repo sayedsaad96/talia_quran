@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../khatmah_localizations.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 
@@ -71,9 +70,8 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final primary = context.tokens.accent;
+    final cardBg = context.tokens.card;
 
     return Container(
       decoration: BoxDecoration(
@@ -165,9 +163,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
             Text(
               context.l10n.khatmahCondition,
               style: AppTypography.labelMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

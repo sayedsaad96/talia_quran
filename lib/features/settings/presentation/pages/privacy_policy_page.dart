@@ -31,21 +31,15 @@ class PrivacyPolicyPage extends StatelessWidget {
         ? PrivacyPolicyContent.arManualOptionAction
         : PrivacyPolicyContent.enManualOptionAction;
 
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final dividerColor = isDark
-        ? AppColors.darkDivider
-        : AppColors.lightDivider;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final cardBg = context.tokens.card;
+    final dividerColor = context.tokens.divider;
 
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
+        backgroundColor: context.tokens.background,
         body: CustomScrollView(
           slivers: [
             _buildAppBar(context, isDark, isAr),
@@ -203,9 +197,7 @@ class PrivacyPolicyPage extends StatelessWidget {
   SliverAppBar _buildAppBar(BuildContext context, bool isDark, bool isAr) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0.5,
       leading: IconButton(
@@ -216,9 +208,7 @@ class PrivacyPolicyPage extends StatelessWidget {
       title: Text(
         context.l10n.privacyPolicy,
         style: AppTypography.headlineSmall.copyWith(
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          color: context.tokens.textPrimary,
           fontWeight: FontWeight.bold,
           fontFamily: isAr ? 'Noto_Naskh_Arabic' : null,
         ),

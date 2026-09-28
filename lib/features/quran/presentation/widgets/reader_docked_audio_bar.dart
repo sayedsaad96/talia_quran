@@ -27,7 +27,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
         }
 
         final isDark = context.isDark;
-        final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+        final primary = context.tokens.accent;
         final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
         final surahName = context.isArabic
             ? SurahNames.nameAr(state.currentSurahId)
@@ -153,9 +153,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
                 icon: Icon(
                   Icons.close_rounded,
                   size: 18,
-                  color: isDark
-                      ? AppColors.darkTextHint
-                      : AppColors.lightTextHint,
+                  color: context.tokens.textHint,
                 ),
                 tooltip: context.l10n.stopRecitation,
                 onPressed: () {

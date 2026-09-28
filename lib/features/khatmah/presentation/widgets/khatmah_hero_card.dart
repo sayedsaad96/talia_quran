@@ -77,7 +77,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
   @override
   Widget build(BuildContext context) {
     final currentPlan = plan;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     if (widget.error != null) {
       return Card(
         margin: margin,
@@ -99,7 +99,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
     if (currentPlan == null || currentPlan.status == KhatmahStatus.completed) {
       return Card(
         margin: margin,
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: context.tokens.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         ),
@@ -136,7 +136,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
 
     return Card(
       margin: margin,
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      color: context.tokens.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       ),
@@ -204,9 +204,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                             : '',
                       ),
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                 ),
               ),
               Text(
@@ -224,9 +222,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                       currentPlan.dedication.recipientName!,
                     ),
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                 ),

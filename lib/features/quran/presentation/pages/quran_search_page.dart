@@ -7,7 +7,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/usecases/search_quran_usecase.dart';
 
@@ -64,11 +63,8 @@ class _QuranSearchPageState extends State<QuranSearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       appBar: AppBar(
         title: Text(context.l10n.homeSearchTitle),
       ),

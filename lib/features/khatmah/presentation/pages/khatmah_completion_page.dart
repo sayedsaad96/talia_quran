@@ -115,9 +115,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     final isDark = context.isDark;
     final isArabic = context.isArabic;
     final gold = isDark ? AppColors.goldLight : AppColors.gold;
-    final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final bg = context.tokens.background;
+    final cardBg = context.tokens.card;
+    final border = context.tokens.divider;
 
     final completion = widget.completion;
     if (completion == null || !completion.isValidCompletion) {
@@ -220,9 +220,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     title,
                     textAlign: TextAlign.center,
                     style: AppTypography.titleMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
 
@@ -335,9 +333,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                               fontSize: 16,
                               height: 1.9,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                              color: context.tokens.textPrimary,
                             ),
                           ),
                         ],
@@ -506,7 +502,6 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -522,10 +517,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
-            fontSize: 11,
+            color: context.tokens.textSecondary,
           ),
         ),
       ],

@@ -6,7 +6,6 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'reciter_selector_sheet.dart';
 
@@ -33,9 +32,8 @@ class ReaderOverflowSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final surface = context.tokens.surface;
+    final primary = context.tokens.accent;
     final reciterService = getIt<QuranReciterService>();
 
     return Material(
@@ -82,9 +80,7 @@ class ReaderOverflowSheet extends StatelessWidget {
                   subtitle: Text(
                     context.isArabic ? reciter.nameAr : reciter.nameEn,
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                   trailing: Icon(

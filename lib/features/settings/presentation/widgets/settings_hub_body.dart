@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
@@ -183,7 +182,7 @@ class SettingsHubBody extends StatelessWidget {
     required Widget page,
     String? subtitle,
   }) {
-    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
+    final accent = context.tokens.accent;
     return SettingsNavTile(
       icon: icon,
       iconColor: accent,

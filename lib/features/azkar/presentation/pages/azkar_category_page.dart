@@ -62,9 +62,7 @@ class _AzkarCategoryView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       body: BlocBuilder<AzkarCubit, AzkarState>(
         builder: (context, state) {
           if (state is AzkarLoading) {
@@ -114,9 +112,7 @@ class _AzkarUnderReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final foreground = context.tokens.textPrimary;
     return SafeArea(
       child: Column(
         children: [
@@ -286,13 +282,8 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
     } else {
       snapshot = widget.state;
     }
-    final isDark = widget.isDark;
-    final surfaceColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final surfaceColor = context.tokens.surface;
+    final textColor = context.tokens.textPrimary;
 
     showModalBottomSheet<void>(
       context: context,
@@ -316,9 +307,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                     height: 4,
                     decoration: BoxDecoration(
                       color:
-                          (isDark
-                                  ? AppColors.darkTextHint
-                                  : AppColors.lightTextHint)
+                          context.tokens.textHint
                               .withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(99),
                     ),
@@ -338,9 +327,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                       itemCount: snapshot.sessions.length,
                       separatorBuilder: (_, _) => Divider(
-                        color: (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
+                        color: context.tokens.divider,
                         height: 1,
                       ),
                       itemBuilder: (context, index) {
@@ -354,9 +341,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                           leading: CircleAvatar(
                             backgroundColor: selected
                                 ? AppColors.primary
-                                : (isDark
-                                      ? AppColors.darkSurfaceVariant
-                                      : AppColors.lightSurfaceVariant),
+                                : context.tokens.surfaceVariant,
                             foregroundColor: selected
                                 ? Colors.white
                                 : textColor,
@@ -381,9 +366,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                               session.currentCount,
                             ),
                             style: AppTypography.labelSmall.copyWith(
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
+                              color: context.tokens.textSecondary,
                             ),
                           ),
                           trailing: session.isDone
@@ -472,9 +455,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         icon: const BackButtonIcon(),
                         constraints: iconConstraints,
                         visualDensity: isSmall ? VisualDensity.compact : null,
-                        color: widget.isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                         onPressed: () {
                           TaliaBackButton.navigateBack(
                             context,
@@ -495,9 +476,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                                 fontFamily: 'Amiri',
                                 fontWeight: FontWeight.w700,
                                 fontSize: isSmall ? 18 : null,
-                                color: widget.isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
+                                color: context.tokens.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -509,9 +488,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.labelMedium.copyWith(
-                                color: widget.isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
+                                color: context.tokens.textSecondary,
                               ),
                             ),
                           ],
@@ -522,9 +499,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         icon: const Icon(Icons.format_size_rounded),
                         constraints: iconConstraints,
                         visualDensity: isSmall ? VisualDensity.compact : null,
-                        color: widget.isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                         onPressed: () => FontScaleSelectorSheet.show(
                           context,
                           store: _prefsStore,
@@ -545,9 +520,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                                 : Icons.pause_circle_outline_rounded,
                             color: autoAdvance
                                 ? AppColors.primary
-                                : (widget.isDark
-                                    ? AppColors.darkTextHint
-                                    : AppColors.lightTextHint),
+                                : context.tokens.textHint,
                           ),
                           onPressed: () {
                             HapticFeedback.selectionClick();
@@ -560,9 +533,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         icon: const Icon(Icons.format_list_bulleted_rounded),
                         constraints: iconConstraints,
                         visualDensity: isSmall ? VisualDensity.compact : null,
-                        color: widget.isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                         onPressed: () => _openIndexSheet(context),
                       ),
                     ],
@@ -578,9 +549,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: completedPercent,
-                  backgroundColor: widget.isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
+                  backgroundColor: context.tokens.divider,
                   valueColor: const AlwaysStoppedAnimation<Color>(
                     AppColors.gold,
                   ),
@@ -665,14 +634,10 @@ class _ZikrReaderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final textColor = context.tokens.textPrimary;
+    final secondaryColor = context.tokens.textSecondary;
+    final cardColor = context.tokens.card;
+    final borderColor = context.tokens.divider;
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Padding(
@@ -898,9 +863,7 @@ class _ZikrReaderPage extends StatelessWidget {
                         return CircularProgressIndicator(
                           value: value,
                           strokeWidth: 8,
-                          backgroundColor: isDark
-                              ? AppColors.darkDivider
-                              : AppColors.lightDivider,
+                          backgroundColor: context.tokens.divider,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             session.isDone
                                 ? AppColors.success
@@ -1086,13 +1049,8 @@ class _CompletionScreenState extends State<_CompletionScreen> {
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final motionValue = disableAnimations ? 1.0 : null;
-    final isDark = widget.isDark;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textColor = context.tokens.textPrimary;
+    final secondaryColor = context.tokens.textSecondary;
 
     return SafeArea(
       child: Padding(

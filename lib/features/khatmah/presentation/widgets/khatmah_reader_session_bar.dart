@@ -69,8 +69,8 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         if (plan == null) return const SizedBox.shrink();
         final isArabic = context.isArabic;
         final isDark = context.isDark;
-        final gold = isDark ? AppColors.primaryLight : AppColors.primary;
-        final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+        final gold = context.tokens.accent;
+        final bg = context.tokens.surface;
 
         final target = state is KhatmahActive
             ? (startPage: state.wirdStartPage, endPage: state.wirdEndPage)
@@ -161,7 +161,6 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
                                 color: gold.withValues(alpha: 0.8),
-                                fontSize: 11,
                                 height: 1.2,
                               ),
                             ),
@@ -176,7 +175,6 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                         color: isDark
                             ? Colors.white70
                             : AppColors.lightTextSecondary,
-                        fontSize: 11,
                         height: 1.2,
                       ),
                     ),
@@ -226,15 +224,14 @@ class KhatmahReaderSessionBar extends StatelessWidget {
     String? actionLabel,
     Key? actionKey,
   }) {
-    final isDark = context.isDark;
-    final color = isDark ? AppColors.primaryLight : AppColors.primary;
+    final color = context.tokens.accent;
     return Semantics(
       liveRegion: true,
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: (isDark ? AppColors.darkSurface : AppColors.lightSurface),
+          color: context.tokens.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         ),
         child: Row(

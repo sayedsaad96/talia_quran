@@ -112,7 +112,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                     gradient: LinearGradient(
                                       colors: [
                                         isDark ? AppColors.goldLight : AppColors.primaryLight,
-                                        isDark ? AppColors.primaryLight : AppColors.primary,
+                                        context.tokens.accent,
                                       ],
                                     ),
                                   ),
@@ -150,9 +150,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                         child: Text(
                                           surahName,
                                           style: AppTypography.titleSmall.copyWith(
-                                            color: isDark
-                                                ? AppColors.darkTextPrimary
-                                                : AppColors.lightTextPrimary,
+                                            color: context.tokens.textPrimary,
                                             fontWeight: FontWeight.bold,
                                             fontFamily: context.isArabic ? 'Amiri' : null,
                                             fontSize: 16,
@@ -178,7 +176,6 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                           style: AppTypography.labelSmall.copyWith(
                                             color: primary,
                                             fontWeight: FontWeight.w700,
-                                            fontSize: 10.5,
                                           ),
                                         ),
                                       ),
@@ -200,19 +197,14 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                       Icon(
                                         Icons.record_voice_over_rounded,
                                         size: 13,
-                                        color: isDark
-                                            ? AppColors.darkTextHint
-                                            : AppColors.lightTextHint,
+                                        color: context.tokens.textHint,
                                       ),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           reciterName,
                                           style: AppTypography.bodySmall.copyWith(
-                                            color: isDark
-                                                ? AppColors.darkTextSecondary
-                                                : AppColors.lightTextSecondary,
-                                            fontSize: 11.5,
+                                            color: context.tokens.textSecondary,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -232,9 +224,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                       ? Icons.skip_next_rounded
                                       : Icons.skip_previous_rounded,
                                   size: 20,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
+                                  color: context.tokens.textSecondary,
                                 ),
                                 tooltip: context.l10n.prevAyah,
                                 onPressed: () {
@@ -259,9 +249,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                       ? Icons.skip_previous_rounded
                                       : Icons.skip_next_rounded,
                                   size: 20,
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
+                                  color: context.tokens.textSecondary,
                                 ),
                                 tooltip: context.l10n.nextAyah,
                                 onPressed: () {
@@ -276,9 +264,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                               icon: Icon(
                                 Icons.swap_vert_rounded,
                                 size: 20,
-                                color: isDark
-                                    ? AppColors.darkTextHint
-                                    : AppColors.lightTextHint,
+                                color: context.tokens.textHint,
                               ),
                               tooltip: context.l10n.changeReciter,
                               onPressed: () => ReciterSelectorSheet.show(context),
@@ -290,9 +276,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                               icon: Icon(
                                 Icons.close_rounded,
                                 size: 18,
-                                color: isDark
-                                    ? AppColors.darkTextHint
-                                    : AppColors.lightTextHint,
+                                color: context.tokens.textHint,
                               ),
                               tooltip: context.l10n.closePlayer,
                               onPressed: () {

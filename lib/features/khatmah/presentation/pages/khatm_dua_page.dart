@@ -78,9 +78,9 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final gold = isDark ? AppColors.goldLight : AppColors.gold;
-    final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final bg = context.tokens.background;
+    final cardBg = context.tokens.card;
+    final border = context.tokens.divider;
 
     return Scaffold(
       backgroundColor: bg,
@@ -247,9 +247,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                         Text(
                           context.l10n.khatmahDuaPendingReview,
                           style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
+                            color: context.tokens.textSecondary,
                             height: 1.4,
                           ),
                         ),
@@ -286,9 +284,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                         fontSize: 20.0 * fontScale,
                         height: 2.2,
                         fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                       ),
                     ),
                   ),
@@ -348,9 +344,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                               fontSize: 18.0 * fontScale,
                               height: 2.0,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
+                              color: context.tokens.textPrimary,
                             ),
                           ),
                         ],

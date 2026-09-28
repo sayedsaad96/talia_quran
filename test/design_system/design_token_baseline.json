@@ -71,33 +71,33 @@
     "hexColor": 1,
     "fontSizeLiteral": 3,
     "radiusLiteral": 5,
-    "isDarkBranch": 29
+    "isDarkBranch": 7
   },
   "lib/features/azkar/presentation/pages/azkar_page.dart": {
     "hexColor": 4,
     "fontSizeLiteral": 1,
     "radiusLiteral": 5,
-    "isDarkBranch": 9
+    "isDarkBranch": 2
   },
   "lib/features/azkar/presentation/pages/general_azkar_page.dart": {
     "fontSizeLiteral": 1,
     "radiusLiteral": 3,
-    "isDarkBranch": 27
+    "isDarkBranch": 5
   },
   "lib/features/azkar/presentation/pages/smart_wird_page.dart": {
     "hexColor": 1,
     "fontSizeLiteral": 2,
     "radiusLiteral": 3,
-    "isDarkBranch": 19
+    "isDarkBranch": 1
   },
   "lib/features/azkar/presentation/widgets/font_scale_selector_sheet.dart": {
     "fontSizeLiteral": 1,
     "radiusLiteral": 4,
-    "isDarkBranch": 8
+    "isDarkBranch": 1
   },
   "lib/features/azkar/presentation/widgets/free_tasbeeh_sheet.dart": {
     "radiusLiteral": 1,
-    "isDarkBranch": 12
+    "isDarkBranch": 2
   },
   "lib/features/certificate/presentation/widgets/certificate_celebration_dialog.dart": {
     "isDarkBranch": 1
@@ -123,32 +123,20 @@
   },
   "lib/features/khatmah/presentation/pages/khatm_dua_page.dart": {
     "fontSizeLiteral": 2,
-    "isDarkBranch": 7
+    "isDarkBranch": 1
   },
   "lib/features/khatmah/presentation/pages/khatmah_completion_page.dart": {
-    "fontSizeLiteral": 2,
-    "isDarkBranch": 7
+    "fontSizeLiteral": 1,
+    "isDarkBranch": 1
   },
   "lib/features/khatmah/presentation/pages/khatmah_dashboard_page.dart": {
-    "isDarkBranch": 7
+    "isDarkBranch": 2
   },
   "lib/features/khatmah/presentation/pages/khatmah_setup_page.dart": {
-    "fontSizeLiteral": 1,
-    "isDarkBranch": 7
-  },
-  "lib/features/khatmah/presentation/widgets/khatmah_dedication_form.dart": {
-    "isDarkBranch": 3
-  },
-  "lib/features/khatmah/presentation/widgets/khatmah_hero_card.dart": {
-    "isDarkBranch": 5
-  },
-  "lib/features/khatmah/presentation/widgets/khatmah_progress_gauge.dart": {
-    "fontSizeLiteral": 1,
-    "isDarkBranch": 5
+    "isDarkBranch": 1
   },
   "lib/features/khatmah/presentation/widgets/khatmah_reader_session_bar.dart": {
-    "fontSizeLiteral": 2,
-    "isDarkBranch": 5
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/child_detail_page.dart": {
     "hexColor": 1,
@@ -241,47 +229,36 @@
   "lib/features/progress/presentation/widgets/progress_certificates.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/quran/presentation/pages/bookmarks_page.dart": {
-    "isDarkBranch": 7
-  },
   "lib/features/quran/presentation/pages/kids_quran_reader_page.dart": {
     "isDarkBranch": 2
   },
   "lib/features/quran/presentation/pages/quran_page.dart": {
-    "fontSizeLiteral": 5,
-    "isDarkBranch": 24
+    "fontSizeLiteral": 1,
+    "isDarkBranch": 2
   },
   "lib/features/quran/presentation/pages/quran_reader_page.dart": {
-    "isDarkBranch": 5
-  },
-  "lib/features/quran/presentation/pages/quran_search_page.dart": {
     "isDarkBranch": 1
   },
   "lib/features/quran/presentation/widgets/ayah_options_sheet.dart": {
-    "radiusLiteral": 1,
-    "isDarkBranch": 2
+    "radiusLiteral": 1
   },
   "lib/features/quran/presentation/widgets/continue_reading_card.dart": {
-    "isDarkBranch": 4
-  },
-  "lib/features/quran/presentation/widgets/juz_grid_view.dart": {
-    "isDarkBranch": 4
+    "isDarkBranch": 1
   },
   "lib/features/quran/presentation/widgets/long_press_hint_banner.dart": {
     "fontSizeLiteral": 1
   },
   "lib/features/quran/presentation/widgets/quick_navigation_sheet.dart": {
-    "radiusLiteral": 1,
-    "isDarkBranch": 4
+    "radiusLiteral": 1
   },
   "lib/features/quran/presentation/widgets/quran_background_exit_dialog.dart": {
-    "isDarkBranch": 6
+    "isDarkBranch": 3
   },
   "lib/features/quran/presentation/widgets/quran_mini_player_bar.dart": {
     "hexColor": 6,
-    "fontSizeLiteral": 4,
+    "fontSizeLiteral": 2,
     "radiusLiteral": 3,
-    "isDarkBranch": 25
+    "isDarkBranch": 17
   },
   "lib/features/quran/presentation/widgets/quran_page_font_guard.dart": {
     "radiusLiteral": 1,
@@ -289,70 +266,45 @@
   },
   "lib/features/quran/presentation/widgets/reader_docked_audio_bar.dart": {
     "fontSizeLiteral": 1,
-    "isDarkBranch": 3
+    "isDarkBranch": 1
   },
   "lib/features/quran/presentation/widgets/reader_footer.dart": {
     "fontSizeLiteral": 1
   },
   "lib/features/quran/presentation/widgets/reader_overflow_sheet.dart": {
-    "radiusLiteral": 1,
-    "isDarkBranch": 3
+    "radiusLiteral": 1
   },
   "lib/features/quran/presentation/widgets/reciter_selector_sheet.dart": {
-    "fontSizeLiteral": 1,
-    "radiusLiteral": 2,
-    "isDarkBranch": 5
+    "radiusLiteral": 2
   },
   "lib/features/settings/presentation/pages/privacy_policy_page.dart": {
-    "isDarkBranch": 8
-  },
-  "lib/features/settings/presentation/pages/settings_page.dart": {
-    "isDarkBranch": 2
-  },
-  "lib/features/settings/presentation/pages/subpages/quran_settings_page.dart": {
-    "isDarkBranch": 3
+    "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_account_tiles.dart": {
     "radiusLiteral": 1,
-    "isDarkBranch": 24
+    "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_appearance_tiles.dart": {
-    "isDarkBranch": 10
+    "isDarkBranch": 2
   },
   "lib/features/settings/presentation/widgets/settings_group.dart": {
-    "isDarkBranch": 7
-  },
-  "lib/features/settings/presentation/widgets/settings_hub_body.dart": {
     "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_info_tiles.dart": {
-    "fontSizeLiteral": 5,
-    "isDarkBranch": 9
-  },
-  "lib/features/settings/presentation/widgets/settings_memorization_tiles.dart": {
-    "isDarkBranch": 10
+    "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_nav_tile.dart": {
-    "fontSizeLiteral": 2,
-    "radiusLiteral": 1,
-    "isDarkBranch": 3
+    "radiusLiteral": 1
   },
   "lib/features/settings/presentation/widgets/settings_notification_tiles.dart": {
-    "isDarkBranch": 8
-  },
-  "lib/features/settings/presentation/widgets/settings_parent_tiles.dart": {
-    "isDarkBranch": 7
+    "isDarkBranch": 2
   },
   "lib/features/settings/presentation/widgets/settings_prayer_notification_tiles.dart": {
     "radiusLiteral": 2,
-    "isDarkBranch": 4
+    "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_section.dart": {
-    "fontSizeLiteral": 2,
-    "isDarkBranch": 11
-  },
-  "lib/features/settings/presentation/widgets/settings_subpage_scaffold.dart": {
-    "isDarkBranch": 2
+    "isDarkBranch": 3
   },
   "lib/features/tutorial_guide/presentation/widgets/tutorial_guide_section_card.dart": {
     "isDarkBranch": 1

@@ -263,14 +263,13 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
   void _openIndexSheet() {
     unawaited(HapticFeedback.selectionClick());
     final wird = _wird!;
-    final isDark = context.isDark;
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Directionality(
         textDirection: Directionality.of(context),
         child: Material(
-          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          color: context.tokens.surface,
           clipBehavior: Clip.antiAlias,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -284,9 +283,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: (isDark
-                            ? AppColors.darkTextHint
-                            : AppColors.lightTextHint)
+                    color: context.tokens.textHint
                         .withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(99),
                   ),
@@ -296,9 +293,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                   child: Text(
                     context.l10n.azkarIndex,
                     style: AppTypography.headlineSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: context.tokens.textPrimary,
                       fontFamily: 'Amiri',
                     ),
                   ),
@@ -325,17 +320,13 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
+                            color: context.tokens.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           '$count / ${item.zikr.totalCount}',
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
+                            color: context.tokens.textSecondary,
                           ),
                         ),
                         onTap: () {
@@ -358,7 +349,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final background =
-        isDark ? AppColors.darkBackground : AppColors.lightBackground;
+        context.tokens.background;
 
     return Scaffold(
       backgroundColor: background,
@@ -403,9 +394,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
               IconButton(
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 icon: const BackButtonIcon(),
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
                 onPressed: () {
                   TaliaBackButton.navigateBack(
                     context,
@@ -423,17 +412,13 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                       style: AppTypography.headlineSmall.copyWith(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                       ),
                     ),
                     Text(
                       context.l10n.completedCount(completed, totalItems),
                       style: AppTypography.labelMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.tokens.textSecondary,
                       ),
                     ),
                   ],
@@ -443,9 +428,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                 tooltip: context.l10n.azkarIndex,
                 icon: Icon(
                   Icons.format_list_bulleted_rounded,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                 ),
                 onPressed: _openIndexSheet,
               ),
@@ -459,7 +442,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
             child: LinearProgressIndicator(
               value: totalItems == 0 ? 0 : completed / totalItems,
               backgroundColor:
-                  isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                  context.tokens.divider,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
               minHeight: 4,
             ),
@@ -525,11 +508,11 @@ class _SmartWirdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        context.tokens.textPrimary;
     final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final card = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+        context.tokens.textSecondary;
+    final card = context.tokens.card;
+    final border = context.tokens.divider;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -673,7 +656,7 @@ class _CounterDial extends StatelessWidget {
                   value: value,
                   strokeWidth: 8,
                   backgroundColor:
-                      isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                      context.tokens.divider,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     done ? AppColors.success : AppColors.primary,
                   ),
@@ -734,11 +717,10 @@ class _SmartWirdDoneView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+        context.tokens.textPrimary;
     final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+        context.tokens.textSecondary;
 
     return Center(
       child: Padding(

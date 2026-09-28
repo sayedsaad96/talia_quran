@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Shared chrome for a settings destination pushed from the hub.
@@ -18,13 +17,8 @@ class SettingsSubpageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final background = isDark
-        ? AppColors.darkBackground
-        : AppColors.lightBackground;
-    final titleColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final background = context.tokens.background;
+    final titleColor = context.tokens.textPrimary;
 
     return Scaffold(
       backgroundColor: background,

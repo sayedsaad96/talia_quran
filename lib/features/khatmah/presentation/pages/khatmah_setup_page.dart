@@ -144,8 +144,8 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     final isDark = context.isDark;
     final isArabic = context.isArabic;
     final l10n = context.l10n;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final primary = context.tokens.accent;
+    final cardBg = context.tokens.card;
 
     final estimatedDays =
         _selectedDays ??
@@ -205,9 +205,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                           .l10n
                           .khatmahChooseYourDailyReadingPaceToCompleteThe,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.tokens.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -350,9 +348,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                                 labelStyle: AppTypography.labelMedium.copyWith(
                                   color: isSelected
                                       ? AppColors.goldDark
-                                      : (isDark
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.lightTextPrimary),
+                                      : context.tokens.textPrimary,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -467,9 +463,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               Text(
                                 context.l10n.khatmahEstimatedDuration,
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
+                                  color: context.tokens.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -490,9 +484,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               Text(
                                 context.l10n.khatmahExpectedCompletion,
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextSecondary
-                                      : AppColors.lightTextSecondary,
+                                  color: context.tokens.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -554,10 +546,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                           : const Icon(Icons.check_circle_outline_rounded),
                       label: Text(
                         context.l10n.khatmahStartKhatmah,
-                        style: AppTypography.labelLarge.copyWith(
+                        style: AppTypography.titleLarge.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
                     ),
