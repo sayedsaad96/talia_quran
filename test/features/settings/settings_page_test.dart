@@ -16,6 +16,7 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/app_version_service.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/core/theme/app_colors.dart';
+import 'package:talia_quran/core/theme/pure_black_cubit.dart';
 import 'package:talia_quran/core/theme/theme_cubit.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
@@ -437,12 +438,14 @@ Future<_FakeMemorizationRepository> _registerSettingsDependencies({
   final authCubit = AuthCubit(authRepository);
   final profileCubit = ProfileCubit(prefs)..loadProfile();
   final themeCubit = ThemeCubit(prefs)..loadTheme();
+  final pureBlackCubit = PureBlackCubit(prefs)..load();
   final localeCubit = LocaleCubit(prefs)..loadLocale();
 
   addTearDown(authRepository.dispose);
   addTearDown(authCubit.close);
   addTearDown(profileCubit.close);
   addTearDown(themeCubit.close);
+  addTearDown(pureBlackCubit.close);
   addTearDown(localeCubit.close);
 
   getIt.registerSingleton<SharedPreferences>(prefs);
@@ -451,6 +454,7 @@ Future<_FakeMemorizationRepository> _registerSettingsDependencies({
   getIt.registerSingleton<AuthCubit>(authCubit);
   getIt.registerSingleton<ProfileCubit>(profileCubit);
   getIt.registerSingleton<ThemeCubit>(themeCubit);
+  getIt.registerSingleton<PureBlackCubit>(pureBlackCubit);
   getIt.registerSingleton<LocaleCubit>(localeCubit);
   // The settings page builds every section up front (no accordion), so the
   // prayer-times and prayer-companion sections need their stores registered.
@@ -525,6 +529,7 @@ class _SettingsTestApp extends StatelessWidget {
         BlocProvider.value(value: getIt<AuthCubit>()),
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<ThemeCubit>()),
+        BlocProvider.value(value: getIt<PureBlackCubit>()),
         BlocProvider.value(value: getIt<LocaleCubit>()),
         BlocProvider<QuranAudioPlayerCubit>(
           create: (_) => _FakeQuranAudioPlayerCubit(),

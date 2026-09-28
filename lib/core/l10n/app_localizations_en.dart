@@ -597,6 +597,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get systemDefault => 'System Default';
 
   @override
+  String get pureBlackTheme => 'Pure black (OLED)';
+
+  @override
+  String get pureBlackThemeHint =>
+      'True-black background in dark mode. Easier on the eyes and saves battery on OLED screens';
+
+  @override
   String get changeMemorizationPath => 'Change Memorization Path';
 
   @override

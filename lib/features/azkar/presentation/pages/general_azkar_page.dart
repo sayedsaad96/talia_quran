@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -16,6 +15,8 @@ import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
 import '../widgets/font_scale_selector_sheet.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
+import '../../../../core/router/app_router.dart';
 
 class GeneralAzkarPage extends StatelessWidget {
   const GeneralAzkarPage({
@@ -424,11 +425,10 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         icon: const BackButtonIcon(),
         onPressed: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/');
-          }
+          TaliaBackButton.navigateBack(
+            context,
+            fallbackLocation: AppRoutes.azkar,
+          );
         },
       ),
       actions: [

@@ -2,6 +2,8 @@
 
 Status: Step 1 (inventory, navigation map, consistency baseline) — complete.
 Step 2 (design-system audit + unification plan) — complete, see §5–§9.
+Phase 0 (foundations) — implemented, see §7 "Phase 0 — implementation notes".
+§9 answers: certificate/share copy stays Arabic-only; OLED ships; WIP committed (5bb244c).
 Next: Step 2 (design-system unification plan), Step 3 (per-feature critique),
 Step 4 (accessibility + copy), Step 5 (fixes in small verified batches).
 
@@ -256,6 +258,41 @@ intended visual changes and are listed in the batch notes), the guard
 baseline goes down, and screenshots are taken on the connected Android
 device (light + dark, AR + EN, text scale 1.0 and 1.3). Only edited files
 get formatted.
+
+### Phase 0 — implementation notes
+
+Landed:
+- `lib/core/theme/talia_tokens.dart`: `TaliaTokens` (light / dark /
+  **oled**) and `TaliaTextStyles`. They are read via `context.tokens` /
+  `context.talia` on the existing `BuildContextX`, with a fallback by
+  brightness for widgets pumped without `AppTheme`.
+- `AppTheme`: a single `_build()` shared by `light`, `dark`, and the new
+  `oled`, registering the tokens as an extension. Added themes for
+  filled / elevated / outlined / text buttons (min 64×48, radius md,
+  labelLarge), FAB, dialog, snackBar (floating), progress indicator, and
+  list tile. Existing values are unchanged. The input `errorBorder` is now
+  also set in dark mode.
+- Deviations from D5: `navigationBarTheme` was skipped (the shell uses a
+  custom bottom bar and a `NavigationRail`, both explicitly styled).
+  `iconButtonTheme` and `switchTheme` were skipped (the M3 defaults already
+  derive from the scheme). `segmentedButtonTheme` is deferred until a
+  migrated screen needs it.
+- Deviation from D8: the snackbar helpers already existed
+  (`context.showSnackBar` / `showAutoDismissSnackBar`) and are reused. They
+  now inherit shape and behavior from `snackBarTheme`.
+- `lib/core/widgets/talia_app_bar.dart`: `TaliaAppBar` and
+  `TaliaBackButton`, where back is shown by default and falls back to a
+  per-feature location when there is no history. `AppScaffold` now uses it.
+  NAV-2 is fixed in the Azkar pages (fallback `/azkar`), settings (`/`),
+  and the khatmah reader bar (`/khatmah/dashboard`).
+- NAV-1 is fixed: `onException` sends unmatched locations Home
+  (`AppRouter.isUnknownLocationError`).
+- OLED: `PureBlackCubit` (pref `theme_pure_black`) selects `AppTheme.oled`
+  as `darkTheme`, with a switch under Settings › Theme (l10n
+  `pureBlackTheme*`).
+- D10 guard: `test/design_system/design_token_guard_test.dart`, with its
+  baseline in `design_token_baseline.json`. Regenerate it (shrink-only)
+  with `UPDATE_DESIGN_BASELINE=1`.
 
 ## 8. Out of scope
 

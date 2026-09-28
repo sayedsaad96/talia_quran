@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/talia_tokens.dart';
 
 extension BuildContextX on BuildContext {
   // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -9,6 +10,13 @@ extension BuildContextX on BuildContext {
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
   TextTheme get textTheme => Theme.of(this).textTheme;
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
+
+  /// Talia design tokens for the active theme (light / dark / OLED).
+  /// Prefer this over `isDark ? AppColors.darkX : AppColors.lightX`.
+  TaliaTokens get tokens => TaliaTokens.of(this);
+
+  /// Quran/azkar text styles with the theme's text color applied.
+  TaliaTextStyles get talia => TaliaTextStyles(tokens);
 
   // ─── Localization ─────────────────────────────────────────────────────────────
   AppLocalizations get l10n => AppLocalizations.of(this);
@@ -36,8 +44,6 @@ extension BuildContextX on BuildContext {
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? colorScheme.error : colorScheme.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/pure_black_cubit.dart';
 import '../../../../core/theme/theme_cubit.dart';
 
 class ThemeSettingTile extends StatelessWidget {
@@ -62,6 +63,44 @@ class ThemeSettingTile extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Switches dark mode to the pure-black OLED palette.
+class PureBlackSettingTile extends StatelessWidget {
+  const PureBlackSettingTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final textTheme = context.textTheme;
+    return BlocBuilder<PureBlackCubit, bool>(
+      builder: (context, enabled) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            secondary: Icon(
+              Icons.contrast_rounded,
+              color: tokens.textSecondary,
+            ),
+            title: Text(
+              context.l10n.pureBlackTheme,
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.pureBlackThemeHint,
+              style: textTheme.bodySmall,
+            ),
+            value: enabled,
+            onChanged: (value) =>
+                context.read<PureBlackCubit>().setEnabled(value),
           ),
         );
       },

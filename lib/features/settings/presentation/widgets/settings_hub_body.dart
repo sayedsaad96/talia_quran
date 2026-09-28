@@ -79,6 +79,7 @@ class SettingsHubBody extends StatelessWidget {
           title: l10n.theme,
         ),
         ThemeSettingTile(isDark: isDark),
+        const PureBlackSettingTile(),
       ],
     );
   }

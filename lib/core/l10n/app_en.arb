@@ -209,6 +209,8 @@
   "notifications": "Notifications",
   "about": "About",
   "systemDefault": "System Default",
+  "pureBlackTheme": "Pure black (OLED)",
+  "pureBlackThemeHint": "True-black background in dark mode. Easier on the eyes and saves battery on OLED screens",
   "changeMemorizationPath": "Change Memorization Path",
   "adultPath": "Adult Path",
   "adultPathDesc": "Start from Al-Fatihah and Al-Baqarah",

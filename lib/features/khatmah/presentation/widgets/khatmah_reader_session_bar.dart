@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -9,6 +8,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
+import '../../../../core/router/app_router.dart';
 
 class KhatmahReaderSessionBar extends StatelessWidget {
   const KhatmahReaderSessionBar({
@@ -188,11 +189,10 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                   onPressed:
                       onExit ??
                       () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/');
-                        }
+                        TaliaBackButton.navigateBack(
+                          context,
+                          fallbackLocation: AppRoutes.khatmahDashboard,
+                        );
                       },
                   icon: Icon(Icons.exit_to_app_rounded, size: 14, color: gold),
                   label: Text(

@@ -365,6 +365,12 @@ abstract class AppRouter {
   // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+  /// True when go_router could not match the requested location at all
+  /// (as opposed to a failing async redirect).
+  static bool isUnknownLocationError(Object? error) =>
+      error is GoException &&
+      error.message.startsWith('no routes for location');
+
   static String? redirectForAuth(AuthState authState, String location) {
     if (authState is AuthOwnerDataFailure) {
       return location == AppRoutes.login ? null : AppRoutes.login;
@@ -439,7 +445,14 @@ abstract class AppRouter {
     // (e.g. AuthRetryableFetchException when Supabase is unreachable)
     // and keeps the user on their current page rather than crashing.
     onException: (context, state, router) {
-      // No-op: let the user stay on the current page.
+      // Unknown or stale location (old notification payload, bad deep link):
+      // there may be no page underneath to fall back to, so go Home instead
+      // of leaving a blank screen.
+      if (isUnknownLocationError(state.error)) {
+        router.go(AppRoutes.home);
+        return;
+      }
+      // Otherwise no-op: let the user stay on the current page.
       // The per-route try-catch blocks already return safe fallbacks for
       // known network errors; this is a last-resort safety net.
     },

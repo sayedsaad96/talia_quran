@@ -136,6 +136,12 @@ abstract class AppColors {
     colors: [Color(0xFF093B35), Color(0xFF041D1A)],
   );
 
+  static const LinearGradient heroGradientOled = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF062B26), oledBackground],
+  );
+
   static const LinearGradient skyGradientLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

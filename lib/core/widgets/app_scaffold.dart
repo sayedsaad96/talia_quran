@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_typography.dart';
 import '../extensions/context_extensions.dart';
+import '../router/app_router.dart';
+import 'talia_app_bar.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
@@ -21,6 +21,8 @@ class AppScaffold extends StatelessWidget {
     this.extendBodyBehindAppBar = false,
     this.resizeToAvoidBottomInset = true,
     this.gradient,
+    this.showBackButton = true,
+    this.fallbackLocation = AppRoutes.home,
   });
 
   final Widget body;
@@ -38,12 +40,15 @@ class AppScaffold extends StatelessWidget {
   final bool resizeToAvoidBottomInset;
   final Gradient? gradient;
 
+  /// Set to `false` on shell tab roots.
+  final bool showBackButton;
+
+  /// Where the back button goes when there is no history to pop.
+  final String fallbackLocation;
+
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final bg =
-        backgroundColor ??
-        (isDark ? AppColors.darkBackground : AppColors.lightBackground);
+    final bg = backgroundColor ?? context.tokens.background;
 
     return Scaffold(
       backgroundColor: gradient != null ? Colors.transparent : bg,
@@ -52,21 +57,13 @@ class AppScaffold extends StatelessWidget {
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomBar,
       appBar: showAppBar
-          ? AppBar(
-              title:
-                  titleWidget ??
-                  (title != null
-                      ? Text(
-                          title!,
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                        )
-                      : null),
+          ? TaliaAppBar(
+              title: title,
+              titleWidget: titleWidget,
               centerTitle: centerTitle,
               leading: leading,
+              showBackButton: showBackButton,
+              fallbackLocation: fallbackLocation,
               actions: actions,
               backgroundColor: extendBodyBehindAppBar
                   ? Colors.transparent
@@ -105,10 +102,7 @@ class AppSliverScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final bg =
-        backgroundColor ??
-        (isDark ? AppColors.darkBackground : AppColors.lightBackground);
+    final bg = backgroundColor ?? context.tokens.background;
 
     return Scaffold(
       backgroundColor: bg,

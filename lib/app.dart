@@ -17,6 +17,7 @@ import 'core/services/notification_scheduler.dart';
 import 'core/services/app_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
+import 'core/theme/pure_black_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
 import 'features/prayer_companion/application/prayer_companion_controller.dart';
 import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
@@ -122,6 +123,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: getIt<ThemeCubit>()),
+        BlocProvider.value(value: getIt<PureBlackCubit>()),
         BlocProvider.value(value: getIt<LocaleCubit>()),
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<AuthCubit>()),
@@ -157,13 +159,14 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
             builder: (context, locale) {
               return BlocBuilder<ThemeCubit, ThemeMode>(
                 builder: (context, themeMode) {
+                  final pureBlack = context.watch<PureBlackCubit>().state;
                   return MaterialApp.router(
                     title: 'تالية',
                     debugShowCheckedModeBanner: false,
                     scaffoldMessengerKey: rootScaffoldMessengerKey,
                     themeMode: themeMode,
                     theme: AppTheme.light,
-                    darkTheme: AppTheme.dark,
+                    darkTheme: pureBlack ? AppTheme.oled : AppTheme.dark,
                     locale: locale,
                     supportedLocales: AppLocalizations.supportedLocales,
                     localizationsDelegates: const [

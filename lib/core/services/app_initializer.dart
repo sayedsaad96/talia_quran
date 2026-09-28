@@ -17,6 +17,7 @@ import '../services/prayer_serenity_watcher.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../sync/notification_refresh_worker.dart';
 import '../theme/theme_cubit.dart';
+import '../theme/pure_black_cubit.dart';
 import '../utils/talia_logger.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
@@ -76,6 +77,7 @@ class AppInitializer {
         // Pre-load theme, locale, and profile early so they are immediately available
         // without causing redundant MaterialApp rebuilds during startup.
         getIt<ThemeCubit>().loadTheme();
+        getIt<PureBlackCubit>().load();
         getIt<LocaleCubit>().loadLocale();
         getIt<ProfileCubit>().loadProfile();
 

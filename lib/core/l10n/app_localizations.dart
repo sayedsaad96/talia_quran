@@ -1197,6 +1197,18 @@ abstract class AppLocalizations {
   /// **'حسب النظام'**
   String get systemDefault;
 
+  /// No description provided for @pureBlackTheme.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسود كامل (OLED)'**
+  String get pureBlackTheme;
+
+  /// No description provided for @pureBlackThemeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED'**
+  String get pureBlackThemeHint;
+
   /// No description provided for @changeMemorizationPath.
   ///
   /// In ar, this message translates to:

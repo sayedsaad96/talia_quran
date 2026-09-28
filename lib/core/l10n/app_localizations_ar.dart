@@ -594,6 +594,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get systemDefault => 'حسب النظام';
 
   @override
+  String get pureBlackTheme => 'أسود كامل (OLED)';
+
+  @override
+  String get pureBlackThemeHint =>
+      'خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED';
+
+  @override
   String get changeMemorizationPath => 'تغيير مسار الحفظ';
 
   @override

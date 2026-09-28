@@ -20,6 +20,8 @@ import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
 import '../../domain/usecases/compose_smart_wird_usecase.dart';
 import '../services/zikr_audio_service.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
+import '../../../../core/router/app_router.dart';
 
 /// A resumable recitation screen for the composed smart wird. Progress is
 /// persisted continuously so the user can leave and come back mid-session;
@@ -405,11 +407,10 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
                 onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/');
-                  }
+                  TaliaBackButton.navigateBack(
+                    context,
+                    fallbackLocation: AppRoutes.azkar,
+                  );
                 },
               ),
               Expanded(

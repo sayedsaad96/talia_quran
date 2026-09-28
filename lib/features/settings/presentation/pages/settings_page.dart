@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,6 +10,8 @@ import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../widgets/settings_hub_body.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
+import '../../../../core/router/app_router.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -119,11 +120,10 @@ class _SettingsView extends StatelessWidget {
       scrolledUnderElevation: 0.5,
       leading: BackButton(
         onPressed: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/');
-          }
+          TaliaBackButton.navigateBack(
+            context,
+            fallbackLocation: AppRoutes.home,
+          );
         },
       ),
       title: Text(

@@ -212,6 +212,8 @@
   "notifications": "الإشعارات",
   "about": "حول التطبيق",
   "systemDefault": "حسب النظام",
+  "pureBlackTheme": "أسود كامل (OLED)",
+  "pureBlackThemeHint": "خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED",
   "changeMemorizationPath": "تغيير مسار الحفظ",
   "adultPath": "مسار الكبار",
   "adultPathDesc": "البدء من الفاتحة والبقرة تصاعدياً",

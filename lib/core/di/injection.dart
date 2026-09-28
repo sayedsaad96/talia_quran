@@ -30,6 +30,7 @@ import '../l10n/app_localizations.dart';
 import '../services/activity_event_recorder.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
+import '../theme/pure_black_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
@@ -216,6 +217,9 @@ Future<void> configureDependencies({bool background = false}) async {
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
     () => ThemeCubit(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PureBlackCubit>(
+    () => PureBlackCubit(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<LocaleCubit>(
     () => LocaleCubit(getIt<SharedPreferences>()),

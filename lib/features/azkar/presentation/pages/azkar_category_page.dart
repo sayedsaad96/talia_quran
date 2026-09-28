@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -22,6 +21,8 @@ import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
 import '../services/zikr_audio_service.dart';
 import '../widgets/font_scale_selector_sheet.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
+import '../../../../core/router/app_router.dart';
 
 class AzkarCategoryPage extends StatelessWidget {
   const AzkarCategoryPage({super.key, required this.category});
@@ -128,11 +129,10 @@ class _AzkarUnderReviewScreen extends StatelessWidget {
                   icon: const BackButtonIcon(),
                   color: foreground,
                   onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
+                    TaliaBackButton.navigateBack(
+                      context,
+                      fallbackLocation: AppRoutes.azkar,
+                    );
                   },
                 ),
                 Expanded(
@@ -476,11 +476,10 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                             ? AppColors.darkTextPrimary
                             : AppColors.lightTextPrimary,
                         onPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
+                          TaliaBackButton.navigateBack(
+                            context,
+                            fallbackLocation: AppRoutes.azkar,
+                          );
                         },
                       ),
                       Expanded(
