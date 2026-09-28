@@ -35,20 +35,15 @@ class _GuardianLinkingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final surface = context.tokens.card;
+    final textColor = context.tokens.textPrimary;
     final authState = context.watch<AuthCubit>().state;
     final isGuest = authState is! AuthAuthenticated;
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
+        backgroundColor: context.tokens.background,
         body: SafeArea(
           child: BlocConsumer<GuardianLinkingCubit, GuardianLinkingState>(
             listener: (context, state) {
@@ -88,9 +83,7 @@ class _GuardianLinkingView extends StatelessWidget {
                     context.l10n.guardianLinkDesc,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),

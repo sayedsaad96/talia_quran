@@ -233,7 +233,7 @@ class KidsHouseCard extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             Color(0xFF374151),
-            Color(0xFF1F2937),
+            KidsTheme.inkOnParchment,
           ],
         ),
     };
@@ -243,8 +243,8 @@ class KidsHouseCard extends StatelessWidget {
     return switch (status) {
       KidsJourneyStageStatus.current => KidsTheme.mintGlow,
       KidsJourneyStageStatus.completed => KidsTheme.goldStar,
-      KidsJourneyStageStatus.needsReview => const Color(0xFFC084FC),
-      KidsJourneyStageStatus.locked => const Color(0xFF4B5563),
+      KidsJourneyStageStatus.needsReview => KidsTheme.reviewLilac,
+      KidsJourneyStageStatus.locked => KidsTheme.lockedSlate,
     };
   }
 
@@ -257,14 +257,14 @@ class KidsHouseCard extends StatelessWidget {
 
   static Color _textColor(KidsJourneyStageStatus status) {
     if (status == KidsJourneyStageStatus.completed) {
-      return const Color(0xFF1F2937);
+      return KidsTheme.inkOnParchment;
     }
     return Colors.white;
   }
 
   static Color _secondaryTextColor(KidsJourneyStageStatus status) {
     if (status == KidsJourneyStageStatus.completed) {
-      return const Color(0xFF4B5563);
+      return KidsTheme.lockedSlate;
     }
     return Colors.white.withValues(alpha: 0.85);
   }
@@ -273,7 +273,7 @@ class KidsHouseCard extends StatelessWidget {
     return switch (status) {
       KidsJourneyStageStatus.completed => KidsTheme.forestGreen,
       KidsJourneyStageStatus.current => KidsTheme.goldStar,
-      KidsJourneyStageStatus.needsReview => const Color(0xFFFBBF24),
+      KidsJourneyStageStatus.needsReview => KidsTheme.reviewAmber,
       KidsJourneyStageStatus.locked => Colors.grey.shade600,
     };
   }
@@ -400,12 +400,12 @@ class _StageNumberBadge extends StatelessWidget {
     final bgColor = switch (status) {
       KidsJourneyStageStatus.current => KidsTheme.mintGlow,
       KidsJourneyStageStatus.completed => KidsTheme.goldStar,
-      KidsJourneyStageStatus.needsReview => const Color(0xFFA855F7),
-      KidsJourneyStageStatus.locked => const Color(0xFF4B5563),
+      KidsJourneyStageStatus.needsReview => KidsTheme.reviewViolet,
+      KidsJourneyStageStatus.locked => KidsTheme.lockedSlate,
     };
 
     final textColor = status == KidsJourneyStageStatus.completed
-        ? const Color(0xFF1F2937)
+        ? KidsTheme.inkOnParchment
         : Colors.white;
 
     return Container(
@@ -529,7 +529,7 @@ class _DestinationActionFooter extends StatelessWidget {
             const Icon(
               Icons.refresh_rounded,
               size: 16,
-              color: Color(0xFFC084FC),
+              color: KidsTheme.reviewLilac,
             ),
             const SizedBox(width: 4),
             Flexible(
@@ -538,7 +538,7 @@ class _DestinationActionFooter extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.labelSmall.copyWith(
-                  color: const Color(0xFFC084FC),
+                  color: KidsTheme.reviewLilac,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0,
                 ),

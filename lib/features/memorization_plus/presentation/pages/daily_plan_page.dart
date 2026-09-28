@@ -54,9 +54,7 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       appBar: AppBar(
         title: Text(context.l10n.dailyPlanHeaderTitle),
         backgroundColor: isDark ? AppColors.darkSurface : AppColors.primary,
@@ -159,9 +157,7 @@ class _DailyPlanBody extends StatelessWidget {
         Text(
           context.l10n.dailyPlanHeaderSummary(total, completed),
           style: AppTypography.titleMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -178,9 +174,7 @@ class _DailyPlanBody extends StatelessWidget {
               ? context.l10n.dailyPlanAllDoneShort
               : context.l10n.dailyPlanRemainingItems(total - completed),
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextSecondary
-                : AppColors.lightTextSecondary,
+            color: context.tokens.textSecondary,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -209,9 +203,7 @@ class _DailyPlanBody extends StatelessWidget {
                     child: Text(
                       context.l10n.dailyPlanReviewDayNotice,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                       ),
                     ),
                   ),
@@ -243,9 +235,7 @@ class _DailyPlanBody extends StatelessWidget {
                     child: Text(
                       context.l10n.dailyPlanBacklogNotice(plan.dueBacklogCount),
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
+                        color: context.tokens.textPrimary,
                       ),
                     ),
                   ),
@@ -335,9 +325,7 @@ class _PlanBucketSection extends StatelessWidget {
           Text(
             title,
             style: AppTypography.titleSmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+              color: context.tokens.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -390,7 +378,7 @@ class _PlanAyahTile extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      color: context.tokens.card,
       child: ListTile(
         onTap: onTap,
         leading: Icon(
@@ -447,9 +435,7 @@ class _PlanAyahTile extends StatelessWidget {
                         daysUntilReview.clamp(1, 999),
                       ),
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextHint
-                            : AppColors.lightTextHint,
+                        color: context.tokens.textHint,
                       ),
                     ),
                 ],
@@ -486,9 +472,7 @@ class _EmptyPlanView extends StatelessWidget {
                   ? Icons.event_available_rounded
                   : Icons.edit_calendar_rounded,
               size: 64,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -505,9 +489,7 @@ class _EmptyPlanView extends StatelessWidget {
                   : context.l10n.dailyPlanNoPlanSubtitle,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
               ),
             ),
             if (!hasPlan && onCreatePlan != null) ...[

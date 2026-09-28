@@ -27,14 +27,13 @@ class V2PhaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: context.tokens.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          color: context.tokens.divider,
         ),
       ),
       child: Column(
@@ -45,9 +44,7 @@ class V2PhaseCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             DefaultTextStyle(
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
               ),
               child: footer!,
             ),
@@ -72,7 +69,6 @@ class V2ProgressHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final position = context.l10n.v2AyahOfBlock(
       session.currentAyahIndex + 1,
       session.totalAyahsInBlock,
@@ -89,9 +85,7 @@ class V2ProgressHeader extends StatelessWidget {
             value: session.blockProgress,
             minHeight: 8,
             borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            backgroundColor: isDark
-                ? AppColors.darkDivider
-                : AppColors.lightDivider,
+            backgroundColor: context.tokens.divider,
             valueColor: AlwaysStoppedAnimation<Color>(primary),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -100,9 +94,7 @@ class V2ProgressHeader extends StatelessWidget {
             key: const Key('v2_ayah_of_block'),
             textAlign: TextAlign.center,
             style: AppTypography.labelMedium.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
         ],
@@ -139,8 +131,7 @@ class V2PhaseScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     // The primary action is pinned below the scrolling content so it is
     // reachable without scrolling past long ayahs on small screens.
     return SafeArea(
@@ -158,9 +149,7 @@ class V2PhaseScaffold extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: AppTypography.headlineLarge.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -168,9 +157,7 @@ class V2PhaseScaffold extends StatelessWidget {
                   subtitle,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -210,16 +197,15 @@ class V2AyahTextCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ayah = session.currentAyah;
-    final isDark = context.isDark;
     return V2PhaseCard(
       child: MemorizationAyahDisplay(
         text: ayah.text,
         surahId: session.surahId,
         ayahNumber: ayah.numberInSurah,
-        textColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-        decorationColor: (isDark ? AppColors.primaryLight : AppColors.primary)
+        textColor: context.tokens.textPrimary,
+        decorationColor: context.tokens.accent
             .withValues(alpha: 0.5),
-        referenceColor: isDark ? AppColors.primaryLight : AppColors.primary,
+        referenceColor: context.tokens.accent,
         isCompleted: session.passedAyahNumbers.contains(ayah.numberInSurah),
       ),
       footer: null,
@@ -246,9 +232,7 @@ class V2HintCard extends StatelessWidget {
         child: Icon(
           Icons.visibility_off_rounded,
           size: 42,
-          color: context.isDark
-              ? AppColors.darkTextHint
-              : AppColors.lightTextHint,
+          color: context.tokens.textHint,
         ),
         footer: Text(
           context.l10n.v2TryWithoutHint,
@@ -311,7 +295,7 @@ class V2HiddenTextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = context.isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     return V2PhaseCard(
       child: Icon(
         isRecording ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
@@ -376,7 +360,7 @@ class V2BlockReviewSummaryCard extends StatelessWidget {
       child: Icon(
         Icons.checklist_rtl_rounded,
         size: 48,
-        color: context.isDark ? AppColors.primaryLight : AppColors.primary,
+        color: context.tokens.accent,
       ),
       footer: Column(
         children: [
@@ -419,7 +403,7 @@ class V2BlockReviewHiddenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = context.isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = context.tokens.accent;
     final footer = _SpeechIssueFooter(
       isRecording: isRecording,
       isEvaluating: isEvaluating,
@@ -590,8 +574,7 @@ class V2MaskedWordsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final hintColor = context.tokens.textHint;
 
     return V2PhaseCard(
       child: revealed
@@ -599,15 +582,11 @@ class V2MaskedWordsCard extends StatelessWidget {
               text: text,
               surahId: surahId,
               ayahNumber: ayahNumber,
-              textColor: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+              textColor: context.tokens.textPrimary,
               decorationColor:
-                  (isDark ? AppColors.primaryLight : AppColors.primary)
+                  context.tokens.accent
                       .withValues(alpha: 0.5),
-              referenceColor: isDark
-                  ? AppColors.primaryLight
-                  : AppColors.primary,
+              referenceColor: context.tokens.accent,
             )
           : Wrap(
               spacing: AppSpacing.sm,

@@ -106,9 +106,6 @@
     "fontSizeLiteral": 10,
     "radiusLiteral": 4
   },
-  "lib/features/home/presentation/theme/home_skin.dart": {
-    "hexColor": 14
-  },
   "lib/features/home/presentation/widgets/home_achievement_sheet.dart": {
     "fontSizeLiteral": 1
   },
@@ -140,24 +137,20 @@
   },
   "lib/features/memorization_plus/presentation/pages/child_detail_page.dart": {
     "hexColor": 1,
-    "fontSizeLiteral": 1,
     "radiusLiteral": 5,
-    "isDarkBranch": 5
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/custom_plan_setup_page.dart": {
     "radiusLiteral": 5,
-    "isDarkBranch": 43
+    "isDarkBranch": 13
   },
   "lib/features/memorization_plus/presentation/pages/daily_plan_page.dart": {
-    "isDarkBranch": 11
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/family_dashboard_page.dart": {
     "hexColor": 1,
     "radiusLiteral": 7,
-    "isDarkBranch": 7
-  },
-  "lib/features/memorization_plus/presentation/pages/guardian_linking_page.dart": {
-    "isDarkBranch": 4
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart": {
     "hexColor": 1
@@ -165,37 +158,19 @@
   "lib/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart": {
     "radiusLiteral": 1
   },
-  "lib/features/memorization_plus/presentation/pages/memorization_hub_page.dart": {
-    "isDarkBranch": 9
-  },
-  "lib/features/memorization_plus/presentation/pages/path_selection_page.dart": {
-    "isDarkBranch": 1
-  },
-  "lib/features/memorization_plus/presentation/pages/practice_surah_page.dart": {
-    "isDarkBranch": 3
-  },
   "lib/features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart": {
     "fontSizeLiteral": 1,
-    "isDarkBranch": 7
-  },
-  "lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart": {
-    "isDarkBranch": 2
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/v2/v2_recitation_result_sheet.dart": {
     "radiusLiteral": 1,
-    "isDarkBranch": 7
-  },
-  "lib/features/memorization_plus/presentation/pages/v2/v2_session_widgets.dart": {
-    "isDarkBranch": 19
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/v2_session_page.dart": {
-    "isDarkBranch": 2
-  },
-  "lib/features/memorization_plus/presentation/theme/kids_theme.dart": {
-    "hexColor": 40
+    "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/widgets/kids_house_card.dart": {
-    "hexColor": 27
+    "hexColor": 16
   },
   "lib/features/memorization_plus/presentation/widgets/kids_journey_painters.dart": {
     "hexColor": 2
@@ -206,15 +181,8 @@
   "lib/features/memorization_plus/presentation/widgets/kids_progress_header.dart": {
     "hexColor": 3
   },
-  "lib/features/memorization_plus/presentation/widgets/memorization_path_choice_card.dart": {
-    "isDarkBranch": 3
-  },
-  "lib/features/memorization_plus/presentation/widgets/memorization_path_settings_sheet.dart": {
-    "isDarkBranch": 4
-  },
   "lib/features/memorization_plus/presentation/widgets/practice_surah_tile.dart": {
-    "fontSizeLiteral": 1,
-    "isDarkBranch": 5
+    "fontSizeLiteral": 1
   },
   "lib/features/onboarding/presentation/widgets/experience_fork_view.dart": {
     "fontSizeLiteral": 1

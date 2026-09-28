@@ -17,9 +17,7 @@ Future<void> showMemorizationPathSettingsSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: isDark
-        ? AppColors.darkBackground
-        : AppColors.lightBackground,
+    backgroundColor: context.tokens.background,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppSpacing.radiusXl),
@@ -35,9 +33,7 @@ Future<void> showMemorizationPathSettingsSheet(
             Text(
               ctx.l10n.changeMemorizationPath,
               style: AppTypography.headlineSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
+                color: context.tokens.textPrimary,
                 fontFamily: 'Amiri',
               ),
             ),
@@ -58,18 +54,14 @@ Future<void> showMemorizationPathSettingsSheet(
               title: Text(
                 ctx.l10n.resetMemorizationPathTileTitle,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               subtitle: Text(
                 ctx.l10n.resetMemorizationPathPreserveProgressDesc,
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.tokens.textSecondary,
                 ),
               ),
               onTap: () async {

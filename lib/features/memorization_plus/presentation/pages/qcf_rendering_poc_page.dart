@@ -106,10 +106,7 @@ class _QcfRenderingPocPageState extends State<QcfRenderingPocPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final background = isDark
-        ? AppColors.darkBackground
-        : AppColors.lightBackground;
+    final background = context.tokens.background;
 
     return Scaffold(
       backgroundColor: background,
@@ -226,12 +223,8 @@ class _NoticePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = context.isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface;
-    final border = context.isDark
-        ? AppColors.darkDivider
-        : AppColors.lightDivider;
+    final surface = context.tokens.surface;
+    final border = context.tokens.divider;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -271,12 +264,8 @@ class _SampleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = context.isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface;
-    final border = context.isDark
-        ? AppColors.darkDivider
-        : AppColors.lightDivider;
+    final surface = context.tokens.surface;
+    final border = context.tokens.divider;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -324,9 +313,7 @@ class _VersePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pageNumber = qcf.getPageNumber(sample.surahNumber, sample.startAyah);
-    final textColor = context.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final textColor = context.tokens.textPrimary;
 
     return Directionality(
       textDirection: TextDirection.rtl,

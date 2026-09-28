@@ -16,9 +16,7 @@ class ChildDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -178,7 +176,7 @@ class _ChildHeaderCard extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
-              style: AppTypography.displayMedium.copyWith(fontSize: 32),
+              style: AppTypography.displayMedium,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -228,7 +226,6 @@ class _TodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return _Panel(
       title: context.l10n.parentDashboardTodaySummary,
       child: child.isActiveToday
@@ -242,9 +239,7 @@ class _TodayCard extends StatelessWidget {
           : Text(
               context.l10n.childDetailNoActivity,
               style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
               ),
             ),
     );
@@ -284,11 +279,10 @@ class _MetricChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: context.tokens.card,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -515,7 +509,7 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: context.tokens.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

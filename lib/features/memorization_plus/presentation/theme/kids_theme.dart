@@ -21,6 +21,12 @@ abstract final class KidsTheme {
   static const Color lockedGrey = Color(0xFF6B7280);
   static const Color lockedSurface = Color(0xFF3D4656);
   static const Color reviewPurple = Color(0xFF7C3AED);
+  // Journey stage status accents (house plaques and badges).
+  static const Color reviewLilac = Color(0xFFC084FC);
+  static const Color reviewViolet = Color(0xFFA855F7);
+  static const Color reviewAmber = Color(0xFFFBBF24);
+  static const Color lockedSlate = Color(0xFF4B5563);
+  static const Color inkOnParchment = Color(0xFF1F2937);
   static const Color successGreen = AppColors.success;
   static const Color errorRed = AppColors.error;
 

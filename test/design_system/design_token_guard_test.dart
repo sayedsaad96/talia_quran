@@ -28,7 +28,10 @@ final _metrics = <String, RegExp>{
 bool _isExempt(String path) =>
     path.endsWith('.g.dart') ||
     path.endsWith('_palette.dart') ||
-    path.endsWith('talia_share_tokens.dart');
+    path.endsWith('talia_share_tokens.dart') ||
+    // Scoped palettes for surfaces with their own look (D9).
+    path.endsWith('/theme/kids_theme.dart') ||
+    path.endsWith('/theme/home_skin.dart');
 
 bool _inScope(String path) =>
     path.startsWith('lib/core/widgets/') || path.contains('/presentation/');

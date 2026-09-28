@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class MemorizationPathChoiceCard extends StatelessWidget {
@@ -25,13 +24,8 @@ class MemorizationPathChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textColor = context.tokens.textPrimary;
+    final secondaryTextColor = context.tokens.textSecondary;
 
     return Semantics(
       button: true,
@@ -39,7 +33,7 @@ class MemorizationPathChoiceCard extends StatelessWidget {
       label: title,
       hint: description,
       child: Material(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: InkWell(
           onTap: isLoading ? null : onTap,

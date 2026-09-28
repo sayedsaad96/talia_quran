@@ -167,9 +167,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     return BlocProvider(
       create: (context) => getIt<MemorizationIdentityCubit>(),
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
+        backgroundColor: context.tokens.background,
         body:
             BlocConsumer<MemorizationIdentityCubit, MemorizationIdentityState>(
               listener: (context, state) {
@@ -410,9 +408,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       Text(
         context.l10n.memorizationPathDescription,
         style: AppTypography.bodyMedium.copyWith(
-          color: isDark
-              ? AppColors.darkTextSecondary
-              : AppColors.lightTextSecondary,
+          color: context.tokens.textSecondary,
         ),
         textAlign: TextAlign.center,
       ),
@@ -462,9 +458,7 @@ class _HubAppBar extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 150,
       pinned: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -604,12 +598,8 @@ class _HubSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,14 +663,10 @@ class _HubActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent =
-        accentOverride ?? (isDark ? AppColors.primaryLight : AppColors.primary);
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textPrimary = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+        accentOverride ?? context.tokens.accent;
+    final surface = context.tokens.card;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     return InkWell(
       onTap: onTap ?? () => context.push(route!),

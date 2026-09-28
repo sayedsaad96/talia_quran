@@ -12,7 +12,6 @@ import '../../../../../core/widgets/closing_moment.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/memorization/v2/session_state.dart';
 import '../../../../../core/router/app_router.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../../core/widgets/social_share/social_share_sheet.dart';
@@ -72,11 +71,8 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textSecondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textSecondary = context.tokens.textSecondary;
     final l10n = context.l10n;
 
     return SafeArea(

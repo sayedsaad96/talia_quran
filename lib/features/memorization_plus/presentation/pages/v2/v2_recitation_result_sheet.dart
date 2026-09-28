@@ -50,7 +50,7 @@ class V2RecitationResultSheet extends StatelessWidget {
     final diff = feedback.wordDiff;
 
     final accent = _accentFor(result, isDark);
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final surface = context.tokens.card;
 
     return Container(
       decoration: BoxDecoration(
@@ -139,9 +139,7 @@ class _ResultHeader extends StatelessWidget {
             context.l10n.v2ResultManualGrade,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
-              color: context.isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           )
         else if (result.similarityScore != null)
@@ -151,9 +149,7 @@ class _ResultHeader extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
-              color: context.isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
       ],
@@ -181,10 +177,10 @@ class _WordDiffView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          color: context.tokens.divider,
         ),
       ),
       child: Wrap(
@@ -223,9 +219,7 @@ class _DiffLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final secondary = context.tokens.textSecondary;
 
     final entries = <(String, int, Color)>[
       (context.l10n.v2ResultWordsCorrect, diff.matchCount, AppColors.success),

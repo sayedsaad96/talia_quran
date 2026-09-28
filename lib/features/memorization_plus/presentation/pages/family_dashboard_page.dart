@@ -45,11 +45,8 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -175,9 +172,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
       builder: (sheetContext) => BlocProvider.value(
         value: context.read<FamilyDashboardCubit>(),
         child: Material(
-          color: context.isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
+          color: context.tokens.background,
           clipBehavior: Clip.antiAlias,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -461,7 +456,7 @@ class _ChildCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final cardColor = context.tokens.card;
     final isActive = child.isActiveToday;
 
     return Semantics(
@@ -596,9 +591,7 @@ class _ChildCard extends StatelessWidget {
                     style: AppTypography.labelSmall.copyWith(
                       color: isActive
                           ? AppColors.primary
-                          : (isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary),
+                          : context.tokens.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -618,13 +611,12 @@ class _ChildCard extends StatelessWidget {
 class _AddChildCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return InkWell(
       borderRadius: BorderRadius.circular(20),
       onTap: () => _showAddChildOptions(context),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          color: context.tokens.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.3),
@@ -827,9 +819,7 @@ void _showAddChildOptions(BuildContext context) {
     context: context,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => Material(
-      color: context.isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      color: context.tokens.background,
       clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

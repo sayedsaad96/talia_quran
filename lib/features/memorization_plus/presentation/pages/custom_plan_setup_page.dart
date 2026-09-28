@@ -361,9 +361,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      backgroundColor: context.tokens.background,
       body: BlocConsumer<CustomPlanCubit, CustomPlanState>(
         listener: (context, state) {
           if (state is CustomPlanSaved) {
@@ -395,9 +393,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               SliverAppBar(
                 expandedHeight: 160,
                 pinned: true,
-                backgroundColor: isDark
-                    ? AppColors.darkBackground
-                    : AppColors.lightBackground,
+                backgroundColor: context.tokens.background,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
@@ -722,7 +718,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isDark
@@ -796,9 +792,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                             toName,
                           ),
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: context.tokens.textSecondary,
                     ),
                   ),
                 ),
@@ -809,9 +803,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             children: [
               Icon(
                 Icons.format_list_numbered_rounded,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
+                color: context.tokens.textSecondary,
                 size: 20,
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -820,9 +812,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                   context.l10n.customPlanFromAyah,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                   ),
                 ),
               ),
@@ -834,9 +824,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                   ),
                   decoration: InputDecoration(
                     helperText: '1-${_ayahCountForSurah(_startSurahId)}',
@@ -886,31 +874,23 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       children: [
         Icon(
           icon,
-          color: isDark
-              ? AppColors.darkTextSecondary
-              : AppColors.lightTextSecondary,
+          color: context.tokens.textSecondary,
           size: 20,
         ),
         const SizedBox(width: AppSpacing.sm),
         Text(
           label,
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
         ),
         const Spacer(),
         DropdownButton<int>(
           value: value,
           underline: const SizedBox.shrink(),
-          dropdownColor: isDark
-              ? AppColors.darkSurface
-              : AppColors.lightSurface,
+          dropdownColor: context.tokens.surface,
           style: AppTypography.bodyMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
           ),
           items: List.generate(
             114,
@@ -944,7 +924,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isDark
@@ -968,9 +948,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               Text(
                 title,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -1044,9 +1022,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? item.$4.withValues(alpha: 0.15)
-                    : isDark
-                    ? AppColors.darkSurface
-                    : AppColors.lightSurface,
+                    : context.tokens.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(
                   color: isSelected
@@ -1066,9 +1042,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     style: AppTypography.labelMedium.copyWith(
                       color: isSelected
                           ? item.$4
-                          : isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                          : context.tokens.textSecondary,
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -1119,9 +1093,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? item.$4.withValues(alpha: 0.15)
-                    : isDark
-                    ? AppColors.darkSurface
-                    : AppColors.lightSurface,
+                    : context.tokens.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(
                   color: isSelected
@@ -1141,9 +1113,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     style: AppTypography.labelMedium.copyWith(
                       color: isSelected
                           ? item.$4
-                          : isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                          : context.tokens.textSecondary,
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -1162,7 +1132,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isDark
@@ -1247,18 +1217,14 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               Text(
                 title,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+                  color: context.tokens.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 subtitle,
                 style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ],
@@ -1285,9 +1251,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           child: Text(
             label,
             style: AppTypography.bodySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
+              color: context.tokens.textSecondary,
             ),
           ),
         ),
@@ -1388,18 +1352,14 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 Text(
                   context.l10n.customPlanEstimatedDuration,
                   style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   durationText,
                   style: AppTypography.titleLarge.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1409,9 +1369,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     totalAyahsEstimate,
                   ),
                   style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
+                    color: context.tokens.textSecondary,
                   ),
                 ),
               ],
@@ -1585,7 +1543,7 @@ class _PlanSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: context.tokens.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
       ),
@@ -1651,17 +1609,13 @@ class _SectionTitle extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: isDark
-              ? AppColors.darkTextSecondary
-              : AppColors.lightTextSecondary,
+          color: context.tokens.textSecondary,
         ),
         const SizedBox(width: 8),
         Text(
           title,
           style: AppTypography.titleMedium.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: context.tokens.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -1689,17 +1643,15 @@ class _StyledTextField extends StatelessWidget {
       validator: validator,
       textDirection: TextDirection.rtl,
       style: AppTypography.bodyMedium.copyWith(
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+        color: context.tokens.textPrimary,
       ),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: AppTypography.bodyMedium.copyWith(
-          color: isDark
-              ? AppColors.darkTextSecondary
-              : AppColors.lightTextSecondary,
+          color: context.tokens.textSecondary,
         ),
         filled: true,
-        fillColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        fillColor: context.tokens.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           borderSide: BorderSide(

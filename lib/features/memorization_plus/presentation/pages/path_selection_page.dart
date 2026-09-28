@@ -61,7 +61,6 @@ class _PathSelectionView extends StatelessWidget {
         },
         builder: (context, state) {
           final isLoading = state is MemorizationIdentityLoading;
-          final isDark = context.isDark;
 
           return Align(
             alignment: Alignment.topCenter,
@@ -84,9 +83,7 @@ class _PathSelectionView extends StatelessWidget {
                     Text(
                       context.l10n.memorizationPathDescription,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                        color: context.tokens.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),

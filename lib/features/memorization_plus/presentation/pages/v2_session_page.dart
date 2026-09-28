@@ -254,9 +254,7 @@ class _V2SessionViewState extends State<_V2SessionView> {
             );
           },
           child: Scaffold(
-            backgroundColor: isDark
-                ? AppColors.darkBackground
-                : AppColors.lightBackground,
+            backgroundColor: context.tokens.background,
             appBar: AppBar(
               title: Text(
                 state is MSActive && state.sessionState.isReview
