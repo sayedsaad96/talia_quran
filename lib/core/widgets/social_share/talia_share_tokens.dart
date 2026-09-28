@@ -92,8 +92,173 @@ abstract class TaliaShareSpacing {
   static const double xxl = 24.0;
 }
 
+/// Layout numbers for the Dawn card on its 360-wide logical canvas.
+@immutable
+class TaliaShareMetrics {
+  const TaliaShareMetrics._({
+    required this.padding,
+    required this.eyebrowSize,
+    required this.signatureHeight,
+    required this.logoSize,
+    required this.qrSize,
+    required this.wordmarkSize,
+    required this.invitationSize,
+    required this.referenceSize,
+    required this.personalLineSize,
+    required this.numeralSize,
+    required this.numeralLabelSize,
+    required this.statNumeralSize,
+    required this.titleSize,
+    required this.bodySize,
+    required this.watermarkSize,
+    required this.characterHeight,
+    required this.heroInset,
+    required this.medalSize,
+    required this.gap,
+    required List<double> verseSizes,
+  }) : _verseSizes = verseSizes;
+
+  static const double cardRadius = 24;
+  static const double signatureRadius = 12;
+  static const double qrRadius = 4;
+  static const double barRadius = 2;
+
+  final EdgeInsets padding;
+  final double eyebrowSize;
+  final double signatureHeight;
+  final double logoSize;
+  final double qrSize;
+  final double wordmarkSize;
+  final double invitationSize;
+  final double referenceSize;
+  final double personalLineSize;
+  final double numeralSize;
+  final double numeralLabelSize;
+  final double statNumeralSize;
+  final double titleSize;
+  final double bodySize;
+  final double watermarkSize;
+  final double characterHeight;
+  final double heroInset;
+  final double medalSize;
+  final double gap;
+
+  /// Verse sizes for text of ≤80, ≤150, ≤250 and more characters.
+  final List<double> _verseSizes;
+
+  double verseSize(int length) {
+    if (length <= 80) return _verseSizes[0];
+    if (length <= 150) return _verseSizes[1];
+    if (length <= 250) return _verseSizes[2];
+    return _verseSizes[3];
+  }
+
+  static const square = TaliaShareMetrics._(
+    padding: EdgeInsets.all(16),
+    eyebrowSize: 10,
+    signatureHeight: 46,
+    logoSize: 34,
+    qrSize: 38,
+    wordmarkSize: 11,
+    invitationSize: 9,
+    referenceSize: 11,
+    personalLineSize: 10,
+    numeralSize: 64,
+    numeralLabelSize: 14,
+    statNumeralSize: 26,
+    titleSize: 16,
+    bodySize: 12,
+    watermarkSize: 56,
+    characterHeight: 96,
+    heroInset: 14,
+    medalSize: 64,
+    gap: 6,
+    verseSizes: [21, 18, 15.5, 13],
+  );
+
+  static const portrait = TaliaShareMetrics._(
+    padding: EdgeInsets.all(20),
+    eyebrowSize: 11,
+    signatureHeight: 54,
+    logoSize: 40,
+    qrSize: 46,
+    wordmarkSize: 12.5,
+    invitationSize: 10,
+    referenceSize: 12,
+    personalLineSize: 11,
+    numeralSize: 84,
+    numeralLabelSize: 16,
+    statNumeralSize: 30,
+    titleSize: 18,
+    bodySize: 13,
+    watermarkSize: 68,
+    characterHeight: 128,
+    heroInset: 18,
+    medalSize: 80,
+    gap: 8,
+    verseSizes: [24, 21, 18, 15],
+  );
+
+  /// Story keeps clear of platform UI: 40 top, 56 bottom.
+  static const story = TaliaShareMetrics._(
+    padding: EdgeInsets.fromLTRB(24, 40, 24, 56),
+    eyebrowSize: 13,
+    signatureHeight: 66,
+    logoSize: 48,
+    qrSize: 58,
+    wordmarkSize: 14,
+    invitationSize: 11.5,
+    referenceSize: 14,
+    personalLineSize: 12.5,
+    numeralSize: 112,
+    numeralLabelSize: 19,
+    statNumeralSize: 36,
+    titleSize: 21,
+    bodySize: 15,
+    watermarkSize: 90,
+    characterHeight: 170,
+    heroInset: 22,
+    medalSize: 104,
+    gap: 12,
+    verseSizes: [28, 25, 22, 18],
+  );
+
+  static TaliaShareMetrics of(SocialShareFormat format) {
+    return switch (format) {
+      SocialShareFormat.square => square,
+      SocialShareFormat.portrait => portrait,
+      SocialShareFormat.story => story,
+    };
+  }
+}
+
 /// Centralized Arabic Typography for Share Cards
 abstract class TaliaShareTypography {
+  /// Reem Kufi — eyebrows, wordmark and numerals only. Never used for
+  /// Quran, dua or dhikr text.
+  static const String displayFontFamily = 'Reem_Kufi';
+
+  /// Display style for the Kufi layer. The bundled font is variable, so
+  /// the weight is also sent as a `wght` axis value.
+  static TextStyle display({
+    required Color color,
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.w600,
+    double height = 1.15,
+    double letterSpacing = 0,
+  }) {
+    return TextStyle(
+      fontFamily: displayFontFamily,
+      fontFamilyFallback: const [bodyFontFamily],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontVariations: [FontVariation.weight(fontWeight.value.toDouble())],
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
   static const String quranFontFamily = 'Amiri';
   static const String bodyFontFamily = 'Noto_Naskh_Arabic';
 
