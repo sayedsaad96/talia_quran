@@ -51,6 +51,24 @@ void main() {
       expect((await repository.getActivePlan())!.completedPages, {1, 2, 3, 4});
     },
   );
+  test(
+    'physical logging after wrapping records only the new range',
+    () async {
+      await repository.createPlan(
+        plan.copyWith(
+          startPage: 300,
+          completedPages: {for (var p = 300; p <= 599; p++) p},
+        ),
+      );
+      final result = await usecase(
+        (await repository.getActivePlan())!,
+        4,
+        source: KhatmahReadingSource.physical,
+        readAt: DateTime(2026, 2, 1),
+      );
+      expect(result.newlyCompletedPages, {600, 601, 602, 603, 604, 1, 2, 3, 4});
+    },
+  );
   test('paused plans reject progress without persisting', () async {
     await repository.createPlan(plan.copyWith(status: KhatmahStatus.paused));
     final paused = (await repository.getActivePlan())!;

@@ -11,9 +11,14 @@ class SmartWirdSession {
     required this.dayPart,
     required this.counts,
     required this.updatedAt,
+    this.period,
   });
 
   final AzkarDayPart dayPart;
+
+  /// Morning or evening. Null for sessions saved before this field existed;
+  /// those resume by [dayPart] only.
+  final AzkarPeriod? period;
 
   /// Persisted counts keyed by zikr id (only entries > 0 are stored).
   final Map<String, int> counts;
@@ -22,6 +27,7 @@ class SmartWirdSession {
 
   Map<String, dynamic> toJson() => {
         'dayPart': dayPart.name,
+        'period': period?.name,
         'counts': counts,
         'updatedAt': updatedAt.millisecondsSinceEpoch,
       };
@@ -32,6 +38,9 @@ class SmartWirdSession {
       dayPart: AzkarTimeContext.dayPartFromName(
         json['dayPart'] as String? ?? '',
       ),
+      period: AzkarPeriod.values
+          .where((value) => value.name == json['period'])
+          .firstOrNull,
       counts: {
         for (final entry in rawCounts.entries)
           if (entry.value is int && (entry.value as int) > 0)

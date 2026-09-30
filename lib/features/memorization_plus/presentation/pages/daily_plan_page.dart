@@ -13,6 +13,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import '../../domain/services/plan_schedule_policy.dart';
 
 /// Read-only view of today's cached daily plan with bucket checkmarks (Sprint 3.2).
 class DailyPlanPage extends StatefulWidget {
@@ -55,11 +56,7 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
     final isDark = context.isDark;
     return Scaffold(
       backgroundColor: context.tokens.background,
-      appBar: AppBar(
-        title: Text(context.l10n.dailyPlanHeaderTitle),
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: Text(context.l10n.dailyPlanHeaderTitle)),
       body: FutureBuilder<_DailyPlanViewData>(
         future: _loadFuture,
         builder: (context, snapshot) {
@@ -96,7 +93,14 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
               await context.push(
                 MemorizationNavigationResolver.dailyPlanAyahLocation(
                   ayah,
-                  blockSize: data.blockSize,
+                  blockSize: data.blockSize == null
+                      ? null
+                      : PlanSchedulePolicy.fitToDailyPlan(
+                          data.blockSize!,
+                          plan,
+                          surahId: ayah.surahId,
+                          startAyah: ayah.ayahNumber,
+                        ),
                 ),
               );
               if (mounted) _retry();
@@ -155,7 +159,11 @@ class _DailyPlanBody extends StatelessWidget {
       ),
       children: [
         Text(
-          context.l10n.dailyPlanHeaderSummary(total, completed),
+          context.l10n.dailyPlanHeaderSummary(
+            total,
+            context.numText(total),
+            context.numText(completed),
+          ),
           style: AppTypography.titleMedium.copyWith(
             color: context.tokens.textPrimary,
           ),
@@ -172,7 +180,10 @@ class _DailyPlanBody extends StatelessWidget {
         Text(
           plan.isRequiredPlanCompleted
               ? context.l10n.dailyPlanAllDoneShort
-              : context.l10n.dailyPlanRemainingItems(total - completed),
+              : context.l10n.dailyPlanRemainingItems(
+                  total - completed,
+                  context.numText(total - completed),
+                ),
           style: AppTypography.bodyMedium.copyWith(
             color: context.tokens.textSecondary,
           ),
@@ -233,7 +244,10 @@ class _DailyPlanBody extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      context.l10n.dailyPlanBacklogNotice(plan.dueBacklogCount),
+                      context.l10n.dailyPlanBacklogNotice(
+                        plan.dueBacklogCount,
+                        context.numText(plan.dueBacklogCount),
+                      ),
                       style: AppTypography.bodySmall.copyWith(
                         color: context.tokens.textPrimary,
                       ),
@@ -394,7 +408,7 @@ class _PlanAyahTile extends StatelessWidget {
             context.isArabic
                 ? SurahNames.nameAr(ayah.surahId)
                 : SurahNames.nameEn(ayah.surahId),
-            ayah.ayahNumber,
+            context.numText(ayah.ayahNumber),
           ),
           style: AppTypography.bodyLarge,
         ),

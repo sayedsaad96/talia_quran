@@ -102,6 +102,51 @@ void main() {
     );
   });
 
+  group('corpus loading', () {
+    test(
+      'concurrent first reads share a single asset load and parse',
+      () async {
+        final loads = <String, int>{};
+        final datasource = QuranLocalDatasourceImpl(
+          loadAsset: (path) async {
+            loads[path] = (loads[path] ?? 0) + 1;
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+            return File(path).readAsStringSync();
+          },
+        );
+
+        final results = await Future.wait<Object?>([
+          datasource.getAyahsByPage(1),
+          datasource.getAyahs(2),
+          datasource.getAyahsGroupedByJuz(),
+          datasource.ensureLoaded().then((_) => null),
+          datasource.getSurahs(),
+        ]);
+
+        expect(loads['assets/data/quran.json'], 1);
+        expect(loads['assets/data/surahs.json'], 1);
+        expect((results[0] as List).first.surahId, 1);
+        expect((results[1] as List), hasLength(286));
+        expect((results[2] as Map), hasLength(30));
+      },
+    );
+
+    test('a failed load is retried on the next read', () async {
+      var attempts = 0;
+      final datasource = QuranLocalDatasourceImpl(
+        loadAsset: (path) async {
+          if (path.endsWith('quran.json') && attempts++ == 0) {
+            throw StateError('transient');
+          }
+          return File(path).readAsStringSync();
+        },
+      );
+
+      await expectLater(datasource.getAyahsByPage(1), throwsA(anything));
+      expect(await datasource.getAyahsByPage(1), isNotEmpty);
+    });
+  });
+
   group('parseQuranData — fail-closed structural metadata', () {
     test('rejects a record missing the global number', () {
       final broken = <String, dynamic>{

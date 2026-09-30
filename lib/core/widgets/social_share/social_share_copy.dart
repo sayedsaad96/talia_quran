@@ -194,7 +194,7 @@ class SocialShareCopy {
       : '${days == 1 ? 'day' : 'days'} with the Quran';
 
   String memorizedAyahsHeroLabel(int ayahs) => isArabic
-      ? '${arabicCountWord(ayahs, one: 'آية', two: 'آيتان', few: 'آيات', many: 'آيةً')} في صدري'
+      ? '${arabicCountWord(ayahs, one: 'آية', two: 'آيتان', few: 'آيات', many: 'آيةً')} في قلبي'
       : '${ayahs == 1 ? 'ayah' : 'ayahs'} memorized';
 
   String surahsCompleted(int count) => isArabic

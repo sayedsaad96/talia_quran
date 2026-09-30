@@ -152,4 +152,86 @@ void main() {
 
     expect(find.text('اكتمل الورد الذكي'), findsOneWidget);
   });
+
+  testWidgets(
+    'resume survives crossing a day-part boundary inside the same period',
+    (tester) async {
+      // Saved at 09:00 (afterFajr). The page reopens at 10:30 (morning day
+      // part) but it is still the morning period, so progress must restore.
+      final store = SmartWirdProgressStore(prefs);
+      await store.saveActiveSession(
+        SmartWirdSession(
+          dayPart: AzkarDayPart.afterFajr,
+          period: AzkarPeriod.morning,
+          counts: {'m-1': 2, 'g-1': 1},
+          updatedAt: DateTime(2026, 9, 25, 9),
+        ),
+        DateTime(2026, 9, 25, 10, 30),
+      );
+
+      await tester.pumpWidget(
+        buildApp(SmartWirdPage(currentTime: DateTime(2026, 9, 25, 10, 30))),
+      );
+      await tester.pumpAndSettle();
+
+      // Restored on card 2 with count 1: one tap completes the wird.
+      await tester.tap(find.text('1').first);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.text('اكتمل الورد الذكي'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'evening progress saved after midnight does not resume the next evening',
+    (tester) async {
+      // 01:00 belongs to the previous evening. Opening the evening wird at
+      // 17:00 the same calendar day must start fresh, not restore its counts.
+      final store = SmartWirdProgressStore(prefs);
+      await store.saveActiveSession(
+        SmartWirdSession(
+          dayPart: AzkarDayPart.night,
+          period: AzkarPeriod.evening,
+          counts: {'g-1': 1},
+          updatedAt: DateTime(2026, 9, 25, 1),
+        ),
+        DateTime(2026, 9, 25, 17),
+      );
+
+      await tester.pumpWidget(
+        buildApp(SmartWirdPage(currentTime: DateTime(2026, 9, 25, 17))),
+      );
+      await tester.pumpAndSettle();
+
+      // Fresh start: one tap on the 0/2 card does not finish the wird.
+      await tester.tap(find.text('0'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.text('اكتمل الورد الذكي'), findsNothing);
+    },
+  );
+
+  testWidgets('tapping a row in the index moves to that card', (tester) async {
+    await tester.pumpWidget(
+      buildApp(SmartWirdPage(currentTime: DateTime(2026, 9, 25, 9))),
+    );
+    await tester.pumpAndSettle();
+
+    // Card 1 (m-1) is showing; card 2 (g-1) has not been built yet.
+    expect(find.text('نص تجريبي g-1'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('نص تجريبي g-1'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('نص تجريبي g-1'), findsOneWidget);
+  });
 }

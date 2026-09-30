@@ -102,7 +102,8 @@ class KhatmahProgressGauge extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         context.l10n.khatmahPagesLeft(
-                          (remainingPages).toString(),
+                          plan.remainingPages,
+                          remainingPages,
                         ),
                         key: const Key('khatmah_progress_remaining_pages'),
                         style: AppTypography.bodySmall.copyWith(

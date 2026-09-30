@@ -13,6 +13,7 @@ import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
+import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
@@ -84,13 +85,14 @@ void main() {
       QuranRepository? quran,
       V2SessionProgressAdapter? progressAdapter,
       List<KidsSessionLog>? kidsSessionLogs,
+      V2SessionEngine? engine,
     }) => KidsModeCubit(
       GetKidsProgressUsecase(repository),
       GetKidsJourneyUsecase(repository),
       AwardKidsPointsUsecase(repository),
       achievementService,
       quran ?? quranRepository,
-      V2SessionEngine(),
+      engine ?? V2SessionEngine(),
       V2SessionReviewAdapter(
         repository: repository,
         scheduler: const ScheduleNextReviewUsecase(),
@@ -866,6 +868,445 @@ void main() {
         expect(repository.saveLogCalls, 0);
       },
     );
+
+    group('silent attempts and the guardian bypass (K21)', () {
+      const silence = KidsRecitationCaptureResult.stoppedByUser();
+
+      test('one quiet attempt does not open the guardian bypass', () async {
+        await cubit.close();
+        cubit = buildCubit(recorder: _FakeKidsRecitationRecorder());
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.startRecording();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(
+          state.recordingError,
+          CubitMessageCodes.kidsRecordingNotCaptured,
+        );
+        expect(state.canUseGuardianFallback, isFalse);
+        expect(
+          await cubit.submitManualCompletion(guardianPin: '1234'),
+          isFalse,
+        );
+        expect(repository.awardCalls, 0);
+      });
+
+      test('repeated silence opens it (STT may not hear the child)', () async {
+        await cubit.close();
+        cubit = buildCubit(recorder: _FakeKidsRecitationRecorder());
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        for (
+          var attempt = 0;
+          attempt < KidsModeLoaded.kGuardianFallbackAfterSilentAttempts;
+          attempt++
+        ) {
+          await cubit.startRecording();
+        }
+
+        expect((cubit.state as KidsModeLoaded).canUseGuardianFallback, isTrue);
+      });
+
+      test('a heard attempt restarts the silence count', () async {
+        await cubit.close();
+        final recorder = _MutableKidsRecitationRecorder();
+        cubit = buildCubit(recorder: recorder);
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        recorder.result = silence;
+        await cubit.startRecording();
+        recorder.result = const KidsRecitationCaptureResult.captured(
+          words: 'different words',
+        );
+        await cubit.startRecording();
+        recorder.result = silence;
+        await cubit.startRecording();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(
+          state.recordingError,
+          CubitMessageCodes.kidsRecordingNotCaptured,
+        );
+        expect(state.canUseGuardianFallback, isFalse);
+      });
+    });
+
+    group('try from memory and "give me the start" (K25)', () {
+      KidsModeCubit passingCubit() {
+        repository.awardCompleter = Completer()
+          ..complete(
+            Right(
+              KidsCompletionResult(
+                progress: const KidsProgress.initial().addPoints(10),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        return buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.captured(
+              words: 'ayah text',
+            ),
+          ),
+          policy: KidsSessionPolicy.forAge(6),
+        );
+      }
+
+      test('trying from memory hides the ayah after the listens', () async {
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.tryFromMemory();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.sessionState.phase, V2SessionPhase.memorizing);
+        expect(state.isRecallingFromMemory, isTrue);
+        expect(state.firstWordRevealed, isFalse);
+      });
+
+      test('trying from memory waits for the required listens', () async {
+        await cubit.load(114, 1, 'ayah text');
+
+        await cubit.tryFromMemory();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.sessionState.phase, V2SessionPhase.learning);
+        expect(state.mustListenFirst, isTrue);
+      });
+
+      test('the first word is offered only while recalling', () async {
+        await cubit.load(114, 1, 'first second third');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.revealFirstWord();
+        expect((cubit.state as KidsModeLoaded).firstWordRevealed, isFalse);
+
+        await cubit.tryFromMemory();
+        await cubit.revealFirstWord();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.firstWordRevealed, isTrue);
+        expect(state.firstWord, 'first');
+        expect(
+          state.sessionState.hintTracker.levelFor(114, 1),
+          V2HintLevel.firstWord,
+        );
+      });
+
+      test(
+        'a pass after the hint is average with no excellence bonus',
+        () async {
+          await cubit.close();
+          cubit = passingCubit();
+
+          await cubit.load(114, 1, 'ayah text');
+          cubit.debugSetLoopCount(3);
+          await cubit.tryFromMemory();
+          await cubit.revealFirstWord();
+          await cubit.startRecording();
+
+          expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+          expect(repository.lastMasteryRating, PerformanceRating.average);
+          expect(
+            repository.lastSavedReview?.lastRating,
+            PerformanceRating.average,
+          );
+          expect(repository.lastHintCount, 1);
+        },
+      );
+
+      test('a pass without the hint stays excellent', () async {
+        await cubit.close();
+        cubit = passingCubit();
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+
+        expect(repository.lastMasteryRating, PerformanceRating.excellent);
+        expect(repository.lastHintCount, 0);
+      });
+
+      test('after a missed try the child recalls again with help', () async {
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.captured(
+              words: 'different words',
+            ),
+          ),
+        );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+        expect(
+          (cubit.state as KidsModeLoaded).sessionState.phase,
+          V2SessionPhase.remediation,
+        );
+
+        await cubit.tryFromMemory();
+        await cubit.revealFirstWord();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.sessionState.phase, V2SessionPhase.memorizing);
+        expect(state.firstWordRevealed, isTrue);
+      });
+    });
+
+    group('recalled words after a miss (K32)', () {
+      test('a miss marks the words the child got right', () async {
+        await cubit.close();
+        final recorder = _MutableKidsRecitationRecorder()
+          ..result = const KidsRecitationCaptureResult.captured(
+            words: 'ayah wrong',
+          );
+        cubit = buildCubit(recorder: recorder);
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+
+        expect((cubit.state as KidsModeLoaded).recalledWords, [true, false]);
+      });
+
+      test('a new attempt clears the old marks', () async {
+        await cubit.close();
+        final recorder = _MutableKidsRecitationRecorder()
+          ..result = const KidsRecitationCaptureResult.captured(
+            words: 'ayah wrong',
+          );
+        cubit = buildCubit(recorder: recorder);
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+        recorder.result = const KidsRecitationCaptureResult.stoppedByUser();
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+
+        expect((cubit.state as KidsModeLoaded).recalledWords, isNull);
+      });
+    });
+
+    group('only an exact recitation is excellent (K31)', () {
+      KidsModeCubit fuzzyCubit(String words) {
+        repository.awardCompleter = Completer()
+          ..complete(
+            Right(
+              KidsCompletionResult(
+                progress: const KidsProgress.initial().addPoints(10),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        return buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: KidsRecitationCaptureResult.captured(words: words),
+          ),
+          policy: KidsSessionPolicy.forAge(6),
+          engine: V2SessionEngine().withPassThreshold(kKidsPassThreshold),
+        );
+      }
+
+      test(
+        'a near-exact pass is average, without the excellence bonus',
+        () async {
+          await cubit.close();
+          cubit = fuzzyCubit('one two three four wrong'); // 4/5 = 0.8
+
+          await cubit.load(114, 1, 'one two three four five');
+          cubit.debugSetLoopCount(3);
+          await cubit.tryFromMemory();
+          await cubit.startRecording();
+
+          expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+          expect(repository.lastMasteryRating, PerformanceRating.average);
+        },
+      );
+
+      test('an exact pass stays excellent', () async {
+        await cubit.close();
+        cubit = fuzzyCubit('one two three four five');
+
+        await cubit.load(114, 1, 'one two three four five');
+        cubit.debugSetLoopCount(3);
+        await cubit.tryFromMemory();
+        await cubit.startRecording();
+
+        expect(repository.lastMasteryRating, PerformanceRating.excellent);
+      });
+    });
+
+    group('reviews start with recall (K28)', () {
+      KidsModeCubit reviewCubit({
+        String words = 'ayah text',
+        List<KidsSessionLog>? logs,
+      }) {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 5,
+                starsEarned: 0,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        return buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: KidsRecitationCaptureResult.captured(words: words),
+          ),
+          policy: KidsSessionPolicy.forAge(6),
+          kidsSessionLogs: logs,
+        );
+      }
+
+      for (final type in [
+        KidsMissionType.dueReview,
+        KidsMissionType.linkedReview,
+      ]) {
+        test('${type.name} opens hidden, with no listening first', () async {
+          await cubit.close();
+          cubit = reviewCubit();
+
+          await cubit.load(114, 1, 'ayah text', missionType: type);
+
+          final state = cubit.state as KidsModeLoaded;
+          expect(state.sessionState.phase, V2SessionPhase.reciting);
+          expect(state.isReview, isTrue);
+          expect(state.maxLoops, 0);
+        });
+      }
+
+      test(
+        'an already memorized ayah reopened from its house is a review',
+        () async {
+          await cubit.close();
+          cubit = reviewCubit(
+            logs: [
+              KidsSessionLog(
+                id: 'memorized',
+                surahId: 114,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.utc(2026, 1, 1),
+              ),
+            ],
+          );
+
+          await cubit.load(
+            114,
+            1,
+            'ayah text',
+            missionType: KidsMissionType.resume,
+          );
+
+          final state = cubit.state as KidsModeLoaded;
+          expect(state.isReview, isTrue);
+          expect(state.sessionState.phase, V2SessionPhase.reciting);
+        },
+      );
+
+      test('new memorization still starts by listening', () async {
+        await cubit.close();
+        cubit = reviewCubit();
+
+        await cubit.load(114, 1, 'ayah text');
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isReview, isFalse);
+        expect(state.sessionState.phase, V2SessionPhase.learning);
+        expect(state.maxLoops, 3);
+      });
+
+      test('a recall straight from memory is excellent', () async {
+        await cubit.close();
+        cubit = reviewCubit();
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.dueReview,
+        );
+        await cubit.startRecording();
+
+        expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+        expect(repository.lastMasteryRating, PerformanceRating.excellent);
+        expect(repository.lastMissionType, KidsMissionType.dueReview);
+      });
+
+      test('the recitation cannot be played before trying', () async {
+        await cubit.close();
+        cubit = reviewCubit();
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.dueReview,
+        );
+        await cubit.playAudio();
+
+        expect((cubit.state as KidsModeLoaded).isPlaying, isFalse);
+      });
+
+      test('"remind me" shows the ayah and counts a missed recall', () async {
+        await cubit.close();
+        cubit = reviewCubit();
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.dueReview,
+        );
+        await cubit.remindMe();
+
+        final reminded = cubit.state as KidsModeLoaded;
+        expect(reminded.sessionState.phase, V2SessionPhase.remediation);
+        expect(reminded.sessionState.failureTracker.failureCountFor(114, 1), 1);
+
+        await cubit.tryFromMemory();
+        await cubit.revealFirstWord();
+        await cubit.startRecording();
+
+        expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+        expect(repository.lastMasteryRating, PerformanceRating.average);
+      });
+
+      test('recitation between attempts awaits the mic, never stuck', () async {
+        await cubit.close();
+        cubit = reviewCubit();
+
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.dueReview,
+        );
+
+        // Also the phase a near miss leaves new memorization in.
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isAwaitingRecitation, isTrue);
+        expect(state.copyWith(isRecording: true).isAwaitingRecitation, isFalse);
+      });
+    });
 
     test(
       'stopRecording ignores a capture signal that already completed',

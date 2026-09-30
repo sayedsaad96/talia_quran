@@ -19,6 +19,9 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
+import '../../../../core/memorization/review_passage_picker.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../core/memorization/v2/recitation_word_diff.dart';
 import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
@@ -332,6 +335,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   int? _loopSurahId;
   int? _loopAyahNumber;
 
+  /// Invalidates pending source loads and player setup when playback stops or
+  /// a newer request takes its place.
+  int _audioRequestId = 0;
+
   // ── Session lifecycle ────────────────────────────────────────────────────
 
   V2SessionState? _sessionState;
@@ -453,14 +460,21 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     }
 
     // Slice block: from startAyah (1-based) for blockSize ayahs. A review
-    // session targets exactly the due ayah — no adjacent-ayah expansion.
-    final effectiveBlockSize = isReview ? 1 : blockSize;
+    // covers the due passage around its target (N4): the following due
+    // ayahs on the same page, each still recited and scheduled on its own.
     final startIndex = (startAyah - 1).clamp(0, allAyahs.length - 1);
-    final endIndex = (startIndex + effectiveBlockSize).clamp(
-      0,
-      allAyahs.length,
-    );
-    final blockAyahs = allAyahs.sublist(startIndex, endIndex);
+    final List<Ayah> blockAyahs;
+    if (isReview) {
+      final passage = ReviewPassagePicker.pick(
+        surahAyahs: allAyahs,
+        startAyah: allAyahs[startIndex].numberInSurah,
+        dueAyahNumbers: await _dueReviewAyahNumbers(surahId),
+      );
+      blockAyahs = passage.isEmpty ? [allAyahs[startIndex]] : passage;
+    } else {
+      final endIndex = (startIndex + blockSize).clamp(0, allAyahs.length);
+      blockAyahs = allAyahs.sublist(startIndex, endIndex);
+    }
 
     if (blockAyahs.isEmpty) {
       emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
@@ -496,6 +510,30 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
     // 6. Start audio prefetch for the block.
     unawaited(_prefetchBlockAudio(surahId, blockAyahs));
+  }
+
+  /// Adult ayahs of [surahId] due for review now. Any read failure yields
+  /// none, so the review falls back to its single target ayah.
+  Future<Set<int>> _dueReviewAyahNumbers(int surahId) async {
+    try {
+      final result = await _memRepo.getAllReviewRecords(
+        scope: ReviewRecordReadScope.adult,
+      );
+      final now = DateTime.now().toUtc();
+      return result.fold<Set<int>>(
+        (_) => <int>{},
+        (records) => {
+          for (final record in records)
+            if (record.surahId == surahId &&
+                ReviewRecordFilters.isAdultCompatible(record) &&
+                record.classifyAt(now).isVisibleForReview)
+              record.ayahNumber,
+        },
+      );
+    } catch (error, stack) {
+      TaliaLogger.w('V2: review passage lookup failed', error, stack);
+      return <int>{};
+    }
   }
 
   Future<void> _saveProgress(V2SessionState sessionState) =>
@@ -699,6 +737,25 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         await _evaluateCurrentRecitation(manualGrade: true, selfGrade: grade);
       });
 
+  /// Self-graded block review (N5). A hesitation or a lapse is a failed
+  /// block review: [stumbledAyahNumber] is remediated, as after an automatic
+  /// failure, instead of the block silently passing.
+  Future<void> submitManualBlockReview({
+    V2SelfGrade grade = V2SelfGrade.mastered,
+    int? stumbledAyahNumber,
+  }) => _runEvaluationExclusive(() async {
+    _assertActive();
+    final st = state as MSActive;
+    if (st.isRecording || st.isEvaluating) return;
+
+    emit(st.copyWith(isEvaluating: true));
+    await _evaluateCurrentRecitation(
+      manualGrade: true,
+      selfGrade: grade,
+      stumbledAyahNumber: stumbledAyahNumber,
+    );
+  });
+
   // ── Audio playback ────────────────────────────────────────────────────────
 
   /// Plays audio for the current ayah.
@@ -708,6 +765,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (st.isPlaying) await stopAudio();
 
     final ayah = st.sessionState.currentAyah;
+    final requestId = ++_audioRequestId;
+    final targetSession = st.sessionState;
     _loopSurahId = st.sessionState.surahId;
     _loopAyahNumber = ayah.numberInSurah;
     _loopRemaining = (st.audioLoopMode.repeatCount ?? 1) - 1;
@@ -716,11 +775,20 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         st.sessionState.surahId,
         ayah.numberInSurah,
       );
-      await AudioCacheService.playFromSource(_player, audioSource);
-      emit(st.copyWith(isPlaying: true));
+      if (!_isCurrentAudioRequest(requestId, targetSession)) return;
+
+      // AudioPlayer.play completes when playback finishes. Emit before it so
+      // the listening control reflects playback as soon as the player starts.
+      emit((state as MSActive).copyWith(isPlaying: true));
+      await _startAudioPlayback(
+        requestId: requestId,
+        targetSession: targetSession,
+        source: audioSource,
+        context: 'play ayah audio',
+      );
     } catch (e, stack) {
       TaliaLogger.e('V2: Failed to play ayah audio', e, stack);
-      if (state is MSActive) {
+      if (_isCurrentAudioRequest(requestId, targetSession)) {
         emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
       }
     }
@@ -776,16 +844,21 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       _loopRemaining = remaining - 1;
     }
 
+    final requestId = ++_audioRequestId;
+    final targetSession = st.sessionState;
     try {
       final audioSource = await _audioCache.getAudioSource(surahId, ayahNumber);
-      await AudioCacheService.playFromSource(_player, audioSource);
-      if (state is MSActive) {
-        emit((state as MSActive).copyWith(isPlaying: true));
-      }
+      if (!_isCurrentAudioRequest(requestId, targetSession)) return;
+      await _startAudioPlayback(
+        requestId: requestId,
+        targetSession: targetSession,
+        source: audioSource,
+        context: 'loop ayah audio',
+      );
     } catch (e, stack) {
       TaliaLogger.e('V2: Failed to loop ayah audio', e, stack);
       _loopRemaining = null;
-      if (state is MSActive) {
+      if (_isCurrentAudioRequest(requestId, targetSession)) {
         emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
       }
     }
@@ -793,10 +866,65 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   /// Stops audio playback.
   Future<void> stopAudio() async {
+    _audioRequestId++;
     await _player.stop();
     _loopRemaining = null;
     if (state is MSActive) {
       emit((state as MSActive).copyWith(isPlaying: false));
+    }
+  }
+
+  bool _isCurrentAudioRequest(int requestId, V2SessionState targetSession) {
+    final current = state;
+    return !isClosed &&
+        requestId == _audioRequestId &&
+        current is MSActive &&
+        identical(current.sessionState, targetSession);
+  }
+
+  Future<void> _startAudioPlayback({
+    required int requestId,
+    required V2SessionState targetSession,
+    required String source,
+    required String context,
+  }) async {
+    try {
+      if (source.startsWith('http://') || source.startsWith('https://')) {
+        await _player.setUrl(source);
+      } else {
+        await _player.setFilePath(source);
+      }
+      if (!_isCurrentAudioRequest(requestId, targetSession)) return;
+
+      unawaited(
+        _observeAudioPlayback(
+          _player.play(),
+          requestId: requestId,
+          targetSession: targetSession,
+          context: context,
+        ),
+      );
+    } catch (e, stack) {
+      TaliaLogger.e('V2: Failed to $context', e, stack);
+      if (_isCurrentAudioRequest(requestId, targetSession)) {
+        emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
+      }
+    }
+  }
+
+  Future<void> _observeAudioPlayback(
+    Future<void> playback, {
+    required int requestId,
+    required V2SessionState targetSession,
+    required String context,
+  }) async {
+    try {
+      await playback;
+    } catch (e, stack) {
+      TaliaLogger.e('V2: Failed to $context', e, stack);
+      if (_isCurrentAudioRequest(requestId, targetSession)) {
+        emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
+      }
     }
   }
 
@@ -887,6 +1015,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<void> _evaluateCurrentRecitation({
     bool manualGrade = false,
     V2SelfGrade selfGrade = V2SelfGrade.mastered,
+    int? stumbledAyahNumber,
   }) async {
     if (_sessionState == null || state is! MSActive) return;
     final spokenText = (state as MSActive).recognizedText;
@@ -902,7 +1031,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
             grade: selfGrade,
           );
         case V2SessionPhase.blockReview:
-          newState = _engine.submitManualBlockReview(previousState);
+          newState = _engine.submitManualBlockReview(
+            previousState,
+            grade: selfGrade,
+            stumbledAyahNumber: stumbledAyahNumber,
+          );
         default:
           // Not a recitation phase — ignore.
           emit((state as MSActive).copyWith(isEvaluating: false));

@@ -38,7 +38,6 @@ class HomeLoaded extends HomeState {
     this.activeKhatmah,
     this.khatmahError,
     this.isRefreshing = false,
-    this.todayChecklist,
     this.ayahOfDay,
     this.streakRisk,
     this.audioResume,
@@ -52,7 +51,6 @@ class HomeLoaded extends HomeState {
     this.prayerCompanionSummary,
     this.weeklyActiveDays = 0,
     this.weeklyActivityCount = 0,
-    this.recentBookmarkRoute,
     this.heroMinutes = 0,
     this.continueRecitation,
     this.recentActivity = const [],
@@ -62,6 +60,7 @@ class HomeLoaded extends HomeState {
   static const Object _khatmahSentinel = Object();
   static const Object _microReviewSentinel = Object();
   static const Object _continueRecitationSentinel = Object();
+  static const Object _deferredSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -81,8 +80,7 @@ class HomeLoaded extends HomeState {
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
     bool? isRefreshing,
-    TodayChecklist? todayChecklist,
-    AyahOfDay? ayahOfDay,
+    Object? ayahOfDay = _deferredSentinel,
     StreakRisk? streakRisk,
     AudioResumePosition? audioResume,
     List<UnifiedJourneyAction>? alternativeActions,
@@ -95,7 +93,6 @@ class HomeLoaded extends HomeState {
     PrayerCompanionDaySummary? prayerCompanionSummary,
     int? weeklyActiveDays,
     int? weeklyActivityCount,
-    String? recentBookmarkRoute,
     int? heroMinutes,
     Object? continueRecitation = _continueRecitationSentinel,
     List<ActivityEvent>? recentActivity,
@@ -125,8 +122,9 @@ class HomeLoaded extends HomeState {
           ? this.khatmahError
           : khatmahError,
       isRefreshing: isRefreshing ?? this.isRefreshing,
-      todayChecklist: todayChecklist ?? this.todayChecklist,
-      ayahOfDay: ayahOfDay ?? this.ayahOfDay,
+      ayahOfDay: identical(ayahOfDay, _deferredSentinel)
+          ? this.ayahOfDay
+          : ayahOfDay as AyahOfDay?,
       streakRisk: streakRisk ?? this.streakRisk,
       audioResume: audioResume ?? this.audioResume,
       alternativeActions: alternativeActions ?? this.alternativeActions,
@@ -140,7 +138,6 @@ class HomeLoaded extends HomeState {
           prayerCompanionSummary ?? this.prayerCompanionSummary,
       weeklyActiveDays: weeklyActiveDays ?? this.weeklyActiveDays,
       weeklyActivityCount: weeklyActivityCount ?? this.weeklyActivityCount,
-      recentBookmarkRoute: recentBookmarkRoute ?? this.recentBookmarkRoute,
       heroMinutes: heroMinutes ?? this.heroMinutes,
       continueRecitation:
           identical(continueRecitation, _continueRecitationSentinel)
@@ -169,7 +166,6 @@ class HomeLoaded extends HomeState {
   final KhatmahPlan? activeKhatmah;
   final Object? khatmahError;
   final bool isRefreshing;
-  final TodayChecklist? todayChecklist;
   final AyahOfDay? ayahOfDay;
   final StreakRisk? streakRisk;
   final AudioResumePosition? audioResume;
@@ -183,7 +179,6 @@ class HomeLoaded extends HomeState {
   final PrayerCompanionDaySummary? prayerCompanionSummary;
   final int weeklyActiveDays;
   final int weeklyActivityCount;
-  final String? recentBookmarkRoute;
   final int heroMinutes;
   final ContinueRecitation? continueRecitation;
   final List<ActivityEvent> recentActivity;
@@ -231,7 +226,6 @@ class HomeLoaded extends HomeState {
     activeKhatmah,
     khatmahError,
     isRefreshing,
-    todayChecklist,
     ayahOfDay,
     streakRisk,
     audioResume,
@@ -245,7 +239,6 @@ class HomeLoaded extends HomeState {
     prayerCompanionSummary,
     weeklyActiveDays,
     weeklyActivityCount,
-    recentBookmarkRoute,
     heroMinutes,
     continueRecitation,
     recentActivity,

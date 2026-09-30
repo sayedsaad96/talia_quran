@@ -45,6 +45,9 @@ class KidsModeLoaded extends KidsModeState {
     this.leveledUpTo,
     this.lastMatchedWords = 0,
     this.lastTargetWords = 0,
+    this.silentAttempts = 0,
+    this.isReview = false,
+    this.recalledWords,
   });
 
   final int surahId;
@@ -85,6 +88,25 @@ class KidsModeLoaded extends KidsModeState {
   /// Total words in the latest evaluated recitation target.
   final int lastTargetWords;
 
+  /// Consecutive recordings in which no words were heard. Reset by any
+  /// attempt the recognizer actually heard (K21).
+  final int silentAttempts;
+
+  /// A review of an ayah the child already memorized: the session starts in
+  /// hidden-text recall, with no listening first (K28).
+  final bool isReview;
+
+  /// K32 — after a missed recitation, one flag per ayah word: recited right
+  /// or not. Null when there is nothing to show. Never the spoken text.
+  final List<bool>? recalledWords;
+
+  /// The text is hidden and the child may record: a review before its first
+  /// attempt, or a near miss that keeps new memorization in recitation.
+  bool get isAwaitingRecitation =>
+      sessionState.phase == V2SessionPhase.reciting &&
+      !isRecording &&
+      !isCompleted;
+
   /// True when the latest mismatch carries usable, genuinely encouraging
   /// word-level feedback — "you got X of Y" only makes sense when the child
   /// actually got some words right.
@@ -93,20 +115,41 @@ class KidsModeLoaded extends KidsModeState {
       lastMatchedWords > 0 &&
       lastTargetWords > 0;
 
+  /// The child is recalling the hidden ayah before reciting — the only
+  /// phase where "give me the start" is offered (Product Rules §5, K25).
+  bool get isRecallingFromMemory =>
+      sessionState.phase == V2SessionPhase.memorizing;
+
+  /// "Give me the start" was used for this ayah. Hints never decrease
+  /// within a session, so the first word stays revealed on later tries.
+  bool get firstWordRevealed =>
+      sessionState.hintTracker.levelFor(surahId, ayahNumber).index >=
+      V2HintLevel.firstWord.index;
+
+  /// The ayah's first word, taken verbatim from the displayed text.
+  String get firstWord => ayahText.trim().split(RegExp(r'\s+')).first;
+
   /// After this many repeated recitation mismatches the guardian-verified
   /// completion becomes available even though the failure is pedagogical —
   /// a child-voice STT false-negative loop must never trap the child in an
   /// unfailable mission.
   static const int kGuardianFallbackAfterMismatches = 3;
 
-  /// True for technical failures, or once the same recitation mismatch has
-  /// repeated [kGuardianFallbackAfterMismatches] times. A single textual
-  /// mismatch is never eligible for guardian override on its own.
+  /// Silence is usually a quiet child, not a fault — one retry comes first.
+  /// Repeated silence may mean the recognizer cannot hear this child's
+  /// voice, so the guardian may then confirm the recitation (K21).
+  static const int kGuardianFallbackAfterSilentAttempts = 2;
+
+  /// True for technical failures, once the same recitation mismatch has
+  /// repeated [kGuardianFallbackAfterMismatches] times, or once silence has
+  /// repeated [kGuardianFallbackAfterSilentAttempts] times. A single textual
+  /// mismatch or quiet attempt is never eligible for guardian override.
   bool get canUseGuardianFallback =>
       audioError != null ||
       recordingError == CubitMessageCodes.kidsMicPermissionDenied ||
       recordingError == CubitMessageCodes.kidsRecordingUnavailable ||
-      recordingError == CubitMessageCodes.kidsRecordingNotCaptured ||
+      (recordingError == CubitMessageCodes.kidsRecordingNotCaptured &&
+          silentAttempts >= kGuardianFallbackAfterSilentAttempts) ||
       (recordingError == CubitMessageCodes.kidsRecitationMismatch &&
           sessionState.failureTracker.failureCountFor(surahId, ayahNumber) >=
               kGuardianFallbackAfterMismatches);
@@ -132,6 +175,9 @@ class KidsModeLoaded extends KidsModeState {
     bool clearLevelUpTo = false,
     int? lastMatchedWords,
     int? lastTargetWords,
+    int? silentAttempts,
+    List<bool>? recalledWords,
+    bool clearRecalledWords = false,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -156,6 +202,11 @@ class KidsModeLoaded extends KidsModeState {
     leveledUpTo: clearLevelUpTo ? null : (leveledUpTo ?? this.leveledUpTo),
     lastMatchedWords: lastMatchedWords ?? this.lastMatchedWords,
     lastTargetWords: lastTargetWords ?? this.lastTargetWords,
+    isReview: isReview,
+    silentAttempts: silentAttempts ?? this.silentAttempts,
+    recalledWords: clearRecalledWords
+        ? null
+        : recalledWords ?? this.recalledWords,
   );
 
   @override
@@ -179,5 +230,8 @@ class KidsModeLoaded extends KidsModeState {
     leveledUpTo,
     lastMatchedWords,
     lastTargetWords,
+    silentAttempts,
+    isReview,
+    recalledWords,
   ];
 }

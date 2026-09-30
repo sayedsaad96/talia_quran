@@ -43,6 +43,8 @@ void main() {
 
   final variants = [
     ('ar_welcome', const Locale('ar'), 0, false),
+    ('ar_memorize', const Locale('ar'), 1, false),
+    ('ar_habit', const Locale('ar'), 2, false),
     ('ar_fork_adult', const Locale('ar'), 3, false),
     ('ar_fork_child', const Locale('ar'), 3, true),
     ('en_welcome', const Locale('en'), 0, false),
@@ -53,7 +55,7 @@ void main() {
     testWidgets('capture $name', (tester) async {
       // Asset I/O doesn't complete under fake async: warm the verse cache.
       await tester.runAsync(() async {
-        for (final (surah, ayah) in const [(1, 1), (1, 2), (1, 4), (73, 4)]) {
+        for (final (surah, ayah) in const [(1, 1), (17, 45), (1, 4), (73, 4)]) {
           await OnboardingSourceAyah.load(surah, ayah);
         }
       });

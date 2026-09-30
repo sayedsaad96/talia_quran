@@ -27,7 +27,10 @@ class HomeAyahOfDayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surahName = context.isArabic ? ayah.surahNameAr : ayah.surahNameEn;
-    final reference = context.l10n.surahAyahFormat(surahName, ayah.ayahNumber);
+    final reference = context.l10n.surahAyahFormat(
+      surahName,
+      context.numText(ayah.ayahNumber),
+    );
     final contextLabel = _contextLabel(context);
 
     return Padding(
@@ -64,6 +67,7 @@ class HomeAyahOfDayCard extends StatelessWidget {
                         child: Text(
                           context.l10n.ayahOfDaySurahMeta(
                             _revelationLabel(context, ayah.surahType!),
+                            ayah.surahAyahCount!,
                             _formatCount(context, ayah.surahAyahCount!),
                           ),
                           style: AppTypography.labelSmall.copyWith(

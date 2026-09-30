@@ -2,9 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/certificate/presentation/widgets/certificate_widget.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 
 void main() {
   group('CertificateType.khatmahReading', () {
+    test('khatmah honorific agrees with the recipient gender', () {
+      KhatmahHistoryEntry entry(KhatmahDedication d) => KhatmahHistoryEntry(
+        id: 'h',
+        khatmahNumber: 1,
+        title: 't',
+        startDate: DateTime(2026, 1, 1),
+        completedDate: DateTime(2026, 2, 1),
+        totalDays: 32,
+        dedication: d,
+        certificateId: 'khatmah-h',
+      );
+      expect(
+        entry(
+          const KhatmahDedication(
+            isDedicated: true,
+            recipientName: 'فاطمة',
+            condition: DedicationCondition.deceased,
+            recipientGender: DedicationGender.female,
+          ),
+        ).certificate!.dedication,
+        'فاطمة (رحمها الله)',
+      );
+      expect(
+        entry(
+          const KhatmahDedication(
+            isDedicated: true,
+            recipientName: 'أحمد',
+            condition: DedicationCondition.alive,
+            recipientGender: DedicationGender.male,
+          ),
+        ).certificate!.dedication,
+        'أحمد (حفظه الله)',
+      );
+      expect(
+        entry(
+          const KhatmahDedication(
+            isDedicated: true,
+            recipientName: 'سعاد',
+            condition: DedicationCondition.sick,
+          ),
+        ).certificate!.dedication,
+        'سعاد',
+      );
+    });
+
     test('contains khatmahReading in CertificateType.values', () {
       expect(CertificateType.values, contains(CertificateType.khatmahReading));
     });

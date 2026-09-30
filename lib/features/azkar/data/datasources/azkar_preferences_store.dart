@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'azkar_alias_registry.dart';
+
 /// Centralized persistence and state notification for Azkar and Duas user preferences.
 class AzkarPreferencesStore {
-  AzkarPreferencesStore([this._prefs]) {
+  AzkarPreferencesStore([this._prefs, this._aliases]) {
     final savedFavorites = _prefs?.getStringList(_keyFavoriteDuas) ?? const [];
     _favoritesNotifier = ValueNotifier<Set<String>>(Set<String>.from(savedFavorites));
 
@@ -23,6 +25,7 @@ class AzkarPreferencesStore {
   static const _keyQuietNight = 'azkar_quiet_night';
 
   final SharedPreferences? _prefs;
+  final AzkarAliasRegistry? _aliases;
   int _inMemoryTasbeehTarget = 33;
 
   late final ValueNotifier<Set<String>> _favoritesNotifier;
@@ -35,15 +38,27 @@ class AzkarPreferencesStore {
 
   Set<String> getFavoriteDuaIds() => Set.unmodifiable(_favoritesNotifier.value);
 
-  bool isFavorite(String id) => _favoritesNotifier.value.contains(id);
+  bool isFavorite(String id) {
+    final favorites = _favoritesNotifier.value;
+    if (favorites.contains(id)) return true;
+    final aliases = _aliases?.aliasesOf(id) ?? const <String>{};
+    return aliases.any(favorites.contains);
+  }
 
+  /// Toggles [id]. A record with hidden duplicate copies is one favorite: the
+  /// visible id is written and every copy id is cleared on removal.
   Future<bool> toggleFavorite(String id) async {
+    final aliases = _aliases?.aliasesOf(id) ?? const <String>{};
     final updated = Set<String>.from(_favoritesNotifier.value);
-    final isNowFavorite = updated.contains(id) ? !updated.remove(id) : updated.add(id);
+    final wasFavorite = updated.contains(id) || aliases.any(updated.contains);
+    updated
+      ..remove(id)
+      ..removeAll(aliases);
+    if (!wasFavorite) updated.add(id);
     _favoritesNotifier.value = updated;
 
     await _prefs?.setStringList(_keyFavoriteDuas, updated.toList());
-    return isNowFavorite;
+    return !wasFavorite;
   }
 
   // ─── Auto-Advance ──────────────────────────────────────────────────────

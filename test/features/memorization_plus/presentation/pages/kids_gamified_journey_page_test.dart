@@ -50,6 +50,39 @@ void main() {
       expect(selectedStage?.stageNumber, 2);
     });
 
+    testWidgets('a house finished since the last visit glows (K37)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+      int? askedSurah;
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState,
+            onBack: () {},
+            onStageSelected: (_) {},
+            loadCelebrations: (surahId, stages) async {
+              askedSurah = surahId;
+              return {1};
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(askedSurah, _loadedState.surahId);
+      expect(
+        find.byKey(const ValueKey('kids-house-celebration')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('tapping locked stage shows SnackBar, not navigation', (
       tester,
     ) async {

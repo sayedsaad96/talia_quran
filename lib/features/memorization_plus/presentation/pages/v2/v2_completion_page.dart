@@ -89,6 +89,7 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
                   ? l10n.closingSummaryReview
                   : l10n.closingSummaryMemorization(
                       finalState.passedAyahNumbers.length,
+                      context.numText(finalState.passedAyahNumbers.length),
                     ),
             ),
             const SizedBox(height: AppSpacing.lg),

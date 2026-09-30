@@ -13,6 +13,7 @@ class KhatmDuaData {
     this.reviewer,
     this.sourceLocator,
     this.version,
+    this.templatesEnabled = false,
   });
 
   final String arabicText;
@@ -25,6 +26,9 @@ class KhatmDuaData {
   final String? sourceLocator;
   final String? version;
 
+  /// `dedicationTemplatesReview` is approved and enabled.
+  final bool templatesEnabled;
+
   factory KhatmDuaData.fromJson(Map<String, dynamic> json) {
     return KhatmDuaData(
       arabicText: json['arabicText'] as String,
@@ -35,19 +39,41 @@ class KhatmDuaData {
       reviewer: json['reviewer'] as String?,
       sourceLocator: json['sourceLocator'] as String?,
       version: json['version'] as String?,
+      templatesEnabled: switch (json['dedicationTemplatesReview']) {
+        {'reviewStatus': 'approved', 'enabled': true} => true,
+        _ => false,
+      },
+      // Quarantined templates are never read as approved inserts.
       dedicationInserts: Map<String, String>.from(
-        (json['quarantinedDedicationInserts'] ??
-                json['dedicationInserts'] ??
-                const {})
-            as Map,
+        (json['dedicationInserts'] ?? const {}) as Map,
       ),
     );
   }
 
-  /// Legacy templates are retained for review, never inferred from a name.
-  /// No gender is modeled and no exact personalized wording is approved.
-  String getDedicationInsert(DedicationCondition condition, [String? name]) =>
-      '';
+  bool get isApproved => reviewStatus == 'approved';
+
+  bool get templatesApproved => isApproved && templatesEnabled;
+
+  /// Approved insert for [condition] and [gender]; '' when not approved, the
+  /// gender is unknown, or no reviewed template exists. A legacy flat key is
+  /// masculine and therefore serves only [DedicationGender.male].
+  String getDedicationInsert(
+    DedicationCondition condition,
+    DedicationGender? gender, [
+    String? name,
+  ]) {
+    if (!templatesApproved || gender == null) return '';
+    final template =
+        dedicationInserts['${condition.name}_${gender.name}'] ??
+        (gender == DedicationGender.male
+            ? dedicationInserts[condition.name]
+            : null);
+    if (template == null || template.isEmpty) return '';
+    if (name != null && name.trim().isNotEmpty) {
+      return template.replaceAll('{name}', name.trim());
+    }
+    return template.replaceAll('{name}', '').replaceAll('  ', ' ').trim();
+  }
 }
 
 class KhatmDuaDatasource {

@@ -172,4 +172,44 @@ void main() {
 
     expect(latestDedication?.customNote, 'اللهم اغفر له وارحمه');
   });
+
+  testWidgets('choosing the mother relationship implies a female recipient', (
+    tester,
+  ) async {
+    KhatmahDedication? latestDedication;
+    await tester.pumpWidget(
+      buildWidget(
+        initialDedication: const KhatmahDedication(isDedicated: true),
+        onChanged: (d) => latestDedication = d,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('khatmah_dedication_relationship')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mother').last);
+    await tester.pumpAndSettle();
+
+    expect(latestDedication?.relationship, 'الأم');
+    expect(latestDedication?.recipientGender, DedicationGender.female);
+  });
+
+  testWidgets('gender chips set the recipient gender', (tester) async {
+    KhatmahDedication? latestDedication;
+    await tester.pumpWidget(
+      buildWidget(
+        initialDedication: const KhatmahDedication(isDedicated: true),
+        onChanged: (d) => latestDedication = d,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('khatmah_dedication_gender_male')));
+    await tester.pumpAndSettle();
+    expect(latestDedication?.recipientGender, DedicationGender.male);
+
+    await tester.tap(find.byKey(const Key('khatmah_dedication_gender_female')));
+    await tester.pumpAndSettle();
+    expect(latestDedication?.recipientGender, DedicationGender.female);
+  });
 }

@@ -32,12 +32,20 @@ class KhatmahHistoryEntry extends Equatable {
         dedication!.recipientName != null &&
         dedication!.recipientName!.trim().isNotEmpty) {
       final name = dedication!.recipientName!.trim();
-      final suffix = switch (dedication!.condition) {
-        DedicationCondition.alive => ' (حفظه الله)',
-        DedicationCondition.deceased => ' (رحمه الله)',
-        DedicationCondition.sick => ' (شفاه الله)',
-        null => '',
-      };
+      // An unknown gender gets no honorific rather than a masculine guess.
+      final gender = dedication!.effectiveGender;
+      final female = gender == DedicationGender.female;
+      final suffix = gender == null
+          ? ''
+          : switch (dedication!.condition) {
+              DedicationCondition.alive =>
+                female ? ' (حفظها الله)' : ' (حفظه الله)',
+              DedicationCondition.deceased =>
+                female ? ' (رحمها الله)' : ' (رحمه الله)',
+              DedicationCondition.sick =>
+                female ? ' (شفاها الله)' : ' (شفاه الله)',
+              null => '',
+            };
       if (suffix.isNotEmpty && !name.contains('الله')) {
         dedicationStr = '$name$suffix';
       } else {

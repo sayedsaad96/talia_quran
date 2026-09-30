@@ -330,5 +330,265 @@ void main() {
         await expectation;
       },
     );
+
+    group('journey continuation (K17/K18)', () {
+      KidsJourneyStage done(int surahId) => KidsJourneyStage(
+        stageNumber: 1,
+        surahId: surahId,
+        startAyah: 1,
+        endAyah: 3,
+        completedAyahs: const [1, 2, 3],
+        status: KidsJourneyStageStatus.completed,
+      );
+      KidsSessionLog newToday() => KidsSessionLog(
+        id: 'today',
+        surahId: 114,
+        ayahNumber: 3,
+        repeatsCompleted: 3,
+        pointsEarned: 10,
+        completedAt: DateTime.now(),
+        missionType: KidsMissionType.newMemorization,
+      );
+
+      void stubJourneys(Map<int, List<KidsJourneyStage>> bySurah) {
+        when(mockGetJourney(any)).thenAnswer((invocation) async {
+          final params =
+              invocation.positionalArguments.first as GetKidsJourneyParams;
+          return Right(bySurah[params.surahId] ?? const []);
+        });
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(any),
+        ).thenAnswer((_) async => const Left(CacheFailure()));
+      }
+
+      test('a finished surah continues at the real frontier', () async {
+        stubJourneys({
+          114: [done(114)],
+          113: [done(113)],
+          112: const [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 112,
+              startAyah: 1,
+              endAyah: 4,
+              completedAyahs: [1, 2],
+              status: KidsJourneyStageStatus.current,
+            ),
+          ],
+        });
+
+        await cubit.load(surahId: 114);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.nextMission?.surahId, 112);
+        expect(loaded.nextMission?.ayahNumbers, const [3]);
+      });
+
+      test(
+        'a surah finished on a capped day is a day end, not the journey end',
+        () async {
+          await cubit.close();
+          cubit = KidsJourneyCubit(
+            mockGetJourney,
+            mockGetProgress,
+            mockQuranRepo,
+            sessionLogsLoader: () async => [newToday()],
+            policyLoader: () async => KidsSessionPolicy.forAge(6),
+          );
+          stubJourneys({
+            114: [done(114)],
+          });
+
+          await cubit.load(surahId: 114);
+
+          final loaded = cubit.state as KidsJourneyLoaded;
+          expect(loaded.nextMission, isNull);
+          expect(loaded.dailyGoalCap, 1);
+        },
+      );
+
+      test('home follows the journey past a finished surah (K20)', () async {
+        const open113 = KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 113,
+          startAyah: 1,
+          endAyah: 5,
+          completedAyahs: [1],
+          status: KidsJourneyStageStatus.current,
+        );
+        stubJourneys({
+          114: [done(114)],
+          113: const [open113],
+        });
+
+        await cubit.load(surahId: 114, followFrontier: true);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.surahId, 113);
+        expect(loaded.stages, const [open113]);
+        expect(loaded.currentStage, open113);
+        expect(loaded.nextMission?.surahId, 113);
+        expect(loaded.nextMission?.ayahNumbers, const [2]);
+      });
+
+      test('the map keeps the surah it was opened for', () async {
+        stubJourneys({
+          114: [done(114)],
+          113: const [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 113,
+              startAyah: 1,
+              endAyah: 5,
+              completedAyahs: [],
+              status: KidsJourneyStageStatus.current,
+            ),
+          ],
+        });
+
+        await cubit.load(surahId: 114);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.surahId, 114);
+        expect(loaded.nextMission?.surahId, 113);
+      });
+
+      test('names the surah of a review mission elsewhere (K20)', () async {
+        await cubit.close();
+        cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          reviewRecordsLoader: () async => [
+            AyahReviewRecord(
+              surahId: 112,
+              ayahNumber: 2,
+              strengthLevel: 3,
+              intervalDays: 1,
+              lastReviewedAt: DateTime.utc(2026, 1, 1),
+              nextReviewDate: DateTime.utc(2026, 1, 2),
+              totalReviews: 1,
+              lastRating: PerformanceRating.average,
+              createdByMode: ReviewRecordCreatedByMode.kidsMode,
+            ),
+          ],
+        );
+        stubJourneys({
+          114: const [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 114,
+              startAyah: 1,
+              endAyah: 6,
+              completedAyahs: [1],
+              status: KidsJourneyStageStatus.current,
+            ),
+          ],
+        });
+        when(mockQuranRepo.getSurahDetail(112)).thenAnswer(
+          (_) async => const Right(
+            SurahDetail(
+              surah: Surah(
+                id: 112,
+                nameAr: 'الإخلاص',
+                nameEn: 'Al-Ikhlas',
+                ayahCount: 4,
+                juz: 30,
+                type: 'meccan',
+                page: 604,
+              ),
+              ayahs: [],
+            ),
+          ),
+        );
+
+        await cubit.load(surahId: 114, followFrontier: true);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.surahId, 114);
+        expect(loaded.nextMission?.surahId, 112);
+        expect(loaded.missionSurahName, 'الإخلاص');
+      });
+
+      test('a finished journey is never reported as a capped day', () async {
+        await cubit.close();
+        cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          sessionLogsLoader: () async => [newToday()],
+          policyLoader: () async => KidsSessionPolicy.forAge(6),
+        );
+        stubJourneys({
+          78: [done(78)],
+        });
+
+        await cubit.load(surahId: 78);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.nextMission, isNull);
+        expect(loaded.dailyGoalCap, isNull);
+      });
+    });
+  });
+
+  group('missionStage', () {
+    const needsReview = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: [1, 2, 3],
+      status: KidsJourneyStageStatus.needsReview,
+    );
+    const current = KidsJourneyStage(
+      stageNumber: 2,
+      surahId: 114,
+      startAyah: 4,
+      endAyah: 6,
+      completedAyahs: [],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    test('describes the stage the new mission really opens (K19)', () {
+      const state = KidsJourneyLoaded(
+        surahId: 114,
+        stages: [needsReview, current],
+        progress: KidsProgress.initial(),
+        nextMission: KidsNextMission(
+          type: KidsMissionType.newMemorization,
+          surahId: 114,
+          ayahNumbers: [4],
+        ),
+      );
+
+      expect(state.missionStage, current);
+    });
+
+    test('falls back to the current stage without a mission', () {
+      const state = KidsJourneyLoaded(
+        surahId: 114,
+        stages: [needsReview, current],
+        progress: KidsProgress.initial(),
+      );
+
+      expect(state.missionStage, needsReview);
+    });
+
+    test('has no stage for a mission in another surah', () {
+      const state = KidsJourneyLoaded(
+        surahId: 114,
+        stages: [needsReview],
+        progress: KidsProgress.initial(),
+        nextMission: KidsNextMission(
+          type: KidsMissionType.newMemorization,
+          surahId: 113,
+          ayahNumbers: [1],
+        ),
+      );
+
+      expect(state.missionStage, isNull);
+    });
   });
 }

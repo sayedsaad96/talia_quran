@@ -20,6 +20,14 @@ abstract final class OnboardingPalette {
   static const emerald = Color(0xFF10B981);
   static const emeraldText = Color(0xFF34D399);
 
+  /// The committed night ground. Pinned here so the journey keeps its deep
+  /// teal-black even though the app's dark theme is a lighter charcoal-green
+  /// (distinct from the pure-black OLED theme).
+  static const nightBackground = Color(0xFF021210);
+  static const nightSurface = Color(0xFF041D1A);
+  static const nightSurfaceVariant = Color(0xFF0A2925);
+  static const nightDivider = Color(0xFF103B35);
+
   /// Inner surface of the preview mock cards.
   static const previewSurface = Color(0xFF0C2B27);
 

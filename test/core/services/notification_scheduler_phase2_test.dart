@@ -10,6 +10,7 @@ import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/services/khatmah_reminder_policy.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart';
@@ -225,12 +226,9 @@ void main() {
     ).thenAnswer((_) async {});
 
     when(
-      () => mockNotificationService.scheduleKhatmahReminder(
+      () => mockNotificationService.scheduleKhatmahReminders(
         title: any(named: 'title'),
-        body: any(named: 'body'),
-        payload: any(named: 'payload'),
-        hour: any(named: 'hour'),
-        minute: any(named: 'minute'),
+        reminders: any(named: 'reminders'),
       ),
     ).thenAnswer((_) async {});
 
@@ -419,16 +417,41 @@ void main() {
         await scheduler.refreshNotifications(l10n);
 
         verify(
-          () => mockNotificationService.scheduleKhatmahReminder(
+          () => mockNotificationService.scheduleKhatmahReminders(
             title: l10n.notificationKhatmahTitle,
-            body: any(named: 'body'),
-            payload: any(named: 'payload'),
-            hour: 17,
-            minute: 0,
+            reminders: any(
+              named: 'reminders',
+              that: hasLength(KhatmahReminderPolicy.maxSlots),
+            ),
           ),
         ).called(1);
       },
     );
+
+    test('no active khatmah cancels reminders instead of nudging', () async {
+      SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.khatmahReminderPreferenceKey: true,
+      });
+      when(
+        () => mockGetActiveKhatmahUsecase.call(),
+      ).thenAnswer((_) async => null);
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        getActiveKhatmah: mockGetActiveKhatmahUsecase,
+      );
+
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+
+      verify(() => mockNotificationService.cancelKhatmahReminder()).called(1);
+      verifyNever(
+        () => mockNotificationService.scheduleKhatmahReminders(
+          title: any(named: 'title'),
+          reminders: any(named: 'reminders'),
+        ),
+      );
+    });
 
     test('cancels Khatmah reminder when disabled', () async {
       SharedPreferences.setMockInitialValues({
@@ -442,12 +465,9 @@ void main() {
 
       verify(() => mockNotificationService.cancelKhatmahReminder()).called(1);
       verifyNever(
-        () => mockNotificationService.scheduleKhatmahReminder(
+        () => mockNotificationService.scheduleKhatmahReminders(
           title: any(named: 'title'),
-          body: any(named: 'body'),
-          payload: any(named: 'payload'),
-          hour: any(named: 'hour'),
-          minute: any(named: 'minute'),
+          reminders: any(named: 'reminders'),
         ),
       );
     });

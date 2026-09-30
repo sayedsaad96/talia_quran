@@ -9,6 +9,17 @@ import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 /// that were extracted into the ARB localization files during the cleanup
 /// sprint. Each entry maps a source file to the literals that must not return.
 const _removedLiterals = <String, List<String>>{
+  'lib/features/memorization_plus/data/repositories/collaborators/memorization_parent_access_service.dart':
+      [
+        'سجّل الدخول أولاً',
+        'Guardian linking requires signing in first',
+        'Guardian linking is only for children',
+        'Parent guardian mode is only available for adults',
+      ],
+  'lib/features/memorization_plus/data/repositories/collaborators/memorization_kids_cloud_sync_service.dart':
+      ['سجّل الدخول أولاً', 'اكتب اسم المكافأة أولاً'],
+  'lib/features/memorization_plus/data/repositories/collaborators/memorization_kids_local_service.dart':
+      ['اكتب اسم المكافأة أولاً', 'يمكن إضافة 3 مكافآت فقط'],
   'lib/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart':
       ['أدخل رمزًا من 4 أرقام', 'رمز غير صحيح'],
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
@@ -120,7 +131,12 @@ void main() {
       final english =
           jsonDecode(File('lib/core/l10n/app_en.arb').readAsStringSync())
               as Map<String, dynamic>;
-      final placeholders = RegExp(r'\{[^}]+\}');
+      // Placeholders plus ICU plural/select syntax (N8): the selector
+      // keywords are syntax, not user-visible Latin text.
+      final placeholders = RegExp(
+        r'\{\w+, (?:plural|select),|(?:=\d+|zero|one|two|few|many|other)\{'
+        r'|\{\w+\}|[{}]',
+      );
       final latinLetters = RegExp(r'[A-Za-z]');
       final arabicLetters = RegExp(r'[\u0600-\u06FF]');
 

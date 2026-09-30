@@ -908,6 +908,30 @@ abstract class AppLocalizations {
   /// **'الدخول إلى وضع التركيز'**
   String get enterFocusMode;
 
+  /// No description provided for @readerGoToPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتقل إلى صفحة أو سورة أو جزء'**
+  String get readerGoToPage;
+
+  /// No description provided for @readerTajweedColors.
+  ///
+  /// In ar, this message translates to:
+  /// **'ألوان التجويد'**
+  String get readerTajweedColors;
+
+  /// No description provided for @readerTajweedColorsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلوين أحكام التجويد في صفحة المصحف'**
+  String get readerTajweedColorsHint;
+
+  /// No description provided for @surahInProgressBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد الحفظ'**
+  String get surahInProgressBadge;
+
   /// No description provided for @exitFocusMode.
   ///
   /// In ar, this message translates to:
@@ -1202,12 +1226,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أسود كامل (OLED)'**
   String get pureBlackTheme;
-
-  /// No description provided for @pureBlackThemeHint.
-  ///
-  /// In ar, this message translates to:
-  /// **'خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED'**
-  String get pureBlackThemeHint;
 
   /// No description provided for @changeMemorizationPath.
   ///
@@ -2223,6 +2241,18 @@ abstract class AppLocalizations {
   /// **'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا'**
   String get azkarFavoritesEmptyDesc;
 
+  /// No description provided for @azkarFavoriteAdd.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة إلى المفضلة'**
+  String get azkarFavoriteAdd;
+
+  /// No description provided for @azkarFavoriteRemove.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة من المفضلة'**
+  String get azkarFavoriteRemove;
+
   /// No description provided for @azkarSearchNoResultsTitle.
   ///
   /// In ar, this message translates to:
@@ -2820,7 +2850,7 @@ abstract class AppLocalizations {
   /// No description provided for @achievementDescJuzAmma.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ ٥٦٤ آية (جزء عمّ)'**
+  /// **'احفظ جزء عمّ كاملاً'**
   String get achievementDescJuzAmma;
 
   /// No description provided for @achievementTitleOneJuzMemorized.
@@ -3549,18 +3579,6 @@ abstract class AppLocalizations {
   /// **'انمُ'**
   String get splashFeatureGrow;
 
-  /// No description provided for @onboardingWelcomeTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'مرحباً بك في تالية'**
-  String get onboardingWelcomeTitle;
-
-  /// No description provided for @onboardingWelcomeSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'مساحة قرآنية هادئة ومتقنة تعينك على التلاوة والتدبر، والحفظ والمراجعة الذكية، وبناء ورد يومي مستدام.'**
-  String get onboardingWelcomeSubtitle;
-
   /// No description provided for @onboardingStartJourney.
   ///
   /// In ar, this message translates to:
@@ -3576,13 +3594,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSlide1Subtitle.
   ///
   /// In ar, this message translates to:
-  /// **'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء مع التفسير الميسر.'**
+  /// **'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء، وخطط ختمة بالوتيرة التي تناسبك.'**
   String get onboardingSlide1Subtitle;
 
   /// No description provided for @onboardingBentoMushafSurah.
   ///
   /// In ar, this message translates to:
-  /// **'سورة الفاتحة'**
+  /// **'سورة الإسراء'**
   String get onboardingBentoMushafSurah;
 
   /// No description provided for @onboardingBentoListeningTitle.
@@ -3597,17 +3615,23 @@ abstract class AppLocalizations {
   /// **'استماع وتكرار صوتي'**
   String get onboardingBentoListeningDesc;
 
-  /// No description provided for @onboardingBentoTafsirTitle.
+  /// No description provided for @onboardingBentoKhatmahTitle.
   ///
   /// In ar, this message translates to:
-  /// **'تفسير ميسر'**
-  String get onboardingBentoTafsirTitle;
+  /// **'خطط الختمة'**
+  String get onboardingBentoKhatmahTitle;
 
-  /// No description provided for @onboardingBentoTafsirDesc.
+  /// No description provided for @onboardingBentoKhatmahDesc.
   ///
   /// In ar, this message translates to:
-  /// **'معاني الآيات فوراً'**
-  String get onboardingBentoTafsirDesc;
+  /// **'وتيرة يومية تناسبك'**
+  String get onboardingBentoKhatmahDesc;
+
+  /// No description provided for @onboardingBentoKhatmahBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد يومي'**
+  String get onboardingBentoKhatmahBadge;
 
   /// No description provided for @onboardingSlide2Title.
   ///
@@ -3657,6 +3681,30 @@ abstract class AppLocalizations {
   /// **'تذكير تلقائي لمنع النسيان'**
   String get onboardingBentoReviewScheduleDesc;
 
+  /// No description provided for @onboardingBentoStatusMastered.
+  ///
+  /// In ar, this message translates to:
+  /// **'متقن راسخ'**
+  String get onboardingBentoStatusMastered;
+
+  /// No description provided for @onboardingBentoStatusDueSoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة قريبة'**
+  String get onboardingBentoStatusDueSoon;
+
+  /// No description provided for @onboardingBentoStatusNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'جديد'**
+  String get onboardingBentoStatusNew;
+
+  /// No description provided for @onboardingBentoSmartAlert.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير ذكي'**
+  String get onboardingBentoSmartAlert;
+
   /// No description provided for @onboardingSlide3Title.
   ///
   /// In ar, this message translates to:
@@ -3684,7 +3732,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingBentoOfflineBadge.
   ///
   /// In ar, this message translates to:
-  /// **'يعمل ١٠٠٪ دون إنترنت'**
+  /// **'يعمل دون إنترنت'**
   String get onboardingBentoOfflineBadge;
 
   /// No description provided for @onboardingBentoKidsTeaserTitle.
@@ -4496,6 +4544,72 @@ abstract class AppLocalizations {
   /// **'حاول التسميع بدون مساعدة'**
   String get kidsGamifiedTestStepSubtitle;
 
+  /// No description provided for @kidsGamifiedTryFromMemory.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب من ذاكرتك'**
+  String get kidsGamifiedTryFromMemory;
+
+  /// No description provided for @kidsGamifiedTryToRemember.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول تتذكّر الآية'**
+  String get kidsGamifiedTryToRemember;
+
+  /// No description provided for @kidsGamifiedGiveMeTheStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعطني البداية'**
+  String get kidsGamifiedGiveMeTheStart;
+
+  /// No description provided for @kidsGamifiedFirstWordShown.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه أول كلمة، أكمل أنت'**
+  String get kidsGamifiedFirstWordShown;
+
+  /// No description provided for @kidsGamifiedReviewChallenge.
+  ///
+  /// In ar, this message translates to:
+  /// **'⭐ تحدّي المراجعة'**
+  String get kidsGamifiedReviewChallenge;
+
+  /// No description provided for @kidsGamifiedReviewChallengeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تتذكّرها؟ سمّعها من ذاكرتك'**
+  String get kidsGamifiedReviewChallengeSubtitle;
+
+  /// No description provided for @kidsGamifiedRemindMe.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكّرني'**
+  String get kidsGamifiedRemindMe;
+
+  /// No description provided for @kidsWelcomeBackTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أهلاً بعودتك!'**
+  String get kidsWelcomeBackTitle;
+
+  /// No description provided for @kidsWelcomeBackSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نبدأ بخطوة سهلة'**
+  String get kidsWelcomeBackSubtitle;
+
+  /// No description provided for @kidsGamifiedEnoughForToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! هذا وقت كافٍ لليوم، يمكنك التوقف.'**
+  String get kidsGamifiedEnoughForToday;
+
+  /// No description provided for @parentSupportTip.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّبا معاً: استمعا للآية مرتين، ثم دع طفلك يبدأ بأول كلمة'**
+  String get parentSupportTip;
+
   /// No description provided for @kidsGamifiedStartMission.
   ///
   /// In ar, this message translates to:
@@ -4793,19 +4907,19 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationHubReviewSectionTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مراجعة بالتسميع'**
+  /// **'المراجعة'**
   String get memorizationHubReviewSectionTitle;
 
   /// No description provided for @memorizationHubReviewSectionSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).'**
+  /// **'سمّع ما حفظته من ذاكرتك، ويقيّم التطبيق تسميعك.'**
   String get memorizationHubReviewSectionSubtitle;
 
   /// No description provided for @memorizationHubReviewCardDescription.
   ///
   /// In ar, this message translates to:
-  /// **'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.'**
+  /// **'سمّع الآيات المستحقة للمراجعة من حفظك.'**
   String get memorizationHubReviewCardDescription;
 
   /// No description provided for @memorizationHubDailyPlanSubtitle.
@@ -4853,7 +4967,7 @@ abstract class AppLocalizations {
   /// No description provided for @listeningReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مراجعة بالسماع'**
+  /// **'اختبار الاستماع'**
   String get listeningReviewTitle;
 
   /// No description provided for @listeningReviewHubDescription.
@@ -4901,7 +5015,7 @@ abstract class AppLocalizations {
   /// No description provided for @listeningReviewNotEnoughBody.
   ///
   /// In ar, this message translates to:
-  /// **'تحتاج المراجعة بالسماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.'**
+  /// **'يحتاج اختبار الاستماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.'**
   String get listeningReviewNotEnoughBody;
 
   /// No description provided for @listeningReviewErrorBody.
@@ -5221,6 +5335,168 @@ abstract class AppLocalizations {
   /// **'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
   String get parentDashboardResetPin;
 
+  /// No description provided for @parentDashboardForgotPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت الرمز؟'**
+  String get parentDashboardForgotPin;
+
+  /// No description provided for @parentDashboardForgotPinTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة رمز ولي الأمر'**
+  String get parentDashboardForgotPinTitle;
+
+  /// No description provided for @parentDashboardForgotPinBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'للتأكد أنك ولي الأمر، أدخل كلمة مرور حسابك {email}. بعدها تنشئ رمزاً جديداً، وتبقى المكافآت والإعدادات كما هي.'**
+  String parentDashboardForgotPinBody(String email);
+
+  /// No description provided for @parentDashboardForgotPinConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقّق'**
+  String get parentDashboardForgotPinConfirm;
+
+  /// No description provided for @parentDashboardAccountPasswordIncorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة مرور الحساب غير صحيحة'**
+  String get parentDashboardAccountPasswordIncorrect;
+
+  /// No description provided for @parentDashboardAccountCheckUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر التحقق من الحساب الآن. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.'**
+  String get parentDashboardAccountCheckUnavailable;
+
+  /// No description provided for @parentDashboardChangePin.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير رمز ولي الأمر'**
+  String get parentDashboardChangePin;
+
+  /// No description provided for @parentDashboardChangePinConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستنشئ رمزاً جديداً الآن. تبقى المكافآت والإعدادات كما هي.'**
+  String get parentDashboardChangePinConfirm;
+
+  /// No description provided for @guardianErrorSignInRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل الدخول بحسابك أولاً ثم أعد المحاولة.'**
+  String get guardianErrorSignInRequired;
+
+  /// No description provided for @guardianErrorCloudUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط الأطفال غير متاح في هذا الإصدار لأن المزامنة السحابية غير مفعّلة.'**
+  String get guardianErrorCloudUnavailable;
+
+  /// No description provided for @guardianErrorOnlyForChildren.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط ولي الأمر متاح لحسابات الأطفال فقط.'**
+  String get guardianErrorOnlyForChildren;
+
+  /// No description provided for @guardianErrorAlreadyLinked.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحساب مرتبط بولي أمر بالفعل.'**
+  String get guardianErrorAlreadyLinked;
+
+  /// No description provided for @guardianErrorParentModeAdultsOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'وضع ولي الأمر متاح لمسار الكبار فقط.'**
+  String get guardianErrorParentModeAdultsOnly;
+
+  /// No description provided for @guardianErrorLinkCodeInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز الربط غير صحيح أو انتهت صلاحيته. اطلب من الطفل إنشاء رمز جديد ثم أعد المحاولة.'**
+  String get guardianErrorLinkCodeInvalid;
+
+  /// No description provided for @guardianErrorChildHasGuardian.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الطفل مرتبط بولي أمر آخر. يجب فك الربط الحالي أولاً.'**
+  String get guardianErrorChildHasGuardian;
+
+  /// No description provided for @guardianErrorSameAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.'**
+  String get guardianErrorSameAccount;
+
+  /// No description provided for @parentRewardErrorTitleRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسم المكافأة أولاً.'**
+  String get parentRewardErrorTitleRequired;
+
+  /// No description provided for @parentRewardErrorLimitReached.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكن إضافة 3 مكافآت فقط.'**
+  String get parentRewardErrorLimitReached;
+
+  /// No description provided for @childErrorNicknameInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسماً من حرف واحد إلى {max} حرفاً.'**
+  String childErrorNicknameInvalid(int max);
+
+  /// No description provided for @childErrorAgeInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر عمراً بين {min} و{max} سنة.'**
+  String childErrorAgeInvalid(int min, int max);
+
+  /// No description provided for @guardianErrorChildNotLinked.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الطفل لم يعد مرتبطاً بحسابك.'**
+  String get guardianErrorChildNotLinked;
+
+  /// No description provided for @childErrorIdentityUpdateUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.'**
+  String get childErrorIdentityUpdateUnavailable;
+
+  /// No description provided for @childAgeYears.
+  ///
+  /// In ar, this message translates to:
+  /// **'{age, plural, =1{سنة واحدة} =2{سنتان} few{{age} سنوات} other{{age} سنة}}'**
+  String childAgeYears(int age);
+
+  /// No description provided for @childEditIdentity.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل اسم الطفل وعمره'**
+  String get childEditIdentity;
+
+  /// No description provided for @childIdentitySaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ بيانات الطفل، وتظهر على جهازه بعد المزامنة التالية.'**
+  String get childIdentitySaved;
+
+  /// No description provided for @kidsLinkGuardianTileTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط ولي الأمر'**
+  String get kidsLinkGuardianTileTitle;
+
+  /// No description provided for @kidsLinkGuardianTileSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج رمز ولي الأمر. بعد الربط يتابع ولي الأمر تقدّمك من جهازه.'**
+  String get kidsLinkGuardianTileSubtitle;
+
   /// No description provided for @parentDashboardTodaySummary.
   ///
   /// In ar, this message translates to:
@@ -5506,14 +5782,18 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPlanHeaderSummary.
   ///
   /// In ar, this message translates to:
-  /// **'{total} عنصر • {completed} مكتمل'**
-  String dailyPlanHeaderSummary(int total, int completed);
+  /// **'{total, plural, =0{{totalText} عنصر} =1{عنصر واحد} =2{عنصران} few{{totalText} عناصر} many{{totalText} عنصرًا} other{{totalText} عنصر}} • {completedText} مكتمل'**
+  String dailyPlanHeaderSummary(
+    int total,
+    String totalText,
+    String completedText,
+  );
 
   /// No description provided for @dailyPlanProgressCount.
   ///
   /// In ar, this message translates to:
   /// **'{completed} من {total}'**
-  String dailyPlanProgressCount(int completed, int total);
+  String dailyPlanProgressCount(String completed, String total);
 
   /// No description provided for @dailyPlanAllDoneShort.
   ///
@@ -5524,8 +5804,8 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPlanRemainingItems.
   ///
   /// In ar, this message translates to:
-  /// **'تبقّى {count} عناصر'**
-  String dailyPlanRemainingItems(int count);
+  /// **'{count, plural, =1{تبقّى عنصر واحد} =2{تبقّى عنصران} few{تبقّى {countText} عناصر} many{تبقّى {countText} عنصرًا} other{تبقّى {countText} عنصر}}'**
+  String dailyPlanRemainingItems(int count, String countText);
 
   /// No description provided for @dailyPlanAyahTitle.
   ///
@@ -5537,7 +5817,7 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'{surah} · آية {ayahNumber}'**
-  String dailyPlanSurahAyahTitle(String surah, int ayahNumber);
+  String dailyPlanSurahAyahTitle(String surah, String ayahNumber);
 
   /// No description provided for @dailyPlanRecordStats.
   ///
@@ -5776,8 +6056,8 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanSurahAyahLimit.
   ///
   /// In ar, this message translates to:
-  /// **'هذه السورة فيها {maxAyah} آيات'**
-  String customPlanSurahAyahLimit(int maxAyah);
+  /// **'هذه السورة فيها {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
+  String customPlanSurahAyahLimit(int count, String countText);
 
   /// No description provided for @customPlanAdult.
   ///
@@ -5854,8 +6134,8 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanApproxWeeks.
   ///
   /// In ar, this message translates to:
-  /// **'{count} أسبوع تقريباً'**
-  String customPlanApproxWeeks(int count);
+  /// **'{count, plural, =0{{countText} أسبوع} =1{أسبوع واحد} =2{أسبوعان} few{{countText} أسابيع} many{{countText} أسبوعًا} other{{countText} أسبوع}} تقريبًا'**
+  String customPlanApproxWeeks(int count, String countText);
 
   /// No description provided for @customPlanApproxMonths.
   ///
@@ -5872,8 +6152,13 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanEstimatedScope.
   ///
   /// In ar, this message translates to:
-  /// **'{surahs} سورة • ~{ayahs} آية'**
-  String customPlanEstimatedScope(int surahs, int ayahs);
+  /// **'{surahs, plural, =0{{surahsText} سورة} =1{سورة واحدة} =2{سورتان} few{{surahsText} سور} many{{surahsText} سورة} other{{surahsText} سورة}} • ~{ayahs, plural, =0{{ayahsText} آية} =1{آية واحدة} =2{آيتان} few{{ayahsText} آيات} many{{ayahsText} آية} other{{ayahsText} آية}}'**
+  String customPlanEstimatedScope(
+    int surahs,
+    String surahsText,
+    int ayahs,
+    String ayahsText,
+  );
 
   /// No description provided for @customPlanQuickPresetTitle.
   ///
@@ -5968,14 +6253,23 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanSummaryLoad.
   ///
   /// In ar, this message translates to:
-  /// **'{ayahsPerDay} آيات يومياً • {daysPerWeek} أيام أسبوعياً'**
-  String customPlanSummaryLoad(int ayahsPerDay, int daysPerWeek);
+  /// **'{ayahsPerDay, plural, =0{{ayahsText} آية} =1{آية واحدة} =2{آيتان} few{{ayahsText} آيات} many{{ayahsText} آية} other{{ayahsText} آية}} يوميًا • {daysPerWeek, plural, =0{{daysText} يوم} =1{يوم واحد} =2{يومان} few{{daysText} أيام} many{{daysText} يومًا} other{{daysText} يوم}} أسبوعيًا'**
+  String customPlanSummaryLoad(
+    int ayahsPerDay,
+    String ayahsText,
+    int daysPerWeek,
+    String daysText,
+  );
 
   /// No description provided for @customPlanSummarySession.
   ///
   /// In ar, this message translates to:
-  /// **'{minutes} دقيقة للجلسة • مستوى {difficulty}'**
-  String customPlanSummarySession(int minutes, Object difficulty);
+  /// **'{minutes, plural, =0{{minutesText} دقيقة} =1{دقيقة واحدة} =2{دقيقتان} few{{minutesText} دقائق} many{{minutesText} دقيقة} other{{minutesText} دقيقة}} للجلسة • مستوى {difficulty}'**
+  String customPlanSummarySession(
+    int minutes,
+    String minutesText,
+    String difficulty,
+  );
 
   /// No description provided for @memorizationPathSelectionFailedTitle.
   ///
@@ -6079,11 +6373,23 @@ abstract class AppLocalizations {
   /// **'صفحة {pageNumber}'**
   String kidsQuranPageLabel(int pageNumber);
 
-  /// No description provided for @kidsQuranSwipeHint.
+  /// No description provided for @kidsQuranLongPressHint.
   ///
   /// In ar, this message translates to:
-  /// **'اسحب بهدوء للصفحة التالية'**
-  String get kidsQuranSwipeHint;
+  /// **'اضغط مطولاً على أي آية لتسمعها'**
+  String get kidsQuranLongPressHint;
+
+  /// No description provided for @kidsQuranListenPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع للصفحة'**
+  String get kidsQuranListenPage;
+
+  /// No description provided for @kidsQuranPausePage.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف'**
+  String get kidsQuranPausePage;
 
   /// No description provided for @parentDashboardPinInvalid.
   ///
@@ -6166,7 +6472,7 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationExitSessionMessage.
   ///
   /// In ar, this message translates to:
-  /// **'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.'**
+  /// **'هل تريد إكمال هذه الجلسة لاحقًا من حيث توقفت، أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.'**
   String get memorizationExitSessionMessage;
 
   /// No description provided for @memorizationExitSessionTitle.
@@ -6178,7 +6484,7 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationSaveAndLeave.
   ///
   /// In ar, this message translates to:
-  /// **'حفظ وخروج'**
+  /// **'أكمل لاحقًا'**
   String get memorizationSaveAndLeave;
 
   /// No description provided for @memorizationDiscardSession.
@@ -8338,8 +8644,8 @@ abstract class AppLocalizations {
   /// No description provided for @reviewBacklogSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'لديك {overdue} آيات متأخرة'**
-  String reviewBacklogSubtitle(String overdue);
+  /// **'{count, plural, =1{لديك آية واحدة متأخرة} =2{لديك آيتان متأخرتان} few{لديك {countText} آيات متأخرة} other{لديك {countText} آية متأخرة}}'**
+  String reviewBacklogSubtitle(int count, String countText);
 
   /// No description provided for @smartPlanCustomTitle.
   ///
@@ -8458,7 +8764,7 @@ abstract class AppLocalizations {
   /// Empty state hint
   ///
   /// In ar, this message translates to:
-  /// **'اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR'**
+  /// **'على جهاز طفلك: افتح مسار الأطفال ← اضغط ⚙ ← «ربط ولي الأمر»، ثم امسح الرمز الظاهر أو اكتبه هنا.'**
   String get familyDashboardNoChildrenHint;
 
   /// Banner title
@@ -8683,6 +8989,54 @@ abstract class AppLocalizations {
   /// **'سنعيدها معك الآن'**
   String get v2SelfGradeForgotHint;
 
+  /// No description provided for @v2SelfGradeRevealHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع من حفظك أولاً، ثم اكشف النص وقارن قبل أن تقيّم.'**
+  String get v2SelfGradeRevealHint;
+
+  /// No description provided for @v2SelfGradeRevealAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعرض الآية وقارن'**
+  String get v2SelfGradeRevealAction;
+
+  /// No description provided for @v2BlockRevealAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعرض المقطع وقارن'**
+  String get v2BlockRevealAction;
+
+  /// No description provided for @v2BlockGradeMastered.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّعت المقطع كاملاً دون تعثّر'**
+  String get v2BlockGradeMastered;
+
+  /// No description provided for @v2BlockGradeHesitated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تردّدت في آية'**
+  String get v2BlockGradeHesitated;
+
+  /// No description provided for @v2BlockGradeForgot.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت آية'**
+  String get v2BlockGradeForgot;
+
+  /// No description provided for @v2StumbledAyahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'في أي آية تعثّرت؟'**
+  String get v2StumbledAyahTitle;
+
+  /// No description provided for @v2StumbledAyahOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية {ayahNumber}'**
+  String v2StumbledAyahOption(int ayahNumber);
+
   /// No description provided for @v2ManualRecallHint.
   ///
   /// In ar, this message translates to:
@@ -8776,8 +9130,8 @@ abstract class AppLocalizations {
   /// No description provided for @closingSummaryMemorization.
   ///
   /// In ar, this message translates to:
-  /// **'حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
-  String closingSummaryMemorization(int count);
+  /// **'حفظتَ {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتين} few{{countText} آيات} many{{countText} آية} other{{countText} آية}} في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
+  String closingSummaryMemorization(int count, String countText);
 
   /// No description provided for @closingSummaryReview.
   ///
@@ -8800,8 +9154,8 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPlanBacklogNotice.
   ///
   /// In ar, this message translates to:
-  /// **'لديك {count} آية مستحقة للمراجعة. أكمل مراجعات اليوم لتُفتح الآيات الجديدة.'**
-  String dailyPlanBacklogNotice(int count);
+  /// **'{count, plural, =1{لديك آية واحدة مستحقة للمراجعة.} =2{لديك آيتان مستحقتان للمراجعة.} few{لديك {countText} آيات مستحقة للمراجعة.} other{لديك {countText} آية مستحقة للمراجعة.}} أكمل مراجعات اليوم لتُفتح الآيات الجديدة.'**
+  String dailyPlanBacklogNotice(int count, String countText);
 
   /// No description provided for @dailyPlanStartReview.
   ///
@@ -8945,7 +9299,7 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'الآية {current} من {total}'**
-  String v2AyahOfBlock(int current, int total);
+  String v2AyahOfBlock(String current, String total);
 
   /// No description provided for @v2EvaluatingBlock.
   ///
@@ -9082,7 +9436,7 @@ abstract class AppLocalizations {
   /// No description provided for @v2MaskedWordsHint.
   ///
   /// In ar, this message translates to:
-  /// **'إظهار الكلمات مخفية'**
+  /// **'إظهار الكلمات المخفية'**
   String get v2MaskedWordsHint;
 
   /// No description provided for @v2MaskedWordsRevealed.
@@ -9096,6 +9450,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إخفاء الكلمات'**
   String get v2MaskedWordsFull;
+
+  /// No description provided for @v2FirstLettersHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أوائل الكلمات'**
+  String get v2FirstLettersHint;
+
+  /// No description provided for @v2FirstLettersRevealed.
+  ///
+  /// In ar, this message translates to:
+  /// **'ظهرت أوائل الكلمات — حاول التذكر'**
+  String get v2FirstLettersRevealed;
+
+  /// No description provided for @countAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
+  String countAyahs(int count, String countText);
+
+  /// No description provided for @streakDaysUnit.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, few{أيام} many{يومًا} other{يوم}}'**
+  String streakDaysUnit(int count);
 
   /// No description provided for @v2SurahLoadFailed.
   ///
@@ -9136,7 +9514,7 @@ abstract class AppLocalizations {
   /// No description provided for @kidsJourneyCompleteHint.
   ///
   /// In ar, this message translates to:
-  /// **'أتممت جزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
+  /// **'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
   String get kidsJourneyCompleteHint;
 
   /// No description provided for @kidsAyahAlreadyCompleted.
@@ -9346,8 +9724,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahPages.
   ///
   /// In ar, this message translates to:
-  /// **'{v1} صفحات'**
-  String khatmahPages(String v1);
+  /// **'{count, plural, =0{{countText} صفحة} =1{صفحة واحدة} =2{صفحتان} few{{countText} صفحات} many{{countText} صفحة} other{{countText} صفحة}}'**
+  String khatmahPages(int count, String countText);
 
   /// No description provided for @khatmahOrCustomPagesPerDay.
   ///
@@ -9376,13 +9754,13 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahDurationDays.
   ///
   /// In ar, this message translates to:
-  /// **'{days} يوماً'**
-  String khatmahDurationDays(String days);
+  /// **'{count, plural, =0{{countText} يوم} =1{يوم واحد} =2{يومان} few{{countText} أيام} many{{countText} يومًا} other{{countText} يوم}}'**
+  String khatmahDurationDays(int count, String countText);
 
   /// No description provided for @khatmahDurationRamadan.
   ///
   /// In ar, this message translates to:
-  /// **'رمضان (٣٠ يوماً)'**
+  /// **'رمضان (جزء يومياً)'**
   String get khatmahDurationRamadan;
 
   /// No description provided for @khatmahEG5.
@@ -9400,8 +9778,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahDays.
   ///
   /// In ar, this message translates to:
-  /// **'{v1} يوم'**
-  String khatmahDays(String v1);
+  /// **'{count, plural, =0{{countText} يوم} =1{يوم واحد} =2{يومان} few{{countText} أيام} many{{countText} يومًا} other{{countText} يوم}}'**
+  String khatmahDays(int count, String countText);
 
   /// No description provided for @khatmahExpectedCompletion.
   ///
@@ -9580,8 +9958,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahAdjustPreviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'الورد اليومي: {pages} صفحة\nالختام المتوقع: {date}'**
-  String khatmahAdjustPreviewBody(String pages, String date);
+  /// **'الورد اليومي: {pages, plural, =0{{pagesText} صفحة} =1{صفحة واحدة} =2{صفحتان} few{{pagesText} صفحات} many{{pagesText} صفحة} other{{pagesText} صفحة}}\nالختام المتوقع: {date}'**
+  String khatmahAdjustPreviewBody(int pages, String pagesText, String date);
 
   /// No description provided for @khatmahApplyAdjustment.
   ///
@@ -9718,8 +10096,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahPagesLeft.
   ///
   /// In ar, this message translates to:
-  /// **'{v1} صفحة متبقية'**
-  String khatmahPagesLeft(String v1);
+  /// **'{count, plural, =1{صفحة واحدة متبقية} =2{صفحتان متبقيتان} few{{countText} صفحات متبقية} other{{countText} صفحة متبقية}}'**
+  String khatmahPagesLeft(int count, String countText);
 
   /// No description provided for @khatmahEstCompletion.
   ///
@@ -9787,6 +10165,12 @@ abstract class AppLocalizations {
   /// **'في الموعد — أحسنت'**
   String get khatmahPaceOnTrack;
 
+  /// No description provided for @khatmahPaceAhead.
+  ///
+  /// In ar, this message translates to:
+  /// **'متقدم — ستختم قبل موعدك ب{count, plural, =1{يوم واحد} =2{يومين} few{{countText} أيام} other{{countText} يوماً}}'**
+  String khatmahPaceAhead(int count, String countText);
+
   /// No description provided for @khatmahRedistributeAction.
   ///
   /// In ar, this message translates to:
@@ -9802,8 +10186,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahPaceBehind.
   ///
   /// In ar, this message translates to:
-  /// **'متأخر {pages} صفحة عن موعد الختام'**
-  String khatmahPaceBehind(String pages);
+  /// **'متأخر {count, plural, =1{صفحة واحدة} =2{صفحتين} few{{countText} صفحات} other{{countText} صفحة}} عن موعد الختام'**
+  String khatmahPaceBehind(int count, String countText);
 
   /// No description provided for @khatmahThroughWirdEnd.
   ///
@@ -9820,8 +10204,8 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahShareSummary.
   ///
   /// In ar, this message translates to:
-  /// **'أتممت ختمة القرآن الكريم ({title}) في {days} يوماً.\nعبر تطبيق تالية القرآني'**
-  String khatmahShareSummary(String title, String days);
+  /// **'أتممت ختمة القرآن الكريم ({title}) في {days, plural, =1{يوم واحد} =2{يومين} few{{daysText} أيام} many{{daysText} يومًا} other{{daysText} يوم}}.\nعبر تطبيق تالية القرآني'**
+  String khatmahShareSummary(String title, int days, String daysText);
 
   /// No description provided for @khatmahUserNote.
   ///
@@ -9948,6 +10332,78 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الأم'**
   String get khatmahRelationshipMother;
+
+  /// No description provided for @khatmahRecipientGender.
+  ///
+  /// In ar, this message translates to:
+  /// **'المُهدى إليه'**
+  String get khatmahRecipientGender;
+
+  /// No description provided for @khatmahRecipientMale.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكر'**
+  String get khatmahRecipientMale;
+
+  /// No description provided for @khatmahRecipientFemale.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنثى'**
+  String get khatmahRecipientFemale;
+
+  /// No description provided for @khatmahEditDedication.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الإهداء'**
+  String get khatmahEditDedication;
+
+  /// No description provided for @khatmahDedicationSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ الإهداء'**
+  String get khatmahDedicationSaved;
+
+  /// No description provided for @khatmahWirdJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد اليوم: الجزء {juz}'**
+  String khatmahWirdJuz(String juz);
+
+  /// No description provided for @khatmahRepeatSameSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة جديدة بنفس الإعدادات'**
+  String get khatmahRepeatSameSettings;
+
+  /// No description provided for @khatmahHistoryStats.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} ختمات • المتوسط {avg} يوماً • الأسرع {fastest} يوماً'**
+  String khatmahHistoryStats(String count, String avg, String fastest);
+
+  /// No description provided for @khatmahJuzMapTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خريطة الختمة'**
+  String get khatmahJuzMapTitle;
+
+  /// No description provided for @khatmahJuzMapCell.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجزء {juz}: {read} من {total} صفحة'**
+  String khatmahJuzMapCell(String juz, String read, String total);
+
+  /// No description provided for @khatmahCatchUpTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف تحب أن تعوّض؟'**
+  String get khatmahCatchUpTitle;
+
+  /// No description provided for @khatmahCatchUpOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'{pages} صفحة يومياً — الختم {date}'**
+  String khatmahCatchUpOption(String pages, String date);
 
   /// No description provided for @khatmahRelationshipFather.
   ///
@@ -10102,8 +10558,8 @@ abstract class AppLocalizations {
   /// No description provided for @ayahOfDaySurahMeta.
   ///
   /// In ar, this message translates to:
-  /// **'{revelation} · {count} آية'**
-  String ayahOfDaySurahMeta(String revelation, String count);
+  /// **'{revelation} · {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
+  String ayahOfDaySurahMeta(String revelation, int count, String countText);
 
   /// No description provided for @ayahOfDayReadSurah.
   ///
@@ -10199,7 +10655,7 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'{count} د'**
-  String homeMinutes(int count);
+  String homeMinutes(String count);
 
   /// No description provided for @homeOccasionFriday.
   ///
@@ -10481,19 +10937,19 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'الآيات {start} إلى {end}'**
-  String homeAyahRange(int start, int end);
+  String homeAyahRange(String start, String end);
 
   /// No description provided for @homeAyahProgressCount.
   ///
   /// In ar, this message translates to:
-  /// **'{current} من {total} آيات'**
-  String homeAyahProgressCount(int current, int total);
+  /// **'{currentText} من {total, plural, =1{آية واحدة} =2{آيتين} few{{totalText} آيات} other{{totalText} آية}}'**
+  String homeAyahProgressCount(String currentText, int total, String totalText);
 
   /// No description provided for @homePageProgressCount.
   ///
   /// In ar, this message translates to:
-  /// **'{current} من {total} صفحات'**
-  String homePageProgressCount(int current, int total);
+  /// **'{currentText} من {total, plural, =1{صفحة واحدة} =2{صفحتين} few{{totalText} صفحات} other{{totalText} صفحة}}'**
+  String homePageProgressCount(String currentText, int total, String totalText);
 
   /// No description provided for @homeTileListen.
   ///
@@ -10708,8 +11164,8 @@ abstract class AppLocalizations {
   /// No description provided for @homeActivityDaysAgo.
   ///
   /// In ar, this message translates to:
-  /// **'قبل {count} يوم'**
-  String homeActivityDaysAgo(int count);
+  /// **'{count, plural, =1{قبل يوم} =2{قبل يومين} few{قبل {countText} أيام} many{قبل {countText} يومًا} other{قبل {countText} يوم}}'**
+  String homeActivityDaysAgo(int count, String countText);
 
   /// No description provided for @homeActivityCompleted.
   ///
@@ -11122,8 +11578,8 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationHubReviewDueBadge.
   ///
   /// In ar, this message translates to:
-  /// **'{count} آية مستحقة للمراجعة'**
-  String memorizationHubReviewDueBadge(int count);
+  /// **'{count, plural, =1{آية واحدة مستحقة للمراجعة} =2{آيتان مستحقتان للمراجعة} few{{countText} آيات مستحقة للمراجعة} other{{countText} آية مستحقة للمراجعة}}'**
+  String memorizationHubReviewDueBadge(int count, String countText);
 
   /// No description provided for @memorizationHubReviewDueNone.
   ///
@@ -11196,6 +11652,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لا يمكن أن يتجاوز {maxLength} حرفاً'**
   String fieldTooLong(int maxLength);
+
+  /// No description provided for @progressDueReviewsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعات مستحقة'**
+  String get progressDueReviewsLabel;
+
+  /// No description provided for @progressStreakDaysUnit.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{يوم} =1{يوم} =2{يومان} few{أيام} many{يوماً} other{يوم}}'**
+  String progressStreakDaysUnit(int count);
+
+  /// No description provided for @progressNextMilestoneTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنجازك القادم'**
+  String get progressNextMilestoneTitle;
+
+  /// No description provided for @progressNextMilestoneRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقي {remaining} للوصول'**
+  String progressNextMilestoneRemaining(int remaining);
+
+  /// No description provided for @progressAllAchievementsUnlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله! أتممت جميع الإنجازات، ثبّتك الله'**
+  String get progressAllAchievementsUnlocked;
+
+  /// No description provided for @progressDueReviewsNudge.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{لديك آية واحدة مستحقة للمراجعة} =2{لديك آيتان مستحقتان للمراجعة} few{لديك {count} آيات مستحقة للمراجعة} other{لديك {count} آية مستحقة للمراجعة}}'**
+  String progressDueReviewsNudge(int count);
+
+  /// No description provided for @progressStartReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ المراجعة'**
+  String get progressStartReview;
+
+  /// No description provided for @progressActiveDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا توجد أيام نشاط بعد} =1{يوم نشاط واحد} =2{يوما نشاط} few{{count} أيام نشاط} many{{count} يوماً من النشاط} other{{count} يوم نشاط}}'**
+  String progressActiveDays(int count);
+
+  /// No description provided for @progressXpToNextLevel.
+  ///
+  /// In ar, this message translates to:
+  /// **'نحو المستوى التالي'**
+  String get progressXpToNextLevel;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../extensions/context_extensions.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../constants/app_spacing.dart';
@@ -60,9 +61,7 @@ class AppTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fillColor = isDark
-        ? AppColors.darkSurfaceVariant
-        : AppColors.lightSurfaceVariant;
+    final fillColor = context.tokens.surfaceVariant;
     final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
 
     return TextFormField(

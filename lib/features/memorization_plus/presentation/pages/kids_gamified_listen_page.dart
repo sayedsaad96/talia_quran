@@ -14,6 +14,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
@@ -84,6 +85,12 @@ class _KidsGamifiedListenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void onBack() => context.canPop()
+        ? context.pop()
+        : context.go(
+            MemorizationNavigationResolver.kidsHomeFallbackLocation(surahId),
+          );
+
     return Scaffold(
       backgroundColor: KidsTheme.nightSkyDark,
       body: BlocConsumer<KidsModeCubit, KidsModeState>(
@@ -149,7 +156,10 @@ class _KidsGamifiedListenView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is KidsModeInitial || state is KidsModeLoading) {
-            return const Center(child: KidsLoadingWidget());
+            return KidsGamifiedListenStatusShell(
+              onBack: onBack,
+              child: const KidsLoadingWidget(),
+            );
           }
 
           if (state is KidsModeError) {
@@ -158,23 +168,20 @@ class _KidsGamifiedListenView extends StatelessWidget {
             final isDailyLimit = state.message.startsWith(
               CubitMessageCodes.kidsDailySessionLimitPrefix,
             );
-            return KidsErrorWidget(
-              message: context.localizedCubitMessage(state.message),
-              actionLabel: isDailyLimit ? context.l10n.goBack : null,
-              onRetry: isDailyLimit
-                  ? () => context.canPop()
-                        ? context.pop()
-                        : context.go(
-                            MemorizationNavigationResolver.kidsHomeFallbackLocation(
-                              surahId,
-                            ),
-                          )
-                  : () => context.read<KidsModeCubit>().load(
-                      surahId,
-                      ayahNumber,
-                      ayahText,
-                      missionType: missionType,
-                    ),
+            return KidsGamifiedListenStatusShell(
+              onBack: onBack,
+              child: KidsErrorWidget(
+                message: context.localizedCubitMessage(state.message),
+                actionLabel: isDailyLimit ? context.l10n.goBack : null,
+                onRetry: isDailyLimit
+                    ? onBack
+                    : () => context.read<KidsModeCubit>().load(
+                        surahId,
+                        ayahNumber,
+                        ayahText,
+                        missionType: missionType,
+                      ),
+              ),
             );
           }
 
@@ -182,13 +189,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
 
           return KidsGamifiedListenContent(
             state: state,
-            onBack: () => context.canPop()
-                ? context.pop()
-                : context.go(
-                    MemorizationNavigationResolver.kidsHomeFallbackLocation(
-                      surahId,
-                    ),
-                  ),
+            onBack: onBack,
             onPlayPause: () {
               final cubit = context.read<KidsModeCubit>();
               if (state.isPlaying) {
@@ -201,9 +202,47 @@ class _KidsGamifiedListenView extends StatelessWidget {
                 context.read<KidsModeCubit>().startRecording(),
             onStopRecording: () =>
                 context.read<KidsModeCubit>().stopRecording(),
+            onTryFromMemory: () =>
+                context.read<KidsModeCubit>().tryFromMemory(),
+            onRevealFirstWord: () =>
+                context.read<KidsModeCubit>().revealFirstWord(),
+            onRemindMe: () => context.read<KidsModeCubit>().remindMe(),
             onManualComplete: () => _submitGuardianCompletion(context),
           );
         },
+      ),
+    );
+  }
+}
+
+@visibleForTesting
+class KidsGamifiedListenStatusShell extends StatelessWidget {
+  const KidsGamifiedListenStatusShell({
+    super.key,
+    required this.onBack,
+    required this.child,
+  });
+
+  final VoidCallback onBack;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return KidsBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              KidsTopBar(
+                title: context.l10n.kidsGamifiedListenAndRepeat,
+                onBack: onBack,
+                backLabel: context.l10n.goBack,
+              ),
+              Expanded(child: child),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -218,6 +257,9 @@ class KidsGamifiedListenContent extends StatelessWidget {
     required this.onPlayPause,
     required this.onRecordRecitation,
     required this.onStopRecording,
+    this.onTryFromMemory,
+    this.onRevealFirstWord,
+    this.onRemindMe,
     this.onManualComplete,
   });
 
@@ -226,6 +268,16 @@ class KidsGamifiedListenContent extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
+
+  /// K25 — hides the ayah for recall once the listens are done (null
+  /// disables the step).
+  final VoidCallback? onTryFromMemory;
+
+  /// K25 — "give me the start" while recalling (null hides the action).
+  final VoidCallback? onRevealFirstWord;
+
+  /// K28 — "remind me" at a hidden recitation (null hides the action).
+  final VoidCallback? onRemindMe;
 
   /// V1-M8 — manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
@@ -243,6 +295,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
               KidsTopBar(
                 title: context.l10n.kidsGamifiedListenAndRepeat,
                 onBack: onBack,
+                backLabel: context.l10n.goBack,
               ),
               Expanded(
                 child: CustomScrollView(
@@ -258,9 +311,17 @@ class KidsGamifiedListenContent extends StatelessWidget {
                       ),
                       sliver: SliverList.list(
                         children: [
-                          if (state.isRecording ||
+                          if (state.isReview && state.isAwaitingRecitation)
+                            const _KidsReviewChallengeCard()
+                          else if (state.isRecording ||
                               state.sessionState.phase.textHidden)
                             const _KidsHiddenRecallCard()
+                          else if (state.isRecallingFromMemory)
+                            _KidsRecallFromMemoryCard(
+                              firstWord: state.firstWordRevealed
+                                  ? state.firstWord
+                                  : null,
+                            )
                           else
                             KidsAyahCard(
                               surahId: state.surahId,
@@ -271,6 +332,8 @@ class KidsGamifiedListenContent extends StatelessWidget {
                               // not that recitation playback is in progress.
                               isAudioLoading: state.isBuffering,
                               audioUnavailable: audioUnavailable,
+                              // K32: after a miss, the words that were right.
+                              recalledWords: state.recalledWords,
                             ),
                           // W2: friendly word-level progress after a near
                           // miss — "you got X of Y words" instead of a bare
@@ -283,14 +346,20 @@ class KidsGamifiedListenContent extends StatelessWidget {
                               total: state.lastTargetWords,
                             ),
                           ],
-                          const SizedBox(height: AppSpacing.lg),
-                          _KidsGamifiedLoopIndicator(state: state),
+                          // A review has no listen gate to count (K28).
+                          if (state.maxLoops > 0) ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            _KidsGamifiedLoopIndicator(state: state),
+                          ],
                           const SizedBox(height: AppSpacing.xl),
                           _KidsGamifiedAudioControls(
                             state: state,
                             onPlayPause: onPlayPause,
                             onRecordRecitation: onRecordRecitation,
                             onStopRecording: onStopRecording,
+                            onTryFromMemory: onTryFromMemory,
+                            onRevealFirstWord: onRevealFirstWord,
+                            onRemindMe: onRemindMe,
                             onManualComplete: onManualComplete,
                           ),
                           const SizedBox(height: 96),
@@ -399,6 +468,113 @@ class _KidsHiddenRecallCard extends StatelessWidget {
   }
 }
 
+/// K28 — "⭐ review challenge": a review opens with the ayah hidden, so the
+/// attempt measures what stayed from before.
+class _KidsReviewChallengeCard extends StatelessWidget {
+  const _KidsReviewChallengeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('kids-review-challenge-card'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
+      decoration: BoxDecoration(
+        color: KidsTheme.reviewPurple.withValues(alpha: 0.16),
+        borderRadius: KidsTheme.cardRadius,
+        border: Border.all(
+          color: KidsTheme.reviewPurple.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            context.l10n.kidsGamifiedReviewChallenge,
+            textAlign: TextAlign.center,
+            style: AppTypography.titleLarge.copyWith(
+              color: Colors.white,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            context.l10n.kidsGamifiedReviewChallengeSubtitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMedium.copyWith(
+              color: Colors.white.withValues(alpha: 0.85),
+              letterSpacing: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// K25 — "try to remember": the ayah is hidden while the child recalls it.
+/// After "give me the start" only the first word shows, verbatim from the
+/// ayah text; it disappears again once recording starts (no hints during
+/// recitation, Product Rules §5).
+class _KidsRecallFromMemoryCard extends StatelessWidget {
+  const _KidsRecallFromMemoryCard({this.firstWord});
+
+  final String? firstWord;
+
+  @override
+  Widget build(BuildContext context) {
+    final word = firstWord;
+    return Container(
+      key: const ValueKey('kids-recall-from-memory-card'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: KidsTheme.cardRadius,
+        border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.psychology_rounded, color: Colors.white, size: 36),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            context.l10n.kidsGamifiedTryToRemember,
+            textAlign: TextAlign.center,
+            style: AppTypography.titleMedium.copyWith(
+              color: Colors.white,
+              letterSpacing: 0,
+            ),
+          ),
+          if (word != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              word,
+              key: const ValueKey('kids-first-word'),
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
+              style: MemorizationAyahDisplay.textStyle(
+                color: KidsTheme.goldLight,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              context.l10n.kidsGamifiedFirstWordShown,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: Colors.white.withValues(alpha: 0.8),
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _KidsGamifiedLoopIndicator extends StatelessWidget {
   const _KidsGamifiedLoopIndicator({required this.state});
 
@@ -462,6 +638,9 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     required this.onPlayPause,
     required this.onRecordRecitation,
     required this.onStopRecording,
+    this.onTryFromMemory,
+    this.onRevealFirstWord,
+    this.onRemindMe,
     this.onManualComplete,
   });
 
@@ -469,6 +648,9 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
+  final VoidCallback? onTryFromMemory;
+  final VoidCallback? onRevealFirstWord;
+  final VoidCallback? onRemindMe;
 
   /// V1-M8 — manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
@@ -478,6 +660,16 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     final isRecording = state.isRecording;
     final loopsComplete = state.currentLoop >= state.maxLoops;
     final micDisabled = state.isCompleted || isRecording || !loopsComplete;
+    // K25: the mic belongs to recall. Before it, the step is "try from
+    // memory"; while recalling, "give me the start" sits under the mic.
+    // K28: a hidden recitation (a review, or a near miss) keeps the mic too.
+    final recalling = state.isRecallingFromMemory || state.isAwaitingRecitation;
+    final showFirstWordHint =
+        state.isRecallingFromMemory &&
+        !isRecording &&
+        !state.firstWordRevealed &&
+        onRevealFirstWord != null;
+    final showRemindMe = state.isAwaitingRecitation && onRemindMe != null;
     // K8: a listen-gated mic is never silent — the button area itself carries
     // a persistent hint, instead of relying on a one-shot SnackBar.
     final showListenFirstHint =
@@ -494,7 +686,10 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
         Center(
           child: FilledButton.tonalIcon(
             key: const ValueKey('kids-gamified-play-audio'),
-            onPressed: state.isRecording ? null : onPlayPause,
+            // No audio during a hidden recitation: it would be the answer.
+            onPressed: state.isRecording || state.sessionState.phase.textHidden
+                ? null
+                : onPlayPause,
             icon: Icon(
               state.isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
             ),
@@ -535,7 +730,8 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                   // Tapping the hint plays the audio (never records).
                   onPlayPressed: onPlayPause,
                 )
-              : FilledButton.icon(
+              : recalling
+              ? FilledButton.icon(
                   key: const ValueKey('kids-gamified-record-recitation-idle'),
                   onPressed: micDisabled ? null : onRecordRecitation,
                   icon: const Icon(Icons.mic_rounded),
@@ -548,8 +744,58 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                       borderRadius: KidsTheme.buttonRadius,
                     ),
                   ),
+                )
+              : FilledButton.icon(
+                  key: const ValueKey('kids-gamified-try-from-memory'),
+                  onPressed: state.isCompleted ? null : onTryFromMemory,
+                  icon: const Icon(Icons.psychology_rounded),
+                  label: Text(context.l10n.kidsGamifiedTryFromMemory),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KidsTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: KidsTheme.buttonRadius,
+                    ),
+                  ),
                 ),
         ),
+        if (showFirstWordHint) ...[
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            key: const ValueKey('kids-gamified-first-word-hint'),
+            onPressed: onRevealFirstWord,
+            icon: const Icon(Icons.lightbulb_rounded),
+            label: Text(context.l10n.kidsGamifiedGiveMeTheStart),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: KidsTheme.goldLight,
+              side: BorderSide(
+                color: KidsTheme.goldStar.withValues(alpha: 0.5),
+              ),
+              minimumSize: const Size.fromHeight(52),
+              shape: const RoundedRectangleBorder(
+                borderRadius: KidsTheme.buttonRadius,
+              ),
+            ),
+          ),
+        ],
+        if (showRemindMe) ...[
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            key: const ValueKey('kids-gamified-remind-me'),
+            onPressed: onRemindMe,
+            icon: const Icon(Icons.visibility_rounded),
+            label: Text(context.l10n.kidsGamifiedRemindMe),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+              minimumSize: const Size.fromHeight(52),
+              shape: const RoundedRectangleBorder(
+                borderRadius: KidsTheme.buttonRadius,
+              ),
+            ),
+          ),
+        ],
         if (showManualComplete) ...[
           const SizedBox(height: AppSpacing.md),
           Text(
@@ -648,13 +894,13 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!mounted) return;
-    final disable = MediaQuery.of(context).disableAnimations;
-    if (disable) {
+    // Reduced motion freezes the wave; tests control motion the same way
+    // instead of sniffing the binding type (K24).
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _waveController.stop();
       _waveController.value = 1.0;
     } else if (!_waveController.isAnimating) {
-      if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-        _waveController.repeat(reverse: true);
-      }
+      _waveController.repeat(reverse: true);
     }
   }
 
@@ -751,7 +997,9 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                         color: KidsTheme.forestGreen.withValues(
                           alpha: 0.6 + 0.4 * ((v + i * 0.1) % 1.0),
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXs,
+                        ),
                       ),
                     ),
                     if (i < heights.length - 1) const SizedBox(width: 4),

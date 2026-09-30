@@ -1,3 +1,5 @@
+import '../../../../core/memorization/surah_memorization_status.dart';
+import '../widgets/surah_memorization_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -141,6 +143,7 @@ class _QuranViewState extends State<_QuranView>
                         _SurahListView(
                           surahs: state.filtered,
                           typeFilter: _surahType,
+                          memorizationStatus: state.memorizationStatus,
                         ),
                         JuzGridView(
                           summaries: _juzSummaries(state.surahs),
@@ -405,8 +408,13 @@ class _SearchBarState extends State<_SearchBar> {
 }
 
 class _SurahListView extends StatelessWidget {
-  const _SurahListView({required this.surahs, this.typeFilter});
+  const _SurahListView({
+    required this.surahs,
+    this.typeFilter,
+    this.memorizationStatus = const {},
+  });
   final List<Surah> surahs;
+  final Map<int, SurahMemorizationStatus> memorizationStatus;
 
   /// View-local revelation-type filter ('meccan' | 'medinan' | null for all).
   final String? typeFilter;
@@ -435,14 +443,21 @@ class _SurahListView extends StatelessWidget {
       ),
       itemCount: visible.length,
       separatorBuilder: (_, _) => const SizedBox(height: 6),
-      itemBuilder: (context, i) => _SurahTile(surah: visible[i], index: i),
+      itemBuilder: (context, i) => _SurahTile(
+        surah: visible[i],
+        index: i,
+        status: memorizationStatus[visible[i].id],
+      ),
     );
   }
 }
 
 class _SurahTile extends StatelessWidget {
-  const _SurahTile({required this.surah, required this.index});
+  const _SurahTile({required this.surah, required this.index, this.status});
   final Surah surah;
+
+  /// Learner's memorization status; null when never started (N17).
+  final SurahMemorizationStatus? status;
   final int index;
 
   @override
@@ -484,7 +499,7 @@ class _SurahTile extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    '${surah.id}',
+                    context.numText(surah.id),
                     style: AppTypography.labelLarge.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
@@ -515,17 +530,28 @@ class _SurahTile extends StatelessWidget {
                     Row(
                       children: [
                         _Chip(
-                          label: surah.isMeccan ? 'مكية' : 'مدنية',
+                          label: surah.isMeccan
+                              ? context.l10n.meccan
+                              : context.l10n.medinan,
                           isMeccan: surah.isMeccan,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          '${surah.ayahCount} ${context.l10n.ayahs}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: context.tokens.textHint,
+                        Flexible(
+                          child: Text(
+                            '${context.l10n.countAyahs(surah.ayahCount, context.numText(surah.ayahCount))}'
+                            ' · ${context.l10n.page} ${context.numText(surah.page)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: context.tokens.textHint,
+                            ),
                           ),
                         ),
+                        if (status != null) ...[
+                          const SizedBox(width: 8),
+                          SurahMemorizationBadge(status!),
+                        ],
                       ],
                     ),
                   ],

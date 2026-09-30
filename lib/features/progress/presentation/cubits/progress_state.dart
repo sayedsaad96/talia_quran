@@ -23,6 +23,7 @@ class ProgressLoaded extends ProgressState {
     this.activityCountsByDay = const {},
     this.activityStartDate,
     this.totalXp = 0,
+    this.xpLevelProgress = 0,
   });
   final OverallProgress progress;
   final MemorizationPath? selectedPath;
@@ -30,6 +31,21 @@ class ProgressLoaded extends ProgressState {
   final Map<String, int> activityCountsByDay;
   final DateTime? activityStartDate;
   final int totalXp;
+
+  /// Progress from the current XP level to the next one, 0..1.
+  final double xpLevelProgress;
+
+  ProgressLoaded copyWith({int? totalXp, double? xpLevelProgress}) {
+    return ProgressLoaded(
+      progress: progress,
+      selectedPath: selectedPath,
+      isKids: isKids,
+      activityCountsByDay: activityCountsByDay,
+      activityStartDate: activityStartDate,
+      totalXp: totalXp ?? this.totalXp,
+      xpLevelProgress: xpLevelProgress ?? this.xpLevelProgress,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -39,6 +55,7 @@ class ProgressLoaded extends ProgressState {
     activityCountsByDay,
     activityStartDate,
     totalXp,
+    xpLevelProgress,
   ];
 }
 

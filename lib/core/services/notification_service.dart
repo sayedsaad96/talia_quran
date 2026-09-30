@@ -12,6 +12,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
+import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
 import '../../features/prayer_companion/notifications/prayer_companion_notification_intent.dart';
 import '../l10n/app_localizations.dart';
 import '../router/launch_destination.dart';
@@ -284,6 +285,8 @@ class TaliaNotificationService {
   static const int _weeklyImpactId = 1064;
   static const int _tahajjudId = 1061;
   static const int _khatmahReminderId = 1062;
+  static const int _khatmahReminderBaseId = 1110;
+  static const int _khatmahReminderSlots = 7;
   static const int _milestoneCelebrationId = 1100;
   static const int _prayerSerenityId = 1063;
   static const int _morningAzkarBaseId = 1070;
@@ -1033,9 +1036,11 @@ class TaliaNotificationService {
   /// Companion check-in / preparation / follow-up presentation. Uses a NEW,
   /// parallel Android channel (`talia_prayer_companion`) alongside the prayer
   /// alerts channel, with the same color and visual treatment as the prayer
-  /// reminders, but attaches the companion actions/category — the legacy
-  /// `prayer_category` actions stay untouched.
-  NotificationDetails get _prayerCompanionNotificationDetails =>
+  /// reminders. Only check-in and follow-up events attach response actions;
+  /// preparation is informational. Legacy `prayer_category` stays untouched.
+  NotificationDetails _prayerCompanionNotificationDetails({
+    required bool allowActions,
+  }) =>
       NotificationDetails(
         android: AndroidNotificationDetails(
           'talia_prayer_companion',
@@ -1047,13 +1052,13 @@ class TaliaNotificationService {
           color: const Color(0xFF1E824C),
           icon: _notificationIcon,
           playSound: true,
-          actions: _prayerCompanionActions,
+          actions: allowActions ? _prayerCompanionActions : null,
         ),
-        iOS: const DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          categoryIdentifier: 'prayer_companion_category',
+          categoryIdentifier: allowActions ? 'prayer_companion_category' : null,
         ),
       );
 
@@ -1705,33 +1710,40 @@ class TaliaNotificationService {
 
   // ─── Khatmah Daily Progress Reminder ───────────────────────────────────────
 
-  /// Schedules a daily reminder for the user's active Khatmah target.
-  Future<void> scheduleKhatmahReminder({
+  /// One-shot khatmah reminders, each carrying that day's wird. Always
+  /// clears the legacy repeating reminder first.
+  Future<void> scheduleKhatmahReminders({
     required String title,
-    required String body,
-    required String payload,
-    int hour = 17,
-    int minute = 0,
+    required List<({DateTime at, String body, String payload})> reminders,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelKhatmahReminder();
-
-    await _plugin.zonedSchedule(
-      id: _khatmahReminderId,
-      title: title,
-      body: body,
-      scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _khatmahNotificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: payload,
+    final availableSlots = await _availableScheduledNotificationSlots();
+    final count = math.min(
+      math.min(reminders.length, _khatmahReminderSlots),
+      availableSlots,
     );
+    for (var i = 0; i < count; i++) {
+      final reminder = reminders[i];
+      await _plugin.zonedSchedule(
+        id: _khatmahReminderBaseId + i,
+        title: title,
+        body: reminder.body,
+        scheduledDate: tz.TZDateTime.from(reminder.at, tz.local),
+        notificationDetails: _khatmahNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: reminder.payload,
+      );
+    }
   }
 
   /// Cancel Khatmah reminder.
   Future<void> cancelKhatmahReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _khatmahReminderId);
+    for (var i = 0; i < _khatmahReminderSlots; i++) {
+      await _plugin.cancel(id: _khatmahReminderBaseId + i);
+    }
   }
 
   // ─── Prayer Times Reminders ────────────────────────────────────────────────
@@ -1888,7 +1900,10 @@ class TaliaNotificationService {
         title: titleFor(reminder),
         body: bodyFor(reminder),
         scheduledDate: tz.TZDateTime.from(reminder.scheduledAt, tz.local),
-        notificationDetails: _prayerCompanionNotificationDetails,
+        notificationDetails: _prayerCompanionNotificationDetails(
+          allowActions:
+              reminder.kind != PrayerCompanionNotificationKind.preparation,
+        ),
         androidScheduleMode: scheduleMode,
         payload: PrayerCompanionNotificationIntent(
           occurrence: reminder.occurrence,

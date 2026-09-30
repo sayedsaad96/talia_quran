@@ -20,6 +20,7 @@ class KhatmahPlanModel {
     this.dailyTargetStartPage,
     this.dailyTargetEndPage,
     this.pausedAt,
+    this.wirdUnit = 'pages',
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
@@ -43,6 +44,7 @@ class KhatmahPlanModel {
   final int? dailyTargetStartPage;
   final int? dailyTargetEndPage;
   final DateTime? pausedAt;
+  final String wirdUnit;
 
   factory KhatmahPlanModel.fromJson(Map<String, dynamic> json) {
     final rawCompletedPages = json['completedPages'];
@@ -74,6 +76,7 @@ class KhatmahPlanModel {
           : null,
       dailyTargetStartPage: json['dailyTargetStartPage'] as int?,
       dailyTargetEndPage: json['dailyTargetEndPage'] as int?,
+      wirdUnit: json['wirdUnit'] as String? ?? 'pages',
     );
   }
 
@@ -94,6 +97,7 @@ class KhatmahPlanModel {
     'dailyTargetStartPage': dailyTargetStartPage,
     'dailyTargetEndPage': dailyTargetEndPage,
     'pausedAt': pausedAt?.toIso8601String(),
+    'wirdUnit': wirdUnit,
   };
 
   factory KhatmahPlanModel.fromEntity(KhatmahPlan entity) {
@@ -113,6 +117,7 @@ class KhatmahPlanModel {
       dailyTargetStartPage: entity.dailyTargetStartPage,
       dailyTargetEndPage: entity.dailyTargetEndPage,
       pausedAt: entity.pausedAt,
+      wirdUnit: entity.wirdUnit.name,
     );
   }
 
@@ -135,6 +140,9 @@ class KhatmahPlanModel {
     dailyTargetStartPage: dailyTargetStartPage,
     dailyTargetEndPage: dailyTargetEndPage,
     pausedAt: pausedAt,
+    wirdUnit:
+        KhatmahWirdUnit.values.where((u) => u.name == wirdUnit).firstOrNull ??
+        KhatmahWirdUnit.pages,
   );
 
   static Set<int> _legacyCompletedPages(int startPage, int currentPage) {

@@ -94,7 +94,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.text('سورة البقرة، آية 255'), findsOneWidget);
+    expect(find.text('سورة البقرة، آية ٢٥٥'), findsOneWidget);
     expect(
       Directionality.of(
         tester.element(find.byKey(const Key('memorization-ayah-reference'))),

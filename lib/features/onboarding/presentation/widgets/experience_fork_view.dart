@@ -92,7 +92,7 @@ class ExperienceForkView extends StatelessWidget {
               selected: isChild,
               accentColor: AppColors.goldLight,
               textAccentColor: AppColors.goldLight,
-              onAccentColor: AppColors.darkBackground,
+              onAccentColor: OnboardingPalette.nightBackground,
               preview: const _KidsNightWindow(),
               title: l10n.onboardingKidsPathTitle,
               subtitle: l10n.onboardingKidsPathSubtitle,
@@ -121,7 +121,9 @@ class ExperienceForkView extends StatelessWidget {
               ),
               child: Text(
                 l10n.onboardingErrorGeneric,
-                style: AppTypography.bodySmall.copyWith(color: OnboardingPalette.nightErrorText),
+                style: AppTypography.bodySmall.copyWith(
+                  color: OnboardingPalette.nightErrorText,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -221,10 +223,10 @@ class _DestinationShrine extends StatelessWidget {
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.darkSurface,
+              color: OnboardingPalette.nightSurface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
               border: Border.all(
-                color: selected ? accentColor : AppColors.darkDivider,
+                color: selected ? accentColor : OnboardingPalette.nightDivider,
                 width: selected ? 1.6 : 1,
               ),
               boxShadow: selected
@@ -278,7 +280,9 @@ class _DestinationShrine extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: selected ? accentColor : Colors.transparent,
                         border: Border.all(
-                          color: selected ? accentColor : AppColors.darkDivider,
+                          color: selected
+                              ? accentColor
+                              : OnboardingPalette.nightDivider,
                           width: 1.5,
                         ),
                       ),
@@ -450,7 +454,10 @@ class _KidsNightWindow extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.darkSurfaceVariant, AppColors.darkSurface],
+          colors: [
+            OnboardingPalette.nightSurfaceVariant,
+            OnboardingPalette.nightSurface,
+          ],
         ),
       ),
       child: Stack(

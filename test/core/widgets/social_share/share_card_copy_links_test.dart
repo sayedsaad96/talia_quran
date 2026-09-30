@@ -186,7 +186,7 @@ void main() {
       expect(ar.streakHeroLabel(2), 'يومان مع القرآن');
       expect(ar.streakHeroLabel(7), 'أيام مع القرآن');
       expect(ar.streakHeroLabel(45), 'يومًا مع القرآن');
-      expect(ar.memorizedAyahsHeroLabel(250), 'آيةً في صدري');
+      expect(ar.memorizedAyahsHeroLabel(250), 'آيةً في قلبي');
       expect(ar.surahsCompleted(2), '2 سورتان مكتملتان');
       expect(ar.surahsCompleted(12), '12 سورة مكتملة');
       expect(en.streakHeroLabel(1), 'day with the Quran');

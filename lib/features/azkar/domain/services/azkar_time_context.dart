@@ -27,15 +27,6 @@ abstract class AzkarTimeContext {
     return AzkarDayPart.night;
   }
 
-  /// Maps a stored [AzkarDayPart] back to its coarse period.
-  static AzkarPeriod periodOfDayPart(AzkarDayPart part) => switch (part) {
-        AzkarDayPart.afterFajr ||
-        AzkarDayPart.morning ||
-        AzkarDayPart.forenoon ||
-        AzkarDayPart.afternoon => AzkarPeriod.morning,
-        AzkarDayPart.evening || AzkarDayPart.night => AzkarPeriod.evening,
-      };
-
   /// Stable wire/enum name for persistence.
   static String nameOfDayPart(AzkarDayPart part) => part.name;
 

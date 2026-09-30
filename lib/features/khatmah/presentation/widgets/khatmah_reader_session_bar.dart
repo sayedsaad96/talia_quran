@@ -83,7 +83,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                 onScreen >= target.startPage &&
                 onScreen <= target.endPage
             ? onScreen
-            : plan.currentPage;
+            : (plan.currentPage > 0 ? plan.currentPage : plan.nextUnreadPage);
 
         final dailyTarget = target.endPage - target.startPage + 1;
         final wirdIndex = plan.completedPages

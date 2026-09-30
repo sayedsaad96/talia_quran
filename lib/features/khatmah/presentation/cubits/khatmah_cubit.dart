@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/identity/account_data_barrier.dart';
 
+import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
@@ -12,6 +14,7 @@ import '../../domain/usecases/delete_khatmah_usecase.dart';
 import '../../domain/usecases/get_active_khatmah_usecase.dart';
 import '../../domain/usecases/pause_resume_khatmah_usecase.dart';
 import '../../domain/usecases/record_khatmah_reading_usecase.dart';
+import '../../domain/usecases/update_khatmah_dedication_usecase.dart';
 import '../../domain/usecases/update_khatmah_schedule_usecase.dart';
 
 abstract class KhatmahState extends Equatable {
@@ -243,9 +246,11 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     this._pauseResume,
     this._deleteKhatmah, {
     UpdateKhatmahScheduleUsecase? updateSchedule,
+    UpdateKhatmahDedicationUsecase? updateDedication,
     Duration shutdownTimeout = const Duration(seconds: 2),
     DateTime Function()? now,
   }) : _updateSchedule = updateSchedule,
+       _updateDedication = updateDedication,
        _now = now ?? DateTime.now,
        _readingClock = now,
        _shutdownTimeout = shutdownTimeout,
@@ -331,6 +336,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   // Retained only for the existing scheduling-adjustment controls. Reader
   // progress must use RecordKhatmahReadingUsecase through the methods below.
   final UpdateKhatmahScheduleUsecase? _updateSchedule;
+  final UpdateKhatmahDedicationUsecase? _updateDedication;
   final Duration _shutdownTimeout;
   final DateTime Function() _now;
   final DateTime Function()? _readingClock;
@@ -678,7 +684,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   /// Whether another mild boost stays within [maxPagesPerDay].
   bool get canBoost {
     final plan = _recordingPlan;
-    return plan != null && plan.targetPagesPerDay < maxPagesPerDay;
+    return plan != null &&
+        plan.wirdUnit == KhatmahWirdUnit.pages &&
+        plan.targetPagesPerDay < maxPagesPerDay;
   }
 
   /// The plan an adjustment would produce, without saving anything — lets
@@ -689,7 +697,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     return switch (kind) {
       KhatmahAdjustment.calm => _calmTransform(plan),
       KhatmahAdjustment.mildBoost => canBoost ? _mildTransform(plan, 1) : null,
-      KhatmahAdjustment.keepEndDate => _keepEndDateTransform(plan),
+      KhatmahAdjustment.keepEndDate =>
+        plan.wirdUnit == KhatmahWirdUnit.juz
+            ? null
+            : _keepEndDateTransform(plan),
     };
   }
 
@@ -697,7 +708,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<bool> applyAdjustment(KhatmahAdjustment kind) => switch (kind) {
     KhatmahAdjustment.calm => calmAdjustment(),
     KhatmahAdjustment.mildBoost => mildCompensation(),
-    KhatmahAdjustment.keepEndDate => _adjustSchedule(_keepEndDateTransform),
+    KhatmahAdjustment.keepEndDate =>
+      previewAdjustment(kind: kind) == null
+          ? Future<bool>.value(false)
+          : _adjustSchedule(_keepEndDateTransform),
   };
 
   Future<bool> calmAdjustment() => _adjustSchedule(_calmTransform);
@@ -717,10 +731,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   );
 
   KhatmahPlan _calmTransform(KhatmahPlan plan) {
-    final days = KhatmahSchedulingEngine.calculateDaysFromPages(
-      plan.remainingPages,
-      plan.targetPagesPerDay,
-    );
+    final days = plan.remainingWirdDays;
     final now = _now();
     final today = DateTime(now.year, now.month, now.day);
     return plan.copyWith(
@@ -740,7 +751,8 @@ class KhatmahCubit extends Cubit<KhatmahState> {
         ? 1
         : KhatmahSchedulingEngine.elapsedCalendarDays(today, end);
     final needed = (plan.remainingPages / daysLeft).ceil();
-    final target = needed.clamp(plan.targetPagesPerDay, maxPagesPerDay);
+    // Never lower the pace; only raise it up to the boost cap.
+    final target = max(plan.targetPagesPerDay, min(needed, maxPagesPerDay));
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
       plan.remainingPages,
       target,
@@ -790,6 +802,34 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       return true;
     } catch (error) {
       _failedSchedule = (planId: plan.id, transform: transform);
+      _emitIfOpen(
+        KhatmahProgressFailure(
+          plan: _lastKnownPlan,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
+      return false;
+    }
+  }
+
+  /// Replaces the dedication of the active or paused plan.
+  Future<bool> updateDedication(KhatmahDedication dedication) async {
+    final plan = _lastKnownPlan;
+    final usecase = _updateDedication;
+    if (plan == null || usecase == null) return false;
+    try {
+      _checkAuthority();
+      final updated = await usecase(plan, dedication);
+      _lastKnownPlan = updated;
+      if (updated.status == KhatmahStatus.paused) {
+        _emitIfOpen(KhatmahPaused(plan: updated));
+      } else {
+        _emitActive(updated);
+      }
+      return true;
+    } catch (error) {
       _emitIfOpen(
         KhatmahProgressFailure(
           plan: _lastKnownPlan,

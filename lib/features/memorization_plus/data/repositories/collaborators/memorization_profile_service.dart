@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -88,7 +89,7 @@ class MemorizationProfileService {
       final profile = await _loadProfile();
       if (!profile.isChild) {
         return const Left(
-          CacheFailure('Guardian linking is only for children'),
+          CacheFailure(CubitMessageCodes.guardianOnlyForChildren),
         );
       }
       final saved = await _saveProfile(
@@ -99,6 +100,38 @@ class MemorizationProfileService {
         ),
       );
       await _datasource.clearPairingSession();
+      await _prefs?.setBool(kIdentityCloudDirty, true);
+      return Right(saved);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  /// Lets a child who chose "continue without guardian" link one later.
+  ///
+  /// The guardian-linking route only admits children whose onboarding is
+  /// still `required`; the automatic post-login and path-selection redirects
+  /// rely on that to leave a child who skipped alone. Re-opening is therefore
+  /// an explicit action (the UI gates it behind the parent PIN) rather than a
+  /// looser route guard.
+  Future<Either<Failure, MemorizationProfile>> reopenGuardianLinking() async {
+    try {
+      final profile = await _loadProfile();
+      if (!profile.isChild) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.guardianOnlyForChildren),
+        );
+      }
+      if (profile.isGuardianLinked) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.guardianAlreadyLinked),
+        );
+      }
+      final saved = await _saveProfile(
+        profile.copyWith(
+          guardianOnboardingStatus: GuardianOnboardingStatus.required,
+        ),
+      );
       await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(saved);
     } catch (e) {

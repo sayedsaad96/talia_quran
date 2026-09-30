@@ -186,6 +186,96 @@ void main() {
     },
   );
 
+  testWidgets('narrow screens move auto-advance and index into a menu', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    addTearDown(tester.view.reset);
+    registerCubitWith([testZikr1, testZikr2]);
+
+    await tester.pumpWidget(
+      buildApp(const AzkarCategoryPage(category: 'morning')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.format_list_bulleted_rounded), findsNothing);
+    expect(find.byIcon(Icons.autorenew_rounded), findsNothing);
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('فهرس الأذكار'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('narrow menu toggles auto-advance', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    addTearDown(tester.view.reset);
+    await prefsStore.setAutoAdvance(true);
+    registerCubitWith([testZikr1]);
+
+    await tester.pumpWidget(
+      buildApp(const AzkarCategoryPage(category: 'morning')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('الانتقال التلقائي مفعّل'));
+    await tester.pumpAndSettle();
+
+    expect(prefsStore.getAutoAdvance(), isFalse);
+  });
+
+  testWidgets('wide screens keep the separate buttons', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(412, 800);
+    addTearDown(tester.view.reset);
+    registerCubitWith([testZikr1]);
+
+    await tester.pumpWidget(
+      buildApp(const AzkarCategoryPage(category: 'morning')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.format_list_bulleted_rounded), findsOneWidget);
+    expect(find.byType(PopupMenuButton<String>), findsNothing);
+  });
+
+  testWidgets('the completion screen can take back the last tap', (
+    tester,
+  ) async {
+    registerCubitWith([testZikr2]); // totalCount 1
+    await tester.pumpWidget(
+      buildApp(const AzkarCategoryPage(category: 'morning')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('الذكر الثاني المعتمد'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('azkar-completion-morning')),
+      findsOneWidget,
+    );
+    final undo = find.byKey(const ValueKey('azkar-completion-undo'));
+    expect(undo, findsOneWidget);
+
+    await tester.tap(undo);
+    await tester.pumpAndSettle();
+
+    expect(find.text('الذكر الثاني المعتمد'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('azkar-completion-morning')),
+      findsNothing,
+    );
+  });
+
   group('haptic feedback never blocks the action', () {
     // A platform haptic that never replies (slow device / engine hiccup,
     // and the default under test) must not hold up copy or undo.

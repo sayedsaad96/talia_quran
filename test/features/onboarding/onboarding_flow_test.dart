@@ -195,11 +195,39 @@ void main() {
         await _registerCore();
         await _pumpOnboarding(tester);
 
-        expect(find.text('Surat Al-Fatihah'), findsOneWidget);
+        expect(find.text('Surat Al-Isra'), findsOneWidget);
         expect(find.text('Masterful Recitation'), findsOneWidget);
-        expect(find.text('Easy Tafsir'), findsOneWidget);
+        // Only shipped features are promised: no tafsir card (none bundled).
+        expect(find.text('Khatmah Plans'), findsOneWidget);
+        expect(find.textContaining('Tafsir'), findsNothing);
+        expect(find.textContaining('tafsir'), findsNothing);
       },
     );
+
+    testWidgets('first slide shows Al-Isra 17:45 verbatim under the basmala', (
+      tester,
+    ) async {
+      await _registerCore();
+      getIt.registerSingleton<QuranRepository>(
+        QuranRepositoryImpl(QuranLocalDatasourceImpl()),
+      );
+      OnboardingSourceAyah.resetCacheForTest();
+      final (basmala, isra45) = (await tester.runAsync(
+        () async => (
+          await OnboardingSourceAyah.load(1, 1),
+          await OnboardingSourceAyah.load(17, 45),
+        ),
+      ))!;
+      expect(isra45, startsWith('وَإِذَا قَرَأْتَ ٱلْقُرْءَانَ'));
+
+      await _pumpOnboarding(tester, locale: const Locale('ar'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump();
+
+      expect(find.text(basmala!), findsOneWidget);
+      expect(find.text('$isra45 ﴿٤٥﴾'), findsOneWidget);
+      expect(find.text('سورة الإسراء'), findsOneWidget);
+    });
 
     testWidgets(
       'second and third slides showcase smart memorization and habit continuity',
@@ -276,6 +304,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Daily Habit & Family Journeys'), findsOneWidget);
+    });
+
+    testWidgets('system back retraces one step instead of leaving', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await _tapVisible(tester, 'Next');
+      expect(find.text('Smart Memorization & Mastery'), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your Daily Quran Sanctuary'), findsOneWidget);
+      expect(find.byTooltip('Previous'), findsNothing);
+    });
+
+    testWidgets('choosing another path clears a previous setup error', (
+      tester,
+    ) async {
+      final repo = await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await navigateToFork(tester);
+      repo.failNextSelect = StateError('disk full');
+      await _tapVisible(tester, 'Continue as guest');
+      expect(find.textContaining('Setup could not finish'), findsOneWidget);
+
+      await _tapVisible(tester, 'Kids & Buds Journey');
+      expect(find.textContaining('Setup could not finish'), findsNothing);
     });
 
     testWidgets('swiping the PageView keeps the cubit step in sync', (

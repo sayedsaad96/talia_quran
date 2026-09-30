@@ -154,4 +154,41 @@ void main() {
     expect(find.textContaining('الوالد رحمه الله'), findsOneWidget);
     expect(find.textContaining('لِعَبْدِكَ'), findsNothing);
   });
+
+  testWidgets('renders approved dedication supplication formula when approved', (
+    tester,
+  ) async {
+    const approvedDuaData = KhatmDuaData(
+      arabicText:
+          'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً',
+      source: 'مصحف مجمع الملك فهد لطباعة المصحف الشريف',
+      sourceNote: 'دعاء عام مقترح مطبوع في ملحق المصحف الشريف',
+      tier: 'guidance',
+      reviewStatus: 'approved',
+      templatesEnabled: true,
+      dedicationInserts: {
+        'deceased': 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ {name} وَارْحَمْهُ',
+      },
+    );
+    when(() => mockGetKhatmDua()).thenAnswer((_) async => approvedDuaData);
+    final cubit = KhatmDuaCubit(mockGetKhatmDua);
+    await cubit.load();
+
+    const dedication = KhatmahDedication(
+      isDedicated: true,
+      recipientName: 'الوالد رحمه الله',
+      relationship: 'الأب',
+      condition: DedicationCondition.deceased,
+    );
+
+    await tester.pumpWidget(createWidget(cubit: cubit, dedication: dedication));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('khatm_dua_dedication_card')), findsOneWidget);
+    expect(find.textContaining('الوالد رحمه الله'), findsWidgets);
+    expect(
+      find.textContaining('اللَّهُمَّ اغْفِرْ لِعَبْدِكَ الوالد رحمه الله وَارْحَمْهُ'),
+      findsOneWidget,
+    );
+  });
 }

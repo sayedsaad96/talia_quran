@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../features/memorization_plus/domain/entities/child_identity_policy.dart';
 import '../../features/progress/domain/entities/progress_entities.dart';
 import '../constants/surah_names.dart';
 import '../services/achievement_service.dart';
@@ -183,6 +184,36 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.kidsJourneyStageLocked => l10n.kidsGamifiedLockedStage,
       CubitMessageCodes.kidsAyahAlreadyCompleted =>
         l10n.kidsAyahAlreadyCompleted,
+      CubitMessageCodes.guardianSignInRequired =>
+        l10n.guardianErrorSignInRequired,
+      CubitMessageCodes.guardianCloudUnavailable =>
+        l10n.guardianErrorCloudUnavailable,
+      CubitMessageCodes.guardianOnlyForChildren =>
+        l10n.guardianErrorOnlyForChildren,
+      CubitMessageCodes.guardianAlreadyLinked =>
+        l10n.guardianErrorAlreadyLinked,
+      CubitMessageCodes.guardianParentModeAdultsOnly =>
+        l10n.guardianErrorParentModeAdultsOnly,
+      CubitMessageCodes.guardianLinkCodeInvalid =>
+        l10n.guardianErrorLinkCodeInvalid,
+      CubitMessageCodes.guardianChildHasGuardian =>
+        l10n.guardianErrorChildHasGuardian,
+      CubitMessageCodes.guardianSameAccount => l10n.guardianErrorSameAccount,
+      CubitMessageCodes.parentRewardTitleRequired =>
+        l10n.parentRewardErrorTitleRequired,
+      CubitMessageCodes.parentRewardLimitReached =>
+        l10n.parentRewardErrorLimitReached,
+      CubitMessageCodes.childNicknameInvalid => l10n.childErrorNicknameInvalid(
+        ChildIdentityPolicy.maxNicknameLength,
+      ),
+      CubitMessageCodes.childAgeInvalid => l10n.childErrorAgeInvalid(
+        ChildIdentityPolicy.minAge,
+        ChildIdentityPolicy.maxAge,
+      ),
+      CubitMessageCodes.guardianChildNotLinked =>
+        l10n.guardianErrorChildNotLinked,
+      CubitMessageCodes.childIdentityUpdateUnavailable =>
+        l10n.childErrorIdentityUpdateUnavailable,
       CubitMessageCodes.errorCache => l10n.errorCacheMessage,
       CubitMessageCodes.errorNetwork => l10n.errorNetworkMessage,
       CubitMessageCodes.errorServer => l10n.errorUnknownMessage,

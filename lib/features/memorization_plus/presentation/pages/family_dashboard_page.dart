@@ -5,14 +5,18 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
+import 'child_detail_page.dart';
 
 class FamilyDashboardPage extends StatelessWidget {
   const FamilyDashboardPage({super.key});
@@ -77,6 +81,10 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
       ),
       body: BlocConsumer<FamilyDashboardCubit, FamilyDashboardState>(
         listener: (context, state) {
+          // A fresh PIN prompt must not show digits typed for the old PIN.
+          if (state is FamilyDashboardNeedsPin && state.feedback == null) {
+            _pinController.clear();
+          }
           final feedbackEventId = switch (state) {
             FamilyDashboardNeedsPin(:final feedbackEventId) => feedbackEventId,
             FamilyDashboardLocked(:final feedbackEventId) => feedbackEventId,
@@ -104,7 +112,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
           }
           if (state is FamilyDashboardError) {
             return ErrorStateWidget(
-              message: state.message,
+              message: context.localizedCubitMessage(state.message),
               onRetry: () => context.read<FamilyDashboardCubit>().load(),
             );
           }
@@ -119,13 +127,18 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
             );
           }
           if (state is FamilyDashboardLocked) {
+            final recoveryEmail = context
+                .read<FamilyDashboardCubit>()
+                .recoveryAccountEmail;
             return _PinGate(
               title: context.l10n.parentDashboardEnterPinTitle,
               buttonText: context.l10n.parentDashboardEnterButton,
               controller: _pinController,
               onSubmit: (pin) =>
                   context.read<FamilyDashboardCubit>().unlock(pin),
-              onReset: () => context.read<FamilyDashboardCubit>().resetAccess(),
+              onForgot: recoveryEmail == null
+                  ? null
+                  : () => _recoverForgottenPin(context, recoveryEmail),
             );
           }
           if (state is FamilyDashboardLoaded) {
@@ -152,6 +165,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
         l10n.parentDashboardChildRemoved,
       FamilyDashboardFeedbackType.nicknameSaved =>
         l10n.familyDashboardNicknameSaved,
+      FamilyDashboardFeedbackType.childIdentitySaved => l10n.childIdentitySaved,
       FamilyDashboardFeedbackType.childLinked =>
         l10n.parentDashboardChildLinked,
       FamilyDashboardFeedbackType.rewardAdded =>
@@ -160,8 +174,46 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
         l10n.parentDashboardRemoteRewardAdded,
       FamilyDashboardFeedbackType.reminderSaved =>
         l10n.parentDashboardReminderSaved,
-      FamilyDashboardFeedbackType.failure => feedback.message ?? '',
+      FamilyDashboardFeedbackType.accountPasswordIncorrect =>
+        l10n.parentDashboardAccountPasswordIncorrect,
+      FamilyDashboardFeedbackType.accountCheckUnavailable =>
+        l10n.parentDashboardAccountCheckUnavailable,
+      FamilyDashboardFeedbackType.failure => context.localizedCubitMessage(
+        feedback.message ?? CubitMessageCodes.errorUnknown,
+      ),
     };
+  }
+
+  Future<void> _recoverForgottenPin(BuildContext context, String email) async {
+    final cubit = context.read<FamilyDashboardCubit>();
+    final password = await showDialog<String>(
+      context: context,
+      builder: (_) => _ForgotPinDialog(email: email),
+    );
+    if (password == null || password.isEmpty) return;
+    await cubit.resetForgottenPin(password);
+  }
+
+  Future<void> _confirmChangePin(BuildContext context) async {
+    final cubit = context.read<FamilyDashboardCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.parentDashboardChangePin),
+        content: Text(context.l10n.parentDashboardChangePinConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await cubit.resetAccess();
   }
 
   void _showSettingsSheet(BuildContext context, ParentSettings settings) {
@@ -288,9 +340,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                   child: OutlinedButton(
                     onPressed: () {
                       Navigator.pop(sheetContext);
-                      context.read<FamilyDashboardCubit>().resetAccess();
+                      _confirmChangePin(context);
                     },
-                    child: Text(context.l10n.parentDashboardResetPin),
+                    child: Text(context.l10n.parentDashboardChangePin),
                   ),
                 ),
                 SizedBox(
@@ -465,7 +517,13 @@ class _ChildCard extends StatelessWidget {
       button: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        onTap: () => context.push('/family-dashboard/child', extra: child),
+        onTap: () => context.push(
+          AppRoutes.childDetail,
+          extra: ChildDetailRouteArgs(
+            child: child,
+            cubit: context.read<FamilyDashboardCubit>(),
+          ),
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: cardColor,
@@ -501,8 +559,7 @@ class _ChildCard extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      child.avatarEmoji ??
-                          (child.isLocal ? '👨‍👧' : '🧒'),
+                      child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
                       style: AppTypography.headlineLarge,
                     ),
                   ),
@@ -526,13 +583,24 @@ class _ChildCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (child.childAge case final age?)
+                Text(
+                  context.l10n.childAgeYears(age),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: context.tokens.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
 
               // Local badge
               if (child.isLocal) ...[
                 const SizedBox(height: 2),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
@@ -578,15 +646,17 @@ class _ChildCard extends StatelessWidget {
                       backgroundColor: const Color(
                         0xFF0D5C53,
                       ).withValues(alpha: 0.12),
-                      valueColor:
-                          const AlwaysStoppedAnimation(AppColors.primary),
+                      valueColor: const AlwaysStoppedAnimation(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     isActive
-                        ? context.l10n
-                            .familyDashboardChildActiveToday(child.todayPoints)
+                        ? context.l10n.familyDashboardChildActiveToday(
+                            child.todayPoints,
+                          )
                         : context.l10n.familyDashboardChildNoActivity,
                     style: AppTypography.labelSmall.copyWith(
                       color: isActive
@@ -708,7 +778,7 @@ class _PinGate extends StatefulWidget {
     required this.controller,
     required this.onSubmit,
     this.requiresConfirmation = false,
-    this.onReset,
+    this.onForgot,
   });
 
   final String title;
@@ -716,7 +786,7 @@ class _PinGate extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onSubmit;
   final bool requiresConfirmation;
-  final VoidCallback? onReset;
+  final VoidCallback? onForgot;
 
   @override
   State<_PinGate> createState() => _PinGateState();
@@ -800,14 +870,75 @@ class _PinGateState extends State<_PinGate> {
                 child: Text(widget.buttonText),
               ),
             ),
-            if (widget.onReset != null)
+            if (widget.onForgot != null)
               TextButton(
-                onPressed: widget.onReset,
-                child: Text(context.l10n.parentDashboardResetPin),
+                onPressed: widget.onForgot,
+                child: Text(context.l10n.parentDashboardForgotPin),
               ),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── Forgotten PIN ────────────────────────────────────────────────────────────
+
+class _ForgotPinDialog extends StatefulWidget {
+  const _ForgotPinDialog({required this.email});
+  final String email;
+
+  @override
+  State<_ForgotPinDialog> createState() => _ForgotPinDialogState();
+}
+
+class _ForgotPinDialogState extends State<_ForgotPinDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final password = _controller.text;
+    if (password.isEmpty) return;
+    Navigator.pop(context, password);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(context.l10n.parentDashboardForgotPinTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(context.l10n.parentDashboardForgotPinBody(widget.email)),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              obscureText: true,
+              keyboardType: TextInputType.visiblePassword,
+              decoration: InputDecoration(labelText: context.l10n.password),
+              onSubmitted: (_) => _submit(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(context.l10n.parentDashboardForgotPinConfirm),
+        ),
+      ],
     );
   }
 }
@@ -832,6 +963,14 @@ void _showAddChildOptions(BuildContext context) {
             Text(
               context.l10n.familyDashboardAddChild,
               style: AppTypography.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              context.l10n.familyDashboardNoChildrenHint,
+              style: AppTypography.bodySmall.copyWith(
+                color: context.tokens.textSecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(

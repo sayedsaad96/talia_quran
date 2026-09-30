@@ -116,6 +116,27 @@ void main() {
     );
 
     blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'a Ramadan khatmah reads one juz a day',
+      build: () {
+        when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+        return buildCubit();
+      },
+      act: (cubit) => cubit.createPlan(
+        pagesPerDay: 21,
+        targetDays: 30,
+        wirdUnit: KhatmahWirdUnit.juz,
+      ),
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupDone>().having(
+          (s) => s.plan.wirdUnit,
+          'wirdUnit',
+          KhatmahWirdUnit.juz,
+        ),
+      ],
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
       'a khatmah can begin at a chosen page (C7)',
       build: () {
         when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});

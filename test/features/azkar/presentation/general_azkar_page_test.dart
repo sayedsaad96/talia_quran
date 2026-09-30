@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/azkar/domain/repositories/azkar_repository.dart';
@@ -154,6 +155,55 @@ void main() {
     // Only testDua2 should be visible
     expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsNothing);
     expect(find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'), findsOneWidget);
+  });
+
+  testWidgets('favorite tooltips follow the app language', (tester) async {
+    registerCubitWith([testDua1]);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: GeneralAzkarPage(category: AzkarCategory.duas),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Add to favorites'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('bookmark-dua-1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+  });
+
+  testWidgets('subcategory chips show how many duas each holds', (tester) async {
+    registerCubitWith([testDua1, testDua2]);
+
+    await tester.pumpWidget(
+      buildApp(const GeneralAzkarPage(category: AzkarCategory.duas)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('أدعية نبوية (1)'), findsOneWidget);
+    expect(find.text('أدعية من القرآن (1)'), findsOneWidget);
+  });
+
+  test('sharing from the duas page uses the dua card, from general the azkar card', () {
+    expect(
+      libraryShareData(testDua1, AzkarCategory.duas).category,
+      SocialShareCategory.dua,
+    );
+    expect(
+      libraryShareData(testDua1, AzkarCategory.general).category,
+      SocialShareCategory.azkar,
+    );
   });
 
   testWidgets('empty search results shows empty state with clear button', (tester) async {

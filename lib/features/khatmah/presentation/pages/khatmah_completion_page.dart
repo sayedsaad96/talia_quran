@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../khatmah_localizations.dart';
+import '../khatmah_setup_prefill.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -99,7 +100,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
         : totalDays.toString();
 
     final buffer = StringBuffer(
-      context.l10n.khatmahShareSummary(title, totalDaysStr),
+      context.l10n.khatmahShareSummary(title, totalDays, totalDaysStr),
     );
     if (plan.dedication.isDedicated) {
       buffer.writeln();
@@ -121,9 +122,29 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
 
     final completion = widget.completion;
     if (completion == null || !completion.isValidCompletion) {
+      // Not a dead end (e.g. after a restart the route extra is gone):
+      // saved completions live in the history.
       return Scaffold(
+        appBar: AppBar(),
         body: Center(
-          child: Text(context.l10n.khatmahNoSavedCompletionAvailable),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.l10n.khatmahNoSavedCompletionAvailable,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                FilledButton(
+                  key: const Key('khatmah_completion_invalid_home_button'),
+                  onPressed: () => context.go(AppRoutes.khatmahHistory),
+                  child: Text(context.l10n.khatmahRecentCompletions),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -260,7 +281,8 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         _StatItem(
                           label: context.l10n.khatmahDuration,
                           value: context.l10n.khatmahDays(
-                            (daysTakenStr).toString(),
+                            daysTaken,
+                            daysTakenStr,
                           ),
                           icon: Icons.calendar_today_rounded,
                           color: AppColors.primaryLight,
@@ -450,6 +472,25 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     ),
                     icon: const Icon(Icons.replay_rounded),
                     label: Text(context.l10n.khatmahStartNewKhatmah),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // One tap to keep the same rhythm (not the dedication).
+                  OutlinedButton.icon(
+                    key: const Key('khatmah_completion_repeat_button'),
+                    onPressed: () => context.go(
+                      AppRoutes.khatmahSetup,
+                      extra: KhatmahSetupPrefill.fromPlan(plan),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.repeat_rounded),
+                    label: Text(context.l10n.khatmahRepeatSameSettings),
                   ),
 
                   const SizedBox(height: AppSpacing.md),

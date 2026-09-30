@@ -68,10 +68,10 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
         final detail = snapshot.data;
         final surah = detail?.surahs.firstOrNull;
         final subtitle = surah == null
-            ? '${context.l10n.page} $page'
+            ? '${context.l10n.page} ${context.numText(page)}'
             : context.isArabic
-                ? '${surah.nameAr} • ${context.l10n.page} $page'
-                : '${surah.nameEn} • ${context.l10n.page} $page';
+                ? '${surah.nameAr} • ${context.l10n.page} ${context.numText(page)}'
+                : '${surah.nameEn} • ${context.l10n.page} ${context.numText(page)}';
         return _CardBody(
           page: page,
           subtitle: subtitle,

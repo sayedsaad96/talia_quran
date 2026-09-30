@@ -8,13 +8,58 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
+import '../widgets/parent_support_tip.dart';
+import 'family_dashboard_page.dart';
 
+/// Route payload for [ChildDetailPage]. The page is pushed as its own root
+/// route, outside the dashboard's widget subtree, so the dashboard's cubit
+/// travels with the route instead of being looked up from ancestors.
+class ChildDetailRouteArgs {
+  const ChildDetailRouteArgs({required this.child, required this.cubit});
+
+  final FamilyChildEntry child;
+  final FamilyDashboardCubit cubit;
+}
+
+/// Expects a [FamilyDashboardCubit] above it (the route provides the
+/// dashboard's own instance). Rebuilds from the cubit so edits such as a new
+/// nickname appear immediately instead of showing the entry captured at push.
 class ChildDetailPage extends StatelessWidget {
   const ChildDetailPage({super.key, required this.child});
   final FamilyChildEntry child;
 
+  /// Builds the child-detail route from its `extra`. The page acts through
+  /// the dashboard's unlocked cubit; without it (deep link, restored route)
+  /// the parent goes back through the dashboard and its PIN gate.
+  static Widget forRoute(Object? extra) {
+    if (extra is! ChildDetailRouteArgs || extra.cubit.isClosed) {
+      return const FamilyDashboardPage();
+    }
+    return BlocProvider<FamilyDashboardCubit>.value(
+      value: extra.cubit,
+      child: ChildDetailPage(child: extra.child),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<FamilyDashboardCubit, FamilyDashboardState>(
+      builder: (context, state) => _buildFor(context, _currentEntry(state)),
+    );
+  }
+
+  FamilyChildEntry _currentEntry(FamilyDashboardState state) {
+    if (state is! FamilyDashboardLoaded) return child;
+    for (final entry in state.dashboard.children) {
+      if (entry.childUserId == child.childUserId &&
+          entry.isLocal == child.isLocal) {
+        return entry;
+      }
+    }
+    return child;
+  }
+
+  Widget _buildFor(BuildContext context, FamilyChildEntry child) {
     return Scaffold(
       backgroundColor: context.tokens.background,
       appBar: AppBar(
@@ -35,7 +80,7 @@ class ChildDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.card_giftcard_rounded),
             tooltip: context.l10n.childDetailAddReward,
-            onPressed: () => _showAddRewardDialog(context),
+            onPressed: () => _showAddRewardDialog(context, child),
           ),
         ],
       ),
@@ -43,7 +88,10 @@ class ChildDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _showAddRewardDialog(BuildContext context) async {
+  Future<void> _showAddRewardDialog(
+    BuildContext context,
+    FamilyChildEntry child,
+  ) async {
     final title = await showDialog<String>(
       context: context,
       builder: (_) => _TextInputDialog(
@@ -116,16 +164,38 @@ class _ChildDetailBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // ─── Open full dashboard (local child only) ────────────────────────
-        if (child.isLocal) ...[
+        // ─── Edit name (local child) / name and age (linked child) ─────────
+        if (child.isLocal)
           OutlinedButton.icon(
             onPressed: () => _showChangeNicknameDialog(context),
             icon: const Icon(Icons.edit_rounded),
             label: Text(context.l10n.parentDashboardEditChild),
+          )
+        else
+          OutlinedButton.icon(
+            onPressed: () => _showEditIdentityDialog(context),
+            icon: const Icon(Icons.edit_rounded),
+            label: Text(context.l10n.childEditIdentity),
           ),
-        ],
       ],
     );
+  }
+
+  Future<void> _showEditIdentityDialog(BuildContext context) async {
+    final identity = await showDialog<_ChildIdentityDraft>(
+      context: context,
+      builder: (_) => _ChildIdentityDialog(
+        initialName: child.displayName,
+        initialAge: child.childAge,
+      ),
+    );
+    if (identity != null && context.mounted) {
+      await context.read<FamilyDashboardCubit>().updateRemoteChildIdentity(
+        childUserId: child.childUserId,
+        nickname: identity.nickname,
+        age: identity.age,
+      );
+    }
   }
 
   Future<void> _showChangeNicknameDialog(BuildContext context) async {
@@ -191,6 +261,13 @@ class _ChildHeaderCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (child.childAge case final age?)
+                  Text(
+                    context.l10n.childAgeYears(age),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
                 const SizedBox(height: 4),
                 if (child.isLocal)
                   Container(
@@ -333,6 +410,8 @@ class _LearningSupportCard extends StatelessWidget {
             icon: Icons.lightbulb_outline_rounded,
             label: context.l10n.parentHintUses(dashboard.totalHintUses),
           ),
+          // K35: a number needs a next step the parent can take.
+          if (dashboard.ayahsNeedingSupport > 0) const ParentSupportTip(),
         ],
       ),
     );
@@ -610,6 +689,123 @@ class _TextInputDialogState extends State<_TextInputDialog> {
           child: Text(context.l10n.cancel),
         ),
         FilledButton(onPressed: _submit, child: Text(widget.actionLabel)),
+      ],
+    );
+  }
+}
+
+typedef _ChildIdentityDraft = ({String nickname, int age});
+
+/// Name + age editor for a linked child, validated with the same
+/// [ChildIdentityPolicy] the server enforces.
+class _ChildIdentityDialog extends StatefulWidget {
+  const _ChildIdentityDialog({required this.initialName, this.initialAge});
+
+  final String initialName;
+  final int? initialAge;
+
+  @override
+  State<_ChildIdentityDialog> createState() => _ChildIdentityDialogState();
+}
+
+class _ChildIdentityDialogState extends State<_ChildIdentityDialog> {
+  late final TextEditingController _nameController;
+  int? _age;
+  String? _nameError;
+  String? _ageError;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+    _age = ChildIdentityPolicy.isValidAge(widget.initialAge)
+        ? widget.initialAge
+        : null;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final l10n = context.l10n;
+    final name = ChildIdentityPolicy.normalizeNickname(_nameController.text);
+    final age = _age;
+    final ageValid = ChildIdentityPolicy.isValidAge(age);
+    setState(() {
+      _nameError = name == null
+          ? l10n.childErrorNicknameInvalid(
+              ChildIdentityPolicy.maxNicknameLength,
+            )
+          : null;
+      _ageError = ageValid
+          ? null
+          : l10n.childErrorAgeInvalid(
+              ChildIdentityPolicy.minAge,
+              ChildIdentityPolicy.maxAge,
+            );
+    });
+    if (name == null || age == null || !ageValid) return;
+    Navigator.pop<_ChildIdentityDraft>(context, (nickname: name, age: age));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(context.l10n.childEditIdentity),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              maxLength: ChildIdentityPolicy.maxNicknameLength,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: context.l10n.name,
+                errorText: _nameError,
+                counterText: '',
+              ),
+              onChanged: (_) {
+                if (_nameError != null) setState(() => _nameError = null);
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<int>(
+              initialValue: _age,
+              decoration: InputDecoration(
+                labelText: context.l10n.age,
+                errorText: _ageError,
+              ),
+              items: [
+                for (
+                  var age = ChildIdentityPolicy.minAge;
+                  age <= ChildIdentityPolicy.maxAge;
+                  age++
+                )
+                  DropdownMenuItem(
+                    value: age,
+                    child: Text(context.l10n.childAgeYears(age)),
+                  ),
+              ],
+              onChanged: (value) => setState(() {
+                _age = value;
+                _ageError = null;
+              }),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(context.l10n.save)),
       ],
     );
   }

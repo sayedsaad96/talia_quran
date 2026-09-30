@@ -135,6 +135,41 @@ void main() {
     },
   );
 
+  testWidgets('stats appear from the second completion onwards', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'khatmah_history': jsonEncode([
+        _historyRow(id: 'a', title: 'First', totalDays: 30),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+    var cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+    addTearDown(cubit.close);
+    await _pumpHistoryPage(tester, cubit);
+    expect(find.byKey(const Key('khatmah_history_stats')), findsNothing);
+
+    await prefs.setString(
+      'khatmah_history',
+      jsonEncode([
+        _historyRow(id: 'a', title: 'First', totalDays: 30),
+        _historyRow(
+          id: 'b',
+          title: 'Second',
+          totalDays: 20,
+          khatmahNumber: 2,
+        ),
+      ]),
+    );
+    cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+    addTearDown(cubit.close);
+    await tester.pumpWidget(const SizedBox());
+    await _pumpHistoryPage(tester, cubit);
+    expect(find.byKey(const Key('khatmah_history_stats')), findsOneWidget);
+    expect(find.textContaining('fastest 20'), findsOneWidget);
+  });
+
   testWidgets(
     'malformed storage is a retryable failure distinct from semantic corruption',
     (tester) async {

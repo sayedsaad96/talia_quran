@@ -108,6 +108,44 @@ void main() {
   });
 
   group('PrayerCompanionController.handle', () {
+    test('preparation action opens Home without recording a prayer', () async {
+      final preparation = PrayerCompanionNotificationIntent(
+        occurrence: occurrence,
+        kind: PrayerCompanionNotificationKind.preparation,
+      );
+      final outcome = await buildController().handle(
+        NotificationResponseEvent(
+          payload: preparation.encode(),
+          actionId: 'action_prayer_companion_confirm',
+        ),
+      );
+      expect(outcome.route, AppRoutes.home);
+      expect(calls, isEmpty);
+      expect(repository.records, isEmpty);
+    });
+
+    test('future check-in action cannot confirm prayer early', () async {
+      final futureOccurrence = PrayerOccurrence(
+        ownerId: ownerId,
+        localDate: DateTime.now().add(const Duration(days: 1)),
+        prayerKey: PrayerKey.asr,
+        scheduledAt: DateTime.now().add(const Duration(hours: 1)),
+      );
+      final futureIntent = PrayerCompanionNotificationIntent(
+        occurrence: futureOccurrence,
+        kind: PrayerCompanionNotificationKind.checkIn,
+      );
+      final outcome = await buildController().handle(
+        NotificationResponseEvent(
+          payload: futureIntent.encode(),
+          actionId: 'action_prayer_companion_confirm',
+        ),
+      );
+      expect(outcome.route, AppRoutes.home);
+      expect(calls, isEmpty);
+      expect(repository.records, isEmpty);
+    });
+
     test('confirm action saves before refreshing notifications', () async {
       final outcome = await buildController().handle(
         NotificationResponseEvent(

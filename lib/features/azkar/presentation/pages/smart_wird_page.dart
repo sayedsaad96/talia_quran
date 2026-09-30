@@ -20,6 +20,8 @@ import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
 import '../../domain/usecases/compose_smart_wird_usecase.dart';
 import '../services/zikr_audio_service.dart';
+import '../widgets/azkar_index_sheet.dart';
+import '../widgets/zikr_audio_state_builder.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
 
@@ -38,8 +40,7 @@ class SmartWirdPage extends StatefulWidget {
 class _SmartWirdPageState extends State<SmartWirdPage> {
   final ComposeSmartWirdUsecase _compose = getIt<ComposeSmartWirdUsecase>();
   final AzkarRepository _repository = getIt<AzkarRepository>();
-  final SmartWirdProgressStore _progressStore =
-      getIt<SmartWirdProgressStore>();
+  final SmartWirdProgressStore _progressStore = getIt<SmartWirdProgressStore>();
   final ZikrAudioService _audioService = getIt<ZikrAudioService>();
 
   /// XP is a bonus, not a requirement: tests and minimal DI setups run
@@ -91,14 +92,17 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
 
     // Resume: restore today's persisted counts for this day-part.
     final saved = _progressStore.activeSession(time);
-    if (saved != null && saved.dayPart == wird!.dayPart) {
+    if (saved != null && _isSameSitting(saved, wird!)) {
       for (final item in wird!.items) {
-        _counts[item.zikr.id] =
-            (saved.counts[item.zikr.id] ?? 0).clamp(0, item.zikr.totalCount);
+        _counts[item.zikr.id] = (saved.counts[item.zikr.id] ?? 0).clamp(
+          0,
+          item.zikr.totalCount,
+        );
       }
       // Jump to the first unfinished card so the user continues seamlessly.
-      final resumeIndex = wird!.items
-          .indexWhere((item) => (_counts[item.zikr.id] ?? 0) < item.zikr.totalCount);
+      final resumeIndex = wird!.items.indexWhere(
+        (item) => (_counts[item.zikr.id] ?? 0) < item.zikr.totalCount,
+      );
       _currentCard = resumeIndex == -1 ? 0 : resumeIndex;
     }
 
@@ -123,7 +127,27 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
     if (_corpus == null) return wird;
     // Re-run the pure composer so day-part ordering stays consistent with the
     // persisted counts even if the corpus changed between sessions.
-    return _compose.composeFromCorpus(_corpus!, wird.dayPart, wird.composedAt);
+    return _compose.composeFromCorpus(
+      _corpus!,
+      wird.dayPart,
+      wird.composedAt,
+      period: wird.period,
+    );
+  }
+
+  /// A saved session belongs to the same sitting when it is the same period
+  /// (morning or evening). Sessions saved before periods were recorded fall
+  /// back to comparing the finer day part.
+  bool _isSameSitting(SmartWirdSession saved, SmartWird wird) {
+    final savedPeriod = saved.period;
+    if (savedPeriod == null) return saved.dayPart == wird.dayPart;
+    // Sessions are keyed by calendar day, so an evening sitting after midnight
+    // (before 04:00, the start of the fixed morning window) would otherwise
+    // share its key with the same day's later evening. Keep them apart.
+    final savedAfterMidnight = saved.updatedAt.hour < 4;
+    final nowAfterMidnight = wird.composedAt.hour < 4;
+    return savedPeriod == wird.period &&
+        savedAfterMidnight == nowAfterMidnight;
   }
 
   Future<void> _persistProgress() async {
@@ -137,6 +161,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
     await _progressStore.saveActiveSession(
       SmartWirdSession(
         dayPart: wird.dayPart,
+        period: wird.period,
         counts: counts,
         updatedAt: widget.currentTime ?? DateTime.now(),
       ),
@@ -167,8 +192,9 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
     // when everything ahead is done) so the recitation keeps flowing.
     if (next >= item.zikr.totalCount) {
       final wird = _wird!;
-      var target = wird.items
-          .indexWhere((i) => (_counts[i.zikr.id] ?? 0) < i.zikr.totalCount);
+      var target = wird.items.indexWhere(
+        (i) => (_counts[i.zikr.id] ?? 0) < i.zikr.totalCount,
+      );
       if (target == -1) {
         target = wird.items.length - 1;
       }
@@ -263,93 +289,42 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
   void _openIndexSheet() {
     unawaited(HapticFeedback.selectionClick());
     final wird = _wird!;
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Directionality(
-        textDirection: Directionality.of(context),
-        child: Material(
-          color: context.tokens.surface,
-          clipBehavior: Clip.antiAlias,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    showAzkarIndexSheet(
+      context,
+      entries: [
+        for (var i = 0; i < wird.items.length; i++)
+          AzkarIndexEntry(
+            title: azkarIndexTitle(wird.items[i].zikr),
+            subtitle: [
+              if (wird.items[i].zikr.reference.isNotEmpty)
+                wird.items[i].zikr.reference,
+              '${_counts[wird.items[i].zikr.id] ?? 0} / '
+                  '${wird.items[i].zikr.totalCount}',
+            ].join(' · '),
+            done:
+                (_counts[wird.items[i].zikr.id] ?? 0) >=
+                wird.items[i].zikr.totalCount,
+            selected: i == _currentCard,
           ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 10),
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.tokens.textHint
-                        .withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    context.l10n.azkarIndex,
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: context.tokens.textPrimary,
-                      fontFamily: 'Amiri',
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: wird.items.length,
-                    itemBuilder: (context, index) {
-                      final item = wird.items[index];
-                      final count = _counts[item.zikr.id] ?? 0;
-                      final done = count >= item.zikr.totalCount;
-                      return ListTile(
-                        leading: Icon(
-                          done
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          color: done ? AppColors.success : AppColors.primary,
-                        ),
-                        title: Text(
-                          item.zikr.reference.isNotEmpty
-                              ? item.zikr.reference
-                              : context.l10n.zikrNumber(index + 1),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: context.tokens.textPrimary,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '$count / ${item.zikr.totalCount}',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: context.tokens.textSecondary,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          setState(() => _currentCard = index);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      ],
+      onSelected: _goToCard,
     );
+  }
+
+  /// Moves the pager to [index]. Setting only `_currentCard` would leave the
+  /// `PageView` where it was.
+  void _goToCard(int index) {
+    final controller = _pageController ??= PageController(
+      initialPage: _currentCard,
+    );
+    setState(() => _currentCard = index);
+    if (controller.hasClients) controller.jumpToPage(index);
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final background =
-        context.tokens.background;
+    final background = context.tokens.background;
 
     return Scaffold(
       backgroundColor: background,
@@ -357,22 +332,22 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
         child: _loading
             ? const Center(child: LoadingWidget())
             : _error != null
-                ? ErrorStateWidget(message: _error!, onRetry: _load)
-                : _wird == null || _wird!.isEmpty
-                    ? EmptyStateWidget(
-                        key: const ValueKey('azkar-content-under-review'),
-                        message: context.l10n.azkarContentUnderReview,
-                        icon: Icons.pending_actions_rounded,
-                      )
-                    : _allDone
-                        ? _SmartWirdDoneView(
-                            completed: _completedCount,
-                            total: _wird!.items.length,
-                            xpResult: _xpResult,
-                            onReset: _reset,
-                            onShare: _shareSession,
-                          )
-                        : _buildSession(context, isDark),
+            ? ErrorStateWidget(message: _error!, onRetry: _load)
+            : _wird == null || _wird!.isEmpty
+            ? EmptyStateWidget(
+                key: const ValueKey('azkar-content-under-review'),
+                message: context.l10n.azkarContentUnderReview,
+                icon: Icons.pending_actions_rounded,
+              )
+            : _allDone
+            ? _SmartWirdDoneView(
+                completed: _completedCount,
+                total: _wird!.items.length,
+                xpResult: _xpResult,
+                onReset: _reset,
+                onShare: _shareSession,
+              )
+            : _buildSession(context, isDark),
       ),
     );
   }
@@ -441,8 +416,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
             borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
             child: LinearProgressIndicator(
               value: totalItems == 0 ? 0 : completed / totalItems,
-              backgroundColor:
-                  context.tokens.divider,
+              backgroundColor: context.tokens.divider,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
               minHeight: 4,
             ),
@@ -461,17 +435,21 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                 final item = wird.items[index];
                 final count = _counts[item.zikr.id] ?? 0;
                 final done = count >= item.zikr.totalCount;
-                return _SmartWirdCard(
-                  item: item,
-                  count: count,
-                  done: done,
-                  isDark: isDark,
-                  onTap: () => _bump(item),
-                  onLongPress: () => _undo(item),
-                  onToggleAudio: () => _audioService.toggle(item.zikr),
-                  hasAudio: _audioService.hasAudio(item.zikr),
-                  isAudioPlaying: _audioService.state.isPlaying &&
-                      _audioService.state.zikrId == item.zikr.id,
+                return ZikrAudioStateBuilder(
+                  source: _audioService,
+                  builder: (context, audioState) => _SmartWirdCard(
+                    item: item,
+                    count: count,
+                    done: done,
+                    isDark: isDark,
+                    onTap: () => _bump(item),
+                    onLongPress: () => _undo(item),
+                    onToggleAudio: () => _audioService.toggle(item.zikr),
+                    hasAudio: _audioService.hasAudio(item.zikr),
+                    isAudioPlaying:
+                        audioState.isPlaying &&
+                        audioState.zikrId == item.zikr.id,
+                  ),
                 );
               },
             ),
@@ -507,10 +485,8 @@ class _SmartWirdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary =
-        context.tokens.textPrimary;
-    final textSecondary =
-        context.tokens.textSecondary;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
     final card = context.tokens.card;
     final border = context.tokens.divider;
 
@@ -655,8 +631,7 @@ class _CounterDial extends StatelessWidget {
                 builder: (context, value, _) => CircularProgressIndicator(
                   value: value,
                   strokeWidth: 8,
-                  backgroundColor:
-                      context.tokens.divider,
+                  backgroundColor: context.tokens.divider,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     done ? AppColors.success : AppColors.primary,
                   ),
@@ -717,10 +692,8 @@ class _SmartWirdDoneView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary =
-        context.tokens.textPrimary;
-    final textSecondary =
-        context.tokens.textSecondary;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     return Center(
       child: Padding(
@@ -755,9 +728,7 @@ class _SmartWirdDoneView extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               context.l10n.completedCount(completed, total),
-              style: AppTypography.bodyLarge.copyWith(
-                color: textSecondary,
-              ),
+              style: AppTypography.bodyLarge.copyWith(color: textSecondary),
             ),
             if (xpResult != null) ...[
               const SizedBox(height: AppSpacing.sm),

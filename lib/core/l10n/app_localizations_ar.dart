@@ -425,6 +425,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterFocusMode => 'الدخول إلى وضع التركيز';
 
   @override
+  String get readerGoToPage => 'انتقل إلى صفحة أو سورة أو جزء';
+
+  @override
+  String get readerTajweedColors => 'ألوان التجويد';
+
+  @override
+  String get readerTajweedColorsHint => 'تلوين أحكام التجويد في صفحة المصحف';
+
+  @override
+  String get surahInProgressBadge => 'قيد الحفظ';
+
+  @override
   String get exitFocusMode => 'الخروج من وضع التركيز';
 
   @override
@@ -595,10 +607,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pureBlackTheme => 'أسود كامل (OLED)';
-
-  @override
-  String get pureBlackThemeHint =>
-      'خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED';
 
   @override
   String get changeMemorizationPath => 'تغيير مسار الحفظ';
@@ -1152,6 +1160,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا';
 
   @override
+  String get azkarFavoriteAdd => 'إضافة إلى المفضلة';
+
+  @override
+  String get azkarFavoriteRemove => 'إزالة من المفضلة';
+
+  @override
   String get azkarSearchNoResultsTitle => 'لا توجد نتائج مطابقة';
 
   @override
@@ -1474,7 +1488,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get achievementTitleJuzAmma => 'جزء عمّ';
 
   @override
-  String get achievementDescJuzAmma => 'احفظ ٥٦٤ آية (جزء عمّ)';
+  String get achievementDescJuzAmma => 'احفظ جزء عمّ كاملاً';
 
   @override
   String get achievementTitleOneJuzMemorized => 'جزء محفوظ';
@@ -1891,13 +1905,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splashFeatureGrow => 'انمُ';
 
   @override
-  String get onboardingWelcomeTitle => 'مرحباً بك في تالية';
-
-  @override
-  String get onboardingWelcomeSubtitle =>
-      'مساحة قرآنية هادئة ومتقنة تعينك على التلاوة والتدبر، والحفظ والمراجعة الذكية، وبناء ورد يومي مستدام.';
-
-  @override
   String get onboardingStartJourney => 'ابدأ رحلتك';
 
   @override
@@ -1905,10 +1912,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingSlide1Subtitle =>
-      'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء مع التفسير الميسر.';
+      'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء، وخطط ختمة بالوتيرة التي تناسبك.';
 
   @override
-  String get onboardingBentoMushafSurah => 'سورة الفاتحة';
+  String get onboardingBentoMushafSurah => 'سورة الإسراء';
 
   @override
   String get onboardingBentoListeningTitle => 'تلاوات متقنة';
@@ -1917,10 +1924,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingBentoListeningDesc => 'استماع وتكرار صوتي';
 
   @override
-  String get onboardingBentoTafsirTitle => 'تفسير ميسر';
+  String get onboardingBentoKhatmahTitle => 'خطط الختمة';
 
   @override
-  String get onboardingBentoTafsirDesc => 'معاني الآيات فوراً';
+  String get onboardingBentoKhatmahDesc => 'وتيرة يومية تناسبك';
+
+  @override
+  String get onboardingBentoKhatmahBadge => 'ورد يومي';
 
   @override
   String get onboardingSlide2Title => 'احفظ القرآن ورسّخه بذكاء';
@@ -1948,6 +1958,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingBentoReviewScheduleDesc => 'تذكير تلقائي لمنع النسيان';
 
   @override
+  String get onboardingBentoStatusMastered => 'متقن راسخ';
+
+  @override
+  String get onboardingBentoStatusDueSoon => 'مراجعة قريبة';
+
+  @override
+  String get onboardingBentoStatusNew => 'جديد';
+
+  @override
+  String get onboardingBentoSmartAlert => 'تذكير ذكي';
+
+  @override
   String get onboardingSlide3Title => 'ورد مستمر وتجربة لكل العائلة';
 
   @override
@@ -1961,7 +1983,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingBentoStreakDays => '٧ أيام متواصلة 🔥';
 
   @override
-  String get onboardingBentoOfflineBadge => 'يعمل ١٠٠٪ دون إنترنت';
+  String get onboardingBentoOfflineBadge => 'يعمل دون إنترنت';
 
   @override
   String get onboardingBentoKidsTeaserTitle => 'مسار براعم تالية';
@@ -2422,6 +2444,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedTestStepSubtitle => 'حاول التسميع بدون مساعدة';
 
   @override
+  String get kidsGamifiedTryFromMemory => 'جرّب من ذاكرتك';
+
+  @override
+  String get kidsGamifiedTryToRemember => 'حاول تتذكّر الآية';
+
+  @override
+  String get kidsGamifiedGiveMeTheStart => 'أعطني البداية';
+
+  @override
+  String get kidsGamifiedFirstWordShown => 'هذه أول كلمة، أكمل أنت';
+
+  @override
+  String get kidsGamifiedReviewChallenge => '⭐ تحدّي المراجعة';
+
+  @override
+  String get kidsGamifiedReviewChallengeSubtitle =>
+      'هل تتذكّرها؟ سمّعها من ذاكرتك';
+
+  @override
+  String get kidsGamifiedRemindMe => 'ذكّرني';
+
+  @override
+  String get kidsWelcomeBackTitle => 'أهلاً بعودتك!';
+
+  @override
+  String get kidsWelcomeBackSubtitle => 'نبدأ بخطوة سهلة';
+
+  @override
+  String get kidsGamifiedEnoughForToday =>
+      'أحسنت! هذا وقت كافٍ لليوم، يمكنك التوقف.';
+
+  @override
+  String get parentSupportTip =>
+      'جرّبا معاً: استمعا للآية مرتين، ثم دع طفلك يبدأ بأول كلمة';
+
+  @override
   String get kidsGamifiedStartMission => 'ابدأ المهمة';
 
   @override
@@ -2591,15 +2649,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizationSessionTitle => 'جلسة الحفظ';
 
   @override
-  String get memorizationHubReviewSectionTitle => 'مراجعة بالتسميع';
+  String get memorizationHubReviewSectionTitle => 'المراجعة';
 
   @override
   String get memorizationHubReviewSectionSubtitle =>
-      'راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).';
+      'سمّع ما حفظته من ذاكرتك، ويقيّم التطبيق تسميعك.';
 
   @override
   String get memorizationHubReviewCardDescription =>
-      'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.';
+      'سمّع الآيات المستحقة للمراجعة من حفظك.';
 
   @override
   String get memorizationHubDailyPlanSubtitle =>
@@ -2627,7 +2685,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.';
 
   @override
-  String get listeningReviewTitle => 'مراجعة بالسماع';
+  String get listeningReviewTitle => 'اختبار الاستماع';
 
   @override
   String get listeningReviewHubDescription =>
@@ -2655,7 +2713,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get listeningReviewNotEnoughBody =>
-      'تحتاج المراجعة بالسماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.';
+      'يحتاج اختبار الاستماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.';
 
   @override
   String get listeningReviewErrorBody => 'تعذّر تحضير الجولة. حاول مرة أخرى.';
@@ -2846,6 +2904,116 @@ class AppLocalizationsAr extends AppLocalizations {
       'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد';
 
   @override
+  String get parentDashboardForgotPin => 'نسيت الرمز؟';
+
+  @override
+  String get parentDashboardForgotPinTitle => 'استعادة رمز ولي الأمر';
+
+  @override
+  String parentDashboardForgotPinBody(String email) {
+    return 'للتأكد أنك ولي الأمر، أدخل كلمة مرور حسابك $email. بعدها تنشئ رمزاً جديداً، وتبقى المكافآت والإعدادات كما هي.';
+  }
+
+  @override
+  String get parentDashboardForgotPinConfirm => 'تحقّق';
+
+  @override
+  String get parentDashboardAccountPasswordIncorrect =>
+      'كلمة مرور الحساب غير صحيحة';
+
+  @override
+  String get parentDashboardAccountCheckUnavailable =>
+      'تعذّر التحقق من الحساب الآن. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
+
+  @override
+  String get parentDashboardChangePin => 'تغيير رمز ولي الأمر';
+
+  @override
+  String get parentDashboardChangePinConfirm =>
+      'ستنشئ رمزاً جديداً الآن. تبقى المكافآت والإعدادات كما هي.';
+
+  @override
+  String get guardianErrorSignInRequired =>
+      'سجّل الدخول بحسابك أولاً ثم أعد المحاولة.';
+
+  @override
+  String get guardianErrorCloudUnavailable =>
+      'ربط الأطفال غير متاح في هذا الإصدار لأن المزامنة السحابية غير مفعّلة.';
+
+  @override
+  String get guardianErrorOnlyForChildren =>
+      'ربط ولي الأمر متاح لحسابات الأطفال فقط.';
+
+  @override
+  String get guardianErrorAlreadyLinked => 'هذا الحساب مرتبط بولي أمر بالفعل.';
+
+  @override
+  String get guardianErrorParentModeAdultsOnly =>
+      'وضع ولي الأمر متاح لمسار الكبار فقط.';
+
+  @override
+  String get guardianErrorLinkCodeInvalid =>
+      'رمز الربط غير صحيح أو انتهت صلاحيته. اطلب من الطفل إنشاء رمز جديد ثم أعد المحاولة.';
+
+  @override
+  String get guardianErrorChildHasGuardian =>
+      'هذا الطفل مرتبط بولي أمر آخر. يجب فك الربط الحالي أولاً.';
+
+  @override
+  String get guardianErrorSameAccount =>
+      'لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.';
+
+  @override
+  String get parentRewardErrorTitleRequired => 'اكتب اسم المكافأة أولاً.';
+
+  @override
+  String get parentRewardErrorLimitReached => 'يمكن إضافة 3 مكافآت فقط.';
+
+  @override
+  String childErrorNicknameInvalid(int max) {
+    return 'اكتب اسماً من حرف واحد إلى $max حرفاً.';
+  }
+
+  @override
+  String childErrorAgeInvalid(int min, int max) {
+    return 'اختر عمراً بين $min و$max سنة.';
+  }
+
+  @override
+  String get guardianErrorChildNotLinked => 'هذا الطفل لم يعد مرتبطاً بحسابك.';
+
+  @override
+  String get childErrorIdentityUpdateUnavailable =>
+      'تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.';
+
+  @override
+  String childAgeYears(int age) {
+    String _temp0 = intl.Intl.pluralLogic(
+      age,
+      locale: localeName,
+      other: '$age سنة',
+      few: '$age سنوات',
+      two: 'سنتان',
+      one: 'سنة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get childEditIdentity => 'تعديل اسم الطفل وعمره';
+
+  @override
+  String get childIdentitySaved =>
+      'تم حفظ بيانات الطفل، وتظهر على جهازه بعد المزامنة التالية.';
+
+  @override
+  String get kidsLinkGuardianTileTitle => 'ربط ولي الأمر';
+
+  @override
+  String get kidsLinkGuardianTileSubtitle =>
+      'يحتاج رمز ولي الأمر. بعد الربط يتابع ولي الأمر تقدّمك من جهازه.';
+
+  @override
   String get parentDashboardTodaySummary => 'ملخص اليوم';
 
   @override
@@ -3013,12 +3181,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanHeaderTitle => 'خطتك اليومية';
 
   @override
-  String dailyPlanHeaderSummary(int total, int completed) {
-    return '$total عنصر • $completed مكتمل';
+  String dailyPlanHeaderSummary(
+    int total,
+    String totalText,
+    String completedText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText عنصر',
+      many: '$totalText عنصرًا',
+      few: '$totalText عناصر',
+      two: 'عنصران',
+      one: 'عنصر واحد',
+      zero: '$totalText عنصر',
+    );
+    return '$_temp0 • $completedText مكتمل';
   }
 
   @override
-  String dailyPlanProgressCount(int completed, int total) {
+  String dailyPlanProgressCount(String completed, String total) {
     return '$completed من $total';
   }
 
@@ -3026,8 +3208,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanAllDoneShort => '✅ أحسنت! أكملت خطتك اليوم';
 
   @override
-  String dailyPlanRemainingItems(int count) {
-    return 'تبقّى $count عناصر';
+  String dailyPlanRemainingItems(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبقّى $countText عنصر',
+      many: 'تبقّى $countText عنصرًا',
+      few: 'تبقّى $countText عناصر',
+      two: 'تبقّى عنصران',
+      one: 'تبقّى عنصر واحد',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3036,7 +3227,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String dailyPlanSurahAyahTitle(String surah, int ayahNumber) {
+  String dailyPlanSurahAyahTitle(String surah, String ayahNumber) {
     return '$surah · آية $ayahNumber';
   }
 
@@ -3163,8 +3354,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanInvalidAyah => 'أدخل رقم آية صحيح';
 
   @override
-  String customPlanSurahAyahLimit(int maxAyah) {
-    return 'هذه السورة فيها $maxAyah آيات';
+  String customPlanSurahAyahLimit(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية',
+      many: '$countText آية',
+      few: '$countText آيات',
+      two: 'آيتان',
+      one: 'آية واحدة',
+      zero: '$countText آية',
+    );
+    return 'هذه السورة فيها $_temp0';
   }
 
   @override
@@ -3204,8 +3405,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanEstimatedDuration => 'المدة المقدّرة للإنهاء';
 
   @override
-  String customPlanApproxWeeks(int count) {
-    return '$count أسبوع تقريباً';
+  String customPlanApproxWeeks(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText أسبوع',
+      many: '$countText أسبوعًا',
+      few: '$countText أسابيع',
+      two: 'أسبوعان',
+      one: 'أسبوع واحد',
+      zero: '$countText أسبوع',
+    );
+    return '$_temp0 تقريبًا';
   }
 
   @override
@@ -3219,8 +3430,33 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String customPlanEstimatedScope(int surahs, int ayahs) {
-    return '$surahs سورة • ~$ayahs آية';
+  String customPlanEstimatedScope(
+    int surahs,
+    String surahsText,
+    int ayahs,
+    String ayahsText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      surahs,
+      locale: localeName,
+      other: '$surahsText سورة',
+      many: '$surahsText سورة',
+      few: '$surahsText سور',
+      two: 'سورتان',
+      one: 'سورة واحدة',
+      zero: '$surahsText سورة',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      ayahs,
+      locale: localeName,
+      other: '$ayahsText آية',
+      many: '$ayahsText آية',
+      few: '$ayahsText آيات',
+      two: 'آيتان',
+      one: 'آية واحدة',
+      zero: '$ayahsText آية',
+    );
+    return '$_temp0 • ~$_temp1';
   }
 
   @override
@@ -3272,13 +3508,52 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String customPlanSummaryLoad(int ayahsPerDay, int daysPerWeek) {
-    return '$ayahsPerDay آيات يومياً • $daysPerWeek أيام أسبوعياً';
+  String customPlanSummaryLoad(
+    int ayahsPerDay,
+    String ayahsText,
+    int daysPerWeek,
+    String daysText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      ayahsPerDay,
+      locale: localeName,
+      other: '$ayahsText آية',
+      many: '$ayahsText آية',
+      few: '$ayahsText آيات',
+      two: 'آيتان',
+      one: 'آية واحدة',
+      zero: '$ayahsText آية',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      daysPerWeek,
+      locale: localeName,
+      other: '$daysText يوم',
+      many: '$daysText يومًا',
+      few: '$daysText أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+      zero: '$daysText يوم',
+    );
+    return '$_temp0 يوميًا • $_temp1 أسبوعيًا';
   }
 
   @override
-  String customPlanSummarySession(int minutes, Object difficulty) {
-    return '$minutes دقيقة للجلسة • مستوى $difficulty';
+  String customPlanSummarySession(
+    int minutes,
+    String minutesText,
+    String difficulty,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutesText دقيقة',
+      many: '$minutesText دقيقة',
+      few: '$minutesText دقائق',
+      two: 'دقيقتان',
+      one: 'دقيقة واحدة',
+      zero: '$minutesText دقيقة',
+    );
+    return '$_temp0 للجلسة • مستوى $difficulty';
   }
 
   @override
@@ -3337,7 +3612,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsQuranSwipeHint => 'اسحب بهدوء للصفحة التالية';
+  String get kidsQuranLongPressHint => 'اضغط مطولاً على أي آية لتسمعها';
+
+  @override
+  String get kidsQuranListenPage => 'استمع للصفحة';
+
+  @override
+  String get kidsQuranPausePage => 'إيقاف';
 
   @override
   String get parentDashboardPinInvalid => 'أدخل رمزًا من 4 أرقام';
@@ -3384,13 +3665,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get memorizationExitSessionMessage =>
-      'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
+      'هل تريد إكمال هذه الجلسة لاحقًا من حيث توقفت، أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
 
   @override
   String get memorizationExitSessionTitle => 'الخروج من الجلسة؟';
 
   @override
-  String get memorizationSaveAndLeave => 'حفظ وخروج';
+  String get memorizationSaveAndLeave => 'أكمل لاحقًا';
 
   @override
   String get memorizationDiscardSession => 'التخلّي عن الجلسة';
@@ -4674,8 +4955,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reviewBacklogTitle => 'تراكم المراجعة';
 
   @override
-  String reviewBacklogSubtitle(String overdue) {
-    return 'لديك $overdue آيات متأخرة';
+  String reviewBacklogSubtitle(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لديك $countText آية متأخرة',
+      few: 'لديك $countText آيات متأخرة',
+      two: 'لديك آيتان متأخرتان',
+      one: 'لديك آية واحدة متأخرة',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4737,7 +5026,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get familyDashboardNoChildrenHint =>
-      'اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR';
+      'على جهاز طفلك: افتح مسار الأطفال ← اضغط ⚙ ← «ربط ولي الأمر»، ثم امسح الرمز الظاهر أو اكتبه هنا.';
 
   @override
   String get familyDashboardTodaySummaryTitle => 'اليوم في عائلتنا';
@@ -4863,6 +5152,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2SelfGradeForgotHint => 'سنعيدها معك الآن';
 
   @override
+  String get v2SelfGradeRevealHint =>
+      'سمّع من حفظك أولاً، ثم اكشف النص وقارن قبل أن تقيّم.';
+
+  @override
+  String get v2SelfGradeRevealAction => 'اعرض الآية وقارن';
+
+  @override
+  String get v2BlockRevealAction => 'اعرض المقطع وقارن';
+
+  @override
+  String get v2BlockGradeMastered => 'سمّعت المقطع كاملاً دون تعثّر';
+
+  @override
+  String get v2BlockGradeHesitated => 'تردّدت في آية';
+
+  @override
+  String get v2BlockGradeForgot => 'نسيت آية';
+
+  @override
+  String get v2StumbledAyahTitle => 'في أي آية تعثّرت؟';
+
+  @override
+  String v2StumbledAyahOption(int ayahNumber) {
+    return 'الآية $ayahNumber';
+  }
+
+  @override
   String get v2ManualRecallHint =>
       'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.';
 
@@ -4914,8 +5230,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get closingAyahSource => 'سورة الرعد · الآية ٢٨';
 
   @override
-  String closingSummaryMemorization(int count) {
-    return 'حفظتَ $count آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.';
+  String closingSummaryMemorization(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية',
+      many: '$countText آية',
+      few: '$countText آيات',
+      two: 'آيتين',
+      one: 'آية واحدة',
+      zero: '$countText آية',
+    );
+    return 'حفظتَ $_temp0 في هذه الجلسة — أثرٌ باقٍ بإذن الله.';
   }
 
   @override
@@ -4930,8 +5256,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.';
 
   @override
-  String dailyPlanBacklogNotice(int count) {
-    return 'لديك $count آية مستحقة للمراجعة. أكمل مراجعات اليوم لتُفتح الآيات الجديدة.';
+  String dailyPlanBacklogNotice(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لديك $countText آية مستحقة للمراجعة.',
+      few: 'لديك $countText آيات مستحقة للمراجعة.',
+      two: 'لديك آيتان مستحقتان للمراجعة.',
+      one: 'لديك آية واحدة مستحقة للمراجعة.',
+    );
+    return '$_temp0 أكمل مراجعات اليوم لتُفتح الآيات الجديدة.';
   }
 
   @override
@@ -5017,7 +5351,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String v2AyahOfBlock(int current, int total) {
+  String v2AyahOfBlock(String current, String total) {
     return 'الآية $current من $total';
   }
 
@@ -5090,13 +5424,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2LoopInfinite => 'تكرار: مستمر';
 
   @override
-  String get v2MaskedWordsHint => 'إظهار الكلمات مخفية';
+  String get v2MaskedWordsHint => 'إظهار الكلمات المخفية';
 
   @override
   String get v2MaskedWordsRevealed => 'الكلمات مخفية — حاول التذكر';
 
   @override
   String get v2MaskedWordsFull => 'إخفاء الكلمات';
+
+  @override
+  String get v2FirstLettersHint => 'أوائل الكلمات';
+
+  @override
+  String get v2FirstLettersRevealed => 'ظهرت أوائل الكلمات — حاول التذكر';
+
+  @override
+  String countAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية',
+      many: '$countText آية',
+      few: '$countText آيات',
+      two: 'آيتان',
+      one: 'آية واحدة',
+      zero: '$countText آية',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakDaysUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'يوم',
+      many: 'يومًا',
+      few: 'أيام',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get v2SurahLoadFailed => 'تعذر تحميل بيانات السورة.';
@@ -5123,7 +5490,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsJourneyCompleteHint =>
-      'أتممت جزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
+      'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
   String get kidsAyahAlreadyCompleted =>
@@ -5250,8 +5617,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahDailyPages => 'الصفحات اليومية';
 
   @override
-  String khatmahPages(String v1) {
-    return '$v1 صفحات';
+  String khatmahPages(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText صفحة',
+      many: '$countText صفحة',
+      few: '$countText صفحات',
+      two: 'صفحتان',
+      one: 'صفحة واحدة',
+      zero: '$countText صفحة',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5268,12 +5645,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة';
 
   @override
-  String khatmahDurationDays(String days) {
-    return '$days يوماً';
+  String khatmahDurationDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوم',
+      many: '$countText يومًا',
+      few: '$countText أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+      zero: '$countText يوم',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get khatmahDurationRamadan => 'رمضان (٣٠ يوماً)';
+  String get khatmahDurationRamadan => 'رمضان (جزء يومياً)';
 
   @override
   String get khatmahEG5 => 'مثال: 5';
@@ -5282,8 +5669,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahEstimatedDuration => 'المدة التقديرية';
 
   @override
-  String khatmahDays(String v1) {
-    return '$v1 يوم';
+  String khatmahDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوم',
+      many: '$countText يومًا',
+      few: '$countText أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+      zero: '$countText يوم',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5383,8 +5780,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahAdjustPreviewTitle => 'تعديل جدول الختمة';
 
   @override
-  String khatmahAdjustPreviewBody(String pages, String date) {
-    return 'الورد اليومي: $pages صفحة\nالختام المتوقع: $date';
+  String khatmahAdjustPreviewBody(int pages, String pagesText, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      pages,
+      locale: localeName,
+      other: '$pagesText صفحة',
+      many: '$pagesText صفحة',
+      few: '$pagesText صفحات',
+      two: 'صفحتان',
+      one: 'صفحة واحدة',
+      zero: '$pagesText صفحة',
+    );
+    return 'الورد اليومي: $_temp0\nالختام المتوقع: $date';
   }
 
   @override
@@ -5458,8 +5865,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahCopyDuA => 'نسخ الدعاء';
 
   @override
-  String khatmahPagesLeft(String v1) {
-    return '$v1 صفحة متبقية';
+  String khatmahPagesLeft(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText صفحة متبقية',
+      few: '$countText صفحات متبقية',
+      two: 'صفحتان متبقيتان',
+      one: 'صفحة واحدة متبقية',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5500,6 +5915,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahPaceOnTrack => 'في الموعد — أحسنت';
 
   @override
+  String khatmahPaceAhead(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوماً',
+      few: '$countText أيام',
+      two: 'يومين',
+      one: 'يوم واحد',
+    );
+    return 'متقدم — ستختم قبل موعدك ب$_temp0';
+  }
+
+  @override
   String get khatmahRedistributeAction => 'أعد التوزيع للحفاظ على الموعد';
 
   @override
@@ -5507,8 +5935,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'أُعيد توزيع الصفحات للحفاظ على موعد الختام';
 
   @override
-  String khatmahPaceBehind(String pages) {
-    return 'متأخر $pages صفحة عن موعد الختام';
+  String khatmahPaceBehind(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText صفحة',
+      few: '$countText صفحات',
+      two: 'صفحتين',
+      one: 'صفحة واحدة',
+    );
+    return 'متأخر $_temp0 عن موعد الختام';
   }
 
   @override
@@ -5520,8 +5956,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahCongratulations => 'مبارك ختم القرآن الكريم';
 
   @override
-  String khatmahShareSummary(String title, String days) {
-    return 'أتممت ختمة القرآن الكريم ($title) في $days يوماً.\nعبر تطبيق تالية القرآني';
+  String khatmahShareSummary(String title, int days, String daysText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysText يوم',
+      many: '$daysText يومًا',
+      few: '$daysText أيام',
+      two: 'يومين',
+      one: 'يوم واحد',
+    );
+    return 'أتممت ختمة القرآن الكريم ($title) في $_temp0.\nعبر تطبيق تالية القرآني';
   }
 
   @override
@@ -5599,6 +6044,50 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get khatmahRelationshipMother => 'الأم';
+
+  @override
+  String get khatmahRecipientGender => 'المُهدى إليه';
+
+  @override
+  String get khatmahRecipientMale => 'ذكر';
+
+  @override
+  String get khatmahRecipientFemale => 'أنثى';
+
+  @override
+  String get khatmahEditDedication => 'تعديل الإهداء';
+
+  @override
+  String get khatmahDedicationSaved => 'حُفظ الإهداء';
+
+  @override
+  String khatmahWirdJuz(String juz) {
+    return 'ورد اليوم: الجزء $juz';
+  }
+
+  @override
+  String get khatmahRepeatSameSettings => 'ختمة جديدة بنفس الإعدادات';
+
+  @override
+  String khatmahHistoryStats(String count, String avg, String fastest) {
+    return '$count ختمات • المتوسط $avg يوماً • الأسرع $fastest يوماً';
+  }
+
+  @override
+  String get khatmahJuzMapTitle => 'خريطة الختمة';
+
+  @override
+  String khatmahJuzMapCell(String juz, String read, String total) {
+    return 'الجزء $juz: $read من $total صفحة';
+  }
+
+  @override
+  String get khatmahCatchUpTitle => 'كيف تحب أن تعوّض؟';
+
+  @override
+  String khatmahCatchUpOption(String pages, String date) {
+    return '$pages صفحة يومياً — الختم $date';
+  }
 
   @override
   String get khatmahRelationshipFather => 'الأب';
@@ -5684,8 +6173,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get surahRevelationMedinan => 'مدنية';
 
   @override
-  String ayahOfDaySurahMeta(String revelation, String count) {
-    return '$revelation · $count آية';
+  String ayahOfDaySurahMeta(String revelation, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية',
+      many: '$countText آية',
+      few: '$countText آيات',
+      two: 'آيتان',
+      one: 'آية واحدة',
+      zero: '$countText آية',
+    );
+    return '$revelation · $_temp0';
   }
 
   @override
@@ -5736,7 +6235,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeSomethingElse => 'شيء آخر';
 
   @override
-  String homeMinutes(int count) {
+  String homeMinutes(String count) {
     return '$count د';
   }
 
@@ -5893,18 +6392,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeContinueAction => 'متابعة';
 
   @override
-  String homeAyahRange(int start, int end) {
+  String homeAyahRange(String start, String end) {
     return 'الآيات $start إلى $end';
   }
 
   @override
-  String homeAyahProgressCount(int current, int total) {
-    return '$current من $total آيات';
+  String homeAyahProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText آية',
+      few: '$totalText آيات',
+      two: 'آيتين',
+      one: 'آية واحدة',
+    );
+    return '$currentText من $_temp0';
   }
 
   @override
-  String homePageProgressCount(int current, int total) {
-    return '$current من $total صفحات';
+  String homePageProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText صفحة',
+      few: '$totalText صفحات',
+      two: 'صفحتين',
+      one: 'صفحة واحدة',
+    );
+    return '$currentText من $_temp0';
   }
 
   @override
@@ -6028,8 +6551,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeActivityYesterday => 'أمس';
 
   @override
-  String homeActivityDaysAgo(int count) {
-    return 'قبل $count يوم';
+  String homeActivityDaysAgo(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل $countText يوم',
+      many: 'قبل $countText يومًا',
+      few: 'قبل $countText أيام',
+      two: 'قبل يومين',
+      one: 'قبل يوم',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -6260,8 +6792,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.';
 
   @override
-  String memorizationHubReviewDueBadge(int count) {
-    return '$count آية مستحقة للمراجعة';
+  String memorizationHubReviewDueBadge(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية مستحقة للمراجعة',
+      few: '$countText آيات مستحقة للمراجعة',
+      two: 'آيتان مستحقتان للمراجعة',
+      one: 'آية واحدة مستحقة للمراجعة',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -6315,4 +6855,68 @@ class AppLocalizationsAr extends AppLocalizations {
   String fieldTooLong(int maxLength) {
     return 'لا يمكن أن يتجاوز $maxLength حرفاً';
   }
+
+  @override
+  String get progressDueReviewsLabel => 'مراجعات مستحقة';
+
+  @override
+  String progressStreakDaysUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'يوم',
+      many: 'يوماً',
+      few: 'أيام',
+      two: 'يومان',
+      one: 'يوم',
+      zero: 'يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressNextMilestoneTitle => 'إنجازك القادم';
+
+  @override
+  String progressNextMilestoneRemaining(int remaining) {
+    return 'باقي $remaining للوصول';
+  }
+
+  @override
+  String get progressAllAchievementsUnlocked =>
+      'ما شاء الله! أتممت جميع الإنجازات، ثبّتك الله';
+
+  @override
+  String progressDueReviewsNudge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لديك $count آية مستحقة للمراجعة',
+      few: 'لديك $count آيات مستحقة للمراجعة',
+      two: 'لديك آيتان مستحقتان للمراجعة',
+      one: 'لديك آية واحدة مستحقة للمراجعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressStartReview => 'ابدأ المراجعة';
+
+  @override
+  String progressActiveDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوم نشاط',
+      many: '$count يوماً من النشاط',
+      few: '$count أيام نشاط',
+      two: 'يوما نشاط',
+      one: 'يوم نشاط واحد',
+      zero: 'لا توجد أيام نشاط بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressXpToNextLevel => 'نحو المستوى التالي';
 }

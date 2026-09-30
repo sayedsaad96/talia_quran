@@ -15,9 +15,10 @@ import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
-import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
+import '../widgets/khatmah_dedication_form.dart';
+import '../widgets/khatmah_juz_map.dart';
 import '../widgets/khatmah_progress_gauge.dart';
 
 class KhatmahDashboardPage extends StatefulWidget {
@@ -134,6 +135,45 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     );
   }
 
+  Future<void> _showEditDedicationSheet(KhatmahPlan plan) async {
+    var draft = plan.dedication;
+    final save = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.lg,
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              KhatmahDedicationForm(
+                initialDedication: plan.dedication,
+                onChanged: (value) => draft = value,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                key: const Key('khatmah_edit_dedication_save_button'),
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: Text(sheetContext.l10n.save),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (save != true || !mounted) return;
+    final saved = await _cubit.updateDedication(draft);
+    if (saved && mounted) {
+      context.showSnackBar(context.l10n.khatmahDedicationSaved);
+    }
+  }
+
   Future<void> _resumeAndOpenReader() async {
     if (_resumeNavigationInFlight) return;
     _resumeNavigationInFlight = true;
@@ -189,6 +229,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
         title: Text(dialogContext.l10n.khatmahAdjustPreviewTitle),
         content: Text(
           dialogContext.l10n.khatmahAdjustPreviewBody(
+            preview.targetPagesPerDay,
             pages,
             _formatDate(preview.expectedEndDate),
           ),
@@ -229,6 +270,57 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
         ),
       );
     }
+  }
+
+  /// Every catch-up choice the plan allows, each with its new pace and
+  /// finish date, so the learner picks with the outcome in view.
+  Future<void> _showCatchUpSheet() async {
+    final choice = await showModalBottomSheet<KhatmahAdjustment>(
+      context: context,
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        String number(int value) => sheetContext.isArabic
+            ? MushafHizbHelper.toArabicNumber(value)
+            : '$value';
+        final options = [
+          for (final kind in KhatmahAdjustment.values)
+            if (_cubit.previewAdjustment(kind: kind) case final preview?)
+              (kind: kind, preview: preview),
+        ];
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Text(
+                  l10n.khatmahCatchUpTitle,
+                  style: AppTypography.titleMedium,
+                ),
+              ),
+              for (final option in options)
+                ListTile(
+                  key: Key('khatmah_catchup_${option.kind.name}'),
+                  title: Text(switch (option.kind) {
+                    KhatmahAdjustment.calm => l10n.khatmahCalmAdjust,
+                    KhatmahAdjustment.mildBoost => l10n.khatmahMildBoost,
+                    KhatmahAdjustment.keepEndDate =>
+                      l10n.khatmahRedistributeAction,
+                  }),
+                  subtitle: Text(
+                    l10n.khatmahCatchUpOption(
+                      number(option.preview.targetPagesPerDay),
+                      _formatDate(option.preview.expectedEndDate),
+                    ),
+                  ),
+                  onTap: () => Navigator.pop(sheetContext, option.kind),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (choice != null && mounted) await _adjust(choice);
   }
 
   static KhatmahPlan? _recordingPlanFrom(KhatmahState state) => switch (state) {
@@ -484,6 +576,17 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
           final wirdEndStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdEndPage)
               : wirdEndPage.toString();
+          final wirdJuz = MushafHizbHelper.getJuz(wirdStartPage);
+          final pagesRange = context.l10n.khatmahPagesTo(
+            wirdStartStr,
+            wirdEndStr,
+          );
+          final wirdJuzStr = isArabic
+              ? MushafHizbHelper.toArabicNumber(wirdJuz)
+              : '$wirdJuz';
+          final wirdRangeText = plan.wirdUnit == KhatmahWirdUnit.juz
+              ? '${context.l10n.khatmahWirdJuz(wirdJuzStr)} · $pagesRange'
+              : pagesRange;
           final wirdPagesCountStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdPagesCount)
               : wirdPagesCount.toString();
@@ -504,6 +607,19 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                 PopupMenuButton<void>(
                   key: const Key('khatmah_dashboard_more_menu'),
                   itemBuilder: (menuContext) => [
+                    PopupMenuItem<void>(
+                      key: const Key(
+                        'khatmah_dashboard_edit_dedication_button',
+                      ),
+                      onTap: () => unawaited(_showEditDedicationSheet(plan)),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.volunteer_activism_outlined),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(context.l10n.khatmahEditDedication),
+                        ],
+                      ),
+                    ),
                     PopupMenuItem<void>(
                       key: const Key('khatmah_dashboard_abandon_button'),
                       onTap: () => _showAbandonConfirmDialog(context, plan),
@@ -579,10 +695,11 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                     if (plan.status == KhatmahStatus.active)
                       _PaceLine(
                         behind: plan.pagesBehind(_cubit.displayDate),
+                        ahead: plan.daysAhead(_cubit.displayDate),
                         isArabic: isArabic,
                         onRedistribute: _adjusting
                             ? null
-                            : () => _adjust(KhatmahAdjustment.keepEndDate),
+                            : () => unawaited(_showCatchUpSheet()),
                       ),
                     const SizedBox(height: AppSpacing.md),
 
@@ -635,7 +752,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                               ),
                               Text(
                                 context.l10n.khatmahPages(
-                                  (wirdPagesCountStr).toString(),
+                                  wirdPagesCount,
+                                  wirdPagesCountStr,
                                 ),
                                 style: AppTypography.labelMedium.copyWith(
                                   color: AppColors.gold,
@@ -646,10 +764,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            context.l10n.khatmahPagesTo(
-                              (wirdStartStr).toString(),
-                              (wirdEndStr).toString(),
-                            ),
+                            wirdRangeText,
                             style: AppTypography.bodyMedium.copyWith(
                               color: context.tokens.textSecondary,
                             ),
@@ -754,6 +869,15 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
+                    // Juz map: what is covered, and a way into any juz.
+                    KhatmahJuzMap(
+                      plan: plan,
+                      enabled: plan.status == KhatmahStatus.active,
+                      onOpenPage: (page) =>
+                          context.push('/quran/page/$page?mode=khatmah'),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
                     // Adaptive Controls Section
                     Text(
                       context.l10n.khatmahCalmAdaptiveControls,
@@ -795,40 +919,42 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        // Mild compensation: add 1-2 pages/day
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            key: const Key(
-                              'khatmah_dashboard_mild_compensation_button',
-                            ),
-                            onPressed:
-                                plan.status != KhatmahStatus.active ||
-                                    _adjusting ||
-                                    !_cubit.canBoost
-                                ? null
-                                : () => _adjust(KhatmahAdjustment.mildBoost),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.sm,
-                                horizontal: AppSpacing.xs,
+                        // Mild compensation: add 1 page/day (pages mode only).
+                        if (plan.wirdUnit == KhatmahWirdUnit.pages) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              key: const Key(
+                                'khatmah_dashboard_mild_compensation_button',
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd,
+                              onPressed:
+                                  plan.status != KhatmahStatus.active ||
+                                      _adjusting ||
+                                      !_cubit.canBoost
+                                  ? null
+                                  : () => _adjust(KhatmahAdjustment.mildBoost),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.sm,
+                                  horizontal: AppSpacing.xs,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
                                 ),
                               ),
-                            ),
-                            icon: const Icon(
-                              Icons.add_circle_outline_rounded,
-                              size: 18,
-                            ),
-                            label: Text(
-                              context.l10n.khatmahMildBoost,
-                              style: AppTypography.labelMedium,
+                              icon: const Icon(
+                                Icons.add_circle_outline_rounded,
+                                size: 18,
+                              ),
+                              label: Text(
+                                context.l10n.khatmahMildBoost,
+                                style: AppTypography.labelMedium,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -909,10 +1035,7 @@ class _PhysicalMushafLoggerDialogState
 
   Future<void> _save() async {
     final page = parseKhatmahPageInput(_controller.text);
-    if (page == null ||
-        page < widget.plan.nextUnreadPage ||
-        page > KhatmahSchedulingEngine.totalPages ||
-        _isSaving) {
+    if (page == null || widget.plan.pagesThrough(page).isEmpty || _isSaving) {
       return;
     }
     setState(() {
@@ -940,7 +1063,7 @@ class _PhysicalMushafLoggerDialogState
     final isArabic = context.isArabic;
     final page = parseKhatmahPageInput(_controller.text);
     final validRange =
-        page != null && page >= widget.plan.nextUnreadPage && page <= 604;
+        page != null && widget.plan.pagesThrough(page).isNotEmpty;
     String number(int value) =>
         isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
     final wirdEnd = widget.plan
@@ -989,7 +1112,7 @@ class _PhysicalMushafLoggerDialogState
                 ),
               ),
             ),
-            if (wirdEnd >= widget.plan.nextUnreadPage) ...[
+            if (widget.plan.pagesThrough(wirdEnd).isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
               ActionChip(
                 key: const Key('khatmah_mushaf_wird_end_chip'),
@@ -1055,11 +1178,15 @@ class _PhysicalMushafLoggerDialogState
 class _PaceLine extends StatelessWidget {
   const _PaceLine({
     required this.behind,
+    this.ahead = 0,
     required this.isArabic,
     this.onRedistribute,
   });
 
   final int behind;
+
+  /// Whole days the projected finish beats the plan; shown when on track.
+  final int ahead;
   final bool isArabic;
 
   /// Offered when behind: spread the remaining pages to keep the end date.
@@ -1068,10 +1195,11 @@ class _PaceLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onTrack = behind == 0;
+    final isAhead = onTrack && ahead > 0;
     final color = onTrack ? AppColors.success : AppColors.warning;
-    final pages = isArabic
-        ? MushafHizbHelper.toArabicNumber(behind)
-        : behind.toString();
+    String number(int value) =>
+        isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
+    final pages = number(behind);
     final line = Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
       child: Row(
@@ -1079,7 +1207,9 @@ class _PaceLine extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            onTrack
+            isAhead
+                ? Icons.trending_up_rounded
+                : onTrack
                 ? Icons.check_circle_outline_rounded
                 : Icons.schedule_rounded,
             size: 16,
@@ -1088,9 +1218,11 @@ class _PaceLine extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
-              onTrack
+              isAhead
+                  ? context.l10n.khatmahPaceAhead(ahead, number(ahead))
+                  : onTrack
                   ? context.l10n.khatmahPaceOnTrack
-                  : context.l10n.khatmahPaceBehind(pages),
+                  : context.l10n.khatmahPaceBehind(behind, pages),
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(color: color),
             ),

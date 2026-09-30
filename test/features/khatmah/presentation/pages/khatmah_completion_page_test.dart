@@ -89,6 +89,10 @@ void main() {
   ) async {
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('khatmah_completion_repeat_button')),
+      findsOneWidget,
+    );
     expect(find.text('5 days'), findsOneWidget);
     expect(find.text('30 days'), findsNothing);
     expect(find.text('2026-03-05'), findsOneWidget);
@@ -110,6 +114,11 @@ void main() {
       findsNothing,
     );
     expect(find.textContaining('مبارك ختم القرآن'), findsNothing);
+    // Not a dead end: the learner can reach their saved completions.
+    expect(
+      find.byKey(const Key('khatmah_completion_invalid_home_button')),
+      findsOneWidget,
+    );
   });
 
   testWidgets(

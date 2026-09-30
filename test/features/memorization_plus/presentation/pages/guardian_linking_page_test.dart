@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -85,20 +86,82 @@ void main() {
     expect(repository.createPairingCalls, 1);
     expect(find.text('ABCDEF'), findsOneWidget);
   });
+
+  testWidgets('a blocked pairing explains the reason in the UI language', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository()
+      ..createPairingResult = const Left(
+        NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
+      );
+    getIt.registerFactory<GuardianLinkingCubit>(
+      () => GuardianLinkingCubit(repository),
+    );
+
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        "Linking children isn't available in this version because cloud "
+        'sync is not enabled.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('@guardian'), findsNothing);
+  });
+
+  testWidgets('"continue" points forward in Arabic (K22)', (tester) async {
+    getIt.registerFactory<GuardianLinkingCubit>(
+      () => GuardianLinkingCubit(_GuardianLinkingRepository()),
+    );
+
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthUnauthenticated(),
+        locale: Locale('ar'),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // arrow_forward mirrors itself under RTL (points left); a hand-picked
+    // arrow_back pointed the child backwards.
+    expect(find.byIcon(Icons.arrow_forward_rounded), findsWidgets);
+    expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+  });
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.authState, required this.child});
+  const _TestApp({
+    required this.authState,
+    required this.child,
+    this.locale = const Locale('en'),
+  });
 
   final AuthState authState;
   final Widget child;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AuthCubit>(
       create: (_) => _FakeAuthCubit(authState),
       child: MaterialApp(
-        locale: const Locale('en'),
+        locale: locale,
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -122,6 +185,7 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 
 class _GuardianLinkingRepository implements MemorizationPlusRepository {
   int createPairingCalls = 0;
+  Either<Failure, PairingSession>? createPairingResult;
 
   @override
   Future<Either<Failure, MemorizationProfile>>
@@ -134,7 +198,7 @@ class _GuardianLinkingRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession() async {
     createPairingCalls++;
-    return Right(_pairingSession());
+    return createPairingResult ?? Right(_pairingSession());
   }
 
   @override

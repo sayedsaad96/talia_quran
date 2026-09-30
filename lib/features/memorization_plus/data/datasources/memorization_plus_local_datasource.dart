@@ -6,6 +6,7 @@ import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../core/memorization/review_record_identity.dart';
+import '../../../../core/memorization/review_record_read_batch.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../models/isar_ayah_review_record.dart';
 import '../models/memorization_models.dart';

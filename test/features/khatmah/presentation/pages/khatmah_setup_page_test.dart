@@ -9,6 +9,7 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
+import 'package:talia_quran/features/khatmah/presentation/khatmah_setup_prefill.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_setup_page.dart';
 
 class MockCreateKhatmahUsecase extends Mock implements CreateKhatmahUsecase {}
@@ -114,6 +115,24 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('121'), findsOneWidget);
+  });
+
+  testWidgets('custom pages input accepts Arabic-Indic digits', (
+    tester,
+  ) async {
+    final cubit = KhatmahSetupCubit(mockCreateKhatmah);
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+
+    // ٧ pages/day -> 604 / 7 = 87 days
+    await tester.enterText(
+      find.byKey(const Key('khatmah_setup_custom_input')),
+      '٧',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('87'), findsOneWidget);
   });
 
   testWidgets(
@@ -329,7 +348,57 @@ void main() {
         any(
           that: isA<KhatmahPlan>()
               .having((p) => p.targetDays, 'targetDays', 30)
-              .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 21),
+              .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 21)
+              .having((p) => p.wirdUnit, 'wirdUnit', KhatmahWirdUnit.juz),
+        ),
+      ),
+    ).called(1);
+  });
+
+  testWidgets('a same-settings prefill is submitted as chosen', (
+    tester,
+  ) async {
+    when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+    final cubit = KhatmahSetupCubit(mockCreateKhatmah);
+    final router = GoRouter(
+      initialLocation: '/khatmah/setup',
+      routes: [
+        GoRoute(
+          path: '/khatmah/setup',
+          builder: (context, state) => KhatmahSetupPage(
+            cubit: cubit,
+            prefill: const KhatmahSetupPrefill(pagesPerDay: 7),
+          ),
+        ),
+        GoRoute(
+          path: '/khatmah/dashboard',
+          builder: (context, state) => const Scaffold(),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final submit = find.byKey(const Key('khatmah_setup_submit_button'));
+    await tester.ensureVisible(submit);
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockCreateKhatmah(
+        any(
+          that: isA<KhatmahPlan>().having(
+            (p) => p.targetPagesPerDay,
+            'targetPagesPerDay',
+            7,
+          ),
         ),
       ),
     ).called(1);

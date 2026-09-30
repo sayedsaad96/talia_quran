@@ -58,7 +58,7 @@ class ReaderFooter extends StatelessWidget {
             ),
           ),
           Semantics(
-            label: '${context.l10n.page} $pageNumber',
+            label: '${context.l10n.page} ${context.numText(pageNumber)}',
             button: onPageTap != null,
             child: Material(
               color: Colors.transparent,

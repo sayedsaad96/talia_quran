@@ -13,6 +13,7 @@ import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_dedication_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
@@ -30,6 +31,9 @@ class MockPauseResumeKhatmahUsecase extends Mock
     implements PauseResumeKhatmahUsecase {}
 
 class MockDeleteKhatmahUsecase extends Mock implements DeleteKhatmahUsecase {}
+
+class MockUpdateKhatmahDedicationUsecase extends Mock
+    implements UpdateKhatmahDedicationUsecase {}
 
 class FakeKhatmahPlan extends Fake implements KhatmahPlan {}
 
@@ -62,6 +66,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(FakeKhatmahPlan());
     registerFallbackValue(KhatmahReadingSource.digital);
+    registerFallbackValue(KhatmahDedication.none);
   });
 
   setUp(() {
@@ -124,6 +129,157 @@ void main() {
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
+
+  testWidgets('catching up offers every option with its preview', (
+    tester,
+  ) async {
+    // testPlan's finish date has passed, so the learner is behind.
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+    final redistribute = find.byKey(
+      const Key('khatmah_dashboard_redistribute_button'),
+    );
+    await tester.ensureVisible(redistribute);
+    await tester.tap(redistribute);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('khatmah_catchup_calm')), findsOneWidget);
+    expect(find.byKey(const Key('khatmah_catchup_mildBoost')), findsOneWidget);
+    expect(
+      find.byKey(const Key('khatmah_catchup_keepEndDate')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('khatmah_catchup_calm')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('khatmah_adjust_preview')), findsOneWidget);
+  });
+
+  testWidgets('a juz plan catches up only by moving the finish date', (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenAnswer(
+      (_) async => testPlan.copyWith(
+        wirdUnit: KhatmahWirdUnit.juz,
+        targetPagesPerDay: 21,
+      ),
+    );
+
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+    final redistribute = find.byKey(
+      const Key('khatmah_dashboard_redistribute_button'),
+    );
+    await tester.ensureVisible(redistribute);
+    await tester.tap(redistribute);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('khatmah_catchup_calm')), findsOneWidget);
+    expect(find.byKey(const Key('khatmah_catchup_mildBoost')), findsNothing);
+    expect(find.byKey(const Key('khatmah_catchup_keepEndDate')), findsNothing);
+  });
+
+  testWidgets('the juz map opens a juz in khatmah mode', (tester) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    String? destination;
+
+    await tester.pumpWidget(
+      buildWidget(
+        cubit: buildCubit(),
+        onNavigate: (value) => destination = value,
+      ),
+    );
+    await tester.pumpAndSettle();
+    final cell = find.byKey(const Key('khatmah_juz_cell_2'));
+    await tester.ensureVisible(cell);
+    await tester.tap(cell);
+    await tester.pumpAndSettle();
+
+    expect(destination, '/quran/page/22?mode=khatmah');
+  });
+
+  testWidgets('a learner ahead of schedule is told so', (tester) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    when(() => mockGetActive()).thenAnswer(
+      (_) async => testPlan.copyWith(
+        startDate: today.subtract(const Duration(days: 5)),
+        expectedEndDate: today.add(const Duration(days: 200)),
+        completedPages: {for (var p = 1; p <= 40; p++) p},
+      ),
+    );
+
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('early'), findsOneWidget);
+  });
+
+  testWidgets('a juz plan shows the juz and hides the page boost', (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenAnswer(
+      (_) async => testPlan.copyWith(
+        wirdUnit: KhatmahWirdUnit.juz,
+        targetPagesPerDay: 21,
+        completedPages: {for (var p = 1; p <= 401; p++) p},
+      ),
+    );
+
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Juz 21'), findsOneWidget);
+    expect(
+      find.byKey(const Key('khatmah_dashboard_mild_compensation_button')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the dedication can be edited from the menu', (tester) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    final updateDedication = MockUpdateKhatmahDedicationUsecase();
+    when(() => updateDedication(any(), any())).thenAnswer(
+      (invocation) async => testPlan.copyWith(
+        dedication: invocation.positionalArguments[1] as KhatmahDedication,
+      ),
+    );
+    createdCubit = KhatmahCubit(
+      mockGetActive,
+      mockRecordReading,
+      mockPauseResume,
+      mockDelete,
+      updateSchedule: mockUpdateSchedule,
+      updateDedication: updateDedication,
+    );
+
+    await tester.pumpWidget(buildWidget(cubit: createdCubit!));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('khatmah_dashboard_more_menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('khatmah_dashboard_edit_dedication_button')),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('khatmah_dedication_recipient_name')),
+      'أمي',
+    );
+    await tester.tap(find.byKey(const Key('khatmah_dedication_gender_female')));
+    await tester.pumpAndSettle();
+    final save = find.byKey(const Key('khatmah_edit_dedication_save_button'));
+    await tester.ensureVisible(save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    final saved =
+        verify(() => updateDedication(any(), captureAny())).captured.single
+            as KhatmahDedication;
+    expect(saved.recipientName, 'أمي');
+    expect(saved.recipientGender, DedicationGender.female);
+  });
 
   testWidgets(
     'daily-complete dashboard keeps original range and can continue',
@@ -350,7 +506,13 @@ void main() {
       await tester.pump();
 
       expect(input, findsOneWidget);
-      expect(find.text('25'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('25'),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const Key('khatmah_dashboard_mushaf_save_error')),
         findsOneWidget,

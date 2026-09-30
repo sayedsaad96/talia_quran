@@ -27,12 +27,14 @@ class KidsTopBar extends StatelessWidget {
     required this.onBack,
     this.subtitle,
     this.trailing,
+    this.backLabel,
   });
 
   final String title;
   final String? subtitle;
   final VoidCallback onBack;
   final Widget? trailing;
+  final String? backLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +47,34 @@ class KidsTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: onBack,
-            icon: const BackButtonIcon(),
-            color: KidsTheme.shellTextPrimary,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.10),
-              minimumSize: const Size(48, 48),
+          if (backLabel == null)
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: onBack,
+              icon: const BackButtonIcon(),
+              color: KidsTheme.shellTextPrimary,
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.10),
+                minimumSize: const Size(48, 48),
+              ),
+            )
+          else
+            Tooltip(
+              message: backLabel!,
+              child: TextButton.icon(
+                onPressed: onBack,
+                icon: const BackButtonIcon(),
+                label: Text(backLabel!),
+                style: TextButton.styleFrom(
+                  foregroundColor: KidsTheme.shellTextPrimary,
+                  backgroundColor: Colors.white.withValues(alpha: 0.10),
+                  minimumSize: const Size(48, 48),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                ),
+              ),
             ),
-          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

@@ -121,6 +121,46 @@ void main() {
     expect((lightCenter.dx - darkCenter.dx).abs(), greaterThan(70));
   });
 
+  testWidgets('dark and pure black are separate peer theme choices', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, viewSize: const Size(420, 900));
+    final theme = getIt<ThemeCubit>();
+    final pureBlack = getIt<PureBlackCubit>();
+
+    // Four options on one row; the old always-visible OLED switch is gone.
+    expect(find.byType(SwitchListTile), findsNothing);
+    final labels = [
+      'Light Mode',
+      'Dark Mode',
+      'Pure black (OLED)',
+      'System Default',
+    ];
+    final ys = [
+      for (final l in labels) tester.getCenter(find.bySemanticsLabel(l)).dy,
+    ];
+    expect(ys.every((y) => (y - ys.first).abs() < 1), isTrue);
+
+    await tester.tap(find.bySemanticsLabel('Pure black (OLED)'));
+    await tester.pumpAndSettle();
+    expect(theme.state, ThemeMode.dark);
+    expect(pureBlack.state, isTrue);
+
+    // Dark switches back to the standard dark palette, not OLED.
+    await tester.tap(find.bySemanticsLabel('Dark Mode'));
+    await tester.pumpAndSettle();
+    expect(theme.state, ThemeMode.dark);
+    expect(pureBlack.state, isFalse);
+
+    // Light keeps the remembered dark variant for later.
+    await tester.tap(find.bySemanticsLabel('Pure black (OLED)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Light Mode'));
+    await tester.pumpAndSettle();
+    expect(theme.state, ThemeMode.light);
+    expect(pureBlack.state, isTrue);
+  });
+
   testWidgets('wide layout presents secondary settings cleanly', (
     tester,
   ) async {

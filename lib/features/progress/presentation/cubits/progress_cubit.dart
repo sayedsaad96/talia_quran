@@ -7,6 +7,7 @@ import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/services/xp_service.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../domain/entities/progress_entities.dart';
@@ -39,8 +40,17 @@ class ProgressCubit extends Cubit<ProgressState> {
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
 
+  /// Incremented on every load so a slow, older load can never overwrite
+  /// the result of a newer one.
+  int _loadGeneration = 0;
+
   void _onProgressChanged(ProgressChangedReason reason) {
-    if (!ProgressEventsBus.affectsProgressTab(reason)) return;
+    if (!ProgressEventsBus.affectsProgressTab(reason)) {
+      // XP-only changes skip the full reload but must not leave the XP
+      // card stale.
+      if (reason == ProgressChangedReason.xp) unawaited(refreshXp());
+      return;
+    }
     _scheduleReload();
   }
 
@@ -53,17 +63,29 @@ class ProgressCubit extends Cubit<ProgressState> {
     });
   }
 
+  /// Loads progress. The skeleton is shown only on the first load; later
+  /// reloads (progress events, pull-to-refresh, retry after data exists)
+  /// swap the data in place so scroll position and open UI survive.
   Future<void> load() async {
-    emit(const ProgressLoading());
+    final generation = ++_loadGeneration;
+    if (state is! ProgressLoaded) emit(const ProgressLoading());
+
     final profileFuture = _pathResolver.currentProfile();
-    final heatmapFuture = _getHeatmap?.call();
-    final xpFuture = _xpService?.getTotalXp();
+    final heatmapFuture = _loadHeatmap();
+    final xpFuture = _loadXp();
     final result = await _getProgress();
-    final profile = await profileFuture;
+    final profile = await _safe(profileFuture, null, 'profile');
     final heatmap = await heatmapFuture;
-    final totalXp = await xpFuture ?? 0;
+    final totalXp = await xpFuture;
+    if (isClosed || generation != _loadGeneration) return;
+
     result.fold(
-      (f) => emit(ProgressError(f.message)),
+      (f) {
+        // Keep showing the last good data rather than replacing it with an
+        // error screen on a background refresh.
+        if (state is ProgressLoaded) return;
+        emit(ProgressError(f.message));
+      },
       (progress) => emit(
         ProgressLoaded(
           progress: progress,
@@ -72,9 +94,60 @@ class ProgressCubit extends Cubit<ProgressState> {
           activityCountsByDay: heatmap?.countsByDay ?? const {},
           activityStartDate: heatmap?.startDate,
           totalXp: totalXp,
+          xpLevelProgress: _xpLevelProgress(totalXp),
         ),
       ),
     );
+  }
+
+  /// Pull-to-refresh entry point.
+  Future<void> refresh() => load();
+
+  /// Updates only the XP numbers without recomputing the whole page.
+  Future<void> refreshXp() async {
+    final current = state;
+    if (current is! ProgressLoaded || _xpService == null) return;
+    final totalXp = await _loadXp();
+    final latest = state;
+    if (isClosed || latest is! ProgressLoaded) return;
+    emit(
+      latest.copyWith(
+        totalXp: totalXp,
+        xpLevelProgress: _xpLevelProgress(totalXp),
+      ),
+    );
+  }
+
+  // Heatmap and XP are secondary: a failure there must not block the page.
+  Future<ActivityHeatmapData?> _loadHeatmap() async {
+    final getHeatmap = _getHeatmap;
+    if (getHeatmap == null) return null;
+    return _safe(getHeatmap(), null, 'heatmap');
+  }
+
+  Future<int> _loadXp() async {
+    final xpService = _xpService;
+    if (xpService == null) return 0;
+    return _safe(xpService.getTotalXp(), 0, 'xp');
+  }
+
+  double _xpLevelProgress(int totalXp) {
+    final xpService = _xpService;
+    if (xpService == null) return 0;
+    try {
+      return xpService.progressToNextLevel(totalXp);
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<T> _safe<T>(Future<T> future, T fallback, String what) async {
+    try {
+      return await future;
+    } catch (e, st) {
+      TaliaLogger.w('ProgressCubit: $what failed to load', e, st);
+      return fallback;
+    }
   }
 
   @override

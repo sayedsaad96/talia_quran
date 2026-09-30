@@ -28,16 +28,21 @@ class HomeContinueCard extends StatelessWidget {
               : SurahNames.nameEn(recitation.surahId))
         : recitation.surahName;
     final range = recitation.startAyah != null && recitation.endAyah != null
-        ? context.l10n.homeAyahRange(recitation.startAyah!, recitation.endAyah!)
+        ? context.l10n.homeAyahRange(
+            context.numText(recitation.startAyah!),
+            context.numText(recitation.endAyah!),
+          )
         : null;
     final count = recitation.unit == ContinueRecitationUnit.pages
         ? context.l10n.homePageProgressCount(
-            recitation.current,
+            context.numText(recitation.current),
             recitation.total,
+            context.numText(recitation.total),
           )
         : context.l10n.homeAyahProgressCount(
-            recitation.current,
+            context.numText(recitation.current),
             recitation.total,
+            context.numText(recitation.total),
           );
     final percent = (recitation.percent * 100).round().clamp(0, 100);
 

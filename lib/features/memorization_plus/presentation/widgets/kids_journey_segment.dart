@@ -20,6 +20,7 @@ class KidsJourneySegment extends StatelessWidget {
     required this.showSignpost,
     required this.onTap,
     required this.onLockedTap,
+    this.celebrate = false,
   });
 
   final KidsJourneyStage stage;
@@ -31,6 +32,9 @@ class KidsJourneySegment extends StatelessWidget {
   final bool showSignpost;
   final VoidCallback onTap;
   final VoidCallback onLockedTap;
+
+  /// K37 — the house was finished since the last visit.
+  final bool celebrate;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +73,7 @@ class KidsJourneySegment extends StatelessWidget {
                       surahName: surahName,
                       onTap: onTap,
                       onLockedTap: onLockedTap,
+                      celebrate: celebrate,
                     ),
                   ),
                 ),

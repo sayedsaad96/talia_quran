@@ -34,6 +34,10 @@ class KidsGamifiedStagePage extends StatefulWidget {
 /// restores a paused session when one exists, and otherwise resolves the
 /// ayah's real semantics (first pass → canonical new memorization under the
 /// daily cap, already rewarded → review), so progress is never downgraded.
+///
+/// A house that needs review opens its most overdue ayah (named by the data
+/// layer), the one that made it need review — its first ayah would leave
+/// the house flagged (K30).
 @visibleForTesting
 String kidsNextMissionLocation(KidsJourneyStage stage) {
   final missionType = switch (stage.status) {
@@ -42,8 +46,11 @@ String kidsNextMissionLocation(KidsJourneyStage stage) {
     KidsJourneyStageStatus.current ||
     KidsJourneyStageStatus.locked => KidsMissionType.resume,
   };
+  final ayah = stage.status == KidsJourneyStageStatus.needsReview
+      ? stage.reviewAyah
+      : null;
   return '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}'
-      '&ayahNumber=${stage.nextAyahToStart}'
+      '&ayahNumber=${ayah ?? stage.nextAyahToStart}'
       '&missionType=${missionType.name}';
 }
 

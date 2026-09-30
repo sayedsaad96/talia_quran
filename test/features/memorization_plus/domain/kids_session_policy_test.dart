@@ -42,9 +42,21 @@ void main() {
     });
   });
 
-  test('kids journey starts from An-Nas and stops at An-Naba', () {
-    expect(KidsJourneyCursor.initial.activeSurahId, 114);
-    expect(KidsJourneyCursor.nextJuzAmmaSurah(114), 113);
-    expect(KidsJourneyCursor.nextJuzAmmaSurah(78), isNull);
+  test('kids journey opens with Al-Fatiha, then An-Nas to An-Naba (K27)', () {
+    expect(KidsJourneyCursor.initial.activeSurahId, 1);
+    expect(KidsJourneyPath.surahIds.first, 1);
+    expect(KidsJourneyPath.surahIds[1], 114);
+    expect(KidsJourneyPath.surahIds.last, 78);
+    expect(KidsJourneyPath.surahIds, hasLength(38));
+
+    expect(KidsJourneyPath.nextAfter(1), 114);
+    expect(KidsJourneyPath.nextAfter(114), 113);
+    expect(KidsJourneyPath.nextAfter(79), 78);
+    expect(KidsJourneyPath.nextAfter(78), isNull);
+
+    expect(KidsJourneyPath.contains(1), isTrue);
+    expect(KidsJourneyPath.contains(78), isTrue);
+    expect(KidsJourneyPath.contains(2), isFalse);
+    expect(KidsJourneyPath.contains(77), isFalse);
   });
 }

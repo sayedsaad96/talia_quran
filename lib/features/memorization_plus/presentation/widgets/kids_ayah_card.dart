@@ -15,6 +15,7 @@ class KidsAyahCard extends StatelessWidget {
     this.isCompleted = false,
     this.isAudioLoading = false,
     this.audioUnavailable = false,
+    this.recalledWords,
   });
 
   final int surahId;
@@ -23,6 +24,9 @@ class KidsAyahCard extends StatelessWidget {
   final bool isCompleted;
   final bool isAudioLoading;
   final bool audioUnavailable;
+
+  /// K32 — after a miss, the words the child recited right are tinted.
+  final List<bool>? recalledWords;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +93,8 @@ class KidsAyahCard extends StatelessWidget {
               decorationColor: KidsTheme.houseBrown.withValues(alpha: 0.5),
               referenceColor: KidsTheme.forestGreen,
               isCompleted: isCompleted,
+              wordHighlights: recalledWords,
+              highlightColor: KidsTheme.forestGreen.withValues(alpha: 0.18),
             ),
             if (audioMessage != null) ...[
               const SizedBox(height: AppSpacing.lg),

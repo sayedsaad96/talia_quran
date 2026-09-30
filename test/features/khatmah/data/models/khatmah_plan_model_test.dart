@@ -299,4 +299,38 @@ void main() {
       expect(restored, entity);
     });
   });
+
+  group('wirdUnit persistence', () {
+    Map<String, dynamic> json([Object? unit]) => {
+      'id': 'u',
+      'title': 'Khatmah',
+      'completedPages': <int>[],
+      'targetPagesPerDay': 21,
+      'targetDays': 30,
+      'startDate': '2026-02-18T00:00:00.000',
+      'expectedEndDate': '2026-03-19T00:00:00.000',
+      'dedication': <String, dynamic>{},
+      'wirdUnit': ?unit,
+    };
+
+    test('juz round-trips', () {
+      final entity = KhatmahPlanModel.fromJson(json('juz')).toEntity();
+      expect(entity.wirdUnit, KhatmahWirdUnit.juz);
+      expect(
+        KhatmahPlanModel.fromEntity(entity).toJson()['wirdUnit'],
+        'juz',
+      );
+    });
+
+    test('missing or unknown unit reads as pages', () {
+      expect(
+        KhatmahPlanModel.fromJson(json()).toEntity().wirdUnit,
+        KhatmahWirdUnit.pages,
+      );
+      expect(
+        KhatmahPlanModel.fromJson(json('hizb')).toEntity().wirdUnit,
+        KhatmahWirdUnit.pages,
+      );
+    });
+  });
 }

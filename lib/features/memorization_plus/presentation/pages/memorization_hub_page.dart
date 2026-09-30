@@ -287,8 +287,8 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           title: context.l10n.memorizationHubViewPlanTitle,
           description: hasPlan
               ? context.l10n.dailyPlanProgressCount(
-                  dailyPlan?.requiredCompletedCount ?? 0,
-                  dailyPlan?.totalItems ?? 0,
+                  context.numText(dailyPlan?.requiredCompletedCount ?? 0),
+                  context.numText(dailyPlan?.totalItems ?? 0),
                 )
               : context.l10n.dailyPlanNoPlanTitle,
           route: AppRoutes.memorizationPlusDailyPlan,
@@ -329,7 +329,10 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           title: context.l10n.reviewQuizTitle,
           description: context.l10n.memorizationHubReviewCardDescription,
           badge: dueReviewCount > 0
-              ? context.l10n.memorizationHubReviewDueBadge(dueReviewCount)
+              ? context.l10n.memorizationHubReviewDueBadge(
+                  dueReviewCount,
+                  context.numText(dueReviewCount),
+                )
               : context.l10n.memorizationHubReviewDueNone,
           accentOverride: dueReviewCount > 0 ? AppColors.gold : null,
           onTap: () => _openAdultTarget(isReview: true),
@@ -541,8 +544,8 @@ class _HubDailyPlanSummaryCard extends StatelessWidget {
         children: [
           Text(
             context.l10n.dailyPlanProgressCount(
-              plan.requiredCompletedCount,
-              plan.totalItems,
+              context.numText(plan.requiredCompletedCount),
+              context.numText(plan.totalItems),
             ),
             style: AppTypography.titleSmall,
           ),

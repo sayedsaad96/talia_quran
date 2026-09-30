@@ -131,7 +131,7 @@ class _JuzCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = context.tokens.accent;
     final title = '${context.l10n.juz} ${context.localizedJuzName(juzNumber)}';
-    final pageLabel = '${context.l10n.page} $initialPage';
+    final pageLabel = '${context.l10n.page} ${context.numText(initialPage)}';
     final surface = context.tokens.surfaceVariant;
     final primaryText = context.tokens.textPrimary;
     final secondaryText = context.tokens.textSecondary;

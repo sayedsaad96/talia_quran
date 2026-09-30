@@ -69,6 +69,76 @@ void main() {
     updateSchedule = MockUpdateKhatmahScheduleUsecase();
   });
 
+  test(
+    'keep-end-date preview works when the pace is above the boost cap',
+    () async {
+      final today = DateTime(2026, 3, 1);
+      final ramadan = KhatmahPlan(
+        id: 'ramadan',
+        title: KhatmahPlan.defaultTitle,
+        targetPagesPerDay: 21,
+        targetDays: 30,
+        startDate: today.subtract(const Duration(days: 10)),
+        expectedEndDate: today.add(const Duration(days: 19)),
+        completedPages: {for (var p = 1; p <= 100; p++) p},
+      );
+      when(() => getActive()).thenAnswer((_) async => ramadan);
+      final cubit = KhatmahCubit(
+        getActive,
+        recordReading,
+        pauseResume,
+        deleteKhatmah,
+        updateSchedule: updateSchedule,
+        now: () => today,
+      );
+      await cubit.load();
+
+      final preview = cubit.previewAdjustment(
+        kind: KhatmahAdjustment.keepEndDate,
+      );
+
+      expect(preview, isNotNull);
+      expect(preview!.targetPagesPerDay, greaterThanOrEqualTo(21));
+      await cubit.close();
+    },
+  );
+
+  test('juz plans offer only the calm adjustment', () async {
+    final today = DateTime(2026, 3, 1);
+    final juzPlan = KhatmahPlan(
+      id: 'juz',
+      title: KhatmahPlan.defaultTitle,
+      wirdUnit: KhatmahWirdUnit.juz,
+      targetPagesPerDay: 21,
+      targetDays: 30,
+      startDate: DateTime(2026, 2, 18),
+      expectedEndDate: DateTime(2026, 3, 19),
+      completedPages: {for (var p = 1; p <= 401; p++) p},
+    );
+    when(() => getActive()).thenAnswer((_) async => juzPlan);
+    final cubit = KhatmahCubit(
+      getActive,
+      recordReading,
+      pauseResume,
+      deleteKhatmah,
+      updateSchedule: updateSchedule,
+      now: () => today,
+    );
+    await cubit.load();
+
+    expect(cubit.canBoost, isFalse);
+    expect(
+      cubit.previewAdjustment(kind: KhatmahAdjustment.keepEndDate),
+      isNull,
+    );
+    expect(cubit.previewAdjustment(kind: KhatmahAdjustment.mildBoost), isNull);
+    final calm = cubit.previewAdjustment(kind: KhatmahAdjustment.calm)!;
+    // 10 juz left (21–30) → 10 days from today.
+    expect(calm.targetDays, 10);
+    expect(calm.expectedEndDate, DateTime(2026, 3, 10));
+    await cubit.close();
+  });
+
   test('starts in the initial state', () async {
     final cubit = buildCubit();
     expect(cubit.state, const KhatmahInitial());

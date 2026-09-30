@@ -11,18 +11,27 @@ class _CertificatesSection extends StatefulWidget {
 
 class _CertificatesSectionState extends State<_CertificatesSection> {
   List<CertificateAward> _certificates = [];
-  bool _isLoading = true;
   StreamSubscription<ProgressChangedReason>? _progressChangesSub;
 
   @override
   void initState() {
     super.initState();
+    // Certificates are read synchronously from preferences, so load before
+    // the first frame instead of flashing a spinner.
     _loadCertificates();
     _progressChangesSub = getIt<ProgressEventsBus>().changes.listen((reason) {
-      if (reason == ProgressChangedReason.certificate && mounted) {
-        unawaited(_loadCertificates());
+      if (!mounted) return;
+      if (reason == ProgressChangedReason.certificate ||
+          reason == ProgressChangedReason.cloudPull) {
+        setState(_loadCertificates);
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CertificatesSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isKids != widget.isKids) _loadCertificates();
   }
 
   @override
@@ -31,36 +40,18 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
     super.dispose();
   }
 
-  Future<void> _loadCertificates() async {
+  void _loadCertificates() {
     final service = getIt<AchievementService>();
-    final certs = service.getEarnedCertificates(isKids: widget.isKids);
+    final certs = service.getEarnedCertificates(isKids: widget.isKids)
+      ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
     if (service.hasNewCertificate(isKids: widget.isKids)) {
       service.markCertificatesSeen(isKids: widget.isKids);
     }
-    if (mounted) {
-      setState(() {
-        _certificates = certs;
-        _isLoading = false;
-      });
-    }
+    _certificates = certs;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(
-            title: context.l10n.myCertificates,
-            padding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          const Center(child: LoadingWidget()),
-        ],
-      );
-    }
-
     if (_certificates.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,9 +66,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
             decoration: BoxDecoration(
               color: context.tokens.card,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: context.tokens.divider,
-              ),
+              border: Border.all(color: context.tokens.divider),
             ),
             child: Center(
               child: Column(
@@ -112,7 +101,8 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
         ),
         const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 180,
+          // Grows with the text scale so titles and dates never clip.
+          height: MediaQuery.textScalerOf(context).scale(180),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -155,19 +145,14 @@ class _CertificateCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       onTap: () {
         context.push(
-          '/certificate',
+          AppRoutes.certificate,
           extra: {
             'award': cert,
-            'userName': context.read<ProfileCubit>().state is ProfileLoaded
-                ? (context.read<ProfileCubit>().state as ProfileLoaded)
-                      .profile
-                      .displayName
-                : context.l10n.taliaUser,
+            'userName': _profileDisplayName(context) ?? context.l10n.taliaUser,
           },
         );
       },
       child: Container(
-        width: 140,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           gradient: bgGradient,
@@ -204,7 +189,9 @@ class _CertificateCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${cert.earnedAt.day}/${cert.earnedAt.month}/${cert.earnedAt.year}',
+              MaterialLocalizations.of(
+                context,
+              ).formatMediumDate(cert.earnedAt.toLocal()),
               style: AppTypography.labelSmall.copyWith(
                 color: context.tokens.textSecondary,
               ),

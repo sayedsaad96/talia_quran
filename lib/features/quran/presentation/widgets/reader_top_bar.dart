@@ -85,7 +85,7 @@ class ReaderTopBar extends StatelessWidget {
                 ),
                 Text(
                   context.isArabic
-                      ? 'الجزء ${MushafHizbHelper.getJuzName(juzNumber)} • ${context.l10n.page} $pageNumber'
+                      ? 'الجزء ${MushafHizbHelper.getJuzName(juzNumber)} • ${context.l10n.page} ${context.numText(pageNumber)}'
                       : 'Juz $juzNumber • ${context.l10n.page} $pageNumber',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

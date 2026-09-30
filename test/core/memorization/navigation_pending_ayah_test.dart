@@ -270,13 +270,14 @@ void main() {
           cachedPlan: DailyPlan(
             generatedAt: DateTime.utc(2026, 7, 8),
             surahId: 67,
-            newAyahs: const [
-              DailyPlanAyah(
-                surahId: 67,
-                ayahNumber: 4,
-                ayahText: 'text',
-                record: null,
-              ),
+            newAyahs: [
+              for (var ayah = 4; ayah <= 7; ayah++)
+                DailyPlanAyah(
+                  surahId: 67,
+                  ayahNumber: ayah,
+                  ayahText: 'text',
+                  record: null,
+                ),
             ],
             nearRevision: const [],
             farRevision: const [],
@@ -305,6 +306,55 @@ void main() {
 
       expect(query['intent'], 'memorize');
       expect(query['blockSize'], '3');
+    });
+
+    test("a memorize block never outgrows today's new ayahs (N3)", () async {
+      final nav = MemorizationNavigationResolver(
+        _FakeRepository(
+          cachedPlan: DailyPlan(
+            generatedAt: DateTime.utc(2026, 7, 8),
+            surahId: 114,
+            newAyahs: const [
+              DailyPlanAyah(
+                surahId: 114,
+                ayahNumber: 1,
+                ayahText: 'text',
+                record: null,
+              ),
+              DailyPlanAyah(
+                surahId: 114,
+                ayahNumber: 2,
+                ayahText: 'text',
+                record: null,
+              ),
+            ],
+            nearRevision: const [],
+            farRevision: const [],
+            completedAyahNums: const [],
+          ),
+          customPlan: CustomMemorizationPlan(
+            name: 'p',
+            startSurahId: 114,
+            endSurahId: 114,
+            newAyahsPerDay: 10,
+            availableDaysPerWeek: 7,
+            sessionMinutes: 60,
+            difficulty: MemorizationDifficulty.easy,
+            enableNearRevision: true,
+            enableFarRevision: true,
+            nearRevisionCount: 5,
+            farRevisionCount: 3,
+            startAyah: 1,
+            createdAt: DateTime.utc(2026, 7, 1),
+          ),
+        ),
+      );
+
+      final targets = await nav.resolve();
+      final query = Uri.parse(targets.todayPlanLocation).queryParameters;
+
+      expect(query['startAyah'], '1');
+      expect(query['blockSize'], '2');
     });
 
     test('completed daily plan does not open a V2 session at ayah 1', () async {

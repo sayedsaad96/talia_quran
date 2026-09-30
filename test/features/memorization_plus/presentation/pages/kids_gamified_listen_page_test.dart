@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
+import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
+import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
@@ -13,7 +15,7 @@ import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   group('KidsGamifiedListenPage', () {
-    testWidgets('renders ayah card, audio controls, and mic button', (
+    testWidgets('after the listens the child tries from memory (K25)', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
@@ -22,6 +24,7 @@ void main() {
 
       var played = false;
       var recorded = false;
+      var tried = false;
 
       await tester.pumpWidget(
         _TestApp(
@@ -31,6 +34,7 @@ void main() {
             onPlayPause: () => played = true,
             onRecordRecitation: () => recorded = true,
             onStopRecording: () {},
+            onTryFromMemory: () => tried = true,
           ),
         ),
       );
@@ -39,18 +43,228 @@ void main() {
       expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
       expect(find.text('Ayah 3'), findsOneWidget);
       expect(find.text('Listen and repeat'), findsWidgets);
-      expect(find.text('Record your recitation'), findsOneWidget);
       expect(find.text('3/3'), findsOneWidget);
+      // Recall comes before the microphone (Product Rules 14.8).
+      expect(find.text('Try from memory'), findsOneWidget);
+      expect(find.text('Record your recitation'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('kids-gamified-play-audio')));
       await tester.pump();
       await tester.tap(
-        find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+        find.byKey(const ValueKey('kids-gamified-try-from-memory')),
       );
       await tester.pump();
 
       expect(played, isTrue);
-      expect(recorded, isTrue);
+      expect(tried, isTrue);
+      expect(recorded, isFalse);
+    });
+
+    group('reviews start with recall (K28)', () {
+      KidsModeLoaded reviewState() => KidsModeLoaded(
+        surahId: 114,
+        ayahNumber: 3,
+        ayahText: 'Test ayah text',
+        sessionState: V2SessionEngine().startReview(_testSessionState()),
+        progress: _baseState.progress,
+        isPlaying: false,
+        currentLoop: 0,
+        maxLoops: 0,
+        isCompleted: false,
+        isReview: true,
+      );
+
+      Future<void> pumpReview(
+        WidgetTester tester, {
+        required KidsModeLoaded state,
+        VoidCallback? onRemind,
+        VoidCallback? onRecord,
+        Locale locale = const Locale('en'),
+        Size size = const Size(900, 1200),
+      }) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = size;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _TestApp(
+            locale: locale,
+            child: KidsGamifiedListenContent(
+              state: state,
+              onBack: () {},
+              onPlayPause: () {},
+              onRecordRecitation: onRecord ?? () {},
+              onStopRecording: () {},
+              onTryFromMemory: () {},
+              onRevealFirstWord: () {},
+              onRemindMe: onRemind ?? () {},
+            ),
+          ),
+        );
+      }
+
+      testWidgets('opens as a hidden review challenge with the mic ready', (
+        tester,
+      ) async {
+        var reminded = false;
+        var recorded = false;
+        await pumpReview(
+          tester,
+          state: reviewState(),
+          onRemind: () => reminded = true,
+          onRecord: () => recorded = true,
+        );
+
+        expect(find.textContaining('Review challenge'), findsOneWidget);
+        expect(find.byType(KidsAyahCard), findsNothing);
+        expect(find.text('Test ayah text'), findsNothing);
+        // No listening gate on a review.
+        expect(find.text('0/0'), findsNothing);
+        final play = tester.widget<FilledButton>(
+          find.byKey(const ValueKey('kids-gamified-play-audio')),
+        );
+        expect(play.onPressed, isNull);
+
+        await tester.tap(
+          find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+        );
+        await tester.tap(find.byKey(const ValueKey('kids-gamified-remind-me')));
+        await tester.pump();
+
+        expect(recorded, isTrue);
+        expect(reminded, isTrue);
+      });
+
+      testWidgets('a near miss in new memorization keeps the mic (fix)', (
+        tester,
+      ) async {
+        final engine = V2SessionEngine();
+        final reciting = engine.startReciting(
+          engine.startMemorizing(engine.startLearning(_testSessionState())),
+        );
+        await pumpReview(
+          tester,
+          state: _baseState.copyWith(sessionState: reciting, currentLoop: 3),
+        );
+
+        expect(find.text('Try reciting without help'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+          findsOneWidget,
+        );
+        expect(find.text('Try from memory'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('kids-gamified-remind-me')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('fits a 320px Arabic screen', (tester) async {
+        await pumpReview(
+          tester,
+          state: reviewState(),
+          locale: const Locale('ar'),
+          size: const Size(320, 640),
+        );
+
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    group('recalling from memory (K25)', () {
+      Future<void> pumpRecall(
+        WidgetTester tester, {
+        required KidsModeLoaded state,
+        VoidCallback? onRecord,
+        VoidCallback? onReveal,
+        Locale locale = const Locale('en'),
+        Size size = const Size(900, 1200),
+      }) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = size;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _TestApp(
+            locale: locale,
+            child: KidsGamifiedListenContent(
+              state: state,
+              onBack: () {},
+              onPlayPause: () {},
+              onRecordRecitation: onRecord ?? () {},
+              onStopRecording: () {},
+              onTryFromMemory: () {},
+              onRevealFirstWord: onReveal ?? () {},
+            ),
+          ),
+        );
+      }
+
+      testWidgets('hides the ayah and offers the start and the mic', (
+        tester,
+      ) async {
+        var recorded = false;
+        var revealed = false;
+        await pumpRecall(
+          tester,
+          state: _recallState(),
+          onRecord: () => recorded = true,
+          onReveal: () => revealed = true,
+        );
+
+        expect(find.byType(KidsAyahCard), findsNothing);
+        expect(find.text('Test ayah text'), findsNothing);
+        expect(find.text('Try to remember the ayah'), findsOneWidget);
+        expect(find.text('Record your recitation'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const ValueKey('kids-gamified-first-word-hint')),
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+        );
+        await tester.pump();
+
+        expect(revealed, isTrue);
+        expect(recorded, isTrue);
+      });
+
+      testWidgets('a revealed start shows only the first word', (tester) async {
+        await pumpRecall(tester, state: _recallState(firstWordRevealed: true));
+
+        expect(find.text('Test'), findsOneWidget);
+        expect(
+          find.text('Here is the first word — you finish it'),
+          findsOneWidget,
+        );
+        expect(find.text('Test ayah text'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('kids-gamified-first-word-hint')),
+          findsNothing,
+        );
+      });
+
+      testWidgets('recording hides the first word too', (tester) async {
+        await pumpRecall(
+          tester,
+          state: _recallState(
+            firstWordRevealed: true,
+          ).copyWith(isRecording: true),
+        );
+
+        expect(find.text('Test'), findsNothing);
+        expect(find.text('Test ayah text'), findsNothing);
+      });
+
+      testWidgets('fits a 320px Arabic screen', (tester) async {
+        await pumpRecall(
+          tester,
+          state: _recallState(firstWordRevealed: true),
+          locale: const Locale('ar'),
+          size: const Size(320, 640),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('حاول تتذكّر الآية'), findsOneWidget);
+      });
     });
 
     testWidgets('mic button stays disabled until all loops complete', (
@@ -107,13 +321,19 @@ void main() {
         ),
       );
 
-      expect(find.text('Listen to the ayah 2 times before recording your voice.'),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey('kids-gamified-listen-first-hint')),
-          findsOneWidget);
+      expect(
+        find.text('Listen to the ayah 2 times before recording your voice.'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('kids-gamified-listen-first-hint')),
+        findsOneWidget,
+      );
 
       // Tapping the hint plays the audio (never records).
-      await tester.tap(find.byKey(const ValueKey('kids-gamified-listen-first-hint')));
+      await tester.tap(
+        find.byKey(const ValueKey('kids-gamified-listen-first-hint')),
+      );
       await tester.pump();
 
       expect(played, isTrue);
@@ -363,6 +583,47 @@ void main() {
       },
     );
 
+    group('recording wave motion (K24)', () {
+      Future<void> pumpRecording(
+        WidgetTester tester, {
+        required bool disableAnimations,
+      }) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(disableAnimations: disableAnimations),
+            child: _TestApp(
+              child: KidsGamifiedListenContent(
+                state: _baseState.copyWith(isRecording: true),
+                onBack: () {},
+                onPlayPause: () {},
+                onRecordRecitation: () {},
+                onStopRecording: () {},
+              ),
+            ),
+          ),
+        );
+        // Let the panel's entrance transition finish.
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      testWidgets('the wave moves while the child records', (tester) async {
+        await pumpRecording(tester, disableAnimations: false);
+
+        expect(tester.hasRunningAnimations, isTrue);
+        // Remove the looping wave so the test can end cleanly.
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('the wave stays still with reduced motion', (tester) async {
+        await pumpRecording(tester, disableAnimations: true);
+
+        expect(tester.hasRunningAnimations, isFalse);
+      });
+    });
+
     testWidgets('isCompleted=true disables mic button', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
@@ -373,25 +634,28 @@ void main() {
       await tester.pumpWidget(
         _TestApp(
           child: KidsGamifiedListenContent(
-            state: _baseState.copyWith(isCompleted: true),
+            state: _baseState.copyWith(isCompleted: true, currentLoop: 3),
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () => recorded = true,
             onStopRecording: () {},
+            onTryFromMemory: () => recorded = true,
           ),
         ),
       );
 
-      // Mic button should be disabled — tapping should not fire
+      // The next step is disabled once the ayah is done: tapping is inert.
       await tester.tap(
-        find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+        find.byKey(const ValueKey('kids-gamified-try-from-memory')),
         warnIfMissed: false,
       );
       await tester.pump();
       expect(recorded, isFalse);
     });
 
-    testWidgets('back button triggers onBack callback', (tester) async {
+    testWidgets('visible labelled back control triggers onBack callback', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
       addTearDown(tester.view.reset);
@@ -410,8 +674,43 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byTooltip('Back'));
+      expect(find.text('Go Back'), findsOneWidget);
+      await tester.tap(find.text('Go Back'));
       await tester.pump();
+      expect(backCalled, isTrue);
+    });
+
+    testWidgets('back control is localized in Arabic', (tester) async {
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedListenContent(
+            state: _baseState,
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('العودة'), findsOneWidget);
+    });
+
+    testWidgets('loading shell keeps the labelled back control available', (
+      tester,
+    ) async {
+      var backCalled = false;
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenStatusShell(
+            onBack: () => backCalled = true,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Go Back'));
       expect(backCalled, isTrue);
     });
 
@@ -487,6 +786,18 @@ final _baseState = KidsModeLoaded(
   isCompleted: false,
 );
 
+/// The session after the listens, recalling the hidden ayah.
+KidsModeLoaded _recallState({bool firstWordRevealed = false}) {
+  final engine = V2SessionEngine();
+  var session = engine.startMemorizing(
+    engine.startLearning(_testSessionState()),
+  );
+  if (firstWordRevealed) {
+    session = engine.useHint(session, V2HintLevel.firstWord);
+  }
+  return _baseState.copyWith(sessionState: session, currentLoop: 3);
+}
+
 V2SessionState _testSessionState() {
   return V2SessionState.initial(
     surahId: 114,
@@ -503,14 +814,15 @@ V2SessionState _testSessionState() {
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.child, this.locale = const Locale('en')});
 
   final Widget child;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,

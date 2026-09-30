@@ -141,6 +141,10 @@
   "clearSearch": "مسح البحث",
   "selectReciter": "اختيار القارئ",
   "enterFocusMode": "الدخول إلى وضع التركيز",
+  "readerGoToPage": "انتقل إلى صفحة أو سورة أو جزء",
+  "readerTajweedColors": "ألوان التجويد",
+  "readerTajweedColorsHint": "تلوين أحكام التجويد في صفحة المصحف",
+  "surahInProgressBadge": "قيد الحفظ",
   "exitFocusMode": "الخروج من وضع التركيز",
   "closeReader": "إغلاق القارئ",
   "hizbNumberLabel": "الحزب {number}",
@@ -213,7 +217,6 @@
   "about": "حول التطبيق",
   "systemDefault": "حسب النظام",
   "pureBlackTheme": "أسود كامل (OLED)",
-  "pureBlackThemeHint": "خلفية سوداء تمامًا في الوضع الداكن، أريح للعين وتوفّر البطارية في شاشات OLED",
   "changeMemorizationPath": "تغيير مسار الحفظ",
   "adultPath": "مسار الكبار",
   "adultPathDesc": "البدء من الفاتحة والبقرة تصاعدياً",
@@ -390,6 +393,8 @@
   "azkarFavorites": "المفضلة",
   "azkarFavoritesEmptyTitle": "لا توجد أدعية في المفضلة",
   "azkarFavoritesEmptyDesc": "اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا",
+  "azkarFavoriteAdd": "إضافة إلى المفضلة",
+  "azkarFavoriteRemove": "إزالة من المفضلة",
   "azkarSearchNoResultsTitle": "لا توجد نتائج مطابقة",
   "azkarSearchNoResultsDesc": "لم نجد أي أدعية تطابق بحثك",
   "azkarSearchClear": "مسح البحث",
@@ -493,7 +498,7 @@
   "achievementTitleTenSurahs": "١٠ سور",
   "achievementDescTenSurahs": "احفظ ١٠ سور كاملة",
   "achievementTitleJuzAmma": "جزء عمّ",
-  "achievementDescJuzAmma": "احفظ ٥٦٤ آية (جزء عمّ)",
+  "achievementDescJuzAmma": "احفظ جزء عمّ كاملاً",
   "achievementTitleOneJuzMemorized": "جزء محفوظ",
   "achievementDescOneJuzMemorized": "احفظ جزءاً كاملاً",
   "achievementTitleFiveJuzMemorized": "٥ أجزاء محفوظة",
@@ -661,16 +666,15 @@
   "splashFeatureMemorize": "احفظ",
   "splashFeatureReview": "راجع",
   "splashFeatureGrow": "انمُ",
-  "onboardingWelcomeTitle": "مرحباً بك في تالية",
-  "onboardingWelcomeSubtitle": "مساحة قرآنية هادئة ومتقنة تعينك على التلاوة والتدبر، والحفظ والمراجعة الذكية، وبناء ورد يومي مستدام.",
   "onboardingStartJourney": "ابدأ رحلتك",
   "onboardingSlide1Title": "مصحفك اليومي بتلاوة وتدبر",
-  "onboardingSlide1Subtitle": "قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء مع التفسير الميسر.",
-  "onboardingBentoMushafSurah": "سورة الفاتحة",
+  "onboardingSlide1Subtitle": "قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء، وخطط ختمة بالوتيرة التي تناسبك.",
+  "onboardingBentoMushafSurah": "سورة الإسراء",
   "onboardingBentoListeningTitle": "تلاوات متقنة",
   "onboardingBentoListeningDesc": "استماع وتكرار صوتي",
-  "onboardingBentoTafsirTitle": "تفسير ميسر",
-  "onboardingBentoTafsirDesc": "معاني الآيات فوراً",
+  "onboardingBentoKhatmahTitle": "خطط الختمة",
+  "onboardingBentoKhatmahDesc": "وتيرة يومية تناسبك",
+  "onboardingBentoKhatmahBadge": "ورد يومي",
   "onboardingSlide2Title": "احفظ القرآن ورسّخه بذكاء",
   "onboardingSlide2Subtitle": "تقنيات تكرار ذكية ومتباعدة تقيس قوة حفظك وتمنع النسيان قبل وقوعه.",
   "onboardingBentoMasteryTitle": "نسبة الإتقان والتثبيت",
@@ -679,11 +683,15 @@
   "onboardingBentoActiveRecallDesc": "إخفاء الكلمات للاختبار الذاتي",
   "onboardingBentoReviewScheduleTitle": "مراجعة ذكية",
   "onboardingBentoReviewScheduleDesc": "تذكير تلقائي لمنع النسيان",
+  "onboardingBentoStatusMastered": "متقن راسخ",
+  "onboardingBentoStatusDueSoon": "مراجعة قريبة",
+  "onboardingBentoStatusNew": "جديد",
+  "onboardingBentoSmartAlert": "تذكير ذكي",
   "onboardingSlide3Title": "ورد مستمر وتجربة لكل العائلة",
   "onboardingSlide3Subtitle": "ابنِ عادة قرآنية يومية لا تنقطع، مع مسار تفاعلي ممتع مخصص للأطفال، وبدون إنترنت.",
   "onboardingBentoStreakTitle": "سلسلة الورد اليومي",
   "onboardingBentoStreakDays": "٧ أيام متواصلة 🔥",
-  "onboardingBentoOfflineBadge": "يعمل ١٠٠٪ دون إنترنت",
+  "onboardingBentoOfflineBadge": "يعمل دون إنترنت",
   "onboardingBentoKidsTeaserTitle": "مسار براعم تالية",
   "onboardingBentoKidsTeaserDesc": "نجوم، أصوات ومكافآت محفزة",
   "onboardingPillarReadTitle": "تلاوة ومصحف أصيل",
@@ -954,6 +962,17 @@
   "kidsGamifiedRepeatStepSubtitle": "كرر خلف القارئ حتى تثبت الآية",
   "kidsGamifiedTestStep": "اختبر نفسك",
   "kidsGamifiedTestStepSubtitle": "حاول التسميع بدون مساعدة",
+  "kidsGamifiedTryFromMemory": "جرّب من ذاكرتك",
+  "kidsGamifiedTryToRemember": "حاول تتذكّر الآية",
+  "kidsGamifiedGiveMeTheStart": "أعطني البداية",
+  "kidsGamifiedFirstWordShown": "هذه أول كلمة، أكمل أنت",
+  "kidsGamifiedReviewChallenge": "⭐ تحدّي المراجعة",
+  "kidsGamifiedReviewChallengeSubtitle": "هل تتذكّرها؟ سمّعها من ذاكرتك",
+  "kidsGamifiedRemindMe": "ذكّرني",
+  "kidsWelcomeBackTitle": "أهلاً بعودتك!",
+  "kidsWelcomeBackSubtitle": "نبدأ بخطوة سهلة",
+  "kidsGamifiedEnoughForToday": "أحسنت! هذا وقت كافٍ لليوم، يمكنك التوقف.",
+  "parentSupportTip":"جرّبا معاً: استمعا للآية مرتين، ثم دع طفلك يبدأ بأول كلمة",
   "kidsGamifiedStartMission": "ابدأ المهمة",
   "kidsGamifiedListenAndRepeat": "استمع وكرر",
   "kidsGamifiedRecordYourVoice": "سجل تلاوتك",
@@ -1045,9 +1064,9 @@
   "dailyPlanListenBeforeRating": "استمع للآية قبل التقييم",
   "reviewQuizTitle": "مراجعة بالتسميع",
   "memorizationSessionTitle": "جلسة الحفظ",
-  "memorizationHubReviewSectionTitle": "مراجعة بالتسميع",
-  "memorizationHubReviewSectionSubtitle": "راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).",
-  "memorizationHubReviewCardDescription": "افتح جلسة حفظ للآيات التي حفظتها مسبقًا.",
+  "memorizationHubReviewSectionTitle": "المراجعة",
+  "memorizationHubReviewSectionSubtitle": "سمّع ما حفظته من ذاكرتك، ويقيّم التطبيق تسميعك.",
+  "memorizationHubReviewCardDescription": "سمّع الآيات المستحقة للمراجعة من حفظك.",
   "memorizationHubDailyPlanSubtitle": "وجهتك الأساسية للحفظ والمراجعة اليومية.",
   "memorizationHubContinuePlanDescription": "افتح ورد الحفظ والمراجعة الحالي.",
   "memorizationHubViewPlanTitle": "تفاصيل خطة اليوم",
@@ -1055,7 +1074,7 @@
   "memorizationHubPracticeSectionSubtitle": "اختر سورة أو تدرب بالتسميع الصوتي.",
   "memorizationHubPracticeBySurahTitle": "تدرّب بالسورة",
   "memorizationHubPracticeBySurahDescription": "تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.",
-  "listeningReviewTitle": "مراجعة بالسماع",
+  "listeningReviewTitle": "اختبار الاستماع",
   "listeningReviewHubDescription": "اسمع آية من محفوظك: حدّد سورتها أو أكمل ما بعدها.",
   "listeningReviewStartPrompt": "اختر نوع الجولة",
   "listeningReviewModeWhichSurah": "من أي سورة؟",
@@ -1064,7 +1083,7 @@
   "listeningReviewLastScore": "آخر جولة: {correct} من {total}",
   "@listeningReviewLastScore": {"placeholders": {"correct": {"type": "int"}, "total": {"type": "int"}}},
   "listeningReviewNotEnoughTitle": "احفظ بضع آيات أولًا",
-  "listeningReviewNotEnoughBody": "تحتاج المراجعة بالسماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.",
+  "listeningReviewNotEnoughBody": "يحتاج اختبار الاستماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.",
   "listeningReviewErrorBody": "تعذّر تحضير الجولة. حاول مرة أخرى.",
   "listeningReviewRetry": "إعادة المحاولة",
   "listeningReviewQuestionProgress": "السؤال {current} من {total}",
@@ -1140,6 +1159,54 @@
   "parentDashboardEnterButton": "دخول",
   "parentDashboardEnterLinkingCode": "إدخال رمز الربط",
   "parentDashboardResetPin": "اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد",
+  "parentDashboardForgotPin": "نسيت الرمز؟",
+  "parentDashboardForgotPinTitle": "استعادة رمز ولي الأمر",
+  "parentDashboardForgotPinBody": "للتأكد أنك ولي الأمر، أدخل كلمة مرور حسابك {email}. بعدها تنشئ رمزاً جديداً، وتبقى المكافآت والإعدادات كما هي.",
+  "@parentDashboardForgotPinBody": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "parentDashboardForgotPinConfirm": "تحقّق",
+  "parentDashboardAccountPasswordIncorrect": "كلمة مرور الحساب غير صحيحة",
+  "parentDashboardAccountCheckUnavailable": "تعذّر التحقق من الحساب الآن. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.",
+  "parentDashboardChangePin": "تغيير رمز ولي الأمر",
+  "parentDashboardChangePinConfirm": "ستنشئ رمزاً جديداً الآن. تبقى المكافآت والإعدادات كما هي.",
+  "guardianErrorSignInRequired": "سجّل الدخول بحسابك أولاً ثم أعد المحاولة.",
+  "guardianErrorCloudUnavailable": "ربط الأطفال غير متاح في هذا الإصدار لأن المزامنة السحابية غير مفعّلة.",
+  "guardianErrorOnlyForChildren": "ربط ولي الأمر متاح لحسابات الأطفال فقط.",
+  "guardianErrorAlreadyLinked": "هذا الحساب مرتبط بولي أمر بالفعل.",
+  "guardianErrorParentModeAdultsOnly": "وضع ولي الأمر متاح لمسار الكبار فقط.",
+  "guardianErrorLinkCodeInvalid": "رمز الربط غير صحيح أو انتهت صلاحيته. اطلب من الطفل إنشاء رمز جديد ثم أعد المحاولة.",
+  "guardianErrorChildHasGuardian": "هذا الطفل مرتبط بولي أمر آخر. يجب فك الربط الحالي أولاً.",
+  "guardianErrorSameAccount": "لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.",
+  "parentRewardErrorTitleRequired": "اكتب اسم المكافأة أولاً.",
+  "parentRewardErrorLimitReached": "يمكن إضافة 3 مكافآت فقط.",
+  "childErrorNicknameInvalid": "اكتب اسماً من حرف واحد إلى {max} حرفاً.",
+  "@childErrorNicknameInvalid": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "childErrorAgeInvalid": "اختر عمراً بين {min} و{max} سنة.",
+  "@childErrorAgeInvalid": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "guardianErrorChildNotLinked": "هذا الطفل لم يعد مرتبطاً بحسابك.",
+  "childErrorIdentityUpdateUnavailable": "تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.",
+  "childAgeYears": "{age, plural, =1{سنة واحدة} =2{سنتان} few{{age} سنوات} other{{age} سنة}}",
+  "@childAgeYears": {
+    "placeholders": {
+      "age": { "type": "int" }
+    }
+  },
+  "childEditIdentity": "تعديل اسم الطفل وعمره",
+  "childIdentitySaved": "تم حفظ بيانات الطفل، وتظهر على جهازه بعد المزامنة التالية.",
+  "kidsLinkGuardianTileTitle": "ربط ولي الأمر",
+  "kidsLinkGuardianTileSubtitle": "يحتاج رمز ولي الأمر. بعد الربط يتابع ولي الأمر تقدّمك من جهازه.",
   "parentDashboardTodaySummary": "ملخص اليوم",
   "parentDashboardTodayEmpty": "اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.",
   "parentDashboardTodayCompleted": "اليوم: أكمل الطفل {count} جلسة. شجعه على المراجعة القادمة.",
@@ -1268,37 +1335,13 @@
   "dailyPlanSettingsTooltip": "إعدادات مسار الحفظ الذكي",
   "dailyPlanRefreshTooltip": "تحديث الخطة",
   "dailyPlanHeaderTitle": "خطتك اليومية",
-  "dailyPlanHeaderSummary": "{total} عنصر • {completed} مكتمل",
-  "@dailyPlanHeaderSummary": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      },
-      "completed": {
-        "type": "int"
-      }
-    }
-  },
+  "dailyPlanHeaderSummary": "{total, plural, =0{{totalText} عنصر} =1{عنصر واحد} =2{عنصران} few{{totalText} عناصر} many{{totalText} عنصرًا} other{{totalText} عنصر}} • {completedText} مكتمل",
+  "@dailyPlanHeaderSummary": {"placeholders": {"total": {"type": "int"}, "totalText": {"type": "String"}, "completedText": {"type": "String"}}},
   "dailyPlanProgressCount": "{completed} من {total}",
-  "@dailyPlanProgressCount": {
-    "placeholders": {
-      "completed": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
+  "@dailyPlanProgressCount": {"placeholders": {"completed": {"type": "String"}, "total": {"type": "String"}}},
   "dailyPlanAllDoneShort": "✅ أحسنت! أكملت خطتك اليوم",
-  "dailyPlanRemainingItems": "تبقّى {count} عناصر",
-  "@dailyPlanRemainingItems": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "dailyPlanRemainingItems": "{count, plural, =1{تبقّى عنصر واحد} =2{تبقّى عنصران} few{تبقّى {countText} عناصر} many{تبقّى {countText} عنصرًا} other{تبقّى {countText} عنصر}}",
+  "@dailyPlanRemainingItems": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "dailyPlanAyahTitle": "آية {ayahNumber}",
   "@dailyPlanAyahTitle": {
     "placeholders": {
@@ -1308,7 +1351,7 @@
     }
   },
   "dailyPlanSurahAyahTitle": "{surah} · آية {ayahNumber}",
-  "@dailyPlanSurahAyahTitle": {"placeholders": {"surah": {"type": "String"}, "ayahNumber": {"type": "int"}}},
+  "@dailyPlanSurahAyahTitle": {"placeholders": {"surah": {"type": "String"}, "ayahNumber": {"type": "String"}}},
   "dailyPlanRecordStats": "قوة: {strength} • مراجعات: {reviews}",
   "@dailyPlanRecordStats": {
     "placeholders": {
@@ -1358,14 +1401,8 @@
   "customPlanToSurah": "إلى سورة",
   "customPlanFromAyah": "من آية رقم",
   "customPlanInvalidAyah": "أدخل رقم آية صحيح",
-  "customPlanSurahAyahLimit": "هذه السورة فيها {maxAyah} آيات",
-  "@customPlanSurahAyahLimit": {
-    "placeholders": {
-      "maxAyah": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanSurahAyahLimit": "هذه السورة فيها {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}",
+  "@customPlanSurahAyahLimit": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "customPlanAdult": "كبير",
   "customPlanChild": "طفل",
   "customPlanDifficultyEasy": "سهل",
@@ -1378,14 +1415,8 @@
   "customPlanFarRevisionSubtitle": "تكرار ذكي للآيات القديمة",
   "customPlanFarRevisionCount": "عدد آيات المراجعة البعيدة",
   "customPlanEstimatedDuration": "المدة المقدّرة للإنهاء",
-  "customPlanApproxWeeks": "{count} أسبوع تقريباً",
-  "@customPlanApproxWeeks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanApproxWeeks": "{count, plural, =0{{countText} أسبوع} =1{أسبوع واحد} =2{أسبوعان} few{{countText} أسابيع} many{{countText} أسبوعًا} other{{countText} أسبوع}} تقريبًا",
+  "@customPlanApproxWeeks": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "customPlanApproxMonths": "{count} شهر تقريباً",
   "@customPlanApproxMonths": {
     "placeholders": {
@@ -1402,17 +1433,8 @@
       }
     }
   },
-  "customPlanEstimatedScope": "{surahs} سورة • ~{ayahs} آية",
-  "@customPlanEstimatedScope": {
-    "placeholders": {
-      "surahs": {
-        "type": "int"
-      },
-      "ayahs": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanEstimatedScope": "{surahs, plural, =0{{surahsText} سورة} =1{سورة واحدة} =2{سورتان} few{{surahsText} سور} many{{surahsText} سورة} other{{surahsText} سورة}} • ~{ayahs, plural, =0{{ayahsText} آية} =1{آية واحدة} =2{آيتان} few{{ayahsText} آيات} many{{ayahsText} آية} other{{ayahsText} آية}}",
+  "@customPlanEstimatedScope": {"placeholders": {"surahs": {"type": "int"}, "surahsText": {"type": "String"}, "ayahs": {"type": "int"}, "ayahsText": {"type": "String"}}},
   "customPlanQuickPresetTitle": "اختر قالباً سريعاً",
   "customPlanPresetLight": "خفيف",
   "customPlanPresetLightDesc": "3 آيات/يوم • 5 أيام • 10 دقائق",
@@ -1434,26 +1456,10 @@
       "endSurah": {}
     }
   },
-  "customPlanSummaryLoad": "{ayahsPerDay} آيات يومياً • {daysPerWeek} أيام أسبوعياً",
-  "@customPlanSummaryLoad": {
-    "placeholders": {
-      "ayahsPerDay": {
-        "type": "int"
-      },
-      "daysPerWeek": {
-        "type": "int"
-      }
-    }
-  },
-  "customPlanSummarySession": "{minutes} دقيقة للجلسة • مستوى {difficulty}",
-  "@customPlanSummarySession": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "difficulty": {}
-    }
-  },
+  "customPlanSummaryLoad": "{ayahsPerDay, plural, =0{{ayahsText} آية} =1{آية واحدة} =2{آيتان} few{{ayahsText} آيات} many{{ayahsText} آية} other{{ayahsText} آية}} يوميًا • {daysPerWeek, plural, =0{{daysText} يوم} =1{يوم واحد} =2{يومان} few{{daysText} أيام} many{{daysText} يومًا} other{{daysText} يوم}} أسبوعيًا",
+  "@customPlanSummaryLoad": {"placeholders": {"ayahsPerDay": {"type": "int"}, "ayahsText": {"type": "String"}, "daysPerWeek": {"type": "int"}, "daysText": {"type": "String"}}},
+  "customPlanSummarySession": "{minutes, plural, =0{{minutesText} دقيقة} =1{دقيقة واحدة} =2{دقيقتان} few{{minutesText} دقائق} many{{minutesText} دقيقة} other{{minutesText} دقيقة}} للجلسة • مستوى {difficulty}",
+  "@customPlanSummarySession": {"placeholders": {"minutes": {"type": "int"}, "minutesText": {"type": "String"}, "difficulty": {"type": "String"}}},
   "memorizationPathSelectionFailedTitle": "تعذر حفظ اختيارك",
   "memorizationPathConfirmTitle": "ماذا سيحدث بعد ذلك؟",
   "memorizationPathCanChangeLater": "يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.",
@@ -1478,7 +1484,9 @@
       }
     }
   },
-  "kidsQuranSwipeHint": "اسحب بهدوء للصفحة التالية",
+  "kidsQuranLongPressHint": "اضغط مطولاً على أي آية لتسمعها",
+  "kidsQuranListenPage": "استمع للصفحة",
+  "kidsQuranPausePage": "إيقاف",
   "parentDashboardPinInvalid": "أدخل رمزًا من 4 أرقام",
   "parentDashboardPinIncorrect": "رمز غير صحيح",
   "parentDashboardLinking": "جارٍ التحقق من رمز الربط…",
@@ -1506,9 +1514,9 @@
   },
   "hifzEvaluatingReview": "جارِ تقييم المراجعة...",
   "hifzLeaveSessionMessage": "هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.",
-  "memorizationExitSessionMessage": "هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.",
+  "memorizationExitSessionMessage": "هل تريد إكمال هذه الجلسة لاحقًا من حيث توقفت، أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.",
   "memorizationExitSessionTitle": "الخروج من الجلسة؟",
-  "memorizationSaveAndLeave": "حفظ وخروج",
+  "memorizationSaveAndLeave": "أكمل لاحقًا",
   "memorizationDiscardSession": "التخلّي عن الجلسة",
   "hifzAyahNumberLabel": "آية {ayahNumber}",
   "@hifzAyahNumberLabel": {
@@ -1951,14 +1959,8 @@
   "learningAlertGenericTitle": "تنبيه تعليمي",
   "learningAlertGenericSubtitle": "مطلوب اتخاذ إجراء",
   "reviewBacklogTitle": "تراكم المراجعة",
-  "reviewBacklogSubtitle": "لديك {overdue} آيات متأخرة",
-  "@reviewBacklogSubtitle": {
-    "placeholders": {
-      "overdue": {
-        "type": "String"
-      }
-    }
-  },
+  "reviewBacklogSubtitle": "{count, plural, =1{لديك آية واحدة متأخرة} =2{لديك آيتان متأخرتان} few{لديك {countText} آيات متأخرة} other{لديك {countText} آية متأخرة}}",
+  "@reviewBacklogSubtitle": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "smartPlanCustomTitle": "خطة مخصصة",
   "smartPlanReviewTitle": "خطة المراجعة",
   "smartPlanTodayTitle": "خطة اليوم",
@@ -1987,7 +1989,7 @@
   "familyDashboardNoChildren": "لم يتم ربط أي طفل بعد",
   "@familyDashboardNoChildren": { "description": "Empty state title" },
 
-  "familyDashboardNoChildrenHint": "اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR",
+  "familyDashboardNoChildrenHint": "على جهاز طفلك: افتح مسار الأطفال ← اضغط ⚙ ← «ربط ولي الأمر»، ثم امسح الرمز الظاهر أو اكتبه هنا.",
   "@familyDashboardNoChildrenHint": { "description": "Empty state hint" },
 
   "familyDashboardTodaySummaryTitle": "اليوم في عائلتنا",
@@ -2081,6 +2083,15 @@
   "v2SelfGradeHesitatedHint": "سمّعتها مع توقف أو خطأ بسيط؛ ستُراجَع قريباً",
   "v2SelfGradeForgot": "لم أتذكّرها",
   "v2SelfGradeForgotHint": "سنعيدها معك الآن",
+  "v2SelfGradeRevealHint": "سمّع من حفظك أولاً، ثم اكشف النص وقارن قبل أن تقيّم.",
+  "v2SelfGradeRevealAction": "اعرض الآية وقارن",
+  "v2BlockRevealAction": "اعرض المقطع وقارن",
+  "v2BlockGradeMastered": "سمّعت المقطع كاملاً دون تعثّر",
+  "v2BlockGradeHesitated": "تردّدت في آية",
+  "v2BlockGradeForgot": "نسيت آية",
+  "v2StumbledAyahTitle": "في أي آية تعثّرت؟",
+  "v2StumbledAyahOption": "الآية {ayahNumber}",
+  "@v2StumbledAyahOption": {"placeholders": {"ayahNumber": {"type": "int"}}},
   "v2ManualRecallHint": "لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.",
   "v2ManualBlockReviewAction": "أتممت مراجعة الكتلة من حفظي (تقييم ذاتي)",
   "v2RemediationTitle": "مراجعة قصيرة",
@@ -2097,13 +2108,13 @@
   "closingMomentLabel": "لحظة ختام",
   "closingAyah": "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
   "closingAyahSource": "سورة الرعد · الآية ٢٨",
-  "closingSummaryMemorization": "حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.",
-  "@closingSummaryMemorization": {"placeholders": {"count": {"type": "int"}}},
+  "closingSummaryMemorization": "حفظتَ {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتين} few{{countText} آيات} many{{countText} آية} other{{countText} آية}} في هذه الجلسة — أثرٌ باقٍ بإذن الله.",
+  "@closingSummaryMemorization": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "closingSummaryReview": "أتممتَ مراجعتك بثبات — ثبتها الله في قلبك.",
   "v2ReviewSessionTitle": "مراجعة الحفظ",
   "v2HintSchedulingNotice": "التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.",
-  "dailyPlanBacklogNotice": "لديك {count} آية مستحقة للمراجعة. أكمل مراجعات اليوم لتُفتح الآيات الجديدة.",
-  "@dailyPlanBacklogNotice": {"placeholders": {"count": {"type": "int"}}},
+  "dailyPlanBacklogNotice": "{count, plural, =1{لديك آية واحدة مستحقة للمراجعة.} =2{لديك آيتان مستحقتان للمراجعة.} few{لديك {countText} آيات مستحقة للمراجعة.} other{لديك {countText} آية مستحقة للمراجعة.}} أكمل مراجعات اليوم لتُفتح الآيات الجديدة.",
+  "@dailyPlanBacklogNotice": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "dailyPlanStartReview": "ابدأ مراجعة اليوم",
   "dailyPlanReviewDayNotice": "اليوم يوم مراجعة في خطتك: لا آيات جديدة، ثبّت ما حفظت.",
   "closingSummaryKhatmahWird": "أتممتَ ورد اليوم — من صفحة {start} إلى {end} — أثرٌ باقٍ بإذن الله.",
@@ -2133,7 +2144,7 @@
   "v2BlockProgress": "تم اجتياز {passed}/{total} آيات.",
   "@v2BlockProgress": { "placeholders": { "passed": { "type": "int" }, "total": { "type": "int" } } },
   "v2AyahOfBlock": "الآية {current} من {total}",
-  "@v2AyahOfBlock": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@v2AyahOfBlock": {"placeholders": {"current": {"type": "String"}, "total": {"type": "String"}}},
   "v2EvaluatingBlock": "جارٍ تقييم المقطع...",
   "v2RecordingBlock": "يتم تسجيل المقطع الآن",
   "v2Playing": "يتم التشغيل",
@@ -2157,9 +2168,15 @@
   "v2LoopOff": "تكرار: بدون",
   "v2LoopThree": "تكرار: 3 مرات",
   "v2LoopInfinite": "تكرار: مستمر",
-  "v2MaskedWordsHint": "إظهار الكلمات مخفية",
+  "v2MaskedWordsHint": "إظهار الكلمات المخفية",
   "v2MaskedWordsRevealed": "الكلمات مخفية — حاول التذكر",
   "v2MaskedWordsFull": "إخفاء الكلمات",
+  "v2FirstLettersHint": "أوائل الكلمات",
+  "v2FirstLettersRevealed": "ظهرت أوائل الكلمات — حاول التذكر",
+  "countAyahs": "{count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}",
+  "@countAyahs": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "streakDaysUnit": "{count, plural, few{أيام} many{يومًا} other{يوم}}",
+  "@streakDaysUnit": {"placeholders": {"count": {"type": "int"}}},
   "v2SurahLoadFailed": "تعذر تحميل بيانات السورة.",
   "v2NoAyahsInRange": "لا توجد آيات في النطاق المحدد.",
   "kidsRecordingUnavailable": "لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.",
@@ -2173,7 +2190,7 @@
       "total": { "type": "int" }
     }
   },
-  "kidsJourneyCompleteHint": "أتممت جزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.",
+  "kidsJourneyCompleteHint": "أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.",
   "kidsAyahAlreadyCompleted": "أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.",
   "accountSwitchOfflineDataDiscarded": "تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.",
   "startYourJourneyWithQuran": "ابدأ رحلتك مع القرآن",
@@ -2216,19 +2233,19 @@
   "khatmahStartNewKhatmah": "بدء ختمة جديدة",
   "khatmahChooseYourDailyReadingPaceToCompleteThe": "اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة",
   "khatmahDailyPages": "الصفحات اليومية",
-  "khatmahPages": "{v1} صفحات",
-  "@khatmahPages": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahPages": "{count, plural, =0{{countText} صفحة} =1{صفحة واحدة} =2{صفحتان} few{{countText} صفحات} many{{countText} صفحة} other{{countText} صفحة}}",
+  "@khatmahPages": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahOrCustomPagesPerDay": "أو عدد مخصص يومياً",
   "khatmahOrChooseDuration": "أو اختر مدة الختمة",
   "khatmahStartFromPage": "ابدأ من الصفحة (اختياري)",
   "khatmahStartFromPageHint": "بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة",
-  "khatmahDurationDays": "{days} يوماً",
-  "@khatmahDurationDays": {"placeholders": {"days": {"type": "String"}}},
-  "khatmahDurationRamadan": "رمضان (٣٠ يوماً)",
+  "khatmahDurationDays": "{count, plural, =0{{countText} يوم} =1{يوم واحد} =2{يومان} few{{countText} أيام} many{{countText} يومًا} other{{countText} يوم}}",
+  "@khatmahDurationDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "khatmahDurationRamadan": "رمضان (جزء يومياً)",
   "khatmahEG5": "مثال: 5",
   "khatmahEstimatedDuration": "المدة التقديرية",
-  "khatmahDays": "{v1} يوم",
-  "@khatmahDays": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahDays": "{count, plural, =0{{countText} يوم} =1{يوم واحد} =2{يومان} few{{countText} أيام} many{{countText} يومًا} other{{countText} يوم}}",
+  "@khatmahDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahExpectedCompletion": "موعد الختام المتوقع",
   "khatmahStartKhatmah": "ابدأ الختمة",
   "khatmahPhysicalMushafProgressSavedSuccessfully": "تم تسجيل القراءة بنجاح",
@@ -2260,8 +2277,8 @@
   "khatmahAdded1PageDayMildCompensation": "تمت إضافة صفحة يومياً للتعويض الخفيف",
   "khatmahMildBoost": "تعويض خفيف",
   "khatmahAdjustPreviewTitle": "تعديل جدول الختمة",
-  "khatmahAdjustPreviewBody": "الورد اليومي: {pages} صفحة\nالختام المتوقع: {date}",
-  "@khatmahAdjustPreviewBody": {"placeholders": {"pages": {"type": "String"}, "date": {"type": "String"}}},
+  "khatmahAdjustPreviewBody": "الورد اليومي: {pages, plural, =0{{pagesText} صفحة} =1{صفحة واحدة} =2{صفحتان} few{{pagesText} صفحات} many{{pagesText} صفحة} other{{pagesText} صفحة}}\nالختام المتوقع: {date}",
+  "@khatmahAdjustPreviewBody": {"placeholders": {"pages": {"type": "int"}, "pagesText": {"type": "String"}, "date": {"type": "String"}}},
   "khatmahApplyAdjustment": "تطبيق",
   "khatmahLoadFailureHint": "تعذّرت قراءة بيانات الختمة على هذا الجهاز. أعد المحاولة.",
   "khatmahPause": "إيقاف مؤقت",
@@ -2285,8 +2302,8 @@
   "khatmahDecreaseFontSize": "تصغير الخط",
   "khatmahIncreaseFontSize": "تكبير الخط",
   "khatmahCopyDuA": "نسخ الدعاء",
-  "khatmahPagesLeft": "{v1} صفحة متبقية",
-  "@khatmahPagesLeft": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahPagesLeft": "{count, plural, =1{صفحة واحدة متبقية} =2{صفحتان متبقيتان} few{{countText} صفحات متبقية} other{{countText} صفحة متبقية}}",
+  "@khatmahPagesLeft": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahEstCompletion": "الختام المتوقع: {v1}",
   "@khatmahEstCompletion": {"placeholders":{"v1":{"type":"String"}}},
   "khatmahDedicateKhatmahToSomeone": "إهداء الختمة لشخص عزيز",
@@ -2300,16 +2317,18 @@
   "@khatmahPageOfOfTodaySWird": {"placeholders":{"v1":{"type":"String"},"v2":{"type":"String"},"v3":{"type":"String"}}},
   "khatmahSaveExit": "إنهاء القراءة",
   "khatmahPaceOnTrack": "في الموعد — أحسنت",
+  "khatmahPaceAhead": "متقدم — ستختم قبل موعدك ب{count, plural, =1{يوم واحد} =2{يومين} few{{countText} أيام} other{{countText} يوماً}}",
+  "@khatmahPaceAhead": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahRedistributeAction": "أعد التوزيع للحفاظ على الموعد",
   "khatmahRedistributed": "أُعيد توزيع الصفحات للحفاظ على موعد الختام",
-  "khatmahPaceBehind": "متأخر {pages} صفحة عن موعد الختام",
-  "@khatmahPaceBehind": {"placeholders": {"pages": {"type": "String"}}},
+  "khatmahPaceBehind": "متأخر {count, plural, =1{صفحة واحدة} =2{صفحتين} few{{countText} صفحات} other{{countText} صفحة}} عن موعد الختام",
+  "@khatmahPaceBehind": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahStartNewKhatmah": "ابدأ ختمة جديدة",
   "khatmahThroughWirdEnd": "حتى نهاية ورد اليوم (ص {page})",
   "@khatmahThroughWirdEnd": {"placeholders": {"page": {"type": "String"}}},
   "khatmahCongratulations": "مبارك ختم القرآن الكريم",
-  "khatmahShareSummary": "أتممت ختمة القرآن الكريم ({title}) في {days} يوماً.\nعبر تطبيق تالية القرآني",
-  "@khatmahShareSummary": {"placeholders":{"title":{"type":"String"},"days":{"type":"String"}}},
+  "khatmahShareSummary": "أتممت ختمة القرآن الكريم ({title}) في {days, plural, =1{يوم واحد} =2{يومين} few{{daysText} أيام} many{{daysText} يومًا} other{{daysText} يوم}}.\nعبر تطبيق تالية القرآني",
+  "@khatmahShareSummary": {"placeholders": {"title": {"type": "String"}, "days": {"type": "int"}, "daysText": {"type": "String"}}},
   "khatmahUserNote": "ملاحظة شخصية كتبتها: {note}",
   "@khatmahUserNote": {"placeholders":{"note":{"type":"String"}}},
   "khatmahTodayRange": "ورد اليوم: الصفحات {start} - {end}{completed}",
@@ -2336,6 +2355,22 @@
   "khatmahGeneralGuidance": "دعاء عام",
   "khatmahRelationshipParent": "والد / والدة",
   "khatmahRelationshipMother": "الأم",
+  "khatmahRecipientGender": "المُهدى إليه",
+  "khatmahRecipientMale": "ذكر",
+  "khatmahRecipientFemale": "أنثى",
+  "khatmahEditDedication": "تعديل الإهداء",
+  "khatmahDedicationSaved": "حُفظ الإهداء",
+  "khatmahWirdJuz": "ورد اليوم: الجزء {juz}",
+  "@khatmahWirdJuz": {"placeholders": {"juz": {"type": "String"}}},
+  "khatmahRepeatSameSettings": "ختمة جديدة بنفس الإعدادات",
+  "khatmahHistoryStats": "{count} ختمات • المتوسط {avg} يوماً • الأسرع {fastest} يوماً",
+  "@khatmahHistoryStats": {"placeholders": {"count": {"type": "String"}, "avg": {"type": "String"}, "fastest": {"type": "String"}}},
+  "khatmahJuzMapTitle": "خريطة الختمة",
+  "khatmahJuzMapCell": "الجزء {juz}: {read} من {total} صفحة",
+  "@khatmahJuzMapCell": {"placeholders": {"juz": {"type": "String"}, "read": {"type": "String"}, "total": {"type": "String"}}},
+  "khatmahCatchUpTitle": "كيف تحب أن تعوّض؟",
+  "khatmahCatchUpOption": "{pages} صفحة يومياً — الختم {date}",
+  "@khatmahCatchUpOption": {"placeholders": {"pages": {"type": "String"}, "date": {"type": "String"}}},
   "khatmahRelationshipFather": "الأب",
   "khatmahRelationshipFriend": "صديق",
   "khatmahRelationshipRelative": "قريب",
@@ -2364,8 +2399,8 @@
   "homeAyahOfDay": "آية اليوم",
   "surahRevelationMeccan": "مكية",
   "surahRevelationMedinan": "مدنية",
-  "ayahOfDaySurahMeta": "{revelation} · {count} آية",
-  "@ayahOfDaySurahMeta": {"placeholders": {"revelation": {"type": "String"}, "count": {"type": "String"}}},
+  "ayahOfDaySurahMeta": "{revelation} · {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}",
+  "@ayahOfDaySurahMeta": {"placeholders": {"revelation": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}},
   "ayahOfDayReadSurah": "اقرأ السورة كاملة",
   "homeAyahContextFriday": "آية ليوم الجمعة",
   "homeAyahContextRamadanStart": "آية لبداية رمضان",
@@ -2383,7 +2418,7 @@
   "@homeResumeListening": {"placeholders":{"surah":{"type":"String"}}},
   "homeSomethingElse": "شيء آخر",
   "homeMinutes": "{count} د",
-  "@homeMinutes": {"placeholders":{"count":{"type":"int"}}},
+  "@homeMinutes": {"placeholders": {"count": {"type": "String"}}},
   "homeOccasionFriday": "الجمعة · سورة الكهف",
   "homeOccasionRamadan": "رمضان",
   "homeOccasionLastTenNights": "العشر الأواخر",
@@ -2437,11 +2472,11 @@
   "homeContinueRecitation": "أكمل تلاوتك",
   "homeContinueAction": "متابعة",
   "homeAyahRange": "الآيات {start} إلى {end}",
-  "@homeAyahRange": {"placeholders":{"start":{"type":"int"},"end":{"type":"int"}}},
-  "homeAyahProgressCount": "{current} من {total} آيات",
-  "@homeAyahProgressCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
-  "homePageProgressCount": "{current} من {total} صفحات",
-  "@homePageProgressCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "@homeAyahRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
+  "homeAyahProgressCount": "{currentText} من {total, plural, =1{آية واحدة} =2{آيتين} few{{totalText} آيات} other{{totalText} آية}}",
+  "@homeAyahProgressCount": {"placeholders": {"currentText": {"type": "String"}, "total": {"type": "int"}, "totalText": {"type": "String"}}},
+  "homePageProgressCount": "{currentText} من {total, plural, =1{صفحة واحدة} =2{صفحتين} few{{totalText} صفحات} other{{totalText} صفحة}}",
+  "@homePageProgressCount": {"placeholders": {"currentText": {"type": "String"}, "total": {"type": "int"}, "totalText": {"type": "String"}}},
   "homeTileListen": "تسميع",
   "homeTileListenHint": "استمع وسمّع",
   "homeTileReview": "مراجعة",
@@ -2484,8 +2519,8 @@
   "homeActivityHoursAgo": "قبل {count} س",
   "@homeActivityHoursAgo": {"placeholders":{"count":{"type":"int"}}},
   "homeActivityYesterday": "أمس",
-  "homeActivityDaysAgo": "قبل {count} يوم",
-  "@homeActivityDaysAgo": {"placeholders":{"count":{"type":"int"}}},
+  "homeActivityDaysAgo": "{count, plural, =1{قبل يوم} =2{قبل يومين} few{قبل {countText} أيام} many{قبل {countText} يومًا} other{قبل {countText} يوم}}",
+  "@homeActivityDaysAgo": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "homeActivityCompleted": "مكتمل",
   "homeFooterTagline": "بالقرآن .. نحيا أجمل",
   "quickNavTitle": "تنقل سريع",
@@ -2558,8 +2593,8 @@
   ,"notificationQuietHoursEnd": "النهاية"
   ,"notificationSmartReminder": "تذكير ذكي"
   ,"notificationSmartReminderSub": "يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير."
-  ,"memorizationHubReviewDueBadge": "{count} آية مستحقة للمراجعة"
-  ,"@memorizationHubReviewDueBadge": { "placeholders": { "count": { "type": "int" } } }
+  ,"memorizationHubReviewDueBadge": "{count, plural, =1{آية واحدة مستحقة للمراجعة} =2{آيتان مستحقتان للمراجعة} few{{countText} آيات مستحقة للمراجعة} other{{countText} آية مستحقة للمراجعة}}"
+  ,"@memorizationHubReviewDueBadge": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"memorizationHubReviewDueNone": "لا مراجعات مستحقة الآن"
   ,"dailyPlanNextReviewInDays": "المراجعة القادمة بعد {count, plural, =0{اليوم} =1{يوم} other{{count} أيام}}"
   ,"@dailyPlanNextReviewInDays": { "placeholders": { "count": { "type": "int" } } }
@@ -2577,4 +2612,17 @@
   ,"@fieldRequired": { "description": "Validation: field must not be empty" }
   ,"fieldTooLong": "لا يمكن أن يتجاوز {maxLength} حرفاً"
   ,"@fieldTooLong": { "description": "Validation: field exceeds max length", "placeholders": { "maxLength": { "type": "int" } } }
+  ,"progressDueReviewsLabel": "مراجعات مستحقة"
+  ,"progressStreakDaysUnit": "{count, plural, =0{يوم} =1{يوم} =2{يومان} few{أيام} many{يوماً} other{يوم}}"
+  ,"@progressStreakDaysUnit": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressNextMilestoneTitle": "إنجازك القادم"
+  ,"progressNextMilestoneRemaining": "باقي {remaining} للوصول"
+  ,"@progressNextMilestoneRemaining": { "placeholders": { "remaining": { "type": "int" } } }
+  ,"progressAllAchievementsUnlocked": "ما شاء الله! أتممت جميع الإنجازات، ثبّتك الله"
+  ,"progressDueReviewsNudge": "{count, plural, =1{لديك آية واحدة مستحقة للمراجعة} =2{لديك آيتان مستحقتان للمراجعة} few{لديك {count} آيات مستحقة للمراجعة} other{لديك {count} آية مستحقة للمراجعة}}"
+  ,"@progressDueReviewsNudge": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressStartReview": "ابدأ المراجعة"
+  ,"progressActiveDays": "{count, plural, =0{لا توجد أيام نشاط بعد} =1{يوم نشاط واحد} =2{يوما نشاط} few{{count} أيام نشاط} many{{count} يوماً من النشاط} other{{count} يوم نشاط}}"
+  ,"@progressActiveDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressXpToNextLevel": "نحو المستوى التالي"
 }

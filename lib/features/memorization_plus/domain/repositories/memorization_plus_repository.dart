@@ -21,6 +21,8 @@ abstract class MemorizationPlusRepository
   @override
   Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian();
   @override
+  Future<Either<Failure, MemorizationProfile>> reopenGuardianLinking();
+  @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession();
   @override
   Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
@@ -205,6 +207,14 @@ abstract class MemorizationPlusRepository
   /// Parent-initiated removal of a linked child.
   @override
   Future<Either<Failure, void>> removeChild(String childUserId);
+
+  /// Guardian correction of a linked child's name and age
+  /// (see [ChildIdentityPolicy]).
+  Future<Either<Failure, void>> updateLinkedChildIdentity({
+    required String childUserId,
+    required String nickname,
+    required int age,
+  });
 
   /// Builds a unified FamilyDashboard with all linked children
   /// (local + remote) and parent settings.

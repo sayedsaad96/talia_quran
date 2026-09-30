@@ -17,6 +17,7 @@ import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/closing_moment.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
+import '../../data/services/reader_display_preferences.dart';
 import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -38,6 +39,48 @@ import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
+
+/// Highlights drawn on the reader page (N15).
+///
+/// The ayah whose options sheet is open is marked most strongly, so the
+/// learner sees which ayah the actions apply to. Audio playback marks the
+/// recited ayah; otherwise saved bookmarks stay visible while reading.
+@visibleForTesting
+List<qcf.HighlightVerse> readerHighlights({
+  required int page,
+  required Color accent,
+  required List<BookmarkEntry> bookmarks,
+  ({int surah, int ayah, int page})? audio,
+  ({int surah, int ayah})? selected,
+}) {
+  return [
+    if (audio != null)
+      qcf.HighlightVerse(
+        surah: audio.surah,
+        verseNumber: audio.ayah,
+        page: audio.page,
+        color: accent.withValues(alpha: 0.24),
+      )
+    else
+      for (final entry in bookmarks)
+        qcf.HighlightVerse(
+          surah: entry.surahId,
+          verseNumber: entry.ayahNumber,
+          page: page,
+          color: accent.withValues(alpha: 0.14),
+        ),
+    if (selected != null &&
+        (audio == null ||
+            audio.surah != selected.surah ||
+            audio.ayah != selected.ayah))
+      qcf.HighlightVerse(
+        surah: selected.surah,
+        verseNumber: selected.ayah,
+        page: page,
+        color: accent.withValues(alpha: 0.32),
+      ),
+  ];
+}
 
 class QuranReaderPage extends StatefulWidget {
   const QuranReaderPage({
@@ -92,6 +135,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   // that depend on them will rebuild.
   final _currentPageNotifier = ValueNotifier<int>(1);
   final _isFocusModeNotifier = ValueNotifier<bool>(false);
+
+  /// The ayah whose options sheet is open, marked on the page (N15).
+  ({int surah, int ayah})? _selectedAyah;
+
+  /// Tajweed colouring of the Mushaf page (N13). Rarely toggled, so a plain
+  /// field + setState is enough.
+  late bool _tajweed = _readTajweedPreference();
   final _showLongPressHintNotifier = ValueNotifier<bool>(false);
   final _showReadConfirmedNotifier = ValueNotifier<bool>(false);
 
@@ -241,6 +291,26 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     if (!seen && mounted) {
       _showLongPressHintNotifier.value = true;
     }
+  }
+
+  bool _readTajweedPreference() {
+    try {
+      return ReaderDisplayPreferences.tajweedEnabled(
+        getIt<SharedPreferences>(),
+      );
+    } catch (_) {
+      return true;
+    }
+  }
+
+  void _setTajweed(bool enabled) {
+    setState(() => _tajweed = enabled);
+    unawaited(
+      ReaderDisplayPreferences.setTajweedEnabled(
+        getIt<SharedPreferences>(),
+        enabled,
+      ),
+    );
   }
 
   void _dismissLongPressHint() {
@@ -467,6 +537,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     final ayah = await _resolveAyah(surahNumber, verseNumber);
     if (!mounted || !context.mounted || ayah == null) return;
 
+    setState(() => _selectedAyah = (surah: surahNumber, ayah: verseNumber));
     await showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -484,6 +555,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         ),
       ),
     );
+    if (mounted) setState(() => _selectedAyah = null);
   }
 
   /// Opens the Quick Navigation sheet. The last-read position is resolved
@@ -652,26 +724,19 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                     audioState.currentAyahNumber != null &&
                     audioState.currentPageNumber != null;
 
-                final currentHighlights = isAudioActive
-                    ? [
-                        qcf.HighlightVerse(
+                final currentHighlights = readerHighlights(
+                  page: pageNumber,
+                  accent: accent,
+                  bookmarks: _pageBookmarks,
+                  audio: isAudioActive
+                      ? (
                           surah: audioState.currentSurahId!,
-                          verseNumber: audioState.currentAyahNumber!,
+                          ayah: audioState.currentAyahNumber!,
                           page: audioState.currentPageNumber!,
-                          color: accent.withValues(alpha: 0.24),
-                        ),
-                      ]
-                    : [
-                        // Saved bookmarks stay visible on the page so the
-                        // learner can see their marks while reading.
-                        for (final entry in _pageBookmarks)
-                          qcf.HighlightVerse(
-                            surah: entry.surahId,
-                            verseNumber: entry.ayahNumber,
-                            page: pageNumber,
-                            color: accent.withValues(alpha: 0.14),
-                          ),
-                      ];
+                        )
+                      : null,
+                  selected: _selectedAyah,
+                );
 
                 return Scaffold(
                   key: _scaffoldKey,
@@ -693,7 +758,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                 pageController: _pageController!,
                                 highlights: currentHighlights,
                                 isDarkMode: isDark,
-                                isTajweed: true,
+                                isTajweed: _tajweed,
                                 pageBackgroundColor: bg,
                                 onPageChanged: (page) {
                                   HapticFeedback.selectionClick();
@@ -747,6 +812,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                             onOpenMenu: () =>
                                                 ReaderOverflowSheet.show(
                                                   context,
+                                                  onOpenNavigation: () =>
+                                                      _openQuickNav(
+                                                        context,
+                                                        pageNumber,
+                                                      ),
+                                                  tajweedEnabled: _tajweed,
+                                                  onTajweedChanged: _setTajweed,
                                                   onEnterFocus: () {
                                                     HapticFeedback.selectionClick();
                                                     _isFocusModeNotifier.value =

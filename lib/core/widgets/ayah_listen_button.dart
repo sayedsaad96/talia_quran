@@ -160,7 +160,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                     shape: BoxShape.circle,
                     color: _isPlaying
                         ? buttonColor.withValues(alpha: 0.15)
-                        : (isDark ? AppColors.darkCard : AppColors.lightCard),
+                        : (context.tokens.card),
                     border: Border.all(
                       color: buttonColor.withValues(
                         alpha: _isPlaying ? 1.0 : 0.6,

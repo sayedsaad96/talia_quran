@@ -143,7 +143,7 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
                         ),
                       _SectionTitle(
                         label:
-                            '${context.l10n.page} ${widget.currentPage} / 604',
+                            '${context.l10n.page} ${context.numText(widget.currentPage)} / ${context.numText(604)}',
                       ),
                       Row(
                         children: [
@@ -294,7 +294,7 @@ class _LastReadTile extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    '${context.l10n.continueReading} • ${context.l10n.page} $page',
+                    '${context.l10n.continueReading} • ${context.l10n.page} ${context.numText(page)}',
                     style: AppTypography.labelLarge.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
@@ -374,7 +374,7 @@ class _SurahJumpList extends StatelessWidget {
                 style: AppTypography.titleSmall,
               ),
               trailing: Text(
-                '${context.l10n.page} ${surah.page}',
+                '${context.l10n.page} ${context.numText(surah.page)}',
                 style: AppTypography.labelSmall.copyWith(color: primary),
               ),
               onTap: () => onTap(surah),

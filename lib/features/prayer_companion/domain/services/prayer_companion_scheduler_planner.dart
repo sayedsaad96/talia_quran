@@ -179,7 +179,11 @@ class PrayerCompanionPlanner {
             );
           }
         }
-        if (settings.checkInEnabled) {
+        // An explicit response from the sheet or a notification supersedes
+        // the generic check-in. Keep only the requested one-off follow-up.
+        if (settings.checkInEnabled &&
+            (record == null ||
+                record.status == PrayerCompanionStatus.unconfirmed)) {
           final at = time.add(checkInDelay);
           if (at.isAfter(now)) {
             events.add(

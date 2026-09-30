@@ -63,6 +63,7 @@ void main() {
   late MockAudioPlayer mockAudioPlayer;
   late MockSpeechToText mockSpeechToText;
   late MockAudioCacheService mockAudioCache;
+  late StreamController<PlayerState> playerStateController;
   late MemorizationSessionCubit cubit;
 
   const defaultSurah = Surah(
@@ -113,10 +114,11 @@ void main() {
     mockAudioPlayer = MockAudioPlayer();
     mockSpeechToText = MockSpeechToText();
     mockAudioCache = MockAudioCacheService();
+    playerStateController = StreamController<PlayerState>.broadcast();
 
     when(
       mockAudioPlayer.playerStateStream,
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => playerStateController.stream);
     when(
       mockSpeechToText.initialize(
         onError: anyNamed('onError'),
@@ -155,8 +157,9 @@ void main() {
     );
   });
 
-  tearDown(() {
-    cubit.close();
+  tearDown(() async {
+    await cubit.close();
+    await playerStateController.close();
   });
 
   void stubReviewWrite() {
@@ -243,6 +246,78 @@ void main() {
               as IsarV2Session;
       expect(saved.launchContext.intent, LearningIntent.review);
       expect(saved.launchContext.origin, LearningOrigin.smartCoach);
+    });
+  });
+
+  // N4: a due review used to open a one-ayah session; neighbouring due
+  // ayahs on the same page are now reviewed together, each graded alone.
+  group('review passage (N4)', () {
+    AyahReviewRecord dueRecord(int ayah, {bool due = true}) {
+      final now = DateTime.now().toUtc();
+      return AyahReviewRecord(
+        surahId: 1,
+        ayahNumber: ayah,
+        strengthLevel: 3,
+        intervalDays: 3,
+        lastReviewedAt: now.subtract(const Duration(days: 4)),
+        nextReviewDate: due
+            ? now.subtract(const Duration(days: 1))
+            : now.add(const Duration(days: 5)),
+        totalReviews: 3,
+        lastRating: PerformanceRating.excellent,
+        createdByMode: ReviewRecordCreatedByMode.v2Session,
+      );
+    }
+
+    const reviewAt3 = LearningLaunchContext(
+      ayah: AyahReference(surahId: 1, ayahNumber: 3),
+      intent: LearningIntent.review,
+      origin: LearningOrigin.review,
+    );
+
+    test('covers the contiguous due ayahs from the target', () async {
+      when(
+        mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')),
+      ).thenAnswer(
+        (_) async => Right([
+          dueRecord(3),
+          dueRecord(4),
+          dueRecord(5),
+          dueRecord(6, due: false),
+          dueRecord(7),
+        ]),
+      );
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 3,
+        blockSize: 5,
+        launchContext: reviewAt3,
+      );
+
+      final active = cubit.state as MSActive;
+      expect(active.sessionState.blockAyahs.map((a) => a.numberInSurah), [
+        3,
+        4,
+        5,
+      ]);
+      expect(active.sessionState.phase, V2SessionPhase.reciting);
+    });
+
+    test('falls back to the single target ayah when records fail', () async {
+      when(
+        mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')),
+      ).thenAnswer((_) async => const Left(CacheFailure()));
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 3,
+        blockSize: 5,
+        launchContext: reviewAt3,
+      );
+
+      final active = cubit.state as MSActive;
+      expect(active.sessionState.blockAyahs.map((a) => a.numberInSurah), [3]);
     });
   });
 
@@ -637,6 +712,42 @@ void main() {
         expect(restored.phase, V2SessionPhase.learning);
         expect(restored.currentAyah.numberInSurah, 2);
         expect(restored.passedAyahNumbers, {1});
+      },
+    );
+  });
+
+  group('audio playback', () {
+    test(
+      'marks the ayah as playing before play completes and clears on completion',
+      () async {
+        const source = 'https://audio.example.org/001001.mp3';
+        final playCompleter = Completer<void>();
+        when(
+          mockAudioCache.getAudioSource(1, 1),
+        ).thenAnswer((_) async => source);
+        when(
+          mockAudioPlayer.setUrl(source),
+        ).thenAnswer((_) async => Duration.zero);
+        when(mockAudioPlayer.play()).thenAnswer((_) => playCompleter.future);
+
+        await _startSession(cubit);
+        final request = cubit.playCurrentAyah();
+        await Future<void>.delayed(Duration.zero);
+
+        expect((cubit.state as MSActive).isPlaying, isTrue);
+
+        playerStateController.add(
+          PlayerState(false, ProcessingState.completed),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect((cubit.state as MSActive).isPlaying, isFalse);
+
+        playCompleter.complete();
+        await request;
+        await Future<void>.delayed(Duration.zero);
+
+        expect((cubit.state as MSActive).isPlaying, isFalse);
       },
     );
   });

@@ -7,7 +7,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
+import '../../domain/entities/khatmah_history_stats.dart';
 import '../cubits/khatmah_history_cubit.dart';
 import '../khatmah_localizations.dart';
 
@@ -114,11 +116,17 @@ class _HistoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasWarning = corruptWarning != null;
+    final stats = KhatmahHistoryStats.from(entries);
+    final lead = (stats != null ? 1 : 0) + (hasWarning ? 1 : 0);
     return ListView.separated(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
-      itemCount: entries.length + (hasWarning ? 1 : 0),
+      itemCount: entries.length + lead,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
+        if (stats != null) {
+          if (index == 0) return _HistoryStatsCard(stats: stats);
+          index--;
+        }
         if (hasWarning && index == 0) {
           return Card(
             key: const Key('khatmah_history_corrupt'),
@@ -141,6 +149,43 @@ class _HistoryList extends StatelessWidget {
         }
         return _HistoryCard(entry: entries[index - (hasWarning ? 1 : 0)]);
       },
+    );
+  }
+}
+
+class _HistoryStatsCard extends StatelessWidget {
+  const _HistoryStatsCard({required this.stats});
+
+  final KhatmahHistoryStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    String number(int value) =>
+        context.isArabic ? MushafHizbHelper.toArabicNumber(value) : '$value';
+    return Card(
+      key: const Key('khatmah_history_stats'),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Icon(
+              Icons.insights_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                context.l10n.khatmahHistoryStats(
+                  number(stats.count),
+                  number(stats.averageDays),
+                  number(stats.fastestDays),
+                ),
+                style: AppTypography.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

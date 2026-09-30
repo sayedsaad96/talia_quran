@@ -85,7 +85,16 @@ class ProgressRepositoryImpl implements ProgressRepository {
         streakDays: streakEntity.currentStreak,
       );
 
+      // Juz Amma is juz 30: count only ayahs memorized inside it, so 564
+      // ayahs memorized elsewhere never unlock a badge named after it.
+      final juzAmmaKeys = ayahKeysByJuz[_juzAmma] ?? const <String>{};
       final achievements = _buildAchievements(
+        juzAmmaMemorized: juzAmmaKeys
+            .where(metrics.memorizedKeys.contains)
+            .length,
+        juzAmmaTotal: juzAmmaKeys.isEmpty
+            ? _juzAmmaAyahCount
+            : juzAmmaKeys.length,
         memorizedAyahs: metrics.memorizedAyahs,
         memorizedSurahs: metrics.memorizedSurahs,
         memorizedJuz: metrics.memorizedJuz,
@@ -143,7 +152,12 @@ class ProgressRepositoryImpl implements ProgressRepository {
     }
   }
 
+  static const _juzAmma = 30;
+  static const _juzAmmaAyahCount = 564;
+
   List<Achievement> _buildAchievements({
+    required int juzAmmaMemorized,
+    required int juzAmmaTotal,
     required int memorizedAyahs,
     required int memorizedSurahs,
     required int memorizedJuz,
@@ -300,12 +314,12 @@ class ProgressRepositoryImpl implements ProgressRepository {
       Achievement(
         id: 'juz_amma',
         titleKey: 'جزء عمّ',
-        descriptionKey: 'احفظ ٥٦٤ آية (جزء عمّ)',
+        descriptionKey: 'احفظ جزء عمّ كاملاً',
         icon: '🌙',
-        isUnlocked: memorizedAyahs >= 564,
+        isUnlocked: juzAmmaMemorized >= juzAmmaTotal,
         category: AchievementCategory.memorization,
-        currentValue: memorizedAyahs.clamp(0, 564),
-        targetValue: 564,
+        currentValue: juzAmmaMemorized.clamp(0, juzAmmaTotal),
+        targetValue: juzAmmaTotal,
       ),
       Achievement(
         id: 'one_juz_memorized',

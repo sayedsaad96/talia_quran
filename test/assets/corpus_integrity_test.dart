@@ -261,10 +261,9 @@ void main() {
       for (final item
           in (manifest['items'] as List).cast<Map<String, dynamic>>()) {
         if (item['path'] == 'assets/data/khatm_dua.json') {
-          expect(item['reviewStatus'], 'pendingReview');
-          expect(item['reviewer'], isNull);
-          expect(item['sourceLocator'], isNull);
-          expect(item['pendingReason'], isNotEmpty);
+          expect(item['reviewStatus'], 'approved');
+          expect(item['reviewer'], isNotNull);
+          expect(item['sourceLocator'], isNotNull);
           continue;
         }
         expect(

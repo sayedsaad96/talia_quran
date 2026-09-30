@@ -53,7 +53,17 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     final defaultGoal = userType == OnboardingUserType.child
         ? OnboardingGoal.childJourney
         : OnboardingGoal.reading;
-    emit(state.copyWith(selectedUserType: userType, selectedGoal: defaultGoal));
+    emit(
+      state.copyWith(
+        selectedUserType: userType,
+        selectedGoal: defaultGoal,
+        // A new choice is a fresh attempt: drop the previous failure banner.
+        status: state.status == OnboardingStatus.error
+            ? OnboardingStatus.editing
+            : null,
+        clearError: true,
+      ),
+    );
   }
 
   Future<void> continueAsGuest() => complete(OnboardingAuthIntent.guest);

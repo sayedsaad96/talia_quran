@@ -15,6 +15,7 @@ import '../../data/datasources/azkar_preferences_store.dart';
 import '../../data/datasources/smart_wird_progress_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
+import '../../domain/services/azkar_period_resolver.dart';
 import '../../domain/services/azkar_time_context.dart';
 import '../cubits/azkar_hub_cubit.dart';
 import '../widgets/free_tasbeeh_sheet.dart';
@@ -33,6 +34,9 @@ class AzkarPage extends StatelessWidget {
         getIt<AzkarCompletionStore>(),
         getIt<AzkarPreferencesStore>(),
         smartWirdStore: getIt<SmartWirdProgressStore>(),
+        windowSource: getIt.isRegistered<AzkarPrayerWindowSource>()
+            ? getIt<AzkarPrayerWindowSource>()
+            : null,
       )..load(currentTime),
       child: const _AzkarHubView(),
     );

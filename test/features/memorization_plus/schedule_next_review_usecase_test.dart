@@ -186,6 +186,45 @@ void main() {
       expect(updated.intervalDays, equals(180));
     });
 
+    // N1: an on-time "average" review used to round 1 × 1.4 back to 1 day,
+    // pinning self-graded ayahs to a daily review forever.
+    test('on-time average reviews always lengthen the interval', () {
+      var now = DateTime.utc(2026, 1, 1, 10);
+      AyahReviewRecord record = AyahReviewRecordModel(
+        surahId: 67,
+        ayahNumber: 3,
+        strengthLevel: 0,
+        intervalDays: 0,
+        lastReviewedAt: now,
+        nextReviewDate: now,
+        totalReviews: 0,
+        lastRating: null,
+      );
+      final intervals = <int>[];
+      for (var i = 0; i < 10; i++) {
+        record = _scheduler.schedule(record, PerformanceRating.average, now);
+        intervals.add(record.intervalDays);
+        now = record.nextReviewDate;
+      }
+      for (var i = 1; i < intervals.length; i++) {
+        expect(
+          intervals[i],
+          greaterThan(intervals[i - 1]),
+          reason: 'average intervals must grow: $intervals',
+        );
+      }
+    });
+
+    test('an early average review still lengthens the interval', () {
+      final base = _newRecord(strengthLevel: 3, intervalDays: 1);
+      final updated = _scheduler.schedule(
+        base,
+        PerformanceRating.average,
+        base.lastReviewedAt,
+      );
+      expect(updated.intervalDays, equals(2));
+    });
+
     test('interval 70, average caps at 90', () {
       final base = _newRecord(strengthLevel: 5, intervalDays: 70);
       final updated = _scheduler.schedule(base, PerformanceRating.average);

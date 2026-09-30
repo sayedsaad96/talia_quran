@@ -58,31 +58,31 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
                   button: true,
                   selected: selected,
                   child: GestureDetector(
-                  onTap: () => setState(() => _selectedTab = i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? primary
-                          : primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.radiusFull,
+                    onTap: () => setState(() => _selectedTab = i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? primary
+                            : primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
+                      ),
+                      child: Text(
+                        tabLabels[i],
+                        style: AppTypography.labelMedium.copyWith(
+                          color: selected ? Colors.white : primary,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      tabLabels[i],
-                      style: AppTypography.labelMedium.copyWith(
-                        color: selected ? Colors.white : primary,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
                   ),
                 ),
               );
@@ -104,12 +104,15 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
         else
           GridView.builder(
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 140,
               crossAxisSpacing: AppSpacing.sm,
               mainAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 0.72,
+              // Fixed height that grows with the user's text scale, so
+              // two-line titles never clip.
+              mainAxisExtent: MediaQuery.textScalerOf(context).scale(150),
             ),
             itemCount: _filtered.length,
             itemBuilder: (context, i) =>
@@ -140,214 +143,70 @@ class _AchievementTile extends StatelessWidget {
       button: true,
       label: title,
       child: GestureDetector(
-        onTap: () => _showAchievementDetail(context),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: unlocked ? primary.withValues(alpha: 0.08) : surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: unlocked ? primary.withValues(alpha: 0.25) : border,
-            width: unlocked ? 1.5 : 0.5,
+        onTap: () => _showAchievementDetailSheet(context, achievement, isDark),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: unlocked ? primary.withValues(alpha: 0.08) : surface,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: unlocked ? primary.withValues(alpha: 0.25) : border,
+              width: unlocked ? 1.5 : 0.5,
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Expressive Image / Shape Badge
-            _AchievementBadgeShape(
-              achievement: achievement,
-              isDark: isDark,
-              isUnlocked: unlocked,
-              size: 48,
-            ),
-            const SizedBox(height: 8),
-
-            // Title
-            Text(
-              title,
-              style: AppTypography.labelSmall.copyWith(
-                color: unlocked ? primary : hintColor,
-                fontWeight: unlocked ? FontWeight.w600 : FontWeight.w400,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            const SizedBox(height: 6),
-
-            // Progress bar or lock
-            if (unlocked)
-              Icon(Icons.check_circle_rounded, size: 14, color: primary)
-            else ...[
-              // Mini progress bar
-              SizedBox(
-                width: 50,
-                child: LinearPercentIndicator(
-                  padding: EdgeInsets.zero,
-                  lineHeight: 3,
-                  percent: achievement.progressPercent,
-                  progressColor: primary.withValues(alpha: 0.5),
-                  backgroundColor: primary.withValues(alpha: 0.08),
-                  barRadius: const Radius.circular(4),
-                  animation: true,
-                  animationDuration: 400,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                context.l10n.countOfTotal(
-                  achievement.currentValue,
-                  achievement.targetValue,
-                ),
-                style: AppTypography.labelSmall.copyWith(
-                  color: hintColor,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      ),
-    );
-  }
-
-  void _showAchievementDetail(BuildContext context) {
-    final isDark = this.isDark;
-    final primary = context.tokens.accent;
-    final surface = context.tokens.card;
-    final title = context.localizedAchievementTitle(achievement);
-    final description = context.localizedAchievementDescription(achievement);
-    final textPrimary = context.tokens.textPrimary;
-    final textSecondary = context.tokens.textSecondary;
-
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
-      builder: (sheetContext) => SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.tokens.divider,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              // Expressive Image / Shape Badge
               _AchievementBadgeShape(
                 achievement: achievement,
                 isDark: isDark,
-                isUnlocked: achievement.isUnlocked,
-                size: 96,
+                isUnlocked: unlocked,
+                size: 48,
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: 8),
+
+              // Title
               Text(
                 title,
-                style: AppTypography.headlineMedium.copyWith(
-                  color: textPrimary,
+                style: AppTypography.labelSmall.copyWith(
+                  color: unlocked ? primary : hintColor,
+                  fontWeight: unlocked ? FontWeight.w600 : FontWeight.w400,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                description,
-                style: AppTypography.bodyMedium.copyWith(color: textSecondary),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              // Progress bar
-              LinearPercentIndicator(
-                lineHeight: 8,
-                percent: achievement.progressPercent,
-                progressColor: achievement.isUnlocked
-                    ? AppColors.success
-                    : primary,
-                backgroundColor: primary.withValues(alpha: 0.1),
-                barRadius: const Radius.circular(4),
-                animation: true,
-                animationDuration: 500,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                context.l10n.countOfTotal(
-                  achievement.currentValue,
-                  achievement.targetValue,
-                ),
-                style: AppTypography.labelMedium.copyWith(
-                  color: textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (achievement.isUnlocked) ...[
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.success,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.l10n.achieved,
-                        style: AppTypography.labelMedium.copyWith(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
+
+              const SizedBox(height: 6),
+
+              // Progress bar or lock
+              if (unlocked)
+                Icon(Icons.check_circle_rounded, size: 14, color: primary)
+              else ...[
+                // Mini progress bar
                 SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      final profileState = context.read<ProfileCubit>().state;
-                      final name = profileState is ProfileLoaded && profileState.profile.hasName
-                          ? profileState.profile.displayName
-                          : null;
-                      final data = SocialShareData.achievement(
-                        achievement: achievement,
-                        localizedTitle: title,
-                        localizedDesc: description,
-                        userName: name,
-                      );
-                      Navigator.of(sheetContext).pop();
-                      SocialShareSheet.show(context, data);
-                    },
-                    icon: const Icon(Icons.share_rounded, size: 20),
-                    label: Text(context.l10n.shareAchievement),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                    ),
+                  width: 50,
+                  child: LinearPercentIndicator(
+                    padding: EdgeInsets.zero,
+                    lineHeight: 3,
+                    percent: achievement.progressPercent,
+                    progressColor: primary.withValues(alpha: 0.5),
+                    backgroundColor: primary.withValues(alpha: 0.08),
+                    barRadius: const Radius.circular(4),
+                    animation: true,
+                    animationDuration: 400,
                   ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.l10n.countOfTotal(
+                    achievement.currentValue,
+                    achievement.targetValue,
+                  ),
+                  style: AppTypography.labelSmall.copyWith(color: hintColor),
                 ),
               ],
-              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
@@ -356,7 +215,172 @@ class _AchievementTile extends StatelessWidget {
   }
 }
 
+// ─── Achievement Detail Sheet ─────────────────────────────────────────────────
+
+void _showAchievementDetailSheet(
+  BuildContext context,
+  Achievement achievement,
+  bool isDark,
+) {
+  final primary = context.tokens.accent;
+  final surface = context.tokens.card;
+  final title = context.localizedAchievementTitle(achievement);
+  final description = context.localizedAchievementDescription(achievement);
+  final textPrimary = context.tokens.textPrimary;
+  final textSecondary = context.tokens.textSecondary;
+
+  showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    backgroundColor: surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppSpacing.radiusXl),
+      ),
+    ),
+    builder: (sheetContext) => SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.tokens.divider,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _AchievementBadgeShape(
+              achievement: achievement,
+              isDark: isDark,
+              isUnlocked: achievement.isUnlocked,
+              size: 96,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              title,
+              style: AppTypography.headlineMedium.copyWith(color: textPrimary),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              description,
+              style: AppTypography.bodyMedium.copyWith(color: textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            // Progress bar
+            LinearPercentIndicator(
+              lineHeight: 8,
+              percent: achievement.progressPercent,
+              progressColor: achievement.isUnlocked
+                  ? AppColors.success
+                  : primary,
+              backgroundColor: primary.withValues(alpha: 0.1),
+              barRadius: const Radius.circular(4),
+              animation: true,
+              animationDuration: 500,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              context.l10n.countOfTotal(
+                achievement.currentValue,
+                achievement.targetValue,
+              ),
+              style: AppTypography.labelMedium.copyWith(
+                color: textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (achievement.isUnlocked) ...[
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.success,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.l10n.achieved,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    final data = SocialShareData.achievement(
+                      achievement: achievement,
+                      localizedTitle: title,
+                      localizedDesc: description,
+                      userName: _profileDisplayName(context),
+                    );
+                    Navigator.of(sheetContext).pop();
+                    SocialShareSheet.show(context, data);
+                  },
+                  icon: const Icon(Icons.share_rounded, size: 20),
+                  label: Text(context.l10n.shareAchievement),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 // ─── Expressive Achievement Shapes ────────────────────────────────────────────
+
+/// Medal tier per achievement: 0 bronze, 1 silver, 2 gold, 3 diamond,
+/// 4 legendary. Keyed by id because targets mix units (pages, ayahs,
+/// surahs, juz, days) and cannot be compared on one scale.
+int _achievementRank(String id) {
+  return switch (id) {
+    'first_page' || 'ten_pages' || 'fifty_pages' => 0,
+    'juz_read' => 1,
+    'five_juz_read' => 2,
+    'half_quran_read' => 3,
+    'full_quran_read' => 4,
+    'first_ayah' || 'ten_ayahs' => 0,
+    'fifty_ayahs' || 'hundred_ayahs' || 'first_surah' => 1,
+    'five_surahs' || 'ten_surahs' || 'juz_amma' || 'one_juz_memorized' => 2,
+    'five_juz_memorized' || 'ten_juz_memorized' || 'half_quran_memorized' => 3,
+    'full_quran_memorized' => 4,
+    'three_day_streak' || 'week_streak' => 0,
+    'two_week_streak' => 1,
+    'month_streak' => 2,
+    'ninety_day_streak' => 3,
+    'year_streak' => 4,
+    _ => 0,
+  };
+}
 
 class _AchievementBadgeShape extends StatelessWidget {
   const _AchievementBadgeShape({
@@ -461,39 +485,7 @@ class _AchievementBadgeShape extends StatelessWidget {
         break;
     }
 
-    // Determine rank based on position/target
-    int rank = 0; // 0=Bronze, 1=Silver, 2=Gold, 3=Diamond, 4=Legendary
-    if (achievement.category == AchievementCategory.reading) {
-      if (achievement.targetValue >= 604) {
-        rank = 4;
-      } else if (achievement.targetValue >= 302) {
-        rank = 3;
-      } else if (achievement.targetValue >= 100) {
-        rank = 2;
-      } else if (achievement.targetValue >= 20) {
-        rank = 1;
-      }
-    } else if (achievement.category == AchievementCategory.memorization) {
-      if (achievement.targetValue >= 6236) {
-        rank = 4;
-      } else if (achievement.targetValue >= 15) {
-        rank = 3; // 15 juz
-      } else if (achievement.targetValue >= 564) {
-        rank = 2; // Juz Amma+
-      } else if (achievement.targetValue >= 50) {
-        rank = 1;
-      }
-    } else if (achievement.category == AchievementCategory.streak) {
-      if (achievement.targetValue >= 365) {
-        rank = 4;
-      } else if (achievement.targetValue >= 90) {
-        rank = 3;
-      } else if (achievement.targetValue >= 30) {
-        rank = 2;
-      } else if (achievement.targetValue >= 14) {
-        rank = 1;
-      }
-    }
+    final rank = _achievementRank(achievement.id);
 
     final List<Color> gradientColors;
     final Color glowColor;

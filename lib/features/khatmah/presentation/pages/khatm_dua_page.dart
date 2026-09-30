@@ -52,13 +52,21 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
     super.dispose();
   }
 
-  void _copyDua(String arabicText, String? dedicationInsert) {
+  void _copyDua(
+    String arabicText,
+    String? dedicationInsert, [
+    String? supplicationInsert,
+  ]) {
     final buffer = StringBuffer();
     buffer.writeln(arabicText);
     if (dedicationInsert != null && dedicationInsert.isNotEmpty) {
       buffer.writeln();
       buffer.writeln(context.l10n.khatmahDedicationOfReward);
       buffer.writeln(dedicationInsert);
+    }
+    if (supplicationInsert != null && supplicationInsert.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln(supplicationInsert);
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
@@ -120,13 +128,23 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                           widget.dedication!.recipientName ?? '',
                         )
                       : null;
+                  final supplicationInsert =
+                      (widget.dedication != null &&
+                          widget.dedication!.isDedicated &&
+                          widget.dedication!.condition != null)
+                      ? state.data.getDedicationInsert(
+                          widget.dedication!.condition!,
+                          widget.dedication!.effectiveGender,
+                          widget.dedication!.recipientName,
+                        )
+                      : null;
 
                   return IconButton(
                     key: const Key('khatm_dua_copy_button'),
                     tooltip: context.l10n.khatmahCopyDuA,
                     icon: const Icon(Icons.copy_rounded),
                     onPressed: () =>
-                        _copyDua(state.data.arabicText, dedicationInsert),
+                        _copyDua(state.data.arabicText, dedicationInsert, supplicationInsert),
                   );
                 },
               ),
@@ -173,6 +191,8 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
           if (state is KhatmDuaLoaded) {
             final data = state.data;
             final fontScale = state.fontScale;
+            // Dedication line and supplication insert share one size.
+            final insertFontSize = 18.0 * fontScale;
             final hasDedication =
                 widget.dedication != null && widget.dedication!.isDedicated;
             final dedicationInsert = hasDedication
@@ -180,6 +200,14 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                     widget.dedication!.recipientName ?? '',
                   )
                 : null;
+            final supplicationInsert =
+                (hasDedication && widget.dedication!.condition != null)
+                    ? data.getDedicationInsert(
+                        widget.dedication!.condition!,
+                        widget.dedication!.effectiveGender,
+                        widget.dedication!.recipientName,
+                      )
+                    : '';
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
@@ -245,7 +273,9 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          context.l10n.khatmahDuaPendingReview,
+                          data.isApproved
+                              ? data.sourceNote
+                              : context.l10n.khatmahDuaPendingReview,
                           style: AppTypography.bodySmall.copyWith(
                             color: context.tokens.textSecondary,
                             height: 1.4,
@@ -341,12 +371,29 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                             textDirection: context.textDirection,
                             style: TextStyle(
                               fontFamily: 'Noto_Naskh_Arabic',
-                              fontSize: 18.0 * fontScale,
+                              fontSize: insertFontSize,
                               height: 2.0,
                               fontWeight: FontWeight.w600,
                               color: context.tokens.textPrimary,
                             ),
                           ),
+                          if (supplicationInsert.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Divider(color: gold.withValues(alpha: 0.3)),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              supplicationInsert,
+                              textAlign: TextAlign.center,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontFamily: 'Noto_Naskh_Arabic',
+                                fontSize: insertFontSize,
+                                height: 2.2,
+                                fontWeight: FontWeight.w500,
+                                color: context.tokens.textPrimary,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

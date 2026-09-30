@@ -10,6 +10,7 @@ import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/journey/unified_journey_engine.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
+import 'package:talia_quran/core/memorization/review_record_read_batch.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
@@ -623,7 +624,10 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     verify(mockGetQuranPage.call(any)).called(1);
-    verify(mockMemRepo.getMemorizationProfile()).called(1);
+    // The navigation resolver among the home extras reads the profile too.
+    verify(
+      mockMemRepo.getMemorizationProfile(),
+    ).called(greaterThanOrEqualTo(1));
 
     pendingPage.complete(const Left(CacheFailure('no cache')));
     await load;
@@ -641,14 +645,115 @@ void main() {
     );
 
     final load = cubit.load();
-    await feed.kindsRequested.future;
+    await feed.recentRequested.future;
     await Future<void>.delayed(Duration.zero);
 
     verify(ayah.call()).called(1);
 
-    feed.kinds.complete(const {});
     feed.pendingRecent.complete(const []);
     await load;
+  });
+
+  test('paints the page before the ayah of the day resolves', () async {
+    final ayah = _MockGetAyahOfDay();
+    final pending = Completer<AyahOfDay?>();
+    when(ayah.call()).thenAnswer((_) => pending.future);
+    await cubit.close();
+    cubit = buildCubit(getAyahOfDay: ayah);
+
+    final load = cubit.load();
+    final painted =
+        await cubit.stream.firstWhere((s) => s is HomeLoaded) as HomeLoaded;
+
+    expect(painted.progress.memorizedAyahs, 10);
+    expect(painted.ayahOfDay, isNull);
+    expect(painted.isRefreshing, isFalse);
+
+    pending.complete(const AyahOfDay(
+      surahId: 2,
+      ayahNumber: 1,
+      text: 'نص',
+      surahNameAr: 'البقرة',
+      surahNameEn: 'Al-Baqarah',
+      pageNumber: 2,
+    ));
+    await load;
+
+    final loaded = cubit.state as HomeLoaded;
+    expect(loaded.ayahOfDay?.text, 'نص');
+    expect(loaded.isRefreshing, isFalse);
+  });
+
+  test('a refresh keeps the previous deferred content until it resolves',
+      () async {
+    final ayah = _MockGetAyahOfDay();
+    final refreshed = Completer<AyahOfDay?>();
+    var calls = 0;
+    when(ayah.call()).thenAnswer(
+      (_) => calls++ == 0
+          ? Future.value(const AyahOfDay(
+              surahId: 2,
+              ayahNumber: 1,
+              text: 'الأولى',
+              surahNameAr: 'البقرة',
+              surahNameEn: 'Al-Baqarah',
+              pageNumber: 2,
+            ))
+          : refreshed.future,
+    );
+    await cubit.close();
+    cubit = buildCubit(getAyahOfDay: ayah);
+    await cubit.load();
+
+    final states = <HomeState>[];
+    final sub = cubit.stream.listen(states.add);
+    addTearDown(sub.cancel);
+    final refresh = cubit.load();
+    await untilCalled(ayah.call());
+    refreshed.complete(const AyahOfDay(
+      surahId: 2,
+      ayahNumber: 2,
+      text: 'الثانية',
+      surahNameAr: 'البقرة',
+      surahNameEn: 'Al-Baqarah',
+      pageNumber: 2,
+    ));
+    await refresh;
+    await Future<void>.delayed(Duration.zero);
+
+    final loaded = states.whereType<HomeLoaded>().toList();
+    expect(loaded, hasLength(3));
+    for (final interim in loaded.take(2)) {
+      expect(interim.isRefreshing, isTrue);
+      expect(interim.ayahOfDay?.text, 'الأولى');
+    }
+    expect(loaded.last.isRefreshing, isFalse);
+    expect(loaded.last.ayahOfDay?.text, 'الثانية');
+  });
+
+  test('review-record reads share one store read per load', () async {
+    var storeReads = 0;
+    Future<List<AyahReviewRecord>> readStore() async {
+      storeReads++;
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      return const [];
+    }
+
+    // Stand-ins for the storage layer that progress, the smart coach and
+    // home each reach through their own collaborators.
+    when(mockGetCoachRecommendation.call()).thenAnswer((_) async {
+      await ReviewRecordReadBatch.read('local|adult', readStore);
+      return const Right(null);
+    });
+    when(mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')))
+        .thenAnswer((_) async =>
+            Right(await ReviewRecordReadBatch.read('local|adult', readStore)));
+
+    await cubit.load();
+    expect(storeReads, 1);
+
+    await cubit.load();
+    expect(storeReads, 2, reason: 'each load reads the store afresh');
   });
 
   test('load completes quietly when cubit closes during XP fetch', () async {
@@ -799,21 +904,20 @@ class _MemoryActivityFeed implements ActivityFeedRepository {
 }
 
 class _PendingActivityFeed implements ActivityFeedRepository {
-  final kinds = Completer<Set<ActivityEventKind>>();
   final pendingRecent = Completer<List<ActivityEvent>>();
-  final kindsRequested = Completer<void>();
+  final recentRequested = Completer<void>();
 
   @override
   Future<void> append(ActivityEvent event) async {}
 
   @override
-  Future<Set<ActivityEventKind>> kindsSince(DateTime start) {
-    if (!kindsRequested.isCompleted) kindsRequested.complete();
-    return kinds.future;
-  }
+  Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => const {};
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20}) => pendingRecent.future;
+  Future<List<ActivityEvent>> recent({int limit = 20}) {
+    if (!recentRequested.isCompleted) recentRequested.complete();
+    return pendingRecent.future;
+  }
 }
 
 class _FakeXpService implements XpService {

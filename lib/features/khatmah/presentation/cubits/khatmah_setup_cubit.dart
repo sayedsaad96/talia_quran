@@ -102,6 +102,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
     KhatmahDedication dedication = const KhatmahDedication(),
     int? targetDays,
     int startPage = 1,
+    KhatmahWirdUnit wirdUnit = KhatmahWirdUnit.pages,
   }) async {
     if (isClosed || state is KhatmahSetupSaving) return;
     emit(const KhatmahSetupSaving());
@@ -116,12 +117,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
           );
       final endDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
 
-      final title =
-          dedication.isDedicated &&
-              dedication.recipientName != null &&
-              dedication.recipientName!.trim().isNotEmpty
-          ? dedication.recipientName!.trim()
-          : KhatmahPlan.defaultTitle;
+      final title = KhatmahPlan.titleFor(dedication);
 
       final plan = KhatmahPlan(
         id: _uuid.v4(),
@@ -133,6 +129,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
         expectedEndDate: endDate,
         dedication: dedication,
         authority: _authority,
+        wirdUnit: wirdUnit,
       );
 
       await _createKhatmah(plan);

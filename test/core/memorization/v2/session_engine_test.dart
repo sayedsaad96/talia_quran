@@ -72,6 +72,25 @@ void main() {
       expect(state.hintTracker.levelFor(1, 1), V2HintLevel.firstWord);
     });
 
+    test('a reminder during recitation is an honest failed recall (K28)', () {
+      var state = engine.startReview(_initialState());
+      expect(state.phase, V2SessionPhase.reciting);
+
+      state = engine.requestReminder(state);
+
+      expect(state.phase, V2SessionPhase.remediation);
+      expect(state.failureTracker.failureCountFor(1, 1), 1);
+      expect(state.passedAyahNumbers, isEmpty);
+    });
+
+    test('a reminder is only possible during recitation', () {
+      final learning = engine.startLearning(_initialState());
+      final memorizing = engine.startMemorizing(learning);
+
+      expect(engine.requestReminder(learning), learning);
+      expect(engine.requestReminder(memorizing), memorizing);
+    });
+
     test('ignores invalid phase transitions without changing state', () {
       final created = _initialState();
 
@@ -81,18 +100,12 @@ void main() {
         engine.evaluateRecitation(created, 'text').phase,
         V2SessionPhase.created,
       );
-      expect(
-        engine.startBlockReview(created).phase,
-        V2SessionPhase.created,
-      );
+      expect(engine.startBlockReview(created).phase, V2SessionPhase.created);
       expect(
         engine.evaluateBlockReview(created, 'text').phase,
         V2SessionPhase.created,
       );
-      expect(
-        engine.completeRemediation(created).phase,
-        V2SessionPhase.created,
-      );
+      expect(engine.completeRemediation(created).phase, V2SessionPhase.created);
     });
 
     test('escalates an ayah to weak after three failed recitations', () {

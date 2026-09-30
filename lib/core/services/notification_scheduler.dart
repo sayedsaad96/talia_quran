@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
-import '../router/app_router.dart';
 import '../l10n/app_localizations.dart';
 import '../prayer_delivery/android_prayer_delivery_scheduler.dart';
 import '../prayer_delivery/prayer_delivery_coordinator.dart';
@@ -15,6 +14,7 @@ import '../utils/talia_logger.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../features/khatmah/domain/services/khatmah_reminder_policy.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
 import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
@@ -166,6 +166,100 @@ class NotificationScheduler {
       TaliaLogger.w('Background notification refresh failed', error, stack);
       return false;
     }
+  }
+
+  /// Re-plans only the khatmah reminders, e.g. after reading progress.
+  Future<void> refreshKhatmahReminder(AppLocalizations l10n) async {
+    try {
+      await _enqueueRefresh(() async {
+        _service.attachLocalization(l10n);
+        final prefs = await SharedPreferences.getInstance();
+        final quietEnabled =
+            prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+            false;
+        final quietStartHour =
+            prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23;
+        final quietEndHour =
+            prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4;
+        await _refreshKhatmahReminder(
+          l10n,
+          prefs,
+          (hour, minute) => applyQuietHours(
+            hour: hour,
+            minute: minute,
+            enabled: quietEnabled,
+            startHour: quietStartHour,
+            endHour: quietEndHour,
+          ),
+        );
+      });
+    } catch (error, stack) {
+      TaliaLogger.w('Khatmah reminder refresh failed', error, stack);
+    }
+  }
+
+  /// Up to seven one-shot reminders that follow real progress; none without
+  /// an active khatmah.
+  Future<void> _refreshKhatmahReminder(
+    AppLocalizations l10n,
+    SharedPreferences prefs,
+    ({int hour, int minute}) Function(int hour, int minute) quiet,
+  ) async {
+    final enabled =
+        prefs.getBool(TaliaNotificationService.khatmahReminderPreferenceKey) ??
+        true;
+    if (!enabled) {
+      await _service.cancelKhatmahReminder();
+      return;
+    }
+    final hour =
+        prefs.getInt(
+          '${TaliaNotificationService.khatmahReminderPreferenceKey}_hour',
+        ) ??
+        17;
+    final minute =
+        prefs.getInt(
+          '${TaliaNotificationService.khatmahReminderPreferenceKey}_minute',
+        ) ??
+        0;
+
+    KhatmahPlan? activePlan;
+    try {
+      final usecase =
+          _getActiveKhatmah ??
+          (getIt.isRegistered<GetActiveKhatmahUsecase>()
+              ? getIt<GetActiveKhatmahUsecase>()
+              : null);
+      activePlan = await usecase?.call();
+    } catch (e, stack) {
+      TaliaLogger.w('Failed to load active khatmah for notification', e, stack);
+    }
+
+    final quietTime = quiet(hour, minute);
+    final slots = KhatmahReminderPolicy.slots(
+      plan: activePlan,
+      now: DateTime.now(),
+      hour: quietTime.hour,
+      minute: quietTime.minute,
+    );
+    if (slots.isEmpty) {
+      await _service.cancelKhatmahReminder();
+      return;
+    }
+    await _service.scheduleKhatmahReminders(
+      title: l10n.notificationKhatmahTitle,
+      reminders: [
+        for (final slot in slots)
+          (
+            at: slot.at,
+            body: l10n.notificationKhatmahBodyWithTarget(
+              slot.startPage,
+              slot.endPage,
+            ),
+            payload: '/quran/page/${slot.startPage}?mode=khatmah',
+          ),
+      ],
+    );
   }
 
   Future<void> _refreshNotifications(
@@ -526,64 +620,7 @@ class NotificationScheduler {
     }
 
     // Khatmah Daily Progress Reminder
-    final khatmahEnabled =
-        prefs.getBool(TaliaNotificationService.khatmahReminderPreferenceKey) ??
-        true;
-    if (khatmahEnabled) {
-      final hour =
-          prefs.getInt(
-            '${TaliaNotificationService.khatmahReminderPreferenceKey}_hour',
-          ) ??
-          17;
-      final minute =
-          prefs.getInt(
-            '${TaliaNotificationService.khatmahReminderPreferenceKey}_minute',
-          ) ??
-          0;
-
-      KhatmahPlan? activePlan;
-      try {
-        final usecase =
-            _getActiveKhatmah ??
-            (getIt.isRegistered<GetActiveKhatmahUsecase>()
-                ? getIt<GetActiveKhatmahUsecase>()
-                : null);
-        activePlan = await usecase?.call();
-      } catch (e, stack) {
-        TaliaLogger.w(
-          'Failed to load active khatmah for notification',
-          e,
-          stack,
-        );
-      }
-
-      final String body;
-      final String payload;
-      if (activePlan != null &&
-          !activePlan.isComplete &&
-          activePlan.status == KhatmahStatus.active) {
-        final target = activePlan.dailyTargetFor(now);
-        body = l10n.notificationKhatmahBodyWithTarget(
-          target.startPage,
-          target.endPage,
-        );
-        payload = '/quran/page/${target.startPage}?mode=khatmah';
-      } else {
-        body = l10n.notificationKhatmahBody;
-        payload = AppRoutes.khatmahDashboard;
-      }
-
-      final quietTime = quiet(hour, minute);
-      await _service.scheduleKhatmahReminder(
-        title: l10n.notificationKhatmahTitle,
-        body: body,
-        payload: payload,
-        hour: quietTime.hour,
-        minute: quietTime.minute,
-      );
-    } else {
-      await _service.cancelKhatmahReminder();
-    }
+    await _refreshKhatmahReminder(l10n, prefs, quiet);
 
     // Prayer Times (Rolling 7 Days)
     var prayerDeliveryFailed = false;

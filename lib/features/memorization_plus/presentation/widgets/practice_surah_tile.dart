@@ -97,7 +97,10 @@ class _PracticeSurahTileState extends State<PracticeSurahTile> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${surah.ayahCount} ${context.l10n.ayahs}',
+                    context.l10n.countAyahs(
+                      surah.ayahCount,
+                      context.numText(surah.ayahCount),
+                    ),
                     style: AppTypography.bodySmall.copyWith(
                       color: context.tokens.textHint,
                     ),

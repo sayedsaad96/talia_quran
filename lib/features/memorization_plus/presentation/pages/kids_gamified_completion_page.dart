@@ -43,6 +43,7 @@ class _KidsGamifiedCompletionPageState
     extends State<KidsGamifiedCompletionPage> {
   KidsNextMission? _nextMission;
   int? _dailyGoalCap;
+  bool _sessionGoalReached = false;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _KidsGamifiedCompletionPageState
     setState(() {
       _nextMission = outcome.mission;
       _dailyGoalCap = outcome.dailyGoalCap;
+      _sessionGoalReached = outcome.sessionGoalReached;
     });
   }
 
@@ -80,6 +82,7 @@ class _KidsGamifiedCompletionPageState
       leveledUpTo: widget.leveledUpTo,
       showNextButton: _nextMission != null,
       dailyGoalCap: _dailyGoalCap,
+      sessionGoalReached: _sessionGoalReached,
       onNext: widget.onNext ?? () => _openNextMission(context),
       onReturnToMap: widget.onReturnToMap ?? () => _returnToMap(context),
     );
@@ -115,6 +118,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
     this.leveledUpTo,
     this.showNextButton = true,
     this.dailyGoalCap,
+    this.sessionGoalReached = false,
     required this.onNext,
     required this.onReturnToMap,
   });
@@ -124,6 +128,9 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
   final int? leveledUpTo;
   final bool showNextButton;
   final int? dailyGoalCap;
+
+  /// K36 — today's sessions reached the parent's session goal.
+  final bool sessionGoalReached;
   final VoidCallback onNext;
   final VoidCallback onReturnToMap;
 
@@ -142,6 +149,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
                 leveledUpTo: leveledUpTo,
                 showNextButton: showNextButton,
                 dailyGoalCap: dailyGoalCap,
+                sessionGoalReached: sessionGoalReached,
                 onNext: onNext,
                 onReturnToMap: onReturnToMap,
               ),

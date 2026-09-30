@@ -13,10 +13,14 @@ class RemoteChildSummary extends Equatable {
     required this.logs,
     required this.rewards,
     this.production,
+    this.childAge,
   });
 
   final String childUserId;
   final String displayName;
+
+  /// Age the child (or guardian) set, from `profiles.age`; null when unknown.
+  final int? childAge;
   final KidsProgress progress;
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
@@ -34,6 +38,7 @@ class RemoteChildSummary extends Equatable {
     logs,
     rewards,
     production,
+    childAge,
   ];
 }
 

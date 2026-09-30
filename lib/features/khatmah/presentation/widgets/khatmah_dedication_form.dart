@@ -26,9 +26,12 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
   late final TextEditingController _noteController;
   String? _relationship;
   DedicationCondition? _condition;
+  DedicationGender? _gender;
 
+  // Legacy stored values (e.g. 'والد / والدة') still show via `?_relationship`.
   static const List<String> _relationshipOptionsArabic = [
-    'والد / والدة',
+    'الأب',
+    'الأم',
     'صديق',
     'قريب',
     'أخرى',
@@ -43,6 +46,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
     _noteController = TextEditingController(text: init?.customNote ?? '');
     _relationship = init?.relationship;
     _condition = init?.condition;
+    _gender = init?.recipientGender;
   }
 
   @override
@@ -64,6 +68,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
         customNote: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
+        recipientGender: _gender,
       ),
     );
   }
@@ -131,6 +136,35 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
               onChanged: (_) => _notifyChange(),
             ),
             const SizedBox(height: AppSpacing.md),
+            // Recipient gender: dua and honorific wording depend on it.
+            Text(
+              context.l10n.khatmahRecipientGender,
+              style: AppTypography.labelMedium.copyWith(
+                color: context.tokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                for (final gender in DedicationGender.values)
+                  ChoiceChip(
+                    key: Key('khatmah_dedication_gender_${gender.name}'),
+                    label: Text(
+                      gender == DedicationGender.male
+                          ? context.l10n.khatmahRecipientMale
+                          : context.l10n.khatmahRecipientFemale,
+                    ),
+                    selected: _gender == gender,
+                    selectedColor: primary.withValues(alpha: 0.2),
+                    onSelected: (selected) {
+                      setState(() => _gender = selected ? gender : null);
+                      _notifyChange();
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
             // Relationship dropdown
             DropdownButtonFormField<String>(
               key: const Key('khatmah_dedication_relationship'),
@@ -154,6 +188,8 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
               onChanged: (val) {
                 setState(() {
                   _relationship = val;
+                  _gender =
+                      KhatmahDedication.genderForRelationship(val) ?? _gender;
                 });
                 _notifyChange();
               },

@@ -15,6 +15,7 @@ class FamilyChildEntry extends Equatable {
     required this.isLocal,
     this.localData,
     this.remoteSummary,
+    this.childAge,
   });
 
   final String childUserId;
@@ -31,6 +32,10 @@ class FamilyChildEntry extends Equatable {
 
   /// Non-null for remote children — data read from Supabase.
   final RemoteChildSummary? remoteSummary;
+
+  /// Child's age when known. Only linked children carry one: a same-device
+  /// child shares the guardian's adult profile, which holds no child age.
+  final int? childAge;
 
   /// Points earned today (all sessions since UTC midnight).
   int get todayPoints {
@@ -65,45 +70,44 @@ class FamilyChildEntry extends Equatable {
   }
 
   /// Current streak (days in a row).
-  int get currentStreak =>
-      isLocal
-          ? (localData?.progress.currentStreak ?? 0)
-          : (remoteSummary?.progress.currentStreak ?? 0);
+  int get currentStreak => isLocal
+      ? (localData?.progress.currentStreak ?? 0)
+      : (remoteSummary?.progress.currentStreak ?? 0);
 
   /// Current level.
-  int get currentLevel =>
-      isLocal
-          ? (localData?.progress.currentLevel ?? 1)
-          : (remoteSummary?.progress.currentLevel ?? 1);
+  int get currentLevel => isLocal
+      ? (localData?.progress.currentLevel ?? 1)
+      : (remoteSummary?.progress.currentLevel ?? 1);
 
   /// Stars earned.
-  int get starsEarned =>
-      isLocal
-          ? (localData?.progress.starsEarned ?? 0)
-          : (remoteSummary?.progress.starsEarned ?? 0);
+  int get starsEarned => isLocal
+      ? (localData?.progress.starsEarned ?? 0)
+      : (remoteSummary?.progress.starsEarned ?? 0);
 
   /// Level progress ratio [0.0, 1.0].
-  double get levelProgress =>
-      isLocal
-          ? (localData?.progress.levelProgress ?? 0.0)
-          : (remoteSummary?.progress.levelProgress ?? 0.0);
+  double get levelProgress => isLocal
+      ? (localData?.progress.levelProgress ?? 0.0)
+      : (remoteSummary?.progress.levelProgress ?? 0.0);
 
   /// Whether the child had any activity today.
   bool get isActiveToday => todaySessions > 0;
 
   @override
-  List<Object?> get props =>
-      [childUserId, displayName, isLocal, localData, remoteSummary];
+  List<Object?> get props => [
+    childUserId,
+    displayName,
+    isLocal,
+    localData,
+    remoteSummary,
+    childAge,
+  ];
 }
 
 // ─── FamilyDashboard ──────────────────────────────────────────────────────────
 
 /// Unified family view: all children linked to a parent, plus parent settings.
 class FamilyDashboard extends Equatable {
-  const FamilyDashboard({
-    required this.children,
-    required this.settings,
-  });
+  const FamilyDashboard({required this.children, required this.settings});
 
   final List<FamilyChildEntry> children;
   final ParentSettings settings;
@@ -111,8 +115,7 @@ class FamilyDashboard extends Equatable {
   bool get hasAnyChild => children.isNotEmpty;
 
   /// Count of children who had at least one session today.
-  int get totalActiveToday =>
-      children.where((c) => c.isActiveToday).length;
+  int get totalActiveToday => children.where((c) => c.isActiveToday).length;
 
   /// Sum of all points earned today across all children.
   int get totalPointsToday =>

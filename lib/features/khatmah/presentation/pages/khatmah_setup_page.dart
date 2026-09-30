@@ -14,13 +14,17 @@ import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../khatmah_localizations.dart';
+import '../khatmah_setup_prefill.dart';
 import '../cubits/khatmah_setup_cubit.dart';
 import '../widgets/khatmah_dedication_form.dart';
 
 class KhatmahSetupPage extends StatefulWidget {
-  const KhatmahSetupPage({super.key, this.cubit});
+  const KhatmahSetupPage({super.key, this.cubit, this.prefill});
 
   final KhatmahSetupCubit? cubit;
+
+  /// Choices carried over from a finished khatmah ("same settings").
+  final KhatmahSetupPrefill? prefill;
 
   @override
   State<KhatmahSetupPage> createState() => _KhatmahSetupPageState();
@@ -58,6 +62,15 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
         _createdOwnCubit = true;
       }
     }
+    final prefill = widget.prefill;
+    if (prefill != null) {
+      _selectedPages = prefill.pagesPerDay;
+      _selectedDays = prefill.targetDays;
+      if (prefill.targetDays == null &&
+          !_presets.contains(prefill.pagesPerDay)) {
+        _customController.text = '${prefill.pagesPerDay}';
+      }
+    }
   }
 
   @override
@@ -87,7 +100,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   }
 
   void _onCustomChanged(String value) {
-    final parsed = int.tryParse(value);
+    final parsed = parseKhatmahPageInput(value);
     if (parsed != null &&
         parsed > 0 &&
         parsed <= KhatmahSchedulingEngine.totalPages) {
@@ -104,6 +117,10 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
       dedication: _dedication,
       targetDays: _selectedDays,
       startPage: parseKhatmahPageInput(_startPageController.text) ?? 1,
+      // Ramadan: one juz a day, ending on the juz boundary.
+      wirdUnit: _selectedDays == 30
+          ? KhatmahWirdUnit.juz
+          : KhatmahWirdUnit.pages,
     );
   }
 
@@ -337,9 +354,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               return ChoiceChip(
                                 key: Key('khatmah_setup_preset_$pages'),
                                 label: Text(
-                                  context.l10n.khatmahPages(
-                                    (pagesStr).toString(),
-                                  ),
+                                  context.l10n.khatmahPages(pages, pagesStr),
                                 ),
                                 selected: isSelected,
                                 selectedColor: AppColors.gold.withValues(
@@ -365,7 +380,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             controller: _customController,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[0-9٠-٩]'),
+                              ),
                             ],
                             decoration: InputDecoration(
                               labelText:
@@ -399,6 +416,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                                   days == 30
                                       ? context.l10n.khatmahDurationRamadan
                                       : context.l10n.khatmahDurationDays(
+                                          days,
                                           daysStr,
                                         ),
                                 ),
@@ -469,7 +487,8 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               const SizedBox(height: 2),
                               Text(
                                 context.l10n.khatmahDays(
-                                  (daysDisplay).toString(),
+                                  estimatedDays,
+                                  daysDisplay,
                                 ),
                                 style: AppTypography.titleLarge.copyWith(
                                   color: AppColors.gold,

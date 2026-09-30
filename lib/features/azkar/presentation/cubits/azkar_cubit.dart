@@ -96,7 +96,13 @@ class AzkarCubit extends Cubit<AzkarState> {
     if (allDone) {
       await _store.setAllDone(state.category, true);
     }
-    emit(state.copyWith(sessions: sessions, allDone: allDone));
+    emit(
+      state.copyWith(
+        sessions: sessions,
+        allDone: allDone,
+        canUndoCompletion: allDone,
+      ),
+    );
 
     if (autoAdvance && session.isDone && !allDone) {
       await Future.delayed(const Duration(milliseconds: 350));
@@ -127,7 +133,13 @@ class AzkarCubit extends Cubit<AzkarState> {
     await _store.clearCategory(state.category);
     if (isClosed) return;
 
-    emit(state.copyWith(sessions: sessions, allDone: false));
+    emit(
+      state.copyWith(
+        sessions: sessions,
+        allDone: false,
+        canUndoCompletion: false,
+      ),
+    );
   }
 
   Future<void> decrementCurrent() => _enqueueMutation(_decrementCurrent);
@@ -155,7 +167,13 @@ class AzkarCubit extends Cubit<AzkarState> {
     );
     await _store.setAllDone(state.category, false);
 
-    emit(state.copyWith(sessions: sessions, allDone: false));
+    emit(
+      state.copyWith(
+        sessions: sessions,
+        allDone: false,
+        canUndoCompletion: false,
+      ),
+    );
   }
 
   void goTo(int index) {

@@ -38,12 +38,11 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
     int reminderMinute = 30,
     int weeklyGoalSessions = 5,
     bool? guidanceAudioEnabled,
-    int startingSurahId = 114,
+    int startingSurahId = KidsJourneyPath.firstSurahId,
   }) async {
-    final trimmedName = nickname.trim();
-    if (trimmedName.isEmpty ||
-        age < 5 ||
-        age > 12 ||
+    final trimmedName = ChildIdentityPolicy.normalizeNickname(nickname);
+    if (trimmedName == null ||
+        !ChildIdentityPolicy.isValidAge(age) ||
         pin.length != 4 ||
         int.tryParse(pin) == null ||
         reminderHour < 0 ||
@@ -52,8 +51,7 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
         reminderMinute > 59 ||
         weeklyGoalSessions < 1 ||
         weeklyGoalSessions > 7 ||
-        startingSurahId < 78 ||
-        startingSurahId > 114) {
+        !KidsJourneyPath.contains(startingSurahId)) {
       emit(const MemorizationIdentityError(message: 'Invalid child setup'));
       return;
     }

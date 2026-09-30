@@ -1,5 +1,7 @@
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
+import 'mushaf_juz_table.dart';
+
 /// Helper for Hizb and Juz calculations based on the standard
 /// 604-page Madinah Mushaf (King Fahd Complex) layout.
 abstract class MushafHizbHelper {
@@ -7,11 +9,7 @@ abstract class MushafHizbHelper {
 
   // ─── Juz Start Pages (Madinah Mushaf) ───────────────────────────────────────
   // Each entry is the first page of the corresponding Juz (1-indexed).
-  static const List<int> juzStartPages = [
-    1, 22, 42, 62, 82, 102, 121, 142, 162, 182, // Juz  1–10
-    201, 222, 242, 262, 282, 302, 322, 342, 362, 382, // Juz 11–20
-    402, 422, 442, 462, 482, 502, 522, 542, 562, 582, // Juz 21–30
-  ];
+  static const List<int> juzStartPages = MushafJuzTable.startPages;
 
   // ─── Ordinal Juz Names (Arabic) ──────────────────────────────────────────────
   static const List<String> juzNames = [
@@ -56,13 +54,11 @@ abstract class MushafHizbHelper {
   static List<int>? _hizbStartPages;
 
   /// Returns the Juz number (1-30) for a given Mushaf page (1-604).
-  static int getJuz(int pageNumber) {
-    final page = pageNumber.clamp(1, 604);
-    for (int i = 28; i >= 0; i--) {
-      if (page >= juzStartPages[i]) return i + 1;
-    }
-    return 1;
-  }
+  static int getJuz(int pageNumber) => MushafJuzTable.juzOf(pageNumber);
+
+  /// First and last Madinah-mushaf page of [juz] (1-30).
+  static ({int start, int end}) juzPageRange(int juz) =>
+      MushafJuzTable.range(juz);
 
   /// Returns the Hizb number (1-60) for a given Mushaf page (1-604).
   ///

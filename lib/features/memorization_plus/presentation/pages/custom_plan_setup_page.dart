@@ -850,7 +850,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                       return context.l10n.customPlanInvalidAyah;
                     }
                     if (parsed > maxAyah) {
-                      return context.l10n.customPlanSurahAyahLimit(maxAyah);
+                      return context.l10n.customPlanSurahAyahLimit(
+                        maxAyah,
+                        context.numText(maxAyah),
+                      );
                     }
                     return null;
                   },
@@ -1315,7 +1318,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     } else if (months > 1) {
       durationText = context.l10n.customPlanApproxMonths(months);
     } else {
-      durationText = context.l10n.customPlanApproxWeeks(weeks);
+      durationText = context.l10n.customPlanApproxWeeks(
+        weeks,
+        context.numText(weeks),
+      );
     }
 
     return Container(
@@ -1366,7 +1372,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 Text(
                   context.l10n.customPlanEstimatedScope(
                     totalSurahs,
+                    context.numText(totalSurahs),
                     totalAyahsEstimate,
+                    context.numText(totalAyahsEstimate),
                   ),
                   style: AppTypography.bodySmall.copyWith(
                     color: context.tokens.textSecondary,
@@ -1556,10 +1564,18 @@ class _PlanSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(context.l10n.customPlanSummaryRange(startSurah, endSurah)),
-          Text(context.l10n.customPlanSummaryLoad(ayahsPerDay, daysPerWeek)),
+          Text(
+            context.l10n.customPlanSummaryLoad(
+              ayahsPerDay,
+              context.numText(ayahsPerDay),
+              daysPerWeek,
+              context.numText(daysPerWeek),
+            ),
+          ),
           Text(
             context.l10n.customPlanSummarySession(
               sessionMinutes,
+              context.numText(sessionMinutes),
               difficultyLabel,
             ),
           ),

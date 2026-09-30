@@ -19,11 +19,16 @@ class KidsRewardDialog extends StatefulWidget {
     this.leveledUpTo,
     this.showNextButton = true,
     this.dailyGoalCap,
+    this.sessionGoalReached = false,
     this.onNext,
     this.onReturnToMap,
   });
 
   final int starsEarned;
+
+  /// K36 — today's sessions reached the session goal: a gentle note that
+  /// it is fine to stop, without hiding "Next".
+  final bool sessionGoalReached;
 
   /// K11: session points shown as a second reward pill when positive.
   final int pointsEarned;
@@ -85,6 +90,7 @@ class _KidsRewardDialogState extends State<KidsRewardDialog> {
           leveledUpTo: widget.leveledUpTo,
           showNextButton: widget.showNextButton,
           dailyGoalCap: widget.dailyGoalCap,
+          sessionGoalReached: widget.sessionGoalReached,
           onNext: widget.onNext,
           onReturnToMap: widget.onReturnToMap,
         ),
@@ -123,11 +129,13 @@ class _RewardCard extends StatelessWidget {
     this.leveledUpTo,
     this.showNextButton = true,
     this.dailyGoalCap,
+    this.sessionGoalReached = false,
     this.onNext,
     this.onReturnToMap,
   });
 
   final int starsEarned;
+  final bool sessionGoalReached;
   final int pointsEarned;
   final int? leveledUpTo;
   final bool showNextButton;
@@ -180,11 +188,14 @@ class _RewardCard extends StatelessWidget {
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              _RewardPill(
-                icon: Icons.star_rounded,
-                label: context.l10n.kidsGamifiedEarnedStars(starsEarned),
-                color: KidsTheme.goldStar,
-              ),
+              // A review earns gems, not stars: "+0 stars" would read as a
+              // lesser effort, so the pill only shows real stars (K23).
+              if (starsEarned > 0)
+                _RewardPill(
+                  icon: Icons.star_rounded,
+                  label: context.l10n.kidsGamifiedEarnedStars(starsEarned),
+                  color: KidsTheme.goldStar,
+                ),
               // K11: real session points next to the stars, when any.
               if (pointsEarned > 0)
                 _RewardPill(
@@ -211,55 +222,94 @@ class _RewardCard extends StatelessWidget {
                 letterSpacing: 0,
               ),
             ),
+          ] else if (sessionGoalReached) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.l10n.kidsGamifiedEnoughForToday,
+              key: const ValueKey('kids-enough-for-today'),
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
           ],
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onReturnToMap,
-                  icon: const Icon(Icons.map_rounded),
-                  label: Text(context.l10n.kidsGamifiedReturnToMap),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.52),
-                    ),
-                    minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: KidsTheme.buttonRadius,
-                    ),
-                  ),
-                ),
-              ),
-              if (showNextButton) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: onNext,
-                    icon: Icon(
-                      context.isArabic
-                          ? Icons.arrow_back_rounded
-                          : Icons.arrow_forward_rounded,
-                    ),
-                    label: Text(context.l10n.kidsGamifiedStartMission),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: KidsTheme.goldStar,
-                      foregroundColor: KidsTheme.nightSkyDark,
-                      minimumSize: const Size.fromHeight(
-                        AppSpacing.buttonHeight,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: KidsTheme.buttonRadius,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+          _RewardActions(
+            showNextButton: showNextButton,
+            onNext: onNext,
+            onReturnToMap: onReturnToMap,
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Return to map" and "Start mission": side by side, or stacked (the next
+/// mission on top) when large text would squeeze them past the card (K29).
+class _RewardActions extends StatelessWidget {
+  const _RewardActions({
+    required this.showNextButton,
+    required this.onNext,
+    required this.onReturnToMap,
+  });
+
+  final bool showNextButton;
+  final VoidCallback? onNext;
+  final VoidCallback? onReturnToMap;
+
+  static const double _stackAboveTextScale = 1.3;
+
+  @override
+  Widget build(BuildContext context) {
+    final returnToMap = OutlinedButton.icon(
+      onPressed: onReturnToMap,
+      icon: const Icon(Icons.map_rounded),
+      label: Text(context.l10n.kidsGamifiedReturnToMap),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.52)),
+        minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+        shape: const RoundedRectangleBorder(
+          borderRadius: KidsTheme.buttonRadius,
+        ),
+      ),
+    );
+    if (!showNextButton) return returnToMap;
+
+    final next = FilledButton.icon(
+      onPressed: onNext,
+      // Mirrors itself under RTL: it points left in Arabic.
+      icon: const Icon(Icons.arrow_forward_rounded),
+      label: Text(context.l10n.kidsGamifiedStartMission),
+      style: FilledButton.styleFrom(
+        backgroundColor: KidsTheme.goldStar,
+        foregroundColor: KidsTheme.nightSkyDark,
+        minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+        shape: const RoundedRectangleBorder(
+          borderRadius: KidsTheme.buttonRadius,
+        ),
+      ),
+    );
+
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    if (textScale > _stackAboveTextScale) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          next,
+          const SizedBox(height: AppSpacing.sm),
+          returnToMap,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: returnToMap),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: next),
+      ],
     );
   }
 }
@@ -292,11 +342,14 @@ class _RewardPill extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.labelLarge.copyWith(
-              color: Colors.white,
-              letterSpacing: 0,
+          // Wraps under large text instead of running past the card (K29).
+          Flexible(
+            child: Text(
+              label,
+              style: AppTypography.labelLarge.copyWith(
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
             ),
           ),
         ],

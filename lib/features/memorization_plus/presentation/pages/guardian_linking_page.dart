@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -102,8 +103,12 @@ class _GuardianLinkingView extends StatelessWidget {
                         message: state is GuardianLinkingError
                             ? (state.kind == GuardianLinkingErrorKind.timeout
                                   ? context.l10n.guardianLinkingTimeoutMessage
-                                  : state.message)
-                            : (state as GuardianLinkingBlocked).message,
+                                  : context.localizedCubitMessage(
+                                      state.message,
+                                    ))
+                            : context.localizedCubitMessage(
+                                (state as GuardianLinkingBlocked).message,
+                              ),
                       ),
                       if (state is GuardianLinkingError) ...[
                         const SizedBox(height: AppSpacing.md),
@@ -216,11 +221,8 @@ class _GuardianLinkingLoadingState extends State<_GuardianLinkingLoading> {
               onPressed: () => context
                   .read<GuardianLinkingCubit>()
                   .continueWithoutGuardian(),
-              icon: Icon(
-                context.isArabic
-                    ? Icons.arrow_back_rounded
-                    : Icons.arrow_forward_rounded,
-              ),
+              // Mirrors itself under RTL: "continue" points left in Arabic.
+              icon: const Icon(Icons.arrow_forward_rounded),
               label: Text(context.l10n.continueWithoutGuardian),
             ),
           ],
@@ -260,11 +262,8 @@ class _GuestGuardianLinkingCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.memorizationPlusKidsHome),
-            icon: Icon(
-              context.isArabic
-                  ? Icons.arrow_back_rounded
-                  : Icons.arrow_forward_rounded,
-            ),
+            // Mirrors itself under RTL: "continue" points left in Arabic.
+            icon: const Icon(Icons.arrow_forward_rounded),
             label: Text(context.l10n.guardianGuestContinueKids),
           ),
         ],
@@ -298,11 +297,8 @@ class _ChoiceActions extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
-            icon: Icon(
-              context.isArabic
-                  ? Icons.arrow_back_rounded
-                  : Icons.arrow_forward_rounded,
-            ),
+            // Mirrors itself under RTL: "continue" points left in Arabic.
+            icon: const Icon(Icons.arrow_forward_rounded),
             label: Text(context.l10n.continueWithoutGuardian),
           ),
         ],

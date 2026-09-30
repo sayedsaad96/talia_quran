@@ -177,6 +177,7 @@ class MemorizationCloudMappers {
           )
           .toList(),
       production: production,
+      childAge: (row['age'] as num?)?.toInt(),
     );
   }
 

@@ -13,6 +13,7 @@ import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
 import '../services/notification_scheduler.dart';
+import '../services/khatmah_reminder_sync.dart';
 import '../services/quran_continuous_player_service.dart';
 import '../services/quran_reciter_service.dart';
 import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
@@ -76,13 +77,16 @@ import '../../features/memorization_plus/data/listening/listening_quiz_source.da
 import '../../features/memorization_plus/data/listening/listening_recitation_capture.dart';
 import '../../features/memorization_plus/data/listening/listening_review_stats_store.dart';
 import '../../features/memorization_plus/presentation/cubits/listening_review_cubit.dart';
+import '../../features/azkar/data/datasources/azkar_alias_registry.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/datasources/azkar_completion_store.dart';
 import '../../features/azkar/data/datasources/azkar_preferences_store.dart';
+import '../../features/azkar/data/datasources/prayer_times_window_source.dart';
 import '../../features/azkar/data/datasources/smart_wird_progress_store.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
+import '../../features/azkar/domain/services/azkar_period_resolver.dart';
 import '../../features/azkar/domain/usecases/compose_smart_wird_usecase.dart';
 import '../../features/azkar/presentation/cubits/azkar_cubit.dart';
 import '../../features/azkar/presentation/cubits/azkar_hub_cubit.dart';
@@ -112,6 +116,7 @@ import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
 import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
+import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -137,6 +142,7 @@ import '../../features/settings/data/repositories/settings_repository_impl.dart'
 import '../../features/streak/presentation/cubits/streak_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/data/services/supabase_account_password_verifier.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
 import '../identity/account_data_barrier.dart';
@@ -150,6 +156,7 @@ import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/get_khatmah_history_usecase.dart';
 import '../../features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/update_khatmah_dedication_usecase.dart';
 import '../../features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
@@ -333,11 +340,21 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<AzkarCompletionStore>(
     () => AzkarCompletionStore(getIt<SharedPreferences>()),
   );
+  getIt.registerLazySingleton<AzkarAliasRegistry>(() => AzkarAliasRegistry());
   getIt.registerLazySingleton<AzkarPreferencesStore>(
-    () => AzkarPreferencesStore(getIt<SharedPreferences>()),
+    () => AzkarPreferencesStore(
+      getIt<SharedPreferences>(),
+      getIt<AzkarAliasRegistry>(),
+    ),
+  );
+  getIt.registerLazySingleton<AzkarPrayerWindowSource>(
+    () => PrayerTimesWindowSource(getIt<PrayerTimesService>()),
   );
   getIt.registerLazySingleton<ComposeSmartWirdUsecase>(
-    () => ComposeSmartWirdUsecase(getIt<AzkarRepository>()),
+    () => ComposeSmartWirdUsecase(
+      getIt<AzkarRepository>(),
+      windowSource: getIt<AzkarPrayerWindowSource>(),
+    ),
   );
   getIt.registerLazySingleton<SmartWirdProgressStore>(
     () => SmartWirdProgressStore(getIt<SharedPreferences>()),
@@ -525,7 +542,10 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerLazySingleton<AzkarRepository>(
-    () => AzkarRepositoryImpl(getIt<AzkarLocalDatasource>()),
+    () => AzkarRepositoryImpl(
+      getIt<AzkarLocalDatasource>(),
+      aliasRegistry: getIt<AzkarAliasRegistry>(),
+    ),
   );
   getIt.registerLazySingleton<KhatmahRepository>(
     () => KhatmahRepositoryImpl(getIt<KhatmahLocalDatasource>()),
@@ -739,6 +759,17 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<DeleteKhatmahUsecase>(
     () => DeleteKhatmahUsecase(getIt<KhatmahRepository>()),
   );
+  getIt.registerLazySingleton<UpdateKhatmahDedicationUsecase>(
+    () => UpdateKhatmahDedicationUsecase(getIt<KhatmahRepository>()),
+  );
+  getIt.registerLazySingleton<KhatmahReminderSync>(
+    () => KhatmahReminderSync(
+      getIt<GetActiveKhatmahUsecase>().changes,
+      () => getIt<NotificationScheduler>().refreshKhatmahReminder(
+        lookupAppLocalizations(getIt<LocaleCubit>().state),
+      ),
+    ),
+  );
   getIt.registerLazySingleton<GetKhatmDuaUsecase>(
     () => GetKhatmDuaUsecase(getIt<KhatmDuaDatasource>()),
   );
@@ -754,7 +785,10 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerFactory<SurahListCubit>(
-    () => SurahListCubit(getIt<GetSurahsUsecase>()),
+    () => SurahListCubit(
+      getIt<GetSurahsUsecase>(),
+      memorizationRepository: getIt<MemorizationPlusRepository>(),
+    ),
   );
   getIt.registerFactory<SurahDetailCubit>(
     () => SurahDetailCubit(getIt<GetSurahDetailUsecase>()),
@@ -807,6 +841,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<AzkarCompletionStore>(),
       getIt<AzkarPreferencesStore>(),
       smartWirdStore: getIt<SmartWirdProgressStore>(),
+      windowSource: getIt<AzkarPrayerWindowSource>(),
     ),
   );
   getIt.registerFactory<GuardianLinkingCubit>(
@@ -871,6 +906,13 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerFactory<CustomPlanCubit>(
     () => CustomPlanCubit(getIt<MemorizationPlusRepository>()),
   );
+  // K37 — which map houses the child already saw completed (display state).
+  getIt.registerLazySingleton<KidsMapCelebrationStore>(
+    () => KidsMapCelebrationStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerFactory<KidsJourneyCubit>(
     () => KidsJourneyCubit(
       getIt<GetKidsJourneyUsecase>(),
@@ -934,6 +976,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<ParentAccessUsecase>(),
       getIt<ParentRemoteLinkUsecase>(),
       getIt<GetFamilyDashboardUsecase>(),
+      accountVerifier: const SupabaseAccountPasswordVerifier(),
     ),
   );
   getIt.registerFactory<MemorizationSessionCubit>(
@@ -968,20 +1011,15 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<XpService>(),
       getActiveKhatmah: getIt<GetActiveKhatmahUsecase>(),
       getDailyWird: getIt<GetDailyWirdUsecase>(),
-      readingLog: getIt<DailyReadingLogService>(),
-      azkarStore: getIt<AzkarCompletionStore>(),
-      getAzkar: getIt<GetAzkarUsecase>(),
       streakRiskEvaluator: getIt<StreakRiskEvaluator>(),
       streakService: getIt<StreakService>(),
       audioResumeStore: getIt<AudioResumeStore>(),
       getFamilyDashboard: getIt<GetFamilyDashboardUsecase>(),
-      bookmarkService: getIt<BookmarkService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       prayerTimes: getIt<PrayerTimesService>(),
       companionPreferences: getIt<PrayerCompanionPreferences>(),
       getCompanionSummary: getIt<GetPrayerCompanionDaySummary>(),
       occasionService: getIt<HomeOccasionService>(),
-      todayChecklist: getIt<GetTodayChecklistUsecase>(),
       getRecentActivity: getIt<GetRecentActivityUsecase>(),
     ),
   );
@@ -995,6 +1033,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<PauseResumeKhatmahUsecase>(),
       getIt<DeleteKhatmahUsecase>(),
       updateSchedule: getIt<UpdateKhatmahScheduleUsecase>(),
+      updateDedication: getIt<UpdateKhatmahDedicationUsecase>(),
     ),
   );
   getIt.registerFactory<KhatmahHistoryCubit>(

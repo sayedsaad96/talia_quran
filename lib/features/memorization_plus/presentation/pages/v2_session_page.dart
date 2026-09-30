@@ -15,7 +15,6 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/memorization_session_cubit.dart';
@@ -195,7 +194,6 @@ class _V2SessionViewState extends State<_V2SessionView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     return BlocConsumer<MemorizationSessionCubit, MemorizationSessionState>(
       listenWhen: (previous, current) {
         if (current is MSError) return true;
@@ -261,10 +259,6 @@ class _V2SessionViewState extends State<_V2SessionView> {
                     ? context.l10n.v2ReviewSessionTitle
                     : context.l10n.memorizationSessionTitle,
               ),
-              backgroundColor: isDark
-                  ? AppColors.darkSurface
-                  : AppColors.primary,
-              foregroundColor: Colors.white,
             ),
             body: _buildBody(context, state),
           ),

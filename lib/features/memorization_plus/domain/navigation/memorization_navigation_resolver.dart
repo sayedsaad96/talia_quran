@@ -1,3 +1,4 @@
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/pending_ayah_resolver.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
@@ -14,9 +15,12 @@ import 'kids_next_mission_resolver.dart';
 /// The completion screen's "Next" outcome: the mission to open, or — when
 /// none is left because today's new-ayah quota is used up — that quota, so
 /// the child sees an encouraging day-complete end instead of a dead button.
+/// [sessionGoalReached]: today's sessions reached the parent's session goal,
+/// so the celebration adds a gentle "that's enough for today" (K36).
 typedef KidsMissionAfterCompletion = ({
   KidsNextMission? mission,
   int? dailyGoalCap,
+  bool sessionGoalReached,
 });
 
 class MemorizationNavigationTargets {
@@ -125,21 +129,54 @@ class MemorizationNavigationResolver {
     final reviewRecords = await _reviewRecords(ReviewRecordReadScope.kids);
     final stages = journeyResult.getOrElse(() => const <KidsJourneyStage>[]);
     final budget = await _kidsDailyBudget(at);
-    final mission = const KidsNextMissionResolver().resolveSkippingAyah(
+    const resolver = KidsNextMissionResolver();
+    final continuation = await resolver.findContinuation(
       activeSurahId: surahId,
-      stages: stages,
-      reviewRecords: reviewRecords,
-      now: at.toUtc(),
-      justCompletedSurahId: surahId,
-      justCompletedAyah: completedAyah,
-      budget: budget,
+      stages: KidsNextMissionResolver.withCompletedAyah(
+        stages,
+        surahId: surahId,
+        ayahNumber: completedAyah,
+      ),
+      loadStages: (id) async => (await _repository.getKidsJourney(
+        surahId: id,
+      )).fold((_) => null, (stages) => stages),
     );
+    KidsNextMission? resolveWith(KidsDailyBudget budget) =>
+        resolver.resolveSkippingAyah(
+          activeSurahId: surahId,
+          stages: stages,
+          reviewRecords: reviewRecords,
+          now: at.toUtc(),
+          justCompletedSurahId: surahId,
+          justCompletedAyah: completedAyah,
+          budget: budget,
+          continuation: continuation,
+        );
+    final mission = resolveWith(budget);
     return (
       mission: mission,
-      dailyGoalCap: mission == null && budget.newAyahLimitReached
-          ? budget.maxNewAyahsPerDay
-          : null,
+      dailyGoalCap: resolver.dailyGoalCap(
+        mission: mission,
+        budget: budget,
+        resolveWith: resolveWith,
+      ),
+      sessionGoalReached: budget.sessionGoalReached(
+        await _kidsSessionGoalMinutes(),
+      ),
     );
+  }
+
+  /// The parent's session goal, else the age band's default (K36). A read
+  /// failure means no goal — the gentle note simply does not appear.
+  Future<int> _kidsSessionGoalMinutes() async {
+    final settings = (await _repository.getParentSettings()).fold(
+      (_) => null,
+      (settings) => settings,
+    );
+    final goal = settings?.sessionGoalMinutes;
+    if (goal != null) return goal;
+    final profile = await _profile();
+    return KidsSessionPolicy.forChildAge(profile?.childAge).maxSessionMinutes;
   }
 
   Future<String> adultEntryLocation() async {
@@ -289,6 +326,13 @@ class MemorizationNavigationResolver {
         (a, b) => b.completedAt.toUtc().compareTo(a.completedAt.toUtc()),
       );
     });
+    // The journey frontier is where the child last memorized something new.
+    // A review of an older surah must not pull home back there (K17).
+    for (final log in logs) {
+      if (KidsSessionLogsCloudMerge.isCanonicalRewardLog(log)) {
+        return log.surahId;
+      }
+    }
     if (logs.isNotEmpty) return logs.first.surahId;
 
     final customPlan = await _customPlan();
@@ -396,8 +440,9 @@ class MemorizationNavigationResolver {
       ),
     };
 
-    // Memorization blocks follow the plan's difficulty (M-U4); reviews always
-    // target a single ayah.
+    // Memorization blocks follow the plan's difficulty (M-U4), trimmed to
+    // today's remaining new ayahs when continuing the plan (N3); reviews
+    // always target a single ayah.
     final adultPlan =
         customPlan != null &&
             customPlan.isActive &&
@@ -410,7 +455,8 @@ class MemorizationNavigationResolver {
         ...launchContext.toRouteQuery(),
         if (adultPlan != null &&
             launchContext.intent == LearningIntent.memorize)
-          'blockSize': '${PlanSchedulePolicy.blockSize(adultPlan)}',
+          'blockSize':
+              '${PlanSchedulePolicy.fitToDailyPlan(PlanSchedulePolicy.blockSize(adultPlan), intent == PendingAyahIntent.continueDailyPlan ? cachedPlan : null, surahId: target.surahId, startAyah: target.startAyah)}',
       },
     ).toString();
   }

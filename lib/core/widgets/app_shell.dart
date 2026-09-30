@@ -258,10 +258,7 @@ class _TaliaBottomNav extends StatelessWidget {
             color: context.tokens.surface.withValues(
               alpha: isDark ? 0.92 : 0.95,
             ),
-            border: Border.all(
-              color: context.tokens.glassBorder,
-              width: 1,
-            ),
+            border: Border.all(color: context.tokens.glassBorder, width: 1),
             boxShadow: [
               BoxShadow(
                 color: isDark

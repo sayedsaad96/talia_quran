@@ -14,6 +14,7 @@ import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_journey_complete_card.dart';
 import '../widgets/kids_day_complete_card.dart';
+import '../widgets/kids_welcome_back_card.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
@@ -33,15 +34,18 @@ class KidsGamifiedHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<KidsJourneyCubit>()..load(surahId: surahId),
+      create: (_) =>
+          getIt<KidsJourneyCubit>()
+            ..load(surahId: surahId, followFrontier: true),
       child: _KidsGamifiedHomeView(surahId: surahId, childName: childName),
     );
   }
 }
 
 @visibleForTesting
-String kidsQuranReaderLocation(int surahId) =>
-    '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId';
+String kidsQuranReaderLocation(int surahId, {int? ayahNumber}) =>
+    '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId'
+    '${ayahNumber == null ? '' : '&ayahNumber=$ayahNumber'}';
 
 @visibleForTesting
 String kidsMissionLocation(KidsNextMission mission) =>
@@ -95,8 +99,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
 
           if (state is KidsJourneyError) {
             return KidsErrorWidget(
-              onRetry: () =>
-                  context.read<KidsJourneyCubit>().load(surahId: surahId),
+              onRetry: () => context.read<KidsJourneyCubit>().load(
+                surahId: surahId,
+                followFrontier: true,
+              ),
             );
           }
 
@@ -109,11 +115,22 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
             // already visible: navigating to the same route would rebuild the
             // page and flash a loading state at the child for no reason.
             onHomeTap: () {},
-            onRefresh: () =>
-                context.read<KidsJourneyCubit>().load(surahId: surahId),
+            onRefresh: () => context.read<KidsJourneyCubit>().load(
+              surahId: surahId,
+              followFrontier: true,
+            ),
             onMushafTap: () => _openDestination(() async {
               if (!context.mounted) return;
-              await context.push(kidsQuranReaderLocation(state.surahId));
+              // Open the Mushaf at today's mission ayah, marked (K26).
+              final mission = state.nextMission;
+              await context.push(
+                mission == null
+                    ? kidsQuranReaderLocation(state.surahId)
+                    : kidsQuranReaderLocation(
+                        mission.surahId,
+                        ayahNumber: mission.startAyah,
+                      ),
+              );
             }),
             onJourneyTap: () => _openDestination(() async {
               if (!context.mounted) return;
@@ -147,7 +164,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
     }
 
     if (context.mounted) {
-      await context.read<KidsJourneyCubit>().load(surahId: state.surahId);
+      // Re-resolve from the loaded surah: finishing its last ayah moves home
+      // on to the surah where the journey continues (K20).
+      await context.read<KidsJourneyCubit>().load(
+        surahId: state.surahId,
+        followFrontier: true,
+      );
     }
   }
 }
@@ -208,7 +230,18 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onSettingsTap: onPathSettingsTap,
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      if (state.currentStage == null &&
+                      // K33: a warm welcome after a few days away.
+                      if (state.isReturningAfterBreak) ...[
+                        const KidsWelcomeBackCard(),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      if (state.dailyGoalCap != null) ...[
+                        // Today's quota is used up: end the day with praise
+                        // instead of a mission the session would refuse (N3).
+                        // Checked first: a surah finished on a capped day is
+                        // not the end of the journey (K18).
+                        KidsDayCompleteCard(dailyGoalCap: state.dailyGoalCap!),
+                      ] else if (state.currentStage == null &&
                           state.nextMission == null &&
                           // Real progress separates a finished journey from a
                           // first-time child who has not started yet.
@@ -217,20 +250,17 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         // journey is finished — a real celebration, not a
                         // generic empty state (W2).
                         const KidsJourneyCompleteCard(),
-                      ] else if (state.dailyGoalCap != null) ...[
-                        // Today's quota is used up: end the day with praise
-                        // instead of a mission the session would refuse (N3).
-                        KidsDayCompleteCard(dailyGoalCap: state.dailyGoalCap!),
                       ] else ...[
                         KidsMissionCard(
-                          stage: state.currentStage,
+                          stage: state.missionStage,
                           // A mission in another surah never borrows the
                           // loaded surah's name.
                           surahName:
                               state.nextMission != null &&
                                   state.nextMission!.surahId != state.surahId
-                              ? '${context.l10n.surah} '
-                                    '${state.nextMission!.surahId}'
+                              ? state.missionSurahName ??
+                                    '${context.l10n.surah} '
+                                        '${state.nextMission!.surahId}'
                               : state.surahName ??
                                     '${context.l10n.surah} ${state.surahId}',
                           onContinue: onMissionTap,

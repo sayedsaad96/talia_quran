@@ -376,6 +376,20 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
   Future<List<AyahReviewRecordModel>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
     bool includeAllAudiences = false,
+  }) {
+    final audienceKey = includeAllAudiences ? '*' : scope.name;
+    return ReviewRecordReadBatch.read(
+      '${_owner.currentOwnerId}|$audienceKey',
+      () => _readAllReviewRecords(
+        scope: scope,
+        includeAllAudiences: includeAllAudiences,
+      ),
+    );
+  }
+
+  Future<List<AyahReviewRecordModel>> _readAllReviewRecords({
+    required ReviewRecordReadScope scope,
+    required bool includeAllAudiences,
   }) async {
     final isar = _isar;
     if (isar == null) {

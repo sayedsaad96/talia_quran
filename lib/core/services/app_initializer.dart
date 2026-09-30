@@ -12,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../l10n/locale_cubit.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_scheduler.dart';
+import '../services/khatmah_reminder_sync.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_serenity_watcher.dart';
 import '../sync/background_sync_scheduler.dart';
@@ -20,6 +21,7 @@ import '../theme/theme_cubit.dart';
 import '../theme/pure_black_cubit.dart';
 import '../utils/talia_logger.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
+import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 
@@ -91,6 +93,10 @@ class AppInitializer {
         // Non-blocking: Scheduling reminders and pre-warming Quran cache
         // runs in the background so the UI transitions immediately.
         unawaited(_scheduleFirstLaunchNotifications());
+        // Home's first load needs the parsed corpus (progress, daily wird,
+        // ayah of the day). Start it now so it overlaps the splash-to-home
+        // transition; home's reads join this same in-flight load.
+        unawaited(_preloadQuranCorpus());
         unawaited(getIt<QuranWarmupService>().warmUp());
         unawaited(getIt<BookmarkService>().ensureLoaded());
 
@@ -141,6 +147,15 @@ class AppInitializer {
       return Supabase.instance.isInitialized;
     } catch (_) {
       return false;
+    }
+  }
+
+  static Future<void> _preloadQuranCorpus() async {
+    try {
+      await getIt<QuranLocalDatasource>().ensureLoaded();
+    } catch (error, stack) {
+      // Callers retry on their own read; a failed preload is not fatal.
+      TaliaLogger.w('Quran corpus preload failed', error, stack);
     }
   }
 
@@ -198,6 +213,8 @@ class AppInitializer {
     final locale = getIt<LocaleCubit>().state;
     final l10n = lookupAppLocalizations(locale);
     await getIt<NotificationScheduler>().refreshNotifications(l10n);
+    // Khatmah reminders follow reading progress, not only app resumes.
+    getIt<KhatmahReminderSync>().start();
 
     final notificationService = getIt<TaliaNotificationService>();
     await notificationService.cancelStreakAlert();

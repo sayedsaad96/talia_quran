@@ -79,7 +79,15 @@ class ScheduleNextReviewUsecase {
         } else {
           final int rawInterval =
               (effectiveBase * math.max(1.2, newEaseFactor - 1.0)).round();
-          newInterval = _applyFuzz(rawInterval, record.ayahNumber).clamp(1, 90);
+          // A pass must always space the next review further out: short
+          // intervals round 1 × 1.4 back to 1, which pinned self-graded
+          // ayahs (capped at average) to a daily review forever.
+          newInterval = math
+              .max(
+                record.intervalDays + 1,
+                _applyFuzz(rawInterval, record.ayahNumber),
+              )
+              .clamp(1, 90);
         }
       case PerformanceRating.weak:
         newStrength = (record.strengthLevel - 1).clamp(0, 10);
@@ -435,6 +443,16 @@ class ParentRemoteLinkUsecase {
   /// child's guardian status.
   Future<Either<Failure, void>> removeChild(String childUserId) =>
       _repository.removeChild(childUserId);
+
+  Future<Either<Failure, void>> updateChildIdentity({
+    required String childUserId,
+    required String nickname,
+    required int age,
+  }) => _repository.updateLinkedChildIdentity(
+    childUserId: childUserId,
+    nickname: nickname,
+    age: age,
+  );
 }
 
 // ─── GetCustomPlanUsecase ─────────────────────────────────────────────────────

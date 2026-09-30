@@ -29,6 +29,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../widgets/onboarding_palette.dart';
 import '../cubits/onboarding_cubit.dart';
 import '../widgets/experience_fork_view.dart';
 import '../widgets/onboarding_cta.dart';
@@ -65,24 +66,23 @@ class _OnboardingViewState extends State<_OnboardingView> {
   final PageController _pageController = PageController();
 
   @override
-  void initState() {
-    super.initState();
-    _pageController.addListener(() => setState(() {}));
-  }
-
-  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
   double get _page =>
-      _pageController.hasClients && _pageController.position.hasContentDimensions
+      _pageController.hasClients &&
+          _pageController.position.hasContentDimensions
       ? _pageController.page ?? 0
       : 0;
 
   void _goToStep(int step) {
     context.read<OnboardingCubit>().goToStep(step);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pageController.jumpToPage(step);
+      return;
+    }
     _pageController.animateToPage(
       step,
       duration: const Duration(milliseconds: 450),
@@ -92,7 +92,6 @@ class _OnboardingViewState extends State<_OnboardingView> {
 
   @override
   Widget build(BuildContext context) {
-    final page = _page;
     final l10n = context.l10n;
 
     return BlocConsumer<OnboardingCubit, OnboardingState>(
@@ -106,76 +105,80 @@ class _OnboardingViewState extends State<_OnboardingView> {
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          // The journey begins at night regardless of the app theme.
-          backgroundColor: AppColors.darkBackground,
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              OnboardingNightScene(page: page),
-              SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 580),
-                    child: Column(
-                      children: [
-                        _JourneyTopBar(
-                          currentStep: state.currentStep,
-                          onBack: state.currentStep == 0
-                              ? null
-                              : () => _goToStep(state.currentStep - 1),
-                          onSkip: state.isLoading
-                              ? null
-                              : () => context.read<OnboardingCubit>().skip(),
-                        ),
-                        Expanded(
-                          child: PageView(
-                            controller: _pageController,
-                            physics: state.isLoading
-                                ? const NeverScrollableScrollPhysics()
-                                : const BouncingScrollPhysics(),
-                            onPageChanged: (step) =>
-                                context.read<OnboardingCubit>().goToStep(step),
-                            children: [
-                              const OnboardingMushafBentoView(),
-                              const OnboardingMemorizeBentoView(),
-                              const OnboardingHabitBentoView(),
-                              ExperienceForkView(state: state),
-                            ],
+        // Android back retraces the journey one step instead of leaving it.
+        return PopScope(
+          canPop: state.isFirstStep,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop || state.isLoading) return;
+            _goToStep(state.currentStep - 1);
+          },
+          child: Scaffold(
+            // The journey begins at night regardless of the app theme.
+            backgroundColor: OnboardingPalette.nightBackground,
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Only the sky follows the swipe; the slides don't rebuild per frame.
+                AnimatedBuilder(
+                  animation: _pageController,
+                  builder: (context, _) => OnboardingNightScene(page: _page),
+                ),
+                SafeArea(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 580),
+                      child: Column(
+                        children: [
+                          _JourneyTopBar(
+                            currentStep: state.currentStep,
+                            onBack: state.isFirstStep || state.isLoading
+                                ? null
+                                : () => _goToStep(state.currentStep - 1),
+                            onSkip: state.isLoading
+                                ? null
+                                : () => context.read<OnboardingCubit>().skip(),
                           ),
-                        ),
-                        if (state.currentStep < 3)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.pagePadding,
-                              AppSpacing.xs,
-                              AppSpacing.pagePadding,
-                              AppSpacing.md,
-                            ),
-                            child: Row(
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              physics: state.isLoading
+                                  ? const NeverScrollableScrollPhysics()
+                                  : const BouncingScrollPhysics(),
+                              onPageChanged: (step) => context
+                                  .read<OnboardingCubit>()
+                                  .goToStep(step),
                               children: [
-                                _AnimatedStepDots(
-                                  currentStep: state.currentStep,
-                                  onDotTap: _goToStep,
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: OnboardingPrimaryCta(
-                                    label: state.currentStep == 2
-                                        ? l10n.onboardingStartJourney
-                                        : l10n.next,
-                                    onTap: () => _goToStep(state.currentStep + 1),
-                                  ),
-                                ),
+                                const OnboardingMushafBentoView(),
+                                const OnboardingMemorizeBentoView(),
+                                const OnboardingHabitBentoView(),
+                                ExperienceForkView(state: state),
                               ],
                             ),
                           ),
-                      ],
+                          if (!state.isLastStep)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.pagePadding,
+                                AppSpacing.xs,
+                                AppSpacing.pagePadding,
+                                AppSpacing.md,
+                              ),
+                              child: OnboardingPrimaryCta(
+                                label:
+                                    state.currentStep ==
+                                        OnboardingState.stepCount - 2
+                                    ? l10n.onboardingStartJourney
+                                    : l10n.next,
+                                onTap: () => _goToStep(state.currentStep + 1),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -272,7 +275,9 @@ class _JourneyProgress extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 height: isCurrent ? 4 : 3,
                 decoration: BoxDecoration(
-                  color: isActive ? AppColors.goldLight : AppColors.darkDivider,
+                  color: isActive
+                      ? AppColors.goldLight
+                      : OnboardingPalette.nightDivider,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   boxShadow: isCurrent
                       ? [
@@ -289,57 +294,6 @@ class _JourneyProgress extends StatelessWidget {
           }),
         ),
       ),
-    );
-  }
-}
-
-/// Interactive animated step indicator capsules at the bottom of the slides.
-class _AnimatedStepDots extends StatelessWidget {
-  const _AnimatedStepDots({
-    required this.currentStep,
-    required this.onDotTap,
-  });
-
-  final int currentStep;
-  final ValueChanged<int> onDotTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(OnboardingState.stepCount, (index) {
-        final isCurrent = index == currentStep;
-        final isPassed = index < currentStep;
-
-        return GestureDetector(
-          onTap: () => onDotTap(index),
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: isCurrent ? 24 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: isCurrent
-                  ? AppColors.goldLight
-                  : (isPassed
-                      ? AppColors.primaryLight.withValues(alpha: 0.6)
-                      : AppColors.darkDivider),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              boxShadow: isCurrent
-                  ? [
-                      BoxShadow(
-                        color: AppColors.gold.withValues(alpha: 0.4),
-                        blurRadius: 6,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-        );
-      }),
     );
   }
 }

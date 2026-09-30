@@ -128,7 +128,9 @@ class HomeSkin {
         scaffold: tokens?.background ?? AppColors.darkBackground,
         ambientGlow: AppColors.gold.withValues(alpha: 0.16),
         heroVeil: _veil,
-        glassFill: isOled ? AppColors.oledCard : const Color(0xF00A2925),
+        glassFill: isOled
+            ? AppColors.oledCard
+            : AppColors.darkSurfaceVariant.withValues(alpha: 0.94),
         glassBorder: Colors.white.withValues(alpha: 0.10),
         glassHighlight: Colors.white.withValues(alpha: 0.06),
         textPrimary: AppColors.darkTextPrimary,

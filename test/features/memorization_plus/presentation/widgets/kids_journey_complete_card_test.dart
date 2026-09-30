@@ -32,8 +32,9 @@ void main() {
     // trophy and confetti replace the previous generic empty state.
     expect(find.byIcon(Icons.emoji_events_rounded), findsOneWidget);
     expect(find.byType(ConfettiWidget), findsOneWidget);
+    // The path opens with Al-Fatiha, so the milestone names both (K27).
     expect(
-      find.textContaining('Juz Amma'),
+      find.textContaining('Al-Fatiha and the whole Juz Amma'),
       findsOneWidget,
     );
   });

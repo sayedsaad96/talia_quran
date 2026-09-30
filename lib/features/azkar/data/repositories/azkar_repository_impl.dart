@@ -1,18 +1,24 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
+import '../../domain/services/azkar_dedupe.dart';
+import '../datasources/azkar_alias_registry.dart';
 import '../datasources/azkar_local_datasource.dart';
 
 class AzkarRepositoryImpl implements AzkarRepository {
-  AzkarRepositoryImpl(this._datasource);
+  AzkarRepositoryImpl(this._datasource, {AzkarAliasRegistry? aliasRegistry})
+    : _aliasRegistry = aliasRegistry;
   final AzkarLocalDatasource _datasource;
+  final AzkarAliasRegistry? _aliasRegistry;
 
   @override
   Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async {
     try {
       final models = await _datasource.getAzkar(category);
-      return Right(models);
+      final deduped = AzkarDedupe.apply(models);
+      _aliasRegistry?.record(deduped.aliases);
+      return Right(deduped.items);
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {

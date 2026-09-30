@@ -58,7 +58,7 @@ void main() {
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('Save & leave'), findsOneWidget);
+    expect(find.text('Continue later'), findsOneWidget);
     expect(find.text('Discard session'), findsOneWidget);
 
     await tester.tap(find.text('Discard session'));

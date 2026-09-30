@@ -39,11 +39,11 @@ abstract class AppColors {
   static const Color lightTextHint = Color(0xFF756A5A);
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF021210); // Deep green-black
-  static const Color darkSurface = Color(0xFF041D1A);
-  static const Color darkSurfaceVariant = Color(0xFF0A2925);
-  static const Color darkCard = Color(0xFF041D1A);
-  static const Color darkDivider = Color(0xFF103B35);
+  static const Color darkBackground = Color(0xFF0D201D); // Deep green-charcoal, clearly lifted off OLED black
+  static const Color darkSurface = Color(0xFF14302B);
+  static const Color darkSurfaceVariant = Color(0xFF1D3E38);
+  static const Color darkCard = Color(0xFF14302B);
+  static const Color darkDivider = Color(0xFF2B4D46);
 
   static const Color darkTextPrimary = Color(0xFFF0EDE6);
   static const Color darkTextSecondary = Color(0xFFA8B0BC);
@@ -131,7 +131,7 @@ abstract class AppColors {
   static const LinearGradient heroGradientDark = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF093B35), Color(0xFF041D1A)],
+    colors: [Color(0xFF0E4A42), Color(0xFF14302B)],
   );
 
   static const LinearGradient heroGradientOled = LinearGradient(

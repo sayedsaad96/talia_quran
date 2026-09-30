@@ -80,4 +80,41 @@ void main() {
     );
     expect(store.activeSession(DateTime(2026, 9, 25)), isNull);
   });
+
+  group('SmartWirdSession period', () {
+    test('round-trips the period', () {
+      final session = SmartWirdSession(
+        dayPart: AzkarDayPart.afterFajr,
+        period: AzkarPeriod.morning,
+        counts: const {'m-1': 1},
+        updatedAt: DateTime(2026, 9, 25, 9),
+      );
+
+      final restored = SmartWirdSession.fromJson(session.toJson());
+
+      expect(restored.period, AzkarPeriod.morning);
+    });
+
+    test('a legacy session without a period loads with a null period', () {
+      final restored = SmartWirdSession.fromJson({
+        'dayPart': 'afterFajr',
+        'counts': {'m-1': 1},
+        'updatedAt': DateTime(2026, 9, 25, 9).millisecondsSinceEpoch,
+      });
+
+      expect(restored.period, isNull);
+      expect(restored.dayPart, AzkarDayPart.afterFajr);
+    });
+
+    test('an unknown period name loads as null instead of throwing', () {
+      final restored = SmartWirdSession.fromJson({
+        'dayPart': 'morning',
+        'period': 'midday',
+        'counts': const <String, dynamic>{},
+        'updatedAt': 0,
+      });
+
+      expect(restored.period, isNull);
+    });
+  });
 }

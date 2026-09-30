@@ -31,6 +31,17 @@ void main() {
       );
     });
 
+    test('the Mushaf opens at the mission ayah (K26)', () {
+      expect(
+        kidsQuranReaderLocation(113, ayahNumber: 4),
+        '${AppRoutes.memorizationPlusKidsQuran}?surahId=113&ayahNumber=4',
+      );
+      expect(
+        kidsQuranReaderLocation(114),
+        '${AppRoutes.memorizationPlusKidsQuran}?surahId=114',
+      );
+    });
+
     testWidgets('renders progress, mission, and bottom navigation actions', (
       tester,
     ) async {
@@ -191,6 +202,172 @@ void main() {
       expect(find.text('Continue now'), findsNothing);
     });
 
+    testWidgets(
+      'a surah finished on a capped day ends the day, not the journey (K18)',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        const surahDoneState = KidsJourneyLoaded(
+          surahId: 114,
+          stages: [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 114,
+              startAyah: 1,
+              endAyah: 6,
+              completedAyahs: [1, 2, 3, 4, 5, 6],
+              status: KidsJourneyStageStatus.completed,
+            ),
+          ],
+          progress: KidsProgress(
+            totalPoints: 60,
+            currentLevel: 1,
+            currentStreak: 1,
+            starsEarned: 6,
+            ayahsCompleted: 6,
+            lastSessionAt: null,
+          ),
+          dailyGoalCap: 1,
+        );
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedHomeContent(
+              state: surahDoneState,
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+            ),
+          ),
+        );
+
+        expect(find.byType(KidsDayCompleteCard), findsOneWidget);
+        expect(
+          find.textContaining('completed the current memorization journey'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'mission card describes the stage the new mission opens (K19)',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        const budgetSpentState = KidsJourneyLoaded(
+          surahId: 114,
+          stages: [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 114,
+              startAyah: 1,
+              endAyah: 3,
+              completedAyahs: [1, 2, 3],
+              status: KidsJourneyStageStatus.needsReview,
+            ),
+            KidsJourneyStage(
+              stageNumber: 2,
+              surahId: 114,
+              startAyah: 4,
+              endAyah: 6,
+              completedAyahs: [],
+              status: KidsJourneyStageStatus.current,
+            ),
+          ],
+          progress: KidsProgress.initial(),
+          nextMission: KidsNextMission(
+            type: KidsMissionType.newMemorization,
+            surahId: 114,
+            ayahNumbers: [4],
+          ),
+        );
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedHomeContent(
+              state: budgetSpentState,
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+            ),
+          ),
+        );
+
+        expect(find.text('Memorization House 2'), findsOneWidget);
+        expect(find.text('Memorization House 1'), findsNothing);
+      },
+    );
+
+    testWidgets('a review in another surah shows that surah by name (K20)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      final reviewElsewhere = _loadedState.copyWith(
+        nextMission: const KidsNextMission(
+          type: KidsMissionType.dueReview,
+          surahId: 112,
+          ayahNumbers: [2],
+        ),
+        missionSurahName: 'الإخلاص',
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: reviewElsewhere,
+            onHomeTap: () {},
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('الإخلاص'), findsOneWidget);
+      expect(find.textContaining('112'), findsNothing);
+    });
+
+    testWidgets('a returning child is welcomed back, no streak talk (K33)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      Future<void> pumpHome(bool returning) => tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: _loadedState.copyWith(isReturningAfterBreak: returning),
+            onHomeTap: () {},
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+          ),
+        ),
+      );
+
+      await pumpHome(true);
+      expect(find.text('Welcome back!'), findsOneWidget);
+      expect(find.text("Let's start with an easy step"), findsOneWidget);
+      expect(find.byType(KidsMissionCard), findsOneWidget);
+
+      await pumpHome(false);
+      expect(find.text('Welcome back!'), findsNothing);
+    });
+
     testWidgets('finished journey replaces the mission card with celebration', (
       tester,
     ) async {
@@ -270,8 +447,8 @@ void main() {
 
         // Should still render with default greeting
         expect(find.text('Welcome, memorization hero!'), findsOneWidget);
-        // Should show 0 stars
-        expect(find.text('0 stars'), findsOneWidget);
+        // K34: a zero counter is never shown to a new child.
+        expect(find.text('0 stars'), findsNothing);
         // Should show first stage prompt
         expect(find.text('Start your first stage today'), findsOneWidget);
       },

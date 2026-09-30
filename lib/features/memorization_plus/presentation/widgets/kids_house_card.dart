@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -16,6 +18,7 @@ class KidsHouseCard extends StatelessWidget {
     this.onTap,
     this.onLockedTap,
     this.width = 172,
+    this.celebrate = false,
   });
 
   final KidsJourneyStage stage;
@@ -23,6 +26,9 @@ class KidsHouseCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLockedTap;
   final double width;
+
+  /// K37 — completed since the child's last visit: glows once on arrival.
+  final bool celebrate;
 
   bool get _isLocked => stage.status == KidsJourneyStageStatus.locked;
   bool get _isCurrent => stage.status == KidsJourneyStageStatus.current;
@@ -51,13 +57,17 @@ class KidsHouseCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // 1. Destination Building Landmark with 2.5D stage number badge
-              _DestinationLandmark(
-                status: stage.status,
-                stageNumber: stage.stageNumber,
-                isCurrent: _isCurrent,
-                isLocked: _isLocked,
-                isCompleted: _isCompleted,
+              _CelebrationGlow(
+                enabled: celebrate,
                 reducedMotion: reducedMotion,
+                child: _DestinationLandmark(
+                  status: stage.status,
+                  stageNumber: stage.stageNumber,
+                  isCurrent: _isCurrent,
+                  isLocked: _isLocked,
+                  isCompleted: _isCompleted,
+                  reducedMotion: reducedMotion,
+                ),
               ),
 
               const SizedBox(height: 6),
@@ -205,37 +215,25 @@ class KidsHouseCard extends StatelessWidget {
   static LinearGradient _plaqueGradient(KidsJourneyStageStatus status) {
     return switch (status) {
       KidsJourneyStageStatus.current => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0F7D6B),
-            Color(0xFF074D40),
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF0F7D6B), Color(0xFF074D40)],
+      ),
       KidsJourneyStageStatus.completed => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFFF9E6),
-            Color(0xFFFDE8B5),
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFFF9E6), Color(0xFFFDE8B5)],
+      ),
       KidsJourneyStageStatus.needsReview => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF6B21A8),
-            Color(0xFF4C1D95),
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF6B21A8), Color(0xFF4C1D95)],
+      ),
       KidsJourneyStageStatus.locked => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF374151),
-            KidsTheme.inkOnParchment,
-          ],
-        ),
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF374151), KidsTheme.inkOnParchment],
+      ),
     };
   }
 
@@ -317,10 +315,26 @@ class _DestinationLandmark extends StatelessWidget {
       // Gentle desaturation for locked building
       buildingImage = ColorFiltered(
         colorFilter: const ColorFilter.matrix(<double>[
-          0.33, 0.33, 0.33, 0, 0,
-          0.33, 0.33, 0.33, 0, 0,
-          0.33, 0.33, 0.33, 0, 0,
-          0,    0,    0,    0.85, 0,
+          0.33,
+          0.33,
+          0.33,
+          0,
+          0,
+          0.33,
+          0.33,
+          0.33,
+          0,
+          0,
+          0.33,
+          0.33,
+          0.33,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.85,
+          0,
         ]),
         child: buildingImage,
       );
@@ -361,10 +375,7 @@ class _DestinationLandmark extends StatelessWidget {
         Positioned(
           top: -2,
           right: 0,
-          child: _StageNumberBadge(
-            stageNumber: stageNumber,
-            status: status,
-          ),
+          child: _StageNumberBadge(stageNumber: stageNumber, status: status),
         ),
 
         // Padlock icon if locked
@@ -387,10 +398,7 @@ class _DestinationLandmark extends StatelessWidget {
 
 /// Stage number badge with 2.5D beveled appearance
 class _StageNumberBadge extends StatelessWidget {
-  const _StageNumberBadge({
-    required this.stageNumber,
-    required this.status,
-  });
+  const _StageNumberBadge({required this.stageNumber, required this.status});
 
   final int stageNumber;
   final KidsJourneyStageStatus status;
@@ -438,10 +446,7 @@ class _StageNumberBadge extends StatelessWidget {
 
 /// 3-Star visual journey progress indicator
 class _JourneyStarsRow extends StatelessWidget {
-  const _JourneyStarsRow({
-    required this.earnedStars,
-    required this.isLocked,
-  });
+  const _JourneyStarsRow({required this.earnedStars, required this.isLocked});
 
   final int earnedStars;
   final bool isLocked;
@@ -469,10 +474,7 @@ class _JourneyStarsRow extends StatelessWidget {
 
 /// Action footer on the destination card
 class _DestinationActionFooter extends StatelessWidget {
-  const _DestinationActionFooter({
-    required this.status,
-    required this.onTap,
-  });
+  const _DestinationActionFooter({required this.status, required this.onTap});
 
   final KidsJourneyStageStatus status;
   final VoidCallback? onTap;
@@ -594,11 +596,7 @@ class _DestinationActionFooter extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.lock_rounded,
-            size: 14,
-            color: Colors.white70,
-          ),
+          const Icon(Icons.lock_rounded, size: 14, color: Colors.white70),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
@@ -614,6 +612,88 @@ class _DestinationActionFooter extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// K37 — a one-shot golden glow around a house the child finished since the
+/// last map visit. Reduced motion shows a still, soft glow instead.
+class _CelebrationGlow extends StatefulWidget {
+  const _CelebrationGlow({
+    required this.enabled,
+    required this.reducedMotion,
+    required this.child,
+  });
+
+  final bool enabled;
+  final bool reducedMotion;
+  final Widget child;
+
+  @override
+  State<_CelebrationGlow> createState() => _CelebrationGlowState();
+}
+
+class _CelebrationGlowState extends State<_CelebrationGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enabled && !widget.reducedMotion) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _CelebrationGlow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The map learns what to celebrate after its first frame: a house that
+    // is already on screen must still play its glow when told to.
+    if (widget.enabled && !oldWidget.enabled && !widget.reducedMotion) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  BoxDecoration _glow(double strength) => BoxDecoration(
+    shape: BoxShape.circle,
+    boxShadow: [
+      BoxShadow(
+        color: KidsTheme.goldStar.withValues(alpha: 0.55 * strength),
+        blurRadius: 36 * strength,
+        spreadRadius: 6 * strength,
+      ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) return widget.child;
+    if (widget.reducedMotion) {
+      return DecoratedBox(
+        key: const ValueKey('kids-house-celebration'),
+        decoration: _glow(0.6),
+        child: widget.child,
+      );
+    }
+    return AnimatedBuilder(
+      key: const ValueKey('kids-house-celebration'),
+      animation: _controller,
+      builder: (context, child) {
+        // Rises and fades back: sin(πt) peaks mid-way and ends at zero.
+        final strength = math.sin(math.pi * _controller.value);
+        return DecoratedBox(decoration: _glow(strength), child: child);
+      },
+      child: widget.child,
     );
   }
 }

@@ -21,6 +21,7 @@ class SurahListLoaded extends SurahListState {
     required this.filtered,
     this.query = '',
     this.selectedJuz,
+    this.memorizationStatus = const {},
   });
 
   final List<Surah> surahs;
@@ -28,20 +29,31 @@ class SurahListLoaded extends SurahListState {
   final String query;
   final int? selectedJuz;
 
+  /// Memorization badge per surah id; absent = not started (N17).
+  final Map<int, SurahMemorizationStatus> memorizationStatus;
+
   SurahListLoaded copyWith({
     List<Surah>? surahs,
     List<Surah>? filtered,
     String? query,
     int? selectedJuz,
+    Map<int, SurahMemorizationStatus>? memorizationStatus,
   }) => SurahListLoaded(
     surahs: surahs ?? this.surahs,
     filtered: filtered ?? this.filtered,
     query: query ?? this.query,
     selectedJuz: selectedJuz,
+    memorizationStatus: memorizationStatus ?? this.memorizationStatus,
   );
 
   @override
-  List<Object?> get props => [surahs, filtered, query, selectedJuz];
+  List<Object?> get props => [
+    surahs,
+    filtered,
+    query,
+    selectedJuz,
+    memorizationStatus,
+  ];
 }
 
 class SurahListError extends SurahListState {

@@ -4,6 +4,7 @@ import 'ayah_review_record.dart';
 import 'kids_journey_stage.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
+import 'kids_session_policy.dart';
 
 enum ParentRewardStatus { locked, unlocked, claimed }
 
@@ -18,7 +19,7 @@ class ParentSettings extends Equatable {
     this.localChildNickname,
     this.guidanceAudioEnabled,
     this.sessionGoalMinutes,
-    this.startingSurahId = 114,
+    this.startingSurahId = KidsJourneyPath.firstSurahId,
     this.kidsHifzV2Enabled = false,
   });
 

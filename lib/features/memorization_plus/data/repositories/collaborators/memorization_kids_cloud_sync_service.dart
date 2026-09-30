@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:meta/meta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
@@ -30,7 +32,9 @@ class MemorizationKidsCloudSyncService {
   final RecordOwnerProvider _owner;
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
-      _gateway.supabaseOrFailure();
+      _gateway.supabaseOrFailure().leftMap(
+        (_) => const NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
+      );
 
   Future<Either<Failure, void>> pullKidsProgressFromCloud() async {
     try {
@@ -196,7 +200,9 @@ class MemorizationKidsCloudSyncService {
 
       final user = client.auth.currentUser;
       if (user == null) {
-        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
       }
 
       try {
@@ -227,11 +233,21 @@ class MemorizationKidsCloudSyncService {
     final children = <RemoteChildSummary>[];
     for (final link in links) {
       final childId = link['child_user_id'] as String;
-      final profileRows = await client
-          .from('profiles')
-          .select('display_name')
-          .eq('id', childId)
-          .limit(1);
+      List<Map<String, dynamic>> profileRows;
+      try {
+        profileRows = await client
+            .from('profiles')
+            .select('display_name, child_nickname, age')
+            .eq('id', childId)
+            .limit(1);
+      } on PostgrestException catch (e) {
+        if (e.code != '42703') rethrow;
+        profileRows = await client
+            .from('profiles')
+            .select('display_name, age')
+            .eq('id', childId)
+            .limit(1);
+      }
       final progressRows = await client
           .from('kids_progress_cloud')
           .select()
@@ -293,7 +309,12 @@ class MemorizationKidsCloudSyncService {
           childUserId: childId,
           displayName: profileRows.isEmpty
               ? 'طفل تالية'
-              : profileRows.first['display_name'] as String? ?? 'طفل تالية',
+              : profileRows.first['child_nickname'] as String? ??
+                    profileRows.first['display_name'] as String? ??
+                    'طفل تالية',
+          childAge: profileRows.isEmpty
+              ? null
+              : (profileRows.first['age'] as num?)?.toInt(),
           progress: _mappers.progressFromCloud(
             progressRows.isEmpty ? null : progressRows.first,
           ),
@@ -313,7 +334,9 @@ class MemorizationKidsCloudSyncService {
     try {
       final trimmed = title.trim();
       if (trimmed.isEmpty) {
-        return const Left(CacheFailure('اكتب اسم المكافأة أولاً'));
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardTitleRequired),
+        );
       }
       final clientResult = _supabaseOrFailure;
       final clientFailure = clientResult.fold(
@@ -327,7 +350,9 @@ class MemorizationKidsCloudSyncService {
 
       final user = client.auth.currentUser;
       if (user == null) {
-        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
       }
       await client.rpc(
         'create_parent_reward',
@@ -342,6 +367,77 @@ class MemorizationKidsCloudSyncService {
     } catch (e) {
       return Left(NetworkFailure.from(e));
     }
+  }
+
+  /// Guardian-side correction of a linked child's name and age. The server
+  /// (`update_linked_child_identity`) re-checks the active link and limits.
+  Future<Either<Failure, void>> updateLinkedChildIdentity({
+    required String childUserId,
+    required String nickname,
+    required int age,
+  }) async {
+    final name = ChildIdentityPolicy.normalizeNickname(nickname);
+    if (name == null) {
+      return const Left(CacheFailure(CubitMessageCodes.childNicknameInvalid));
+    }
+    if (!ChildIdentityPolicy.isValidAge(age)) {
+      return const Left(CacheFailure(CubitMessageCodes.childAgeInvalid));
+    }
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      await client.rpc(
+        'update_linked_child_identity',
+        params: {
+          'p_child_user_id': childUserId,
+          'p_nickname': name,
+          'p_age': age,
+        },
+      );
+      return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(childIdentityUpdateFailure(e));
+    } catch (e) {
+      return Left(Failure.fromCloud(e));
+    }
+  }
+
+  /// Maps `update_linked_child_identity` exceptions
+  /// (supabase/migrations/20260929195346_guardian_child_identity.sql) to
+  /// message codes; a server without the function yet reports the edit as
+  /// unavailable instead of a generic error.
+  @visibleForTesting
+  static Failure childIdentityUpdateFailure(PostgrestException error) {
+    final message = error.message.toLowerCase();
+    final code = switch (message) {
+      _
+          when error.code == 'PGRST202' ||
+              message.contains('update_linked_child_identity') ||
+              message.contains('could not find the function') =>
+        CubitMessageCodes.childIdentityUpdateUnavailable,
+      _ when message.contains('no active guardian link') =>
+        CubitMessageCodes.guardianChildNotLinked,
+      _ when message.contains('invalid child nickname') =>
+        CubitMessageCodes.childNicknameInvalid,
+      _ when message.contains('invalid child age') =>
+        CubitMessageCodes.childAgeInvalid,
+      _ when message.contains('not authenticated') =>
+        CubitMessageCodes.guardianSignInRequired,
+      _ => null,
+    };
+    return code == null ? ServerFailure.from(error) : ServerFailure(code);
   }
 
   Future<Set<String>> _pushKidsSessionLogs(
@@ -433,7 +529,9 @@ class MemorizationKidsCloudSyncService {
         () => throw StateError('unreachable'),
       );
       if (client.auth.currentUser == null) {
-        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
       }
 
       final response = await client.rpc(

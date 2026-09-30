@@ -41,6 +41,15 @@ void main() {
 
           // An honest verdict is required — no silent pass.
           expect(cubit.manualRecallCalls, 0);
+          // N5: grades stay locked until the ayah is revealed to compare.
+          expect(find.textContaining('ٱلْحَمْدُ'), findsNothing);
+          await tester.tap(find.byKey(const ValueKey('v2-self-grade-forgot')));
+          await tester.pumpAndSettle();
+          expect(cubit.manualRecallCalls, 0);
+
+          await tester.tap(find.byKey(const ValueKey('v2-self-grade-reveal')));
+          await tester.pumpAndSettle();
+          expect(find.textContaining('ٱلْحَمْدُ'), findsOneWidget);
           await tester.tap(find.byKey(const ValueKey('v2-self-grade-forgot')));
           await tester.pumpAndSettle();
 
@@ -103,10 +112,46 @@ void main() {
         );
         expect(manualAction, findsOneWidget);
         await tester.tap(manualAction);
-        await tester.pump();
-        expect(cubit.manualRecallCalls, 1);
+        await tester.pumpAndSettle();
+        // N5: no silent pass — the learner compares, then grades.
+        expect(cubit.manualBlockGrades, isEmpty);
+        await tester.tap(find.byKey(const ValueKey('v2-self-grade-reveal')));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('ٱلْحَمْدُ'), findsOneWidget);
+        expect(find.textContaining('ٱلرَّحْمَـٰنِ'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('v2-self-grade-mastered')));
+        await tester.pumpAndSettle();
+        expect(cubit.manualBlockGrades, [(V2SelfGrade.mastered, null)]);
       },
     );
+
+    testWidgets('a stumble in block review asks which ayah (N5)', (
+      tester,
+    ) async {
+      final cubit = _FakeMemorizationSessionCubit(
+        _activeState(phase: V2SessionPhase.blockReview),
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          cubit: cubit,
+          child: V2BlockReviewPage(state: cubit.state as MSActive),
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('v2-manual-block-review')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('v2-self-grade-reveal')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('v2-self-grade-forgot')));
+      await tester.pumpAndSettle();
+
+      expect(cubit.manualBlockGrades, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('v2-stumbled-ayah-2')));
+      await tester.pumpAndSettle();
+
+      expect(cubit.manualBlockGrades, [(V2SelfGrade.forgot, 2)]);
+    });
   });
 }
 
@@ -166,6 +211,16 @@ class _FakeMemorizationSessionCubit extends Cubit<MemorizationSessionState>
   ]) async {
     manualRecallCalls += 1;
     lastSelfGrade = grade;
+  }
+
+  final manualBlockGrades = <(V2SelfGrade, int?)>[];
+
+  @override
+  Future<void> submitManualBlockReview({
+    V2SelfGrade grade = V2SelfGrade.mastered,
+    int? stumbledAyahNumber,
+  }) async {
+    manualBlockGrades.add((grade, stumbledAyahNumber));
   }
 
   @override

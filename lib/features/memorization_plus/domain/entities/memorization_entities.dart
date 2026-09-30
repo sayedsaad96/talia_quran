@@ -1,4 +1,5 @@
 export 'ayah_review_record.dart';
+export 'child_identity_policy.dart';
 export 'custom_memorization_plan.dart';
 export 'daily_plan.dart';
 export 'family_dashboard.dart';

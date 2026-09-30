@@ -19,6 +19,24 @@ abstract final class CubitMessageCodes {
   /// after the code: '@kids/daily_limit|4'.
   static const kidsDailySessionLimitPrefix = '@kids/daily_limit|';
 
+  // Guardian linking and parent rewards (family dashboard, child linking).
+  static const guardianSignInRequired = '@guardian/sign_in_required';
+  static const guardianCloudUnavailable = '@guardian/cloud_unavailable';
+  static const guardianOnlyForChildren = '@guardian/only_for_children';
+  static const guardianAlreadyLinked = '@guardian/already_linked';
+  static const guardianParentModeAdultsOnly =
+      '@guardian/parent_mode_adults_only';
+  static const guardianLinkCodeInvalid = '@guardian/link_code_invalid';
+  static const guardianChildHasGuardian = '@guardian/child_has_guardian';
+  static const guardianSameAccount = '@guardian/same_account';
+  static const parentRewardTitleRequired = '@guardian/reward_title_required';
+  static const parentRewardLimitReached = '@guardian/reward_limit_reached';
+  static const childNicknameInvalid = '@guardian/child_nickname_invalid';
+  static const childAgeInvalid = '@guardian/child_age_invalid';
+  static const guardianChildNotLinked = '@guardian/child_not_linked';
+  static const childIdentityUpdateUnavailable =
+      '@guardian/child_identity_update_unavailable';
+
   // Generic data-layer failures (emitted by core Failure types).
   static const errorCache = '@error/cache';
   static const errorNetwork = '@error/network';

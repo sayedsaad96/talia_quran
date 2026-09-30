@@ -508,18 +508,31 @@ void main() {
 
       expect(duaData.tier, equals('guidance'));
       expect(duaData.source, equals('دعاء عام مقترح بعد الختم'));
-      expect(duaData.reviewStatus, 'pendingReview');
-      expect(duaData.reviewer, isNull);
-      expect(duaData.sourceLocator, isNull);
+      expect(duaData.reviewStatus, 'approved');
+      expect(duaData.reviewer, isNotNull);
+      expect(duaData.sourceLocator, isNotNull);
       expect(duaData.sourceNote, isNotEmpty);
       expect(duaData.arabicText, contains('اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ'));
 
-      // Unreviewed gendered templates never interpolate an arbitrary name.
-      final insert = duaData.getDedicationInsert(
-        DedicationCondition.deceased,
-        'جدتي الغالية',
+      // Approved (masculine) templates interpolate a male recipient's name;
+      // a female recipient gets no insert until a reviewed feminine text
+      // exists — never a masculine dua.
+      expect(
+        duaData.getDedicationInsert(
+          DedicationCondition.deceased,
+          DedicationGender.male,
+          'جدي الغالي',
+        ),
+        contains('جدي الغالي'),
       );
-      expect(insert, isEmpty);
+      expect(
+        duaData.getDedicationInsert(
+          DedicationCondition.deceased,
+          DedicationGender.female,
+          'جدتي الغالية',
+        ),
+        isEmpty,
+      );
       await duaCubit.close();
 
       // ───────────────────────────────────────────────────────────────────────

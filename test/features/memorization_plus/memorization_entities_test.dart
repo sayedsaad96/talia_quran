@@ -111,7 +111,8 @@ void main() {
 
       expect(restored.guidanceAudioEnabled, isNull);
       expect(restored.sessionGoalMinutes, isNull);
-      expect(restored.startingSurahId, 114);
+      // The kids journey opens with Al-Fatiha (K27).
+      expect(restored.startingSurahId, 1);
       expect(restored.kidsHifzV2Enabled, isFalse);
     });
     test('kids session log stores learning metrics without speech content', () {

@@ -78,7 +78,6 @@ class SettingsHubBody extends StatelessWidget {
           title: l10n.theme,
         ),
         ThemeSettingTile(isDark: isDark),
-        const PureBlackSettingTile(),
       ],
     );
   }
@@ -190,9 +189,9 @@ class SettingsHubBody extends StatelessWidget {
       subtitle: subtitle,
       isDark: isDark,
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => page),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => page));
       },
     );
   }

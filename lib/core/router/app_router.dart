@@ -29,6 +29,7 @@ import '../../features/khatmah/presentation/pages/khatm_dua_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_completion_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_history_page.dart';
+import '../../features/khatmah/presentation/khatmah_setup_prefill.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/memorization_plus/presentation/pages/listening_review_page.dart';
@@ -612,7 +613,11 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahSetup,
-        builder: (context, state) => const KhatmahSetupPage(),
+        builder: (context, state) => KhatmahSetupPage(
+          prefill: state.extra is KhatmahSetupPrefill
+              ? state.extra as KhatmahSetupPrefill
+              : null,
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -770,9 +775,14 @@ abstract class AppRouter {
           final pageNumber = int.tryParse(
             state.uri.queryParameters['pageNumber'] ?? '',
           );
+          final validSurahId = _isValidSurahId(surahId) ? surahId : null;
           return KidsQuranReaderPage(
-            surahId: _isValidSurahId(surahId) ? surahId : null,
+            surahId: validSurahId,
             pageNumber: pageNumber,
+            // The reader validates the ayah against the Mushaf itself.
+            ayahNumber: validSurahId == null
+                ? null
+                : int.tryParse(state.uri.queryParameters['ayahNumber'] ?? ''),
           );
         },
       ),
@@ -843,11 +853,7 @@ abstract class AppRouter {
         path: AppRoutes.childDetail,
         redirect: (context, state) =>
             MemorizationRouteGuard.parentDashboardRedirect(),
-        builder: (context, state) {
-          final child = state.extra as FamilyChildEntry?;
-          if (child == null) return const FamilyDashboardPage();
-          return ChildDetailPage(child: child);
-        },
+        builder: (context, state) => ChildDetailPage.forRoute(state.extra),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

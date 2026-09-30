@@ -17,23 +17,25 @@ void main() {
   });
 
   group('submitManualRecall', () {
-    test('marks the current ayah passed and advances like an automatic pass',
-        () {
-      var state = _initialState(blockReviewRequired: false);
-      state = engine.startLearning(state);
-      state = engine.startMemorizing(state);
-      state = engine.startReciting(state);
+    test(
+      'marks the current ayah passed and advances like an automatic pass',
+      () {
+        var state = _initialState(blockReviewRequired: false);
+        state = engine.startLearning(state);
+        state = engine.startMemorizing(state);
+        state = engine.startReciting(state);
 
-      state = engine.submitManualRecall(state);
+        state = engine.submitManualRecall(state);
 
-      expect(state.passedAyahNumbers, contains(1));
-      expect(state.phase, V2SessionPhase.learning);
-      expect(
-        state.failureTracker.failureCountFor(1, 1),
-        0,
-        reason: 'a self-graded pass must never be recorded as a failure',
-      );
-    });
+        expect(state.passedAyahNumbers, contains(1));
+        expect(state.phase, V2SessionPhase.learning);
+        expect(
+          state.failureTracker.failureCountFor(1, 1),
+          0,
+          reason: 'a self-graded pass must never be recorded as a failure',
+        );
+      },
+    );
 
     test('completes the session when the last ayah passes manually', () {
       var state = _initialState(blockReviewRequired: true);
@@ -116,6 +118,39 @@ void main() {
     test('is ignored outside the block review phase', () {
       final created = _initialState();
       expect(engine.submitManualBlockReview(created), same(created));
+    });
+    // N5: a self-graded block review used to be a pass no matter what.
+    test('a stumble routes that ayah to remediation, never completion', () {
+      var state = _stateWithAllAyahsPassed(blockReviewRequired: true);
+      state = engine.startBlockReview(state);
+
+      state = engine.submitManualBlockReview(
+        state,
+        grade: V2SelfGrade.forgot,
+        stumbledAyahNumber: 2,
+      );
+
+      expect(state.phase, V2SessionPhase.remediation);
+      expect(state.currentAyah.numberInSurah, 2);
+      expect(state.failureTracker.failureCountFor(1, 2), 1);
+      expect(state.lastRecitationResult?.passed, isFalse);
+      expect(
+        state.lastRecitationResult?.assessmentMethod,
+        V2AssessmentMethod.manual,
+      );
+    });
+
+    test('a hesitation is a stumble too; the ayah defaults to the first', () {
+      var state = _stateWithAllAyahsPassed(blockReviewRequired: true);
+      state = engine.startBlockReview(state);
+
+      state = engine.submitManualBlockReview(
+        state,
+        grade: V2SelfGrade.hesitated,
+      );
+
+      expect(state.phase, V2SessionPhase.remediation);
+      expect(state.currentAyah.numberInSurah, 1);
     });
   });
 }

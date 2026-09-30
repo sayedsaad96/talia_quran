@@ -12,7 +12,12 @@ import '../../cubits/memorization_session_cubit.dart';
 import 'v2_session_widgets.dart';
 
 /// V2 Phase 2: Memorizing — the user trains from memory.
-/// Hints (masked words / first word / full ayah) are only available here.
+///
+/// The ayah starts hidden. Hints escalate: first word → first letter of
+/// every word → full ayah. Every hint reaches the tracker before it shows,
+/// so a prompted recall is never graded as a hint-free one. First letters
+/// share the first-word tier (a partial prompt, graded average); the enum
+/// stays unchanged because its index is persisted in checkpoints/evidence.
 class V2MemorizingPage extends StatefulWidget {
   const V2MemorizingPage({super.key, required this.state});
 
@@ -23,25 +28,27 @@ class V2MemorizingPage extends StatefulWidget {
 }
 
 class _V2MemorizingPageState extends State<V2MemorizingPage> {
-  /// View-local masked-words reveal — resets when the ayah changes.
-  bool _maskedRevealed = false;
-  int _maskedAyahNumber = -1;
+  /// View-local choice of partial prompt — resets when the ayah changes.
+  bool _showFirstLetters = false;
+  int _promptAyahNumber = -1;
+
+  void _useHint(V2HintLevel level, {bool firstLetters = false}) {
+    unawaited(context.read<MemorizationSessionCubit>().useHint(level));
+    if (firstLetters) setState(() => _showFirstLetters = true);
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
     final session = state.sessionState;
     final ayahNumber = session.currentAyah.numberInSurah;
-    if (_maskedAyahNumber != ayahNumber) {
-      _maskedAyahNumber = ayahNumber;
-      _maskedRevealed = false;
+    if (_promptAyahNumber != ayahNumber) {
+      _promptAyahNumber = ayahNumber;
+      _showFirstLetters = false;
     }
-    final hintLevel = session.hintTracker.levelFor(
-      session.surahId,
-      ayahNumber,
-    );
-    final showMaskedCard =
-        hintLevel == V2HintLevel.none || hintLevel == V2HintLevel.firstWord;
+    final hintLevel = session.hintTracker.levelFor(session.surahId, ayahNumber);
+    final showFirstLetters =
+        _showFirstLetters && hintLevel != V2HintLevel.fullAyah;
 
     return V2PhaseScaffold(
       session: session,
@@ -53,27 +60,14 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().advanceToReciting(),
       children: [
-        if (showMaskedCard) ...[
+        if (showFirstLetters)
           V2MaskedWordsCard(
             text: session.currentAyah.text,
             surahId: session.surahId,
             ayahNumber: ayahNumber,
-            revealed: _maskedRevealed,
-            onToggle: () {
-              // Reveal = seeing the full ayah, identical to the "show
-              // ayah" hint button. It must reach the hint tracker so the
-              // eventual pass is not graded as a hint-free recall.
-              if (!_maskedRevealed) {
-                unawaited(
-                  context
-                      .read<MemorizationSessionCubit>()
-                      .useHint(V2HintLevel.fullAyah),
-                );
-              }
-              setState(() => _maskedRevealed = !_maskedRevealed);
-            },
-          ),
-        ] else
+            revealed: false,
+          )
+        else
           V2HintCard(session: session, hintLevel: hintLevel),
         const SizedBox(height: AppSpacing.md),
         V2AudioAction(
@@ -88,24 +82,24 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
         Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.center,
           children: [
             V2HintButton(
               label: context.l10n.v2FirstWordHint,
               icon: Icons.short_text_rounded,
-              onPressed: () => unawaited(
-                context.read<MemorizationSessionCubit>().useHint(
-                  V2HintLevel.firstWord,
-                ),
-              ),
+              onPressed: () => _useHint(V2HintLevel.firstWord),
+            ),
+            V2HintButton(
+              key: const Key('v2-first-letters-hint'),
+              label: context.l10n.v2FirstLettersHint,
+              icon: Icons.text_fields_rounded,
+              onPressed: () =>
+                  _useHint(V2HintLevel.firstWord, firstLetters: true),
             ),
             V2HintButton(
               label: context.l10n.v2ShowAyahHint,
               icon: Icons.visibility_rounded,
-              onPressed: () => unawaited(
-                context.read<MemorizationSessionCubit>().useHint(
-                  V2HintLevel.fullAyah,
-                ),
-              ),
+              onPressed: () => _useHint(V2HintLevel.fullAyah),
             ),
           ],
         ),

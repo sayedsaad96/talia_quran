@@ -36,12 +36,20 @@ class ZikrAudioState {
       );
 }
 
+/// The read side of the audio service, so widgets can follow playback state
+/// without depending on the platform player.
+abstract interface class ZikrAudioStateSource {
+  ZikrAudioState get state;
+  void addListener(void Function(ZikrAudioState) listener);
+  void removeListener(void Function(ZikrAudioState) listener);
+}
+
 /// Recites a single zikr from its optional [Zikr.audioUrl] asset/URL.
 ///
 /// The player only ever plays a fully-qualified source shipped with the
 /// approved dataset — it never synthesizes speech for religious text. If a
 /// record has no audio the service stays idle and the UI hides the control.
-class ZikrAudioService {
+class ZikrAudioService implements ZikrAudioStateSource {
   ZikrAudioService({AudioLifecycleManager? lifecycleManager})
       : _lifecycle = lifecycleManager;
 
@@ -51,12 +59,15 @@ class ZikrAudioService {
   ZikrAudioState _state = const ZikrAudioState();
   final List<void Function(ZikrAudioState)> _listeners = [];
 
+  @override
   ZikrAudioState get state => _state;
 
+  @override
   void addListener(void Function(ZikrAudioState) listener) {
     _listeners.add(listener);
   }
 
+  @override
   void removeListener(void Function(ZikrAudioState) listener) {
     _listeners.remove(listener);
   }

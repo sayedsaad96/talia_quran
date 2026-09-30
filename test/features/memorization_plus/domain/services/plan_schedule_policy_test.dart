@@ -137,4 +137,55 @@ void main() {
       );
     });
   });
+
+  // N3: the session opened from today's plan used the configured block size,
+  // so a plan shrunk to 2 ayahs (session length) still opened a 3-ayah block.
+  group('fitToDailyPlan (N3)', () {
+    DailyPlan today(List<int> ayahs, {List<int> completed = const []}) =>
+        DailyPlan(
+          generatedAt: DateTime.utc(2026, 9, 29),
+          surahId: 114,
+          newAyahs: [
+            for (final a in ayahs)
+              DailyPlanAyah(
+                surahId: 114,
+                ayahNumber: a,
+                ayahText: 't',
+                record: null,
+              ),
+          ],
+          nearRevision: const [],
+          farRevision: const [],
+          completedAyahNums: completed,
+        );
+
+    int fit(int block, DailyPlan? plan, int startAyah) =>
+        PlanSchedulePolicy.fitToDailyPlan(
+          block,
+          plan,
+          surahId: 114,
+          startAyah: startAyah,
+        );
+
+    test('never longer than the new ayahs left in the plan', () {
+      expect(fit(3, today([1, 2]), 1), 2);
+    });
+
+    test('counts only unfinished ayahs from the start ayah on', () {
+      expect(fit(5, today([1, 2, 3], completed: [1]), 2), 2);
+    });
+
+    test('a gap in the plan ends the block', () {
+      expect(fit(5, today([1, 2, 5]), 1), 2);
+    });
+
+    test('keeps the block when the plan has more ayahs', () {
+      expect(fit(3, today([1, 2, 3, 4, 5]), 1), 3);
+    });
+
+    test('a start ayah outside the plan keeps the block', () {
+      expect(fit(3, today([1, 2]), 4), 3);
+      expect(fit(3, null, 1), 3);
+    });
+  });
 }

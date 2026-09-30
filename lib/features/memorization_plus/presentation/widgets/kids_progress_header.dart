@@ -188,8 +188,14 @@ class _ProgressHeaderBody extends StatelessWidget {
   final int starsEarned;
   final int streakDays;
 
+  /// K34: a one-day "streak" is not an achievement yet and only adds
+  /// pressure; the badge appears once the child comes back a second day.
+  static const int _minStreakDays = 2;
+
   @override
   Widget build(BuildContext context) {
+    // K34: never show a counter that reads zero.
+    final showStars = starsEarned > 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -199,11 +205,13 @@ class _ProgressHeaderBody extends StatelessWidget {
             percentage: levelPercentage,
             progressValue: levelProgressValue,
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: _StarCounter(count: starsEarned),
-          ),
+          if (showStars) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _StarCounter(count: starsEarned),
+            ),
+          ],
         ] else
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -215,13 +223,15 @@ class _ProgressHeaderBody extends StatelessWidget {
                   progressValue: levelProgressValue,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              _StarCounter(count: starsEarned),
+              if (showStars) ...[
+                const SizedBox(width: AppSpacing.md),
+                _StarCounter(count: starsEarned),
+              ],
             ],
           ),
         // K12: the daily-consistency engine was invisible to kids —
         // surface the streak right under the level/XP section.
-        if (streakDays > 0) ...[
+        if (streakDays >= _minStreakDays) ...[
           const SizedBox(height: AppSpacing.sm),
           _StreakBadge(days: streakDays),
         ],
@@ -287,9 +297,7 @@ class _StreakBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: KidsTheme.goldStar.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(
-          color: KidsTheme.goldStar.withValues(alpha: 0.45),
-        ),
+        border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.45)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

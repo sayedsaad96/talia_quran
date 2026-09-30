@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
@@ -55,7 +56,10 @@ class _SettingsView extends StatelessWidget {
       child: BlocConsumer<SettingsCubit, SettingsState>(
         listener: (context, state) {
           if (state.errorMessage != null) {
-            _showSettingsError(context, state.errorMessage!);
+            _showSettingsError(
+              context,
+              context.localizedCubitMessage(state.errorMessage!),
+            );
             context.read<SettingsCubit>().clearTransientMessages();
           } else if (state.showMemorizationPathResetSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(

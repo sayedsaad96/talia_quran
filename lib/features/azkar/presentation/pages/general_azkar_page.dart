@@ -14,9 +14,19 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
+import '../services/zikr_copy_text.dart';
 import '../widgets/font_scale_selector_sheet.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
+
+String _normalizedSubcategory(String subcategory) =>
+    subcategory == 'أدعية قرآنية' ? 'أدعية من القرآن' : subcategory;
+
+/// The share payload for a library card: a dua card on the duas page, an azkar
+/// card on the general azkar page.
+@visibleForTesting
+SocialShareData libraryShareData(Zikr zikr, AzkarCategory category) =>
+    SocialShareData.dua(zikr: zikr, isDua: category == AzkarCategory.duas);
 
 class GeneralAzkarPage extends StatelessWidget {
   const GeneralAzkarPage({
@@ -32,19 +42,13 @@ class GeneralAzkarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<AzkarCubit>()..load(category),
-      child: _GeneralAzkarView(
-        category: category,
-        prefsStore: prefsStore,
-      ),
+      child: _GeneralAzkarView(category: category, prefsStore: prefsStore),
     );
   }
 }
 
 class _GeneralAzkarView extends StatefulWidget {
-  const _GeneralAzkarView({
-    required this.category,
-    this.prefsStore,
-  });
+  const _GeneralAzkarView({required this.category, this.prefsStore});
 
   final AzkarCategory category;
   final AzkarPreferencesStore? prefsStore;
@@ -116,15 +120,14 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       );
     }
 
-    // Extract unique subcategories and normalize on-the-fly
-    final uniqueSubcategories = state.sessions
-        .map((s) {
-          final sub = s.zikr.subcategory;
-          return sub == 'أدعية قرآنية' ? 'أدعية من القرآن' : sub;
-        })
-        .where((sub) => sub.isNotEmpty)
-        .toSet()
-        .toList();
+    // Unique subcategories in dataset order, with how many records each holds.
+    final subcategoryCounts = <String, int>{};
+    for (final session in state.sessions) {
+      final sub = _normalizedSubcategory(session.zikr.subcategory);
+      if (sub.isEmpty) continue;
+      subcategoryCounts.update(sub, (count) => count + 1, ifAbsent: () => 1);
+    }
+    final uniqueSubcategories = subcategoryCounts.keys.toList();
 
     final tabs = ['', _favoritesTabKey, ...uniqueSubcategories];
 
@@ -137,8 +140,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         if (!_prefsStore.isFavorite(s.zikr.id)) return false;
       } else if (_selectedSubcategory.isNotEmpty) {
         final rawSub = s.zikr.subcategory;
-        final mappedSub =
-            rawSub == 'أدعية قرآنية' ? 'أدعية من القرآن' : rawSub;
+        final mappedSub = _normalizedSubcategory(rawSub);
         if (mappedSub != _selectedSubcategory &&
             rawSub != _selectedSubcategory) {
           return false;
@@ -156,8 +158,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       return textNorm.contains(normalizedQuery) ||
           refNorm.contains(normalizedQuery) ||
           subNorm.contains(normalizedQuery) ||
-          (translitNorm.isNotEmpty &&
-              translitNorm.contains(normalizedQuery)) ||
+          (translitNorm.isNotEmpty && translitNorm.contains(normalizedQuery)) ||
           (translationNorm.isNotEmpty &&
               translationNorm.contains(normalizedQuery));
     }).toList();
@@ -166,7 +167,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       slivers: [
         _buildAppBar(context, isDark),
         SliverToBoxAdapter(child: _buildSearchBar(context, isDark)),
-        SliverToBoxAdapter(child: _buildCategoriesFilter(tabs, isDark)),
+        SliverToBoxAdapter(
+          child: _buildCategoriesFilter(tabs, subcategoryCounts, isDark),
+        ),
         if (filteredSessions.isEmpty)
           _buildEmptyResults(isFavoritesTab, isDark)
         else
@@ -184,6 +187,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
                   child: _ZikrCard(
                     zikr: session.zikr,
+                    category: widget.category,
                     isDark: isDark,
                     prefsStore: _prefsStore,
                   ),
@@ -229,33 +233,32 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               : null,
           filled: true,
           fillColor: context.tokens.card,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            borderSide: BorderSide(
-              color: context.tokens.divider,
-            ),
+            borderSide: BorderSide(color: context.tokens.divider),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            borderSide: BorderSide(
-              color: context.tokens.divider,
-            ),
+            borderSide: BorderSide(color: context.tokens.divider),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCategoriesFilter(List<String> tabs, bool isDark) {
+  Widget _buildCategoriesFilter(
+    List<String> tabs,
+    Map<String, int> counts,
+    bool isDark,
+  ) {
     final primary = context.tokens.accent;
     return SizedBox(
       height: 56,
@@ -280,7 +283,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  selected ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                  selected
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
                   size: 16,
                   color: selected
                       ? Colors.white
@@ -291,7 +296,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               ],
             );
           } else {
-            labelWidget = Text(tab);
+            labelWidget = Text('$tab (${counts[tab] ?? 0})');
           }
 
           return ChoiceChip(
@@ -300,16 +305,12 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             showCheckmark: false,
             onSelected: (_) => setState(() => _selectedSubcategory = tab),
             selectedColor: primary,
-            backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+            backgroundColor: isDark ? context.tokens.card : Colors.white,
             side: BorderSide(
-              color: selected
-                  ? primary
-                  : context.tokens.divider,
+              color: selected ? primary : context.tokens.divider,
             ),
             labelStyle: AppTypography.labelMedium.copyWith(
-              color: selected
-                  ? Colors.white
-                  : context.tokens.textSecondary,
+              color: selected ? Colors.white : context.tokens.textSecondary,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             ),
           );
@@ -369,15 +370,17 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 size: 56,
                 color: context.tokens.textHint,
               ),
-              const SizedBox(height: 16),                Text(
-                  context.l10n.azkarSearchNoResultsTitle,
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.azkarSearchNoResultsTitle,
                 style: AppTypography.titleMedium.copyWith(
                   color: context.tokens.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),                Text(
-                  context.l10n.azkarSearchNoResultsDesc,
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.azkarSearchNoResultsDesc,
                 style: AppTypography.bodySmall.copyWith(
                   color: context.tokens.textSecondary,
                 ),
@@ -491,11 +494,13 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
 class _ZikrCard extends StatelessWidget {
   const _ZikrCard({
     required this.zikr,
+    required this.category,
     required this.isDark,
     required this.prefsStore,
   });
 
   final Zikr zikr;
+  final AzkarCategory category;
   final bool isDark;
   final AzkarPreferencesStore prefsStore;
 
@@ -574,21 +579,21 @@ class _ZikrCard extends StatelessWidget {
                       const Spacer(),
                     ValueListenableBuilder<Set<String>>(
                       valueListenable: prefsStore.favoritesListenable,
-                      builder: (context, favorites, _) {
-                        final isFav = favorites.contains(zikr.id);
+                      builder: (context, _, _) {
+                        final isFav = prefsStore.isFavorite(zikr.id);
                         return IconButton(
                           key: ValueKey('bookmark-${zikr.id}'),
                           tooltip: isFav
-                              ? 'إزالة من المفضلة'
-                              : 'إضافة إلى المفضلة',
+                              ? context.l10n.azkarFavoriteRemove
+                              : context.l10n.azkarFavoriteAdd,
                           icon: Icon(
                             isFav
                                 ? Icons.bookmark_rounded
                                 : Icons.bookmark_border_rounded,
                             color: isFav
                                 ? (isDark
-                                    ? AppColors.goldLight
-                                    : AppColors.goldDark)
+                                      ? AppColors.goldLight
+                                      : AppColors.goldDark)
                                 : textSecondary.withValues(alpha: 0.7),
                             size: 20,
                           ),
@@ -608,7 +613,14 @@ class _ZikrCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        Clipboard.setData(ClipboardData(text: zikr.text));
+                        Clipboard.setData(
+                          ClipboardData(
+                            text: zikrCopyText(
+                              zikr,
+                              footer: context.l10n.sharedFromTalia,
+                            ),
+                          ),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(context.l10n.zikrCopied)),
                         );
@@ -619,10 +631,7 @@ class _ZikrCard extends StatelessWidget {
                       icon: Icon(Icons.share_rounded, color: primary, size: 20),
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        final data = SocialShareData.dua(
-                          zikr: zikr,
-                          isDua: false,
-                        );
+                        final data = libraryShareData(zikr, category);
                         SocialShareSheet.show(context, data);
                       },
                     ),

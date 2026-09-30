@@ -111,7 +111,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
               Text(
                 context.l10n.surahAyahFormat(
                   widget.surahName,
-                  widget.ayah.numberInSurah,
+                  context.numText(widget.ayah.numberInSurah),
                 ),
                 style: AppTypography.titleMedium.copyWith(
                   color: primary,

@@ -21,11 +21,23 @@ class _InfoChip {
     required this.value,
     required this.color,
     required this.isDark,
+    this.wide = false,
   });
   final String label;
   final String value;
   final Color color;
   final bool isDark;
+
+  /// Takes a full row; for long values such as a surah name.
+  final bool wide;
+}
+
+/// One decimal for small values so early progress is visible (0.3%),
+/// whole numbers once progress is meaningful.
+String _formatPercent(double fraction) {
+  final pct = (fraction.clamp(0.0, 1.0)) * 100;
+  if (pct == 0 || pct >= 10) return '${pct.toStringAsFixed(0)}%';
+  return '${pct.toStringAsFixed(1)}%';
 }
 
 class _DetailedProgressCard extends StatelessWidget {
@@ -61,110 +73,162 @@ class _DetailedProgressCard extends StatelessWidget {
         border: Border.all(color: border, width: 0.5),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // Circular progress
-              CircularPercentIndicator(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final ring = CircularPercentIndicator(
                 radius: 44,
                 lineWidth: 6,
                 percent: percentage.clamp(0.0, 1.0),
-                center: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, color: iconColor, size: 20),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${(percentage * 100).toStringAsFixed(1)}%',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: iconColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                progressColor: iconColor,
-                backgroundColor: iconColor.withValues(alpha: 0.1),
-                circularStrokeCap: CircularStrokeCap.round,
-                animation: true,
-                animationDuration: 600,
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              // Details column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.headlineSmall.copyWith(
-                        color: textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    ...rows.map(
-                      (row) => Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: _ProgressBarRow(row: row, isDark: isDark),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // Extra info chips
-          if (extraInfo != null && extraInfo!.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Divider(color: border, height: 1),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: extraInfo!.map((chip) {
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.sm,
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: chip.color.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                center: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: chip.color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
+                        Icon(icon, color: iconColor, size: 20),
+                        const SizedBox(height: 2),
                         Text(
-                          chip.label,
+                          _formatPercent(percentage),
                           style: AppTypography.labelSmall.copyWith(
-                            color: context.tokens.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          chip.value,
-                          style: AppTypography.labelMedium.copyWith(
-                            color: chip.color,
+                            color: iconColor,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
                   ),
+                ),
+                progressColor: iconColor,
+                backgroundColor: iconColor.withValues(alpha: 0.1),
+                circularStrokeCap: CircularStrokeCap.round,
+                animation: true,
+                animationDuration: 600,
+              );
+              final titleText = Text(
+                title,
+                style: AppTypography.headlineSmall.copyWith(color: textPrimary),
+              );
+              final bars = [
+                for (final row in rows)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: _ProgressBarRow(row: row, isDark: isDark),
+                  ),
+              ];
+
+              // Wide cards keep the ring beside the bars; on phones the
+              // bars get the full width so counts never collide.
+              if (constraints.maxWidth >= 340) {
+                return Row(
+                  children: [
+                    ring,
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleText,
+                          const SizedBox(height: AppSpacing.sm),
+                          ...bars,
+                        ],
+                      ),
+                    ),
+                  ],
                 );
-              }).toList(),
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ring,
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: titleText),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ...bars,
+                ],
+              );
+            },
+          ),
+          // Extra info chips: a 3-column grid that wraps, so any number of
+          // chips fits at every width and text scale.
+          if (extraInfo != null && extraInfo!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Divider(color: border, height: 1),
+            const SizedBox(height: AppSpacing.md),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const spacing = AppSpacing.sm;
+                final columns = constraints.maxWidth < 280 ? 2 : 3;
+                final cell =
+                    (constraints.maxWidth - spacing * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final chip in extraInfo!)
+                      SizedBox(
+                        width: chip.wide ? constraints.maxWidth : cell,
+                        child: _InfoChipTile(chip: chip),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _InfoChipTile extends StatelessWidget {
+  const _InfoChipTile({required this.chip});
+  final _InfoChip chip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: '${chip.label}: ${chip.value}',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: chip.color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              chip.value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.titleSmall.copyWith(
+                color: chip.color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              chip.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.labelSmall.copyWith(
+                color: context.tokens.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -195,11 +259,15 @@ class _ProgressBarRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            Text(
-              row.label,
-              style: AppTypography.labelSmall.copyWith(color: hintColor),
+            Expanded(
+              child: Text(
+                row.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelSmall.copyWith(color: hintColor),
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: AppSpacing.xs),
             Text(
               context.l10n.countOfTotal(row.current, row.total),
               style: AppTypography.labelSmall.copyWith(

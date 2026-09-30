@@ -101,6 +101,12 @@ class PrayerCompanionController {
         route: LaunchDestination.routeForResponse(event),
       );
     }
+    // Preparation is informational. Its notification may show platform action
+    // buttons, but none should record a prayer before its scheduled start.
+    if (intent.kind == PrayerCompanionNotificationKind.preparation ||
+        DateTime.now().isBefore(intent.occurrence.scheduledAt)) {
+      return const PrayerCompanionResponseOutcome(route: AppRoutes.home);
+    }
     await applyInApp(intent.occurrence, command);
     return const PrayerCompanionResponseOutcome(route: AppRoutes.home);
   }

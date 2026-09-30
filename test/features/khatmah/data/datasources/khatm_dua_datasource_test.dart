@@ -24,18 +24,6 @@ void main() {
 ''';
 
   group('KhatmDuaData', () {
-    test('unreviewed legacy templates cannot infer gender from a name', () {
-      final data = KhatmDuaData.fromJson({
-        'arabicText': 'text',
-        'source': 'unverified claim',
-        'sourceNote': 'note',
-        'tier': 'guidance',
-        'dedicationInserts': {'alive': 'لِعَبْدِكَ {name}'},
-      });
-      for (final condition in DedicationCondition.values) {
-        expect(data.getDedicationInsert(condition, 'فاطمة'), isEmpty);
-      }
-    });
     test('fromJson parses all fields correctly', () {
       final json = {
         'arabicText': 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ...',
@@ -60,25 +48,101 @@ void main() {
       expect(data.dedicationInserts['sick'], 'شفاء لـ {name}');
     });
 
-    test('legacy templates stay quarantined for all recipient conditions', () {
-      final data = KhatmDuaData.fromJson({
-        'arabicText': 'text',
-        'source': 'source',
-        'sourceNote': 'note',
-        'tier': 'guidance',
-        'dedicationInserts': {
-          'alive': 'اللهم بارك في {name}',
-          'deceased': 'اللهم ارحم {name}',
-          'sick': 'اللهم اشف {name}',
-        },
-      });
+    Map<String, dynamic> approvedJson(Map<String, String> inserts) => {
+      'arabicText': 'text',
+      'source': 'source',
+      'sourceNote': 'note',
+      'tier': 'guidance',
+      'reviewStatus': 'approved',
+      'dedicationTemplatesReview': {'reviewStatus': 'approved', 'enabled': true},
+      'dedicationInserts': inserts,
+    };
 
-      expect(data.getDedicationInsert(DedicationCondition.alive, 'أحمد'), '');
+    test('legacy flat templates serve only a male recipient', () {
+      final data = KhatmDuaData.fromJson(
+        approvedJson({'deceased': 'اللهم ارحم {name}'}),
+      );
       expect(
-        data.getDedicationInsert(DedicationCondition.deceased, 'فاطمة'),
+        data.getDedicationInsert(
+          DedicationCondition.deceased,
+          DedicationGender.male,
+          'أحمد',
+        ),
+        'اللهم ارحم أحمد',
+      );
+      expect(
+        data.getDedicationInsert(
+          DedicationCondition.deceased,
+          DedicationGender.female,
+          'فاطمة',
+        ),
         '',
       );
-      expect(data.getDedicationInsert(DedicationCondition.sick, 'سعيد'), '');
+      expect(
+        data.getDedicationInsert(DedicationCondition.deceased, null, 'فاطمة'),
+        '',
+      );
+    });
+
+    test('gendered keys win when present', () {
+      final data = KhatmDuaData.fromJson(
+        approvedJson({'deceased': 'M {name}', 'deceased_female': 'F {name}'}),
+      );
+      expect(
+        data.getDedicationInsert(
+          DedicationCondition.deceased,
+          DedicationGender.female,
+          'فاطمة',
+        ),
+        'F فاطمة',
+      );
+    });
+
+    test('templates stay closed unless the templates review is enabled', () {
+      final json = approvedJson({'alive': 'M {name}'})
+        ..['dedicationTemplatesReview'] = {
+          'reviewStatus': 'approved',
+          'enabled': false,
+        };
+      final data = KhatmDuaData.fromJson(json);
+      expect(
+        data.getDedicationInsert(
+          DedicationCondition.alive,
+          DedicationGender.male,
+          'أحمد',
+        ),
+        '',
+      );
+    });
+
+    test('quarantined templates never become approved inserts', () {
+      final json = approvedJson({})
+        ..remove('dedicationInserts')
+        ..['quarantinedDedicationInserts'] = {'alive': 'M {name}'};
+      final data = KhatmDuaData.fromJson(json);
+      expect(
+        data.getDedicationInsert(
+          DedicationCondition.alive,
+          DedicationGender.male,
+          'أحمد',
+        ),
+        '',
+      );
+    });
+
+    test('unreviewed data never renders templates', () {
+      final data = KhatmDuaData.fromJson({
+        'arabicText': 'text',
+        'source': 's',
+        'sourceNote': 'n',
+        'tier': 'guidance',
+        'dedicationInserts': {'alive': 'M {name}'},
+      });
+      for (final condition in DedicationCondition.values) {
+        for (final gender in DedicationGender.values) {
+          expect(data.getDedicationInsert(condition, gender, 'x'), isEmpty);
+        }
+      }
     });
   });
 

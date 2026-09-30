@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../constants/app_spacing.dart';
 import '../../di/injection.dart';
+import '../../extensions/context_extensions.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import 'social_share_card.dart';
@@ -180,9 +181,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
         onSelected();
       },
       selectedColor: AppColors.primary.withValues(alpha: 0.18),
-      backgroundColor: isDark
-          ? AppColors.darkSurfaceVariant
-          : AppColors.lightSurfaceVariant,
+      backgroundColor: context.tokens.surfaceVariant,
       labelStyle: TextStyle(
         color: selected
             ? AppColors.primary
@@ -332,7 +331,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            color: context.tokens.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: EdgeInsets.only(
@@ -348,9 +347,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkDivider
-                        : AppColors.lightDivider,
+                    color: context.tokens.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -602,9 +599,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       icon: const Icon(Icons.download_rounded, size: 20),
                       tooltip: copy.saveToGalleryTooltip,
                       style: IconButton.styleFrom(
-                        backgroundColor: isDark
-                            ? AppColors.darkSurfaceVariant
-                            : AppColors.lightSurfaceVariant,
+                        backgroundColor: context.tokens.surfaceVariant,
                         foregroundColor: AppColors.primary,
                         padding: const EdgeInsets.all(14),
                         shape: RoundedRectangleBorder(
@@ -621,9 +616,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       icon: const Icon(Icons.short_text_rounded, size: 20),
                       tooltip: copy.shareAsTextTooltip,
                       style: IconButton.styleFrom(
-                        backgroundColor: isDark
-                            ? AppColors.darkSurfaceVariant
-                            : AppColors.lightSurfaceVariant,
+                        backgroundColor: context.tokens.surfaceVariant,
                         foregroundColor: isDark
                             ? AppColors.darkTextPrimary
                             : AppColors.lightTextPrimary,

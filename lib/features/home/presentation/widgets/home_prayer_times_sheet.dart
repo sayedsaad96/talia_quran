@@ -79,10 +79,12 @@ class HomePrayerTimesSheet extends StatefulWidget {
 class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late PrayerCompanionDaySummary? _companionSummary;
 
   @override
   void initState() {
     super.initState();
+    _companionSummary = widget.companionSummary;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -94,6 +96,36 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
       } else {
         _controller.forward();
       }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HomePrayerTimesSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.companionSummary != widget.companionSummary) {
+      _companionSummary = widget.companionSummary;
+    }
+  }
+
+  void _applySavedCompanionRecord(PrayerCompanionRecord record) {
+    final summary = _companionSummary;
+    if (summary == null) return;
+
+    final previousStatus = summary.statusByPrayer[record.occurrence.prayerKey];
+    final wasConfirmed = previousStatus == PrayerCompanionStatus.confirmed;
+    final isConfirmed = record.status == PrayerCompanionStatus.confirmed;
+    setState(() {
+      _companionSummary = PrayerCompanionDaySummary(
+        statusByPrayer: {
+          ...summary.statusByPrayer,
+          record.occurrence.prayerKey: record.status,
+        },
+        confirmedCount: summary.confirmedCount +
+            (isConfirmed && !wasConfirmed ? 1 : 0) -
+            (!isConfirmed && wasConfirmed ? 1 : 0),
+        actionableOccurrence:
+            isConfirmed ? null : summary.actionableOccurrence,
+      );
     });
   }
 
@@ -187,7 +219,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
       ),
     ];
 
-    final summary = widget.companionSummary;
+    final summary = _companionSummary;
     final companionActive =
         summary != null && widget.companionController != null;
 
@@ -409,6 +441,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                           ? _CompanionActionData(
                               occurrence: summary.actionableOccurrence!,
                               controller: widget.companionController!,
+                              onSaved: _applySavedCompanionRecord,
                               onChanged: widget.onCompanionChanged,
                             )
                           : null,
@@ -660,19 +693,21 @@ class _CompanionActionData {
   const _CompanionActionData({
     required this.occurrence,
     required this.controller,
+    this.onSaved,
     this.onChanged,
   });
 
   final PrayerOccurrence occurrence;
   final PrayerCompanionController controller;
+  final ValueChanged<PrayerCompanionRecord>? onSaved;
   final VoidCallback? onChanged;
 }
 
 /// The in-sheet Companion action group for the current actionable prayer.
 ///
-/// Buttons are disabled while a submission is in flight; success asks the
-/// host to reload Home so the summary and statuses refresh, and failure
-/// surfaces a recoverable snackbar without ever showing a false success.
+/// Buttons are disabled while a submission is in flight. A successful save
+/// updates the open sheet and asks the host to reload Home; a failure surfaces
+/// a recoverable snackbar without ever showing a false success.
 class _CompanionActionRow extends StatelessWidget {
   const _CompanionActionRow({required this.data, required this.skin});
 
@@ -690,6 +725,7 @@ class _CompanionActionRow extends StatelessWidget {
       child: BlocConsumer<PrayerCompanionCubit, PrayerCompanionState>(
         listener: (context, state) {
           if (state is PrayerCompanionSuccess) {
+            data.onSaved?.call(state.record);
             data.onChanged?.call();
           } else if (state is PrayerCompanionFailure) {
             ScaffoldMessenger.of(

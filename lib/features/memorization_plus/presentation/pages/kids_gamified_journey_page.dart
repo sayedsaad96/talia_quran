@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../data/datasources/kids_map_celebration_store.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../cubits/kids_journey_cubit.dart';
@@ -77,6 +78,9 @@ class _KidsGamifiedJourneyView extends StatelessWidget {
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
+            loadCelebrations: getIt.isRegistered<KidsMapCelebrationStore>()
+                ? getIt<KidsMapCelebrationStore>().takeNewlyCompleted
+                : null,
             onStageSelected: (stage) async {
               await context.push(_stageDetailsLocation(stage), extra: stage);
               if (context.mounted) {
@@ -92,6 +96,10 @@ class _KidsGamifiedJourneyView extends StatelessWidget {
   }
 }
 
+/// K37 — the houses finished since the child's last visit to this map.
+typedef KidsCelebrationLoader =
+    Future<Set<int>> Function(int surahId, List<KidsJourneyStage> stages);
+
 @visibleForTesting
 class KidsGamifiedJourneyContent extends StatefulWidget {
   const KidsGamifiedJourneyContent({
@@ -101,6 +109,7 @@ class KidsGamifiedJourneyContent extends StatefulWidget {
     required this.onStageSelected,
     this.onRefresh,
     this.onPathSettingsTap,
+    this.loadCelebrations,
   });
 
   final KidsJourneyLoaded state;
@@ -108,6 +117,9 @@ class KidsGamifiedJourneyContent extends StatefulWidget {
   final ValueChanged<KidsJourneyStage> onStageSelected;
   final Future<void> Function()? onRefresh;
   final VoidCallback? onPathSettingsTap;
+
+  /// K37 — null means no glow (e.g. tests, or no store registered).
+  final KidsCelebrationLoader? loadCelebrations;
 
   @override
   State<KidsGamifiedJourneyContent> createState() =>
@@ -123,16 +135,29 @@ class _KidsGamifiedJourneyContentState
   /// inside every segment's build, an O(n²) scan on each rebuild.
   late int _activeStageIndex;
 
+  /// K37 — stage numbers to light up once on this visit.
+  Set<int> _celebrate = const {};
+
   @override
   void initState() {
     super.initState();
     _activeStageIndex = _resolveActiveIndex(widget.state.stages);
     _scheduleAutoScroll();
+    _loadCelebrations();
+  }
+
+  Future<void> _loadCelebrations() async {
+    final loader = widget.loadCelebrations;
+    if (loader == null) return;
+    final celebrate = await loader(widget.state.surahId, widget.state.stages);
+    if (mounted) setState(() => _celebrate = celebrate);
   }
 
   @override
   void didUpdateWidget(covariant KidsGamifiedJourneyContent oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Back from a house: anything finished meanwhile glows now.
+    if (oldWidget.state.stages != widget.state.stages) _loadCelebrations();
     if (oldWidget.state.surahId != widget.state.surahId) {
       _didAutoScroll = false;
       _activeStageIndex = _resolveActiveIndex(widget.state.stages);
@@ -242,7 +267,8 @@ class _KidsGamifiedJourneyContentState
                               final stage = widget.state.stages[index];
                               final isActive = index == _activeStageIndex;
                               final isLeft = index.isEven;
-                              final showSignpost = (index + 1) % 4 == 0 &&
+                              final showSignpost =
+                                  (index + 1) % 4 == 0 &&
                                   index != widget.state.stages.length - 1;
 
                               return KidsJourneySegment(
@@ -252,9 +278,13 @@ class _KidsGamifiedJourneyContentState
                                 isLeft: isLeft,
                                 isFirst: index == 0,
                                 isLast: index == widget.state.stages.length - 1,
-                                surahName: widget.state.surahName ??
+                                surahName:
+                                    widget.state.surahName ??
                                     '${context.l10n.surah} ${widget.state.surahId}',
                                 showSignpost: showSignpost,
+                                celebrate: _celebrate.contains(
+                                  stage.stageNumber,
+                                ),
                                 onTap: () => widget.onStageSelected(stage),
                                 onLockedTap: () =>
                                     _showLockedStageMessage(context),
@@ -284,10 +314,7 @@ class _KidsGamifiedJourneyContentState
 
 /// Header for the Journey Map section
 class _JourneyMapHeader extends StatelessWidget {
-  const _JourneyMapHeader({
-    required this.mapTitle,
-    required this.subtitle,
-  });
+  const _JourneyMapHeader({required this.mapTitle, required this.subtitle});
 
   final String mapTitle;
   final String subtitle;
@@ -336,6 +363,7 @@ class _JourneyMapHeader extends StatelessWidget {
     );
   }
 }
+
 String _stageDetailsLocation(KidsJourneyStage stage) {
   final query = Uri(
     queryParameters: {

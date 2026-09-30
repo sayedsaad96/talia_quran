@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_filters.dart';
@@ -94,16 +95,24 @@ class MemorizationKidsLocalService {
   static bool _ayahNeedsKidsReview(AyahReviewRecord record) =>
       KidsDueReviewPolicy.isDue(record, DateTime.now());
 
-  static bool _stageNeedsKidsReview({
+  /// The stage's most overdue ayah (earliest review date among its due
+  /// records), or null when nothing in it is due. A stage "needs review"
+  /// exactly when this is non-null, and its review opens this ayah (K30).
+  static int? _mostOverdueKidsAyah({
     required int surahId,
     required List<int> ayahRange,
     required Map<String, AyahReviewRecord> kidsRecordsByKey,
   }) {
+    AyahReviewRecord? mostOverdue;
     for (final ayah in ayahRange) {
       final record = kidsRecordsByKey['${surahId}_$ayah'];
-      if (record != null && _ayahNeedsKidsReview(record)) return true;
+      if (record == null || !_ayahNeedsKidsReview(record)) continue;
+      if (mostOverdue == null ||
+          record.nextReviewDate.isBefore(mostOverdue.nextReviewDate)) {
+        mostOverdue = record;
+      }
     }
-    return false;
+    return mostOverdue?.ayahNumber;
   }
 
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
@@ -151,13 +160,14 @@ class MemorizationKidsLocalService {
             .toList();
 
         KidsJourneyStageStatus status;
+        int? reviewAyah;
         if (stageCompleted.length == ayahRange.length) {
-          status =
-              _stageNeedsKidsReview(
-                surahId: surahId,
-                ayahRange: ayahRange,
-                kidsRecordsByKey: kidsRecordsByKey,
-              )
+          reviewAyah = _mostOverdueKidsAyah(
+            surahId: surahId,
+            ayahRange: ayahRange,
+            kidsRecordsByKey: kidsRecordsByKey,
+          );
+          status = reviewAyah != null
               ? KidsJourneyStageStatus.needsReview
               : KidsJourneyStageStatus.completed;
         } else if (!foundCurrent) {
@@ -175,6 +185,7 @@ class MemorizationKidsLocalService {
             endAyah: end,
             completedAyahs: stageCompleted,
             status: status,
+            reviewAyah: reviewAyah,
           ),
         );
       }
@@ -336,6 +347,9 @@ class MemorizationKidsLocalService {
     }
   }
 
+  /// Clears the guardian PIN so a new one can be created. Rewards are kept:
+  /// every caller has already proven guardianship (open dashboard or account
+  /// password), so wiping them would only lose the family's data.
   Future<Either<Failure, void>> resetParentAccess() async {
     try {
       final settings = await _datasource.getParentSettings();
@@ -347,7 +361,6 @@ class MemorizationKidsLocalService {
           settings.copyWith(clearPin: true, remoteLinkEnabled: false),
         ),
       );
-      await _datasource.saveParentRewards(const []);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -360,11 +373,15 @@ class MemorizationKidsLocalService {
     try {
       final trimmed = title.trim();
       if (trimmed.isEmpty) {
-        return const Left(CacheFailure('اكتب اسم المكافأة أولاً'));
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardTitleRequired),
+        );
       }
       final rewards = await _datasource.getParentRewards();
       if (rewards.length >= 3) {
-        return const Left(CacheFailure('يمكن إضافة 3 مكافآت فقط'));
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardLimitReached),
+        );
       }
       final reward = ParentRewardModel(
         id: DateTime.now().microsecondsSinceEpoch.toString(),

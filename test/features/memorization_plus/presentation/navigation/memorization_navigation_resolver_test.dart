@@ -105,18 +105,25 @@ void main() {
           targets.reviewQuizLocation,
           AppRoutes.memorizationPlusCustomPlan,
         );
-        expect(
-          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
-          '114',
-        );
         expect(targets.todayPlanLocation, isNot(contains('surahId=1')));
         expect(targets.reviewQuizLocation, isNot(contains('surahId=1')));
-        expect(
-          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
-          isNot('1'),
-        );
       },
     );
+
+    test('a new child starts the kids journey at Al-Fatiha (K27)', () async {
+      const resolver = MemorizationNavigationResolver(_FakeRepository());
+
+      final targets = await resolver.resolve();
+
+      expect(
+        Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+        '1',
+      );
+      expect(
+        Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+        '1',
+      );
+    });
 
     group('kidsMissionAfterCompletion', () {
       const stage = KidsJourneyStage(
@@ -182,7 +189,109 @@ void main() {
         expect(outcome.mission?.startAyah, 3);
         expect(outcome.dailyGoalCap, isNull);
       });
+
+      test('says so when today reached the session goal (K36)', () async {
+        KidsSessionLog timed(String id, int seconds) => KidsSessionLog(
+          id: id,
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 2,
+          pointsEarned: 10,
+          completedAt: DateTime.now(),
+          durationSeconds: seconds,
+        );
+        MemorizationNavigationResolver resolverWith(int seconds) =>
+            MemorizationNavigationResolver(
+              _FakeRepository(
+                kidsStages: const [stage],
+                kidsLogs: [timed('a', seconds)],
+                parentSettings: const ParentSettings(sessionGoalMinutes: 6),
+              ),
+            );
+
+        final reached = await resolverWith(
+          400,
+        ).kidsMissionAfterCompletion(surahId: 114, completedAyah: 2);
+        final notYet = await resolverWith(
+          100,
+        ).kidsMissionAfterCompletion(surahId: 114, completedAyah: 2);
+
+        expect(reached.sessionGoalReached, isTrue);
+        // A gentle note only: the next mission stays available.
+        expect(reached.mission, isNotNull);
+        expect(notYet.sessionGoalReached, isFalse);
+      });
+
+      test(
+        'continues at the real frontier past memorized surahs (K17)',
+        () async {
+          KidsJourneyStage done(int surahId) => KidsJourneyStage(
+            stageNumber: 1,
+            surahId: surahId,
+            startAyah: 1,
+            endAyah: 3,
+            completedAyahs: const [1, 2, 3],
+            status: KidsJourneyStageStatus.completed,
+          );
+          final resolver = MemorizationNavigationResolver(
+            _FakeRepository(
+              kidsStagesBySurah: {
+                114: [done(114)],
+                113: [done(113)],
+                112: const [
+                  KidsJourneyStage(
+                    stageNumber: 1,
+                    surahId: 112,
+                    startAyah: 1,
+                    endAyah: 4,
+                    completedAyahs: [1, 2],
+                    status: KidsJourneyStageStatus.current,
+                  ),
+                ],
+              },
+            ),
+          );
+
+          // A due review of 114:2 just finished; 113 is already memorized.
+          final outcome = await resolver.kidsMissionAfterCompletion(
+            surahId: 114,
+            completedAyah: 2,
+          );
+
+          expect(outcome.mission?.surahId, 112);
+          expect(outcome.mission?.startAyah, 3);
+        },
+      );
     });
+
+    test(
+      'a newer review in an old surah does not move kids home (K17)',
+      () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsLogs: [
+              _kidsLog(surahId: 112, completedAt: DateTime.utc(2026, 1, 1)),
+              KidsSessionLog(
+                id: 'review',
+                surahId: 114,
+                ayahNumber: 2,
+                repeatsCompleted: 2,
+                pointsEarned: 5,
+                completedAt: DateTime.utc(2026, 1, 2),
+                missionType: KidsMissionType.dueReview,
+              ),
+            ],
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '112',
+        );
+      },
+    );
 
     test(
       'a spent kids review budget hands the home surah back to the journey',
@@ -310,6 +419,7 @@ class _FakeRepository implements MemorizationPlusRepository {
     this.reviewRecords = const [],
     this.parentSettings = const ParentSettings(),
     this.kidsStages = const [],
+    this.kidsStagesBySurah,
   });
 
   final DailyPlan? cachedPlan;
@@ -318,11 +428,12 @@ class _FakeRepository implements MemorizationPlusRepository {
   final List<AyahReviewRecord> reviewRecords;
   final ParentSettings parentSettings;
   final List<KidsJourneyStage> kidsStages;
+  final Map<int, List<KidsJourneyStage>>? kidsStagesBySurah;
 
   @override
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
     required int surahId,
-  }) async => Right(kidsStages);
+  }) async => Right(kidsStagesBySurah?[surahId] ?? kidsStages);
 
   @override
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>

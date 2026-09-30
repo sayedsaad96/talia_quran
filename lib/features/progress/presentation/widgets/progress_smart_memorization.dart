@@ -14,7 +14,8 @@ class _SmartMemorizationCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: context.tokens.divider, width: 0.5),
         boxShadow: [
           BoxShadow(
             color: AppColors.gold.withValues(alpha: 0.05),
@@ -40,11 +41,13 @@ class _SmartMemorizationCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Text(
-                context.l10n.kidsTrack,
-                style: AppTypography.titleMedium.copyWith(
-                  color: textPrimary,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  context.l10n.kidsTrack,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

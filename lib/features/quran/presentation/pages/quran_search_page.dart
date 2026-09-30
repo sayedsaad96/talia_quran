@@ -124,7 +124,7 @@ class _QuranSearchPageState extends State<QuranSearchPage> {
                 context.isArabic
                     ? SurahNames.nameAr(ayah.surahId)
                     : SurahNames.nameEn(ayah.surahId),
-                ayah.numberInSurah,
+                context.numText(ayah.numberInSurah),
               ),
             ),
             onTap: () {

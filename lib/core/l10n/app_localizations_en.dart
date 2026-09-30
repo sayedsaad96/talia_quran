@@ -428,6 +428,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterFocusMode => 'Enter focus mode';
 
   @override
+  String get readerGoToPage => 'Go to a page, surah or juz';
+
+  @override
+  String get readerTajweedColors => 'Tajweed colors';
+
+  @override
+  String get readerTajweedColorsHint =>
+      'Color the tajweed rules on the Mushaf page';
+
+  @override
+  String get surahInProgressBadge => 'Memorizing';
+
+  @override
   String get exitFocusMode => 'Exit focus mode';
 
   @override
@@ -598,10 +611,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pureBlackTheme => 'Pure black (OLED)';
-
-  @override
-  String get pureBlackThemeHint =>
-      'True-black background in dark mode. Easier on the eyes and saves battery on OLED screens';
 
   @override
   String get changeMemorizationPath => 'Change Memorization Path';
@@ -1158,6 +1167,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the bookmark icon next to any dua to save it here';
 
   @override
+  String get azkarFavoriteAdd => 'Add to favorites';
+
+  @override
+  String get azkarFavoriteRemove => 'Remove from favorites';
+
+  @override
   String get azkarSearchNoResultsTitle => 'No matching results';
 
   @override
@@ -1481,7 +1496,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementTitleJuzAmma => 'Juz Amma';
 
   @override
-  String get achievementDescJuzAmma => 'Memorize 564 ayahs (Juz Amma)';
+  String get achievementDescJuzAmma => 'Memorize all of Juz Amma';
 
   @override
   String get achievementTitleOneJuzMemorized => 'Memorized Juz';
@@ -1903,13 +1918,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splashFeatureGrow => 'Grow';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Talia';
-
-  @override
-  String get onboardingWelcomeSubtitle =>
-      'A calm, intelligent Quran sanctuary designed to help you read, memorize, review, and build a lasting daily habit.';
-
-  @override
   String get onboardingStartJourney => 'Start Your Journey';
 
   @override
@@ -1917,10 +1925,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSlide1Subtitle =>
-      'Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and easy tafsir.';
+      'Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and khatmah plans at your own pace.';
 
   @override
-  String get onboardingBentoMushafSurah => 'Surat Al-Fatihah';
+  String get onboardingBentoMushafSurah => 'Surat Al-Isra';
 
   @override
   String get onboardingBentoListeningTitle => 'Masterful Recitation';
@@ -1929,10 +1937,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBentoListeningDesc => 'Audio listening & repeat';
 
   @override
-  String get onboardingBentoTafsirTitle => 'Easy Tafsir';
+  String get onboardingBentoKhatmahTitle => 'Khatmah Plans';
 
   @override
-  String get onboardingBentoTafsirDesc => 'Instant word meanings';
+  String get onboardingBentoKhatmahDesc => 'A daily pace that suits you';
+
+  @override
+  String get onboardingBentoKhatmahBadge => 'Daily wird';
 
   @override
   String get onboardingSlide2Title => 'Smart Memorization & Mastery';
@@ -1960,11 +1971,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBentoReviewScheduleDesc => 'Timely memory refresh';
 
   @override
+  String get onboardingBentoStatusMastered => 'Mastered';
+
+  @override
+  String get onboardingBentoStatusDueSoon => 'Due soon';
+
+  @override
+  String get onboardingBentoStatusNew => 'New';
+
+  @override
+  String get onboardingBentoSmartAlert => 'Smart alert';
+
+  @override
   String get onboardingSlide3Title => 'Daily Habit & Family Journeys';
 
   @override
   String get onboardingSlide3Subtitle =>
-      'Build an unbreakable daily Quran habit, with a fun interactive kids path, completely offline.';
+      'Build an unbreakable daily Quran habit, with a fun interactive kids path, even offline.';
 
   @override
   String get onboardingBentoStreakTitle => 'Daily Streak';
@@ -1973,7 +1996,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBentoStreakDays => '7 Days Streak 🔥';
 
   @override
-  String get onboardingBentoOfflineBadge => 'Works 100% Offline';
+  String get onboardingBentoOfflineBadge => 'Works offline';
 
   @override
   String get onboardingBentoKidsTeaserTitle => 'Talia Kids Journey';
@@ -2443,6 +2466,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedTestStepSubtitle => 'Try reciting without help';
 
   @override
+  String get kidsGamifiedTryFromMemory => 'Try from memory';
+
+  @override
+  String get kidsGamifiedTryToRemember => 'Try to remember the ayah';
+
+  @override
+  String get kidsGamifiedGiveMeTheStart => 'Give me the start';
+
+  @override
+  String get kidsGamifiedFirstWordShown =>
+      'Here is the first word — you finish it';
+
+  @override
+  String get kidsGamifiedReviewChallenge => '⭐ Review challenge';
+
+  @override
+  String get kidsGamifiedReviewChallengeSubtitle =>
+      'Do you remember it? Recite it from memory';
+
+  @override
+  String get kidsGamifiedRemindMe => 'Remind me';
+
+  @override
+  String get kidsWelcomeBackTitle => 'Welcome back!';
+
+  @override
+  String get kidsWelcomeBackSubtitle => 'Let\'s start with an easy step';
+
+  @override
+  String get kidsGamifiedEnoughForToday =>
+      'Well done! That\'s enough time for today — you can stop here.';
+
+  @override
+  String get parentSupportTip =>
+      'Try together: listen to the ayah twice, then let your child start with the first word';
+
+  @override
   String get kidsGamifiedStartMission => 'Start mission';
 
   @override
@@ -2614,15 +2674,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationSessionTitle => 'Memorization Session';
 
   @override
-  String get memorizationHubReviewSectionTitle => 'Review Session';
+  String get memorizationHubReviewSectionTitle => 'Review';
 
   @override
   String get memorizationHubReviewSectionSubtitle =>
-      'Review memorized ayahs through guided recitation (speech-to-text).';
+      'Recite what you memorized from memory; the app checks your recitation.';
 
   @override
   String get memorizationHubReviewCardDescription =>
-      'Open a V2 recitation session for ayahs you have already memorized.';
+      'Recite the ayahs due for review from memory.';
 
   @override
   String get memorizationHubDailyPlanSubtitle =>
@@ -2650,7 +2710,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Recite Practice: choose a surah and start a speech-to-text session.';
 
   @override
-  String get listeningReviewTitle => 'Listening Review';
+  String get listeningReviewTitle => 'Listening Quiz';
 
   @override
   String get listeningReviewHubDescription =>
@@ -2678,7 +2738,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listeningReviewNotEnoughBody =>
-      'Listening review needs at least 5 memorized ayahs that can be played.';
+      'The listening quiz needs at least 5 memorized ayahs that can be played.';
 
   @override
   String get listeningReviewErrorBody =>
@@ -2872,6 +2932,116 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reset on this device — a new code will be required';
 
   @override
+  String get parentDashboardForgotPin => 'Forgot the code?';
+
+  @override
+  String get parentDashboardForgotPinTitle => 'Recover guardian code';
+
+  @override
+  String parentDashboardForgotPinBody(String email) {
+    return 'To confirm you are the guardian, enter the password for $email. You will then create a new code; rewards and settings stay as they are.';
+  }
+
+  @override
+  String get parentDashboardForgotPinConfirm => 'Verify';
+
+  @override
+  String get parentDashboardAccountPasswordIncorrect =>
+      'Incorrect account password';
+
+  @override
+  String get parentDashboardAccountCheckUnavailable =>
+      'Couldn\'t verify the account right now. Check your connection and try again.';
+
+  @override
+  String get parentDashboardChangePin => 'Change guardian code';
+
+  @override
+  String get parentDashboardChangePinConfirm =>
+      'You\'ll create a new code now. Rewards and settings stay as they are.';
+
+  @override
+  String get guardianErrorSignInRequired =>
+      'Sign in to your account first, then try again.';
+
+  @override
+  String get guardianErrorCloudUnavailable =>
+      'Linking children isn\'t available in this version because cloud sync is not enabled.';
+
+  @override
+  String get guardianErrorOnlyForChildren =>
+      'Guardian linking is only available for child profiles.';
+
+  @override
+  String get guardianErrorAlreadyLinked =>
+      'This account is already linked to a guardian.';
+
+  @override
+  String get guardianErrorParentModeAdultsOnly =>
+      'Guardian mode is only available on the adults path.';
+
+  @override
+  String get guardianErrorLinkCodeInvalid =>
+      'The linking code is incorrect or has expired. Ask the child to create a new code and try again.';
+
+  @override
+  String get guardianErrorChildHasGuardian =>
+      'This child is already linked to another guardian. The current link must be removed first.';
+
+  @override
+  String get guardianErrorSameAccount =>
+      'A child can\'t be linked to the same account. The child needs an account separate from the guardian\'s.';
+
+  @override
+  String get parentRewardErrorTitleRequired => 'Enter the reward name first.';
+
+  @override
+  String get parentRewardErrorLimitReached => 'You can add up to 3 rewards.';
+
+  @override
+  String childErrorNicknameInvalid(int max) {
+    return 'Enter a name of 1 to $max characters.';
+  }
+
+  @override
+  String childErrorAgeInvalid(int min, int max) {
+    return 'Choose an age between $min and $max.';
+  }
+
+  @override
+  String get guardianErrorChildNotLinked =>
+      'This child is no longer linked to your account.';
+
+  @override
+  String get childErrorIdentityUpdateUnavailable =>
+      'Editing the child\'s details isn\'t available right now. Try again later.';
+
+  @override
+  String childAgeYears(int age) {
+    String _temp0 = intl.Intl.pluralLogic(
+      age,
+      locale: localeName,
+      other: '$age years old',
+      one: '1 year old',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get childEditIdentity => 'Edit name and age';
+
+  @override
+  String get childIdentitySaved =>
+      'Saved. The child\'s device shows the change after its next sync.';
+
+  @override
+  String get kidsLinkGuardianTileTitle => 'Link guardian';
+
+  @override
+  String get kidsLinkGuardianTileSubtitle =>
+      'Needs the guardian\'s code. Once linked, your guardian follows your progress from their device.';
+
+  @override
   String get parentDashboardTodaySummary => 'Today';
 
   @override
@@ -3038,12 +3208,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanHeaderTitle => 'Today\'s Plan';
 
   @override
-  String dailyPlanHeaderSummary(int total, int completed) {
-    return '$total items • $completed completed';
+  String dailyPlanHeaderSummary(
+    int total,
+    String totalText,
+    String completedText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText items',
+      one: '$totalText item',
+    );
+    return '$_temp0 • $completedText completed';
   }
 
   @override
-  String dailyPlanProgressCount(int completed, int total) {
+  String dailyPlanProgressCount(String completed, String total) {
     return '$completed of $total';
   }
 
@@ -3052,8 +3232,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Well done! You completed your plan today';
 
   @override
-  String dailyPlanRemainingItems(int count) {
-    return '$count items remaining';
+  String dailyPlanRemainingItems(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText items',
+      one: '$countText item',
+    );
+    return '$_temp0 remaining';
   }
 
   @override
@@ -3062,7 +3248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String dailyPlanSurahAyahTitle(String surah, int ayahNumber) {
+  String dailyPlanSurahAyahTitle(String surah, String ayahNumber) {
     return '$surah · Ayah $ayahNumber';
   }
 
@@ -3191,8 +3377,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanInvalidAyah => 'Enter a valid ayah number';
 
   @override
-  String customPlanSurahAyahLimit(int maxAyah) {
-    return 'This Surah has $maxAyah ayahs';
+  String customPlanSurahAyahLimit(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return 'This Surah has $_temp0';
   }
 
   @override
@@ -3234,8 +3426,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanEstimatedDuration => 'Estimated completion time';
 
   @override
-  String customPlanApproxWeeks(int count) {
-    return '$count weeks approx.';
+  String customPlanApproxWeeks(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText weeks',
+      one: '$countText week',
+    );
+    return '$_temp0 approx.';
   }
 
   @override
@@ -3249,8 +3447,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanEstimatedScope(int surahs, int ayahs) {
-    return '$surahs Surahs • ~$ayahs ayahs';
+  String customPlanEstimatedScope(
+    int surahs,
+    String surahsText,
+    int ayahs,
+    String ayahsText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      surahs,
+      locale: localeName,
+      other: '$surahsText Surahs',
+      one: '$surahsText Surah',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      ayahs,
+      locale: localeName,
+      other: '$ayahsText ayahs',
+      one: '$ayahsText ayah',
+    );
+    return '$_temp0 • ~$_temp1';
   }
 
   @override
@@ -3304,13 +3519,40 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanSummaryLoad(int ayahsPerDay, int daysPerWeek) {
-    return '$ayahsPerDay ayahs daily • $daysPerWeek days weekly';
+  String customPlanSummaryLoad(
+    int ayahsPerDay,
+    String ayahsText,
+    int daysPerWeek,
+    String daysText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      ayahsPerDay,
+      locale: localeName,
+      other: '$ayahsText ayahs',
+      one: '$ayahsText ayah',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      daysPerWeek,
+      locale: localeName,
+      other: '$daysText days',
+      one: '$daysText day',
+    );
+    return '$_temp0 daily • $_temp1 weekly';
   }
 
   @override
-  String customPlanSummarySession(int minutes, Object difficulty) {
-    return '$minutes minutes per session • $difficulty level';
+  String customPlanSummarySession(
+    int minutes,
+    String minutesText,
+    String difficulty,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutesText minutes',
+      one: '$minutesText minute',
+    );
+    return '$_temp0 per session • $difficulty level';
   }
 
   @override
@@ -3374,7 +3616,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsQuranSwipeHint => 'Swipe gently for the next page';
+  String get kidsQuranLongPressHint => 'Long-press any ayah to hear it';
+
+  @override
+  String get kidsQuranListenPage => 'Listen to the page';
+
+  @override
+  String get kidsQuranPausePage => 'Pause';
 
   @override
   String get parentDashboardPinInvalid => 'Enter a 4-digit code';
@@ -3422,13 +3670,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memorizationExitSessionMessage =>
-      'Save this session for later or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
+      'Continue this session later from where you stopped, or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
 
   @override
   String get memorizationExitSessionTitle => 'Leave this session?';
 
   @override
-  String get memorizationSaveAndLeave => 'Save & leave';
+  String get memorizationSaveAndLeave => 'Continue later';
 
   @override
   String get memorizationDiscardSession => 'Discard session';
@@ -4619,8 +4867,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewBacklogTitle => 'Review Backlog';
 
   @override
-  String reviewBacklogSubtitle(String overdue) {
-    return 'You have $overdue overdue ayahs';
+  String reviewBacklogSubtitle(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText overdue ayahs',
+      one: '$countText overdue ayah',
+    );
+    return 'You have $_temp0';
   }
 
   @override
@@ -4682,7 +4936,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyDashboardNoChildrenHint =>
-      'Ask your child to open the linking page in the app to scan a QR code';
+      'On your child\'s device: open the kids track → tap ⚙ → “Link guardian”, then scan the code shown or type it here.';
 
   @override
   String get familyDashboardTodaySummaryTitle => 'Today in Our Family';
@@ -4809,6 +5063,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2SelfGradeForgotHint => 'We will go over it again now';
 
   @override
+  String get v2SelfGradeRevealHint =>
+      'Recite from memory first, then reveal the text and compare before grading.';
+
+  @override
+  String get v2SelfGradeRevealAction => 'Show the ayah to compare';
+
+  @override
+  String get v2BlockRevealAction => 'Show the block to compare';
+
+  @override
+  String get v2BlockGradeMastered =>
+      'Recited the whole block without stumbling';
+
+  @override
+  String get v2BlockGradeHesitated => 'Hesitated on an ayah';
+
+  @override
+  String get v2BlockGradeForgot => 'Forgot an ayah';
+
+  @override
+  String get v2StumbledAyahTitle => 'Where did you stumble?';
+
+  @override
+  String v2StumbledAyahOption(int ayahNumber) {
+    return 'Ayah $ayahNumber';
+  }
+
+  @override
   String get v2ManualRecallHint =>
       'No microphone? Confirm you recited from memory and your progress will be saved.';
 
@@ -4861,8 +5143,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
 
   @override
-  String closingSummaryMemorization(int count) {
-    return 'You committed $count ayahs to memory this session — a lasting impact, in shaa Allah.';
+  String closingSummaryMemorization(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return 'You committed $_temp0 to memory this session — a lasting impact, in shaa Allah.';
   }
 
   @override
@@ -4877,8 +5165,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hints are recorded and shape your next review schedule.';
 
   @override
-  String dailyPlanBacklogNotice(int count) {
-    return 'You have $count ayahs due for review. Finish today\'s reviews to unlock new ayahs.';
+  String dailyPlanBacklogNotice(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return 'You have $_temp0 due for review. Finish today\'s reviews to unlock new ayahs.';
   }
 
   @override
@@ -4968,7 +5262,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String v2AyahOfBlock(int current, int total) {
+  String v2AyahOfBlock(String current, String total) {
     return 'Ayah $current of $total';
   }
 
@@ -5050,6 +5344,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2MaskedWordsFull => 'Hide words';
 
   @override
+  String get v2FirstLettersHint => 'First letters';
+
+  @override
+  String get v2FirstLettersRevealed => 'First letters revealed — try to recall';
+
+  @override
+  String countAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakDaysUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'days',
+      one: 'day',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get v2SurahLoadFailed => 'Could not load surah data.';
 
   @override
@@ -5075,7 +5397,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsJourneyCompleteHint =>
-      'You completed the whole Juz Amma! Tell your parent about this great achievement.';
+      'You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.';
 
   @override
   String get kidsAyahAlreadyCompleted =>
@@ -5202,8 +5524,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahDailyPages => 'Daily Pages';
 
   @override
-  String khatmahPages(String v1) {
-    return '$v1 pages';
+  String khatmahPages(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText pages',
+      one: '$countText page',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5220,12 +5548,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'After page 604 you continue from page 1 until the khatmah is complete';
 
   @override
-  String khatmahDurationDays(String days) {
-    return '$days days';
+  String khatmahDurationDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days',
+      one: '$countText day',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get khatmahDurationRamadan => 'Ramadan (30 days)';
+  String get khatmahDurationRamadan => 'Ramadan (a juz a day)';
 
   @override
   String get khatmahEG5 => 'e.g. 5';
@@ -5234,8 +5568,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahEstimatedDuration => 'Estimated Duration';
 
   @override
-  String khatmahDays(String v1) {
-    return '$v1 days';
+  String khatmahDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days',
+      one: '$countText day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5336,8 +5676,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahAdjustPreviewTitle => 'Adjust khatmah schedule';
 
   @override
-  String khatmahAdjustPreviewBody(String pages, String date) {
-    return 'Daily wird: $pages pages\nExpected completion: $date';
+  String khatmahAdjustPreviewBody(int pages, String pagesText, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      pages,
+      locale: localeName,
+      other: '$pagesText pages',
+      one: '$pagesText page',
+    );
+    return 'Daily wird: $_temp0\nExpected completion: $date';
   }
 
   @override
@@ -5412,8 +5758,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahCopyDuA => 'Copy du\'a';
 
   @override
-  String khatmahPagesLeft(String v1) {
-    return '$v1 pages left';
+  String khatmahPagesLeft(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText pages',
+      one: '$countText page',
+    );
+    return '$_temp0 left';
   }
 
   @override
@@ -5454,6 +5806,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahPaceOnTrack => 'On schedule — well done';
 
   @override
+  String khatmahPaceAhead(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days',
+      one: 'a day',
+    );
+    return 'Ahead — you\'ll finish $_temp0 early';
+  }
+
+  @override
   String get khatmahRedistributeAction =>
       'Redistribute to keep the finish date';
 
@@ -5462,8 +5825,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pages redistributed to keep your finish date';
 
   @override
-  String khatmahPaceBehind(String pages) {
-    return '$pages pages behind the finish date';
+  String khatmahPaceBehind(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText pages',
+      one: '$countText page',
+    );
+    return '$_temp0 behind the finish date';
   }
 
   @override
@@ -5476,8 +5845,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Congratulations on completing the Quran';
 
   @override
-  String khatmahShareSummary(String title, String days) {
-    return 'Completed Quran Khatmah ($title) in $days days.\nVia Talia Quran App';
+  String khatmahShareSummary(String title, int days, String daysText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$daysText days',
+      one: '$daysText day',
+    );
+    return 'Completed Quran Khatmah ($title) in $_temp0.\nVia Talia Quran App';
   }
 
   @override
@@ -5558,6 +5933,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahRelationshipMother => 'Mother';
+
+  @override
+  String get khatmahRecipientGender => 'Recipient';
+
+  @override
+  String get khatmahRecipientMale => 'Male';
+
+  @override
+  String get khatmahRecipientFemale => 'Female';
+
+  @override
+  String get khatmahEditDedication => 'Edit dedication';
+
+  @override
+  String get khatmahDedicationSaved => 'Dedication saved';
+
+  @override
+  String khatmahWirdJuz(String juz) {
+    return 'Today\'s wird: Juz $juz';
+  }
+
+  @override
+  String get khatmahRepeatSameSettings => 'New khatmah, same settings';
+
+  @override
+  String khatmahHistoryStats(String count, String avg, String fastest) {
+    return '$count khatmahs • average $avg days • fastest $fastest days';
+  }
+
+  @override
+  String get khatmahJuzMapTitle => 'Khatmah map';
+
+  @override
+  String khatmahJuzMapCell(String juz, String read, String total) {
+    return 'Juz $juz: $read of $total pages';
+  }
+
+  @override
+  String get khatmahCatchUpTitle => 'How would you like to catch up?';
+
+  @override
+  String khatmahCatchUpOption(String pages, String date) {
+    return '$pages pages a day — finish $date';
+  }
 
   @override
   String get khatmahRelationshipFather => 'Father';
@@ -5643,8 +6062,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get surahRevelationMedinan => 'Medinan';
 
   @override
-  String ayahOfDaySurahMeta(String revelation, String count) {
-    return '$revelation · $count ayahs';
+  String ayahOfDaySurahMeta(String revelation, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return '$revelation · $_temp0';
   }
 
   @override
@@ -5696,7 +6121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSomethingElse => 'Something else';
 
   @override
-  String homeMinutes(int count) {
+  String homeMinutes(String count) {
     return '$count min';
   }
 
@@ -5856,18 +6281,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeContinueAction => 'Continue';
 
   @override
-  String homeAyahRange(int start, int end) {
+  String homeAyahRange(String start, String end) {
     return 'Verses $start to $end';
   }
 
   @override
-  String homeAyahProgressCount(int current, int total) {
-    return '$current of $total ayahs';
+  String homeAyahProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText ayahs',
+      one: '$totalText ayah',
+    );
+    return '$currentText of $_temp0';
   }
 
   @override
-  String homePageProgressCount(int current, int total) {
-    return '$current of $total pages';
+  String homePageProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText pages',
+      one: '$totalText page',
+    );
+    return '$currentText of $_temp0';
   }
 
   @override
@@ -5992,8 +6437,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeActivityYesterday => 'Yesterday';
 
   @override
-  String homeActivityDaysAgo(int count) {
-    return '$count days ago';
+  String homeActivityDaysAgo(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days',
+      one: '$countText day',
+    );
+    return '$_temp0 ago';
   }
 
   @override
@@ -6226,8 +6677,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Uses your recent on-device opening times to choose a reminder time.';
 
   @override
-  String memorizationHubReviewDueBadge(int count) {
-    return '$count ayahs due for review';
+  String memorizationHubReviewDueBadge(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs',
+      one: '$countText ayah',
+    );
+    return '$_temp0 due for review';
   }
 
   @override
@@ -6282,4 +6739,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String fieldTooLong(int maxLength) {
     return 'Cannot exceed $maxLength characters';
   }
+
+  @override
+  String get progressDueReviewsLabel => 'Due reviews';
+
+  @override
+  String progressStreakDaysUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'days',
+      one: 'day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressNextMilestoneTitle => 'Your next milestone';
+
+  @override
+  String progressNextMilestoneRemaining(int remaining) {
+    return '$remaining to go';
+  }
+
+  @override
+  String get progressAllAchievementsUnlocked =>
+      'Masha\'Allah! You\'ve unlocked every achievement';
+
+  @override
+  String progressDueReviewsNudge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ayahs are due for review',
+      one: '1 ayah is due for review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressStartReview => 'Start review';
+
+  @override
+  String progressActiveDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active days',
+      one: '1 active day',
+      zero: 'No active days yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressXpToNextLevel => 'Toward next level';
 }

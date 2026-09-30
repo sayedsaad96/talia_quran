@@ -58,7 +58,7 @@ void main() {
       expect(find.text("View Today's Plan"), findsOneWidget);
       expect(find.text('Practice'), findsOneWidget);
       expect(find.text('Practice by Surah'), findsOneWidget);
-      expect(find.text('Listening Review'), findsOneWidget);
+      expect(find.text('Listening Quiz'), findsOneWidget);
       expect(find.textContaining('Recite Practice'), findsOneWidget);
       expect(find.text('Review Session'), findsWidgets);
       expect(find.text('Settings'), findsOneWidget);
@@ -92,7 +92,7 @@ void main() {
     expect(find.text('Rewards / Progress'), findsWidgets);
     expect(find.text("Continue Today's Plan"), findsNothing);
     expect(find.text('Practice by Surah'), findsNothing);
-    expect(find.text('Listening Review'), findsNothing);
+    expect(find.text('Listening Quiz'), findsNothing);
     expect(find.text('Parent Dashboard'), findsNothing);
   });
 

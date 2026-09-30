@@ -49,9 +49,13 @@ class UnifiedJourneyActionMapper {
         break;
 
       case UnifiedJourneyActionType.reviewBacklog:
-        final overdue = action.metadata['overdueAyahs'] ?? '0';
+        final overdue =
+            int.tryParse(action.metadata['overdueAyahs'] ?? '') ?? 0;
         title = context.l10n.reviewBacklogTitle;
-        subtitle = context.l10n.reviewBacklogSubtitle(overdue.toString());
+        subtitle = context.l10n.reviewBacklogSubtitle(
+          overdue,
+          context.numText(overdue),
+        );
         break;
 
       case UnifiedJourneyActionType.smartPlan:

@@ -26,6 +26,7 @@ import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_daily_budget.dart';
+import '../../domain/services/kids_recalled_words.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
@@ -223,20 +224,25 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       }
     }
 
-    // The listen-repetition gate follows the age-band policy: a 5–7 year-old
-    // repeats the audio three times before recall, an 8–12 year-old twice.
-    maxLoops = policy.maxListenRepetitions;
-    sessionState ??= _sessionEngine.startLearning(
-      V2SessionState.initial(
-        surahId: surahId,
-        blockAyahs: [fallbackAyah],
-        // Kids missions are single-ayah blocks: a "block review" would only
-        // repeat the recitation the child just passed, and no kids UI drives
-        // startBlockReview — requiring it parks the session at
-        // blockReviewPending and the celebration never fires.
-        blockReviewRequired: false,
-      ),
+    // A review measures what stayed from before (K28): it starts in
+    // hidden-text recall with no listening first; support comes only after a
+    // missed recall or "remind me". New memorization follows the age-band
+    // listen gate: a 5–7 year-old repeats the audio three times before
+    // recall, an 8–12 year-old twice.
+    final isReview = effectiveMissionType != KidsMissionType.newMemorization;
+    maxLoops = isReview ? 0 : policy.maxListenRepetitions;
+    final initialSession = V2SessionState.initial(
+      surahId: surahId,
+      blockAyahs: [fallbackAyah],
+      // Kids missions are single-ayah blocks: a "block review" would only
+      // repeat the recitation the child just passed, and no kids UI drives
+      // startBlockReview — requiring it parks the session at
+      // blockReviewPending and the celebration never fires.
+      blockReviewRequired: false,
     );
+    sessionState ??= isReview
+        ? _sessionEngine.startReview(initialSession)
+        : _sessionEngine.startLearning(initialSession);
     await _saveKidsSession(sessionState);
 
     final activeAyah = sessionState.currentAyah;
@@ -259,6 +265,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         currentLoop: 0,
         maxLoops: maxLoops,
         isCompleted: false,
+        isReview: isReview,
       ),
     );
   }
@@ -385,6 +392,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   Future<void> playAudio() async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
+    // Playing during hidden-text recitation would give the answer away
+    // (Product Rules, Phase 3); "remind me" is the honest way back (K28).
+    if (st.sessionState.phase.textHidden) return;
 
     // An optional replay after the mandatory listen gate has opened must not
     // re-close the microphone or regress the loop progress dots (M1); only a
@@ -455,6 +465,77 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
+  /// Hides the ayah so the child recalls it before reciting ("try from
+  /// memory"). Hints are offered only in this phase (Product Rules §5), and
+  /// a missed recitation returns here for another attempt (§14.8, K25).
+  Future<void> tryFromMemory() async {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted || st.isRecording) return;
+    if (_loopCount < maxLoops) {
+      _flagListenFirst(st);
+      return;
+    }
+    if (st.isPlaying) await stopAudio();
+    if (isClosed || state is! KidsModeLoaded) return;
+    final current = state as KidsModeLoaded;
+    final session = switch (current.sessionState.phase) {
+      V2SessionPhase.learning => _sessionEngine.startMemorizing(
+        current.sessionState,
+      ),
+      V2SessionPhase.remediation => _sessionEngine.completeRemediation(
+        current.sessionState,
+      ),
+      _ => null,
+    };
+    if (session == null) return;
+    emit(current.copyWith(sessionState: session));
+    await _saveKidsSession(session);
+  }
+
+  /// "Remind me": the child cannot recall the hidden ayah, so the text and
+  /// audio come back as support. Recorded as a missed recall, so the rating
+  /// and the next review stay honest (K28).
+  Future<void> remindMe() async {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isAwaitingRecitation) return;
+    final session = _sessionEngine.requestReminder(st.sessionState);
+    emit(
+      st.copyWith(
+        sessionState: session,
+        clearRecordingError: true,
+        lastMatchedWords: 0,
+        lastTargetWords: 0,
+      ),
+    );
+    await _saveKidsSession(session);
+  }
+
+  /// "Give me the start": reveals the ayah's first word while the child is
+  /// recalling. Recorded once as a first-word hint, so a later pass rates
+  /// average instead of excellent — honest evidence for the review schedule.
+  Future<void> revealFirstWord() async {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isRecallingFromMemory || st.firstWordRevealed) return;
+    final session = _sessionEngine.useHint(
+      st.sessionState,
+      V2HintLevel.firstWord,
+    );
+    emit(st.copyWith(sessionState: session));
+    await _saveKidsSession(session);
+  }
+
+  /// Shows the "listen first" warning briefly.
+  void _flagListenFirst(KidsModeLoaded st) {
+    emit(st.copyWith(mustListenFirst: true));
+    Future.delayed(const Duration(seconds: 2), () {
+      if (isClosed || state is! KidsModeLoaded) return;
+      emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
+    });
+  }
+
   /// Records the child's recitation and evaluates it against the ayah text,
   /// using the shared ordered V2 evaluator and its explicit verdict bands.
   Future<void> startRecording() async {
@@ -463,11 +544,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (st.isCompleted) return;
 
     if (_loopCount < maxLoops) {
-      emit(st.copyWith(mustListenFirst: true));
-      Future.delayed(const Duration(seconds: 2), () {
-        if (isClosed || state is! KidsModeLoaded) return;
-        emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
-      });
+      _flagListenFirst(st);
       return;
     }
 
@@ -499,6 +576,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         // linger on the screen.
         lastMatchedWords: 0,
         lastTargetWords: 0,
+        clearRecalledWords: true,
       ),
     );
     await _saveKidsSession(recitingSession);
@@ -557,6 +635,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           recordingError: CubitMessageCodes.kidsRecordingNotCaptured,
           lastMatchedWords: 0,
           lastTargetWords: 0,
+          silentAttempts: current.silentAttempts + 1,
         ),
       );
       return;
@@ -579,6 +658,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           recordingError: CubitMessageCodes.kidsRecitationMismatch,
           lastMatchedWords: evalResult.matchedWordCount,
           lastTargetWords: evalResult.targetWordCount,
+          silentAttempts: 0,
+          // K32: which ayah words were right — flags only, in memory.
+          recalledWords: kidsRecalledWords(
+            targetText: current.ayahText,
+            spokenText: capture.recognizedWords,
+          ),
         ),
       );
       await _saveKidsSession(evaluatedSession);
@@ -593,10 +678,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         clearRecordingError: true,
         lastMatchedWords: 0,
         lastTargetWords: 0,
+        clearRecalledWords: true,
       ),
     );
 
-    await markCompleted(automaticSpokenText: capture.recognizedWords);
+    await markCompleted(
+      automaticSpokenText: capture.recognizedWords,
+      automaticSimilarity: evalResult.similarityScore,
+    );
   }
 
   /// Stops an in-progress recording manually (user pressed "Done").
@@ -656,6 +745,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   Future<void> markCompleted({
     bool manualGrade = false,
     String? automaticSpokenText,
+    double? automaticSimilarity,
   }) async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
@@ -702,6 +792,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       final masteryRating = _masteryRatingFor(
         failureCount: failureCount,
         hintLevel: effectiveHint,
+        // K31: STT tolerance (kKidsPassThreshold) lets a near match pass,
+        // but only an exact recitation is evidence of excellent mastery.
+        exactRecitation: manualGrade || (automaticSimilarity ?? 1.0) >= 1.0,
       );
       final startedAt = _sessionStartedAt ?? DateTime.now().toUtc();
       final durationSeconds = max(
@@ -821,11 +914,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   PerformanceRating _masteryRatingFor({
     required int failureCount,
     required V2HintLevel hintLevel,
+    bool exactRecitation = true,
   }) {
     if (hintLevel == V2HintLevel.fullAyah || failureCount >= 2) {
       return PerformanceRating.weak;
     }
-    if (hintLevel == V2HintLevel.firstWord || failureCount == 1) {
+    if (hintLevel == V2HintLevel.firstWord ||
+        failureCount == 1 ||
+        !exactRecitation) {
       return PerformanceRating.average;
     }
     return PerformanceRating.excellent;
@@ -958,12 +1054,16 @@ class KidsRecitationCaptureResult {
 }
 
 class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
-  KidsSpeechRecitationRecorder({SpeechToText? speechToText})
-    : _speechToText = speechToText ?? SpeechToText();
+  KidsSpeechRecitationRecorder({
+    SpeechToText? speechToText,
+    @visibleForTesting Future<bool> Function()? microphonePermission,
+  }) : _speechToText = speechToText ?? SpeechToText(),
+       _microphonePermission = microphonePermission;
 
   final SpeechToText _speechToText;
+  final Future<bool> Function()? _microphonePermission;
   bool _speechEnabled = false;
-  void Function(KidsRecitationCaptureResult result)? _onCaptureFailure;
+  void Function(SpeechRecognitionError error)? _onSpeechError;
 
   // Tracks the latest words during an active session so stop() can flush them.
   String _latestRecognizedWords = '';
@@ -1000,7 +1100,13 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       if (!internalCompleter.isCompleted) internalCompleter.complete(result);
     }
 
-    _onCaptureFailure = (result) {
+    _onSpeechError = (error) {
+      // Silence ends the listen with an error on Android. It is a quiet
+      // child, not a broken microphone: evaluate whatever was heard, and an
+      // empty capture becomes "we did not hear you" (K21).
+      final result = _isSilence(error)
+          ? KidsRecitationCaptureResult.captured(words: _latestRecognizedWords)
+          : const KidsRecitationCaptureResult.unavailable();
       completeInternal(result);
       _completeIfOpen(externalCompleter, result);
     };
@@ -1060,7 +1166,7 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       }
       return result;
     } finally {
-      _onCaptureFailure = null;
+      _onSpeechError = null;
     }
   }
 
@@ -1076,7 +1182,15 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
     }
   }
 
+  /// No recognizable speech — the same split as the adult session's
+  /// speech-issue classification.
+  static bool _isSilence(SpeechRecognitionError error) =>
+      error.errorMsg == 'error_no_match' ||
+      error.errorMsg == 'error_speech_timeout';
+
   Future<bool> _ensureMicrophonePermission() async {
+    final override = _microphonePermission;
+    if (override != null) return override();
     var status = await Permission.microphone.status;
     if (!status.isGranted) {
       status = await Permission.microphone.request();
@@ -1088,9 +1202,7 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
     try {
       return await _speechToText.initialize(
         onError: (SpeechRecognitionError error) {
-          _onCaptureFailure?.call(
-            const KidsRecitationCaptureResult.unavailable(),
-          );
+          _onSpeechError?.call(error);
         },
         onStatus: (status) {},
       );

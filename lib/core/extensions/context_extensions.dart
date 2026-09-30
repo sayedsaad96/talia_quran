@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/talia_tokens.dart';
+import '../utils/mushaf_hizb_helper.dart';
 
 extension BuildContextX on BuildContext {
   // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -26,6 +27,16 @@ extension BuildContextX on BuildContext {
   IconData get forwardChevron => isArabic
       ? Icons.arrow_back_ios_new_rounded
       : Icons.arrow_forward_ios_rounded;
+
+  /// [number] in the locale's digits: Eastern Arabic (٠١٢…) in Arabic, the
+  /// convention already used on the Mushaf, khatmah and Home (N7), Western
+  /// otherwise. Pass the result as a message's `…Text` placeholder; the int
+  /// itself still selects the plural form.
+  String numText(int number) {
+    if (!isArabic) return '$number';
+    final digits = MushafHizbHelper.toArabicNumber(number.abs());
+    return number < 0 ? '-$digits' : digits;
+  }
 
   // ─── Sizing ──────────────────────────────────────────────────────────────────
   Size get screenSize => MediaQuery.sizeOf(this);

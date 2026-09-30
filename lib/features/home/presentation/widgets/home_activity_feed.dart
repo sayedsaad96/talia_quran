@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -113,7 +114,10 @@ class _ActivityRow extends StatelessWidget {
         ? context.l10n.homeDailyWirdPage(event.pageNumber.toString())
         : kindLabel;
     final detail = event.startAyah != null && event.endAyah != null
-        ? context.l10n.homeAyahRange(event.startAyah!, event.endAyah!)
+        ? context.l10n.homeAyahRange(
+            context.numText(event.startAyah!),
+            context.numText(event.endAyah!),
+          )
         : kindLabel;
 
     void handleTap() {
@@ -211,5 +215,9 @@ String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
   if (startOfLocal == startOfToday.subtract(const Duration(days: 1))) {
     return l10n.homeActivityYesterday;
   }
-  return l10n.homeActivityDaysAgo(diff.inDays.clamp(1, 9999));
+  final days = diff.inDays.clamp(1, 9999);
+  return l10n.homeActivityDaysAgo(
+    days,
+    l10n.localeName == 'ar' ? MushafHizbHelper.toArabicNumber(days) : '$days',
+  );
 }

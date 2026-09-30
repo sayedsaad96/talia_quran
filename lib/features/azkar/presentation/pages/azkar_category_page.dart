@@ -20,6 +20,9 @@ import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
 import '../services/zikr_audio_service.dart';
+import '../services/zikr_copy_text.dart';
+import '../widgets/azkar_index_sheet.dart';
+import '../widgets/zikr_audio_state_builder.dart';
 import '../widgets/font_scale_selector_sheet.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
@@ -89,6 +92,9 @@ class _AzkarCategoryView extends StatelessWidget {
                 totalCount: state.sessions.length,
                 isDark: isDark,
                 onReset: () => context.read<AzkarCubit>().reset(),
+                onUndo: state.canUndoCompletion
+                    ? () => context.read<AzkarCubit>().decrementCurrent()
+                    : null,
               );
             }
             return _ActiveAzkarScreen(
@@ -261,134 +267,36 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
     }
   }
 
-  String _shareableText(BuildContext context, ZikrSession session) {
-    final reference = session.zikr.reference;
-    return [
-      session.zikr.text,
-      if (reference.isNotEmpty) reference,
-      context.l10n.sharedFromTalia,
-    ].join('\n\n');
-  }
+  String _shareableText(BuildContext context, ZikrSession session) =>
+      zikrCopyText(session.zikr, footer: context.l10n.sharedFromTalia);
 
   void _openIndexSheet(BuildContext context) {
     HapticFeedback.selectionClick();
     final cubit = context.read<AzkarCubit>();
     // Snapshot the live state so the sheet reflects current counts/progress
     // even if it stays open while the user completes zikr in the background.
-    final AzkarLoaded snapshot;
     final current = cubit.state;
-    if (current is AzkarLoaded) {
-      snapshot = current;
-    } else {
-      snapshot = widget.state;
-    }
-    final surfaceColor = context.tokens.surface;
-    final textColor = context.tokens.textPrimary;
+    final snapshot = current is AzkarLoaded ? current : widget.state;
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Directionality(
-          textDirection: Directionality.of(context),
-          child: Material(
-            color: surfaceColor,
-            clipBehavior: Clip.antiAlias,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 460),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          context.tokens.textHint
-                              .withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                    child: Text(
-                      context.l10n.azkarIndex,
-                      style: AppTypography.headlineSmall.copyWith(
-                        color: textColor,
-                        fontFamily: 'Amiri',
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      itemCount: snapshot.sessions.length,
-                      separatorBuilder: (_, _) => Divider(
-                        color: context.tokens.divider,
-                        height: 1,
-                      ),
-                      itemBuilder: (context, index) {
-                        final session = snapshot.sessions[index];
-                        final selected = index == snapshot.currentIndex;
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          leading: CircleAvatar(
-                            backgroundColor: selected
-                                ? AppColors.primary
-                                : context.tokens.surfaceVariant,
-                            foregroundColor: selected
-                                ? Colors.white
-                                : textColor,
-                            child: Text('${index + 1}'),
-                          ),
-                          title: Text(
-                            session.zikr.reference.isNotEmpty
-                                ? session.zikr.reference
-                                : context.l10n.zikrNumber(index + 1),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: textColor,
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                          ),
-                          subtitle: Text(
-                            context.l10n.miniProgressOf(
-                              session.zikr.totalCount,
-                              session.currentCount,
-                            ),
-                            style: AppTypography.labelSmall.copyWith(
-                              color: context.tokens.textSecondary,
-                            ),
-                          ),
-                          trailing: session.isDone
-                              ? const Icon(
-                                  Icons.check_circle,
-                                  color: AppColors.success,
-                                )
-                              : null,
-                          onTap: () {
-                            Navigator.pop(sheetContext);
-                            cubit.goTo(index);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
+    showAzkarIndexSheet(
+      context,
+      entries: [
+        for (var i = 0; i < snapshot.sessions.length; i++)
+          AzkarIndexEntry(
+            title: azkarIndexTitle(snapshot.sessions[i].zikr),
+            subtitle: [
+              if (snapshot.sessions[i].zikr.reference.isNotEmpty)
+                snapshot.sessions[i].zikr.reference,
+              context.l10n.miniProgressOf(
+                snapshot.sessions[i].zikr.totalCount,
+                snapshot.sessions[i].currentCount,
               ),
-            ),
+            ].join(' · '),
+            done: snapshot.sessions[i].isDone,
+            selected: i == snapshot.currentIndex,
           ),
-        );
-      },
+      ],
+      onSelected: cubit.goTo,
     );
   }
 
@@ -506,36 +414,70 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                           isDark: widget.isDark,
                         ),
                       ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: _prefsStore.autoAdvanceListenable,
-                        builder: (context, autoAdvance, _) => IconButton(
-                          tooltip: autoAdvance
-                              ? context.l10n.azkarAutoAdvanceOn
-                              : context.l10n.azkarAutoAdvanceOff,
-                          constraints: iconConstraints,
-                          visualDensity: isSmall ? VisualDensity.compact : null,
-                          icon: Icon(
-                            autoAdvance
-                                ? Icons.autorenew_rounded
-                                : Icons.pause_circle_outline_rounded,
-                            color: autoAdvance
-                                ? AppColors.primary
-                                : context.tokens.textHint,
+                      if (isSmall)
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _prefsStore.autoAdvanceListenable,
+                          builder: (context, autoAdvance, _) =>
+                              PopupMenuButton<String>(
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).showMenuTooltip,
+                                icon: Icon(
+                                  Icons.more_vert_rounded,
+                                  color: context.tokens.textPrimary,
+                                ),
+                                onSelected: (value) {
+                                  if (value == 'auto') {
+                                    HapticFeedback.selectionClick();
+                                    _prefsStore.setAutoAdvance(!autoAdvance);
+                                  } else {
+                                    _openIndexSheet(context);
+                                  }
+                                },
+                                itemBuilder: (menuContext) => [
+                                  PopupMenuItem<String>(
+                                    value: 'auto',
+                                    child: Text(
+                                      autoAdvance
+                                          ? context.l10n.azkarAutoAdvanceOn
+                                          : context.l10n.azkarAutoAdvanceOff,
+                                    ),
+                                  ),
+                                  PopupMenuItem<String>(
+                                    value: 'index',
+                                    child: Text(context.l10n.azkarIndex),
+                                  ),
+                                ],
+                              ),
+                        )
+                      else ...[
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _prefsStore.autoAdvanceListenable,
+                          builder: (context, autoAdvance, _) => IconButton(
+                            tooltip: autoAdvance
+                                ? context.l10n.azkarAutoAdvanceOn
+                                : context.l10n.azkarAutoAdvanceOff,
+                            icon: Icon(
+                              autoAdvance
+                                  ? Icons.autorenew_rounded
+                                  : Icons.pause_circle_outline_rounded,
+                              color: autoAdvance
+                                  ? AppColors.primary
+                                  : context.tokens.textHint,
+                            ),
+                            onPressed: () {
+                              HapticFeedback.selectionClick();
+                              _prefsStore.setAutoAdvance(!autoAdvance);
+                            },
                           ),
-                          onPressed: () {
-                            HapticFeedback.selectionClick();
-                            _prefsStore.setAutoAdvance(!autoAdvance);
-                          },
                         ),
-                      ),
-                      IconButton(
-                        tooltip: context.l10n.azkarIndex,
-                        icon: const Icon(Icons.format_list_bulleted_rounded),
-                        constraints: iconConstraints,
-                        visualDensity: isSmall ? VisualDensity.compact : null,
-                        color: context.tokens.textPrimary,
-                        onPressed: () => _openIndexSheet(context),
-                      ),
+                        IconButton(
+                          tooltip: context.l10n.azkarIndex,
+                          icon: const Icon(Icons.format_list_bulleted_rounded),
+                          color: context.tokens.textPrimary,
+                          onPressed: () => _openIndexSheet(context),
+                        ),
+                      ],
                     ],
                   ),
                 );
@@ -574,21 +516,26 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                       itemCount: widget.state.sessions.length,
                       itemBuilder: (context, index) {
                         final session = widget.state.sessions[index];
-                        return _ZikrReaderPage(
-                          session: session,
-                          fontSize: 26.0 * fontScale,
-                          isDark: widget.isDark,
-                          showUndo: _showUndo && _undoIndex == index,
-                          onTap: () => _handleCounterTap(context, index, session),
-                          onLongPress: () => _undoLastCount(context),
-                          onUndo: () => _undoLastCount(context),
-                          onShare: () => _shareZikr(context, session),
-                          onCopy: () => _copyZikr(context, session),
-                          onToggleAudio: () => _audioService.toggle(session.zikr),
-                          hasAudio: _audioService.hasAudio(session.zikr),
-                          isAudioPlaying:
-                              _audioService.state.isPlaying &&
-                                  _audioService.state.zikrId == session.zikr.id,
+                        return ZikrAudioStateBuilder(
+                          source: _audioService,
+                          builder: (context, audioState) => _ZikrReaderPage(
+                            session: session,
+                            fontSize: 26.0 * fontScale,
+                            isDark: widget.isDark,
+                            showUndo: _showUndo && _undoIndex == index,
+                            onTap: () =>
+                                _handleCounterTap(context, index, session),
+                            onLongPress: () => _undoLastCount(context),
+                            onUndo: () => _undoLastCount(context),
+                            onShare: () => _shareZikr(context, session),
+                            onCopy: () => _copyZikr(context, session),
+                            onToggleAudio: () =>
+                                _audioService.toggle(session.zikr),
+                            hasAudio: _audioService.hasAudio(session.zikr),
+                            isAudioPlaying:
+                                audioState.isPlaying &&
+                                audioState.zikrId == session.zikr.id,
+                          ),
                         );
                       },
                     );
@@ -995,6 +942,7 @@ class _CompletionScreen extends StatefulWidget {
     required this.totalCount,
     required this.isDark,
     required this.onReset,
+    this.onUndo,
   });
 
   final String title;
@@ -1002,6 +950,7 @@ class _CompletionScreen extends StatefulWidget {
   final int totalCount;
   final bool isDark;
   final VoidCallback onReset;
+  final VoidCallback? onUndo;
 
   @override
   State<_CompletionScreen> createState() => _CompletionScreenState();
@@ -1157,6 +1106,18 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                 )
                 .animate(autoPlay: !disableAnimations, value: motionValue)
                 .fadeIn(delay: 500.ms),
+            if (widget.onUndo != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              TextButton.icon(
+                key: const ValueKey('azkar-completion-undo'),
+                onPressed: widget.onUndo,
+                icon: const Icon(Icons.undo_rounded, size: 18),
+                label: Text(context.l10n.undo),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.tokens.textSecondary,
+                ),
+              ),
+            ],
           ],
         ),
       ),

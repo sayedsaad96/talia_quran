@@ -42,6 +42,107 @@ void main() {
       expect(mapTapped, isTrue);
     });
 
+    testWidgets('the Next arrow points forward in Arabic (K22)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 1,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      // The forward arrow mirrors itself under RTL; a hand-picked "back"
+      // arrow would point the child backwards.
+      expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+    });
+
+    testWidgets('a review without stars never shows "+0 stars" (K23)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 0,
+            pointsEarned: 5,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('stars'), findsNothing);
+      expect(find.text('+5 gems'), findsOneWidget);
+    });
+
+    testWidgets('after the session goal it says "enough for today" (K36)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 1,
+            sessionGoalReached: true,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      expect(
+        find.textContaining("That's enough time for today"),
+        findsOneWidget,
+      );
+      // Gentle, not blocking.
+      expect(find.text('Start mission'), findsOneWidget);
+    });
+
+    testWidgets('large text stacks the two actions instead of squeezing', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(360, 900);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: Size(360, 900),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: _TestApp(
+            child: KidsGamifiedCompletionContent(
+              starsEarned: 1,
+              onNext: () {},
+              onReturnToMap: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      final map = tester.getCenter(find.text('Return to map'));
+      final next = tester.getCenter(find.text('Start mission'));
+      expect(map.dy, isNot(next.dy));
+    });
+
     testWidgets('hides next button when showNextButton is false', (
       tester,
     ) async {
@@ -283,14 +384,15 @@ AyahReviewRecord _dueReviewRecord({
 );
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.child, this.locale = const Locale('en')});
 
   final Widget child;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,

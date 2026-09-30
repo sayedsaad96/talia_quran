@@ -6,6 +6,7 @@ import '../../data/datasources/azkar_preferences_store.dart';
 import '../../data/datasources/smart_wird_progress_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
+import '../../domain/services/azkar_period_resolver.dart';
 import '../../domain/services/azkar_time_context.dart';
 
 enum AzkarHubStatus { loading, ready, error }
@@ -89,14 +90,17 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
     this._prefsStore, {
     DateTime Function()? now,
     SmartWirdProgressStore? smartWirdStore,
+    AzkarPrayerWindowSource? windowSource,
   })  : _now = now ?? DateTime.now,
         _smartWirdStore = smartWirdStore,
+        _windowSource = windowSource,
         super(const AzkarHubState(status: AzkarHubStatus.loading));
 
   final AzkarRepository _repository;
   final AzkarCompletionStore _completionStore;
   final AzkarPreferencesStore _prefsStore;
   final SmartWirdProgressStore? _smartWirdStore;
+  final AzkarPrayerWindowSource? _windowSource;
   final DateTime Function() _now;
 
   Future<void> load([DateTime? nowOverride]) async {
@@ -118,6 +122,9 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
       emit(state.copyWith(status: AzkarHubStatus.error, error: failureMessage));
       return;
     }
+
+    final period = await AzkarPeriodResolver.resolveWith(now, _windowSource);
+    if (isClosed) return;
 
     final counts = <AzkarCategory, int>{
       for (final entry in corpus.entries) entry.key: entry.value.length,
@@ -150,7 +157,7 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
         counts: counts,
         completion: completion,
         tasbeehTally: _prefsStore.getTasbeehTally(now),
-        period: AzkarTimeContext.resolvePeriod(now),
+        period: period,
         smartWirdCompletedToday: smartCompletedToday,
         smartWirdSessionCountToday: smartSessionCount,
       ),

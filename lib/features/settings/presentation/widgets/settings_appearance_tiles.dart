@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -7,6 +9,11 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/pure_black_cubit.dart';
 import '../../../../core/theme/theme_cubit.dart';
 
+/// Light, Dark, Pure black (OLED) and System as four peer choices.
+///
+/// Pure black is not a separate switch: it is a distinct dark variant, so it
+/// is chosen here and only ever changes which dark palette is used. Light and
+/// System leave the remembered dark variant untouched.
 class ThemeSettingTile extends StatelessWidget {
   const ThemeSettingTile({super.key, required this.isDark});
   final bool isDark;
@@ -15,95 +22,86 @@ class ThemeSettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, themeMode) {
-        final primary = context.tokens.accent;
+        return BlocBuilder<PureBlackCubit, bool>(
+          builder: (context, pureBlack) {
+            final primary = context.tokens.accent;
+            final l10n = context.l10n;
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: ThemeOption(
-                  label: context.l10n.lightMode,
-                  icon: Icons.light_mode_rounded,
-                  isSelected: themeMode == ThemeMode.light,
-                  color: primary,
-                  isDark: isDark,
-                  onTap: () =>
+            Widget option({
+              required String label,
+              required IconData icon,
+              required bool selected,
+              required VoidCallback onTap,
+            }) => Expanded(
+              child: ThemeOption(
+                label: label,
+                icon: icon,
+                isSelected: selected,
+                color: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+            );
+
+            const gap = SizedBox(width: AppSpacing.xs);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  option(
+                    label: l10n.lightMode,
+                    icon: Icons.light_mode_rounded,
+                    selected: themeMode == ThemeMode.light,
+                    onTap: () => unawaited(
                       context.read<ThemeCubit>().setTheme(ThemeMode.light),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: ThemeOption(
-                  label: context.l10n.darkMode,
-                  icon: Icons.dark_mode_rounded,
-                  isSelected: themeMode == ThemeMode.dark,
-                  color: primary,
-                  isDark: isDark,
-                  onTap: () =>
-                      context.read<ThemeCubit>().setTheme(ThemeMode.dark),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: ThemeOption(
-                  label: context.l10n.systemDefault,
-                  icon: Icons.brightness_auto_rounded,
-                  isSelected: themeMode == ThemeMode.system,
-                  color: primary,
-                  isDark: isDark,
-                  onTap: () =>
+                    ),
+                  ),
+                  gap,
+                  option(
+                    label: l10n.darkMode,
+                    icon: Icons.dark_mode_rounded,
+                    selected: themeMode == ThemeMode.dark && !pureBlack,
+                    onTap: () => unawaited(_selectDark(context, oled: false)),
+                  ),
+                  gap,
+                  option(
+                    label: l10n.pureBlackTheme,
+                    icon: Icons.contrast_rounded,
+                    selected: themeMode == ThemeMode.dark && pureBlack,
+                    onTap: () => unawaited(_selectDark(context, oled: true)),
+                  ),
+                  gap,
+                  option(
+                    label: l10n.systemDefault,
+                    icon: Icons.brightness_auto_rounded,
+                    selected: themeMode == ThemeMode.system,
+                    onTap: () => unawaited(
                       context.read<ThemeCubit>().setTheme(ThemeMode.system),
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
-}
 
-/// Switches dark mode to the pure-black OLED palette.
-class PureBlackSettingTile extends StatelessWidget {
-  const PureBlackSettingTile({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-    final textTheme = context.textTheme;
-    return BlocBuilder<PureBlackCubit, bool>(
-      builder: (context, enabled) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            secondary: Icon(
-              Icons.contrast_rounded,
-              color: tokens.textSecondary,
-            ),
-            title: Text(
-              context.l10n.pureBlackTheme,
-              style: textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            subtitle: Text(
-              context.l10n.pureBlackThemeHint,
-              style: textTheme.bodySmall,
-            ),
-            value: enabled,
-            onChanged: (value) =>
-                context.read<PureBlackCubit>().setEnabled(value),
-          ),
-        );
-      },
-    );
+  /// Sets the palette first so the switch never flashes the wrong dark.
+  static Future<void> _selectDark(
+    BuildContext context, {
+    required bool oled,
+  }) async {
+    final pureBlackCubit = context.read<PureBlackCubit>();
+    final themeCubit = context.read<ThemeCubit>();
+    await pureBlackCubit.setEnabled(oled);
+    await themeCubit.setTheme(ThemeMode.dark);
   }
 }
 

@@ -324,7 +324,8 @@ void main() {
 
       expect(
         await MemorizationRouteGuard.kidsJourneyRedirect(state),
-        '${AppRoutes.memorizationPlusKidsJourney}?surahId=114',
+        // A new child's journey opens with Al-Fatiha (K27).
+        '${AppRoutes.memorizationPlusKidsJourney}?surahId=1',
       );
     });
   });

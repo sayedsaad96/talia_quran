@@ -99,6 +99,7 @@ class MemorizationFamilyService {
                   displayName: r.displayName,
                   isLocal: false,
                   remoteSummary: r,
+                  childAge: r.childAge,
                 ),
               );
             }

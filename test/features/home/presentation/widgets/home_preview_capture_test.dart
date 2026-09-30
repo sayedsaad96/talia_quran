@@ -13,7 +13,6 @@ import 'package:talia_quran/core/theme/app_theme.dart';
 import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
 import 'package:talia_quran/features/home/domain/entities/ayah_of_day.dart';
 import 'package:talia_quran/features/home/domain/entities/continue_recitation.dart';
-import 'package:talia_quran/features/home/domain/entities/today_checklist.dart';
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
 import 'package:talia_quran/features/home/presentation/pages/home_page.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
@@ -91,38 +90,6 @@ void main() {
         totalXp: 420,
         hijriLabel: 'الأربعاء ١٧ ربيع الآخر ١٤٤٨ هـ',
         gregorianLabel: '9 / 9 / 2026',
-        todayChecklist: const TodayChecklist(
-          tasks: [
-            TodayTask(
-              kind: TodayTaskKind.reading,
-              route: '/quran/page/1',
-              isComplete: true,
-              current: 1,
-              total: 1,
-            ),
-            TodayTask(
-              kind: TodayTaskKind.memorize,
-              route: '/memorization-hub',
-              isComplete: false,
-              current: 2,
-              total: 10,
-            ),
-            TodayTask(
-              kind: TodayTaskKind.review,
-              route: '/memorization-hub',
-              isComplete: false,
-              current: 0,
-              total: 5,
-            ),
-            TodayTask(
-              kind: TodayTaskKind.azkar,
-              route: '/azkar/morning',
-              isComplete: true,
-              current: 1,
-              total: 1,
-            ),
-          ],
-        ),
         continueRecitation: const ContinueRecitation(
           surahName: 'البقرة',
           surahId: 2,

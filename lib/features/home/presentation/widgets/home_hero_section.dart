@@ -39,7 +39,7 @@ void showHomeAlternativesSheet(
                 leading: Icon(mapper.map(ctx, action).icon),
                 title: Text(mapper.map(ctx, action).title),
                 subtitle: Text(
-                  '${mapper.map(ctx, action).subtitle} · ${ctx.l10n.homeMinutes(journeyActionMinutes(action))}',
+                  '${mapper.map(ctx, action).subtitle} · ${ctx.l10n.homeMinutes(ctx.numText(journeyActionMinutes(action)))}',
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -80,7 +80,7 @@ class HomeHeroSection extends StatelessWidget {
             data: JourneyPresentationData(
               title: data.title,
               subtitle: minutes > 0
-                  ? '${data.subtitle} · ${context.l10n.homeMinutes(minutes)}'
+                  ? '${data.subtitle} · ${context.l10n.homeMinutes(context.numText(minutes))}'
                   : data.subtitle,
               icon: data.icon,
               route: data.route,

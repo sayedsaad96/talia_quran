@@ -1,5 +1,6 @@
 import '../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../entities/custom_memorization_plan.dart';
+import '../entities/daily_plan.dart';
 
 /// Turns the learner's plan settings into concrete daily scheduling:
 ///
@@ -52,6 +53,32 @@ abstract final class PlanSchedulePolicy {
     };
     final daily = plan.newAyahsPerDay < 1 ? 1 : plan.newAyahsPerDay;
     return byDifficulty < daily ? byDifficulty : daily;
+  }
+
+  /// Fits [blockSize] to today's plan for a session starting at
+  /// [startAyah]: the block covers at most the unfinished new ayahs of
+  /// [today] that run contiguously from [startAyah], so the session never
+  /// memorizes more than the plan (and its time estimate) promised. A start
+  /// outside today's new ayahs (surah practice, no plan) keeps [blockSize].
+  static int fitToDailyPlan(
+    int blockSize,
+    DailyPlan? today, {
+    required int surahId,
+    required int startAyah,
+  }) {
+    if (today == null) return blockSize;
+    final remaining = {
+      for (final ayah in today.newAyahs)
+        if (ayah.surahId == surahId &&
+            !today.isAyahCompleted(ayah.surahId, ayah.ayahNumber))
+          ayah.ayahNumber,
+    };
+    var run = 0;
+    while (remaining.contains(startAyah + run)) {
+      run++;
+    }
+    if (run == 0) return blockSize;
+    return run < blockSize ? run : blockSize;
   }
 
   /// Recitation pass threshold for [difficulty].

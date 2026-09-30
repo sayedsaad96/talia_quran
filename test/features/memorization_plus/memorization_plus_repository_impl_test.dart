@@ -10,7 +10,9 @@ import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/core/security/parent_pin_secure_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
+import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/memorization_profile_service.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -186,33 +188,36 @@ void main() {
       KidsMissionType.resume,
       KidsMissionType.linkedReview,
     ]) {
-      test('a first $missionType mission earns only reduced review points', () async {
-        final result = await repository.awardKidsPoints(
-          sessionId: 'non-reward-${missionType.name}',
-          surahId: 114,
-          ayahNumber: 1,
-          repeatsCompleted: 1,
-          missionType: missionType,
-        );
+      test(
+        'a first $missionType mission earns only reduced review points',
+        () async {
+          final result = await repository.awardKidsPoints(
+            sessionId: 'non-reward-${missionType.name}',
+            surahId: 114,
+            ayahNumber: 1,
+            repeatsCompleted: 1,
+            missionType: missionType,
+          );
 
-        final completion = result.getOrElse(
-          () => throw StateError('Expected non-reward mission to succeed'),
-        );
-        final progress = await datasource.getKidsProgress();
-        final logs = await datasource.getKidsSessionLogs();
-        final journey = (await repository.getKidsJourney(
-          surahId: 114,
-        )).getOrElse(() => throw StateError('Expected journey'));
+          final completion = result.getOrElse(
+            () => throw StateError('Expected non-reward mission to succeed'),
+          );
+          final progress = await datasource.getKidsProgress();
+          final logs = await datasource.getKidsSessionLogs();
+          final journey = (await repository.getKidsJourney(
+            surahId: 114,
+          )).getOrElse(() => throw StateError('Expected journey'));
 
-        // W2: reduced review points show progress, but never canonical
-        // memorization rewards (stars, completed-ayah counts, journey).
-        expect(completion.pointsEarned, 5);
-        expect(completion.starsEarned, 0);
-        expect(progress.totalPoints, 5);
-        expect(progress.ayahsCompleted, 0);
-        expect(logs.single.pointsEarned, 5);
-        expect(journey.first.completedAyahs, isEmpty);
-      });
+          // W2: reduced review points show progress, but never canonical
+          // memorization rewards (stars, completed-ayah counts, journey).
+          expect(completion.pointsEarned, 5);
+          expect(completion.starsEarned, 0);
+          expect(progress.totalPoints, 5);
+          expect(progress.ayahsCompleted, 0);
+          expect(logs.single.pointsEarned, 5);
+          expect(journey.first.completedAyahs, isEmpty);
+        },
+      );
     }
 
     test('positive logs repair a stale cached kids projection', () async {
@@ -343,17 +348,20 @@ void main() {
       expect(await datasource.getKidsSessionLogs(), isEmpty);
     });
 
-    test('new memorization without completion evidence is not rewarded', () async {
-      final result = await repository.awardKidsPoints(
-        surahId: 114,
-        ayahNumber: 1,
-        repeatsCompleted: 3,
-      );
+    test(
+      'new memorization without completion evidence is not rewarded',
+      () async {
+        final result = await repository.awardKidsPoints(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+        );
 
-      expect(result.isLeft(), isTrue);
-      expect(await datasource.getKidsSessionLogs(), isEmpty);
-      expect((await datasource.getKidsProgress()).totalPoints, 0);
-    });
+        expect(result.isLeft(), isTrue);
+        expect(await datasource.getKidsSessionLogs(), isEmpty);
+        expect((await datasource.getKidsProgress()).totalPoints, 0);
+      },
+    );
 
     test(
       'award cannot overwrite a review log with the same session id',
@@ -503,6 +511,41 @@ void main() {
           () => throw StateError('Expected kids progress'),
         );
         expect(hydrated.currentStreak, 4);
+      },
+    );
+
+    test(
+      'a house that needs review names its most overdue ayah (K30)',
+      () async {
+        for (final ayah in [1, 2, 3, 4, 5]) {
+          await repository.awardKidsPoints(
+            completionAuthorized: true,
+            surahId: 114,
+            ayahNumber: ayah,
+            repeatsCompleted: 3,
+          );
+        }
+        AyahReviewRecord record(int ayah, DateTime next) => AyahReviewRecord(
+          surahId: 114,
+          ayahNumber: ayah,
+          strengthLevel: 2,
+          intervalDays: 1,
+          lastReviewedAt: DateTime.utc(2025, 12, 1),
+          nextReviewDate: next,
+          totalReviews: 1,
+          lastRating: PerformanceRating.average,
+          createdByMode: ReviewRecordCreatedByMode.kidsMode,
+        );
+        await repository.saveReviewRecord(record(1, DateTime.utc(2099)));
+        await repository.saveReviewRecord(record(2, DateTime.utc(2026, 2, 1)));
+        await repository.saveReviewRecord(record(4, DateTime.utc(2026, 1, 15)));
+
+        final stages = (await repository.getKidsJourney(
+          surahId: 114,
+        )).getOrElse(() => throw StateError('Expected journey'));
+
+        expect(stages.first.status, KidsJourneyStageStatus.needsReview);
+        expect(stages.first.reviewAyah, 4);
       },
     );
 
@@ -686,6 +729,102 @@ void main() {
         startsWith('pbkdf2-sha256\$'),
       );
       expect(rewards.getOrElse(() => const []), hasLength(1));
+    });
+
+    group('reopenGuardianLinking', () {
+      test('lets a child who skipped linking open it again', () async {
+        await repository.selectMemorizationPath(MemorizationPath.child);
+        await repository.continueWithoutGuardian();
+        await prefs.remove(MemorizationProfileService.kIdentityCloudDirty);
+
+        final result = await repository.reopenGuardianLinking();
+
+        final profile = result.getOrElse(() => throw StateError('failed'));
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.required,
+        );
+        expect(profile.isGuardianLinked, isFalse);
+        expect(
+          prefs.getBool(MemorizationProfileService.kIdentityCloudDirty),
+          isTrue,
+        );
+      });
+
+      test('is refused for an adult profile', () async {
+        await repository.selectMemorizationPath(MemorizationPath.adult);
+
+        final result = await repository.reopenGuardianLinking();
+
+        expect(
+          result.fold((failure) => failure.message, (_) => null),
+          CubitMessageCodes.guardianOnlyForChildren,
+        );
+      });
+
+      test('is refused for a child who is already linked', () async {
+        await repository.selectMemorizationPath(MemorizationPath.child);
+        final child = (await repository.getMemorizationProfile()).getOrElse(
+          () => throw StateError('no profile'),
+        );
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel.fromEntity(
+            child.copyWith(
+              guardianLinkStatus: GuardianLinkStatus.linked,
+              guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            ),
+          ),
+        );
+
+        final result = await repository.reopenGuardianLinking();
+
+        expect(
+          result.fold((failure) => failure.message, (_) => null),
+          CubitMessageCodes.guardianAlreadyLinked,
+        );
+        final after = (await repository.getMemorizationProfile()).getOrElse(
+          () => throw StateError('no profile'),
+        );
+        expect(
+          after.guardianOnboardingStatus,
+          GuardianOnboardingStatus.completed,
+        );
+      });
+    });
+
+    test('only a changed child nickname is marked for cloud upload', () async {
+      const key = 'mem_plus_child_nickname_cloud_dirty';
+
+      await repository.saveParentSettings(
+        const ParentSettings(localChildNickname: 'Maryam'),
+      );
+      expect(prefs.getBool(key), isTrue);
+
+      await prefs.remove(key);
+      await repository.saveParentSettings(
+        const ParentSettings(localChildNickname: 'Maryam', reminderHour: 19),
+      );
+      expect(
+        prefs.getBool(key),
+        isNull,
+        reason: 'an unchanged name must not be resent over a guardian edit',
+      );
+    });
+
+    test('resetting parent access clears the PIN but keeps rewards', () async {
+      await repository.setParentPin('1234');
+      await repository.saveParentReward('نزهة قصيرة');
+
+      await repository.resetParentAccess();
+
+      final settings = await datasource.getParentSettings();
+      expect(settings.hasPin, isFalse);
+      expect(await parentPinStore.readVerifier('local'), isNull);
+      expect(
+        (await repository.verifyParentPin('1234')).getOrElse(() => true),
+        isFalse,
+      );
+      expect(await datasource.getParentRewards(), hasLength(1));
     });
 
     test(

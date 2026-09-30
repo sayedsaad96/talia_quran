@@ -15,7 +15,9 @@ void main() {
   });
 
   group('KidsProgressHeader', () {
-    testWidgets('shows the daily streak badge when a streak exists', (tester) async {
+    testWidgets('shows the daily streak badge when a streak exists', (
+      tester,
+    ) async {
       // K12: the daily-consistency engine (currentStreak) was invisible to
       // kids; the header must surface it with the shared home streak label.
       tester.view.devicePixelRatio = 1;
@@ -32,16 +34,16 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const _TestApp(
-          child: KidsProgressHeader(progress: progress),
-        ),
+        const _TestApp(child: KidsProgressHeader(progress: progress)),
       );
 
       expect(find.byKey(const ValueKey('kids-streak-badge')), findsOneWidget);
       expect(find.text('5-day streak'), findsOneWidget);
     });
 
-    testWidgets('hides the streak badge when the streak is zero', (tester) async {
+    testWidgets('hides the streak badge when the streak is zero', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
       addTearDown(tester.view.reset);
@@ -49,13 +51,57 @@ void main() {
       const progress = KidsProgress.initial();
 
       await tester.pumpWidget(
-        const _TestApp(
-          child: KidsProgressHeader(progress: progress),
-        ),
+        const _TestApp(child: KidsProgressHeader(progress: progress)),
       );
 
       expect(find.byKey(const ValueKey('kids-streak-badge')), findsNothing);
       expect(find.textContaining('-day streak'), findsNothing);
+    });
+
+    testWidgets('a one-day streak and zero stars show no counters (K34)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      const progress = KidsProgress(
+        totalPoints: 20,
+        currentLevel: 1,
+        currentStreak: 1,
+        starsEarned: 0,
+        ayahsCompleted: 0,
+        lastSessionAt: null,
+      );
+
+      await tester.pumpWidget(
+        const _TestApp(child: KidsProgressHeader(progress: progress)),
+      );
+
+      expect(find.byKey(const ValueKey('kids-streak-badge')), findsNothing);
+      expect(find.textContaining('star'), findsNothing);
+    });
+
+    testWidgets('a two-day streak shows the badge (K34)', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      const progress = KidsProgress(
+        totalPoints: 20,
+        currentLevel: 1,
+        currentStreak: 2,
+        starsEarned: 1,
+        ayahsCompleted: 1,
+        lastSessionAt: null,
+      );
+
+      await tester.pumpWidget(
+        const _TestApp(child: KidsProgressHeader(progress: progress)),
+      );
+
+      expect(find.byKey(const ValueKey('kids-streak-badge')), findsOneWidget);
+      expect(find.textContaining('star'), findsOneWidget);
     });
 
     testWidgets('renders at 320px without layout exceptions', (tester) async {

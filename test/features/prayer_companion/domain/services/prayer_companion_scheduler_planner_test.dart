@@ -291,6 +291,29 @@ void main() {
       );
     });
 
+    test('an explicit response cancels its pending generic check-in', () async {
+      await enableCompanion();
+      await repository.save(
+        recordFor(
+          PrayerKey.asr,
+          PrayerCompanionStatus.remindLater,
+          followUpAt: DateTime(2026, 9, 16, 15, 40),
+          followUpCount: 1,
+        ),
+      );
+      final plan = await buildPlanner().plan(
+        now: DateTime(2026, 9, 16, 15, 35),
+      );
+      final asrEvents = plan.where(
+        (event) => event.occurrence.localDate == day &&
+            event.occurrence.prayerKey == PrayerKey.asr,
+      );
+      expect(
+        asrEvents.map((event) => event.kind),
+        [PrayerCompanionNotificationKind.followUp],
+      );
+    });
+
     test('elapsed events are skipped', () async {
       await enableCompanion();
       final now = DateTime(2026, 9, 16, 16, 10);

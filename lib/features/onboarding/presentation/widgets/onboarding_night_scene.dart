@@ -32,9 +32,9 @@ class OnboardingNightScene extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.darkBackground,
-                  AppColors.darkSurface,
-                  AppColors.darkBackground,
+                  OnboardingPalette.nightBackground,
+                  OnboardingPalette.nightSurface,
+                  OnboardingPalette.nightBackground,
                 ],
                 stops: [0.0, 0.55, 1.0],
               ),

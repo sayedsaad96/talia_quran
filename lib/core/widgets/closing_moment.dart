@@ -30,8 +30,8 @@ class ClosingMomentAyahCard extends StatelessWidget {
     final textSecondary = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
-    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final cardBorder = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final cardBg = context.tokens.card;
+    final cardBorder = context.tokens.divider;
 
     return Container(
       width: double.infinity,
@@ -85,10 +85,9 @@ class ClosingMomentAyahCard extends StatelessWidget {
 
 /// Opens the serene closing-dua bottom sheet shared by all closing moments.
 Future<void> showClosingDuaSheet(BuildContext context) {
-  final isDark = context.isDark;
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+    backgroundColor: context.tokens.card,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppSpacing.radiusLg),

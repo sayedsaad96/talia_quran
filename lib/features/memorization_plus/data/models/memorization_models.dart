@@ -469,7 +469,8 @@ class ParentSettingsModel extends ParentSettings {
         localChildNickname: json['localChildNickname'] as String?,
         guidanceAudioEnabled: json['guidanceAudioEnabled'] as bool?,
         sessionGoalMinutes: json['sessionGoalMinutes'] as int?,
-        startingSurahId: json['startingSurahId'] as int? ?? 114,
+        startingSurahId:
+            json['startingSurahId'] as int? ?? KidsJourneyPath.firstSurahId,
         kidsHifzV2Enabled: json['kidsHifzV2Enabled'] as bool? ?? false,
       );
 

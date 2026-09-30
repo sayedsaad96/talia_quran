@@ -77,7 +77,7 @@ class _StreakSection extends StatelessWidget {
                 size: 22, color: AppColors.streakOrange),
             const SizedBox(width: 6),
             Text(
-              '$days',
+              context.numText(days),
               style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.w800,
                 color: AppColors.streakOrange,
@@ -85,7 +85,7 @@ class _StreakSection extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              context.l10n.days,
+              context.l10n.streakDaysUnit(days),
               style: AppTypography.labelSmall.copyWith(
                 color: skin.textSecondary,
               ),

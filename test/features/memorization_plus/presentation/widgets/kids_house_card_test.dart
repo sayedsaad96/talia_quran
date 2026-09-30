@@ -100,6 +100,69 @@ void main() {
       expect(find.textContaining('2/5'), findsOneWidget);
     });
 
+    group('newly completed glow (K37)', () {
+      Future<void> pumpHouse(
+        WidgetTester tester, {
+        required bool celebrate,
+        bool reducedMotion = false,
+      }) => tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(disableAnimations: reducedMotion),
+          child: _TestApp(
+            child: KidsHouseCard(
+              stage: _stage(KidsJourneyStageStatus.completed),
+              celebrate: celebrate,
+            ),
+          ),
+        ),
+      );
+
+      testWidgets('a celebrated house glows once, then settles', (
+        tester,
+      ) async {
+        await pumpHouse(tester, celebrate: true);
+
+        expect(
+          find.byKey(const ValueKey('kids-house-celebration')),
+          findsOneWidget,
+        );
+        expect(tester.hasRunningAnimations, isTrue);
+
+        await tester.pump(const Duration(seconds: 2));
+        expect(tester.hasRunningAnimations, isFalse);
+      });
+
+      testWidgets('a glow that arrives after the first frame still plays', (
+        tester,
+      ) async {
+        // The map learns which houses to celebrate asynchronously, so the
+        // on-screen house is built first and told to celebrate afterwards.
+        await pumpHouse(tester, celebrate: false);
+        await pumpHouse(tester, celebrate: true);
+
+        expect(tester.hasRunningAnimations, isTrue);
+      });
+
+      testWidgets('reduced motion keeps the glow still', (tester) async {
+        await pumpHouse(tester, celebrate: true, reducedMotion: true);
+
+        expect(
+          find.byKey(const ValueKey('kids-house-celebration')),
+          findsOneWidget,
+        );
+        expect(tester.hasRunningAnimations, isFalse);
+      });
+
+      testWidgets('an ordinary house does not glow', (tester) async {
+        await pumpHouse(tester, celebrate: false);
+
+        expect(
+          find.byKey(const ValueKey('kids-house-celebration')),
+          findsNothing,
+        );
+      });
+    });
+
     testWidgets('shows lock icon only for locked state', (tester) async {
       await tester.pumpWidget(
         _TestApp(

@@ -7,6 +7,7 @@ import 'package:talia_quran/features/memorization_plus/data/models/memorization_
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/progress/data/datasources/progress_local_datasource.dart';
 import 'package:talia_quran/features/progress/data/repositories/progress_repository_impl.dart';
+import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/quran/data/datasources/quran_local_datasource.dart';
 import 'package:talia_quran/features/quran/data/models/ayah_model.dart';
 import 'package:talia_quran/features/quran/data/models/surah_model.dart';
@@ -106,6 +107,57 @@ void main() {
       expect(progress.memorizedAyahs, 1);
       expect(progress.learningAyahs, 1);
     });
+
+    group('juz_amma achievement', () {
+      AyahModel ayah(int surahId, int n, int juz) => AyahModel(
+        number: surahId * 10 + n,
+        surahId: surahId,
+        text: 'آية',
+        numberInSurah: n,
+        juz: juz,
+        page: 1,
+      );
+
+      final juzGroups = {
+        1: [ayah(1, 1, 1), ayah(1, 2, 1)],
+        30: [ayah(2, 1, 30), ayah(2, 2, 30)],
+      };
+
+      Future<Achievement> juzAmma(List<AyahReviewRecordModel> records) async {
+        final repository = ProgressRepositoryImpl(
+          _FakeProgressDatasource(),
+          _FakeMemPlusDatasource(records),
+          _FakeQuranDatasource(juzGroups: juzGroups),
+          const _FakeStreakReader(),
+          ProgressEventsBus(),
+        );
+        final result = await repository.getOverallProgress();
+        final progress = result.getOrElse(() => throw StateError('failed'));
+        return progress.achievements.singleWhere((a) => a.id == 'juz_amma');
+      }
+
+      test('ignores ayahs memorized outside juz 30', () async {
+        final achievement = await juzAmma([
+          _reviewRecord(1, 1),
+          _reviewRecord(1, 2),
+          _reviewRecord(2, 1),
+        ]);
+
+        expect(achievement.isUnlocked, isFalse);
+        expect(achievement.currentValue, 1);
+        expect(achievement.targetValue, 2);
+      });
+
+      test('unlocks once every juz 30 ayah is memorized', () async {
+        final achievement = await juzAmma([
+          _reviewRecord(2, 1),
+          _reviewRecord(2, 2),
+        ]);
+
+        expect(achievement.isUnlocked, isTrue);
+        expect(achievement.currentValue, 2);
+      });
+    });
   });
 }
 
@@ -159,8 +211,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
-    Future<List<KidsSessionLogModel>> Function(List<KidsSessionLogModel> current)
-        mutate,
+    Future<List<KidsSessionLogModel>> Function(
+      List<KidsSessionLogModel> current,
+    )
+    mutate,
   ) async => mutate(const []);
 
   @override
@@ -252,7 +306,9 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
   @override
-  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {}
+  Future<void> markKidsSessionLogsCloudSynced(
+    Iterable<String> localIds,
+  ) async {}
 
   @override
   Future<ParentSettingsModel> getParentSettings() async =>
@@ -314,6 +370,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 }
 
 class _FakeQuranDatasource implements QuranLocalDatasource {
+  _FakeQuranDatasource({this.juzGroups = const {}});
+
+  final Map<int, List<AyahModel>> juzGroups;
+
   @override
   Future<void> ensureLoaded() async {}
 
@@ -356,7 +416,7 @@ class _FakeQuranDatasource implements QuranLocalDatasource {
   }
 
   @override
-  Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz() async => const {};
+  Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz() async => juzGroups;
 
   @override
   Future<List<SurahModel>> getSurahs() async => const [

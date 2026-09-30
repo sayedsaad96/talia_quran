@@ -213,6 +213,15 @@ final class V2SessionEngine {
     );
   }
 
+  /// The learner cannot recall the ayah and asks to see it again: an honest
+  /// failed recall. [reciting] → [remediation], recorded as a failure like a
+  /// missed recitation (Phase 4 — Remediation). Used by kids reviews, which
+  /// start in recitation and must never leave a child stuck at a hidden text.
+  V2SessionState requestReminder(V2SessionState state) {
+    if (state.phase != V2SessionPhase.reciting) return state;
+    return _handleFail(state.copyWith(clearLastResult: true));
+  }
+
   /// Completes remediation and returns to memorizing for retry.
   V2SessionState completeRemediation(V2SessionState state) {
     if (state.phase != V2SessionPhase.remediation) return state;
@@ -245,12 +254,36 @@ final class V2SessionEngine {
     );
   }
 
-  /// Records a self-graded pass for the whole block review.
-  V2SessionState submitManualBlockReview(V2SessionState state) {
+  /// Records a self-graded block review.
+  ///
+  /// [V2SelfGrade.mastered] completes the block. A hesitation or a lapse is
+  /// a failed block review, exactly like an automatic one: the ayah where the
+  /// learner stumbled ([stumbledAyahNumber], else the first) is remediated
+  /// and the block must be reviewed again.
+  V2SessionState submitManualBlockReview(
+    V2SessionState state, {
+    V2SelfGrade grade = V2SelfGrade.mastered,
+    int? stumbledAyahNumber,
+  }) {
     if (state.phase != V2SessionPhase.blockReview) return state;
+    if (grade == V2SelfGrade.mastered) {
+      return state.copyWith(
+        phase: V2SessionPhase.completed,
+        lastRecitationResult: _manualPassResult(),
+      );
+    }
+    final stumbledIndex = state.blockAyahs.indexWhere(
+      (a) => a.numberInSurah == stumbledAyahNumber,
+    );
+    final remediationIndex = stumbledIndex >= 0 ? stumbledIndex : 0;
     return state.copyWith(
-      phase: V2SessionPhase.completed,
-      lastRecitationResult: _manualPassResult(),
+      phase: V2SessionPhase.remediation,
+      currentAyahIndex: remediationIndex,
+      failureTracker: state.failureTracker.recordFailure(
+        surahId: state.surahId,
+        ayahNumber: state.blockAyahs[remediationIndex].numberInSurah,
+      ),
+      lastRecitationResult: _manualFailResult(),
     );
   }
 

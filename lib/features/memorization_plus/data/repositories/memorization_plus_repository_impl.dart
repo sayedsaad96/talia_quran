@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
@@ -162,6 +163,10 @@ class MemorizationPlusRepositoryImpl
   @override
   Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian() =>
       _profile.continueWithoutGuardian();
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> reopenGuardianLinking() =>
+      _profile.reopenGuardianLinking();
 
   @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession() =>
@@ -365,11 +370,22 @@ class MemorizationPlusRepositoryImpl
   Future<Either<Failure, void>> saveParentSettings(
     ParentSettings settings,
   ) async {
+    final previousNickname = (await _kidsLocal.getParentSettings()).fold(
+      (_) => null,
+      (previous) => previous.localChildNickname,
+    );
     final localResult = await _kidsLocal.saveParentSettings(settings);
     final failure = localResult.fold((failure) => failure, (_) => null);
     if (failure != null) return Left(failure);
 
     try {
+      // Only a real change on this device is published: resending an
+      // unchanged name on every identity push could overwrite a correction
+      // the guardian made in the meantime.
+      if (settings.localChildNickname != null &&
+          settings.localChildNickname != previousNickname) {
+        await _prefs.setBool(_kChildNicknameDirty, true);
+      }
       const reminderKey = TaliaNotificationService.kidsReminderPreferenceKey;
       await Future.wait([
         _prefs.setBool(reminderKey, settings.reminderEnabled),
@@ -574,12 +590,31 @@ class MemorizationPlusRepositoryImpl
       _parentAccess.removeChild(childUserId);
 
   @override
+  Future<Either<Failure, void>> updateLinkedChildIdentity({
+    required String childUserId,
+    required String nickname,
+    required int age,
+  }) => _kidsCloudSync.updateLinkedChildIdentity(
+    childUserId: childUserId,
+    nickname: nickname,
+    age: age,
+  );
+
+  @override
   Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() =>
       _family.getFamilyDashboard();
 
   // --- Identity Cloud Sync --------------------------------------------------
 
   static const _kIdentityDirty = MemorizationProfileService.kIdentityCloudDirty;
+
+  /// Set when the child's name changes on this device; cleared once
+  /// `set_own_child_nickname` accepted it.
+  static const _kChildNicknameDirty = 'mem_plus_child_nickname_cloud_dirty';
+
+  static const _identityColumns =
+      'selected_path, guardian_onboarding_status, is_parent_guardian, age, '
+      'updated_at';
 
   @override
   Future<Either<Failure, void>> pullIdentityFromCloud() async {
@@ -588,13 +623,23 @@ class MemorizationPlusRepositoryImpl
       final uid = _gateway.supabase.auth.currentUser?.id;
       if (uid == null) return const Right(null);
 
-      final row = await _gateway.supabase
-          .from('profiles')
-          .select(
-            'selected_path, guardian_onboarding_status, is_parent_guardian, age, updated_at',
-          )
-          .eq('id', uid)
-          .maybeSingle();
+      Map<String, dynamic>? row;
+      try {
+        row = await _gateway.supabase
+            .from('profiles')
+            .select('$_identityColumns, child_nickname')
+            .eq('id', uid)
+            .maybeSingle();
+      } on PostgrestException catch (e) {
+        // 42703 undefined_column: a server without the child-identity
+        // migration still syncs the rest of the identity.
+        if (e.code != '42703') rethrow;
+        row = await _gateway.supabase
+            .from('profiles')
+            .select(_identityColumns)
+            .eq('id', uid)
+            .maybeSingle();
+      }
 
       if (row == null) return const Right(null);
       final rawPath = row['selected_path'] as String?;
@@ -625,6 +670,9 @@ class MemorizationPlusRepositoryImpl
             childAge: childAge,
           ),
         );
+        if (cloudPath == MemorizationPath.child) {
+          await _applyCloudChildNickname(row['child_nickname'] as String?);
+        }
       }
       return const Right(null);
     } catch (e) {
@@ -632,15 +680,62 @@ class MemorizationPlusRepositoryImpl
     }
   }
 
+  /// Takes the guardian's (or another device's) name for this child. Written
+  /// straight to storage so it is not mistaken for a local edit to publish.
+  Future<void> _applyCloudChildNickname(String? raw) async {
+    final nickname = ChildIdentityPolicy.normalizeNickname(raw);
+    if (nickname == null) return;
+    final settings = await _datasource.getParentSettings();
+    if (settings.localChildNickname == nickname) return;
+    await _datasource.saveParentSettings(
+      ParentSettingsModel.fromEntity(
+        settings.copyWith(localChildNickname: nickname),
+      ),
+    );
+  }
+
+  /// Publishes a name changed on this child device. An older server without
+  /// `set_own_child_nickname` keeps the flag so the name goes up later.
+  Future<void> _pushChildNickname(MemorizationProfile profile) async {
+    if (_prefs.getBool(_kChildNicknameDirty) != true) return;
+    if (!profile.isChild) {
+      await _prefs.remove(_kChildNicknameDirty);
+      return;
+    }
+    final settings = await _datasource.getParentSettings();
+    final nickname = ChildIdentityPolicy.normalizeNickname(
+      settings.localChildNickname,
+    );
+    if (nickname == null) {
+      await _prefs.remove(_kChildNicknameDirty);
+      return;
+    }
+    try {
+      await _gateway.supabase.rpc(
+        'set_own_child_nickname',
+        params: {'p_nickname': nickname},
+      );
+      await _prefs.remove(_kChildNicknameDirty);
+    } on PostgrestException catch (e) {
+      if (!_gateway.isMissingRpc(e, 'set_own_child_nickname')) rethrow;
+    }
+  }
+
   @override
   Future<Either<Failure, void>> pushIdentityToCloud() async {
     try {
       if (!_gateway.isSupabaseReady) return const Right(null);
-      if (_prefs.getBool(_kIdentityDirty) != true) return const Right(null);
       if (_gateway.supabase.auth.currentUser == null) return const Right(null);
+      final identityDirty = _prefs.getBool(_kIdentityDirty) == true;
+      final nicknameDirty = _prefs.getBool(_kChildNicknameDirty) == true;
+      if (!identityDirty && !nicknameDirty) return const Right(null);
 
       final profile = await _profileStore.loadProfile();
       if (!profile.hasSelectedPath) return const Right(null);
+      if (!identityDirty) {
+        await _pushChildNickname(profile);
+        return const Right(null);
+      }
 
       await _gateway.supabase.rpc(
         'upsert_memorization_identity',
@@ -654,6 +749,8 @@ class MemorizationPlusRepositoryImpl
       );
 
       await _prefs.remove(_kIdentityDirty);
+      // After the identity so the server already knows this is a child.
+      await _pushChildNickname(profile);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('Failed to push memorization identity: $e'));

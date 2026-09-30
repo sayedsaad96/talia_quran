@@ -92,25 +92,46 @@ class OverallProgress extends Equatable {
   int get unlockedAchievements =>
       achievements.where((a) => a.isUnlocked).length;
 
+  /// The locked achievement the user is closest to, or null when every
+  /// achievement is unlocked. Ties go to the smaller target so the
+  /// suggestion stays reachable.
+  Achievement? get nextMilestone {
+    Achievement? best;
+    for (final a in achievements) {
+      if (a.isUnlocked) continue;
+      if (best == null ||
+          a.progressPercent > best.progressPercent ||
+          (a.progressPercent == best.progressPercent &&
+              a.targetValue < best.targetValue)) {
+        best = a;
+      }
+    }
+    return best;
+  }
+
   @override
   List<Object?> get props => [
     memorizedAyahs,
     startedAyahs,
     reviewedAyahsTotal,
     overdueReviews,
-    overdueReviews,
     lastReviewedAt,
     lastMemorizedSurahId,
     lastMemorizedAyahNumber,
+    totalAyahs,
     memorizedSurahs,
     inProgressSurahs,
+    totalSurahs,
     memorizedJuz,
+    totalJuz,
     readAyahs,
     readSurahs,
     readJuz,
     streakDays,
+    lastActiveDate,
     achievements,
     readPagesCount,
+    totalQuranPages,
     learningAyahs,
     reviewAyahs,
     kidsPoints,
@@ -144,6 +165,8 @@ class Achievement extends Equatable {
   double get progressPercent =>
       targetValue == 0 ? 0 : (currentValue / targetValue).clamp(0.0, 1.0);
 
+  int get remaining => (targetValue - currentValue).clamp(0, targetValue);
+
   @override
-  List<Object?> get props => [id, isUnlocked, currentValue];
+  List<Object?> get props => [id, isUnlocked, currentValue, targetValue];
 }

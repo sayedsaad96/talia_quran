@@ -455,7 +455,12 @@ class SocialShareData {
             : storedTitle);
     final shareContent =
         customContent ??
-        copy.khatmahShareSummary(shareTitle, daysTaken.toString());
+        copy.khatmahShareSummary(
+          shareTitle,
+          daysTaken,
+          // Share cards keep Western digits (their own numeral design).
+          '$daysTaken',
+        );
 
     return SocialShareData(
       content: shareContent,

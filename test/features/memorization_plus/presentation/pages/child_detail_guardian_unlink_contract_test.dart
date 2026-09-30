@@ -1,10 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/child_detail_page.dart';
 
 void main() {
@@ -65,14 +69,24 @@ void main() {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1400);
       addTearDown(tester.view.reset);
+      final repository = _UnusedRepository();
+      final cubit = FamilyDashboardCubit(
+        ParentAccessUsecase(repository),
+        ParentRemoteLinkUsecase(repository),
+        GetFamilyDashboardUsecase(repository),
+      );
+      addTearDown(cubit.close);
 
       await tester.pumpWidget(
-        const _TestApp(
-          child: ChildDetailPage(
-            child: FamilyChildEntry(
-              childUserId: 'child-1',
-              displayName: 'Remote child',
-              isLocal: false,
+        _TestApp(
+          child: BlocProvider.value(
+            value: cubit,
+            child: const ChildDetailPage(
+              child: FamilyChildEntry(
+                childUserId: 'child-1',
+                displayName: 'Remote child',
+                isLocal: false,
+              ),
             ),
           ),
         ),
@@ -84,6 +98,11 @@ void main() {
       expect(find.byIcon(Icons.link_off_rounded), findsNothing);
     },
   );
+}
+
+class _UnusedRepository implements MemorizationPlusRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _TestApp extends StatelessWidget {

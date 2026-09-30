@@ -33,16 +33,12 @@ class RecordKhatmahReadingUsecase {
     }
 
     final readingDate = readAt ?? DateTime.now();
-    final confirmedStart = plan.nextUnreadPage;
     final result = await _repository.mutatePlan(plan, (current) {
       final anchoredPlan = current.anchorDailyTarget(readingDate);
       final coveredPlan = switch (source) {
         KhatmahReadingSource.digital => anchoredPlan.recordPage(pageNumber),
-        KhatmahReadingSource.physical => anchoredPlan.copyWith(
-          completedPages: {
-            ...anchoredPlan.completedPages,
-            for (var page = confirmedStart; page <= pageNumber; page++) page,
-          },
+        KhatmahReadingSource.physical => anchoredPlan.recordThroughPage(
+          pageNumber,
         ),
       };
       final updatedPlan = coveredPlan.copyWith(

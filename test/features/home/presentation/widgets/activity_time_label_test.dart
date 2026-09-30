@@ -42,7 +42,7 @@ void main() {
   test('older events use day counts', () {
     expect(
       activityTimeLabel(l10n, DateTime(2026, 9, 6, 10), now),
-      l10n.homeActivityDaysAgo(3),
+      l10n.homeActivityDaysAgo(3, l10n.localeName == 'ar' ? '٣' : '3'),
     );
   });
 }

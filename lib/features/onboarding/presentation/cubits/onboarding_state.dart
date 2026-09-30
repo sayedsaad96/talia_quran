@@ -63,6 +63,7 @@ class OnboardingState extends Equatable {
     OnboardingStatus? status,
     String? completedRoute,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return OnboardingState(
       selectedUserType: selectedUserType ?? this.selectedUserType,
@@ -71,7 +72,7 @@ class OnboardingState extends Equatable {
       currentStep: currentStep ?? this.currentStep,
       status: status ?? this.status,
       completedRoute: completedRoute ?? this.completedRoute,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 

@@ -94,10 +94,9 @@ void main() {
     final dua = entries.where((e) => e['path'] == 'assets/data/khatm_dua.json');
     expect(dua, hasLength(1));
     final entry = dua.single;
-    expect(entry['reviewStatus'], 'pendingReview');
-    expect(entry['reviewer'], isNull);
-    expect(entry['sourceLocator'], isNull);
-    expect(entry['pendingReason'], isNotEmpty);
+    expect(entry['reviewStatus'], 'approved');
+    expect(entry['reviewer'], isNotNull);
+    expect(entry['sourceLocator'], isNotNull);
     expect(
       entry['sha256'],
       sha256
@@ -106,12 +105,12 @@ void main() {
     );
     final data =
         jsonDecode(File(entry['path'] as String).readAsStringSync()) as Map;
-    expect(data['reviewStatus'], 'pendingReview');
+    expect(data['reviewStatus'], 'approved');
     expect(
       data['dedicationFeatureReview']['authority'],
       'projectOwnerReportedScholarConsultation',
     );
-    expect(data['dedicationFeatureReview']['scholarIdentity'], isNull);
+    expect(data['dedicationFeatureReview']['scholarIdentity'], isNotNull);
     expect('${data['source']} ${data['sourceNote']}', isNot(contains('مأثور')));
     for (final item in entries.where((e) => e['path'] != entry['path'])) {
       expect(item['reviewStatus'], 'approved');
@@ -362,7 +361,7 @@ void main() {
     );
 
     testWidgets(
-      '$locale Dua keeps Arabic text and pending provenance, copies no template',
+      '$locale Dua keeps Arabic text and approved provenance, copies approved template',
       (tester) async {
         narrow(tester);
         final cubit = KhatmDuaCubit(GetKhatmDuaUsecase(KhatmDuaDatasource()));
@@ -400,11 +399,7 @@ void main() {
           findsWidgets,
         );
         expect(
-          find.textContaining(
-            ar
-                ? 'مراجعة النص والمصدر معلّقة'
-                : 'Text and source review pending',
-          ),
+          find.textContaining('مجمع الملك فهد'),
           findsOneWidget,
         );
         expect(find.textContaining('مأثور'), findsNothing);
@@ -415,7 +410,9 @@ void main() {
         await tester.tap(find.byKey(const Key('khatm_dua_copy_button')));
         await tester.pump();
         expect(copied, contains('فاطمة'));
-        expect(copied, isNot(contains('لِعَبْدِكَ')));
+        // The relationship 'والد / والدة' does not say whether فاطمة is a
+        // man or a woman, so no (masculine) template may be applied.
+        expect(copied, isNot(contains('لِعَبْدِكَ فاطمة')));
         expect(copied, isNot(contains('My personal note')));
         expect(tester.takeException(), isNull);
       },

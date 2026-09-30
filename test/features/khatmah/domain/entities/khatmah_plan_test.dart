@@ -325,4 +325,159 @@ void main() {
       expect(plan.currentPage, 3);
     });
   });
+
+  group('pagesThrough (wrap-aware)', () {
+    KhatmahPlan planFrom(int start, Set<int> read) => KhatmahPlan(
+      id: 'p',
+      title: KhatmahPlan.defaultTitle,
+      startPage: start,
+      completedPages: read,
+      targetPagesPerDay: 5,
+      targetDays: 121,
+      startDate: DateTime(2026, 1, 1),
+      expectedEndDate: DateTime(2026, 5, 1),
+    );
+
+    test('continues across 604 to page 1', () {
+      final plan = planFrom(300, {for (var p = 300; p <= 600; p++) p});
+      expect(plan.pagesThrough(3), [601, 602, 603, 604, 1, 2, 3]);
+    });
+
+    test('already-read page in reading order yields nothing', () {
+      final plan = planFrom(300, {
+        for (var p = 300; p <= 604; p++) p,
+        for (var p = 1; p <= 9; p++) p,
+      });
+      expect(plan.nextUnreadPage, 10);
+      expect(plan.pagesThrough(350), isEmpty);
+      expect(plan.pagesThrough(10), [10]);
+    });
+
+    test('plain plan from page 1', () {
+      final plan = planFrom(1, {1, 2});
+      expect(plan.pagesThrough(5), [3, 4, 5]);
+      expect(plan.pagesThrough(0), isEmpty);
+      expect(plan.pagesThrough(605), isEmpty);
+    });
+
+    test('recordThroughPage wraps too', () {
+      final plan = planFrom(600, {600, 601, 602, 603, 604});
+      expect(plan.recordThroughPage(2).completedPages, containsAll([1, 2]));
+    });
+  });
+
+  group('juz wird', () {
+    KhatmahPlan juzPlan(Set<int> read, {DateTime? end}) => KhatmahPlan(
+      id: 'r',
+      title: KhatmahPlan.defaultTitle,
+      wirdUnit: KhatmahWirdUnit.juz,
+      completedPages: read,
+      targetPagesPerDay: 21,
+      targetDays: 30,
+      startDate: DateTime(2026, 2, 18),
+      expectedEndDate: end ?? DateTime(2026, 3, 19),
+    );
+
+    test('daily target is the rest of the current juz', () {
+      expect(
+        juzPlan({}).dailyTargetFor(DateTime(2026, 2, 18)),
+        (startPage: 1, endPage: 21),
+      );
+      expect(
+        juzPlan({
+          for (var p = 1; p <= 25; p++) p,
+        }).dailyTargetFor(DateTime(2026, 2, 19)),
+        (startPage: 26, endPage: 41),
+      );
+    });
+
+    test('last day with the 23-page final juz left is on track', () {
+      final lastDay = juzPlan({for (var p = 1; p <= 581; p++) p});
+      expect(lastDay.remainingJuzCount, 1);
+      expect(lastDay.remainingWirdDays, 1);
+      expect(lastDay.pagesBehind(DateTime(2026, 3, 19)), 0);
+      expect(lastDay.pagesBehind(DateTime(2026, 3, 20)), 23);
+    });
+
+    test('two juz left with one day left is behind by the second juz', () {
+      final plan = juzPlan({for (var p = 1; p <= 561; p++) p});
+      expect(plan.pagesBehind(DateTime(2026, 3, 19)), 23);
+    });
+
+    test('pages mode keeps its page-count pace', () {
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: KhatmahPlan.defaultTitle,
+        completedPages: const {1, 2, 3},
+        targetPagesPerDay: 5,
+        targetDays: 121,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 5, 1),
+      );
+      expect(plan.wirdUnit, KhatmahWirdUnit.pages);
+      expect(plan.remainingWirdDays, 121);
+    });
+  });
+
+  group('projection', () {
+    test('projection counts from tomorrow once today is done', () {
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: KhatmahPlan.defaultTitle,
+        completedPages: {for (var p = 1; p <= 20; p++) p},
+        targetPagesPerDay: 5,
+        targetDays: 121,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 5, 1),
+        dailyTargetDate: DateTime(2026, 1, 1),
+        dailyTargetStartPage: 1,
+        dailyTargetEndPage: 5,
+      );
+      final today = DateTime(2026, 1, 1, 20);
+      // 584 pages / 5 = 117 days starting 2026-01-02 → ends 2026-04-28.
+      expect(plan.projectedEndDate(today), DateTime(2026, 4, 28));
+      expect(plan.daysAhead(today), 3);
+    });
+
+    test('days ahead is never negative', () {
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: KhatmahPlan.defaultTitle,
+        targetPagesPerDay: 5,
+        targetDays: 121,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 1, 10),
+      );
+      expect(plan.daysAhead(DateTime(2026, 1, 1)), 0);
+    });
+
+    test('a fresh plan on its first day is not ahead', () {
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: KhatmahPlan.defaultTitle,
+        targetPagesPerDay: 5,
+        targetDays: 121,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 5, 1),
+      );
+      expect(plan.daysAhead(DateTime(2026, 1, 1, 9)), 0);
+    });
+  });
+
+  test('juz progress and first unread page', () {
+    final plan = KhatmahPlan(
+      id: 'p',
+      title: KhatmahPlan.defaultTitle,
+      completedPages: {for (var p = 1; p <= 21; p++) p, 22, 30},
+      targetPagesPerDay: 5,
+      targetDays: 121,
+      startDate: DateTime(2026, 1, 1),
+      expectedEndDate: DateTime(2026, 5, 1),
+    );
+    expect(plan.juzProgress(1), (read: 21, total: 21));
+    expect(plan.juzProgress(2), (read: 2, total: 20));
+    expect(plan.juzProgress(30), (read: 0, total: 23));
+    expect(plan.firstUnreadPageInJuz(2), 23);
+    expect(plan.firstUnreadPageInJuz(1), 1);
+  });
 }

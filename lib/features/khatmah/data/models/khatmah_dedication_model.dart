@@ -7,6 +7,7 @@ class KhatmahDedicationModel {
     this.relationship,
     this.condition,
     this.customNote,
+    this.recipientGender,
   });
 
   final bool isDedicated;
@@ -14,6 +15,7 @@ class KhatmahDedicationModel {
   final String? relationship;
   final String? condition;
   final String? customNote;
+  final String? recipientGender;
 
   factory KhatmahDedicationModel.fromJson(Map<String, dynamic> json) {
     return KhatmahDedicationModel(
@@ -22,6 +24,7 @@ class KhatmahDedicationModel {
       relationship: json['relationship'] as String?,
       condition: json['condition'] as String?,
       customNote: json['customNote'] as String?,
+      recipientGender: json['recipientGender'] as String?,
     );
   }
 
@@ -31,6 +34,7 @@ class KhatmahDedicationModel {
     'relationship': relationship,
     'condition': condition,
     'customNote': customNote,
+    'recipientGender': recipientGender,
   };
 
   factory KhatmahDedicationModel.fromEntity(KhatmahDedication entity) {
@@ -40,6 +44,7 @@ class KhatmahDedicationModel {
       relationship: entity.relationship,
       condition: entity.condition?.name,
       customNote: entity.customNote,
+      recipientGender: entity.recipientGender?.name,
     );
   }
 
@@ -54,5 +59,8 @@ class KhatmahDedicationModel {
           )
         : null,
     customNote: customNote,
+    recipientGender: DedicationGender.values
+        .where((gender) => gender.name == recipientGender)
+        .firstOrNull,
   );
 }

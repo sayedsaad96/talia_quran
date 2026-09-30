@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../cubits/memorization_session_cubit.dart';
+import 'v2_recitation_page.dart';
 import 'v2_session_widgets.dart';
 
 /// V2 Phase 5a: Block Review Pending — all individual ayahs passed.
@@ -51,7 +52,6 @@ class V2BlockReviewPage extends StatelessWidget {
     final isEvaluating = state.isEvaluating;
     return V2PhaseScaffold(
       session: session,
-      icon: Icons.mic_external_on_rounded,
       title: context.l10n.v2BlockReviewTitle,
       subtitle: context.l10n.v2BlockReviewSubtitle(start, end),
       primaryActionLabel: isEvaluating
@@ -79,9 +79,21 @@ class V2BlockReviewPage extends StatelessWidget {
           key: const ValueKey('v2-manual-block-review'),
           onPressed: isEvaluating || isRecording
               ? null
-              : () => context
-                    .read<MemorizationSessionCubit>()
-                    .submitManualRecall(),
+              : () async {
+                  // N5: compare, then grade — a stumble is remediated
+                  // instead of the block passing silently.
+                  final cubit = context.read<MemorizationSessionCubit>();
+                  final verdict = await showV2SelfGradeSheet(
+                    context,
+                    surahId: session.surahId,
+                    ayahs: session.blockAyahs,
+                  );
+                  if (verdict == null) return;
+                  await cubit.submitManualBlockReview(
+                    grade: verdict.grade,
+                    stumbledAyahNumber: verdict.stumbledAyahNumber,
+                  );
+                },
           icon: const Icon(Icons.record_voice_over_rounded, size: 18),
           label: Text(context.l10n.v2ManualBlockReviewAction),
         ),

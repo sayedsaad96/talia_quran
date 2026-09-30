@@ -1,4 +1,4 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,19 +27,25 @@ Widget _buildApp(
       GoRoute(
         path: '/',
         builder: (context, state) => Scaffold(
-          body: Builder(builder: (ctx) {
-            return ElevatedButton(
-              onPressed: () =>
-                  showMemorizationPathSettingsSheet(ctx, isDark: false),
-              child: const Text('Open Sheet'),
-            );
-          }),
+          body: Builder(
+            builder: (ctx) {
+              return ElevatedButton(
+                onPressed: () =>
+                    showMemorizationPathSettingsSheet(ctx, isDark: false),
+                child: const Text('Open Sheet'),
+              );
+            },
+          ),
         ),
       ),
       GoRoute(
         path: '/memorization-plus',
+        builder: (context, state) => const Scaffold(body: Text('Replaced')),
+      ),
+      GoRoute(
+        path: '/memorization-plus/guardian-linking',
         builder: (context, state) =>
-            const Scaffold(body: Text('Replaced')),
+            const Scaffold(body: Text('Guardian linking page')),
       ),
     ],
   );
@@ -53,16 +59,34 @@ Widget _buildApp(
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: AppLocalizations.supportedLocales,
+    locale: const Locale('en'),
   );
 }
+
+final _resetTile = find.ancestor(
+  of: find.byIcon(Icons.restart_alt_rounded),
+  matching: find.byType(ListTile),
+);
+final _linkTile = find.widgetWithText(ListTile, 'Link guardian');
+
+MemorizationProfile _child({bool linked = false}) =>
+    MemorizationProfile.empty().copyWith(
+      selectedPath: MemorizationPath.child,
+      guardianLinkStatus: linked
+          ? GuardianLinkStatus.linked
+          : GuardianLinkStatus.none,
+      guardianOnboardingStatus: linked
+          ? GuardianOnboardingStatus.completed
+          : GuardianOnboardingStatus.skipped,
+    );
 
 /// Opens the bottom sheet, taps the Reset tile, and confirms via the dialog.
 Future<void> _openSheetAndConfirmReset(WidgetTester tester) async {
   await tester.tap(find.text('Open Sheet'));
   await tester.pumpAndSettle();
 
-  expect(find.byType(ListTile), findsOneWidget);
-  await tester.tap(find.byType(ListTile));
+  expect(_resetTile, findsOneWidget);
+  await tester.tap(_resetTile);
   await tester.pumpAndSettle();
 
   // Tap the warning FilledButton inside the confirmation AlertDialog.
@@ -115,10 +139,12 @@ void main() {
           ),
         ),
       );
-      when(() => mockRepository.verifyParentPin('1234'))
-          .thenAnswer((_) async => const Right(true));
-      when(() => mockRepository.resetMemorizationIdentity())
-          .thenAnswer((_) async => Right(MemorizationProfile.empty()));
+      when(
+        () => mockRepository.verifyParentPin('1234'),
+      ).thenAnswer((_) async => const Right(true));
+      when(
+        () => mockRepository.resetMemorizationIdentity(),
+      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
       when(() => mockPathResolver.notifyChanged()).thenReturn(null);
 
       await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
@@ -156,8 +182,9 @@ void main() {
           ),
         ),
       );
-      when(() => mockRepository.resetMemorizationIdentity())
-          .thenAnswer((_) async => Right(MemorizationProfile.empty()));
+      when(
+        () => mockRepository.resetMemorizationIdentity(),
+      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
       when(() => mockPathResolver.notifyChanged()).thenReturn(null);
 
       await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
@@ -173,4 +200,107 @@ void main() {
       verifyNever(() => mockRepository.verifyParentPin(any()));
     },
   );
+
+  group('link guardian tile', () {
+    setUp(() {
+      when(() => mockPathResolver.notifyChanged()).thenReturn(null);
+      when(
+        () => mockRepository.reopenGuardianLinking(),
+      ).thenAnswer((_) async => Right(_child()));
+    });
+
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
+      await tester.tap(find.text('Open Sheet'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('is hidden for an adult and for a linked child', (
+      tester,
+    ) async {
+      for (final profile in [
+        MemorizationProfile.empty().copyWith(
+          selectedPath: MemorizationPath.adult,
+        ),
+        _child(linked: true),
+      ]) {
+        when(
+          () => mockRepository.getMemorizationProfile(),
+        ).thenAnswer((_) async => Right(profile));
+        await openSheet(tester);
+        expect(_linkTile, findsNothing);
+        expect(_resetTile, findsOneWidget);
+        Navigator.of(tester.element(_resetTile)).pop();
+        await tester.pumpAndSettle();
+      }
+    });
+
+    testWidgets('asks for the parent PIN, then opens guardian linking', (
+      tester,
+    ) async {
+      when(
+        () => mockRepository.getMemorizationProfile(),
+      ).thenAnswer((_) async => Right(_child()));
+      when(() => mockRepository.getParentSettings()).thenAnswer(
+        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+      );
+      when(
+        () => mockRepository.verifyParentPin('1234'),
+      ).thenAnswer((_) async => const Right(true));
+
+      await openSheet(tester);
+      await tester.tap(_linkTile);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '1234');
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockRepository.reopenGuardianLinking()).called(1);
+      expect(find.text('Guardian linking page'), findsOneWidget);
+    });
+
+    testWidgets('a wrong PIN keeps linking closed', (tester) async {
+      when(
+        () => mockRepository.getMemorizationProfile(),
+      ).thenAnswer((_) async => Right(_child()));
+      when(() => mockRepository.getParentSettings()).thenAnswer(
+        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+      );
+      when(
+        () => mockRepository.verifyParentPin('0000'),
+      ).thenAnswer((_) async => const Right(false));
+
+      await openSheet(tester);
+      await tester.tap(_linkTile);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '0000');
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.reopenGuardianLinking());
+      expect(find.text('Guardian linking page'), findsNothing);
+    });
+
+    testWidgets('a profile that never had a PIN is not locked out', (
+      tester,
+    ) async {
+      when(
+        () => mockRepository.getMemorizationProfile(),
+      ).thenAnswer((_) async => Right(_child()));
+      when(
+        () => mockRepository.getParentSettings(),
+      ).thenAnswer((_) async => const Right(ParentSettings()));
+
+      await openSheet(tester);
+      await tester.tap(_linkTile);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.verifyParentPin(any()));
+      verify(() => mockRepository.reopenGuardianLinking()).called(1);
+      expect(find.text('Guardian linking page'), findsOneWidget);
+    });
+  });
 }

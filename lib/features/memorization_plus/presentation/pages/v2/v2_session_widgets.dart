@@ -32,9 +32,7 @@ class V2PhaseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.tokens.card,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: context.tokens.divider,
-        ),
+        border: Border.all(color: context.tokens.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,8 +68,8 @@ class V2ProgressHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final position = context.l10n.v2AyahOfBlock(
-      session.currentAyahIndex + 1,
-      session.totalAyahsInBlock,
+      context.numText(session.currentAyahIndex + 1),
+      context.numText(session.totalAyahsInBlock),
     );
     // The bar alone says nothing to a screen reader or at a glance; the
     // text names where the learner is in the block.
@@ -109,7 +107,7 @@ class V2PhaseScaffold extends StatelessWidget {
   const V2PhaseScaffold({
     super.key,
     required this.session,
-    required this.icon,
+    this.icon,
     required this.title,
     required this.subtitle,
     required this.primaryActionLabel,
@@ -120,7 +118,10 @@ class V2PhaseScaffold extends StatelessWidget {
   });
 
   final V2SessionState session;
-  final IconData icon;
+
+  /// Phase icon above the title. Null when the phase's own card already
+  /// shows a live icon (the recording microphone) so it is not doubled.
+  final IconData? icon;
   final String title;
   final String subtitle;
   final String primaryActionLabel;
@@ -143,8 +144,10 @@ class V2PhaseScaffold extends StatelessWidget {
               children: [
                 V2ProgressHeader(session: session, primary: primary),
                 const SizedBox(height: AppSpacing.lg),
-                Icon(icon, color: primary, size: 40),
-                const SizedBox(height: AppSpacing.md),
+                if (icon != null) ...[
+                  Icon(icon, color: primary, size: 40),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 Text(
                   title,
                   textAlign: TextAlign.center,
@@ -203,8 +206,7 @@ class V2AyahTextCard extends StatelessWidget {
         surahId: session.surahId,
         ayahNumber: ayah.numberInSurah,
         textColor: context.tokens.textPrimary,
-        decorationColor: context.tokens.accent
-            .withValues(alpha: 0.5),
+        decorationColor: context.tokens.accent.withValues(alpha: 0.5),
         referenceColor: context.tokens.accent,
         isCompleted: session.passedAyahNumbers.contains(ayah.numberInSurah),
       ),
@@ -563,14 +565,16 @@ class V2MaskedWordsCard extends StatelessWidget {
     required this.surahId,
     required this.ayahNumber,
     required this.revealed,
-    required this.onToggle,
+    this.onToggle,
   });
 
   final String text;
   final int surahId;
   final int ayahNumber;
   final bool revealed;
-  final VoidCallback onToggle;
+
+  /// Reveal/hide control. Null hides it (the full ayah has its own hint).
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -583,9 +587,7 @@ class V2MaskedWordsCard extends StatelessWidget {
               surahId: surahId,
               ayahNumber: ayahNumber,
               textColor: context.tokens.textPrimary,
-              decorationColor:
-                  context.tokens.accent
-                      .withValues(alpha: 0.5),
+              decorationColor: context.tokens.accent.withValues(alpha: 0.5),
               referenceColor: context.tokens.accent,
             )
           : Wrap(
@@ -610,24 +612,25 @@ class V2MaskedWordsCard extends StatelessWidget {
           Text(
             revealed
                 ? context.l10n.v2MaskedWordsFull
-                : context.l10n.v2MaskedWordsRevealed,
+                : context.l10n.v2FirstLettersRevealed,
             textAlign: TextAlign.center,
           ),
-          TextButton.icon(
-            key: const Key('v2-masked-words-toggle'),
-            onPressed: onToggle,
-            icon: Icon(
-              revealed
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded,
-              size: 16,
+          if (onToggle != null)
+            TextButton.icon(
+              key: const Key('v2-masked-words-toggle'),
+              onPressed: onToggle,
+              icon: Icon(
+                revealed
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 16,
+              ),
+              label: Text(
+                revealed
+                    ? context.l10n.v2MaskedWordsFull
+                    : context.l10n.v2MaskedWordsHint,
+              ),
             ),
-            label: Text(
-              revealed
-                  ? context.l10n.v2MaskedWordsFull
-                  : context.l10n.v2MaskedWordsHint,
-            ),
-          ),
         ],
       ),
     );

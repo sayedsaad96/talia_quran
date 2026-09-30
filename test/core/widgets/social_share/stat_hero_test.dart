@@ -67,7 +67,7 @@ void main() {
       ),
     );
     expect(find.text('250'), findsOneWidget);
-    expect(find.text('آيةً في صدري'), findsOneWidget);
+    expect(find.text('آيةً في قلبي'), findsOneWidget);
     expect(find.text('12 سورة مكتملة'), findsOneWidget);
     expect(find.text('250 من 500'), findsOneWidget);
     expect(progressLine, findsOneWidget);

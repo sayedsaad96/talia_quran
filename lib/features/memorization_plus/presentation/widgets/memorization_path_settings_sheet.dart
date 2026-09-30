@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -14,7 +15,17 @@ Future<void> showMemorizationPathSettingsSheet(
   BuildContext context, {
   required bool isDark,
   String replacementLocation = AppRoutes.memorizationPlus,
-}) {
+}) async {
+  // A child who skipped guardian linking at setup can link later from here;
+  // a linked child or an adult never sees the option.
+  final profile =
+      (await getIt<MemorizationPlusRepository>().getMemorizationProfile()).fold(
+        (_) => null,
+        (profile) => profile,
+      );
+  final canLinkGuardian =
+      profile != null && profile.isChild && !profile.isGuardianLinked;
+  if (!context.mounted) return;
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: context.tokens.background,
@@ -133,6 +144,38 @@ Future<void> showMemorizationPathSettingsSheet(
                 }
               },
             ),
+            if (canLinkGuardian)
+              ListTile(
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.family_restroom_rounded,
+                    color: AppColors.primary,
+                  ),
+                ),
+                title: Text(
+                  ctx.l10n.kidsLinkGuardianTileTitle,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.tokens.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  ctx.l10n.kidsLinkGuardianTileSubtitle,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: context.tokens.textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openGuardianLinking(context);
+                },
+              ),
           ],
         ),
       ),
@@ -140,17 +183,53 @@ Future<void> showMemorizationPathSettingsSheet(
   );
 }
 
-Future<bool> _verifyGuardianPin(BuildContext context) async {
+/// Re-opens guardian linking for a child who skipped it, after the parent
+/// PIN. A profile that never had a PIN (created before PINs existed) is not
+/// locked out; if the settings cannot be read the PIN is still required.
+Future<void> _openGuardianLinking(BuildContext context) async {
+  final repository = getIt<MemorizationPlusRepository>();
+  final settings = (await repository.getParentSettings()).fold(
+    (_) => null,
+    (settings) => settings,
+  );
+  if (settings == null || settings.hasPin) {
+    if (!context.mounted) return;
+    final verified = await _verifyGuardianPin(
+      context,
+      confirmLabel: context.l10n.confirm,
+    );
+    if (!verified) return;
+  }
+  final result = await repository.reopenGuardianLinking();
+  if (!context.mounted) return;
+  result.fold(
+    (failure) => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.localizedCubitMessage(failure.message))),
+    ),
+    (_) {
+      getIt<MemorizationPathResolver>().notifyChanged();
+      context.push(AppRoutes.memorizationPlusGuardianLinking);
+    },
+  );
+}
+
+Future<bool> _verifyGuardianPin(
+  BuildContext context, {
+  String? confirmLabel,
+}) async {
   final verified = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogContext) => const _GuardianPinDialog(),
+    builder: (dialogContext) => _GuardianPinDialog(confirmLabel: confirmLabel),
   );
   return verified == true;
 }
 
 class _GuardianPinDialog extends StatefulWidget {
-  const _GuardianPinDialog();
+  const _GuardianPinDialog({this.confirmLabel});
+
+  /// Defaults to the reset label used by the path-reset flow.
+  final String? confirmLabel;
 
   @override
   State<_GuardianPinDialog> createState() => _GuardianPinDialogState();
@@ -184,8 +263,9 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
       _isSubmitting = true;
       _error = null;
     });
-    final result =
-        await getIt<MemorizationPlusRepository>().verifyParentPin(pin);
+    final result = await getIt<MemorizationPlusRepository>().verifyParentPin(
+      pin,
+    );
     final isValid = result.getOrElse(() => false);
     if (!mounted) return;
     if (isValid) {
@@ -232,10 +312,9 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
         ),
         FilledButton(
           onPressed: _isSubmitting ? null : _handleConfirm,
-          child: Text(context.l10n.reset),
+          child: Text(widget.confirmLabel ?? context.l10n.reset),
         ),
       ],
     );
   }
 }
-

@@ -7,6 +7,7 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
+import 'package:talia_quran/core/theme/app_theme.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -16,6 +17,44 @@ import 'package:talia_quran/features/quran/domain/repositories/quran_repository.
 import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 
 void main() {
+  // N6: the theme's colored AppBar title style overrode the page's white
+  // foreground, drawing a near-black title on the dark teal bar (~2:1).
+  for (final (name, theme) in [
+    ('light', AppTheme.light),
+    ('dark', AppTheme.dark),
+  ]) {
+    testWidgets('header title is readable on its bar ($name)', (tester) async {
+      final repository = await _repositoryForPlan(
+        DailyPlan(
+          generatedAt: DateTime.now().toUtc(),
+          surahId: 1,
+          newAyahs: const [],
+          nearRevision: const [],
+          farRevision: const [],
+          completedAyahNums: const [],
+        ),
+        withActivePlan: false,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: DailyPlanPage(repositoryOverride: repository),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(headerTitleContrast(tester, "Today's Plan"), greaterThan(4.5));
+    });
+  }
+
   testWidgets('DailyPlanPage shows buckets and completion checkmarks', (
     tester,
   ) async {
@@ -224,3 +263,33 @@ final _activeAdultPlan = CustomMemorizationPlan(
   startAyah: 1,
   createdAt: DateTime.utc(2026, 9, 1),
 );
+
+/// Contrast ratio between an AppBar title and the color behind it (the bar,
+/// or the scaffold when the bar is transparent).
+double headerTitleContrast(WidgetTester tester, String title) {
+  final appBar = find.byType(AppBar);
+  final paragraph = tester.widget<RichText>(
+    find.descendant(
+      of: appBar,
+      matching: find.byWidgetPredicate(
+        (w) => w is RichText && w.text.toPlainText() == title,
+      ),
+    ),
+  );
+  final fg = paragraph.text.style!.color!;
+  var bg = tester
+      .widget<Material>(
+        find.descendant(of: appBar, matching: find.byType(Material)).first,
+      )
+      .color!;
+  if (bg.a < 1) {
+    bg =
+        tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor ??
+        Theme.of(tester.element(appBar)).scaffoldBackgroundColor;
+  }
+  final l1 = fg.computeLuminance();
+  final l2 = bg.computeLuminance();
+  final hi = l1 > l2 ? l1 : l2;
+  final lo = l1 > l2 ? l2 : l1;
+  return (hi + 0.05) / (lo + 0.05);
+}

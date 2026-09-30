@@ -73,14 +73,18 @@ void main() {
     );
   });
 
-  PrayerCompanionController makeController() {
+  PrayerCompanionController makeController({bool saveSucceeds = true}) {
     final repository = _MockPrayerCompanionRepository();
     final scheduler = _MockNotificationScheduler();
     when(() => repository.read(any())).thenAnswer((_) async => null);
-    when(() => repository.save(any())).thenAnswer(
-      (invocation) async =>
-          invocation.positionalArguments.first as PrayerCompanionRecord,
-    );
+    if (saveSucceeds) {
+      when(() => repository.save(any())).thenAnswer(
+        (invocation) async =>
+            invocation.positionalArguments.first as PrayerCompanionRecord,
+      );
+    } else {
+      when(() => repository.save(any())).thenThrow(StateError('save failed'));
+    }
     when(
       () => scheduler.refreshNotifications(any(), force: true),
     ).thenAnswer((_) async {});
@@ -208,7 +212,7 @@ void main() {
   });
 
   testWidgets(
-    'actionable occurrence renders the action group and triggers reload',
+    'successful action updates the open sheet and triggers reload',
     (tester) async {
       var reloaded = false;
       await tester.pumpWidget(
@@ -232,7 +236,43 @@ void main() {
 
       await tester.tap(find.text('صليت'));
       await tester.pumpAndSettle();
+
       expect(reloaded, isTrue);
+      expect(find.bySemanticsLabel('العصر: تم التأكيد'), findsOneWidget);
+      expect(find.text('تم تأكيد 1 من 5'), findsOneWidget);
+      expect(find.text('صليت'), findsNothing);
+      expect(find.text('سأصلي الآن'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'failed action keeps the sheet state and does not trigger reload',
+    (tester) async {
+      var reloaded = false;
+      await tester.pumpWidget(
+        sheetHarness(
+          summary: PrayerCompanionDaySummary(
+            statusByPrayer: const {
+              PrayerKey.asr: PrayerCompanionStatus.unconfirmed,
+            },
+            confirmedCount: 0,
+            actionableOccurrence: asrOccurrence,
+          ),
+          controller: makeController(saveSucceeds: false),
+          onCompanionChanged: () => reloaded = true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('صليت'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(reloaded, isFalse);
+      expect(find.bySemanticsLabel('العصر: لم يتم التأكيد بعد'), findsOneWidget);
+      expect(find.text('تم تأكيد 0 من 5'), findsOneWidget);
+      expect(find.text('صليت'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
     },
   );
 }

@@ -35,6 +35,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.message,
     this.isCreatingLink = false,
     this.dailyGoalCap,
+    this.missionSurahName,
+    this.isReturningAfterBreak = false,
   });
 
   final int surahId;
@@ -53,6 +55,13 @@ class KidsJourneyLoaded extends KidsJourneyState {
 
   bool get dailyGoalReached => dailyGoalCap != null;
 
+  /// Name of [nextMission]'s surah when it is not [surahId] (a due review
+  /// elsewhere), so the card never shows a bare surah number (K20).
+  final String? missionSurahName;
+
+  /// K33 — back after three or more days: home greets the child warmly.
+  final bool isReturningAfterBreak;
+
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
       if (stage.status == KidsJourneyStageStatus.needsReview) return stage;
@@ -61,6 +70,23 @@ class KidsJourneyLoaded extends KidsJourneyState {
       if (stage.status == KidsJourneyStageStatus.current) return stage;
     }
     return null;
+  }
+
+  /// The stage the mission card describes: the one [nextMission] actually
+  /// opens. Once the review budget is spent a "needs review" stage may still
+  /// be [currentStage] while the mission is new memorization in a later
+  /// stage (K19). A mission in another surah has no stage here.
+  KidsJourneyStage? get missionStage {
+    final mission = nextMission;
+    if (mission == null) return currentStage;
+    for (final stage in stages) {
+      if (stage.surahId == mission.surahId &&
+          mission.startAyah >= stage.startAyah &&
+          mission.startAyah <= stage.endAyah) {
+        return stage;
+      }
+    }
+    return mission.surahId == surahId ? currentStage : null;
   }
 
   KidsJourneyLoaded copyWith({
@@ -77,6 +103,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     bool? isCreatingLink,
     int? dailyGoalCap,
     bool clearDailyGoalCap = false,
+    String? missionSurahName,
+    bool? isReturningAfterBreak,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -89,6 +117,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     dailyGoalCap: clearDailyGoalCap
         ? null
         : (dailyGoalCap ?? this.dailyGoalCap),
+    missionSurahName: missionSurahName ?? this.missionSurahName,
+    isReturningAfterBreak: isReturningAfterBreak ?? this.isReturningAfterBreak,
   );
 
   @override
@@ -102,5 +132,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     message,
     isCreatingLink,
     dailyGoalCap,
+    missionSurahName,
+    isReturningAfterBreak,
   ];
 }

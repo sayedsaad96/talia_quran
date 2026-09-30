@@ -420,6 +420,35 @@ void main() {
       expect(budget.dueReviewBudgetExhausted, isTrue); // age 6 → 1 review
     });
 
+    test("sums only today's session time (K36)", () {
+      KidsSessionLog timed(String id, DateTime at, int seconds) =>
+          KidsSessionLog(
+            id: id,
+            surahId: 114,
+            ayahNumber: 1,
+            repeatsCompleted: 1,
+            pointsEarned: 10,
+            completedAt: at,
+            durationSeconds: seconds,
+          );
+      final budget = KidsDailyBudget.fromLogs(
+        logs: [
+          timed('a', DateTime(2026, 9, 1, 8), 300),
+          timed('b', DateTime(2026, 8, 31, 20), 900), // yesterday
+          timed('c', DateTime(2026, 9, 1, 9), 120),
+        ],
+        policy: KidsSessionPolicy.forAge(6),
+        now: DateTime(2026, 9, 1, 12),
+      );
+
+      expect(budget.sessionSecondsToday, 420);
+      expect(budget.sessionGoalReached(7), isTrue);
+      expect(budget.sessionGoalReached(8), isFalse);
+      // No goal, or old logs with no recorded time, never trigger it.
+      expect(budget.sessionGoalReached(0), isFalse);
+      expect(KidsDailyBudget.unlimited.sessionGoalReached(6), isFalse);
+    });
+
     test('a missing policy is unlimited (fail-open)', () {
       final budget = KidsDailyBudget.fromLogs(
         logs: const [],
@@ -428,6 +457,300 @@ void main() {
       );
       expect(budget.newAyahLimitReached, isFalse);
       expect(budget.dueReviewBudgetExhausted, isFalse);
+    });
+  });
+
+  group('journey continuation (K17)', () {
+    const finished114 = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 6,
+      completedAyahs: [1, 2, 3, 4, 5, 6],
+      status: KidsJourneyStageStatus.completed,
+    );
+    const finished113 = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 113,
+      startAyah: 1,
+      endAyah: 5,
+      completedAyahs: [1, 2, 3, 4, 5],
+      status: KidsJourneyStageStatus.completed,
+    );
+    const inProgress112 = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 112,
+      startAyah: 1,
+      endAyah: 4,
+      completedAyahs: [1, 2],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    Future<List<KidsJourneyStage>?> Function(int) loader(
+      Map<int, List<KidsJourneyStage>?> bySurah,
+    ) =>
+        (surahId) async => bySurah[surahId];
+
+    test(
+      'skips an already memorized next surah to the real frontier',
+      () async {
+        const resolver = KidsNextMissionResolver();
+        final continuation = await resolver.findContinuation(
+          activeSurahId: 114,
+          stages: const [finished114],
+          loadStages: loader({
+            113: const [finished113],
+            112: const [inProgress112],
+          }),
+        );
+
+        final mission = resolver.resolve(
+          activeSurahId: 114,
+          stages: const [finished114],
+          reviewRecords: const [],
+          now: DateTime.utc(2026, 9, 1),
+          continuation: continuation,
+        );
+
+        expect(mission?.type, KidsMissionType.newMemorization);
+        expect(mission?.surahId, 112);
+        expect(mission?.ayahNumbers, const [3]);
+      },
+    );
+
+    test('is not needed while the active surah still has open work', () async {
+      final continuation = await const KidsNextMissionResolver()
+          .findContinuation(
+            activeSurahId: 114,
+            stages: const [_currentStage],
+            loadStages: (_) async => fail('must not load other surahs'),
+          );
+
+      expect(continuation, isNull);
+    });
+
+    test('ends the journey when every remaining surah is memorized', () async {
+      const resolver = KidsNextMissionResolver(lastJuzAmmaSurahId: 112);
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 114,
+        stages: const [finished114],
+        loadStages: loader({
+          113: const [finished113],
+          112: const [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 112,
+              startAyah: 1,
+              endAyah: 4,
+              completedAyahs: [1, 2, 3, 4],
+              status: KidsJourneyStageStatus.completed,
+            ),
+          ],
+        }),
+      );
+
+      final mission = resolver.resolve(
+        activeSurahId: 114,
+        stages: const [finished114],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: continuation,
+      );
+
+      expect(continuation, isNotNull);
+      expect(mission, isNull);
+    });
+
+    test('an unreadable next journey keeps starting that surah', () async {
+      final continuation = await const KidsNextMissionResolver()
+          .findContinuation(
+            activeSurahId: 114,
+            stages: const [finished114],
+            loadStages: loader({113: null}),
+          );
+
+      expect(continuation?.mission?.surahId, 113);
+      expect(continuation?.mission?.ayahNumbers, const [1]);
+    });
+
+    test('a current stage with every ayah completed is not reopened', () {
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 114,
+        stages: const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 114,
+            startAyah: 1,
+            endAyah: 3,
+            completedAyahs: [1, 2, 3],
+            status: KidsJourneyStageStatus.current,
+          ),
+        ],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: const KidsJourneyContinuation(
+          KidsNextMission(
+            type: KidsMissionType.newMemorization,
+            surahId: 113,
+            ayahNumbers: [1],
+          ),
+        ),
+      );
+
+      expect(mission?.surahId, 113);
+    });
+  });
+
+  group('Al-Fatiha opens the journey (K27)', () {
+    const finishedFatiha = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 1,
+      startAyah: 1,
+      endAyah: 7,
+      completedAyahs: [1, 2, 3, 4, 5, 6, 7],
+      status: KidsJourneyStageStatus.completed,
+    );
+
+    test('after Al-Fatiha the journey moves on to An-Nas', () {
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 1,
+        stages: const [finishedFatiha],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+      );
+
+      expect(mission?.type, KidsMissionType.newMemorization);
+      expect(mission?.surahId, 114);
+      expect(mission?.ayahNumbers, const [1]);
+    });
+
+    test('the look-ahead continues past Al-Fatiha', () async {
+      const resolver = KidsNextMissionResolver();
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 1,
+        stages: const [finishedFatiha],
+        loadStages: (surahId) async => surahId == 114
+            ? const [
+                KidsJourneyStage(
+                  stageNumber: 1,
+                  surahId: 114,
+                  startAyah: 1,
+                  endAyah: 6,
+                  completedAyahs: [1],
+                  status: KidsJourneyStageStatus.current,
+                ),
+              ]
+            : null,
+      );
+
+      expect(continuation?.mission?.surahId, 114);
+      expect(continuation?.mission?.ayahNumbers, const [2]);
+    });
+  });
+
+  group('daily goal cap (K18)', () {
+    const finished114 = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 6,
+      completedAyahs: [1, 2, 3, 4, 5, 6],
+      status: KidsJourneyStageStatus.completed,
+    );
+    const capped = KidsDailyBudget(
+      newAyahsCompletedToday: 1,
+      maxNewAyahsPerDay: 1,
+    );
+
+    test(
+      'a finished surah on a capped day is a day end, not the journey end',
+      () {
+        const resolver = KidsNextMissionResolver();
+        KidsNextMission? resolveWith(KidsDailyBudget budget) =>
+            resolver.resolve(
+              activeSurahId: 114,
+              stages: const [finished114],
+              reviewRecords: const [],
+              now: DateTime.utc(2026, 9, 1),
+              budget: budget,
+              continuation: const KidsJourneyContinuation(
+                KidsNextMission(
+                  type: KidsMissionType.newMemorization,
+                  surahId: 113,
+                  ayahNumbers: [1],
+                ),
+              ),
+            );
+
+        final mission = resolveWith(capped);
+
+        expect(mission, isNull);
+        expect(
+          resolver.dailyGoalCap(
+            mission: mission,
+            budget: capped,
+            resolveWith: resolveWith,
+          ),
+          1,
+        );
+      },
+    );
+
+    test('a truly finished journey never reports a daily cap', () {
+      const resolver = KidsNextMissionResolver();
+      KidsNextMission? resolveWith(KidsDailyBudget budget) => resolver.resolve(
+        activeSurahId: 114,
+        stages: const [finished114],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        budget: budget,
+        continuation: const KidsJourneyContinuation(null),
+      );
+
+      expect(
+        resolver.dailyGoalCap(
+          mission: resolveWith(capped),
+          budget: capped,
+          resolveWith: resolveWith,
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('spent review budget (K19)', () {
+    test('never loops the child on a linked stage review', () {
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 114,
+        stages: const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 114,
+            startAyah: 1,
+            endAyah: 3,
+            completedAyahs: [1, 2, 3],
+            status: KidsJourneyStageStatus.needsReview,
+          ),
+          KidsJourneyStage(
+            stageNumber: 2,
+            surahId: 114,
+            startAyah: 4,
+            endAyah: 6,
+            completedAyahs: [],
+            status: KidsJourneyStageStatus.current,
+          ),
+        ],
+        reviewRecords: [_dueReviewRecord(surahId: 114, ayahNumber: 3)],
+        now: DateTime.utc(2026, 9, 2),
+        budget: const KidsDailyBudget(
+          dueReviewsCompletedToday: 3,
+          maxDueReviewsPerDay: 3,
+          maxNewAyahsPerDay: 2,
+        ),
+      );
+
+      expect(mission?.type, KidsMissionType.newMemorization);
+      expect(mission?.ayahNumbers, const [4]);
     });
   });
 }

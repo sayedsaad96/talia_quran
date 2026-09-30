@@ -16,10 +16,21 @@ abstract class QuranLocalDatasource {
 }
 
 class QuranLocalDatasourceImpl implements QuranLocalDatasource {
+  QuranLocalDatasourceImpl({Future<String> Function(String path)? loadAsset})
+    : _loadAsset = loadAsset ?? rootBundle.loadString;
+
+  final Future<String> Function(String path) _loadAsset;
   List<SurahModel>? _cachedSurahs;
   Map<int, List<AyahModel>>? _cachedAyahs;
   // BUG-007: Page index for O(1) lookup instead of O(n) iteration
   Map<int, List<AyahModel>>? _cachedByPage;
+  Map<int, List<AyahModel>>? _cachedByJuz;
+
+  // In-flight loads. The first home load asks for progress, the daily wird
+  // page and the ayah of the day at the same time; without sharing one
+  // future each caller decoded and parsed the whole corpus separately.
+  Future<List<SurahModel>>? _surahsLoad;
+  Future<void>? _quranLoad;
 
   @override
   Future<void> ensureLoaded() async {
@@ -30,15 +41,19 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   }
 
   @override
-  Future<List<SurahModel>> getSurahs() async {
-    if (_cachedSurahs != null) return _cachedSurahs!;
+  Future<List<SurahModel>> getSurahs() {
+    final cached = _cachedSurahs;
+    if (cached != null) return Future.value(cached);
+    return _surahsLoad ??= _readSurahs().whenComplete(() => _surahsLoad = null);
+  }
+
+  Future<List<SurahModel>> _readSurahs() async {
     try {
-      final jsonStr = await rootBundle.loadString('assets/data/surahs.json');
+      final jsonStr = await _loadAsset('assets/data/surahs.json');
       final list = jsonDecode(jsonStr) as List<dynamic>;
-      _cachedSurahs = list
+      return _cachedSurahs = list
           .map((e) => SurahModel.fromJson(e as Map<String, dynamic>))
           .toList();
-      return _cachedSurahs!;
     } catch (e) {
       throw const CacheFailure('Failed to load surahs');
     }
@@ -67,9 +82,16 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     return ayahs;
   }
 
-  Future<void> _loadQuranData() async {
+  Future<void> _loadQuranData() {
+    if (_cachedAyahs != null) return Future.value();
+    return _quranLoad ??= _readQuranData().whenComplete(
+      () => _quranLoad = null,
+    );
+  }
+
+  Future<void> _readQuranData() async {
     try {
-      final jsonStr = await rootBundle.loadString('assets/data/quran.json');
+      final jsonStr = await _loadAsset('assets/data/quran.json');
       final surahs = await getSurahs();
 
       final result = await compute(QuranLocalDatasourceImpl.parseQuranData, {
@@ -157,6 +179,8 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
 
   @override
   Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz() async {
+    final cached = _cachedByJuz;
+    if (cached != null) return cached;
     if (_cachedAyahs == null) await _loadQuranData();
 
     final grouped = <int, List<AyahModel>>{};
@@ -166,7 +190,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
         grouped.putIfAbsent(juz, () => []).add(ayah);
       }
     }
-    return grouped;
+    return _cachedByJuz = grouped;
   }
 }
 

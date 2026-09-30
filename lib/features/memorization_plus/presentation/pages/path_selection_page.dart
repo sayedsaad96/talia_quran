@@ -279,7 +279,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
   var _reminderTime = const TimeOfDay(hour: 18, minute: 30);
   var _weeklyGoalSessions = 5;
   var _guidanceAudioEnabled = true;
-  var _startingSurahId = 114;
+  var _startingSurahId = KidsJourneyPath.firstSurahId;
   var _canSubmit = false;
 
   @override
@@ -301,7 +301,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
   void _refreshValidity() {
     setState(() {
       _canSubmit =
-          _nameController.text.trim().isNotEmpty &&
+          ChildIdentityPolicy.normalizeNickname(_nameController.text) != null &&
           _pinController.text.length == 4 &&
           _pinController.text == _confirmPinController.text;
     });
@@ -331,23 +331,27 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
               TextField(
                 controller: _nameController,
                 textInputAction: TextInputAction.next,
+                maxLength: ChildIdentityPolicy.maxNicknameLength,
                 decoration: InputDecoration(
                   labelText: context.l10n.name,
                   hintText: context.l10n.enterName,
+                  counterText: '',
                 ),
                 onChanged: (_) => _refreshValidity(),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: _age,
-                decoration: InputDecoration(
-                  labelText: context.l10n.age,
-                ),
+                decoration: InputDecoration(labelText: context.l10n.age),
                 items: [
-                  for (var value = 5; value <= 12; value++)
+                  for (
+                    var value = ChildIdentityPolicy.minAge;
+                    value <= ChildIdentityPolicy.maxAge;
+                    value++
+                  )
                     DropdownMenuItem(
                       value: value,
-                      child: Text('$value'),
+                      child: Text(context.l10n.childAgeYears(value)),
                     ),
                 ],
                 onChanged: (value) {
@@ -366,7 +370,8 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                   labelText: context.l10n.kidsSetupStartingSurah,
                 ),
                 items: [
-                  for (var value = 114; value >= 78; value--)
+                  // Al-Fatiha first, then Juz Amma in memorization order.
+                  for (final value in KidsJourneyPath.surahIds)
                     DropdownMenuItem(
                       value: value,
                       child: Text(
@@ -392,9 +397,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                   for (final value in const [3, 5, 7])
                     DropdownMenuItem(
                       value: value,
-                      child: Text(
-                        context.l10n.kidsSetupWeeklyGoalValue(value),
-                      ),
+                      child: Text(context.l10n.kidsSetupWeeklyGoalValue(value)),
                     ),
                 ],
                 onChanged: (value) {
@@ -430,9 +433,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                 obscureText: true,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   labelText: context.l10n.parentDashboardCreatePinTitle,
                   helperText: context.l10n.parentDashboardPinHelp,
@@ -445,9 +446,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                 obscureText: true,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   labelText: context.l10n.parentDashboardPinConfirm,
                 ),
@@ -483,4 +482,3 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
     );
   }
 }
-

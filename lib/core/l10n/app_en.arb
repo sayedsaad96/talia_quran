@@ -138,6 +138,10 @@
   "clearSearch": "Clear search",
   "selectReciter": "Choose reciter",
   "enterFocusMode": "Enter focus mode",
+  "readerGoToPage": "Go to a page, surah or juz",
+  "readerTajweedColors": "Tajweed colors",
+  "readerTajweedColorsHint": "Color the tajweed rules on the Mushaf page",
+  "surahInProgressBadge": "Memorizing",
   "exitFocusMode": "Exit focus mode",
   "closeReader": "Close reader",
   "hizbNumberLabel": "Hizb {number}",
@@ -210,7 +214,6 @@
   "about": "About",
   "systemDefault": "System Default",
   "pureBlackTheme": "Pure black (OLED)",
-  "pureBlackThemeHint": "True-black background in dark mode. Easier on the eyes and saves battery on OLED screens",
   "changeMemorizationPath": "Change Memorization Path",
   "adultPath": "Adult Path",
   "adultPathDesc": "Start from Al-Fatihah and Al-Baqarah",
@@ -386,6 +389,8 @@
   "azkarFavorites": "Favorites",
   "azkarFavoritesEmptyTitle": "No favorites yet",
   "azkarFavoritesEmptyDesc": "Tap the bookmark icon next to any dua to save it here",
+  "azkarFavoriteAdd": "Add to favorites",
+  "azkarFavoriteRemove": "Remove from favorites",
   "azkarSearchNoResultsTitle": "No matching results",
   "azkarSearchNoResultsDesc": "We couldn't find any duas for your search",
   "azkarSearchClear": "Clear search",
@@ -489,7 +494,7 @@
   "achievementTitleTenSurahs": "10 Surahs",
   "achievementDescTenSurahs": "Memorize 10 complete Surahs",
   "achievementTitleJuzAmma": "Juz Amma",
-  "achievementDescJuzAmma": "Memorize 564 ayahs (Juz Amma)",
+  "achievementDescJuzAmma": "Memorize all of Juz Amma",
   "achievementTitleOneJuzMemorized": "Memorized Juz",
   "achievementDescOneJuzMemorized": "Memorize one complete Juz",
   "achievementTitleFiveJuzMemorized": "5 Memorized Juz",
@@ -657,16 +662,15 @@
   "splashFeatureMemorize": "Memorize",
   "splashFeatureReview": "Review",
   "splashFeatureGrow": "Grow",
-  "onboardingWelcomeTitle": "Welcome to Talia",
-  "onboardingWelcomeSubtitle": "A calm, intelligent Quran sanctuary designed to help you read, memorize, review, and build a lasting daily habit.",
   "onboardingStartJourney": "Start Your Journey",
   "onboardingSlide1Title": "Your Daily Quran Sanctuary",
-  "onboardingSlide1Subtitle": "Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and easy tafsir.",
-  "onboardingBentoMushafSurah": "Surat Al-Fatihah",
+  "onboardingSlide1Subtitle": "Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and khatmah plans at your own pace.",
+  "onboardingBentoMushafSurah": "Surat Al-Isra",
   "onboardingBentoListeningTitle": "Masterful Recitation",
   "onboardingBentoListeningDesc": "Audio listening & repeat",
-  "onboardingBentoTafsirTitle": "Easy Tafsir",
-  "onboardingBentoTafsirDesc": "Instant word meanings",
+  "onboardingBentoKhatmahTitle": "Khatmah Plans",
+  "onboardingBentoKhatmahDesc": "A daily pace that suits you",
+  "onboardingBentoKhatmahBadge": "Daily wird",
   "onboardingSlide2Title": "Smart Memorization & Mastery",
   "onboardingSlide2Subtitle": "Intelligent spaced repetition algorithms that track memory strength and prevent forgetting.",
   "onboardingBentoMasteryTitle": "Mastery & Retention",
@@ -675,11 +679,15 @@
   "onboardingBentoActiveRecallDesc": "Hide words for self-testing",
   "onboardingBentoReviewScheduleTitle": "Smart Review",
   "onboardingBentoReviewScheduleDesc": "Timely memory refresh",
+  "onboardingBentoStatusMastered": "Mastered",
+  "onboardingBentoStatusDueSoon": "Due soon",
+  "onboardingBentoStatusNew": "New",
+  "onboardingBentoSmartAlert": "Smart alert",
   "onboardingSlide3Title": "Daily Habit & Family Journeys",
-  "onboardingSlide3Subtitle": "Build an unbreakable daily Quran habit, with a fun interactive kids path, completely offline.",
+  "onboardingSlide3Subtitle": "Build an unbreakable daily Quran habit, with a fun interactive kids path, even offline.",
   "onboardingBentoStreakTitle": "Daily Streak",
   "onboardingBentoStreakDays": "7 Days Streak 🔥",
-  "onboardingBentoOfflineBadge": "Works 100% Offline",
+  "onboardingBentoOfflineBadge": "Works offline",
   "onboardingBentoKidsTeaserTitle": "Talia Kids Journey",
   "onboardingBentoKidsTeaserDesc": "Stars, audios & joyful rewards",
   "onboardingPillarReadTitle": "Authentic Mushaf Reading",
@@ -950,6 +958,17 @@
   "kidsGamifiedRepeatStepSubtitle": "Repeat after the reciter until it settles",
   "kidsGamifiedTestStep": "Test yourself",
   "kidsGamifiedTestStepSubtitle": "Try reciting without help",
+  "kidsGamifiedTryFromMemory": "Try from memory",
+  "kidsGamifiedTryToRemember": "Try to remember the ayah",
+  "kidsGamifiedGiveMeTheStart": "Give me the start",
+  "kidsGamifiedFirstWordShown": "Here is the first word — you finish it",
+  "kidsGamifiedReviewChallenge": "⭐ Review challenge",
+  "kidsGamifiedReviewChallengeSubtitle": "Do you remember it? Recite it from memory",
+  "kidsGamifiedRemindMe": "Remind me",
+  "kidsWelcomeBackTitle": "Welcome back!",
+  "kidsWelcomeBackSubtitle": "Let's start with an easy step",
+  "kidsGamifiedEnoughForToday": "Well done! That's enough time for today — you can stop here.",
+  "parentSupportTip":"Try together: listen to the ayah twice, then let your child start with the first word",
   "kidsGamifiedStartMission": "Start mission",
   "kidsGamifiedListenAndRepeat": "Listen and repeat",
   "kidsGamifiedRecordYourVoice": "Record your recitation",
@@ -1041,9 +1060,9 @@
   "dailyPlanListenBeforeRating": "Listen to the ayah before rating",
   "reviewQuizTitle": "Review Session",
   "memorizationSessionTitle": "Memorization Session",
-  "memorizationHubReviewSectionTitle": "Review Session",
-  "memorizationHubReviewSectionSubtitle": "Review memorized ayahs through guided recitation (speech-to-text).",
-  "memorizationHubReviewCardDescription": "Open a V2 recitation session for ayahs you have already memorized.",
+  "memorizationHubReviewSectionTitle": "Review",
+  "memorizationHubReviewSectionSubtitle": "Recite what you memorized from memory; the app checks your recitation.",
+  "memorizationHubReviewCardDescription": "Recite the ayahs due for review from memory.",
   "memorizationHubDailyPlanSubtitle": "Your default place for daily memorization and review.",
   "memorizationHubContinuePlanDescription": "Open your current memorization and review plan.",
   "memorizationHubViewPlanTitle": "View Today's Plan",
@@ -1051,7 +1070,7 @@
   "memorizationHubPracticeSectionSubtitle": "Choose a surah or use recite practice.",
   "memorizationHubPracticeBySurahTitle": "Practice by Surah",
   "memorizationHubPracticeBySurahDescription": "Recite Practice: choose a surah and start a speech-to-text session.",
-  "listeningReviewTitle": "Listening Review",
+  "listeningReviewTitle": "Listening Quiz",
   "listeningReviewHubDescription": "Hear an ayah you memorized: name its surah or recite what comes next.",
   "listeningReviewStartPrompt": "Choose a round type",
   "listeningReviewModeWhichSurah": "Which surah?",
@@ -1059,7 +1078,7 @@
   "listeningReviewModeMixed": "Mixed",
   "listeningReviewLastScore": "Last round: {correct} of {total}",
   "listeningReviewNotEnoughTitle": "Memorize a few ayahs first",
-  "listeningReviewNotEnoughBody": "Listening review needs at least 5 memorized ayahs that can be played.",
+  "listeningReviewNotEnoughBody": "The listening quiz needs at least 5 memorized ayahs that can be played.",
   "listeningReviewErrorBody": "Couldn't prepare the round. Please try again.",
   "listeningReviewRetry": "Try again",
   "listeningReviewQuestionProgress": "Question {current} of {total}",
@@ -1128,6 +1147,54 @@
   "parentDashboardEnterButton": "Enter",
   "parentDashboardEnterLinkingCode": "Enter linking code",
   "parentDashboardResetPin": "Reset on this device — a new code will be required",
+  "parentDashboardForgotPin": "Forgot the code?",
+  "parentDashboardForgotPinTitle": "Recover guardian code",
+  "parentDashboardForgotPinBody": "To confirm you are the guardian, enter the password for {email}. You will then create a new code; rewards and settings stay as they are.",
+  "@parentDashboardForgotPinBody": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "parentDashboardForgotPinConfirm": "Verify",
+  "parentDashboardAccountPasswordIncorrect": "Incorrect account password",
+  "parentDashboardAccountCheckUnavailable": "Couldn't verify the account right now. Check your connection and try again.",
+  "parentDashboardChangePin": "Change guardian code",
+  "parentDashboardChangePinConfirm": "You'll create a new code now. Rewards and settings stay as they are.",
+  "guardianErrorSignInRequired": "Sign in to your account first, then try again.",
+  "guardianErrorCloudUnavailable": "Linking children isn't available in this version because cloud sync is not enabled.",
+  "guardianErrorOnlyForChildren": "Guardian linking is only available for child profiles.",
+  "guardianErrorAlreadyLinked": "This account is already linked to a guardian.",
+  "guardianErrorParentModeAdultsOnly": "Guardian mode is only available on the adults path.",
+  "guardianErrorLinkCodeInvalid": "The linking code is incorrect or has expired. Ask the child to create a new code and try again.",
+  "guardianErrorChildHasGuardian": "This child is already linked to another guardian. The current link must be removed first.",
+  "guardianErrorSameAccount": "A child can't be linked to the same account. The child needs an account separate from the guardian's.",
+  "parentRewardErrorTitleRequired": "Enter the reward name first.",
+  "parentRewardErrorLimitReached": "You can add up to 3 rewards.",
+  "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
+  "@childErrorNicknameInvalid": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "childErrorAgeInvalid": "Choose an age between {min} and {max}.",
+  "@childErrorAgeInvalid": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "guardianErrorChildNotLinked": "This child is no longer linked to your account.",
+  "childErrorIdentityUpdateUnavailable": "Editing the child's details isn't available right now. Try again later.",
+  "childAgeYears": "{age, plural, =1{1 year old} other{{age} years old}}",
+  "@childAgeYears": {
+    "placeholders": {
+      "age": { "type": "int" }
+    }
+  },
+  "childEditIdentity": "Edit name and age",
+  "childIdentitySaved": "Saved. The child's device shows the change after its next sync.",
+  "kidsLinkGuardianTileTitle": "Link guardian",
+  "kidsLinkGuardianTileSubtitle": "Needs the guardian's code. Once linked, your guardian follows your progress from their device.",
   "parentDashboardTodaySummary": "Today",
   "parentDashboardTodayEmpty": "Today: no sessions yet. Encourage a short session.",
   "parentDashboardTodayCompleted": "Today: the child completed {count} sessions. Encourage the next review.",
@@ -1256,37 +1323,13 @@
   "dailyPlanSettingsTooltip": "Smart memorization path settings",
   "dailyPlanRefreshTooltip": "Refresh plan",
   "dailyPlanHeaderTitle": "Today's Plan",
-  "dailyPlanHeaderSummary": "{total} items • {completed} completed",
-  "@dailyPlanHeaderSummary": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      },
-      "completed": {
-        "type": "int"
-      }
-    }
-  },
+  "dailyPlanHeaderSummary": "{total, plural, =1{{totalText} item} other{{totalText} items}} • {completedText} completed",
+  "@dailyPlanHeaderSummary": {"placeholders": {"total": {"type": "int"}, "totalText": {"type": "String"}, "completedText": {"type": "String"}}},
   "dailyPlanProgressCount": "{completed} of {total}",
-  "@dailyPlanProgressCount": {
-    "placeholders": {
-      "completed": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
+  "@dailyPlanProgressCount": {"placeholders": {"completed": {"type": "String"}, "total": {"type": "String"}}},
   "dailyPlanAllDoneShort": "Well done! You completed your plan today",
-  "dailyPlanRemainingItems": "{count} items remaining",
-  "@dailyPlanRemainingItems": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "dailyPlanRemainingItems": "{count, plural, =1{{countText} item} other{{countText} items}} remaining",
+  "@dailyPlanRemainingItems": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "dailyPlanAyahTitle": "Ayah {ayahNumber}",
   "@dailyPlanAyahTitle": {
     "placeholders": {
@@ -1296,7 +1339,7 @@
     }
   },
   "dailyPlanSurahAyahTitle": "{surah} · Ayah {ayahNumber}",
-  "@dailyPlanSurahAyahTitle": {"placeholders": {"surah": {"type": "String"}, "ayahNumber": {"type": "int"}}},
+  "@dailyPlanSurahAyahTitle": {"placeholders": {"surah": {"type": "String"}, "ayahNumber": {"type": "String"}}},
   "dailyPlanRecordStats": "Strength: {strength} • Reviews: {reviews}",
   "@dailyPlanRecordStats": {
     "placeholders": {
@@ -1346,14 +1389,8 @@
   "customPlanToSurah": "To Surah",
   "customPlanFromAyah": "From ayah number",
   "customPlanInvalidAyah": "Enter a valid ayah number",
-  "customPlanSurahAyahLimit": "This Surah has {maxAyah} ayahs",
-  "@customPlanSurahAyahLimit": {
-    "placeholders": {
-      "maxAyah": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanSurahAyahLimit": "This Surah has {count, plural, =1{{countText} ayah} other{{countText} ayahs}}",
+  "@customPlanSurahAyahLimit": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "customPlanAdult": "Adult",
   "customPlanChild": "Child",
   "customPlanDifficultyEasy": "Easy",
@@ -1366,14 +1403,8 @@
   "customPlanFarRevisionSubtitle": "Smart repetition for older ayahs",
   "customPlanFarRevisionCount": "Far review ayah count",
   "customPlanEstimatedDuration": "Estimated completion time",
-  "customPlanApproxWeeks": "{count} weeks approx.",
-  "@customPlanApproxWeeks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanApproxWeeks": "{count, plural, =1{{countText} week} other{{countText} weeks}} approx.",
+  "@customPlanApproxWeeks": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "customPlanApproxMonths": "{count} months approx.",
   "@customPlanApproxMonths": {
     "placeholders": {
@@ -1390,17 +1421,8 @@
       }
     }
   },
-  "customPlanEstimatedScope": "{surahs} Surahs • ~{ayahs} ayahs",
-  "@customPlanEstimatedScope": {
-    "placeholders": {
-      "surahs": {
-        "type": "int"
-      },
-      "ayahs": {
-        "type": "int"
-      }
-    }
-  },
+  "customPlanEstimatedScope": "{surahs, plural, =1{{surahsText} Surah} other{{surahsText} Surahs}} • ~{ayahs, plural, =1{{ayahsText} ayah} other{{ayahsText} ayahs}}",
+  "@customPlanEstimatedScope": {"placeholders": {"surahs": {"type": "int"}, "surahsText": {"type": "String"}, "ayahs": {"type": "int"}, "ayahsText": {"type": "String"}}},
   "customPlanQuickPresetTitle": "Choose a quick template",
   "customPlanPresetLight": "Light",
   "customPlanPresetLightDesc": "3 ayahs/day • 5 days • 10 minutes",
@@ -1422,26 +1444,10 @@
       "endSurah": {}
     }
   },
-  "customPlanSummaryLoad": "{ayahsPerDay} ayahs daily • {daysPerWeek} days weekly",
-  "@customPlanSummaryLoad": {
-    "placeholders": {
-      "ayahsPerDay": {
-        "type": "int"
-      },
-      "daysPerWeek": {
-        "type": "int"
-      }
-    }
-  },
-  "customPlanSummarySession": "{minutes} minutes per session • {difficulty} level",
-  "@customPlanSummarySession": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "difficulty": {}
-    }
-  },
+  "customPlanSummaryLoad": "{ayahsPerDay, plural, =1{{ayahsText} ayah} other{{ayahsText} ayahs}} daily • {daysPerWeek, plural, =1{{daysText} day} other{{daysText} days}} weekly",
+  "@customPlanSummaryLoad": {"placeholders": {"ayahsPerDay": {"type": "int"}, "ayahsText": {"type": "String"}, "daysPerWeek": {"type": "int"}, "daysText": {"type": "String"}}},
+  "customPlanSummarySession": "{minutes, plural, =1{{minutesText} minute} other{{minutesText} minutes}} per session • {difficulty} level",
+  "@customPlanSummarySession": {"placeholders": {"minutes": {"type": "int"}, "minutesText": {"type": "String"}, "difficulty": {"type": "String"}}},
   "memorizationPathSelectionFailedTitle": "Could not save your choice",
   "memorizationPathConfirmTitle": "What happens next?",
   "memorizationPathCanChangeLater": "You can change this later from Settings without losing progress.",
@@ -1466,7 +1472,9 @@
       }
     }
   },
-  "kidsQuranSwipeHint": "Swipe gently for the next page",
+  "kidsQuranLongPressHint": "Long-press any ayah to hear it",
+  "kidsQuranListenPage": "Listen to the page",
+  "kidsQuranPausePage": "Pause",
   "parentDashboardPinInvalid": "Enter a 4-digit code",
   "parentDashboardPinIncorrect": "Incorrect code",
   "parentDashboardLinking": "Verifying pairing code…",
@@ -1494,9 +1502,9 @@
   },
   "hifzEvaluatingReview": "Evaluating review…",
   "hifzLeaveSessionMessage": "Do you want to leave the memorization session? Your current progress will be saved.",
-  "memorizationExitSessionMessage": "Save this session for later or discard it? Failed, unpassed Ayahs will be added to review when discarded.",
+  "memorizationExitSessionMessage": "Continue this session later from where you stopped, or discard it? Failed, unpassed Ayahs will be added to review when discarded.",
   "memorizationExitSessionTitle": "Leave this session?",
-  "memorizationSaveAndLeave": "Save & leave",
+  "memorizationSaveAndLeave": "Continue later",
   "memorizationDiscardSession": "Discard session",
   "hifzAyahNumberLabel": "Ayah {ayahNumber}",
   "@hifzAyahNumberLabel": {
@@ -2001,14 +2009,8 @@
   "learningAlertGenericTitle": "Learning Alert",
   "learningAlertGenericSubtitle": "Action required",
   "reviewBacklogTitle": "Review Backlog",
-  "reviewBacklogSubtitle": "You have {overdue} overdue ayahs",
-  "@reviewBacklogSubtitle": {
-    "placeholders": {
-      "overdue": {
-        "type": "String"
-      }
-    }
-  },
+  "reviewBacklogSubtitle": "You have {count, plural, =1{{countText} overdue ayah} other{{countText} overdue ayahs}}",
+  "@reviewBacklogSubtitle": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "smartPlanCustomTitle": "Custom Plan",
   "smartPlanReviewTitle": "Review Plan",
   "smartPlanTodayTitle": "Todays Plan",
@@ -2038,7 +2040,7 @@
   "familyDashboardNoChildren": "No children linked yet",
   "@familyDashboardNoChildren": { "description": "Empty state title" },
 
-  "familyDashboardNoChildrenHint": "Ask your child to open the linking page in the app to scan a QR code",
+  "familyDashboardNoChildrenHint": "On your child's device: open the kids track → tap ⚙ → “Link guardian”, then scan the code shown or type it here.",
   "@familyDashboardNoChildrenHint": { "description": "Empty state hint" },
 
   "familyDashboardTodaySummaryTitle": "Today in Our Family",
@@ -2132,6 +2134,15 @@
   "v2SelfGradeHesitatedHint": "Recited with a pause or small slip; it will come back soon",
   "v2SelfGradeForgot": "Could not recall it",
   "v2SelfGradeForgotHint": "We will go over it again now",
+  "v2SelfGradeRevealHint": "Recite from memory first, then reveal the text and compare before grading.",
+  "v2SelfGradeRevealAction": "Show the ayah to compare",
+  "v2BlockRevealAction": "Show the block to compare",
+  "v2BlockGradeMastered": "Recited the whole block without stumbling",
+  "v2BlockGradeHesitated": "Hesitated on an ayah",
+  "v2BlockGradeForgot": "Forgot an ayah",
+  "v2StumbledAyahTitle": "Where did you stumble?",
+  "v2StumbledAyahOption": "Ayah {ayahNumber}",
+  "@v2StumbledAyahOption": {"placeholders": {"ayahNumber": {"type": "int"}}},
   "v2ManualRecallHint": "No microphone? Confirm you recited from memory and your progress will be saved.",
   "v2ManualBlockReviewAction": "I recited the block from memory (self-grade)",
   "v2RemediationTitle": "Short remediation",
@@ -2148,13 +2159,13 @@
   "closingMomentLabel": "A moment of closure",
   "closingAyah": "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
   "closingAyahSource": "Surah Ar-Ra'd · Ayah 28",
-  "closingSummaryMemorization": "You committed {count} ayahs to memory this session — a lasting impact, in shaa Allah.",
-  "@closingSummaryMemorization": {"placeholders": {"count": {"type": "int"}}},
+  "closingSummaryMemorization": "You committed {count, plural, =1{{countText} ayah} other{{countText} ayahs}} to memory this session — a lasting impact, in shaa Allah.",
+  "@closingSummaryMemorization": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "closingSummaryReview": "Your review is complete — may it stay firmly rooted in your heart.",
   "v2ReviewSessionTitle": "Review Session",
   "v2HintSchedulingNotice": "Hints are recorded and shape your next review schedule.",
-  "dailyPlanBacklogNotice": "You have {count} ayahs due for review. Finish today's reviews to unlock new ayahs.",
-  "@dailyPlanBacklogNotice": {"placeholders": {"count": {"type": "int"}}},
+  "dailyPlanBacklogNotice": "You have {count, plural, =1{{countText} ayah} other{{countText} ayahs}} due for review. Finish today's reviews to unlock new ayahs.",
+  "@dailyPlanBacklogNotice": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "dailyPlanStartReview": "Start today's review",
   "dailyPlanReviewDayNotice": "Today is a review day in your plan: no new ayahs, strengthen what you've memorized.",
   "closingSummaryKhatmahWird": "You completed today's wird — pages {start} to {end} — a lasting impact, in shaa Allah.",
@@ -2184,7 +2195,7 @@
   "v2BlockProgress": "{passed}/{total} ayahs passed individually.",
   "@v2BlockProgress": { "placeholders": { "passed": { "type": "int" }, "total": { "type": "int" } } },
   "v2AyahOfBlock": "Ayah {current} of {total}",
-  "@v2AyahOfBlock": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@v2AyahOfBlock": {"placeholders": {"current": {"type": "String"}, "total": {"type": "String"}}},
   "v2EvaluatingBlock": "Evaluating block...",
   "v2RecordingBlock": "Recording block now",
   "v2Playing": "Playing",
@@ -2211,6 +2222,12 @@
   "v2MaskedWordsHint": "Show masked words",
   "v2MaskedWordsRevealed": "Words are hidden — try to recall",
   "v2MaskedWordsFull": "Hide words",
+  "v2FirstLettersHint": "First letters",
+  "v2FirstLettersRevealed": "First letters revealed — try to recall",
+  "countAyahs": "{count, plural, =1{{countText} ayah} other{{countText} ayahs}}",
+  "@countAyahs": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "streakDaysUnit": "{count, plural, =1{day} other{days}}",
+  "@streakDaysUnit": {"placeholders": {"count": {"type": "int"}}},
   "v2SurahLoadFailed": "Could not load surah data.",
   "v2NoAyahsInRange": "No ayahs are available in the selected range.",
   "kidsRecordingUnavailable": "The microphone did not work. Try again or ask a parent for help.",
@@ -2224,7 +2241,7 @@
       "total": { "type": "int" }
     }
   },
-  "kidsJourneyCompleteHint": "You completed the whole Juz Amma! Tell your parent about this great achievement.",
+  "kidsJourneyCompleteHint": "You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.",
   "kidsAyahAlreadyCompleted": "You already completed this ayah. Open the map to continue.",
   "accountSwitchOfflineDataDiscarded": "Unsynced progress from the previous account was not uploaded and has been removed from this device.",
   "startYourJourneyWithQuran": "Start your journey with the Quran",
@@ -2267,19 +2284,19 @@
   "khatmahStartNewKhatmah": "Start New Khatmah",
   "khatmahChooseYourDailyReadingPaceToCompleteThe": "Choose your daily reading pace to complete the Quran with serenity.",
   "khatmahDailyPages": "Daily Pages",
-  "khatmahPages": "{v1} pages",
-  "@khatmahPages": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahPages": "{count, plural, =1{{countText} page} other{{countText} pages}}",
+  "@khatmahPages": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahOrCustomPagesPerDay": "Or custom pages per day",
   "khatmahOrChooseDuration": "Or choose a duration",
   "khatmahStartFromPage": "Start from page (optional)",
   "khatmahStartFromPageHint": "After page 604 you continue from page 1 until the khatmah is complete",
-  "khatmahDurationDays": "{days} days",
-  "@khatmahDurationDays": {"placeholders": {"days": {"type": "String"}}},
-  "khatmahDurationRamadan": "Ramadan (30 days)",
+  "khatmahDurationDays": "{count, plural, =1{{countText} day} other{{countText} days}}",
+  "@khatmahDurationDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "khatmahDurationRamadan": "Ramadan (a juz a day)",
   "khatmahEG5": "e.g. 5",
   "khatmahEstimatedDuration": "Estimated Duration",
-  "khatmahDays": "{v1} days",
-  "@khatmahDays": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahDays": "{count, plural, =1{{countText} day} other{{countText} days}}",
+  "@khatmahDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahExpectedCompletion": "Expected Completion",
   "khatmahStartKhatmah": "Start Khatmah",
   "khatmahPhysicalMushafProgressSavedSuccessfully": "Physical Mushaf progress saved successfully",
@@ -2311,8 +2328,8 @@
   "khatmahAdded1PageDayMildCompensation": "Added 1 page/day mild compensation",
   "khatmahMildBoost": "Mild Boost",
   "khatmahAdjustPreviewTitle": "Adjust khatmah schedule",
-  "khatmahAdjustPreviewBody": "Daily wird: {pages} pages\nExpected completion: {date}",
-  "@khatmahAdjustPreviewBody": {"placeholders": {"pages": {"type": "String"}, "date": {"type": "String"}}},
+  "khatmahAdjustPreviewBody": "Daily wird: {pages, plural, =1{{pagesText} page} other{{pagesText} pages}}\nExpected completion: {date}",
+  "@khatmahAdjustPreviewBody": {"placeholders": {"pages": {"type": "int"}, "pagesText": {"type": "String"}, "date": {"type": "String"}}},
   "khatmahApplyAdjustment": "Apply",
   "khatmahLoadFailureHint": "Couldn't read the khatmah data on this device. Please try again.",
   "khatmahPause": "Pause",
@@ -2336,8 +2353,8 @@
   "khatmahDecreaseFontSize": "Decrease font size",
   "khatmahIncreaseFontSize": "Increase font size",
   "khatmahCopyDuA": "Copy du'a",
-  "khatmahPagesLeft": "{v1} pages left",
-  "@khatmahPagesLeft": {"placeholders":{"v1":{"type":"String"}}},
+  "khatmahPagesLeft": "{count, plural, =1{{countText} page} other{{countText} pages}} left",
+  "@khatmahPagesLeft": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahEstCompletion": "Est. completion: {v1}",
   "@khatmahEstCompletion": {"placeholders":{"v1":{"type":"String"}}},
   "khatmahDedicateKhatmahToSomeone": "Dedicate Khatmah to someone",
@@ -2351,16 +2368,18 @@
   "@khatmahPageOfOfTodaySWird": {"placeholders":{"v1":{"type":"String"},"v2":{"type":"String"},"v3":{"type":"String"}}},
   "khatmahSaveExit": "Finish reading",
   "khatmahPaceOnTrack": "On schedule — well done",
+  "khatmahPaceAhead": "Ahead — you'll finish {count, plural, =1{a day} other{{countText} days}} early",
+  "@khatmahPaceAhead": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahRedistributeAction": "Redistribute to keep the finish date",
   "khatmahRedistributed": "Pages redistributed to keep your finish date",
-  "khatmahPaceBehind": "{pages} pages behind the finish date",
-  "@khatmahPaceBehind": {"placeholders": {"pages": {"type": "String"}}},
+  "khatmahPaceBehind": "{count, plural, =1{{countText} page} other{{countText} pages}} behind the finish date",
+  "@khatmahPaceBehind": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "khatmahStartNewKhatmah": "Start a new khatmah",
   "khatmahThroughWirdEnd": "Through today's wird (p. {page})",
   "@khatmahThroughWirdEnd": {"placeholders": {"page": {"type": "String"}}},
   "khatmahCongratulations": "Congratulations on completing the Quran",
-  "khatmahShareSummary": "Completed Quran Khatmah ({title}) in {days} days.\nVia Talia Quran App",
-  "@khatmahShareSummary": {"placeholders":{"title":{"type":"String"},"days":{"type":"String"}}},
+  "khatmahShareSummary": "Completed Quran Khatmah ({title}) in {days, plural, =1{{daysText} day} other{{daysText} days}}.\nVia Talia Quran App",
+  "@khatmahShareSummary": {"placeholders": {"title": {"type": "String"}, "days": {"type": "int"}, "daysText": {"type": "String"}}},
   "khatmahUserNote": "Your personal note: {note}",
   "@khatmahUserNote": {"placeholders":{"note":{"type":"String"}}},
   "khatmahTodayRange": "Today: pages {start} - {end}{completed}",
@@ -2387,6 +2406,22 @@
   "khatmahGeneralGuidance": "General supplication",
   "khatmahRelationshipParent": "Parent",
   "khatmahRelationshipMother": "Mother",
+  "khatmahRecipientGender": "Recipient",
+  "khatmahRecipientMale": "Male",
+  "khatmahRecipientFemale": "Female",
+  "khatmahEditDedication": "Edit dedication",
+  "khatmahDedicationSaved": "Dedication saved",
+  "khatmahWirdJuz": "Today's wird: Juz {juz}",
+  "@khatmahWirdJuz": {"placeholders": {"juz": {"type": "String"}}},
+  "khatmahRepeatSameSettings": "New khatmah, same settings",
+  "khatmahHistoryStats": "{count} khatmahs • average {avg} days • fastest {fastest} days",
+  "@khatmahHistoryStats": {"placeholders": {"count": {"type": "String"}, "avg": {"type": "String"}, "fastest": {"type": "String"}}},
+  "khatmahJuzMapTitle": "Khatmah map",
+  "khatmahJuzMapCell": "Juz {juz}: {read} of {total} pages",
+  "@khatmahJuzMapCell": {"placeholders": {"juz": {"type": "String"}, "read": {"type": "String"}, "total": {"type": "String"}}},
+  "khatmahCatchUpTitle": "How would you like to catch up?",
+  "khatmahCatchUpOption": "{pages} pages a day — finish {date}",
+  "@khatmahCatchUpOption": {"placeholders": {"pages": {"type": "String"}, "date": {"type": "String"}}},
   "khatmahRelationshipFather": "Father",
   "khatmahRelationshipFriend": "Friend",
   "khatmahRelationshipRelative": "Relative",
@@ -2414,8 +2449,8 @@
   "homeAyahOfDay": "Ayah of the day",
   "surahRevelationMeccan": "Meccan",
   "surahRevelationMedinan": "Medinan",
-  "ayahOfDaySurahMeta": "{revelation} · {count} ayahs",
-  "@ayahOfDaySurahMeta": {"placeholders": {"revelation": {"type": "String"}, "count": {"type": "String"}}},
+  "ayahOfDaySurahMeta": "{revelation} · {count, plural, =1{{countText} ayah} other{{countText} ayahs}}",
+  "@ayahOfDaySurahMeta": {"placeholders": {"revelation": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}},
   "ayahOfDayReadSurah": "Read the full surah",
   "homeAyahContextFriday": "An ayah for Friday",
   "homeAyahContextRamadanStart": "An ayah for the start of Ramadan",
@@ -2433,7 +2468,7 @@
   "@homeResumeListening": {"placeholders":{"surah":{"type":"String"}}},
   "homeSomethingElse": "Something else",
   "homeMinutes": "{count} min",
-  "@homeMinutes": {"placeholders":{"count":{"type":"int"}}},
+  "@homeMinutes": {"placeholders": {"count": {"type": "String"}}},
   "homeOccasionFriday": "Friday · Surah Al-Kahf",
   "homeOccasionRamadan": "Ramadan",
   "homeOccasionLastTenNights": "Last ten nights",
@@ -2487,11 +2522,11 @@
   "homeContinueRecitation": "Continue reciting",
   "homeContinueAction": "Continue",
   "homeAyahRange": "Verses {start} to {end}",
-  "@homeAyahRange": {"placeholders":{"start":{"type":"int"},"end":{"type":"int"}}},
-  "homeAyahProgressCount": "{current} of {total} ayahs",
-  "@homeAyahProgressCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
-  "homePageProgressCount": "{current} of {total} pages",
-  "@homePageProgressCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "@homeAyahRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
+  "homeAyahProgressCount": "{currentText} of {total, plural, =1{{totalText} ayah} other{{totalText} ayahs}}",
+  "@homeAyahProgressCount": {"placeholders": {"currentText": {"type": "String"}, "total": {"type": "int"}, "totalText": {"type": "String"}}},
+  "homePageProgressCount": "{currentText} of {total, plural, =1{{totalText} page} other{{totalText} pages}}",
+  "@homePageProgressCount": {"placeholders": {"currentText": {"type": "String"}, "total": {"type": "int"}, "totalText": {"type": "String"}}},
   "homeTileListen": "Recite",
   "homeTileListenHint": "Listen and recite",
   "homeTileReview": "Review",
@@ -2534,8 +2569,8 @@
   "homeActivityHoursAgo": "{count} h ago",
   "@homeActivityHoursAgo": {"placeholders":{"count":{"type":"int"}}},
   "homeActivityYesterday": "Yesterday",
-  "homeActivityDaysAgo": "{count} days ago",
-  "@homeActivityDaysAgo": {"placeholders":{"count":{"type":"int"}}},
+  "homeActivityDaysAgo": "{count, plural, =1{{countText} day} other{{countText} days}} ago",
+  "@homeActivityDaysAgo": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
   "homeActivityCompleted": "Completed",
   "homeFooterTagline": "With the Quran, we live more beautifully",
   "quickNavTitle": "Quick navigation",
@@ -2608,8 +2643,8 @@
   ,"notificationQuietHoursEnd": "Ends"
   ,"notificationSmartReminder": "Smart reminder"
   ,"notificationSmartReminderSub": "Uses your recent on-device opening times to choose a reminder time."
-  ,"memorizationHubReviewDueBadge": "{count} ayahs due for review"
-  ,"@memorizationHubReviewDueBadge": { "placeholders": { "count": { "type": "int" } } }
+  ,"memorizationHubReviewDueBadge": "{count, plural, =1{{countText} ayah} other{{countText} ayahs}} due for review"
+  ,"@memorizationHubReviewDueBadge": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"memorizationHubReviewDueNone": "No reviews due right now"
   ,"dailyPlanNextReviewInDays": "Next review in {count, plural, =0{today} =1{1 day} other{{count} days}}"
   ,"@dailyPlanNextReviewInDays": { "placeholders": { "count": { "type": "int" } } }
@@ -2627,4 +2662,17 @@
   ,"@fieldRequired": { "description": "Validation: field must not be empty" }
   ,"fieldTooLong": "Cannot exceed {maxLength} characters"
   ,"@fieldTooLong": { "description": "Validation: field exceeds max length", "placeholders": { "maxLength": { "type": "int" } } }
+  ,"progressDueReviewsLabel": "Due reviews"
+  ,"progressStreakDaysUnit": "{count, plural, =1{day} other{days}}"
+  ,"@progressStreakDaysUnit": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressNextMilestoneTitle": "Your next milestone"
+  ,"progressNextMilestoneRemaining": "{remaining} to go"
+  ,"@progressNextMilestoneRemaining": { "placeholders": { "remaining": { "type": "int" } } }
+  ,"progressAllAchievementsUnlocked": "Masha'Allah! You've unlocked every achievement"
+  ,"progressDueReviewsNudge": "{count, plural, =1{1 ayah is due for review} other{{count} ayahs are due for review}}"
+  ,"@progressDueReviewsNudge": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressStartReview": "Start review"
+  ,"progressActiveDays": "{count, plural, =0{No active days yet} =1{1 active day} other{{count} active days}}"
+  ,"@progressActiveDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressXpToNextLevel": "Toward next level"
 }

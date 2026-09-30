@@ -78,24 +78,51 @@ final class KidsSessionPolicy extends Equatable {
   ];
 }
 
+/// The kids memorization path (K27): Al-Fatiha first — the surah a child
+/// needs for prayer — then Juz Amma from An-Nas down to An-Naba.
+///
+/// The single source of the path's order: the setup picker, start-surah
+/// validation, and the "next surah" of the mission resolver all read it.
+abstract final class KidsJourneyPath {
+  static const firstSurahId = 1;
+  static const lastSurahId = 78;
+
+  /// Every surah on the path, in the order the child memorizes them.
+  static const List<int> surahIds = [
+    firstSurahId,
+    114, 113, 112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, //
+    100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, //
+    83, 82, 81, 80, 79, lastSurahId,
+  ];
+
+  static bool contains(int surahId) =>
+      surahId == firstSurahId || (surahId >= lastSurahId && surahId <= 114);
+
+  /// The surah after [surahId] on a path that ends at [lastSurahId]; null at
+  /// the end of the path or for a surah outside it.
+  static int? nextAfter(int surahId, {int lastSurahId = lastSurahId}) {
+    if (surahId == firstSurahId) return 114;
+    if (surahId > lastSurahId && surahId <= 114) return surahId - 1;
+    return null;
+  }
+}
+
 final class KidsJourneyCursor extends Equatable {
   const KidsJourneyCursor({
     required this.activeSurahId,
     required this.nextAyah,
-    this.pathId = juzAmmaReversePath,
+    this.pathId = fatihaThenJuzAmmaPath,
   });
 
-  static const juzAmmaReversePath = 'juz_amma_reverse';
-  static const initial = KidsJourneyCursor(activeSurahId: 114, nextAyah: 1);
+  static const fatihaThenJuzAmmaPath = 'fatiha_then_juz_amma';
+  static const initial = KidsJourneyCursor(
+    activeSurahId: KidsJourneyPath.firstSurahId,
+    nextAyah: 1,
+  );
 
   final String pathId;
   final int activeSurahId;
   final int nextAyah;
-
-  static int? nextJuzAmmaSurah(int completedSurahId) {
-    if (completedSurahId < 78 || completedSurahId > 114) return null;
-    return completedSurahId == 78 ? null : completedSurahId - 1;
-  }
 
   KidsJourneyCursor copyWith({int? activeSurahId, int? nextAyah}) =>
       KidsJourneyCursor(

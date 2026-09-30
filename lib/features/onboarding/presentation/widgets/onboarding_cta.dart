@@ -115,9 +115,45 @@ class JourneyEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
     return child
         .animate()
         .fadeIn(duration: 380.ms, delay: delayMs.ms)
         .slideY(begin: slide, duration: 380.ms, delay: delayMs.ms);
+  }
+}
+
+/// Scrollable body of a feature slide. Content that fits is centred in the
+/// space above the CTA instead of leaving a void under it; taller content
+/// (small phones, large text) scrolls from the top.
+class JourneySlide extends StatelessWidget {
+  const JourneySlide({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.pagePadding,
+          vertical: AppSpacing.xs,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: (constraints.maxHeight - AppSpacing.xs * 2).clamp(
+              0.0,
+              double.infinity,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
   }
 }

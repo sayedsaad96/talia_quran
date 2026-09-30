@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/activity_heatmap.dart';
@@ -42,6 +43,15 @@ class ProgressPage extends StatelessWidget {
   }
 }
 
+/// Display name for share cards and certificates, or null when the user
+/// has not set one.
+String? _profileDisplayName(BuildContext context) {
+  final profileState = context.read<ProfileCubit>().state;
+  return profileState is ProfileLoaded && profileState.profile.hasName
+      ? profileState.profile.displayName
+      : null;
+}
+
 class _ProgressView extends StatelessWidget {
   const _ProgressView();
 
@@ -53,122 +63,205 @@ class _ProgressView extends StatelessWidget {
       backgroundColor: context.tokens.background,
       body: BlocBuilder<ProgressCubit, ProgressState>(
         builder: (context, state) {
-          return CustomScrollView(
-            slivers: [
-              _buildAppBar(context, isDark, state),
-              if (state is ProgressLoading)
-                const SliverFillRemaining(child: ProgressSkeletonLoader()),
-              if (state is ProgressError)
-                SliverFillRemaining(
-                  child: ErrorStateWidget(
-                    message: state.message,
-                    onRetry: () => context.read<ProgressCubit>().load(),
+          return RefreshIndicator(
+            // Sits below the pinned header instead of over the title.
+            edgeOffset: _ProgressHeader.collapsedHeight(context),
+            color: context.tokens.accent,
+            onRefresh: () => context.read<ProgressCubit>().refresh(),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                _ProgressHeader(state: state),
+                if (state is ProgressLoading || state is ProgressInitial)
+                  const SliverFillRemaining(child: ProgressSkeletonLoader()),
+                if (state is ProgressError)
+                  SliverFillRemaining(
+                    child: ErrorStateWidget(
+                      message: state.message,
+                      onRetry: () => context.read<ProgressCubit>().load(),
+                    ),
                   ),
-                ),
-              if (state is ProgressLoaded) ...[
-                SliverToBoxAdapter(
-                  child: _ProgressContent(
-                    progress: state.progress,
-                    isKids: state.isKids,
-                    isDark: isDark,
-                    activityCountsByDay: state.activityCountsByDay,
-                    activityStartDate: state.activityStartDate,
-                    totalXp: state.totalXp,
+                if (state is ProgressLoaded)
+                  SliverToBoxAdapter(
+                    child: _ProgressContent(
+                      progress: state.progress,
+                      isKids: state.isKids,
+                      isDark: isDark,
+                      activityCountsByDay: state.activityCountsByDay,
+                      activityStartDate: state.activityStartDate,
+                      totalXp: state.totalXp,
+                      xpLevelProgress: state.xpLevelProgress,
+                    ),
                   ),
-                ),
               ],
-            ],
+            ),
           );
         },
       ),
     );
   }
+}
 
-  SliverAppBar _buildAppBar(
-    BuildContext context,
-    bool isDark,
-    ProgressState state,
-  ) {
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+/// Pinned hero header. The gradient stays visible when collapsed so the
+/// white title and share action keep their contrast in every theme.
+class _ProgressHeader extends StatelessWidget {
+  const _ProgressHeader({required this.state});
+
+  final ProgressState state;
+
+  static const double _expandedHeight = 140;
+
+  static double collapsedHeight(BuildContext context) =>
+      MediaQuery.paddingOf(context).top + kToolbarHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = this.state;
+    final topInset = MediaQuery.paddingOf(context).top;
+
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: _expandedHeight,
       pinned: true,
       backgroundColor: context.tokens.background,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      actions: [
-        if (state is ProgressLoaded)
-          PopupMenuButton<SocialShareCategory>(
-            icon: const Icon(Icons.share_rounded, color: Colors.white),
-            tooltip: context.l10n.shareProgress,
-            onSelected: (type) {
-              final profileState = context.read<ProfileCubit>().state;
-              final name = profileState is ProfileLoaded && profileState.profile.hasName
-                  ? profileState.profile.displayName
-                  : null;
-              final data = switch (type) {
-                SocialShareCategory.progress => SocialShareData.progress(progress: state.progress, userName: name),
-                SocialShareCategory.memorization => SocialShareData.memorization(
-                    ayahsCount: state.progress.memorizedAyahs,
-                    surahsCount: state.progress.memorizedSurahs,
-                    userName: name,
-                  ),
-                SocialShareCategory.streak => SocialShareData.streak(
-                    streakDays: state.progress.streakDays,
-                    userName: name,
-                  ),
-                _ => SocialShareData.progress(progress: state.progress, userName: name),
-              };
-              SocialShareSheet.show(context, data);
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: SocialShareCategory.progress, child: Text(context.l10n.shareProgress)),
-              PopupMenuItem(
-                value: SocialShareCategory.memorization,
-                child: Text(context.l10n.shareMemorizationMilestone),
-              ),
-              PopupMenuItem(
-                value: SocialShareCategory.streak,
-                child: Text(context.l10n.shareConsistencyStreak),
-              ),
-            ],
-          ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.pin,
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: context.tokens.heroGradient,
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    context.l10n.progress,
-                    style: AppTypography.headlineLarge.copyWith(
-                      color: Colors.white,
-                      fontFamily: 'Amiri',
+      foregroundColor: Colors.white,
+      iconTheme: const IconThemeData(color: Colors.white),
+      actionsIconTheme: const IconThemeData(color: Colors.white),
+      actions: [if (state is ProgressLoaded) _ShareProgressMenu(state: state)],
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final minExtent = topInset + kToolbarHeight;
+          final maxExtent = topInset + _expandedHeight;
+          final t = maxExtent <= minExtent
+              ? 1.0
+              : ((maxExtent - constraints.maxHeight) / (maxExtent - minExtent))
+                    .clamp(0.0, 1.0);
+
+          return DecoratedBox(
+            decoration: BoxDecoration(gradient: context.tokens.heroGradient),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                PositionedDirectional(
+                  end: -24,
+                  top: -12,
+                  child: Opacity(
+                    opacity: 1 - t,
+                    child: Icon(
+                      Icons.insights_rounded,
+                      size: 150,
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
-                  Text(
-                    context.l10n.quranProgress,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white70,
+                ),
+                // Expanded title block.
+                Opacity(
+                  opacity: (1 - t * 1.6).clamp(0.0, 1.0),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pagePadding,
+                        AppSpacing.lg,
+                        AppSpacing.pagePadding,
+                        AppSpacing.md,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            context.l10n.progress,
+                            style: AppTypography.headlineLarge.copyWith(
+                              color: Colors.white,
+                              fontFamily: 'Amiri',
+                            ),
+                          ),
+                          Text(
+                            context.l10n.quranProgress,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                // Compact title once collapsed.
+                PositionedDirectional(
+                  start: 0,
+                  end: 0,
+                  bottom: 0,
+                  height: kToolbarHeight,
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: ((t - 0.6) / 0.4).clamp(0.0, 1.0),
+                      child: Center(
+                        child: Text(
+                          context.l10n.progress,
+                          style: AppTypography.titleLarge.copyWith(
+                            color: Colors.white,
+                            fontFamily: 'Amiri',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
+          );
+        },
       ),
+    );
+  }
+}
+
+class _ShareProgressMenu extends StatelessWidget {
+  const _ShareProgressMenu({required this.state});
+
+  final ProgressLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<SocialShareCategory>(
+      icon: const Icon(Icons.share_rounded, color: Colors.white),
+      tooltip: context.l10n.shareProgress,
+      onSelected: (type) {
+        final name = _profileDisplayName(context);
+        final progress = state.progress;
+        final data = switch (type) {
+          SocialShareCategory.memorization => SocialShareData.memorization(
+            ayahsCount: progress.memorizedAyahs,
+            surahsCount: progress.memorizedSurahs,
+            userName: name,
+          ),
+          SocialShareCategory.streak => SocialShareData.streak(
+            streakDays: progress.streakDays,
+            userName: name,
+          ),
+          _ => SocialShareData.progress(progress: progress, userName: name),
+        };
+        SocialShareSheet.show(context, data);
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: SocialShareCategory.progress,
+          child: Text(context.l10n.shareProgress),
+        ),
+        PopupMenuItem(
+          value: SocialShareCategory.memorization,
+          child: Text(context.l10n.shareMemorizationMilestone),
+        ),
+        PopupMenuItem(
+          value: SocialShareCategory.streak,
+          child: Text(context.l10n.shareConsistencyStreak),
+        ),
+      ],
     );
   }
 }
@@ -183,6 +276,7 @@ class _ProgressContent extends StatefulWidget {
     this.activityCountsByDay = const {},
     this.activityStartDate,
     this.totalXp = 0,
+    this.xpLevelProgress = 0,
   });
 
   final OverallProgress progress;
@@ -191,6 +285,7 @@ class _ProgressContent extends StatefulWidget {
   final Map<String, int> activityCountsByDay;
   final DateTime? activityStartDate;
   final int totalXp;
+  final double xpLevelProgress;
 
   @override
   State<_ProgressContent> createState() => _ProgressContentState();
@@ -234,6 +329,8 @@ class _ProgressContentState extends State<_ProgressContent>
     super.dispose();
   }
 
+  void _openMemorization() => context.go(AppRoutes.memorizationHub);
+
   @override
   Widget build(BuildContext context) {
     final p = widget.progress;
@@ -254,54 +351,70 @@ class _ProgressContentState extends State<_ProgressContent>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ─── Hero Stats Row ─────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: _StreakCard(
-                      streakDays: p.streakDays,
-                      isDark: isDark,
+              // ─── Hero Stats ─────────────────────────────────
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _StreakCard(
+                        streakDays: p.streakDays,
+                        isDark: isDark,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _StatCard(
-                      label: context.l10n.pagesRead,
-                      value: '${p.readPagesCount}',
-                      unit: context.l10n.pages,
-                      icon: Icons.auto_stories_rounded,
-                      isDark: isDark,
-                      color: AppColors.gold,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _StatCard(
+                        label: context.l10n.pagesRead,
+                        value: p.readPagesCount,
+                        unit: context.l10n.pages,
+                        icon: Icons.auto_stories_rounded,
+                        isDark: isDark,
+                        color: AppColors.gold,
+                        onTap: () => context.go(AppRoutes.quran),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: context.l10n.reviewing,
-                      value: '${p.reviewAyahs}',
-                      unit: context.l10n.ayahs,
-                      icon: Icons.history_rounded,
-                      isDark: isDark,
-                      color: AppColors.info,
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        label: context.l10n.progressDueReviewsLabel,
+                        value: p.reviewAyahs,
+                        unit: context.l10n.ayahs,
+                        icon: Icons.history_rounded,
+                        isDark: isDark,
+                        color: p.overdueReviews > 0
+                            ? AppColors.warning
+                            : AppColors.info,
+                        onTap: _openMemorization,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _StatCard(
-                      label: context.l10n.xpLabel,
-                      value: '${widget.totalXp}',
-                      unit: context.l10n.points,
-                      icon: Icons.bolt_rounded,
-                      isDark: isDark,
-                      color: AppColors.primary,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _StatCard(
+                        label: context.l10n.xpLabel,
+                        value: widget.totalXp,
+                        unit: context.l10n.points,
+                        icon: Icons.bolt_rounded,
+                        isDark: isDark,
+                        color: AppColors.primary,
+                        levelProgress: widget.xpLevelProgress,
+                        levelProgressLabel: context.l10n.progressXpToNextLevel,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+
+              const SizedBox(height: AppSpacing.md),
+              _NextMilestoneCard(milestone: p.nextMilestone, isDark: isDark),
+
               const SizedBox(height: AppSpacing.sectionGap),
               ActivityHeatmap(
                 activityCountsByDay: widget.activityCountsByDay,
@@ -410,11 +523,20 @@ class _ProgressContentState extends State<_ProgressContent>
                         ),
                         color: AppColors.primary,
                         isDark: isDark,
+                        wide: true,
                       ),
                   ],
                 ),
               ] else ...[
                 // ─── Adult Memorization Stats ────────────────────
+                if (p.reviewAyahs > 0) ...[
+                  _DueReviewsBanner(
+                    dueCount: p.reviewAyahs,
+                    hasOverdue: p.overdueReviews > 0,
+                    onStart: _openMemorization,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 _DetailedProgressCard(
                   isDark: isDark,
                   icon: Icons.psychology_rounded,
@@ -455,7 +577,7 @@ class _ProgressContentState extends State<_ProgressContent>
                       isDark: isDark,
                     ),
                     _InfoChip(
-                      label: context.l10n.reviewing,
+                      label: context.l10n.progressDueReviewsLabel,
                       value: '${p.reviewAyahs}',
                       color: AppColors.info,
                       isDark: isDark,
@@ -500,6 +622,7 @@ class _ProgressContentState extends State<_ProgressContent>
                         ),
                         color: AppColors.primary,
                         isDark: isDark,
+                        wide: true,
                       ),
                   ],
                 ),
@@ -537,9 +660,7 @@ class _ProgressContentState extends State<_ProgressContent>
                       vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color:
-                          context.tokens.accent
-                              .withValues(alpha: 0.1),
+                      color: context.tokens.accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusFull,
                       ),
@@ -571,5 +692,3 @@ class _ProgressContentState extends State<_ProgressContent>
     );
   }
 }
-
-// ─── Streak Card ──────────────────────────────────────────────────────────────

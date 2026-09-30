@@ -6,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import 'package:meta/meta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../domain/entities/kids_qr_link_contract.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -32,7 +33,9 @@ class MemorizationParentAccessService {
   final MemorizationCloudGateway _gateway;
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
-      _gateway.supabaseOrFailure();
+      _gateway.supabaseOrFailure().leftMap(
+        (_) => const NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
+      );
 
   Future<MemorizationProfile> _loadProfile() => _profileStore.loadProfile();
 
@@ -44,12 +47,12 @@ class MemorizationParentAccessService {
       final profile = await _loadProfile();
       if (!profile.isChild) {
         return const Left(
-          CacheFailure('Guardian linking is only for children'),
+          CacheFailure(CubitMessageCodes.guardianOnlyForChildren),
         );
       }
       if (profile.isGuardianLinked) {
         return const Left(
-          CacheFailure('Unlink the current guardian before linking another'),
+          CacheFailure(CubitMessageCodes.guardianAlreadyLinked),
         );
       }
       final tokenResult = await createChildLinkToken();
@@ -206,7 +209,7 @@ class MemorizationParentAccessService {
       final profile = await _loadProfile();
       if (value && profile.selectedPath != MemorizationPath.adult) {
         return const Left(
-          CacheFailure('Parent guardian mode is only available for adults'),
+          CacheFailure(CubitMessageCodes.guardianParentModeAdultsOnly),
         );
       }
       final saved = await _saveProfile(
@@ -293,7 +296,7 @@ class MemorizationParentAccessService {
 
       if (client.auth.currentUser == null) {
         return const Left(
-          NetworkFailure('Guardian linking requires signing in first'),
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
         );
       }
 
@@ -334,20 +337,60 @@ class MemorizationParentAccessService {
 
       if (client.auth.currentUser == null) {
         return const Left(
-          NetworkFailure('سجّل الدخول أولاً على جهاز ولي الأمر'),
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      final rawToken = normalizeLinkToken(token);
+      // A mistyped code is rejected here instead of costing a round trip
+      // that could only answer "invalid or expired".
+      if (rawToken == null) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.guardianLinkCodeInvalid),
         );
       }
       // Hash the token client-side (no pgcrypto needed)
-      final rawToken = _extractToken(token).toUpperCase().trim();
       final tokenHash = sha256.convert(utf8.encode(rawToken)).toString();
       await client.rpc(
         'accept_child_link_token_with_hash',
         params: {'p_token_hash': tokenHash},
       );
       return const Right(null);
+    } on PostgrestException catch (e) {
+      return Left(linkAcceptFailure(e));
     } catch (e) {
       return Left(Failure.fromCloud(e));
     }
+  }
+
+  /// Uppercased link token from a scanned payload or typed code, or null when
+  /// it cannot be a token this app issued (12 hex characters, see
+  /// [createChildLinkToken]).
+  @visibleForTesting
+  static String? normalizeLinkToken(String raw) {
+    final token = KidsQrLinkContract.extractToken(
+      raw,
+    ).replaceAll(RegExp(r'[\s-]'), '').toUpperCase();
+    return RegExp(r'^[0-9A-F]{12}$').hasMatch(token) ? token : null;
+  }
+
+  /// Maps the exceptions raised by `accept_child_link_token_with_hash`
+  /// (supabase/migrations/0004_cost_audit_fixes.sql) to message codes the
+  /// parent can act on; anything else stays a generic server failure.
+  @visibleForTesting
+  static Failure linkAcceptFailure(PostgrestException error) {
+    final message = error.message.toLowerCase();
+    final code = switch (message) {
+      _ when message.contains('invalid or expired link token') =>
+        CubitMessageCodes.guardianLinkCodeInvalid,
+      _ when message.contains('already has an active guardian') =>
+        CubitMessageCodes.guardianChildHasGuardian,
+      _ when message.contains('parent and child accounts must be different') =>
+        CubitMessageCodes.guardianSameAccount,
+      _ when message.contains('not authenticated') =>
+        CubitMessageCodes.guardianSignInRequired,
+      _ => null,
+    };
+    return code == null ? ServerFailure.from(error) : ServerFailure(code);
   }
 
   Future<Either<Failure, void>> revokeGuardianLink(
@@ -365,7 +408,9 @@ class MemorizationParentAccessService {
       );
 
       if (client.auth.currentUser == null) {
-        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
       }
 
       await client.rpc(
@@ -415,8 +460,6 @@ class MemorizationParentAccessService {
       return Left(CacheFailure.from(e));
     }
   }
-
-  String _extractToken(String raw) => KidsQrLinkContract.extractToken(raw);
 
   /// Public wrapper so manual code entry shares the exact same payload
   /// contract as the parent-side QR scanner.

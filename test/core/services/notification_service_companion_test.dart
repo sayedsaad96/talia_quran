@@ -253,5 +253,29 @@ void main() {
         expect(details.iOS?.categoryIdentifier, 'prayer_companion_category');
       },
     );
+
+    test('preparation notification has no completion actions', () async {
+      await service.schedulePrayerCompanionReminders(
+        reminders: [
+          reminder(id: 2100, kind: PrayerCompanionNotificationKind.preparation),
+        ],
+        titleFor: (r) => 't',
+        bodyFor: (r) => 'b',
+      );
+      final captured = verify(
+        () => plugin.zonedSchedule(
+          id: 2100,
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          scheduledDate: any(named: 'scheduledDate'),
+          notificationDetails: captureAny(named: 'notificationDetails'),
+          androidScheduleMode: any(named: 'androidScheduleMode'),
+          payload: any(named: 'payload'),
+        ),
+      ).captured;
+      final details = captured.single as NotificationDetails;
+      expect(details.android?.actions, isNull);
+      expect(details.iOS?.categoryIdentifier, isNull);
+    });
   });
 }

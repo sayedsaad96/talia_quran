@@ -178,6 +178,25 @@ void main() {
         );
       }
     });
+
+    test('a house that needs review opens its due ayah (K30)', () {
+      // The data layer names the most overdue ayah; the page only routes.
+      const needsReview = KidsJourneyStage(
+        stageNumber: 1,
+        surahId: 114,
+        startAyah: 1,
+        endAyah: 3,
+        completedAyahs: [1, 2, 3],
+        status: KidsJourneyStageStatus.needsReview,
+        reviewAyah: 2,
+      );
+
+      expect(
+        kidsNextMissionLocation(needsReview),
+        '${AppRoutes.memorizationPlusKids}'
+        '?surahId=114&ayahNumber=2&missionType=linkedReview',
+      );
+    });
   });
 }
 

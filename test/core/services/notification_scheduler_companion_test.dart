@@ -164,12 +164,9 @@ void main() {
       ),
     ).thenAnswer((_) async {});
     when(
-      () => service.scheduleKhatmahReminder(
+      () => service.scheduleKhatmahReminders(
         title: any(named: 'title'),
-        body: any(named: 'body'),
-        payload: any(named: 'payload'),
-        hour: any(named: 'hour'),
-        minute: any(named: 'minute'),
+        reminders: any(named: 'reminders'),
       ),
     ).thenAnswer((_) async {});
     when(
