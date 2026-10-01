@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('account deletion migration validates the JWT session owner', () {
     final migration = File(
-      'supabase/migrations/20261002090000_harden_delete_current_user_session.sql',
+      'supabase/migrations/20261001235630_harden_delete_current_user_session.sql',
     ).readAsStringSync();
 
     expect(migration, contains("auth.jwt() ->> 'session_id'"));
@@ -34,7 +34,7 @@ void main() {
 
     expect(
       definitions.last,
-      '20261002090000_harden_delete_current_user_session.sql',
+      '20261001235630_harden_delete_current_user_session.sql',
     );
   });
 }
