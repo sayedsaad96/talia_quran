@@ -6785,12 +6785,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeActivityJustNow => 'الآن';
 
   @override
-  String homeActivityMinutesAgo(int count) {
+  String homeActivityMinutesAgo(String count) {
     return 'قبل $count د';
   }
 
   @override
-  String homeActivityHoursAgo(int count) {
+  String homeActivityHoursAgo(String count) {
     return 'قبل $count س';
   }
 

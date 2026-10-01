@@ -6783,12 +6783,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeActivityJustNow => 'Just now';
 
   @override
-  String homeActivityMinutesAgo(int count) {
+  String homeActivityMinutesAgo(String count) {
     return '$count min ago';
   }
 
   @override
-  String homeActivityHoursAgo(int count) {
+  String homeActivityHoursAgo(String count) {
     return '$count h ago';
   }
 

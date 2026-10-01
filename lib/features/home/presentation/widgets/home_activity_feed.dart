@@ -217,16 +217,25 @@ class _ActivityRow extends StatelessWidget {
   }
 }
 
+/// Clock for relative activity times; tests pin it for stable goldens.
+@visibleForTesting
+DateTime Function() activityClock = DateTime.now;
+
 String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
-  final moment = now ?? DateTime.now();
+  final moment = now ?? activityClock();
   final local = at.toLocal();
   final diff = moment.difference(local);
+  String digits(int value) => l10n.localeName == 'ar'
+      ? MushafHizbHelper.toArabicNumber(value)
+      : '$value';
   if (diff.inMinutes < 1) return l10n.homeActivityJustNow;
-  if (diff.inMinutes < 60) return l10n.homeActivityMinutesAgo(diff.inMinutes);
+  if (diff.inMinutes < 60) {
+    return l10n.homeActivityMinutesAgo(digits(diff.inMinutes));
+  }
   final startOfToday = DateTime(moment.year, moment.month, moment.day);
   final startOfLocal = DateTime(local.year, local.month, local.day);
   if (startOfLocal == startOfToday) {
-    return l10n.homeActivityHoursAgo(diff.inHours.clamp(1, 23));
+    return l10n.homeActivityHoursAgo(digits(diff.inHours.clamp(1, 23)));
   }
   if (startOfLocal == startOfToday.subtract(const Duration(days: 1))) {
     return l10n.homeActivityYesterday;

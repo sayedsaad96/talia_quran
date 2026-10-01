@@ -11513,13 +11513,13 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'قبل {count} د'**
-  String homeActivityMinutesAgo(int count);
+  String homeActivityMinutesAgo(String count);
 
   /// No description provided for @homeActivityHoursAgo.
   ///
   /// In ar, this message translates to:
   /// **'قبل {count} س'**
-  String homeActivityHoursAgo(int count);
+  String homeActivityHoursAgo(String count);
 
   /// No description provided for @homeActivityYesterday.
   ///
