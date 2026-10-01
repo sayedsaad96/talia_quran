@@ -786,6 +786,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewStartMemorizing => 'Start memorizing';
 
   @override
+  String get customPlanChildSwitchTitle => 'Switch to the kids path?';
+
+  @override
+  String get customPlanChildSwitchBody =>
+      'Kids plans are managed in the kids path. This ends your adult path and current plan (your achievements, history and certificates are kept), then opens the kids path setup.';
+
+  @override
+  String get customPlanChildSwitchConfirm => 'Switch to kids path';
+
+  @override
   String get guestImportTitle => 'Import local memorization data?';
 
   @override
@@ -4768,7 +4778,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialS8Step2 =>
-      'Choose who the plan is for (adult or child) and the surah range.';
+      'Choose the surah range. Choosing Child takes you to the kids path, where kids plans are managed.';
 
   @override
   String get tutorialS8Step3 =>

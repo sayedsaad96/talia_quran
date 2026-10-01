@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -1044,6 +1046,57 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     );
   }
 
+  /// A child's plan belongs to the kids path, so choosing «طفل» leaves this
+  /// adult plan screen for kids setup. An adult path in use is ended only
+  /// after an explicit confirmation (same effect as "Reset path").
+  Future<void> _selectTarget(PlanTargetUser target) async {
+    if (target == _targetUser) return;
+    if (target != PlanTargetUser.child) {
+      setState(() => _targetUser = target);
+      return;
+    }
+    final repository = getIt<MemorizationPlusRepository>();
+    final profile = (await repository.getMemorizationProfile()).fold(
+      (_) => null,
+      (profile) => profile,
+    );
+    if (!mounted) return;
+    if (profile?.isAdult == true) {
+      final l10n = context.l10n;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.customPlanChildSwitchTitle),
+          content: Text(l10n.customPlanChildSwitchBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              key: const Key('custom_plan_child_switch_confirm'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.customPlanChildSwitchConfirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      final result = await repository.resetMemorizationIdentity();
+      if (!mounted) return;
+      final failure = result.fold((failure) => failure, (_) => null);
+      if (failure != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+        return;
+      }
+      getIt<MemorizationPathResolver>().notifyChanged();
+    }
+    if (!mounted) return;
+    context.go('${AppRoutes.memorizationPlus}?preferred=kids&setup=kids');
+  }
+
   Widget _buildTargetUserSelector(bool isDark) {
     final items = [
       (
@@ -1066,7 +1119,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         return Expanded(
           child: InkWell(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            onTap: () => setState(() => _targetUser = item.$1),
+            onTap: () => unawaited(_selectTarget(item.$1)),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.symmetric(horizontal: 4),

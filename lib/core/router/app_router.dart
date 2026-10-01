@@ -666,7 +666,10 @@ abstract class AppRouter {
           final preferredPath = state.uri.queryParameters['preferred'] == 'kids'
               ? MemorizationPath.child
               : null;
-          return PathSelectionPage(preferredPath: preferredPath);
+          return PathSelectionPage(
+            preferredPath: preferredPath,
+            openChildSetup: state.uri.queryParameters['setup'] == 'kids',
+          );
         },
       ),
       GoRoute(

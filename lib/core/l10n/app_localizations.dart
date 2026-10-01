@@ -1551,6 +1551,24 @@ abstract class AppLocalizations {
   /// **'ابدأ الحفظ'**
   String get listeningReviewStartMemorizing;
 
+  /// No description provided for @customPlanChildSwitchTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانتقال إلى مسار الأطفال؟'**
+  String get customPlanChildSwitchTitle;
+
+  /// No description provided for @customPlanChildSwitchBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطط الأطفال تُدار من مسار الأطفال. سيُنهى مسار الكبار وخطتك الحالية، وتبقى إنجازاتك وسجلك وشهاداتك، ثم يُفتح إعداد مسار الأطفال.'**
+  String get customPlanChildSwitchBody;
+
+  /// No description provided for @customPlanChildSwitchConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتقل إلى مسار الأطفال'**
+  String get customPlanChildSwitchConfirm;
+
   /// No description provided for @guestImportTitle.
   ///
   /// In ar, this message translates to:

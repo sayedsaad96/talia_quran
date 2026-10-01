@@ -15,6 +15,11 @@ import 'glass_panel.dart';
 /// - Journey ring: memorization/khatmah circular progress (from HomeJourneyRingCard)
 /// - XP + achievement level
 class HomeUnifiedProgress extends StatelessWidget {
+  /// The clock behind the weekly dots and their weekday letters. Replaceable
+  /// so image baselines do not depend on today's weekday.
+  @visibleForTesting
+  static DateTime Function() clock = DateTime.now;
+
   const HomeUnifiedProgress({
     super.key,
     required this.state,
@@ -182,7 +187,7 @@ class _WeeklyDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
+    final today = HomeUnifiedProgress.clock();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(7, (i) {

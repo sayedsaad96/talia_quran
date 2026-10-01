@@ -783,6 +783,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get listeningReviewStartMemorizing => 'ابدأ الحفظ';
 
   @override
+  String get customPlanChildSwitchTitle => 'الانتقال إلى مسار الأطفال؟';
+
+  @override
+  String get customPlanChildSwitchBody =>
+      'خطط الأطفال تُدار من مسار الأطفال. سيُنهى مسار الكبار وخطتك الحالية، وتبقى إنجازاتك وسجلك وشهاداتك، ثم يُفتح إعداد مسار الأطفال.';
+
+  @override
+  String get customPlanChildSwitchConfirm => 'انتقل إلى مسار الأطفال';
+
+  @override
   String get guestImportTitle => 'نقل بيانات الحفظ المحلية؟';
 
   @override
@@ -4757,7 +4767,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر قالبًا سريعًا (خفيف، متوازن، مكثف، جزء عم) أو املأ الحقول بنفسك.';
 
   @override
-  String get tutorialS8Step2 => 'حدد لمن الخطة (كبير أم طفل) ونطاق السور.';
+  String get tutorialS8Step2 =>
+      'اختر نطاق السور. إن اخترت «طفل» فستُنقل إلى مسار الأطفال، لأن خطط الأطفال تُدار منه.';
 
   @override
   String get tutorialS8Step3 =>
