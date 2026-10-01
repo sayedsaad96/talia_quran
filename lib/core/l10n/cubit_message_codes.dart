@@ -44,4 +44,16 @@ abstract final class CubitMessageCodes {
   static const errorNotFound = '@error/not_found';
   static const errorParse = '@error/parse';
   static const errorUnknown = '@error/unknown';
+
+  // Account deletion is a multi-step remote/local transaction. These codes
+  // deliberately conceal backend and storage details from the UI.
+  static const accountDeletionFailed = '@auth/account_deletion_failed';
+  static const accountDeletionCleanupFailed =
+      '@auth/account_deletion_cleanup_failed';
+  static const accountDeletionSessionCleanupFailed =
+      '@auth/account_deletion_session_cleanup_failed';
+  static const accountDeletionMarkerFailed =
+      '@auth/account_deletion_marker_failed';
+  static const accountDeletionUnavailable =
+      '@auth/account_deletion_unavailable';
 }

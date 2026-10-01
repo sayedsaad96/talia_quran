@@ -8,6 +8,8 @@ import '../../../../core/auth/auth_session_recovery_policy.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/identity/account_data_reset.dart';
+import '../../../../core/identity/account_deletion_marker.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/sync/sync_acknowledgement.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
@@ -36,13 +38,21 @@ class ServerFailure extends Failure {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._isar, this._accountDataReset, [this._prefs]);
+  AuthRepositoryImpl(
+    this._isar,
+    this._accountDataReset, [
+    this._prefs,
+    SupabaseClient? supabaseClient,
+  ]) : _injectedSupabase = supabaseClient;
 
   final Isar _isar;
   final AccountDataReset _accountDataReset;
   final SharedPreferences? _prefs;
+  final SupabaseClient? _injectedSupabase;
+  Future<Either<Failure, Unit>>? _accountDeletionInFlight;
 
   bool get _isSupabaseInitialized {
+    if (_injectedSupabase != null) return true;
     try {
       Supabase.instance.client;
       return true;
@@ -53,7 +63,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // Lazy getter — defers access until first use so the app doesn't crash
   // when Supabase was not initialized (offline / missing .env).
-  SupabaseClient get _supabase => Supabase.instance.client;
+  SupabaseClient get _supabase => _injectedSupabase ?? Supabase.instance.client;
 
   Either<Failure, SupabaseClient> _clientOrFailure() {
     if (!_isSupabaseInitialized) {
@@ -203,7 +213,11 @@ class AuthRepositoryImpl implements AuthRepository {
         (failure) => failure,
         (_) => null,
       );
-      if (clientFailure != null) return Left(clientFailure);
+      if (clientFailure != null) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionFailed),
+        );
+      }
       final client = clientResult.getOrElse(
         () => throw StateError('unreachable'),
       );
@@ -361,24 +375,53 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> deleteAccount() async {
+  Future<Either<Failure, Unit>> deleteAccount() {
+    final existing = _accountDeletionInFlight;
+    if (existing != null) return existing;
+    final deletion = _deleteAccount().whenComplete(
+      () => _accountDeletionInFlight = null,
+    );
+    _accountDeletionInFlight = deletion;
+    return deletion;
+  }
+
+  Future<Either<Failure, Unit>> _deleteAccount() async {
     try {
+      if (_pendingDeletedOwnerId != null) {
+        return await resumeDeletedAccountCleanup();
+      }
       final clientResult = _clientOrFailure();
       final clientFailure = clientResult.fold(
         (failure) => failure,
         (_) => null,
       );
-      if (clientFailure != null) return Left(clientFailure);
+      if (clientFailure != null) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionFailed),
+        );
+      }
       final client = clientResult.getOrElse(
         () => throw StateError('unreachable'),
       );
 
       if (client.auth.currentUser == null) {
-        return Left(AuthFailure(AuthErrorCode.userNotFound));
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionFailed),
+        );
       }
 
-      final departingOwnerId = client.auth.currentUser?.id;
+      final departingOwnerId = client.auth.currentUser!.id;
+      if (!await _markDeletionRequested(departingOwnerId)) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionMarkerFailed),
+        );
+      }
       await client.rpc('delete_current_user');
+      if (!await _markRemoteDeletionConfirmed()) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionMarkerFailed),
+        );
+      }
       // `auth.users` deletion revokes refresh credentials server-side, but an
       // already issued access token remains valid until expiry. Clear the
       // device session locally and fail closed if that cannot be confirmed.
@@ -386,34 +429,106 @@ class AuthRepositoryImpl implements AuthRepository {
       if (client.auth.currentSession != null ||
           client.auth.currentUser != null) {
         return const Left(
-          ServerFailure('تم حذف الحساب، لكن تعذر إنهاء الجلسة على هذا الجهاز.'),
+          ServerFailure(CubitMessageCodes.accountDeletionSessionCleanupFailed),
         );
       }
-      if (departingOwnerId != null) {
-        return await finalizeDeletedAccountLocallyAfterRemoteDeletion(
-          departingOwnerId,
+      return await resumeDeletedAccountCleanup();
+    } on PostgrestException catch (e) {
+      TaliaLogger.w('Account deletion RPC error', e);
+      // The server answered with an error, so the RPC transaction rolled back
+      // and nothing was deleted: release the local fence for this owner.
+      await _clearRequestedDeletionIfPending();
+      final message = e.message.toLowerCase();
+      if (e.code == 'PGRST202' ||
+          message.contains('could not find the function') ||
+          message.contains('schema cache')) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionUnavailable),
+        );
+      }
+      return const Left(ServerFailure(CubitMessageCodes.accountDeletionFailed));
+    } on AuthException catch (e) {
+      TaliaLogger.w('Account deletion auth error', e);
+      return const Left(ServerFailure(CubitMessageCodes.accountDeletionFailed));
+    } catch (e) {
+      TaliaLogger.w('Unexpected account deletion error', e);
+      return const Left(ServerFailure(CubitMessageCodes.accountDeletionFailed));
+    }
+  }
+
+  String? get _pendingDeletedOwnerId {
+    final prefs = _prefs;
+    return prefs == null ? null : AccountDeletionMarker.pendingOwnerId(prefs);
+  }
+
+  Future<bool> _markDeletionRequested(String ownerId) async {
+    final prefs = _prefs;
+    if (prefs == null) return false;
+    final pendingOwner = AccountDeletionMarker.pendingOperationOwnerId(prefs);
+    if (pendingOwner != null && pendingOwner != ownerId) return false;
+    return AccountDeletionMarker.markRequested(prefs, ownerId);
+  }
+
+  Future<void> _clearRequestedDeletionIfPending() async {
+    final prefs = _prefs;
+    if (prefs == null ||
+        AccountDeletionMarker.stage(prefs) !=
+            AccountDeletionMarker.requestedStage) {
+      return;
+    }
+    await AccountDeletionMarker.clear(prefs);
+  }
+
+  Future<bool> _markRemoteDeletionConfirmed() async {
+    final prefs = _prefs;
+    if (prefs == null) return false;
+    return AccountDeletionMarker.markRemoteConfirmed(prefs);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> resumeDeletedAccountCleanup() async {
+    final ownerId = _pendingDeletedOwnerId;
+    if (ownerId == null) {
+      return const Left(ServerFailure(CubitMessageCodes.accountDeletionFailed));
+    }
+    try {
+      if (_isSupabaseInitialized) {
+        final activeOwnerId = _supabase.auth.currentUser?.id;
+        if (activeOwnerId != null && activeOwnerId != ownerId) {
+          return const Left(
+            ServerFailure(CubitMessageCodes.accountDeletionCleanupFailed),
+          );
+        }
+        await _supabase.auth.signOut(scope: SignOutScope.local);
+        if (_supabase.auth.currentSession != null ||
+            _supabase.auth.currentUser != null) {
+          return const Left(
+            ServerFailure(
+              CubitMessageCodes.accountDeletionSessionCleanupFailed,
+            ),
+          );
+        }
+      }
+      await _accountDataReset.eraseDeletedAccountLocally(
+        departingOwnerId: ownerId,
+      );
+      final prefs = _prefs;
+      if (prefs == null ||
+          !await AccountDeletionMarker.completeAndClear(prefs, ownerId)) {
+        return const Left(
+          ServerFailure(CubitMessageCodes.accountDeletionCleanupFailed),
         );
       }
       return const Right(unit);
-    } on PostgrestException catch (e) {
-      TaliaLogger.w('Account deletion RPC error', e);
-      final message = e.message.toLowerCase();
-      if (message.contains('could not find the function') ||
-          message.contains('delete_current_user') ||
-          message.contains('schema cache')) {
-        return const Left(
-          ServerFailure(
-            'تعذر حذف الحساب حالياً. يرجى المحاولة مرة أخرى لاحقاً.',
-          ),
-        );
-      }
-      return const Left(ServerFailure('تعذر حذف الحساب. حاول لاحقاً.'));
-    } on AuthException catch (e) {
-      TaliaLogger.w('Account deletion auth error', e);
-      return Left(AuthFailure(_mapAuthError(e.message)));
-    } catch (e) {
-      TaliaLogger.w('Unexpected account deletion error', e);
-      return const Left(ServerFailure('تعذر حذف الحساب. حاول لاحقاً.'));
+    } catch (error, stackTrace) {
+      TaliaLogger.w(
+        'Remote account deletion is confirmed but local cleanup is incomplete',
+        error,
+        stackTrace,
+      );
+      return const Left(
+        ServerFailure(CubitMessageCodes.accountDeletionCleanupFailed),
+      );
     }
   }
 
@@ -422,18 +537,13 @@ class AuthRepositoryImpl implements AuthRepository {
   /// the already-deleted remote account can be deleted again.
   Future<Either<Failure, Unit>>
   finalizeDeletedAccountLocallyAfterRemoteDeletion(String ownerId) async {
-    try {
-      await _accountDataReset.preserveDeletedAccountLocally(
-        departingOwnerId: ownerId,
-      );
-    } catch (error, stackTrace) {
-      TaliaLogger.w(
-        'Remote account deletion succeeded, but local guest preservation was incomplete; owner-scoped recovery data was retained',
-        error,
-        stackTrace,
+    if (!await _markDeletionRequested(ownerId) ||
+        !await _markRemoteDeletionConfirmed()) {
+      return const Left(
+        ServerFailure(CubitMessageCodes.accountDeletionMarkerFailed),
       );
     }
-    return const Right(unit);
+    return resumeDeletedAccountCleanup();
   }
 
   // ─── Cloud Sync ─────────────────────────────────────────────────────────────

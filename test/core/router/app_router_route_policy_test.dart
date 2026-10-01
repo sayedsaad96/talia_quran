@@ -40,6 +40,16 @@ void main() {
       },
     );
 
+    test('account deletion cleanup keeps the current route stable', () {
+      expect(
+        AppRouter.redirectForAuth(
+          const AuthAccountDeletionInProgress(),
+          AppRoutes.familyDashboard,
+        ),
+        isNull,
+      );
+    });
+
     test('guest users can open local-first memorization routes', () {
       const localRoutes = [
         AppRoutes.memorizationHub,

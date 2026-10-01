@@ -220,6 +220,15 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.errorNotFound => l10n.errorNotFoundMessage,
       CubitMessageCodes.errorParse => l10n.errorParseMessage,
       CubitMessageCodes.errorUnknown => l10n.errorUnknownMessage,
+      CubitMessageCodes.accountDeletionFailed => l10n.accountDeletionFailed,
+      CubitMessageCodes.accountDeletionCleanupFailed =>
+        l10n.accountDeletionRemoteConfirmedCleanupFailed,
+      CubitMessageCodes.accountDeletionSessionCleanupFailed =>
+        l10n.accountDeletionSessionCleanupFailed,
+      CubitMessageCodes.accountDeletionMarkerFailed =>
+        l10n.accountDeletionProgressMarkerFailed,
+      CubitMessageCodes.accountDeletionUnavailable =>
+        l10n.accountDeletionUnavailable,
       _ => message,
     };
   }

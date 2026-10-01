@@ -1,50 +1,30 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../di/injection.dart';
-import '../identity/record_owner_provider.dart';
-import '../../features/auth/application/cloud_sync_coordinator.dart';
-import '../services/app_initializer.dart';
 import 'notification_refresh_worker.dart';
 
-const _cloudSyncTaskName = 'talia.cloud_sync';
-const _ownerInputKey = 'owner_id';
-
-/// Entrypoint retained by the VM so Workmanager can start an isolated Flutter
-/// engine after the app has been terminated.
+/// Workmanager uses one dispatcher for reminders and legacy cloud retries.
 @pragma('vm:entry-point')
 void cloudSyncCallbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    // Workmanager supports a single dispatcher per app; route the periodic
-    // notification-refresh task to its lightweight handler (no app init).
-    if (task == kNotificationRefreshTaskName) {
-      return runNotificationRefreshTask();
-    }
-    WidgetsFlutterBinding.ensureInitialized();
-    try {
-      await AppInitializer.initialize(background: true);
-      final scheduledOwner = inputData?[_ownerInputKey] as String?;
-      final activeOwner = getIt<RecordOwnerProvider>().currentOwnerId;
-      if (scheduledOwner == null || scheduledOwner != activeOwner) {
-        return true;
-      }
-      await getIt<CloudSyncCoordinator>().run();
-      return true;
-    } catch (_) {
-      // Returning false lets Android apply WorkManager backoff. iOS treats
-      // delivery as best-effort and may choose the next execution window.
-      return false;
-    }
-  });
+  Workmanager().executeTask(dispatchBackgroundTask);
 }
 
-/// Schedules owner-scoped, network-constrained retry delivery.
-///
-/// Foreground synchronization remains the primary path; this scheduler only
-/// persists a best-effort operating-system retry for durable queue work.
+Future<bool> dispatchBackgroundTask(
+  String task,
+  Map<String, dynamic>? inputData,
+) async {
+  if (task == kNotificationRefreshTaskName) {
+    return runNotificationRefreshTask();
+  }
+  // Retire old cloud jobs without opening account stores in a second engine.
+  // Foreground reconciliation still delivers the durable account outbox.
+  return true;
+}
+
+/// Registers the reminder dispatcher and cancels previously queued cloud jobs.
+/// Cloud writes run only in the foreground until lifecycle locking spans engines.
 class BackgroundSyncScheduler {
   static const _uniqueNamePrefix = 'talia-cloud-sync-';
 
@@ -53,19 +33,6 @@ class BackgroundSyncScheduler {
   Future<void> initialize() async {
     if (!_isSupported) return;
     await Workmanager().initialize(cloudSyncCallbackDispatcher);
-  }
-
-  Future<void> scheduleAccountSync(String ownerId) async {
-    if (!_isSupported) return;
-    await Workmanager().registerOneOffTask(
-      '$_uniqueNamePrefix$ownerId',
-      _cloudSyncTaskName,
-      inputData: {_ownerInputKey: ownerId},
-      constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
-      backoffPolicy: BackoffPolicy.exponential,
-      backoffPolicyDelay: const Duration(minutes: 1),
-    );
   }
 
   Future<void> cancelAccountSync(String ownerId) async {

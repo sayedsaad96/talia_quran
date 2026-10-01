@@ -6,10 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/identity/record_owner_provider.dart';
+import '../../../../core/identity/account_deletion_marker.dart';
 import '../../../../core/identity/pending_bookmark_recovery_marker.dart';
 import '../../../../core/security/encrypted_account_preferences_store.dart';
 import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../domain/entities/bookmark_entry.dart';
+
+part 'bookmark_owner_erasure.dart';
 
 typedef BookmarkCloudRpc =
     Future<dynamic> Function(String function, {Map<String, dynamic>? params});
@@ -76,6 +79,7 @@ class BookmarkService extends ChangeNotifier {
   }
 
   List<BookmarkEntry> _readRecords(String ownerId) {
+    if (AccountDeletionMarker.isOwnerBlocked(_prefs, ownerId)) return const [];
     final cached = _recordsByOwner[ownerId];
     if (cached != null) return List<BookmarkEntry>.from(cached);
     if (_encryptedAccountPreferences != null) return const [];
@@ -365,6 +369,7 @@ class BookmarkService extends ChangeNotifier {
       _recordsByOwner[ownerId] = <BookmarkEntry>[];
       _unreadableOwners.add(ownerId);
     }
+    await _rejectDeletedOwnerStorage(ownerId);
   }
 
   List<BookmarkEntry> _decodeRecords(String raw) {
@@ -388,6 +393,7 @@ class BookmarkService extends ChangeNotifier {
       await encrypted.write(ownerId, _encryptedStorageKey, encoded);
       await _prefs.remove(_storageKeyFor(ownerId));
     }
+    await _rejectDeletedOwnerStorage(ownerId);
     _recordsByOwner[ownerId] = List<BookmarkEntry>.from(records);
     _unreadableOwners.remove(ownerId);
   }
@@ -441,7 +447,9 @@ class BookmarkService extends ChangeNotifier {
     await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.bookmarkPush);
   }
 
-  bool _isActiveOwner(String ownerId) => _owner.currentOwnerId == ownerId;
+  bool _isActiveOwner(String ownerId) =>
+      _owner.currentOwnerId == ownerId &&
+      !AccountDeletionMarker.isOwnerBlocked(_prefs, ownerId);
 
   void _ensureActiveOwner(String ownerId) {
     if (!_isActiveOwner(ownerId)) {
@@ -450,6 +458,36 @@ class BookmarkService extends ChangeNotifier {
   }
 
   Future<T> _serialize<T>(String ownerId, Future<T> Function() operation) {
+    return _enqueueOwnerOperation(ownerId, () async {
+      await _prefs.reload();
+      if (AccountDeletionMarker.isOwnerBlocked(_prefs, ownerId)) {
+        throw StateError('Bookmark account deletion is pending or complete');
+      }
+      return operation();
+    });
+  }
+
+  Future<void> eraseOwner(String ownerId) =>
+      _enqueueOwnerOperation(ownerId, () => _eraseBookmarksForOwner(this, ownerId));
+
+  Future<void> _rejectDeletedOwnerStorage(String ownerId) async {
+    await _prefs.reload();
+    if (!AccountDeletionMarker.isOwnerBlocked(_prefs, ownerId)) return;
+    if (AccountDeletionMarker.pendingOwnerId(_prefs) == ownerId ||
+        AccountDeletionMarker.ownerId(_prefs) != ownerId) {
+      await _eraseBookmarksForOwner(this, ownerId);
+    }
+    throw StateError('Bookmark account deletion interrupted storage work');
+  }
+
+  void _evictErasedOwner(String ownerId) {
+    _recordsByOwner.remove(ownerId);
+    _unreadableOwners.remove(ownerId);
+    _isLoaded = false;
+    notifyListeners();
+  }
+
+  Future<T> _enqueueOwnerOperation<T>(String ownerId, Future<T> Function() operation) {
     final previous = _ownerOperationTails[ownerId] ?? Future.value();
     final queued = previous.then((_) => operation());
     late final Future<void> tail;

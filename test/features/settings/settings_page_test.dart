@@ -246,15 +246,16 @@ void main() {
   });
 
   testWidgets(
-    'privacy and security contains privacy policy and delete account',
+    'account group contains delete account and privacy remains in about',
     (tester) async {
       await _pumpSettings(tester, user: _signedInUser);
 
+      expect(find.text('Delete account'), findsOneWidget);
       await _tapVisibleText(tester, 'About Talia');
 
       expect(find.text('Privacy & Security'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
-      expect(find.text('Delete account'), findsOneWidget);
+      expect(find.text('Delete account'), findsNothing);
     },
   );
 

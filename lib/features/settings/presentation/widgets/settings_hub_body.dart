@@ -55,6 +55,20 @@ class SettingsHubBody extends StatelessWidget {
         AccountSection(isDark: isDark),
         SettingsDivider(isDark: isDark),
         ProfileSettingTile(isDark: isDark),
+        BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, authState) {
+            if (authState is! AuthAuthenticated) return const SizedBox.shrink();
+            return Column(
+              children: [
+                SettingsDivider(isDark: isDark),
+                DeleteAccountTile(
+                  isDark: isDark,
+                  email: authState.user.email,
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }

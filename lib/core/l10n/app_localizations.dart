@@ -3390,19 +3390,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDeleteAccountSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'يحذف الحساب السحابي فقط'**
+  /// **'حذف الحساب والتقدم المرتبط به نهائيًا'**
   String get settingsDeleteAccountSubtitle;
 
   /// No description provided for @settingsDeleteAccountWarning.
   ///
   /// In ar, this message translates to:
-  /// **'سيتم حذف حساب Supabase المرتبط بـ {email} وبياناته السحابية.\n\nلن يتم حذف تقدم القرآن المحلي، أو الحفظ، أو مسار الأطفال، أو الحفظ الذكي من هذا الجهاز.\n\nهل تريد المتابعة؟'**
+  /// **'سيُحذف حساب {email} وملفه وتقدمه وخططه وعلاماته المرجعية وشهاداته وروابط ولي الأمر والمكافآت المرتبطة من السحابة.\n\nسيُمسح أيضًا تقدم الحساب وملفاته المحلية، بما فيها ملفات الأطفال التابعة له والعمليات المعلقة، من هذا الجهاز. لا يمكن التراجع عن الحذف.\n\nتبقى الحسابات المستقلة المرتبطة، والملفات التي حفظتها أو شاركتها خارج التطبيق. يجب تنظيف بيانات التطبيق على أجهزتك الأخرى أيضًا.\n\nهل تريد حذف الحساب نهائيًا؟'**
   String settingsDeleteAccountWarning(Object email);
 
   /// No description provided for @settingsAccountDeletedMessage.
   ///
   /// In ar, this message translates to:
-  /// **'تم حذف الحساب السحابي. بقي تقدمك المحلي محفوظاً على هذا الجهاز.'**
+  /// **'تم حذف الحساب وتنظيف بياناته من هذا الجهاز.'**
   String get settingsAccountDeletedMessage;
 
   /// No description provided for @settingsVersion.
@@ -8278,7 +8278,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS8Step2.
   ///
   /// In ar, this message translates to:
-  /// **'حدد لمن الخطة (كبير أم طفل) ونطاق السور.'**
+  /// **'اختر نطاق السور. إن اخترت «طفل» فستُنقل إلى مسار الأطفال، لأن خطط الأطفال تُدار منه.'**
   String get tutorialS8Step2;
 
   /// No description provided for @tutorialS8Step3.
@@ -12072,6 +12072,276 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'نحو المستوى التالي'**
   String get progressXpToNextLevel;
+
+  /// No description provided for @privacyEffectiveDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ النفاذ: 2 أكتوبر 2026'**
+  String get privacyEffectiveDate;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'توضح هذه السياسة كيف يتعامل تطبيق تالية القرآن مع بياناتك على الجهاز وفي الخدمات السحابية، وكيف تتحكم في الأذونات وتطلب حذف بياناتك.'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyManualOptionAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح الحفظ لاستخدام التقييم الذاتي'**
+  String get privacyManualOptionAction;
+
+  /// No description provided for @privacyControllerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١. مقدمة والمسؤول عن البيانات'**
+  String get privacyControllerTitle;
+
+  /// No description provided for @privacyControllerBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تالية القرآن (Talia Quran) تطبيق للقراءة والحفظ والمراجعة والأذكار. المطوّر والمسؤول عن معالجة بيانات التطبيق هو Sayed Saad. تنطبق هذه السياسة على تطبيق تالية وميزات الحساب وربط ولي الأمر. للاستفسارات وطلبات الخصوصية: elsayed.saad2014@feps.edu.eg.'**
+  String get privacyControllerBody;
+
+  /// No description provided for @privacyDataTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٢. المعلومات التي نجمعها وأين تُحفظ'**
+  String get privacyDataTitle;
+
+  /// No description provided for @privacyAccountData.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب: عند التسجيل نعالج البريد الإلكتروني وكلمة المرور عبر Supabase للمصادقة والتحقق واستعادة الحساب، ومعرّف الحساب ورموز الجلسة. تُستخدم بيانات الملف مثل الاسم أو لقب الطفل والعمر عند تقديمها لتخصيص التجربة وعرضها لولي الأمر المرتبط وإصدار الشهادات. لا تطلب إرسال كلمة المرور إلى الدعم.'**
+  String get privacyAccountData;
+
+  /// No description provided for @privacyProgressData.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم والتفضيلات: يحفظ التطبيق القراءة والعلامات المرجعية وخطط الحفظ والمراجعات وتقييماتها وسجل الجلسات والنقاط والسلاسل اليومية والإنجازات والشهادات وإعدادات الطفل وولي الأمر. تُحفظ بيانات التشغيل على الجهاز، وتُزامن الميزات السحابية المتاحة بيانات الحساب المرتبطة عند تسجيل الدخول وتوفر الاتصال. قد تُرسل العمليات المعلقة تلقائيًا عند عودة الاتصال. ليست كل التفضيلات أو الميزات المحلية قابلة للمزامنة.'**
+  String get privacyProgressData;
+
+  /// No description provided for @privacyTechnicalData.
+  ///
+  /// In ar, this message translates to:
+  /// **'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث.'**
+  String get privacyTechnicalData;
+
+  /// No description provided for @privacyPurposeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٣. أغراض المعالجة'**
+  String get privacyPurposeTitle;
+
+  /// No description provided for @privacyPurposeBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'نستخدم البيانات لتشغيل الحساب ومزامنة التقدم وإتاحة المراجعة والتذكيرات والشهادات وربط ولي الأمر الذي تختاره، ولحماية الخدمة والاستجابة للدعم. لا نبيع بياناتك، ولا نستخدم تقدمك أو بيانات الأطفال للإعلانات الموجّهة. طلب الأذونات منفصل عن قبول هذه السياسة؛ يمكنك رفض الأذونات الاختيارية ومواصلة استخدام الوظائف التي لا تحتاجها.'**
+  String get privacyPurposeBody;
+
+  /// No description provided for @privacyPermissionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٤. أذونات الجهاز والصوت'**
+  String get privacyPermissionsTitle;
+
+  /// No description provided for @privacyMicrophone.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميكروفون: يُستخدم عند بدء التسميع للتعرف على قراءتك. يعمل عبر خدمة التعرف الصوتي المدمجة في نظام الجهاز؛ وقد يعالج الصوت مزوّد نظام التشغيل وفق سياساته الخاصة، ولا نضمن بقاء المعالجة دون اتصال. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا. قد تُحفظ نتيجة التقييم ضمن التقدم. يتوفر خيار التقييم الذاتي اليدوي؛ يمكنك إلغاء إذن الميكروفون والتعرف على الكلام من إعدادات الجهاز.'**
+  String get privacyMicrophone;
+
+  /// No description provided for @privacyCamera.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط.'**
+  String get privacyCamera;
+
+  /// No description provided for @privacyNotifications.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإشعارات: تُجدول التذكيرات محليًا على الجهاز للحفظ والقراءة والأذكار ومواقيت الصلاة، ويمكن تعطيلها من التطبيق أو إعدادات النظام. قد تظهر معلومات التذكير على شاشة القفل حسب إعدادات جهازك.'**
+  String get privacyNotifications;
+
+  /// No description provided for @privacyPhotos.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصور والملفات والمشاركة: تُستخدم عند اختيار حفظ شهادة أو بطاقة أو تصديرها أو مشاركتها. قد تحتوي الملفات على الاسم والتقدم الذي اخترت عرضه. تصبح النسخ التي تحفظها خارج التطبيق أو ترسلها لتطبيق آخر تحت سيطرتك وسياسة الجهة المستقبلة؛ حذف الحساب لا يمحوها.'**
+  String get privacyPhotos;
+
+  /// No description provided for @privacyLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة: تُحسب على الجهاز باستخدام المدينة التي تختارها أو الإحداثيات التي تدخلها يدويًا. تُحفظ هذه الإعدادات محليًا. لا يطلب هذا الإصدار تحديد موقع GPS ولا يتتبع موقعك في الخلفية.'**
+  String get privacyLocation;
+
+  /// No description provided for @privacyChildrenTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥. خصوصية الأطفال وولي الأمر'**
+  String get privacyChildrenTitle;
+
+  /// No description provided for @privacyChildrenBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتضمن التطبيق مسارًا للأطفال، وقد تتضمن بياناته لقب الطفل والعمر وتقدم الحفظ والتقييمات والجلسات والمكافآت. ندعو ولي الأمر للإشراف على استخدام الطفل للحساب والمزامنة والتسميع والمشاركة، واستخدام لقب بدلاً من الاسم الكامل وتجنب إرسال معلومات إضافية غير لازمة. ملفات الأطفال المحلية ليست حسابات مستقلة بالضرورة.'**
+  String get privacyChildrenBody;
+
+  /// No description provided for @privacyGuardianSharing.
+  ///
+  /// In ar, this message translates to:
+  /// **'عند إتمام ربط حساب ولي الأمر بموافقتك، يستطيع ولي الأمر المرتبط الاطلاع عبر السحابة على بيانات الطفل المتاحة للمتابعة، ومنها الاسم أو اللقب والعمر والتقدم والجلسات والإنجازات، وإدارة المكافآت. الربط ليس محليًا فقط. يمكنك إلغاء الربط من أدوات ولي الأمر، وطلب مراجعة بيانات الطفل أو حذفها عبر بريد الخصوصية. لا يمحو إلغاء الربط النسخ التي سبق للمستلم حفظها.'**
+  String get privacyGuardianSharing;
+
+  /// No description provided for @privacyChildrenSpeech.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نعرض إعلانات موجهة للأطفال. التسميع الصوتي اختياري، وخدمة التعرف التابعة للنظام قد تعالج الصوت خارج الجهاز؛ يمكن لولي الأمر اختيار التقييم اليدوي وإلغاء الأذونات. لا يُعد ربط QR وحده إثباتًا للموافقة الأبوية القانونية.'**
+  String get privacyChildrenSpeech;
+
+  /// No description provided for @privacyProvidersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٦. الجهات التي قد تتلقى البيانات'**
+  String get privacyProvidersTitle;
+
+  /// No description provided for @privacyProvidersBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه.'**
+  String get privacyProvidersBody;
+
+  /// No description provided for @privacyProviderProtection.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقتصر على البيانات اللازمة للخدمة ونشترط على مزودي المعالجة حماية البيانات بما يتفق مع هذه السياسة ومتطلبات المتاجر والقانون الساري. خدمات نظام الجهاز والتطبيقات التي تختارها للمشاركة تخضع كذلك لسياساتها. قد نفصح بالقدر اللازم للامتثال لطلب قانوني ملزم أو لحماية الحقوق وأمن الخدمة.'**
+  String get privacyProviderProtection;
+
+  /// No description provided for @privacySecurityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٧. الحماية ونقل البيانات'**
+  String get privacySecurityTitle;
+
+  /// No description provided for @privacySecurityBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستخدم اتصالات الحساب HTTPS، وتعتمد صلاحيات السحابة على هوية الحساب وقواعد وصول تسمح بالمشاركة المحددة مع ولي الأمر المرتبط. تُحفظ بعض البيانات الحساسة، مثل رمز حماية ولي الأمر وبيانات حساب مختارة، باستخدام تخزين آمن؛ وتحفظ مكتبة المصادقة الجلسة على الجهاز لتسجيل الدخول المستمر. لا توجد وسيلة حماية مضمونة تمامًا. قد تُعالج بيانات الخدمات لدى مزودين خارج بلدك؛ ونتعامل مع النقل وفق الضمانات والمتطلبات القانونية المنطبقة.'**
+  String get privacySecurityBody;
+
+  /// No description provided for @privacyRetentionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٨. الاحتفاظ بالبيانات'**
+  String get privacyRetentionTitle;
+
+  /// No description provided for @privacyRetentionBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يبقى تقدم الحساب وملفه في الخدمة النشطة ما دام الحساب قائمًا وحتى حذف البيانات أو الحساب. تبقى البيانات المحلية حتى حذفها أو تنظيف بيانات التطبيق. تُزال بيانات الحساب من قواعد التشغيل عند نجاح حذف الحساب؛ قد تبقى نسخ احتياطية أو سجلات أمنية لدى مزود الخدمة خلال دورة الاحتفاظ المحدودة، ولا تُستخدم لإعادة إنشاء الحساب. قد يحتفظ نظام جهازك بنسخة احتياطية وفق إعدادات النسخ الاحتياطي لديك؛ يمكنك إدارتها من إعدادات النظام. تُحفظ مراسلات الدعم بقدر ما يلزم لحل الطلب والالتزامات القانونية. للاستفسار عن المدة المنطبقة على بياناتك تواصل معنا؛ وإذا لزم الاحتفاظ ببيانات لسبب قانوني نوضح الفئات والسبب والمدة في الرد على طلبك.'**
+  String get privacyRetentionBody;
+
+  /// No description provided for @privacyDeletionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٩. حذف الحساب والبيانات'**
+  String get privacyDeletionTitle;
+
+  /// No description provided for @privacyDeletionBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحذف الحساب: افتح الإعدادات ← الحساب ← حذف الحساب، واقرأ التحذير ثم أكّد. يلزم اتصال بالإنترنت. يحذف ذلك حساب تسجيل الدخول وملفه وبياناته السحابية المرتبطة، بما فيها التقدم والخطط والعلامات المرجعية والشهادات وروابط ولي الأمر والمكافآت المرتبطة. ينهي الجلسة وينظف بيانات الحساب المحلية على هذا الجهاز، بما فيها التقدم والملفات المحلية التابعة للحساب والعمليات المعلقة. الحذف نهائي ولا يُعد تسجيل الخروج أو إلغاء الربط بديلاً عنه. تظهر رسالة النجاح بعد إتمام التنظيف؛ إذا ظهر طلب إعادة المحاولة فاتبع تعليماته.'**
+  String get privacyDeletionBody;
+
+  /// No description provided for @privacyDeletionLimits.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يحذف حذف حساب ولي الأمر حسابات الأطفال المستقلة أو حسابات أولياء الأمور الآخرين؛ تزال روابطها بالحساب المحذوف. لا تُحذف ملفات الشهادات أو البطاقات التي حفظتها أو شاركتها خارج التطبيق، أو النسخ المحلية على أجهزة أخرى بهذه العملية؛ نظّف بيانات التطبيق على تلك الأجهزة أيضًا. قد تبقى إعدادات الجهاز العامة والمحتوى القرآني المحمّل وبيانات الضيف التي يمكن فصلها عن الحساب.'**
+  String get privacyDeletionLimits;
+
+  /// No description provided for @privacyExternalDeletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكن طلب الحذف دون تثبيت التطبيق: أرسل من بريد الحساب إلى elsayed.saad2014@feps.edu.eg بعنوان «طلب حذف حساب تالية القرآن»، واذكر أنك تريد حذف الحساب والبيانات المرتبطة به. سنتحقق من ملكية الحساب قبل التنفيذ ونبلغك بإتمام الحذف أو أي احتفاظ قانوني واجب. لا ترسل كلمة المرور أو رموز التحقق. يمكنك استخدام البريد نفسه لطلب حذف فئات من البيانات مع الإبقاء على الحساب.'**
+  String get privacyExternalDeletion;
+
+  /// No description provided for @privacyRightsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠. خياراتك وحقوقك'**
+  String get privacyRightsTitle;
+
+  /// No description provided for @privacyRightsBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك تعديل بيانات ملفك داخل التطبيق، وإلغاء الأذونات من إعدادات الجهاز، وتعطيل التذكيرات وإلغاء ربط ولي الأمر. بحسب القانون المنطبق، يمكنك طلب الوصول أو نسخة من بياناتك أو تصحيحها أو حذفها أو تقييد المعالجة أو الاعتراض عليها أو سحب الموافقة أو تقديم شكوى للجهة المختصة. تواصل معنا من بريد الحساب لتحديد طلبك؛ قد نطلب معلومات محدودة للتحقق من الهوية. لا يؤثر سحب الموافقة في المعالجة التي تمت قبله.'**
+  String get privacyRightsBody;
+
+  /// No description provided for @privacyChangesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١١. التغييرات على السياسة'**
+  String get privacyChangesTitle;
+
+  /// No description provided for @privacyChangesBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'نحدّث تاريخ النفاذ عند تعديل السياسة، ونُظهر إشعارًا مناسبًا بالتغييرات الجوهرية. إذا احتاج استخدام جديد لبياناتك إلى موافقة، نطلبها قبل بدء هذا الاستخدام. راجع السياسة عند تحديث التطبيق.'**
+  String get privacyChangesBody;
+
+  /// No description provided for @privacyContactTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٢. تواصل معنا'**
+  String get privacyContactTitle;
+
+  /// No description provided for @privacyContactBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'المطوّر: Sayed Saad\nالتطبيق: تالية القرآن — Talia Quran\nللخصوصية وحذف الحساب وبيانات الأطفال: elsayed.saad2014@feps.edu.eg'**
+  String get privacyContactBody;
+
+  /// No description provided for @accountDeletionRemoteConfirmedCleanupFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف الحساب من السحابة، لكن تنظيف بيانات الجهاز لم يكتمل. أعد المحاولة لإتمام التنظيف.'**
+  String get accountDeletionRemoteConfirmedCleanupFailed;
+
+  /// No description provided for @accountDeletionSessionCleanupFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف الحساب، لكن إنهاء الجلسة على الجهاز لم يكتمل. أعد المحاولة.'**
+  String get accountDeletionSessionCleanupFailed;
+
+  /// No description provided for @accountDeletionProgressMarkerFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ حالة عملية الحذف بأمان. لم يبدأ حذف الحساب؛ أعد المحاولة.'**
+  String get accountDeletionProgressMarkerFailed;
+
+  /// No description provided for @accountDeletionUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'خدمة حذف الحساب غير متاحة حاليًا. أعد المحاولة أو تواصل معنا عبر بريد الخصوصية.'**
+  String get accountDeletionUnavailable;
+
+  /// No description provided for @accountDeletionFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تأكيد اكتمال حذف الحساب. تحقق من الاتصال وأعد المحاولة؛ لا تفترض اكتمال الحذف حتى تظهر رسالة النجاح.'**
+  String get accountDeletionFailed;
+
+  /// No description provided for @accountDeletionRetryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إتمام حذف الحساب'**
+  String get accountDeletionRetryTitle;
+
+  /// No description provided for @accountDeletionRetryAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get accountDeletionRetryAction;
 }
 
 class _AppLocalizationsDelegate

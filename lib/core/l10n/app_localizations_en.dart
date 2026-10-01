@@ -1801,16 +1801,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeleteAccountTitle => 'Delete account';
 
   @override
-  String get settingsDeleteAccountSubtitle => 'Deletes the cloud account only';
+  String get settingsDeleteAccountSubtitle =>
+      'Permanently delete your account and its progress';
 
   @override
   String settingsDeleteAccountWarning(Object email) {
-    return 'This deletes the Supabase account for $email and its cloud data.\n\nLocal Quran, Hifz, Kids, and Smart memorization progress on this device will not be deleted.\n\nDo you want to continue?';
+    return 'The account $email, its profile, progress, plans, bookmarks, certificates, guardian links and associated rewards will be deleted from the cloud.\n\nIts local progress, dependent child profiles and pending operations will also be erased from this device. Deletion cannot be undone.\n\nIndependent linked accounts and files saved or shared outside the app remain. Clear app data on your other devices too.\n\nPermanently delete the account?';
   }
 
   @override
   String get settingsAccountDeletedMessage =>
-      'Cloud account deleted. Your local progress remains on this device.';
+      'Account deleted and its data cleared from this device.';
 
   @override
   String settingsVersion(Object version) {
@@ -7153,4 +7154,170 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get progressXpToNextLevel => 'Toward next level';
+
+  @override
+  String get privacyEffectiveDate => 'Effective date: October 2, 2026';
+
+  @override
+  String get privacyIntro =>
+      'This policy explains how Talia Quran handles your data on your device and through cloud services, and how you control permissions and request deletion.';
+
+  @override
+  String get privacyManualOptionAction =>
+      'Open memorization to use manual self-grade';
+
+  @override
+  String get privacyControllerTitle => '1. Introduction and Data Controller';
+
+  @override
+  String get privacyControllerBody =>
+      'Talia Quran is an app for reading, memorization, revision and Azkar. The developer and controller responsible for app data is Sayed Saad. This policy covers Talia, its account features and guardian linking. Privacy enquiries and requests: elsayed.saad2014@feps.edu.eg.';
+
+  @override
+  String get privacyDataTitle =>
+      '2. Information We Collect and Where It Is Stored';
+
+  @override
+  String get privacyAccountData =>
+      'Account: Registration processes your email and password through Supabase for authentication, verification and recovery, together with an account ID and session tokens. Profile details, such as a name or child nickname and age when supplied, personalize the experience, appear to a linked guardian and support certificates. Never send your password to support.';
+
+  @override
+  String get privacyProgressData =>
+      'Progress and preferences: The app stores reading progress, bookmarks, memorization plans, reviews and ratings, sessions, XP, streaks, achievements, certificates and child/guardian settings. Operational data is stored on your device; supported cloud features synchronize associated account data when signed in and connected. Pending operations may upload automatically when connectivity returns. Some local features and preferences do not synchronize.';
+
+  @override
+  String get privacyTechnicalData =>
+      'Technical data and support: Account and audio services receive ordinary connection information such as IP address, request time and technical data needed for service operation and security. The app logs technical errors locally. If you contact us, we process your email, message and information you choose to send to resolve your request. The current version does not include third-party advertising or behavioral analytics SDKs.';
+
+  @override
+  String get privacyPurposeTitle => '3. Purposes of Processing';
+
+  @override
+  String get privacyPurposeBody =>
+      'We use data to operate accounts, synchronize progress, provide revision, reminders and certificates, enable guardian linking you choose, protect the service and respond to support. We do not sell your data or use progress or children’s data for targeted advertising. Permission requests are separate from this policy; you can refuse optional permissions and continue using features that do not require them.';
+
+  @override
+  String get privacyPermissionsTitle => '4. Device Permissions and Speech';
+
+  @override
+  String get privacyMicrophone =>
+      'Microphone: Used when you start recitation assessment to recognize your reading. Recognition uses your operating system\'s built-in speech service; the platform provider may process audio under its own policies, and offline processing is not guaranteed. Talia does not retain raw audio and does not send it to Talia servers. An assessment result may be saved with progress. A manual self-grade option is available; revoke microphone and speech-recognition permissions in device settings.';
+
+  @override
+  String get privacyCamera =>
+      'Camera: Used when you choose to scan a guardian-link QR code. The scanner processes camera frames to read the code; the app does not save or upload camera images. The pairing token is sent to the account service to validate and establish the link.';
+
+  @override
+  String get privacyNotifications =>
+      'Notifications: Reminders for memorization, reading, Azkar and prayer times are scheduled locally. Disable them in the app or system settings. Reminder information may appear on the lock screen depending on your device settings.';
+
+  @override
+  String get privacyPhotos =>
+      'Photos, files and sharing: Used when you choose to save, export or share a certificate or card. Files may contain the name and progress you choose to display. Copies saved outside the app or sent to another app are subject to your control and the recipient’s policy; deleting your account does not erase them.';
+
+  @override
+  String get privacyLocation =>
+      'Prayer times: Calculated on your device using the city you select or coordinates you enter manually. These settings are stored locally. This version does not request GPS location or track your location in the background.';
+
+  @override
+  String get privacyChildrenTitle => '5. Children’s Privacy and Guardians';
+
+  @override
+  String get privacyChildrenBody =>
+      'The app includes a children’s path that may process a child’s nickname, age, memorization progress, assessments, sessions and rewards. A guardian should supervise account use, synchronization, speech assessment and sharing, use a nickname instead of a full name and avoid providing unnecessary details. Local child profiles are not necessarily separate accounts.';
+
+  @override
+  String get privacyGuardianSharing =>
+      'When you approve and complete guardian account linking, the linked guardian can view available child monitoring data through the cloud, including the name or nickname, age, progress, sessions and achievements, and manage rewards. Linking is not exclusively local. Unlink using the guardian tools and request review or deletion of child data through the privacy email. Unlinking cannot erase copies a recipient previously saved.';
+
+  @override
+  String get privacyChildrenSpeech =>
+      'We do not serve targeted advertising to children. Speech assessment is optional; the operating system’s recognition provider may process audio away from the device. Guardians can choose manual assessment and revoke permissions. QR linking alone is not proof of legally required parental consent.';
+
+  @override
+  String get privacyProvidersTitle => '6. Who May Receive Data';
+
+  @override
+  String get privacyProvidersBody =>
+      'Supabase processes authentication, account and cloud progress data for the app. Your device’s speech-recognition provider may process recitation audio. EveryAyah provides reciter recordings online and receives ordinary technical request data during streaming or downloads. Email services may process verification and support messages. Linked guardians and apps you select for sharing receive the data described above.';
+
+  @override
+  String get privacyProviderProtection =>
+      'We limit processing to what the service needs and require processors to protect data consistently with this policy, store requirements and applicable law. Device platform services and apps you choose for sharing also have their own policies. We may disclose information necessary to comply with a binding legal request or protect rights and service security.';
+
+  @override
+  String get privacySecurityTitle => '7. Security and International Transfers';
+
+  @override
+  String get privacySecurityBody =>
+      'Account connections use HTTPS. Cloud access depends on account identity and access rules that allow the specified sharing with linked guardians. Selected sensitive data, including guardian PIN protection and selected account data, uses secure storage; the authentication library persists a session on the device to keep you signed in. No security measure is absolute. Service providers may process data outside your country; transfers are handled subject to applicable safeguards and legal requirements.';
+
+  @override
+  String get privacyRetentionTitle => '8. Data Retention';
+
+  @override
+  String get privacyRetentionBody =>
+      'Active account data and profile are retained while your account exists, until the data or account is deleted. Local data remains until you erase it or clear app data. Successful account deletion removes account data from operational databases. Provider backups or security logs may remain during their limited retention cycle and are not used to recreate the account. Your device platform may keep backups according to your backup settings; manage these in system settings. Support correspondence is retained as necessary to resolve requests and meet legal obligations. Contact us for the retention period applicable to your data; if a legal exception requires retention, we explain the categories, reason and duration in our response.';
+
+  @override
+  String get privacyDeletionTitle => '9. Account and Data Deletion';
+
+  @override
+  String get privacyDeletionBody =>
+      'To delete your account, open Settings → Account → Delete account, read the warning and confirm. Internet access is required. This deletes your login account, profile and associated cloud data, including progress, plans, bookmarks, certificates, guardian links and associated rewards. It ends the session and clears account data on this device, including progress, dependent local profiles and pending operations. Deletion is permanent; signing out or unlinking is not a substitute. Success is shown after cleanup finishes; follow any retry instructions if completion is interrupted.';
+
+  @override
+  String get privacyDeletionLimits =>
+      'Deleting a guardian account does not delete independent child or other guardian accounts; their links to the deleted account are removed. Certificates or cards exported outside the app, shared copies and local copies on other devices are not erased by this operation; clear app data on those devices as well. General device preferences, downloaded Quran content and separately identifiable guest data may remain.';
+
+  @override
+  String get privacyExternalDeletion =>
+      'You can request deletion without installing the app: email elsayed.saad2014@feps.edu.eg from your account email with the subject “Talia Quran account deletion request” and ask to delete the account and associated data. We verify account ownership before acting and notify you of completion or any legally required retention. Do not send passwords or verification codes. Use the same email to request deletion of particular data while keeping your account.';
+
+  @override
+  String get privacyRightsTitle => '10. Your Choices and Rights';
+
+  @override
+  String get privacyRightsBody =>
+      'Edit your profile in the app, revoke device permissions, disable reminders and unlink guardians. Depending on applicable law, you may request access, a copy, correction or erasure of data, restriction of processing, object to processing, withdraw consent or complain to the relevant authority. Contact us from your account email and describe your request; we may request limited identity verification. Withdrawal does not affect processing that occurred before it.';
+
+  @override
+  String get privacyChangesTitle => '11. Changes to This Policy';
+
+  @override
+  String get privacyChangesBody =>
+      'We update the effective date when the policy changes and provide appropriate notice of material changes. If a new use of your data requires consent, we request it before that use begins. Review the policy when updating the app.';
+
+  @override
+  String get privacyContactTitle => '12. Contact Us';
+
+  @override
+  String get privacyContactBody =>
+      'Developer: Sayed Saad\nApp: Talia Quran — تالية القرآن\nPrivacy, account deletion and children’s data: elsayed.saad2014@feps.edu.eg';
+
+  @override
+  String get accountDeletionRemoteConfirmedCleanupFailed =>
+      'Your cloud account was deleted, but device cleanup is incomplete. Retry to finish cleanup.';
+
+  @override
+  String get accountDeletionSessionCleanupFailed =>
+      'Your account was deleted, but removing the device session is incomplete. Retry.';
+
+  @override
+  String get accountDeletionProgressMarkerFailed =>
+      'The deletion state could not be saved safely. Account deletion has not started; retry.';
+
+  @override
+  String get accountDeletionUnavailable =>
+      'Account deletion is currently unavailable. Retry or contact the privacy email.';
+
+  @override
+  String get accountDeletionFailed =>
+      'Account deletion could not be confirmed. Check your connection and retry; wait for the success message before assuming deletion is complete.';
+
+  @override
+  String get accountDeletionRetryTitle => 'Finish account deletion';
+
+  @override
+  String get accountDeletionRetryAction => 'Retry';
 }

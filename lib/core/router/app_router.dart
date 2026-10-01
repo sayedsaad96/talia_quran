@@ -377,6 +377,9 @@ abstract class AppRouter {
       error.message.startsWith('no routes for location');
 
   static String? redirectForAuth(AuthState authState, String location) {
+    if (authState is AuthAccountDeletionInProgress) {
+      return null;
+    }
     if (authState is AuthOwnerDataFailure) {
       return location == AppRoutes.login ? null : AppRoutes.login;
     }

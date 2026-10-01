@@ -164,6 +164,23 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
       ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> resumeDeletedAccountCleanup() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resumeDeletedAccountCleanup,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
+            _FakeEither_0<_i6.Failure, _i2.Unit>(
+          this,
+          Invocation.method(
+            #resumeDeletedAccountCleanup,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> syncProgressToCloud() =>
       (super.noSuchMethod(
         Invocation.method(

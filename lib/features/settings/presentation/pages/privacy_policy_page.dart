@@ -16,20 +16,11 @@ class PrivacyPolicyPage extends StatelessWidget {
     final locale = Localizations.localeOf(context);
     final isAr = locale.languageCode == 'ar';
 
-    final sections = isAr
-        ? PrivacyPolicyContent.getArabicContent()
-        : PrivacyPolicyContent.getEnglishContent();
-
-    final effectiveDate = isAr
-        ? PrivacyPolicyContent.arEffectiveDate
-        : PrivacyPolicyContent.enEffectiveDate;
-
-    final introSubtitle = isAr
-        ? PrivacyPolicyContent.arIntroSubtitle
-        : PrivacyPolicyContent.enIntroSubtitle;
-    final manualOptionAction = isAr
-        ? PrivacyPolicyContent.arManualOptionAction
-        : PrivacyPolicyContent.enManualOptionAction;
+    final l10n = context.l10n;
+    final sections = PrivacyPolicyContent.sections(l10n);
+    final effectiveDate = l10n.privacyEffectiveDate;
+    final introSubtitle = l10n.privacyIntro;
+    final manualOptionAction = l10n.privacyManualOptionAction;
 
     final primary = context.tokens.accent;
     final textColor = context.tokens.textPrimary;

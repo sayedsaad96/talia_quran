@@ -5,7 +5,10 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/pending_bookmark_recovery_marker.dart';
@@ -471,7 +474,7 @@ void main() {
 
         expect(result.isLeft(), isTrue);
         result.fold(
-          (failure) => expect(failure, isA<AuthConfigurationFailure>()),
+          (failure) => expect(failure.message, '@auth/account_deletion_failed'),
           (_) =>
               fail('Expected deleteAccount to fail when Supabase is offline'),
         );
@@ -482,8 +485,114 @@ void main() {
       },
     );
 
+    test('coalesces concurrent deletion requests', () async {
+      final first = repository.deleteAccount();
+      final second = repository.deleteAccount();
+
+      expect(identical(first, second), isTrue);
+      await first;
+    });
+
     test(
-      'confirmed remote deletion remains success when guest bookmark copy fails',
+      'HTTP RPC success erases local data after a real auth session',
+      () async {
+        var rpcCalls = 0;
+        final client = SupabaseClient(
+          'https://example.test',
+          'anon-key',
+          httpClient: MockClient((request) async {
+            if (request.url.path.endsWith('/token')) {
+              return http.Response(
+                '{"access_token":"eyJhbGciOiJub25lIn0.eyJzdWIiOiJvd25lci1hIiwic2Vzc2lvbl9pZCI6InNlc3Npb24tYSJ9.","refresh_token":"refresh","expires_in":3600,"token_type":"bearer","user":{"id":"owner-a","email":"a@example.test"}}',
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (request.url.path.endsWith('/rpc/delete_current_user')) {
+              rpcCalls++;
+              // postgrest reads the originating request from the response.
+              return http.Response(
+                'null',
+                200,
+                request: request,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response('{}', 200);
+          }),
+        );
+        await client.auth.signInWithPassword(
+          email: 'a@example.test',
+          password: 'password',
+        );
+        final httpRepository = AuthRepositoryImpl(
+          isar,
+          AccountDataReset(isar, prefs, documentsDirectory: () async => dir),
+          prefs,
+          client,
+        );
+
+        final result = await httpRepository.deleteAccount();
+
+        expect(result, const Right(unit));
+        expect(rpcCalls, 1);
+        expect(prefs.getString('user_profile'), isNull);
+        expect(prefs.getString('account_deletion_owner'), isNull);
+      },
+    );
+
+    test(
+      'a missing deletion RPC reports unavailable and releases the marker',
+      () async {
+        final client = SupabaseClient(
+          'https://example.test',
+          'anon-key',
+          httpClient: MockClient((request) async {
+            if (request.url.path.endsWith('/token')) {
+              return http.Response(
+                '{"access_token":"eyJhbGciOiJub25lIn0.eyJzdWIiOiJvd25lci1hIiwic2Vzc2lvbl9pZCI6InNlc3Npb24tYSJ9.","refresh_token":"refresh","expires_in":3600,"token_type":"bearer","user":{"id":"owner-a","email":"a@example.test"}}',
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (request.url.path.endsWith('/rpc/delete_current_user')) {
+              return http.Response(
+                '{"code":"PGRST202","message":"Could not find the function public.delete_current_user without parameters in the schema cache"}',
+                404,
+                request: request,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response('{}', 200);
+          }),
+        );
+        await client.auth.signInWithPassword(
+          email: 'a@example.test',
+          password: 'password',
+        );
+        final httpRepository = AuthRepositoryImpl(
+          isar,
+          AccountDataReset(isar, prefs, documentsDirectory: () async => dir),
+          prefs,
+          client,
+        );
+
+        final result = await httpRepository.deleteAccount();
+
+        result.fold(
+          (failure) =>
+              expect(failure.message, '@auth/account_deletion_unavailable'),
+          (_) => fail('Expected deletion to fail without the RPC'),
+        );
+        // Nothing was deleted remotely, so the account is not fenced off.
+        expect(prefs.getString('account_deletion_owner'), isNull);
+        expect(prefs.getString('account_deletion_stage'), isNull);
+        expect(prefs.getString('user_profile'), isNotNull);
+      },
+    );
+
+    test(
+      'confirmed remote deletion erases local account data without guest rehome',
       () async {
         final encrypted = _GuestWriteFailingEncryptedStore();
         await encrypted.write(
@@ -491,10 +600,14 @@ void main() {
           'quran_bookmarks',
           '[{"revision":1,"isSynced":false}]',
         );
-        encrypted.failGuestWrite = true;
         final afterRemoteDelete = AuthRepositoryImpl(
           isar,
-          AccountDataReset(isar, prefs, encryptedAccountPreferences: encrypted),
+          AccountDataReset(
+            isar,
+            prefs,
+            encryptedAccountPreferences: encrypted,
+            documentsDirectory: () async => dir,
+          ),
           prefs,
         );
 
@@ -504,12 +617,14 @@ void main() {
         expect(result, const Right(unit));
         expect(
           await encrypted.read('deleted-owner', 'quran_bookmarks'),
-          '[{"revision":1,"isSynced":false}]',
+          isNull,
         );
         expect(
           PendingBookmarkRecoveryMarker.contains(prefs, 'deleted-owner'),
-          isTrue,
+          isFalse,
         );
+        expect(prefs.getString('account_deletion_owner'), isNull);
+        expect(prefs.getString('account_deletion_stage'), isNull);
       },
     );
   });
@@ -613,11 +728,8 @@ class _AuthenticatedSyncAuthRepository implements AuthRepository {
   final String ownerId;
 
   @override
-  AppUser get currentUser => AppUser(
-    id: ownerId,
-    email: '$ownerId@example.com',
-    displayName: ownerId,
-  );
+  AppUser get currentUser =>
+      AppUser(id: ownerId, email: '$ownerId@example.com', displayName: ownerId);
 
   @override
   Future<Either<Failure, Unit>> pullProgressFromCloud() async =>
