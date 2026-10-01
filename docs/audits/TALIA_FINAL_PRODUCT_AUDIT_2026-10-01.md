@@ -264,3 +264,22 @@ Remaining Latin digits seen: the azkar counter («1 من 22», «0 من 3») and
 - **Religious review (not code):** the closing dua and the onboarding basmala card.
 - **71 hard-coded bilingual strings:** deferred to a separate change.
 - **Golden baselines:** `home_loaded_light` and the two home preview captures were failing before this work and still need a re-baseline decision.
+
+## Content review — owner reconfirmation (2026-10-02)
+
+The project owner completed the religious-content review of the two items this audit left blocked, and approved them. This is the owner reconfirmation required by `docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md` and the v1 release plan for later content changes. An external signature is not required.
+
+| Item | Where | Decision |
+|---|---|---|
+| Closing dua («اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا…») | `closingDua` in `app_ar.arb` / `app_en.arb`, shown by the closing-moment sheet | Approved by the owner |
+| Onboarding Mushaf card (basmala above Al-Isra 17:45) | `onboarding_mushaf_bento_view.dart` | Approved by the owner |
+| Closing ayah (Ar-Ra'd 13:28) | `ClosingMomentAyahCard`, loaded verbatim from `assets/data/quran.json` | Changed in this audit (no longer typed in the ARB); covered by the same review |
+
+Hashes: no asset listed in `assets/data/content_manifest.json` changed in this work. `quran.json`, `azkar_release.json` and the other hashed corpora are untouched, and the corpus integrity tests pass, so no hash update is needed. `prayer_cities.json` is not a religious-content corpus.
+
+Not recorded here: the reviewer's identity and the date the review took place. The owner confirmed it in conversation on 2026-10-02. Add them if the release process asks for a formal record.
+
+### Open items after this review
+
+- **71 hard-coded bilingual strings:** deferred to a separate change.
+- No other blocked content items remain from this audit.
