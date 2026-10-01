@@ -60,6 +60,12 @@ void main() {
   });
 
   test('history is capped at maxHistory entries', () async {
+    // A fixed clock: the history window is relative to now, so with the real
+    // clock this test began failing once September 1 fell out of the window.
+    final store = SmartWirdProgressStore(
+      prefs,
+      now: () => DateTime(2026, 9, 21),
+    );
     for (var i = 0; i < SmartWirdProgressStore.maxHistory + 5; i++) {
       await store.recordCompletion(
         dayPart: AzkarDayPart.afterFajr,

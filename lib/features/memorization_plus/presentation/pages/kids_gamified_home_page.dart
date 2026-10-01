@@ -10,6 +10,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_journey_complete_card.dart';
@@ -67,6 +68,33 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
   /// destination on top of each other — a very real pattern with children.
   bool _destinationOpen = false;
 
+  /// The nickname entered at kids setup, so the greeting uses the child's
+  /// name instead of a generic "memorization hero".
+  String? _nickname;
+
+  @override
+  void initState() {
+    super.initState();
+    _nickname = widget.childName;
+    if (_nickname == null) unawaited(_loadNickname());
+  }
+
+  Future<void> _loadNickname() async {
+    try {
+      if (!getIt.isRegistered<MemorizationPlusRepository>()) return;
+      final result = await getIt<MemorizationPlusRepository>()
+          .getParentSettings();
+      final nickname = result.fold(
+        (_) => null,
+        (settings) => settings.localChildNickname,
+      );
+      if (!mounted || nickname == null || nickname.trim().isEmpty) return;
+      setState(() => _nickname = nickname.trim());
+    } catch (_) {
+      // The generic greeting is a safe fallback.
+    }
+  }
+
   Future<void> _openDestination(Future<void> Function() open) async {
     if (_destinationOpen) return;
     _destinationOpen = true;
@@ -110,7 +138,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
 
           return KidsGamifiedHomeContent(
             state: state,
-            childName: widget.childName,
+            childName: _nickname,
             // The home tab is only ever tappable while the home screen is
             // already visible: navigating to the same route would rebuild the
             // page and flash a loading state at the child for no reason.

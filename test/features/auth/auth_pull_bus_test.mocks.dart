@@ -360,6 +360,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ) as _i4.Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>
+      reopenGuardianLinking() => (super.noSuchMethod(
+            Invocation.method(
+              #reopenGuardianLinking,
+              [],
+            ),
+            returnValue: _i4
+                .Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i9.MemorizationProfile>(
+              this,
+              Invocation.method(
+                #reopenGuardianLinking,
+                [],
+              ),
+            )),
+          ) as _i4.Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, _i9.PairingSession>>
       createGuardianPairingSession() => (super.noSuchMethod(
             Invocation.method(
@@ -759,6 +777,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
           this,
           Invocation.method(
             #claimLocalReviewRecords,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, int>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, int>> countClaimableLocalReviewRecords() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #countClaimableLocalReviewRecords,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, int>>.value(
+            _FakeEither_0<_i6.Failure, int>(
+          this,
+          Invocation.method(
+            #countClaimableLocalReviewRecords,
             [],
           ),
         )),
@@ -1460,6 +1495,37 @@ class MockMemorizationPlusRepository extends _i1.Mock
           Invocation.method(
             #removeChild,
             [childUserId],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, void>> updateLinkedChildIdentity({
+    required String? childUserId,
+    required String? nickname,
+    required int? age,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateLinkedChildIdentity,
+          [],
+          {
+            #childUserId: childUserId,
+            #nickname: nickname,
+            #age: age,
+          },
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #updateLinkedChildIdentity,
+            [],
+            {
+              #childUserId: childUserId,
+              #nickname: nickname,
+              #age: age,
+            },
           ),
         )),
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);

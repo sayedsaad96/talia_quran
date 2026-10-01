@@ -75,6 +75,70 @@ void main() {
   );
 
   testWidgets(
+    'after sign-in, guest memorization is offered for import before routing',
+    (tester) async {
+      final authCubit = _GuestDataLoginAuthCubit(claimable: 3);
+      final prefs = await SharedPreferences.getInstance();
+      final profileCubit = ProfileCubit(prefs)..loadProfile();
+      final router = _loginRouter(onHomeRouteResolved: () {});
+      addTearDown(router.dispose);
+      addTearDown(authCubit.close);
+      addTearDown(profileCubit.close);
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      getIt.registerSingleton<MemorizationPlusRepository>(
+        _TrackingMemorizationRepository(),
+      );
+
+      await _pumpLoginPage(
+        tester,
+        router: router,
+        authCubit: authCubit,
+        profileCubit: profileCubit,
+      );
+
+      authCubit.emitAuthenticated(_accountB);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Import local memorization data?'), findsOneWidget);
+      expect(find.text('home route'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('guest_import_confirm_button')));
+      await tester.pumpAndSettle();
+
+      expect(authCubit.importCalls, 1);
+      expect(find.text('home route'), findsOneWidget);
+    },
+  );
+
+  testWidgets('without guest data there is no import prompt', (tester) async {
+    final authCubit = _GuestDataLoginAuthCubit(claimable: 0);
+    final prefs = await SharedPreferences.getInstance();
+    final profileCubit = ProfileCubit(prefs)..loadProfile();
+    final router = _loginRouter(onHomeRouteResolved: () {});
+    addTearDown(router.dispose);
+    addTearDown(authCubit.close);
+    addTearDown(profileCubit.close);
+    getIt.registerSingleton<SharedPreferences>(prefs);
+    getIt.registerSingleton<MemorizationPlusRepository>(
+      _TrackingMemorizationRepository(),
+    );
+
+    await _pumpLoginPage(
+      tester,
+      router: router,
+      authCubit: authCubit,
+      profileCubit: profileCubit,
+    );
+
+    authCubit.emitAuthenticated(_accountB);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import local memorization data?'), findsNothing);
+    expect(authCubit.importCalls, 0);
+    expect(find.text('home route'), findsOneWidget);
+  });
+
+  testWidgets(
     'disposing login while profile resolution is pending does not navigate',
     (tester) async {
       final syncRelease = Completer<void>();
@@ -241,6 +305,22 @@ class _LoginPageAuthCubit extends AuthCubit {
 
   void emitAuthenticated(AppUser user) {
     emit(AuthAuthenticated(user: user));
+  }
+}
+
+class _GuestDataLoginAuthCubit extends _LoginPageAuthCubit {
+  _GuestDataLoginAuthCubit({required this.claimable}) : super(Future.value());
+
+  final int claimable;
+  int importCalls = 0;
+
+  @override
+  Future<int> claimableGuestReviewRecordCount() async => claimable;
+
+  @override
+  Future<Either<Failure, int>> importGuestReviewRecords() async {
+    importCalls += 1;
+    return Right(claimable);
   }
 }
 

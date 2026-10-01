@@ -219,9 +219,9 @@ void main() {
   });
 
   test('Scenario 2: Critical Learning Alert emits P2 Action', () async {
-    final record = AyahReviewRecord(
+    AyahReviewRecord recordFor(int ayah) => AyahReviewRecord(
       surahId: 1,
-      ayahNumber: 1,
+      ayahNumber: ayah,
       lastReviewedAt: DateTime.now().subtract(const Duration(days: 30)),
       nextReviewDate: DateTime.now().subtract(const Duration(days: 10)),
       totalReviews: 1,
@@ -232,9 +232,13 @@ void main() {
       lastRating: PerformanceRating.average,
       createdByMode: ReviewRecordCreatedByMode.v2Session,
     );
-    when(
-      mockMemRepo.getAllReviewRecords(),
-    ).thenAnswer((_) async => Right([record]));
+    // Enough weak ayahs for retention to be a real signal (not one ayah).
+    when(mockMemRepo.getAllReviewRecords()).thenAnswer(
+      (_) async => Right([
+        for (var ayah = 1; ayah <= 10; ayah++)
+          recordFor(ayah),
+      ]),
+    );
     const coach = SmartCoachRecommendation(
       kind: SmartCoachRecommendationKind.reviewWeakAyah,
       route:
@@ -264,9 +268,9 @@ void main() {
 
   test('critical alert keeps the overlapping Coach memorization intent',
       () async {
-    final record = AyahReviewRecord(
+    AyahReviewRecord recordFor(int ayah) => AyahReviewRecord(
       surahId: 1,
-      ayahNumber: 1,
+      ayahNumber: ayah,
       lastReviewedAt: DateTime.now().subtract(const Duration(days: 30)),
       nextReviewDate: DateTime.now().subtract(const Duration(days: 10)),
       totalReviews: 1,
@@ -283,9 +287,13 @@ void main() {
       route:
           '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
     );
-    when(
-      mockMemRepo.getAllReviewRecords(),
-    ).thenAnswer((_) async => Right([record]));
+    // Enough weak ayahs for retention to be a real signal (not one ayah).
+    when(mockMemRepo.getAllReviewRecords()).thenAnswer(
+      (_) async => Right([
+        for (var ayah = 1; ayah <= 10; ayah++)
+          recordFor(ayah),
+      ]),
+    );
     when(
       mockGetCoachRecommendation.call(),
     ).thenAnswer((_) async => const Right(coach));

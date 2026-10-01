@@ -540,7 +540,7 @@ class _SurahTile extends StatelessWidget {
                         Flexible(
                           child: Text(
                             '${context.l10n.countAyahs(surah.ayahCount, context.numText(surah.ayahCount))}'
-                            ' · ${context.l10n.page} ${context.numText(surah.page)}',
+                            '${context.listSeparator}${context.l10n.page} ${context.numText(surah.page)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(

@@ -24,6 +24,11 @@ extension BuildContextX on BuildContext {
   bool get isArabic => Localizations.localeOf(this).languageCode == 'ar';
   TextDirection get textDirection =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
+  /// Separator between short facts in one line. The middle dot reads as the
+  /// Eastern Arabic zero (٠) next to Arabic digits («٢٠ ·» looks like ٢٠٠),
+  /// so Arabic uses its own comma.
+  String get listSeparator => isArabic ? '، ' : ' · ';
+
   IconData get forwardChevron => isArabic
       ? Icons.arrow_back_ios_new_rounded
       : Icons.arrow_forward_ios_rounded;

@@ -15,6 +15,7 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/memorization_session_cubit.dart';
@@ -184,12 +185,19 @@ class _V2SessionViewState extends State<_V2SessionView> {
     setState(() => _forceAllowPop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go(AppRoutes.memorizationPlus);
-      }
+      _leave();
     });
+  }
+
+  /// Leaves the session. Without history (the session was opened with
+  /// `context.go`, e.g. right after saving a plan) it goes to the hub:
+  /// `/memorization-plus` would redirect straight back into a session.
+  void _leave() {
+    if (FallbackPopScope.hasHistory(context)) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.memorizationHub);
+    }
   }
 
   @override
@@ -244,9 +252,16 @@ class _V2SessionViewState extends State<_V2SessionView> {
       builder: (context, state) {
         final sessionAllowsPop = state is! MSActive;
         final allowPop = sessionAllowsPop || _forceAllowPop;
+        // Popping the only route would close the app instead of leaving the
+        // session, so without history every exit goes through [_leave].
+        final hasHistory = FallbackPopScope.hasHistory(context);
         return PopScope(
-          canPop: allowPop,
+          canPop: allowPop && hasHistory,
           onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && allowPop) {
+              _leave();
+              return;
+            }
             unawaited(
               _onPopInvoked(didPop: didPop, sessionAllowsPop: sessionAllowsPop),
             );
@@ -254,6 +269,27 @@ class _V2SessionViewState extends State<_V2SessionView> {
           child: Scaffold(
             backgroundColor: context.tokens.background,
             appBar: AppBar(
+              leading: hasHistory
+                  ? null
+                  : IconButton(
+                      key: const Key('v2_session_close_button'),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).closeButtonTooltip,
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () {
+                        if (allowPop) {
+                          _leave();
+                        } else {
+                          unawaited(
+                            _onPopInvoked(
+                              didPop: false,
+                              sessionAllowsPop: sessionAllowsPop,
+                            ),
+                          );
+                        }
+                      },
+                    ),
               title: Text(
                 state is MSActive && state.sessionState.isReview
                     ? context.l10n.v2ReviewSessionTitle

@@ -307,9 +307,43 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
     });
   }
 
+  /// Anything typed that back would silently throw away.
+  bool get _hasInput =>
+      _nameController.text.trim().isNotEmpty ||
+      _pinController.text.isNotEmpty ||
+      _confirmPinController.text.isNotEmpty;
+
+  Future<void> _confirmDiscard() async {
+    final l10n = context.l10n;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.kidsSetupDiscardTitle),
+        content: Text(l10n.kidsSetupDiscardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.kidsSetupKeepEditing),
+          ),
+          TextButton(
+            key: const Key('kids_setup_discard_button'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.kidsSetupDiscard),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return PopScope(
+      canPop: !_hasInput,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_confirmDiscard());
+      },
+      child: SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           24,
@@ -479,6 +513,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
           ),
         ),
       ),
+    ),
     );
   }
 }

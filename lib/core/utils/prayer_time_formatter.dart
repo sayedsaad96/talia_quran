@@ -5,6 +5,11 @@
 /// - 60 minutes or more: expressed in hours (ساعة / ساعتين / ساعات / ساعة)
 ///   along with remaining minutes if any (و دقيقة / و دقيقتين / و X دقائق / و X دقيقة).
 String formatPrayerRemainingTime(int minutes, {required bool isArabic}) {
+  final text = _formatRemaining(minutes, isArabic: isArabic);
+  return isArabic ? _arabicDigits(text) : text;
+}
+
+String _formatRemaining(int minutes, {required bool isArabic}) {
   if (minutes <= 0) {
     return isArabic ? 'أقل من دقيقة' : 'less than a min';
   }
@@ -33,6 +38,11 @@ String formatPrayerRemainingTime(int minutes, {required bool isArabic}) {
 
 /// Compact formatting for tight spaces like badges/chips (e.g. "6 س 34 د" or "25 د").
 String formatPrayerRemainingTimeCompact(int minutes, {required bool isArabic}) {
+  final text = _formatCompact(minutes, isArabic: isArabic);
+  return isArabic ? _arabicDigits(text) : text;
+}
+
+String _formatCompact(int minutes, {required bool isArabic}) {
   if (minutes <= 0) {
     return isArabic ? '< 1 د' : '< 1m';
   }
@@ -96,3 +106,10 @@ String _arabicMinutesConjunction(int minutes) {
     return 'و $minutes دقيقة';
   }
 }
+
+/// Eastern Arabic digits for Arabic text, like every other number in the
+/// Arabic UI ("53 دقيقة" → "٥٣ دقيقة").
+String _arabicDigits(String text) => text.replaceAllMapped(
+  RegExp('[0-9]'),
+  (match) => String.fromCharCode(0x0660 + int.parse(match[0]!)),
+);

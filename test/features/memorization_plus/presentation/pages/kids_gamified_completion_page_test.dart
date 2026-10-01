@@ -230,7 +230,7 @@ void main() {
         ),
       );
 
-      expect(find.text('+1 stars'), findsOneWidget);
+      expect(find.text('+1 star'), findsOneWidget);
       expect(find.textContaining('gems'), findsNothing);
       expect(find.textContaining('Level'), findsNothing);
     });

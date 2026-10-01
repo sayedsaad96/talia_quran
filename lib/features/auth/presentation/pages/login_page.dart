@@ -13,6 +13,7 @@ import '../../../../core/widgets/error_info_banner.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../presentation/cubits/auth_cubit.dart';
+import '../widgets/guest_import_dialog.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/auth_error_code.dart';
 
@@ -111,9 +112,40 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (!context.mounted) return;
     setState(() => _isSyncing = false);
+    await _offerGuestImport(context);
+    if (!context.mounted) return;
     final destination = await _resolvePostLoginDestination();
     if (!context.mounted) return;
     context.go(destination);
+  }
+
+  /// Guest memorization stays under the guest owner after sign-in, so without
+  /// this prompt it silently vanishes from the account's progress. Asked only
+  /// when there is something to import.
+  Future<void> _offerGuestImport(BuildContext context) async {
+    final cubit = context.read<AuthCubit>();
+    final count = await cubit.claimableGuestReviewRecordCount();
+    if (count == 0 || !context.mounted) return;
+    if (!await showGuestImportDialog(context) || !context.mounted) return;
+
+    final claim = await cubit.importGuestReviewRecords();
+    if (!context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    claim.fold(
+      (_) => messenger.showSnackBar(
+        SnackBar(content: Text(context.l10n.errorOccurred)),
+      ),
+      (imported) {
+        if (imported == 0) return;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.guestImportDone(context.numText(imported)),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showSyncFailure() {
@@ -475,7 +507,11 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: AppSpacing.itemGap),
                           TextButton(
-                            onPressed: () => context.go('/'),
+                            // Opened from Settings (or another screen), skip
+                            // returns there; from onboarding it goes home.
+                            onPressed: () => context.canPop()
+                                ? context.pop()
+                                : context.go('/'),
                             child: Text(
                               context.l10n.skip,
                               style: AppTypography.labelLarge.copyWith(

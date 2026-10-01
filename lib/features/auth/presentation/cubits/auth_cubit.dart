@@ -563,6 +563,19 @@ class AuthCubit extends Cubit<AuthState> {
     return repository.claimLocalReviewRecords();
   }
 
+  /// Guest review records the signed-in account could import (0 on failure,
+  /// so a read error never blocks routing after sign-in).
+  Future<int> claimableGuestReviewRecordCount() async {
+    final repository = _memPlusRepository;
+    if (repository == null) return 0;
+    try {
+      final result = await repository.countClaimableLocalReviewRecords();
+      return result.fold<int>((_) => 0, (count) => count);
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> deleteAccount() async {
     emit(const AuthLoading());
     await _beginControlledIdentityTransition();

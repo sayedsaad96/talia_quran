@@ -23,6 +23,7 @@ void main() {
     final state = cubit.state as AzkarLoaded;
     expect(state.sessions, isEmpty);
     expect(state.allDone, isFalse);
+    expect(state.currentIndex, 0);
   });
 
   test(
@@ -53,6 +54,24 @@ void main() {
       expect(state.allDone, isFalse);
     },
   );
+
+  test('reopening a category resumes at the first unfinished dhikr', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final usecase = GetAzkarUsecase(const _TwoZikrRepository());
+    final first = AzkarCubit(usecase, preferences);
+    addTearDown(first.close);
+    await first.load(AzkarCategory.evening);
+    // The first dhikr needs one count; finishing it is saved for today.
+    await first.increment(autoAdvance: false);
+    await Future<void>.delayed(Duration.zero);
+
+    final reopened = AzkarCubit(usecase, preferences);
+    addTearDown(reopened.close);
+    await reopened.load(AzkarCategory.evening);
+
+    expect((reopened.state as AzkarLoaded).currentIndex, 1);
+  });
 
   test('keeps each rapid counter tap', () async {
     SharedPreferences.setMockInitialValues({});

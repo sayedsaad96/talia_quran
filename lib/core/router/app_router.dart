@@ -64,6 +64,7 @@ import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dar
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/fallback_pop_scope.dart';
 
 abstract class AppRoutes {
   static const String splash = '/splash';
@@ -650,7 +651,11 @@ abstract class AppRouter {
         },
         builder: (context, state) {
           final result = state.extra! as KhatmahReadingResult;
-          return KhatmahCompletionPage(completion: result);
+          // Reached with `context.go` from the reader and the dashboard.
+          return FallbackPopScope(
+            fallbackLocation: AppRoutes.home,
+            child: KhatmahCompletionPage(completion: result),
+          );
         },
       ),
       GoRoute(

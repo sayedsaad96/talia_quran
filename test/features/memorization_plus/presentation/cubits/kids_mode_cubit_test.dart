@@ -340,6 +340,9 @@ void main() {
 
         expect(await cubit.submitManualCompletion(guardianPin: '1234'), isTrue);
         expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+        // A stale error would stop the page from opening the completion
+        // screen and strand the child on the finished ayah.
+        expect((cubit.state as KidsModeLoaded).recordingError, isNull);
       },
     );
 

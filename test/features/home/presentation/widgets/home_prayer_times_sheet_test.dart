@@ -80,7 +80,7 @@ void main() {
     expect(find.text('العشاء'), findsOneWidget);
 
     // Highlight for Dhuhr countdown
-    expect(find.text('25 د'), findsOneWidget);
+    expect(find.text('٢٥ د'), findsOneWidget);
   });
 
   testWidgets('renders all 6 prayer times and city in en', (tester) async {

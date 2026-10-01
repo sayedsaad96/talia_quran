@@ -1,13 +1,33 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/widgets/closing_moment.dart';
+import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
+/// Canonical Uthmani text of Ar-Ra'd 13:28 as stored in assets/data/quran.json.
+const _canonical1328 =
+    'ٱلَّذِينَ ءَامَنُوا۟ وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ ٱللَّهِ ۗ أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ';
+
 void main() {
+  setUp(() async {
+    await getIt.reset();
+    ClosingMomentAyahCard.resetCacheForTest();
+    getIt.registerSingleton<QuranRepository>(_ClosingAyahRepository());
+  });
+
+  tearDown(() async {
+    await getIt.reset();
+    ClosingMomentAyahCard.resetCacheForTest();
+  });
+
   group('V2CompletionPage closing moment', () {
     testWidgets('renders serene closing moment before statistics',
         (tester) async {
@@ -24,14 +44,17 @@ void main() {
 
       expect(find.byKey(const Key('v2_closing_moment')), findsOneWidget);
       expect(find.text('A moment of closure'), findsOneWidget);
+      // The full ayah from the corpus, never a hand-typed excerpt.
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('closing_moment_ayah')), findsOneWidget);
+      expect(find.text(_canonical1328), findsOneWidget);
       expect(
         find.text('أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.text("Surah Ar-Ra'd · Ayah 28"), findsOneWidget);
       expect(
         find.text(
-          'You committed 3 ayahs to memory this session — a lasting impact, in shaa Allah.',
+          'You learned 3 ayahs this session — reviews will make them stick, in shaa Allah.',
         ),
         findsOneWidget,
       );
@@ -44,6 +67,26 @@ void main() {
       expect(find.text('3/3'), findsOneWidget);
       expect(find.text('Closing dua'), findsOneWidget);
       expect(find.text('Share memorization milestone'), findsOneWidget);
+    });
+
+    testWidgets('shows no ayah when the canonical corpus is unavailable', (
+      tester,
+    ) async {
+      await getIt.reset();
+      ClosingMomentAyahCard.resetCacheForTest();
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: V2CompletionPage(finalState: _completedState(passed: 3)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('v2_closing_moment')), findsOneWidget);
+      expect(find.byKey(const Key('closing_moment_ayah')), findsNothing);
     });
 
     testWidgets(
@@ -155,4 +198,36 @@ class _TestApp extends StatelessWidget {
       home: child,
     );
   }
+}
+
+class _ClosingAyahRepository implements QuranRepository {
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
+    return const Right(
+      SurahDetail(
+        surah: Surah(
+          id: 13,
+          nameAr: 'الرعد',
+          nameEn: "Ar-Ra'd",
+          ayahCount: 43,
+          type: 'medinan',
+          juz: 13,
+          page: 249,
+        ),
+        ayahs: [
+          Ayah(
+            surahId: 13,
+            numberInSurah: 28,
+            number: 1735,
+            juz: 13,
+            page: 252,
+            text: _canonical1328,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

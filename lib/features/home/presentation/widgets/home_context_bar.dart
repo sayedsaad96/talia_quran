@@ -84,7 +84,7 @@ class HomeContextBar extends StatelessWidget {
                               ? ', ${profileState.profile.displayName}'
                               : '';
                           return Text(
-                            '${context.l10n.brandName} · ${_greetingText(context)}$name',
+                            '${context.l10n.brandName}${context.listSeparator}${_greetingText(context)}$name',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.titleMedium.copyWith(
@@ -118,7 +118,7 @@ class HomeContextBar extends StatelessWidget {
                 if (state.hijriLabel.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${state.hijriLabel}  ·  ${state.gregorianLabel}',
+                    '${state.hijriLabel}${context.listSeparator}${state.gregorianLabel}',
                     style: AppTypography.labelSmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.72),
                     ),

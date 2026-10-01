@@ -25,21 +25,44 @@ class V2RecitationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRecording = state.isRecording;
     final isEvaluating = state.isEvaluating;
+    // Without a speech recognizer (devices without Google speech services)
+    // recording can never work: self-grading becomes the main action.
+    final speechUnavailable =
+        state.speechIssue == V2SpeechIssue.unavailable && !isRecording;
+    final cubit = context.read<MemorizationSessionCubit>();
+    Future<void> selfGrade() async {
+      final session = state.sessionState;
+      final verdict = await showV2SelfGradeSheet(
+        context,
+        surahId: session.surahId,
+        ayahs: [session.currentAyah],
+      );
+      if (verdict != null) {
+        await cubit.submitManualRecall(verdict.grade);
+      }
+    }
+
+    Future<void> record() =>
+        isRecording ? cubit.stopRecording() : cubit.startRecording();
+
     return V2PhaseScaffold(
       session: state.sessionState,
       title: context.l10n.v2RecitationTitle,
       subtitle: context.l10n.v2RecitationSubtitle,
       primaryActionLabel: isEvaluating
           ? context.l10n.v2Evaluating
+          : speechUnavailable
+          ? context.l10n.v2SelfGradeAction
           : isRecording
           ? context.l10n.v2StopRecording
           : context.l10n.v2StartRecording,
-      primaryActionIcon: isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      primaryActionIcon: speechUnavailable
+          ? Icons.record_voice_over_rounded
+          : isRecording
+          ? Icons.stop_rounded
+          : Icons.mic_rounded,
       primaryActionEnabled: !isEvaluating,
-      onPrimaryAction: () {
-        final cubit = context.read<MemorizationSessionCubit>();
-        return isRecording ? cubit.stopRecording() : cubit.startRecording();
-      },
+      onPrimaryAction: speechUnavailable ? selfGrade : record,
       children: [
         V2HiddenTextCard(
           isRecording: isRecording,
@@ -48,25 +71,24 @@ class V2RecitationPage extends StatelessWidget {
         ),
         // V1-M8 — clearly labelled manual/self-grade route for when STT or
         // the network is unavailable. The learner picks an honest verdict;
-        // "forgot" routes to remediation instead of recording a pass.
+        // "forgot" routes to remediation instead of recording a pass. With
+        // no recognizer the roles swap: this offers another recording try.
         TextButton.icon(
           key: const ValueKey('v2-manual-recall'),
           onPressed: isEvaluating || isRecording
               ? null
-              : () async {
-                  final cubit = context.read<MemorizationSessionCubit>();
-                  final session = state.sessionState;
-                  final verdict = await showV2SelfGradeSheet(
-                    context,
-                    surahId: session.surahId,
-                    ayahs: [session.currentAyah],
-                  );
-                  if (verdict != null) {
-                    await cubit.submitManualRecall(verdict.grade);
-                  }
-                },
-          icon: const Icon(Icons.record_voice_over_rounded, size: 18),
-          label: Text(context.l10n.v2SelfGradeAction),
+              : (speechUnavailable ? record : selfGrade),
+          icon: Icon(
+            speechUnavailable
+                ? Icons.mic_rounded
+                : Icons.record_voice_over_rounded,
+            size: 18,
+          ),
+          label: Text(
+            speechUnavailable
+                ? context.l10n.v2TryRecordingAgain
+                : context.l10n.v2SelfGradeAction,
+          ),
         ),
       ],
     );

@@ -29,6 +29,12 @@ abstract final class PlanSchedulePolicy {
     return (index + 1) * days ~/ 7 > index * days ~/ 7;
   }
 
+  /// New ayahs that fit in [sessionMinutes] before any reviews (at least 1).
+  static int newAyahsFittingMinutes(int sessionMinutes) {
+    final fitting = (sessionMinutes / minutesPerNewAyah).floor();
+    return fitting < 1 ? 1 : fitting;
+  }
+
   /// New ayahs to serve today, after [reviewItemCount] required reviews.
   static int newAyahBudget(
     CustomMemorizationPlan plan, {

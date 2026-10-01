@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../auth/presentation/widgets/guest_import_dialog.dart';
 import '../../data/user_profile.dart';
 import '../cubits/profile_cubit.dart';
 import 'settings_section.dart';
@@ -674,32 +675,8 @@ class _AccountSectionState extends State<AccountSection> {
   }
 
   Future<void> _confirmGuestDataImport(BuildContext context) async {
-    final shouldImport = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          context.isArabic
-              ? 'نقل بيانات الحفظ المحلية؟'
-              : 'Import local memorization data?',
-        ),
-        content: Text(
-          context.isArabic
-              ? 'سيتم ربط بيانات الحفظ التي أُنشئت دون تسجيل دخول بهذا الحساب ومزامنتها معه.'
-              : 'Guest memorization data will be linked to this account and synced to it.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(context.isArabic ? 'نقل' : 'Import'),
-          ),
-        ],
-      ),
-    );
-    if (shouldImport != true || !context.mounted) return;
+    final shouldImport = await showGuestImportDialog(context);
+    if (!shouldImport || !context.mounted) return;
 
     final claim = await context.read<AuthCubit>().importGuestReviewRecords();
     if (!context.mounted) return;
@@ -707,11 +684,7 @@ class _AccountSectionState extends State<AccountSection> {
       (failure) => _showSettingsError(context, failure.message),
       (count) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.isArabic
-                ? 'تم نقل $count من سجلات الحفظ.'
-                : 'Imported $count memorization records.',
-          ),
+          content: Text(context.l10n.guestImportDone(context.numText(count))),
           backgroundColor: AppColors.primary,
         ),
       ),

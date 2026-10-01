@@ -29,7 +29,7 @@ class KidsProgressHeader extends StatelessWidget {
     final levelProgress = (progress.levelProgress.clamp(0, 1) * 100).round();
     final greeting = childName == null || childName!.trim().isEmpty
         ? l10n.kidsGamifiedWelcome
-        : '${l10n.kidsGamifiedWelcome} ${childName!.trim()}';
+        : l10n.kidsGamifiedWelcomeNamed(childName!.trim());
     final reducedMotion = MediaQuery.of(context).disableAnimations;
 
     Widget avatarImage = Image.asset(
@@ -354,7 +354,7 @@ class _StarCounter extends StatelessWidget {
           const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 20),
           const SizedBox(width: 4),
           Text(
-            context.l10n.kidsGamifiedStarsCount(count),
+            context.l10n.kidsGamifiedStarsCount(count, context.numText(count)),
             textAlign: TextAlign.center,
             style: AppTypography.labelMedium.copyWith(
               color: Colors.white,

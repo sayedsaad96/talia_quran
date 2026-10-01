@@ -644,12 +644,12 @@ void main() {
         ),
       );
 
-      // The next step is disabled once the ayah is done: tapping is inert.
-      await tester.tap(
+      // Nothing is left to try once the ayah is done: no greyed-out ghost
+      // button stays on screen.
+      expect(
         find.byKey(const ValueKey('kids-gamified-try-from-memory')),
-        warnIfMissed: false,
+        findsNothing,
       );
-      await tester.pump();
       expect(recorded, isFalse);
     });
 

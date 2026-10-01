@@ -119,7 +119,7 @@ void main() {
     // Arabic test
     await tester.pumpWidget(buildHarness(snap: longSnap));
     await tester.pump();
-    expect(find.textContaining('أذان الفجر خلال 6 ساعات و 34 دقيقة'), findsOneWidget);
+    expect(find.textContaining('أذان الفجر خلال ٦ ساعات و ٣٤ دقيقة'), findsOneWidget);
 
     // English test
     await tester.pumpWidget(buildHarness(snap: longSnap, locale: const Locale('en')));

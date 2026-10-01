@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -9,6 +8,7 @@ import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/journey/unified_journey_engine.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../widgets/unified_hero_action_card.dart';
+import '../../../../core/router/open_location.dart';
 
 void showHomeAlternativesSheet(
   BuildContext context, {
@@ -17,12 +17,16 @@ void showHomeAlternativesSheet(
 }) {
   showModalBottomSheet<void>(
     context: context,
+    // Above the bottom navigation, which otherwise covers the last options
+    // and stays tappable while the sheet is open.
+    useRootNavigator: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (ctx) {
       const mapper = UnifiedJourneyActionMapper();
-      return Padding(
+      return SafeArea(
+        child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -39,14 +43,15 @@ void showHomeAlternativesSheet(
                 leading: Icon(mapper.map(ctx, action).icon),
                 title: Text(mapper.map(ctx, action).title),
                 subtitle: Text(
-                  '${mapper.map(ctx, action).subtitle} · ${ctx.l10n.homeMinutes(ctx.numText(journeyActionMinutes(action)))}',
+                  '${mapper.map(ctx, action).subtitle}${ctx.listSeparator}${ctx.l10n.homeMinutes(ctx.numText(journeyActionMinutes(action)))}',
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  context.push(action.route);
+                  context.openLocation(action.route);
                 },
               ),
           ],
+        ),
         ),
       );
     },
@@ -80,7 +85,7 @@ class HomeHeroSection extends StatelessWidget {
             data: JourneyPresentationData(
               title: data.title,
               subtitle: minutes > 0
-                  ? '${data.subtitle} · ${context.l10n.homeMinutes(context.numText(minutes))}'
+                  ? '${data.subtitle}${context.listSeparator}${context.l10n.homeMinutes(context.numText(minutes))}'
                   : data.subtitle,
               icon: data.icon,
               route: data.route,

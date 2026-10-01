@@ -280,19 +280,19 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     );
   }
 
-  /// Transfers `local`-owned review records to the signed-in account on first
-  /// sign-in. Returns the number of records claimed.
-  Future<int> claimLocalReviewRecords() async {
+  /// Guest (`local`-owned) review records the signed-in account could claim
+  /// with [claimLocalReviewRecords]; empty when a claim would do nothing.
+  Future<List<IsarAyahReviewRecord>> _claimableLocalRows() async {
     final isar = _isar;
     final ownerUserId = _owner.currentOwnerId;
     if (isar == null || ownerUserId == ReviewRecordIdentity.localOwnerId) {
-      return 0;
+      return const [];
     }
     if (_prefs.getString(
           MemorizationPlusLocalDatasourceImpl._kLocalRecordsClaimedBy,
         ) !=
         null) {
-      return 0;
+      return const [];
     }
 
     await _runReviewRecordMigrations();
@@ -302,13 +302,25 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
         .filter()
         .ownerUserIdEqualTo(ownerUserId)
         .count();
-    if (alreadyOwned > 0) return 0;
+    if (alreadyOwned > 0) return const [];
 
-    final localRows = await isar.isarAyahReviewRecords
+    return isar.isarAyahReviewRecords
         .filter()
         .ownerUserIdEqualTo(ReviewRecordIdentity.localOwnerId)
         .findAll();
+  }
+
+  /// How many guest review records [claimLocalReviewRecords] would transfer.
+  Future<int> countClaimableLocalReviewRecords() async =>
+      (await _claimableLocalRows()).length;
+
+  /// Transfers `local`-owned review records to the signed-in account on first
+  /// sign-in. Returns the number of records claimed.
+  Future<int> claimLocalReviewRecords() async {
+    final localRows = await _claimableLocalRows();
     if (localRows.isEmpty) return 0;
+    final isar = _isar!;
+    final ownerUserId = _owner.currentOwnerId;
 
     var claimed = 0;
     await isar.writeTxn(() async {

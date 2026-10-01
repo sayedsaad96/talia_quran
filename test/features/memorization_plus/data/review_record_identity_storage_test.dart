@@ -630,5 +630,33 @@ void main() {
       final claimed = await datasourceFor('user-a').claimLocalReviewRecords();
       expect(claimed, 0);
     });
+
+    test('the claimable count matches what a claim would transfer', () async {
+      await seedLocalGuestRecord();
+      await seedLocalGuestRecord(ayahNumber: 4);
+
+      expect(
+        await datasourceFor(
+          ReviewRecordIdentity.localOwnerId,
+        ).countClaimableLocalReviewRecords(),
+        0,
+      );
+      expect(
+        await datasourceFor('user-a').countClaimableLocalReviewRecords(),
+        2,
+      );
+
+      await datasourceFor('user-a').claimLocalReviewRecords();
+
+      // Nothing is left to offer once the guest data has been claimed.
+      expect(
+        await datasourceFor('user-a').countClaimableLocalReviewRecords(),
+        0,
+      );
+      expect(
+        await datasourceFor('user-b').countClaimableLocalReviewRecords(),
+        0,
+      );
+    });
   });
 }

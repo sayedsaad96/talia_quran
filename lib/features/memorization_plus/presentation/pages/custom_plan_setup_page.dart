@@ -14,6 +14,7 @@ import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import '../../domain/services/plan_schedule_policy.dart';
 import '../cubits/custom_plan_cubit.dart';
 
 const List<int> _standardSurahAyahCounts = [
@@ -162,6 +163,21 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   int _endSurahId = 114;
   int _startAyah = 1;
   int _newAyahsPerDay = 3;
+
+  /// The quick preset last applied; it stays highlighted while its values
+  /// are unchanged.
+  ({String name, int newAyahs, int days, int minutes})? _appliedPreset;
+
+  String? get _activePresetName {
+    final preset = _appliedPreset;
+    if (preset == null ||
+        preset.newAyahs != _newAyahsPerDay ||
+        preset.days != _availableDays ||
+        preset.minutes != _sessionMinutes) {
+      return null;
+    }
+    return preset.name;
+  }
   int _availableDays = 7;
   int _sessionMinutes = 30;
   MemorizationDifficulty _difficulty = MemorizationDifficulty.moderate;
@@ -260,6 +276,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     int? endSurahId,
   }) {
     setState(() {
+      _appliedPreset = (
+        name: name,
+        newAyahs: newAyahs,
+        days: days,
+        minutes: minutes,
+      );
       _nameController.text = name;
       _newAyahsPerDay = newAyahs;
       _availableDays = days;
@@ -445,7 +467,11 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _PresetSelector(isDark: isDark, onSelect: _applyPreset),
+                        _PresetSelector(
+                          isDark: isDark,
+                          onSelect: _applyPreset,
+                          activeName: _activePresetName,
+                        ),
                         const SizedBox(height: AppSpacing.xl),
 
                         // ── Plan Name ──
@@ -583,6 +609,29 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           onChanged: (v) => setState(() => _sessionMinutes = v),
                           divisions: 11,
                         ),
+                        if (_newAyahsPerDay >
+                            PlanSchedulePolicy.newAyahsFittingMinutes(
+                              _sessionMinutes,
+                            ))
+                          Padding(
+                            key: const Key('custom_plan_minutes_limit_hint'),
+                            padding: const EdgeInsets.only(
+                              top: AppSpacing.sm,
+                            ),
+                            child: Text(
+                              context.l10n.customPlanMinutesLimitHint(
+                                context.numText(_sessionMinutes),
+                                context.numText(
+                                  PlanSchedulePolicy.newAyahsFittingMinutes(
+                                    _sessionMinutes,
+                                  ),
+                                ),
+                              ),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ),
 
                         const SizedBox(height: AppSpacing.xl),
 
@@ -1304,7 +1353,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     }
     final totalSurahs = hi - lo + 1;
     final sessionsPerWeek = _availableDays;
-    final ayahsPerSession = _newAyahsPerDay;
+    // The session length caps new ayahs (PlanSchedulePolicy), so the
+    // estimate uses what actually fits, not the requested number.
+    final fitting = PlanSchedulePolicy.newAyahsFittingMinutes(_sessionMinutes);
+    final ayahsPerSession = _newAyahsPerDay < fitting
+        ? _newAyahsPerDay
+        : fitting;
     final totalSessions = (totalAyahsEstimate / ayahsPerSession).ceil();
     final weeks = (totalSessions / sessionsPerWeek).ceil();
     final months = (weeks / 4.3).ceil();
@@ -1394,9 +1448,16 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _PresetSelector extends StatelessWidget {
-  const _PresetSelector({required this.isDark, required this.onSelect});
+  const _PresetSelector({
+    required this.isDark,
+    required this.onSelect,
+    this.activeName,
+  });
 
   final bool isDark;
+
+  /// Plan name of the preset currently applied, if any.
+  final String? activeName;
   final void Function({
     required String name,
     required int newAyahs,
@@ -1416,11 +1477,12 @@ class _PresetSelector extends StatelessWidget {
         context.l10n.customPlanPresetLightDesc,
         Icons.spa_rounded,
         AppColors.success,
+        context.l10n.customPlanPresetLightName,
         () => onSelect(
           name: context.l10n.customPlanPresetLightName,
           newAyahs: 3,
           days: 5,
-          minutes: 10,
+          minutes: 20,
           difficulty: MemorizationDifficulty.easy,
         ),
       ),
@@ -1429,11 +1491,12 @@ class _PresetSelector extends StatelessWidget {
         context.l10n.customPlanPresetBalancedDesc,
         Icons.balance_rounded,
         AppColors.primary,
+        context.l10n.customPlanPresetBalancedName,
         () => onSelect(
           name: context.l10n.customPlanPresetBalancedName,
           newAyahs: 5,
           days: 6,
-          minutes: 15,
+          minutes: 30,
           difficulty: MemorizationDifficulty.moderate,
         ),
       ),
@@ -1442,11 +1505,12 @@ class _PresetSelector extends StatelessWidget {
         context.l10n.customPlanPresetIntensiveDesc,
         Icons.local_fire_department_rounded,
         Colors.deepOrange,
+        context.l10n.customPlanPresetIntensiveName,
         () => onSelect(
           name: context.l10n.customPlanPresetIntensiveName,
           newAyahs: 10,
           days: 7,
-          minutes: 30,
+          minutes: 50,
           difficulty: MemorizationDifficulty.challenging,
         ),
       ),
@@ -1455,11 +1519,12 @@ class _PresetSelector extends StatelessWidget {
         context.l10n.customPlanPresetJuzAmmaDesc,
         Icons.auto_stories_rounded,
         Colors.purple,
+        context.l10n.customPlanPresetJuzAmmaName,
         () => onSelect(
           name: context.l10n.customPlanPresetJuzAmmaName,
           newAyahs: 3,
           days: 5,
-          minutes: 10,
+          minutes: 20,
           difficulty: MemorizationDifficulty.easy,
           startSurahId: 114, // سورة الناس = بداية الحفظ (من)
           endSurahId: 78, // سورة النبأ = نهاية الحفظ (إلى)
@@ -1480,14 +1545,20 @@ class _PresetSelector extends StatelessWidget {
           (preset) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: InkWell(
-              onTap: preset.$5,
+              onTap: preset.$6,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               child: Container(
+                key: ValueKey('custom_plan_preset_${preset.$5}'),
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: preset.$4.withValues(alpha: isDark ? 0.16 : 0.08),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: preset.$4.withValues(alpha: 0.22)),
+                  border: Border.all(
+                    color: preset.$5 == activeName
+                        ? preset.$4
+                        : preset.$4.withValues(alpha: 0.22),
+                    width: preset.$5 == activeName ? 2 : 1,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -1508,6 +1579,8 @@ class _PresetSelector extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (preset.$5 == activeName)
+                      Icon(Icons.check_circle_rounded, color: preset.$4),
                   ],
                 ),
               ),

@@ -46,6 +46,9 @@ void main() {
             body: HomeActivityFeed(
               state: state,
               skin: HomeSkin.forBrightness(Brightness.light),
+              reviewLocation: () async =>
+                  '${AppRoutes.memorizationV2Session}'
+                  '?surahId=1&startAyah=1&intent=review',
             ),
           ),
         ),
@@ -154,7 +157,7 @@ void main() {
     await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.textContaining('42'));
+    await tester.tap(find.textContaining('٤٢'));
     await tester.pumpAndSettle();
 
     expect(pushedRoutes, contains('/quran/page/42'));
@@ -193,7 +196,7 @@ void main() {
     await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.textContaining('3'));
+    await tester.tap(find.textContaining('٣'));
     await tester.pumpAndSettle();
 
     expect(pushedRoutes, contains('/quran/page/3?mode=khatmah'));

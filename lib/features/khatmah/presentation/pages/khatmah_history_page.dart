@@ -8,6 +8,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/widgets/fallback_pop_scope.dart';
+import '../../../../core/widgets/talia_app_bar.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_history_stats.dart';
 import '../cubits/khatmah_history_cubit.dart';
@@ -43,8 +45,19 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: _cubit,
-    child: Scaffold(
-      appBar: AppBar(title: Text(context.l10n.khatmahRecentCompletions)),
+    // The completion screen opens history with `context.go`.
+    child: FallbackPopScope(
+      fallbackLocation: AppRoutes.khatmahDashboard,
+      child: Scaffold(
+      appBar: AppBar(
+        leading: FallbackPopScope.hasHistory(context)
+            ? null
+            : const TaliaBackButton(
+                key: Key('khatmah_history_back_button'),
+                fallbackLocation: AppRoutes.khatmahDashboard,
+              ),
+        title: Text(context.l10n.khatmahRecentCompletions),
+      ),
       body: BlocBuilder<KhatmahHistoryCubit, KhatmahHistoryState>(
         builder: (context, state) => switch (state) {
           KhatmahHistoryInitial() || KhatmahHistoryLoading() => const Center(
@@ -84,6 +97,7 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
           ),
         },
       ),
+    ),
     ),
   );
 }

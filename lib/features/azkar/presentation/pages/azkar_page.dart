@@ -155,7 +155,7 @@ class _AzkarHubView extends StatelessWidget {
               : (isMorningHero
                   ? context.l10n.azkarMorningHeroSubtitle
                   : context.l10n.azkarEveningHeroSubtitle),
-          countText: context.l10n.zikrCount(heroCount),
+          countText: context.l10n.zikrCount(context.numText(heroCount)),
           isDone: isAllDone,
           icon: isMorningHero
               ? Icons.wb_sunny_rounded
@@ -178,7 +178,7 @@ class _AzkarHubView extends StatelessWidget {
       bentoCards.add(
         _BentoGridCard(
           title: context.l10n.morningAzkar,
-          subtitle: context.l10n.zikrCount(morningCount),
+          subtitle: context.l10n.zikrCount(context.numText(morningCount)),
           icon: Icons.wb_sunny_rounded,
           accentColor: const Color(0xFFE5A642),
           route: 'morning',
@@ -191,7 +191,7 @@ class _AzkarHubView extends StatelessWidget {
       bentoCards.add(
         _BentoGridCard(
           title: context.l10n.eveningAzkar,
-          subtitle: context.l10n.zikrCount(eveningCount),
+          subtitle: context.l10n.zikrCount(context.numText(eveningCount)),
           icon: Icons.nightlight_round,
           accentColor: AppColors.primaryLight,
           route: 'evening',
@@ -205,7 +205,7 @@ class _AzkarHubView extends StatelessWidget {
       bentoCards.add(
         _BentoGridCard(
           title: context.l10n.duas,
-          subtitle: context.l10n.duaCount(duaCount),
+          subtitle: context.l10n.duaCount(context.numText(duaCount)),
           icon: Icons.menu_book_rounded,
           accentColor: const Color(0xFF6B46C1),
           route: 'duas',
@@ -219,7 +219,7 @@ class _AzkarHubView extends StatelessWidget {
       bentoCards.add(
         _BentoGridCard(
           title: context.l10n.generalAzkar,
-          subtitle: context.l10n.azkarCount(generalCount),
+          subtitle: context.l10n.azkarCount(context.numText(generalCount)),
           icon: Icons.spa_rounded,
           accentColor: AppColors.ambientTeal,
           route: 'general',

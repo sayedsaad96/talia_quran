@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -180,6 +181,26 @@ class _PrayerNotificationSettingsSectionState
     );
   }
 
+  bool _firstLocationHandled = false;
+
+  /// Prayer alerts default to off, so a new user who chose a city never got
+  /// an Adhan alert unless they found this toggle. The first time a location
+  /// makes alerts possible, and only if the user never set the toggle, they
+  /// are switched on (full Adhan audio stays a separate opt-in).
+  void _enableAlertsOnFirstLocation(bool prayerTimesReady) {
+    if (_firstLocationHandled || !prayerTimesReady) return;
+    _firstLocationHandled = true;
+    final prefs = getIt.isRegistered<SharedPreferences>()
+        ? getIt<SharedPreferences>()
+        : null;
+    if (prefs == null || prefs.containsKey(_prayerTimesKey)) return;
+    final l10n = context.l10n;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_cubit.toggleReminder(_prayerTimesKey, true, l10n: l10n));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final textColor = context.tokens.textPrimary;
@@ -191,6 +212,7 @@ class _PrayerNotificationSettingsSectionState
         : null;
     final prayerTimesReady =
         prayerTimesService?.isReadyForNotificationScheduling ?? false;
+    _enableAlertsOnFirstLocation(prayerTimesReady);
 
     return BlocConsumer<NotificationSettingsCubit, NotificationSettingsState>(
       bloc: _cubit,

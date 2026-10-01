@@ -151,7 +151,7 @@ class SettingsHubBody extends StatelessWidget {
           icon: Icons.info_outline_rounded,
           title: l10n.settingsSectionAboutTalia,
           subtitle:
-              '${l10n.settingsSectionHelpTutorial} · ${l10n.settingsSectionPrivacySecurity}',
+              '${l10n.settingsSectionHelpTutorial}${context.listSeparator}${l10n.settingsSectionPrivacySecurity}',
           page: MultiBlocProvider(
             providers: [
               BlocProvider.value(value: context.read<AuthCubit>()),

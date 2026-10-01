@@ -110,7 +110,7 @@ class _XpSection extends StatelessWidget {
         Icon(Icons.star_rounded, size: 18, color: skin.gold),
         const SizedBox(width: 4),
         Text(
-          '$totalXp XP',
+          '${context.numText(totalXp)} ${context.l10n.xpLabel}',
           style: AppTypography.labelMedium.copyWith(
             fontWeight: FontWeight.w700,
             color: skin.textPrimary,
@@ -132,7 +132,14 @@ class _JourneyRingCompact extends StatelessWidget {
     final memPct = progress.totalAyahs > 0
         ? progress.memorizedAyahs / progress.totalAyahs
         : 0.0;
-    return SizedBox(
+    final percent = context.isArabic
+        ? '${context.numText((memPct * 100).round())}٪'
+        : '${(memPct * 100).round()}%';
+    // Captioned: on its own the ring read as an unexplained "0%".
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
       width: 56,
       height: 56,
       child: Stack(
@@ -145,7 +152,7 @@ class _JourneyRingCompact extends StatelessWidget {
             backgroundColor: skin.progressTrack,
           ),
           Text(
-            '${(memPct * 100).round()}%',
+            percent,
             style: AppTypography.labelSmall.copyWith(
               fontWeight: FontWeight.w800,
               color: skin.gold,
@@ -153,12 +160,23 @@ class _JourneyRingCompact extends StatelessWidget {
           ),
         ],
       ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.l10n.homeQuranMemorizedCaption,
+          style: AppTypography.labelSmall.copyWith(color: skin.textSecondary),
+        ),
+      ],
     );
   }
 }
 
 class _WeeklyDots extends StatelessWidget {
   const _WeeklyDots({required this.state, required this.skin});
+
+  // Monday first, matching DateTime.weekday.
+  static const _arabicDays = ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'];
+  static const _englishDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   final HomeLoaded state;
   final HomeSkin skin;
 
@@ -172,13 +190,26 @@ class _WeeklyDots extends StatelessWidget {
         final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
         final count = state.activityCountsByDay[key] ?? 0;
         final active = count > 0;
-        return Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: active ? skin.accent : skin.progressTrack,
-          ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: active ? skin.accent : skin.progressTrack,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Weekday initial, so the dots read as the last seven days.
+            Text(
+              (context.isArabic ? _arabicDays : _englishDays)[day.weekday - 1],
+              style: AppTypography.labelSmall.copyWith(
+                color: skin.textSecondary,
+              ),
+            ),
+          ],
         );
       }),
     );

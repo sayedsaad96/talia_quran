@@ -19,6 +19,10 @@ class SocialShareCopy {
       SocialShareCopy._(languageCode == 'ar');
 
   final bool isArabic;
+
+  /// See `BuildContextX.listSeparator`: the middle dot reads as ٠ beside
+  /// Arabic digits.
+  String get separator => isArabic ? '، ' : ' · ';
   TextDirection get direction =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
 
@@ -86,12 +90,12 @@ class SocialShareCopy {
       case SocialShareCategory.quranAyah:
         return quranBadge;
       case SocialShareCategory.dua:
-        return title.isEmpty ? duaBadge : '$duaBadge · $title';
+        return title.isEmpty ? duaBadge : '$duaBadge$separator$title';
       case SocialShareCategory.azkar:
         if (data.isAzkarWirdProgress) {
           return title.isEmpty ? dhikrBadge : title;
         }
-        return title.isEmpty ? dhikrBadge : '$dhikrBadge · $title';
+        return title.isEmpty ? dhikrBadge : '$dhikrBadge$separator$title';
       case SocialShareCategory.achievement:
         return achievementBadge;
       case SocialShareCategory.memorization:
@@ -172,7 +176,7 @@ class SocialShareCopy {
 
   String ayahReference(String? surahName, int? ayahNumber) {
     final surahPart = surahName == null ? holyQuran : surah(surahName);
-    return ayahNumber == null ? surahPart : '$surahPart · ${ayah(ayahNumber)}';
+    return ayahNumber == null ? surahPart : '$surahPart$separator${ayah(ayahNumber)}';
   }
 
   /// Arabic noun agreement: 1, 2, 3–10, and 0 / 11+.

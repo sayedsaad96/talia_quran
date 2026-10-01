@@ -111,13 +111,19 @@ Future<void> showMemorizationPathSettingsSheet(
                   final repository = getIt<MemorizationPlusRepository>();
                   final profileResult = await repository
                       .getMemorizationProfile();
-                  final requiresGuardianPin = profileResult.fold(
-                    (_) => true,
-                    // Only require PIN when a guardian is linked on another
-                    // device. A standalone child profile (no linked guardian)
-                    // does not need PIN verification — the parent confirmed
-                    // the reset in the dialog above.
-                    (profile) => profile.isChild && profile.isGuardianLinked,
+                  // A child leaving the kids track needs the guardian: always
+                  // when a guardian is linked, and on this device whenever a
+                  // parent PIN was set (the child could tap the dialog above
+                  // themselves). Only a PIN-less, unlinked profile skips it.
+                  final requiresGuardianPin = await profileResult.fold(
+                    (_) async => true,
+                    (profile) async {
+                      if (!profile.isChild) return false;
+                      if (profile.isGuardianLinked) return true;
+                      final settings = (await repository.getParentSettings())
+                          .fold((_) => null, (settings) => settings);
+                      return settings == null || settings.hasPin;
+                    },
                   );
                   if (requiresGuardianPin) {
                     if (!context.mounted) return;

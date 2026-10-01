@@ -120,6 +120,10 @@ void main() {
             return const Scaffold(body: Text('Khatmah Setup Page'));
           },
         ),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: Text('Home')),
+        ),
       ],
     );
 
@@ -129,6 +133,24 @@ void main() {
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
+
+  testWidgets(
+    'opened without history (after setup), back leads home instead of '
+    'closing the app',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+
+      await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+      await tester.pumpAndSettle();
+
+      final back = find.byKey(const Key('khatmah_dashboard_back_button'));
+      expect(back, findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
+    },
+  );
 
   testWidgets('catching up offers every option with its preview', (
     tester,

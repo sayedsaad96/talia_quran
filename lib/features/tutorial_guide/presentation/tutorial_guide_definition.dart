@@ -10,7 +10,9 @@ enum TutorialGuideDefinition {
   kidsMode,
   progressAchievements,
   settingsProfile,
-  offlineWork;
+  offlineWork,
+  khatmah,
+  prayerTimes;
 
   static const List<TutorialGuideDefinition> all = [
     gettingStarted,
@@ -25,5 +27,7 @@ enum TutorialGuideDefinition {
     progressAchievements,
     settingsProfile,
     offlineWork,
+    khatmah,
+    prayerTimes,
   ];
 }

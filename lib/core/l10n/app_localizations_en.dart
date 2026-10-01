@@ -452,7 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String azkarCountOfTotal(int total) {
+  String azkarCountOfTotal(String total) {
     return 'of $total';
   }
 
@@ -760,7 +760,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signOutWarning =>
-      'Do you want to sign out? Local progress on this device will remain available.';
+      'Do you want to sign out? Your account progress returns when you sign in again. Your khatmah plan and khatmah history are kept only on this device and will be removed when you sign out.';
+
+  @override
+  String get memorizationHubNothingToReview =>
+      'Nothing to review yet. Start memorizing first; your ayahs will appear here when their review is due.';
+
+  @override
+  String get homeQuranMemorizedCaption => 'of the Quran memorized';
+
+  @override
+  String get kidsSetupDiscardTitle => 'Discard child setup?';
+
+  @override
+  String get kidsSetupDiscardBody =>
+      'The kids path setup isn\'t saved yet. Leave without saving?';
+
+  @override
+  String get kidsSetupKeepEditing => 'Keep editing';
+
+  @override
+  String get kidsSetupDiscard => 'Leave without saving';
+
+  @override
+  String get listeningReviewStartMemorizing => 'Start memorizing';
+
+  @override
+  String get guestImportTitle => 'Import local memorization data?';
+
+  @override
+  String get guestImportBody =>
+      'You have memorization progress from before you signed in. Move it to this account so it appears in your progress and reviews.';
+
+  @override
+  String get guestImportConfirm => 'Import';
+
+  @override
+  String get guestImportLater => 'Not now';
+
+  @override
+  String guestImportDone(String countText) {
+    return 'Imported $countText memorization records.';
+  }
 
   @override
   String get signOutPendingDataTitle => 'Unsynced progress';
@@ -1730,7 +1771,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMemorizationPathNotSelectedDesc =>
-      'Choose adult or kids memorization when you start Memorization Plus.';
+      'Choose the adult or kids path the next time you open the Memorization tab.';
 
   @override
   String get settingsResetPathKeeps =>
@@ -2385,17 +2426,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedWelcome => 'Welcome, memorization hero!';
 
   @override
+  String kidsGamifiedWelcomeNamed(String name) {
+    return 'Welcome, $name, memorization hero!';
+  }
+
+  @override
   String kidsGamifiedLevelProgress(int level, int progress) {
     return 'Level $level — $progress/100';
   }
 
   @override
-  String kidsGamifiedStarsCount(int count) {
-    return '$count stars';
+  String kidsGamifiedStarsCount(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText stars',
+      one: '$countText star',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get kidsGamifiedLastMission => 'Last mission';
+  String get kidsGamifiedLastMission => 'Your mission';
 
   @override
   String get kidsGamifiedContinueNow => 'Continue now';
@@ -2529,8 +2581,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Audio or microphone unavailable? A guardian can confirm completion.';
 
   @override
-  String kidsGamifiedListenFirst(int count) {
-    return 'Listen to the ayah $count times before recording your voice.';
+  String kidsGamifiedListenFirst(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText times',
+      one: 'once',
+    );
+    return 'Listen to the ayah $_temp0 before recording your voice.';
   }
 
   @override
@@ -2540,8 +2598,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedWellDone => 'Well done!';
 
   @override
-  String kidsGamifiedEarnedStars(int count) {
-    return '+$count stars';
+  String kidsGamifiedEarnedStars(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText stars',
+      one: '$countText star',
+    );
+    return '+$_temp0';
   }
 
   @override
@@ -3475,7 +3539,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanPresetLight => 'Light';
 
   @override
-  String get customPlanPresetLightDesc => '3 ayahs/day • 5 days • 10 minutes';
+  String get customPlanPresetLightDesc => '3 ayahs/day • 5 days • 20 minutes';
 
   @override
   String get customPlanPresetLightName => 'Light plan';
@@ -3485,7 +3549,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customPlanPresetBalancedDesc =>
-      '5 ayahs/day • 6 days • 15 minutes';
+      '5 ayahs/day • 6 days • 30 minutes';
 
   @override
   String get customPlanPresetBalancedName => 'Balanced plan';
@@ -3495,7 +3559,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customPlanPresetIntensiveDesc =>
-      '10 ayahs/day • every day • 30 minutes';
+      '10 ayahs/day • every day • 50 minutes';
 
   @override
   String get customPlanPresetIntensiveName => 'Intensive plan';
@@ -3505,7 +3569,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customPlanPresetJuzAmmaDesc =>
-      'From An-Nas to Al-Fil • 3 ayahs/day';
+      'From An-Nas to An-Naba • 3 ayahs/day • 20 minutes';
+
+  @override
+  String customPlanMinutesLimitHint(String minutes, String count) {
+    return '$minutes minutes leave room for only about $count new ayahs. Lengthen the session to reach your daily goal.';
+  }
 
   @override
   String get customPlanPresetJuzAmmaName => 'Juz Amma plan';
@@ -4329,488 +4398,708 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tutorialS1Title => 'Guide 1';
+  String get tutorialS1Title => 'Getting started with Talia';
 
   @override
-  String get tutorialS1Cat => 'Category';
+  String get tutorialS1Cat => 'Start';
 
   @override
-  String get tutorialS1Does => 'What it does';
+  String get tutorialS1Does =>
+      'Talia opens with a short intro, lets you choose the adult or kids path, then takes you to Home. You can use it as a guest and sign in later.';
 
   @override
-  String get tutorialS1Open => 'How to open';
+  String get tutorialS1Open =>
+      'It appears the first time you open the app. Afterwards, use the bottom bar to move between Home, Quran, Memorization, Adhkar and Progress.';
 
   @override
-  String get tutorialS1Useful => 'When useful';
+  String get tutorialS1Useful =>
+      'Helpful for new users who want the map of the app before reading or memorizing.';
 
   @override
-  String get tutorialS1Step1 => 'Step 1';
+  String get tutorialS1Step1 => 'Go through the intro pages, or tap Skip.';
 
   @override
-  String get tutorialS1Step2 => 'Step 2';
+  String get tutorialS1Step2 =>
+      'Choose the adult or kids path, then continue as a guest or sign in.';
 
   @override
-  String get tutorialS1Step3 => 'Step 3';
+  String get tutorialS1Step3 =>
+      'Use the bottom bar to move between the main sections.';
 
   @override
-  String get tutorialS1Tip1 => 'Tip 1';
+  String get tutorialS1Tip1 =>
+      'Start from Home: it gathers today\'s reading, your progress and shortcuts.';
 
   @override
-  String get tutorialS1Tip2 => 'Tip 2';
+  String get tutorialS1Tip2 =>
+      'You can change the memorization path later in Settings > Quran & Memorization.';
 
   @override
-  String get tutorialS1Note1 => 'Note 1';
+  String get tutorialS1Note1 =>
+      'Signing in is optional. Without it your progress stays on this device.';
 
   @override
   String get tutorialS1Note2 =>
-      'Sign-in is optional; it helps with account management and family features.';
+      'Settings are behind the gear icon at the top of Home.';
 
   @override
-  String get tutorialS2Title => 'Guide 2';
+  String get tutorialS2Title => 'Home';
 
   @override
-  String get tutorialS2Cat => 'Category';
+  String get tutorialS2Cat => 'Start';
 
   @override
-  String get tutorialS2Does => 'What it does';
+  String get tutorialS2Does =>
+      'Home shows the next prayer, a main card for what to do next, today\'s wird, your streak and XP, the ayah of the day and your recent activity.';
 
   @override
-  String get tutorialS2Open => 'How to open';
+  String get tutorialS2Open => 'Tap Home in the bottom bar.';
 
   @override
-  String get tutorialS2Useful => 'When useful';
+  String get tutorialS2Useful =>
+      'The best daily starting point: reading, memorizing and follow-up in one screen.';
 
   @override
-  String get tutorialS2Step1 => 'Step 1';
+  String get tutorialS2Step1 =>
+      'Tap the main card to continue reading, resume a session or open today\'s plan.';
 
   @override
-  String get tutorialS2Step2 => 'Step 2';
+  String get tutorialS2Step2 => 'Tap \"Something else\" to see other options.';
 
   @override
-  String get tutorialS2Step3 => 'Step 3';
+  String get tutorialS2Step3 => 'Open Settings with the gear icon at the top.';
 
   @override
-  String get tutorialS2Step4 => 'Step 4';
+  String get tutorialS2Step4 =>
+      'Tap \"Choose city\" to set your city for prayer times.';
 
   @override
-  String get tutorialS2Tip1 => 'Tip 1';
+  String get tutorialS2Tip1 =>
+      'The ring shows the share of the whole Quran you have memorized, so it grows slowly. The seven dots are the last seven days, ending today.';
 
   @override
-  String get tutorialS2Tip2 => 'Tip 2';
+  String get tutorialS2Tip2 =>
+      'Tap the icons under the ayah of the day to share it, open it in the Mushaf or listen to it.';
 
   @override
-  String get tutorialS2Note1 => 'Note 1';
+  String get tutorialS2Note1 =>
+      'Some cards appear only when there is data, such as a started khatmah or a saved reading position.';
 
   @override
-  String get tutorialS2Note2 => 'Note 2';
+  String get tutorialS2Note2 => 'The account card can be dismissed with the X.';
 
   @override
-  String get tutorialS3Title => 'Guide 3';
+  String get tutorialS3Title => 'Reading the Quran';
 
   @override
-  String get tutorialS3Cat => 'Category';
+  String get tutorialS3Cat => 'Quran';
 
   @override
-  String get tutorialS3Does => 'What it does';
+  String get tutorialS3Does =>
+      'The Quran tab lists the surahs, the juz and your bookmarks. The reader shows the Mushaf page with tajweed colors, audio, bookmarks and a focus mode.';
 
   @override
-  String get tutorialS3Open => 'How to open';
+  String get tutorialS3Open =>
+      'Tap Quran, then choose a surah or a juz. You can also open today\'s wird from Home.';
 
   @override
-  String get tutorialS3Useful => 'When useful';
+  String get tutorialS3Useful =>
+      'For your daily wird, looking up an ayah, or reading before a memorization session.';
 
   @override
-  String get tutorialS3Step1 => 'Step 1';
+  String get tutorialS3Step1 =>
+      'Choose a surah from the list, or use the search box at the top.';
 
   @override
-  String get tutorialS3Step2 => 'Step 2';
+  String get tutorialS3Step2 => 'Swipe to turn the page.';
 
   @override
-  String get tutorialS3Step3 => 'Step 3';
+  String get tutorialS3Step3 =>
+      'Long-press an ayah to listen to it, copy it, bookmark it, share it or start memorizing it.';
 
   @override
-  String get tutorialS3Step4 => 'Step 4';
+  String get tutorialS3Step4 =>
+      'Open the menu with the three dots to go to a page, surah or juz, choose a reciter, switch tajweed colors on or off, or enter focus mode.';
 
   @override
-  String get tutorialS3Step5 => 'Step 5';
+  String get tutorialS3Step5 =>
+      'Stay on a page for a few seconds while reading: it is counted as read automatically.';
 
   @override
-  String get tutorialS3Tip1 => 'Tip 1';
+  String get tutorialS3Tip1 =>
+      'Listen to an ayah before memorizing it to get the pronunciation right.';
 
   @override
-  String get tutorialS3Tip2 => 'Tip 2';
+  String get tutorialS3Tip2 =>
+      'The Continue reading card on the Quran tab takes you back to your last page.';
 
   @override
-  String get tutorialS3Note1 => 'Note 1';
+  String get tutorialS3Note1 =>
+      'The Quran text is bundled with the app, so it displays without a connection.';
 
   @override
-  String get tutorialS3Note2 => 'Note 2';
+  String get tutorialS3Note2 =>
+      'Audio needs a connection unless it was already cached.';
 
   @override
-  String get tutorialS4Title => 'Guide 4';
+  String get tutorialS4Title => 'Search and bookmarks';
 
   @override
-  String get tutorialS4Cat => 'Category';
+  String get tutorialS4Cat => 'Quran';
 
   @override
-  String get tutorialS4Does => 'What it does';
+  String get tutorialS4Does =>
+      'Find a surah by name or an ayah by its words, and keep important ayahs as bookmarks.';
 
   @override
-  String get tutorialS4Open => 'How to open';
+  String get tutorialS4Open =>
+      'Use the search box at the top of the Quran tab, or the search icon on Home. Bookmarks have their own tab on the Quran screen.';
 
   @override
-  String get tutorialS4Useful => 'When useful';
+  String get tutorialS4Useful =>
+      'For collecting ayahs to review, similar ayahs, or places you want to come back to.';
 
   @override
-  String get tutorialS4Step1 => 'Step 1';
+  String get tutorialS4Step1 => 'Type a surah name or words from an ayah.';
 
   @override
-  String get tutorialS4Step2 => 'Step 2';
+  String get tutorialS4Step2 => 'Open the surah or the ayah from the results.';
 
   @override
-  String get tutorialS4Step3 => 'Step 3';
+  String get tutorialS4Step3 =>
+      'Long-press an ayah in the reader and choose Bookmark.';
 
   @override
-  String get tutorialS4Step4 => 'Step 4';
+  String get tutorialS4Step4 =>
+      'Open the Bookmark tab to return to saved ayahs or remove them.';
 
   @override
-  String get tutorialS4Tip1 => 'Tip 1';
+  String get tutorialS4Tip1 =>
+      'Bookmark the start of each memorization section to return to it quickly.';
 
   @override
-  String get tutorialS4Tip2 => 'Tip 2';
+  String get tutorialS4Tip2 =>
+      'Search ignores diacritics, so you can type plain Arabic.';
 
   @override
-  String get tutorialS4Note1 => 'Note 1';
+  String get tutorialS4Note1 =>
+      'Ayah search shows at most 50 results: add more words to narrow it.';
 
   @override
-  String get tutorialS4Note2 => 'Note 2';
+  String get tutorialS4Note2 =>
+      'Removing a bookmark does not affect any reading or memorization progress.';
 
   @override
-  String get tutorialS5Title => 'Guide 5';
+  String get tutorialS5Title => 'Memorizing step by step';
 
   @override
-  String get tutorialS5Cat => 'Category';
+  String get tutorialS5Cat => 'Memorization';
 
   @override
-  String get tutorialS5Does => 'What it does';
+  String get tutorialS5Does =>
+      'The Memorization tab brings together today\'s plan, practice by surah, the listening quiz and reviews by recitation. Every ayah goes through learn, memorize and recite.';
 
   @override
-  String get tutorialS5Open => 'How to open';
+  String get tutorialS5Open =>
+      'Tap Memorization. On first use you choose the adult or kids path.';
 
   @override
-  String get tutorialS5Useful => 'When useful';
+  String get tutorialS5Useful =>
+      'For systematic memorization with spaced reviews, so what you memorize stays.';
 
   @override
-  String get tutorialS5Step1 => 'Step 1';
+  String get tutorialS5Step1 =>
+      'Create a plan, or pick a surah under Practice by Surah.';
 
   @override
-  String get tutorialS5Step2 => 'Step 2';
+  String get tutorialS5Step2 => 'Learn: listen to the ayah and read it.';
 
   @override
-  String get tutorialS5Step3 => 'Step 3';
+  String get tutorialS5Step3 =>
+      'Memorize: try without looking, and use the hints (first word, first letters, show the ayah) only when needed.';
 
   @override
-  String get tutorialS5Step4 => 'Step 4';
+  String get tutorialS5Step4 =>
+      'Recite: record your recitation, or grade yourself honestly if speech recognition is unavailable. A block of ayahs is then recited together.';
 
   @override
-  String get tutorialS5Tip1 => 'Tip 1';
+  String get tutorialS5Tip1 =>
+      'Hints are recorded and affect when the ayah comes back for review.';
 
   @override
-  String get tutorialS5Tip2 => 'Tip 2';
+  String get tutorialS5Tip2 =>
+      'Change how strict recitation checking is in Settings > Quran & Memorization > Accuracy level.';
 
   @override
-  String get tutorialS5Note1 => 'Note 1';
+  String get tutorialS5Note1 =>
+      'Leaving a session asks whether to continue later or discard it.';
 
   @override
-  String get tutorialS5Note2 => 'Note 2';
+  String get tutorialS5Note2 =>
+      'Without speech recognition or microphone permission, grading yourself is a fully supported route.';
 
   @override
-  String get tutorialS6Title => 'Guide 6';
+  String get tutorialS6Title => 'Daily adhkar and the counter';
 
   @override
-  String get tutorialS6Cat => 'Category';
+  String get tutorialS6Cat => 'Adhkar';
 
   @override
-  String get tutorialS6Does => 'What it does';
+  String get tutorialS6Does =>
+      'Morning and evening adhkar, general adhkar and duas, with a repetition counter, an index, free tasbeeh and a smart wird that follows the time of day.';
 
   @override
-  String get tutorialS6Open => 'How to open';
+  String get tutorialS6Open =>
+      'Tap Adhkar, then choose morning, evening, general adhkar, duas, smart wird or free tasbeeh.';
 
   @override
-  String get tutorialS6Useful => 'When useful';
+  String get tutorialS6Useful =>
+      'For the morning and evening wird, tasbeeh sessions, and sharing a dua quickly.';
 
   @override
-  String get tutorialS6Step1 => 'Step 1';
+  String get tutorialS6Step1 =>
+      'Choose a category; the one for the current time is highlighted at the top.';
 
   @override
-  String get tutorialS6Step2 => 'Step 2';
+  String get tutorialS6Step2 =>
+      'Tap the counter once for each repetition; it moves to the next dhikr when you finish.';
 
   @override
-  String get tutorialS6Step3 => 'Step 3';
+  String get tutorialS6Step3 => 'Open the index to jump to a specific dhikr.';
 
   @override
-  String get tutorialS6Step4 => 'Step 4';
+  String get tutorialS6Step4 =>
+      'Change the text size, copy or share the dhikr when needed.';
 
   @override
-  String get tutorialS6Step5 => 'Step 5';
+  String get tutorialS6Step5 =>
+      'When you finish, reset the session or go back.';
 
   @override
-  String get tutorialS6Tip1 => 'Tip 1';
+  String get tutorialS6Tip1 =>
+      'Turn on morning and evening reminders in Settings > Notifications.';
 
   @override
-  String get tutorialS6Tip2 => 'Tip 2';
+  String get tutorialS6Tip2 =>
+      'Press and hold the counter to undo the last count.';
 
   @override
-  String get tutorialS6Note1 => 'Note 1';
+  String get tutorialS6Note1 =>
+      'The adhkar are bundled with the app and work offline.';
 
   @override
-  String get tutorialS6Note2 => 'Note 2';
+  String get tutorialS6Note2 =>
+      'Counters belong to the current day\'s session; they are not a memorization certificate.';
 
   @override
-  String get tutorialS7Title => 'Guide 7';
+  String get tutorialS7Title => 'Daily plan and reviews';
 
   @override
-  String get tutorialS7Cat => 'Category';
+  String get tutorialS7Cat => 'Memorization';
 
   @override
-  String get tutorialS7Does => 'What it does';
+  String get tutorialS7Does =>
+      'Your plan serves new ayahs and reviews every day. Reviews return on a schedule based on how well you recited, so what you memorize stays firm.';
 
   @override
-  String get tutorialS7Open => 'How to open';
+  String get tutorialS7Open =>
+      'Memorization > Continue Today\'s Plan, or the main card on Home.';
 
   @override
-  String get tutorialS7Useful => 'When useful';
+  String get tutorialS7Useful =>
+      'For steady memorization with smart review instead of relying on memory alone.';
 
   @override
-  String get tutorialS7Step1 => 'Step 1';
+  String get tutorialS7Step1 =>
+      'Open Continue Today\'s Plan from the Memorization tab.';
 
   @override
-  String get tutorialS7Step2 => 'Step 2';
+  String get tutorialS7Step2 => 'Finish the new ayahs of the day.';
 
   @override
-  String get tutorialS7Step3 => 'Step 3';
+  String get tutorialS7Step3 =>
+      'Do the Review Session when ayahs are due: the badge shows how many.';
 
   @override
-  String get tutorialS7Step4 => 'Step 4';
+  String get tutorialS7Step4 =>
+      'Open View Today\'s Plan to see what is done and what remains.';
 
   @override
-  String get tutorialS7Step5 => 'Step 5';
+  String get tutorialS7Step5 =>
+      'Try the Listening Quiz once you have memorized a few ayahs: it plays an ayah and asks you to name its surah or continue it.';
 
   @override
-  String get tutorialS7Tip1 => 'Tip 1';
+  String get tutorialS7Tip1 =>
+      'Grade yourself honestly: it decides how strong the ayah is and when it returns.';
 
   @override
-  String get tutorialS7Tip2 => 'Tip 2';
+  String get tutorialS7Tip2 =>
+      'If the plan feels heavy, lower the daily ayahs in Plan Settings.';
 
   @override
-  String get tutorialS7Note1 => 'Note 1';
+  String get tutorialS7Note1 =>
+      'On rest days (set by days per week) you get reviews only.';
 
   @override
-  String get tutorialS7Note2 => 'Note 2';
+  String get tutorialS7Note2 =>
+      'The Listening Quiz needs at least five memorized ayahs.';
 
   @override
-  String get tutorialS8Title => 'Guide 8';
+  String get tutorialS8Title => 'Setting up your plan';
 
   @override
-  String get tutorialS8Cat => 'Category';
+  String get tutorialS8Cat => 'Memorization';
 
   @override
-  String get tutorialS8Does => 'What it does';
+  String get tutorialS8Does =>
+      'Create your plan from a quick preset or from scratch: name, surah range, ayahs per day, days per week, session length, difficulty and reviews.';
 
   @override
-  String get tutorialS8Open => 'How to open';
+  String get tutorialS8Open =>
+      'Memorization > Create plan, or Plan Settings later.';
 
   @override
-  String get tutorialS8Useful => 'When useful';
+  String get tutorialS8Useful =>
+      'For a specific goal, such as memorizing a particular juz, or planning a child\'s memorization.';
 
   @override
-  String get tutorialS8Step1 => 'Step 1';
+  String get tutorialS8Step1 =>
+      'Pick a quick preset (Light, Balanced, Intensive, Juz Amma) or fill in the fields yourself.';
 
   @override
-  String get tutorialS8Step2 => 'Step 2';
+  String get tutorialS8Step2 =>
+      'Choose who the plan is for (adult or child) and the surah range.';
 
   @override
-  String get tutorialS8Step3 => 'Step 3';
+  String get tutorialS8Step3 =>
+      'Set ayahs per day, days per week and session length.';
 
   @override
-  String get tutorialS8Step4 => 'Step 4';
+  String get tutorialS8Step4 =>
+      'Choose the difficulty and turn near and far revision on or off.';
 
   @override
-  String get tutorialS8Step5 => 'Step 5';
+  String get tutorialS8Step5 => 'Save and start the plan.';
 
   @override
-  String get tutorialS8Tip1 => 'Tip 1';
+  String get tutorialS8Tip1 =>
+      'The session length limits new ayahs, at about four minutes each. A note appears if the minutes are too short for your goal.';
 
   @override
-  String get tutorialS8Tip2 => 'Tip 2';
+  String get tutorialS8Tip2 => 'Start small to build a habit, then increase.';
 
   @override
-  String get tutorialS8Note1 => 'Note 1';
+  String get tutorialS8Note1 =>
+      'The plan can be deleted from the setup screen.';
 
   @override
-  String get tutorialS8Note2 => 'Note 2';
+  String get tutorialS8Note2 =>
+      'The finishing time shown on the screen is an estimate.';
 
   @override
-  String get tutorialS9Title => 'Guide 9';
+  String get tutorialS9Title => 'Kids mode and parent tools';
 
   @override
-  String get tutorialS9Cat => 'Category';
+  String get tutorialS9Cat => 'Memorization';
 
   @override
-  String get tutorialS9Does => 'What it does';
+  String get tutorialS9Does =>
+      'A journey of memorization houses with stars, levels and repeated listening for children, plus parent tools for follow-up.';
 
   @override
-  String get tutorialS9Open => 'How to open';
+  String get tutorialS9Open =>
+      'Choose the kids path. The parent PIN is set during kids setup. Parent tools appear on Home once you are signed in.';
 
   @override
-  String get tutorialS9Useful => 'When useful';
+  String get tutorialS9Useful =>
+      'For children and beginners, or for a parent who wants to follow stars, sessions and rewards.';
 
   @override
-  String get tutorialS9Step1 => 'Step 1';
+  String get tutorialS9Step1 =>
+      'Choose the kids path, then enter the child\'s name, age, starting surah and a four-digit parent PIN.';
 
   @override
-  String get tutorialS9Step2 => 'Step 2';
+  String get tutorialS9Step2 =>
+      'On the kids home tap Continue now, listen to the ayah three times, then try from memory.';
 
   @override
-  String get tutorialS9Step3 => 'Step 3';
+  String get tutorialS9Step3 =>
+      'If recording does not work, tap \"I finished memorizing\": the parent enters the PIN to confirm.';
 
   @override
-  String get tutorialS9Step4 => 'Step 4';
+  String get tutorialS9Step4 =>
+      'Follow the journey map: houses open one after another as missions are completed.';
 
   @override
-  String get tutorialS9Tip1 => 'Tip 1';
+  String get tutorialS9Tip1 =>
+      'Keep the PIN private: it also protects leaving the kids path.';
 
   @override
-  String get tutorialS9Tip2 => 'Tip 2';
+  String get tutorialS9Tip2 =>
+      'Use the Mushaf tab on the kids home to let the child read in the Quran.';
 
   @override
-  String get tutorialS9Note1 => 'Note 1';
+  String get tutorialS9Note1 =>
+      'Linking a child from another device needs an account.';
 
   @override
-  String get tutorialS9Note2 => 'Note 2';
+  String get tutorialS9Note2 =>
+      'One child per device: more children use their own devices, linked to the guardian.';
 
   @override
-  String get tutorialS10Title => 'Guide 10';
+  String get tutorialS10Title => 'Progress, achievements and certificates';
 
   @override
-  String get tutorialS10Cat => 'Category';
+  String get tutorialS10Cat => 'Progress';
 
   @override
-  String get tutorialS10Does => 'What it does';
+  String get tutorialS10Does =>
+      'Shows your reading and memorization statistics, your daily streak, achievements, your certificates, and lets you share your progress.';
 
   @override
-  String get tutorialS10Open => 'How to open';
+  String get tutorialS10Open => 'Tap Progress in the bottom bar.';
 
   @override
-  String get tutorialS10Useful => 'When useful';
+  String get tutorialS10Useful =>
+      'For a weekly review, celebrating achievements and tracking consistency.';
 
   @override
-  String get tutorialS10Step1 => 'Step 1';
+  String get tutorialS10Step1 =>
+      'Review the top cards for streak days, pages read, XP and reviews.';
 
   @override
-  String get tutorialS10Step2 => 'Step 2';
+  String get tutorialS10Step2 =>
+      'Open the reading and memorization sections for pages, ayahs, surahs and juz.';
 
   @override
-  String get tutorialS10Step3 => 'Step 3';
+  String get tutorialS10Step3 =>
+      'Switch the achievement filters between all, reading, memorization and streak.';
 
   @override
-  String get tutorialS10Step4 => 'Step 4';
+  String get tutorialS10Step4 =>
+      'Tap an unlocked achievement for details and sharing.';
 
   @override
-  String get tutorialS10Step5 => 'Step 5';
+  String get tutorialS10Step5 =>
+      'Your certificates appear when you complete a surah, a juz or the whole Quran.';
 
   @override
-  String get tutorialS10Tip1 => 'Tip 1';
+  String get tutorialS10Tip1 =>
+      'Reading a khatmah counts toward your streak, but not toward free-reading statistics.';
 
   @override
-  String get tutorialS10Tip2 => 'Tip 2';
+  String get tutorialS10Tip2 =>
+      'Certificates depend on genuinely memorizing the required ayahs.';
 
   @override
-  String get tutorialS10Note1 => 'Note 1';
+  String get tutorialS10Note1 =>
+      'Some statistics appear only after you start memorizing.';
 
   @override
-  String get tutorialS10Note2 => 'Note 2';
+  String get tutorialS10Note2 =>
+      'Sharing happens only when you choose to share.';
 
   @override
-  String get tutorialS11Title => 'Guide 11';
+  String get tutorialS11Title => 'Settings, account and notifications';
 
   @override
-  String get tutorialS11Cat => 'Category';
+  String get tutorialS11Cat => 'Settings';
 
   @override
-  String get tutorialS11Does => 'What it does';
+  String get tutorialS11Does =>
+      'Gathers your account and profile, language and theme, Quran and memorization settings, prayer times, notifications and information about the app.';
 
   @override
-  String get tutorialS11Open => 'How to open';
+  String get tutorialS11Open => 'Tap the gear icon on Home.';
 
   @override
-  String get tutorialS11Useful => 'When useful';
+  String get tutorialS11Useful =>
+      'For personalizing the app, protecting your progress and setting reminders that suit your day.';
 
   @override
-  String get tutorialS11Step1 => 'Step 1';
+  String get tutorialS11Step1 =>
+      'Sign in or create an account with an email and password to manage your account.';
 
   @override
-  String get tutorialS11Step2 => 'Step 2';
+  String get tutorialS11Step2 => 'Edit your name under Profile.';
 
   @override
-  String get tutorialS11Step3 => 'Step 3';
+  String get tutorialS11Step3 =>
+      'Choose Arabic or English, and the light, dark, pure black or system theme.';
 
   @override
-  String get tutorialS11Step4 => 'Step 4';
+  String get tutorialS11Step4 =>
+      'Under Quran & Memorization, set background playback and the accuracy level, or reset your path.';
 
   @override
-  String get tutorialS11Step5 => 'Step 5';
+  String get tutorialS11Step5 =>
+      'Under Prayer times, choose your city and calculation method.';
 
   @override
-  String get tutorialS11Step6 => 'Step 6';
+  String get tutorialS11Step6 =>
+      'Under Notifications, turn reminders for reviews, streak, adhkar and prayers on or off.';
 
   @override
-  String get tutorialS11Tip1 => 'Tip 1';
+  String get tutorialS11Tip1 =>
+      'Write your name in Arabic so it looks right on certificates.';
 
   @override
-  String get tutorialS11Tip2 => 'Tip 2';
+  String get tutorialS11Tip2 =>
+      'Reset the path under Quran & Memorization to switch between adult and kids.';
 
   @override
-  String get tutorialS11Note1 => 'Note 1';
+  String get tutorialS11Note1 =>
+      'Notifications need the system permission to work.';
 
   @override
-  String get tutorialS11Note2 => 'Note 2';
+  String get tutorialS11Note2 =>
+      'Language and theme are stored on this device.';
 
   @override
-  String get tutorialS12Title => 'Guide 12';
+  String get tutorialS12Title => 'Working offline and your data';
 
   @override
-  String get tutorialS12Cat => 'Category';
+  String get tutorialS12Cat => 'Settings';
 
   @override
-  String get tutorialS12Does => 'What it does';
+  String get tutorialS12Does =>
+      'The Quran and adhkar texts are bundled with the app. Your progress, plans and settings are stored on the device. With an account, some of it also syncs online.';
 
   @override
-  String get tutorialS12Open => 'How to open';
+  String get tutorialS12Open =>
+      'There is no separate screen: it works automatically while you use the app.';
 
   @override
-  String get tutorialS12Useful => 'When useful';
+  String get tutorialS12Useful =>
+      'For understanding what works offline and avoiding the loss of important progress.';
 
   @override
-  String get tutorialS12Step1 => 'Step 1';
+  String get tutorialS12Step1 =>
+      'Read the Quran and use the adhkar even without internet.';
 
   @override
-  String get tutorialS12Step2 => 'Step 2';
+  String get tutorialS12Step2 =>
+      'Keep reading and memorizing: progress is saved on the device.';
 
   @override
-  String get tutorialS12Step3 => 'Step 3';
+  String get tutorialS12Step3 =>
+      'Sign in when you want account features or to restore your memorization progress.';
 
   @override
-  String get tutorialS12Tip1 => 'Tip 1';
+  String get tutorialS12Tip1 =>
+      'On a new device, sign in to restore what your account supports.';
 
   @override
-  String get tutorialS12Tip2 => 'Tip 2';
+  String get tutorialS12Tip2 =>
+      'Connect to the internet to play recitations that are not cached.';
 
   @override
-  String get tutorialS12Note1 => 'Note 1';
+  String get tutorialS12Note1 =>
+      'Clearing the app\'s data in system settings removes anything not saved to your account.';
 
   @override
-  String get tutorialS12Note2 => 'Note 2';
+  String get tutorialS12Note2 =>
+      'Signing out removes your khatmah plan and history from this device: they are stored only here.';
+
+  @override
+  String get tutorialS14Note2 =>
+      'Reliable alerts may need the exact-alarm permission in phone settings.';
+
+  @override
+  String get tutorialS14Note1 =>
+      'Times are calculated on the device, so they work offline.';
+
+  @override
+  String get tutorialS14Tip2 =>
+      'If you are unsure which method fits, pick the one your local authority uses.';
+
+  @override
+  String get tutorialS14Tip1 =>
+      'If your city is not listed, use a custom location: copy its coordinates from a maps app.';
+
+  @override
+  String get tutorialS14Step4 =>
+      'Turn on prayer calm mode if you want recitation to pause when prayer time starts.';
+
+  @override
+  String get tutorialS14Step3 =>
+      'Turn on prayer alerts: they switch on automatically the first time you set a location.';
+
+  @override
+  String get tutorialS14Step2 =>
+      'Choose the calculation method (automatic by country by default) and the Asr calculation.';
+
+  @override
+  String get tutorialS14Step1 =>
+      'Choose your country and city, or Custom location to enter coordinates.';
+
+  @override
+  String get tutorialS14Useful =>
+      'For knowing prayer times wherever you are, with an alert when it is time.';
+
+  @override
+  String get tutorialS14Open =>
+      'On Home tap Choose city, or open Settings > Prayer times.';
+
+  @override
+  String get tutorialS14Does =>
+      'Shows prayer times and the next prayer on Home, and can alert you at each prayer.';
+
+  @override
+  String get tutorialS14Cat => 'Settings';
+
+  @override
+  String get tutorialS14Title => 'Prayer times and alerts';
+
+  @override
+  String get tutorialS13Note2 =>
+      'It is stored only on this device, and is removed when you sign out.';
+
+  @override
+  String get tutorialS13Note1 =>
+      'The khatmah is separate from free reading: neither moves the other\'s position.';
+
+  @override
+  String get tutorialS13Tip2 =>
+      'If you fall behind, use the options on the dashboard to catch up.';
+
+  @override
+  String get tutorialS13Tip1 =>
+      'You can dedicate the khatmah to someone you love when you create it.';
+
+  @override
+  String get tutorialS13Step4 =>
+      'If you read from a printed Mushaf, use Record to enter the pages.';
+
+  @override
+  String get tutorialS13Step3 =>
+      'Read the day\'s wird: each page you read is recorded.';
+
+  @override
+  String get tutorialS13Step2 =>
+      'Start the khatmah and tap Continue reading on the dashboard.';
+
+  @override
+  String get tutorialS13Step1 =>
+      'Choose pages per day or a duration, and optionally a start page.';
+
+  @override
+  String get tutorialS13Useful =>
+      'For reading the Quran regularly with a clear goal, such as in Ramadan.';
+
+  @override
+  String get tutorialS13Open =>
+      'On Home tap Start your khatmah, or open the khatmah card once you have started one.';
+
+  @override
+  String get tutorialS13Does =>
+      'Plan a full reading of the Quran at the pace you choose, by pages per day or by number of days. Talia tracks your progress page by page and keeps a history of completed khatmahs.';
+
+  @override
+  String get tutorialS13Cat => 'Quran';
+
+  @override
+  String get tutorialS13Title => 'Khatmah: reading the whole Quran';
 
   @override
   String get tutorialCategoryTitle => 'Category';
@@ -5095,8 +5384,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No microphone? Confirm you recited from memory and your progress will be saved.';
 
   @override
-  String get v2ManualBlockReviewAction =>
-      'I recited the block from memory (self-grade)';
+  String get v2ManualBlockReviewAction => 'Grade the block recitation yourself';
 
   @override
   String get v2RemediationTitle => 'Short remediation';
@@ -5122,7 +5410,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2BlockReviewTitle => 'Recite the full block';
 
   @override
-  String v2BlockReviewSubtitle(int startAyah, int endAyah) {
+  String v2BlockReviewSubtitle(String startAyah, String endAyah) {
     return 'Text is hidden. Record ayahs $startAyah-$endAyah together without hints.';
   }
 
@@ -5137,12 +5425,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closingMomentLabel => 'A moment of closure';
 
   @override
-  String get closingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
-
-  @override
-  String get closingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
-
-  @override
   String closingSummaryMemorization(int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -5150,7 +5432,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$countText ayahs',
       one: '$countText ayah',
     );
-    return 'You committed $_temp0 to memory this session — a lasting impact, in shaa Allah.';
+    return 'You learned $_temp0 this session — reviews will make them stick, in shaa Allah.';
   }
 
   @override
@@ -5228,7 +5510,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2PressRecord => 'Press record when you are ready';
 
   @override
-  String get v2MicrophoneUnavailable => 'Microphone is not available';
+  String get v2MicrophoneUnavailable =>
+      'Speech recognition is not available on this device. Grade your recitation yourself.';
+
+  @override
+  String get v2TryRecordingAgain => 'Try recording again';
 
   @override
   String get v2NoSpeechDetected =>
@@ -5252,12 +5538,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String v2AyahRange(int startAyah, int endAyah) {
+  String v2AyahRange(String startAyah, String endAyah) {
     return 'Ayahs $startAyah-$endAyah';
   }
 
   @override
-  String v2BlockProgress(int passed, int total) {
+  String v2BlockProgress(String passed, String total) {
     return '$passed/$total ayahs passed individually.';
   }
 
@@ -6265,6 +6551,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prayerMethodNorthAmerica => 'ISNA';
+
+  @override
+  String get prayerMethodDubai => 'Dubai';
+
+  @override
+  String get prayerMethodKuwait => 'Kuwait';
+
+  @override
+  String get prayerMethodQatar => 'Qatar';
+
+  @override
+  String get prayerMethodSingapore => 'Singapore, Malaysia & Indonesia';
+
+  @override
+  String get prayerMethodTurkey => 'Turkey (Diyanet)';
+
+  @override
+  String get prayerMethodMoonSighting => 'Moonsighting Committee';
+
+  @override
+  String get prayerMadhabTitle => 'Asr calculation';
+
+  @override
+  String get prayerCustomLocation => 'Custom location (coordinates)';
+
+  @override
+  String get prayerCustomLatitude => 'Latitude';
+
+  @override
+  String get prayerCustomLongitude => 'Longitude';
+
+  @override
+  String get prayerCustomHint =>
+      'City not listed? Copy its coordinates from a maps app.';
+
+  @override
+  String prayerCustomTimeZone(String zone) {
+    return 'Time zone: $zone';
+  }
+
+  @override
+  String get prayerCustomSave => 'Save location';
+
+  @override
+  String get prayerCustomSaved =>
+      'Location saved. Prayer times now use your coordinates.';
+
+  @override
+  String get prayerCustomInvalid =>
+      'Check the coordinates: latitude between -90 and 90, longitude between -180 and 180.';
+
+  @override
+  String get prayerCustomTimeZoneUnavailable =>
+      'Couldn\'t determine your device\'s time zone.';
+
+  @override
+  String get prayerMadhabAuto => 'Automatic by city';
+
+  @override
+  String get prayerMadhabShafi => 'Majority (Shafi\'i, Maliki, Hanbali)';
+
+  @override
+  String get prayerMadhabHanafi => 'Hanafi';
 
   @override
   String get homeBrandSubtitle => 'Talia Quran';

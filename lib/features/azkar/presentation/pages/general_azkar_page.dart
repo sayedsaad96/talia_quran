@@ -296,7 +296,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               ],
             );
           } else {
-            labelWidget = Text('$tab (${counts[tab] ?? 0})');
+            labelWidget = Text('$tab (${context.numText(counts[tab] ?? 0)})');
           }
 
           return ChoiceChip(

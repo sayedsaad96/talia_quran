@@ -74,7 +74,7 @@ void main() {
       expect(ar.hifzNeedsAyahReview, 'تحتاج إلى مراجعة هذه الآية.');
       expect(ar.hifzNoVoiceRecognized, '(لم يتم التعرف على صوت)');
       expect(ar.v2LearningTitle, 'تعلّم الآية');
-      expect(ar.v2BlockReviewSubtitle(1, 5), contains('1-5'));
+      expect(ar.v2BlockReviewSubtitle('١', '٥'), contains('من ١ إلى ٥'));
       expect(ar.kidsPreparing, 'جارٍ التحضير...');
       expect(ar.parentDashboardPinInvalid, 'أدخل رمزًا من 4 أرقام');
       expect(ar.parentDashboardPinIncorrect, 'رمز غير صحيح');
@@ -94,7 +94,7 @@ void main() {
       expect(en.hifzNeedsAyahReview, 'You need to review this Ayah.');
       expect(en.hifzNoVoiceRecognized, '(No voice recognized)');
       expect(en.v2LearningTitle, 'Learn the ayah');
-      expect(en.v2BlockReviewSubtitle(1, 5), contains('1-5'));
+      expect(en.v2BlockReviewSubtitle('1', '5'), contains('1-5'));
       expect(en.kidsPreparing, 'Getting things ready...');
       expect(en.parentDashboardLinking, isNotEmpty);
       expect(en.parentDashboardChildLinked, isNotEmpty);

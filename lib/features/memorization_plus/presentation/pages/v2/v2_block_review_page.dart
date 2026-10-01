@@ -50,21 +50,49 @@ class V2BlockReviewPage extends StatelessWidget {
     final end = session.blockAyahs.last.numberInSurah;
     final isRecording = state.isRecording;
     final isEvaluating = state.isEvaluating;
+    // See V2RecitationPage: no recognizer means self-grading leads.
+    final speechUnavailable =
+        state.speechIssue == V2SpeechIssue.unavailable && !isRecording;
+    final cubit = context.read<MemorizationSessionCubit>();
+    Future<void> selfGrade() async {
+      // N5: compare, then grade — a stumble is remediated instead of the
+      // block passing silently.
+      final verdict = await showV2SelfGradeSheet(
+        context,
+        surahId: session.surahId,
+        ayahs: session.blockAyahs,
+      );
+      if (verdict == null) return;
+      await cubit.submitManualBlockReview(
+        grade: verdict.grade,
+        stumbledAyahNumber: verdict.stumbledAyahNumber,
+      );
+    }
+
+    Future<void> record() =>
+        isRecording ? cubit.stopRecording() : cubit.startRecording();
+
     return V2PhaseScaffold(
       session: session,
       title: context.l10n.v2BlockReviewTitle,
-      subtitle: context.l10n.v2BlockReviewSubtitle(start, end),
+      subtitle: context.l10n.v2BlockReviewSubtitle(
+        context.numText(start),
+        context.numText(end),
+      ),
       primaryActionLabel: isEvaluating
           ? context.l10n.v2EvaluatingBlock
+          : speechUnavailable
+          ? context.l10n.v2ManualBlockReviewAction
           : isRecording
           ? context.l10n.v2StopRecording
           : context.l10n.v2StartRecording,
-      primaryActionIcon: isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      primaryActionIcon: speechUnavailable
+          ? Icons.record_voice_over_rounded
+          : isRecording
+          ? Icons.stop_rounded
+          : Icons.mic_rounded,
       primaryActionEnabled: !isEvaluating,
-      onPrimaryAction: () {
-        final cubit = context.read<MemorizationSessionCubit>();
-        return isRecording ? cubit.stopRecording() : cubit.startRecording();
-      },
+      onPrimaryAction: speechUnavailable ? selfGrade : record,
       children: [
         V2BlockReviewHiddenCard(
           start: start,
@@ -79,23 +107,18 @@ class V2BlockReviewPage extends StatelessWidget {
           key: const ValueKey('v2-manual-block-review'),
           onPressed: isEvaluating || isRecording
               ? null
-              : () async {
-                  // N5: compare, then grade — a stumble is remediated
-                  // instead of the block passing silently.
-                  final cubit = context.read<MemorizationSessionCubit>();
-                  final verdict = await showV2SelfGradeSheet(
-                    context,
-                    surahId: session.surahId,
-                    ayahs: session.blockAyahs,
-                  );
-                  if (verdict == null) return;
-                  await cubit.submitManualBlockReview(
-                    grade: verdict.grade,
-                    stumbledAyahNumber: verdict.stumbledAyahNumber,
-                  );
-                },
-          icon: const Icon(Icons.record_voice_over_rounded, size: 18),
-          label: Text(context.l10n.v2ManualBlockReviewAction),
+              : (speechUnavailable ? record : selfGrade),
+          icon: Icon(
+            speechUnavailable
+                ? Icons.mic_rounded
+                : Icons.record_voice_over_rounded,
+            size: 18,
+          ),
+          label: Text(
+            speechUnavailable
+                ? context.l10n.v2TryRecordingAgain
+                : context.l10n.v2ManualBlockReviewAction,
+          ),
         ),
       ],
     );

@@ -193,7 +193,10 @@ class _RewardCard extends StatelessWidget {
               if (starsEarned > 0)
                 _RewardPill(
                   icon: Icons.star_rounded,
-                  label: context.l10n.kidsGamifiedEarnedStars(starsEarned),
+                  label: context.l10n.kidsGamifiedEarnedStars(
+                    starsEarned,
+                    context.numText(starsEarned),
+                  ),
                   color: KidsTheme.goldStar,
                 ),
               // K11: real session points next to the stars, when any.

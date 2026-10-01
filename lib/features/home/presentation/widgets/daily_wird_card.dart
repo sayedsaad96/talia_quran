@@ -18,14 +18,14 @@ class DailyWirdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pageNumber = state.dailyWirdPageDetail?.pageNumber ?? 1;
-    String wird = context.l10n.homeDailyWirdPage(pageNumber.toString());
+    String wird = context.l10n.homeDailyWirdPage(context.numText(pageNumber));
 
     if (state.dailyWirdPageDetail != null &&
         state.dailyWirdPageDetail!.surahs.isNotEmpty) {
       final surah = state.dailyWirdPageDetail!.surahs.first;
       final surahName = context.isArabic ? surah.nameAr : surah.nameEn;
       wird = context.l10n.homeDailyWirdSurahPage(
-        pageNumber.toString(),
+        context.numText(pageNumber),
         surahName,
       );
     }

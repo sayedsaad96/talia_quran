@@ -37,7 +37,7 @@ void main() {
       shareHarness(hero(verse(isra9), SocialShareFormat.portrait)),
     );
     expect(find.text('﴿ $isra9 ﴾'), findsOneWidget);
-    expect(find.text('سورة الإسراء · الآية 9'), findsOneWidget);
+    expect(find.text('سورة الإسراء، الآية 9'), findsOneWidget);
     final style = tester
         .widget<Text>(find.byKey(const ValueKey('share-hero-text')))
         .style!;

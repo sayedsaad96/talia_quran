@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/surah_names.dart';
+import '../utils/mushaf_hizb_helper.dart';
 import '../router/app_router.dart';
 import 'journey_presentation_data.dart';
 import 'resume_session_presentation_input.dart';
@@ -38,7 +39,7 @@ class ResumeSessionPresentationMapper {
         subtitle: page == null
             ? input.l10n.lastSavedReading
             : input.isArabic
-            ? 'الصفحة $page'
+            ? 'الصفحة ${MushafHizbHelper.toArabicNumber(int.tryParse(page) ?? 0)}'
             : 'Page $page',
         icon: Icons.menu_book_rounded,
         route: input.route,

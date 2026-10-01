@@ -990,6 +990,8 @@ Future<void> configureDependencies({bool background = false}) async {
       reviewOutcomeCommitter: getIt<V2ReviewOutcomeCommitter>(),
       effectOutboxProcessor: getIt<V2ReviewEffectOutboxProcessor>(),
       appSessionService: getIt<AppSessionService>(),
+      recitationPassThreshold: getIt<SettingsRepository>()
+          .getSimilarityThreshold,
     ),
   );
 

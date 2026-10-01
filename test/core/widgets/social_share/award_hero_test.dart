@@ -40,7 +40,7 @@ void main() {
     );
     expect(find.byKey(const ValueKey('share-medal')), findsOneWidget);
     expect(find.text('قارئ جزء كامل'), findsOneWidget);
-    expect(find.text('مكتمل · 20 من 20'), findsOneWidget);
+    expect(find.text('مكتمل، 20 من 20'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
