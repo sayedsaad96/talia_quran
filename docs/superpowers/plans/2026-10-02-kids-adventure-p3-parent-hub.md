@@ -284,3 +284,13 @@ class KidsPolicyController extends ValueNotifier<KidsChildPolicy> {
   - Run `flutter gen-l10n`, `dart run build_runner build --delete-conflicting-outputs`, `flutter analyze` → `No issues found!`, `flutter test` → `All tests passed!`, and `pwsh scripts/verify_supabase_migrations.ps1` → pass.
   - Optionally run `./scripts/verify_v1_release.ps1`.
   - Hand off to the owner for commit. **Deploying the migration to the live project needs the owner's explicit approval.**
+
+---
+
+## Carried over from P2 (non-blocking, triaged in the P2 final review)
+
+- **Task 4 here must clamp the cap.** `resolveKidsDailyMissions` does not clamp `maxMissions` to `kKidsMaxDailyMissions`. Clamp it when adding the home card (P3 Task 4).
+- `resolveKidsDailyMissions` also uses `now` without `toLocal()`, and `dayGoalReached` is unused (implied by `learning == null`).
+- **Day rollover:** the missions list and the reader's confirmed pages are fixed at load. A home screen or reader left open past local midnight keeps the previous day until it refreshes.
+- **Reader tap feedback:** tapping «قرأت هذه الصفحة» while the page is loading does nothing silently. Also add `Semantics(liveRegion: true)` on the confirmation toast/chip, and move `KidsReaderConfirmation` out of the page file.
+- **«كنوزي» loading state:** it uses a bare Scaffold instead of `KidsBackground`, so it flashes. The journey cubit also calls `getSurahs()` on every load and could cache it.
