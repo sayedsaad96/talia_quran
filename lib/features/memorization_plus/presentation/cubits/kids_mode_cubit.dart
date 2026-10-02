@@ -904,6 +904,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
               completion.progress.currentLevel > st.progress.currentLevel
               ? completion.progress.currentLevel
               : null,
+          // An earlier mic/recitation error must not outlive completion: the
+          // page would keep showing it instead of opening the completion.
+          clearRecordingError: true,
         ),
       );
     } finally {

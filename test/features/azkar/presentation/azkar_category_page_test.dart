@@ -94,7 +94,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify initial count is 0 / 2
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('٠'), findsOneWidget);
     expect(find.text('الذكر الأول المعتمد'), findsOneWidget);
 
     // Tap the reading card text directly
@@ -102,7 +102,7 @@ void main() {
     await tester.pump();
 
     // Count should be incremented to 1
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('١'), findsOneWidget);
   });
 
   testWidgets(
@@ -269,7 +269,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('الذكر الثاني المعتمد'), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('٠'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('azkar-completion-morning')),
       findsNothing,
@@ -326,14 +326,14 @@ void main() {
 
       await tester.tap(find.text('الذكر الأول المعتمد'));
       await tester.pump();
-      expect(find.text('1'), findsOneWidget);
+      expect(find.text('١'), findsOneWidget);
       expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.undo_rounded));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('0'), findsOneWidget);
+      expect(find.text('٠'), findsOneWidget);
       expect(find.byIcon(Icons.undo_rounded), findsNothing);
     });
   });

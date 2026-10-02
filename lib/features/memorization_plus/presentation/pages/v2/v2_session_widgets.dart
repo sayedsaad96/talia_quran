@@ -367,15 +367,18 @@ class V2BlockReviewSummaryCard extends StatelessWidget {
       footer: Column(
         children: [
           Text(
-            context.l10n.v2AyahRange(start, end),
+            context.l10n.v2AyahRange(
+              context.numText(start),
+              context.numText(end),
+            ),
             textAlign: TextAlign.center,
             style: AppTypography.titleLarge,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             context.l10n.v2BlockProgress(
-              session.passedAyahNumbers.length,
-              session.totalAyahsInBlock,
+              context.numText(session.passedAyahNumbers.length),
+              context.numText(session.totalAyahsInBlock),
             ),
             textAlign: TextAlign.center,
           ),
@@ -426,7 +429,10 @@ class V2BlockReviewHiddenCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            context.l10n.v2AyahRange(start, end),
+            context.l10n.v2AyahRange(
+              context.numText(start),
+              context.numText(end),
+            ),
             textAlign: TextAlign.center,
             style: AppTypography.titleMedium,
           ),
@@ -667,7 +673,7 @@ class V2SummaryRow extends StatelessWidget {
         Expanded(
           child: V2SummaryTile(
             label: context.l10n.v2Passed,
-            value: '$passed/$total',
+            value: '${context.numText(passed)}/${context.numText(total)}',
             icon: Icons.check_circle_rounded,
             color: AppColors.success,
           ),

@@ -21,14 +21,14 @@ void main() {
   test('minutes ago under an hour', () {
     expect(
       activityTimeLabel(l10n, now.subtract(const Duration(minutes: 12)), now),
-      l10n.homeActivityMinutesAgo(12),
+      l10n.homeActivityMinutesAgo('١٢'),
     );
   });
 
   test('hours ago later the same day', () {
     expect(
       activityTimeLabel(l10n, now.subtract(const Duration(hours: 3)), now),
-      l10n.homeActivityHoursAgo(3),
+      l10n.homeActivityHoursAgo('٣'),
     );
   });
 

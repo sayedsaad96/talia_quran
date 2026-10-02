@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/learning_launch_context.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
@@ -67,6 +68,63 @@ void main() {
     expect(cubit.discardCalls, 1);
     expect(find.text('Open session'), findsOneWidget);
   });
+
+  testWidgets(
+    'a session opened without history offers a close button that leaves '
+    'to the memorization hub (not back into a session)',
+    (tester) async {
+      final cubit = _ExitTestCubit(_activeState());
+      final router = GoRouter(
+        initialLocation: AppRoutes.memorizationV2Session,
+        routes: [
+          GoRoute(
+            path: AppRoutes.memorizationV2Session,
+            builder: (_, _) => V2SessionPage(
+              surahId: 1,
+              startAyah: 1,
+              blockSize: 1,
+              cubitOverride: cubit,
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.memorizationHub,
+            builder: (_, _) => const Scaffold(body: Text('Hub')),
+          ),
+          // The old fallback redirected straight back into a session.
+          GoRoute(
+            path: AppRoutes.memorizationPlus,
+            redirect: (_, _) => AppRoutes.memorizationV2Session,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final close = find.byKey(const Key('v2_session_close_button'));
+      expect(close, findsOneWidget);
+
+      await tester.tap(close);
+      await tester.pumpAndSettle();
+      expect(find.text('Continue later'), findsOneWidget);
+
+      await tester.tap(find.text('Continue later'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hub'), findsOneWidget);
+    },
+  );
 }
 
 MSActive _activeState() => const MSActive(

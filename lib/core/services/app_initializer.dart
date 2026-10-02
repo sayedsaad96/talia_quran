@@ -17,6 +17,7 @@ import '../services/notification_service.dart';
 import '../services/prayer_serenity_watcher.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../sync/notification_refresh_worker.dart';
+import '../identity/account_deletion_marker.dart';
 import '../theme/theme_cubit.dart';
 import '../theme/pure_black_cubit.dart';
 import '../utils/talia_logger.dart';
@@ -75,13 +76,21 @@ class AppInitializer {
       }
       await configureDependencies(background: background);
 
+      final deletionPending = AccountDeletionMarker.hasPendingOperation(
+        getIt<SharedPreferences>(),
+      );
+      if (!background && !deletionPending) {
+        // Finish personal-progress migration before deletion can be initiated.
+        await getIt<HifzMigrationService>().runIfNeeded();
+      }
+
       if (!background) {
         // Pre-load theme, locale, and profile early so they are immediately available
         // without causing redundant MaterialApp rebuilds during startup.
         getIt<ThemeCubit>().loadTheme();
         getIt<PureBlackCubit>().load();
         getIt<LocaleCubit>().loadLocale();
-        getIt<ProfileCubit>().loadProfile();
+        if (!deletionPending) getIt<ProfileCubit>().loadProfile();
 
         // Steps 3 & 4: Notifications — foreground only. The notification
         // plugin needs an Activity context that headless Workmanager engines
@@ -98,7 +107,9 @@ class AppInitializer {
         // transition; home's reads join this same in-flight load.
         unawaited(_preloadQuranCorpus());
         unawaited(getIt<QuranWarmupService>().warmUp());
-        unawaited(getIt<BookmarkService>().ensureLoaded());
+        if (!deletionPending) {
+          unawaited(getIt<BookmarkService>().ensureLoaded());
+        }
 
         // Prayer Serenity Mode (وضع سكينة الصلاة): foreground watcher that
         // pauses recitation at prayer times. Foreground-only — background
@@ -222,10 +233,11 @@ class AppInitializer {
   }
 
   static Future<void> _startBackgroundTasks() async {
+    if (AccountDeletionMarker.hasPendingOperation(getIt<SharedPreferences>())) {
+      return;
+    }
     await getIt<BackgroundSyncScheduler>().initialize();
     await _registerPeriodicNotificationRefresh();
-    // One-time data migration: Hifz → MemorizationPlus V2.
-    unawaited(getIt<HifzMigrationService>().runIfNeeded());
   }
 
   /// Registers a periodic WorkManager task that refreshes rolling

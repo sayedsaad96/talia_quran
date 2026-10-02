@@ -97,7 +97,9 @@ void main() {
       await tester.tap(find.byKey(const Key('khatmah_setup_preset_20')));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('31'), findsOneWidget);
+      // The duration itself, not the end date: today + 30 days can also
+      // contain "31" (e.g. 2026/10/31) and made this test date-dependent.
+      expect(find.textContaining(RegExp(r'(^|\s)(31|٣١) ')), findsOneWidget);
     },
   );
 

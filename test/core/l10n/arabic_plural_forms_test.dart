@@ -36,7 +36,7 @@ void main() {
   test('the count follows the case of its sentence', () {
     expect(ar.homeActivityDaysAgo(2, '٢'), 'قبل يومين');
     expect(ar.homeActivityDaysAgo(1, '١'), 'قبل يوم');
-    expect(ar.closingSummaryMemorization(2, '٢'), startsWith('حفظتَ آيتين '));
+    expect(ar.closingSummaryMemorization(2, '٢'), startsWith('تعلّمتَ آيتين '));
     expect(ar.dailyPlanRemainingItems(2, '٢'), 'تبقّى عنصران');
     expect(ar.dailyPlanHeaderSummary(2, '٢', '٠'), 'عنصران • ٠ مكتمل');
   });

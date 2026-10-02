@@ -23,6 +23,7 @@ import '../cubits/memorization_identity_cubit.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/memorization_path_choice_card.dart';
+import '../../../../core/router/open_location.dart';
 
 class MemorizationHubPage extends StatefulWidget {
   const MemorizationHubPage({super.key});
@@ -96,6 +97,16 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     final route = isReview
         ? targets.reviewQuizLocation
         : targets.todayPlanLocation;
+    // With nothing memorized the review target falls back to plan creation,
+    // which looked like the wrong screen: explain instead.
+    if (isReview && route == AppRoutes.memorizationPlusCustomPlan) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.memorizationHubNothingToReview)),
+        );
+      return;
+    }
     await context.push(route);
     if (mounted) _retryTargets();
   }
@@ -824,7 +835,7 @@ class _KidsHubActionCard extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () => context.push(route),
+      onTap: () => context.openLocation(route),
       borderRadius: KidsTheme.cardRadius,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),

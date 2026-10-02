@@ -4,7 +4,10 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/identity/account_deletion_marker.dart';
+import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/application/cloud_sync_coordinator.dart';
 import 'package:talia_quran/features/auth/domain/entities/auth_session_recovery.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
@@ -31,6 +34,7 @@ void main() {
   AuthCubit buildCubit({
     AppUser? currentUser,
     CloudSyncCoordinator? cloudSyncCoordinator,
+    SharedPreferences? prefs,
   }) {
     when(
       mockAuthRepository.authStateChanges,
@@ -54,7 +58,7 @@ void main() {
       null,
       null,
       null,
-      null,
+      prefs,
       null,
       cloudSyncCoordinator,
     );
@@ -720,38 +724,122 @@ void main() {
   });
 
   group('deleteAccount', () {
+    late SharedPreferences prefs;
     late AuthCubit cubit;
 
-    setUp(() => cubit = buildCubit(currentUser: testUser));
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      cubit = buildCubit(currentUser: testUser, prefs: prefs);
+    });
     tearDown(() => cubit.close());
 
-    test('emits Loading then AccountDeleted on success', () async {
+    test('emits InProgress then AccountDeleted on success', () async {
       when(
         mockAuthRepository.deleteAccount(),
       ).thenAnswer((_) async => const Right(unit));
 
       final expectation = expectLater(
         cubit.stream,
-        emitsInOrder([isA<AuthLoading>(), isA<AuthAccountDeleted>()]),
+        emitsInOrder([
+          isA<AuthAccountDeletionInProgress>(),
+          isA<AuthAccountDeleted>(),
+        ]),
       );
 
       await cubit.deleteAccount();
       await expectation;
     });
 
-    test('emits Loading then Error when deletion fails', () async {
-      when(mockAuthRepository.deleteAccount()).thenAnswer(
-        (_) async => const Left(CacheFailure('delete_current_user غير مفعلة')),
-      );
+    test(
+      'a rejected deletion reports the error and returns to the signed-in view',
+      () async {
+        when(mockAuthRepository.deleteAccount()).thenAnswer(
+          (_) async => const Left(
+            ServerFailure(CubitMessageCodes.accountDeletionUnavailable),
+          ),
+        );
 
-      final expectation = expectLater(
-        cubit.stream,
-        emitsInOrder([isA<AuthLoading>(), isA<AuthError>()]),
-      );
+        final expectation = expectLater(
+          cubit.stream,
+          emitsInOrder([
+            isA<AuthAccountDeletionInProgress>(),
+            isA<AuthError>().having(
+              (state) => state.message,
+              'message',
+              CubitMessageCodes.accountDeletionUnavailable,
+            ),
+            isA<AuthAuthenticated>(),
+          ]),
+        );
 
-      await cubit.deleteAccount();
-      await expectation;
-    });
+        await cubit.deleteAccount();
+        await expectation;
+
+        // Nothing is pending, so the user can start a new deletion.
+        when(
+          mockAuthRepository.deleteAccount(),
+        ).thenAnswer((_) async => const Right(unit));
+        await cubit.deleteAccount();
+        expect(cubit.state, isA<AuthAccountDeleted>());
+      },
+    );
+
+    test(
+      'an unanswered deletion request offers a retry that completes it',
+      () async {
+        // The RPC outcome is unknown: the repository keeps the requested
+        // marker, so the next delete tap must not be silently ignored.
+        when(mockAuthRepository.deleteAccount()).thenAnswer((_) async {
+          await AccountDeletionMarker.markRequested(prefs, testUser.id);
+          return const Left(
+            ServerFailure(CubitMessageCodes.accountDeletionFailed),
+          );
+        });
+
+        await cubit.deleteAccount();
+        expect(cubit.state, isA<AuthAccountDeletionCleanupFailed>());
+
+        when(mockAuthRepository.deleteAccount()).thenAnswer((_) async {
+          await AccountDeletionMarker.completeAndClear(prefs, testUser.id);
+          return const Right(unit);
+        });
+
+        await cubit.retryAccountDeletionCleanup();
+
+        expect(cubit.state, isA<AuthAccountDeleted>());
+        verify(mockAuthRepository.deleteAccount()).called(2);
+        verifyNever(mockAuthRepository.resumeDeletedAccountCleanup());
+      },
+    );
+
+    test(
+      'a confirmed remote deletion retries only the local cleanup',
+      () async {
+        when(mockAuthRepository.deleteAccount()).thenAnswer((_) async {
+          await AccountDeletionMarker.markRequested(prefs, testUser.id);
+          await AccountDeletionMarker.markRemoteConfirmed(prefs);
+          return const Left(
+            ServerFailure(CubitMessageCodes.accountDeletionCleanupFailed),
+          );
+        });
+        when(mockAuthRepository.resumeDeletedAccountCleanup()).thenAnswer((
+          _,
+        ) async {
+          await AccountDeletionMarker.completeAndClear(prefs, testUser.id);
+          return const Right(unit);
+        });
+
+        await cubit.deleteAccount();
+        expect(cubit.state, isA<AuthAccountDeletionCleanupFailed>());
+
+        await cubit.retryAccountDeletionCleanup();
+
+        expect(cubit.state, isA<AuthAccountDeleted>());
+        verify(mockAuthRepository.deleteAccount()).called(1);
+        verify(mockAuthRepository.resumeDeletedAccountCleanup()).called(1);
+      },
+    );
   });
 
   // ─── Parent Mode production resync (Phase 7) ───────────────────────────────

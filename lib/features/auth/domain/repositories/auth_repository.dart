@@ -26,6 +26,10 @@ abstract class AuthRepository {
   /// This requires the `delete_current_user` RPC to be deployed in Supabase.
   Future<Either<Failure, Unit>> deleteAccount();
 
+  /// Completes a device cleanup that was durably marked after a successful
+  /// server-side deletion. It never invokes the deletion RPC again.
+  Future<Either<Failure, Unit>> resumeDeletedAccountCleanup();
+
   /// Sync local progress to cloud
   Future<Either<Failure, Unit>> syncProgressToCloud();
 

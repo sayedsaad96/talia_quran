@@ -4,6 +4,11 @@ import 'migration_readiness_usecase.dart';
 class AdaptiveRecommendationsUsecase {
   const AdaptiveRecommendationsUsecase();
 
+  /// Retention is a share of reviewed ayahs, so a handful of ayahs makes it
+  /// noise: right after a first session it is 0% and raised a high-priority
+  /// "action required" alert on Home for every new learner.
+  static const minAyahsForRetentionSignal = 10;
+
   MemorizationRecommendationsReport generate(MemorizationInsightsReport report) {
     final List<MemorizationRecommendation> recommendations = [];
 
@@ -41,8 +46,11 @@ class AdaptiveRecommendationsUsecase {
       }
     }
 
+    final hasRetentionSignal =
+        report.totalAyahs >= minAyahsForRetentionSignal;
+
     // Retention Drop
-    if (report.retentionScore < 0.70) {
+    if (hasRetentionSignal && report.retentionScore < 0.70) {
       recommendations.add(
         const MemorizationRecommendation(
           type: RecommendationType.retentionDrop,
@@ -52,7 +60,7 @@ class AdaptiveRecommendationsUsecase {
     }
 
     // Retention Excellent
-    if (report.retentionScore > 0.90) {
+    if (hasRetentionSignal && report.retentionScore > 0.90) {
       recommendations.add(
         const MemorizationRecommendation(
           type: RecommendationType.retentionExcellent,

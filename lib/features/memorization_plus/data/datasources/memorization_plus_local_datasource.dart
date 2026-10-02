@@ -43,6 +43,9 @@ abstract class MemorizationPlusLocalDatasource {
   /// sign-in. Returns the number of records claimed.
   Future<int> claimLocalReviewRecords();
 
+  /// How many guest review records [claimLocalReviewRecords] would transfer.
+  Future<int> countClaimableLocalReviewRecords();
+
   Future<AyahReviewRecordModel?> getReviewRecord(
     int surahId,
     int ayahNumber, {

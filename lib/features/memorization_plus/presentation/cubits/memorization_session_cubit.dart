@@ -217,7 +217,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     SpeechToText? speechToText,
     AudioCacheService? audioCacheService,
     AppSessionService? appSessionService,
+    double Function()? recitationPassThreshold,
   }) : _quranRepo = quranRepository,
+       _recitationPassThreshold = recitationPassThreshold,
        _memRepo = memorizationRepository,
        _baseEngine = sessionEngine,
        _engine = sessionEngine,
@@ -257,6 +259,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final V2ReviewOutcomeCommitter? _reviewOutcomeCommitter;
   final V2ReviewEffectOutboxProcessor? _effectOutboxProcessor;
   final AppSessionService? _appSessionService;
+
+  /// The user's "Accuracy level" pass threshold; null keeps the engine's.
+  final double Function()? _recitationPassThreshold;
 
   // ── STT ──────────────────────────────────────────────────────────────────
 
@@ -369,9 +374,13 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // receipt here heals an interrupted session without duplicating rewards.
     unawaited(_processPendingEffects());
 
-    // Plan difficulty: a challenging plan recites against a slightly
-    // stricter pass threshold (M-U4). Any read failure keeps the default.
+    // Pass threshold: the "Accuracy level" setting, raised to the stricter
+    // threshold of a challenging plan (M-U4). Read failures keep the default.
     _engine = _baseEngine;
+    double? threshold;
+    try {
+      threshold = _recitationPassThreshold?.call();
+    } catch (_) {}
     try {
       final planResult = await _memRepo.getCustomPlan();
       final plan = planResult.fold((_) => null, (value) => value);
@@ -379,11 +388,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           plan.isActive &&
           plan.targetUser == PlanTargetUser.adult &&
           plan.difficulty == MemorizationDifficulty.challenging) {
-        _engine = _baseEngine.withPassThreshold(
-          PlanSchedulePolicy.passThreshold(plan.difficulty),
+        final planThreshold = PlanSchedulePolicy.passThreshold(
+          plan.difficulty,
         );
+        threshold = threshold == null || threshold < planThreshold
+            ? planThreshold
+            : threshold;
       }
     } catch (_) {}
+    if (threshold != null) {
+      _engine = _baseEngine.withPassThreshold(threshold);
+    }
 
     // 1. Determine blockReviewRequired from profile.
     bool blockReviewRequired = true; // safe default

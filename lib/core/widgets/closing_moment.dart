@@ -6,15 +6,58 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../constants/app_spacing.dart';
+import '../di/injection.dart';
 import '../extensions/context_extensions.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'memorization_ayah_display.dart';
 
 /// The serene heart of a closing moment: an ayah of tranquility and a quiet
 /// summary of the session's impact, rendered before any statistics.
 class ClosingMomentAyahCard extends StatelessWidget {
   const ClosingMomentAyahCard({super.key, required this.summary});
+
+  /// Ar-Ra'd 13:28, shown in full from the canonical corpus: Quran text is
+  /// never typed into UI copy (Islamic content sources policy).
+  static const closingSurahId = 13;
+  static const closingAyahNumber = 28;
+
+  static Future<String?>? _closingAyahText;
+
+  @visibleForTesting
+  static void resetCacheForTest() => _closingAyahText = null;
+
+  static Future<String?> _loadClosingAyah() async {
+    if (!getIt.isRegistered<QuranRepository>()) return null;
+    final result = await getIt<QuranRepository>().getSurahDetail(
+      closingSurahId,
+    );
+    return result.fold(
+      (_) => null,
+      (detail) => detail.ayahs
+          .where((ayah) => ayah.numberInSurah == closingAyahNumber)
+          .firstOrNull
+          ?.text
+          .replaceAll('﻿', '')
+          .trim(),
+    );
+  }
+
+  /// Loads once; a failed read is retried on the next closing moment.
+  static Future<String?> _closingAyah() {
+    final cached = _closingAyahText;
+    if (cached != null) return cached;
+    final future = _loadClosingAyah().catchError((Object _) => null);
+    _closingAyahText = future;
+    future.then((text) {
+      if (text == null && identical(_closingAyahText, future)) {
+        _closingAyahText = null;
+      }
+    });
+    return future;
+  }
 
   /// Pre-localized, caller-specific summary line (e.g. ayahs memorized or
   /// khatmah wird page range).
@@ -57,21 +100,29 @@ class ClosingMomentAyahCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            l10n.closingAyah,
-            textAlign: TextAlign.center,
-            style: AppTypography.headlineMedium.copyWith(
-              fontFamily: 'Amiri',
-              color: textPrimary,
-              height: 1.9,
-            ),
+          // Fails closed: without the canonical text no ayah is shown.
+          FutureBuilder<String?>(
+            future: _closingAyah(),
+            builder: (context, snapshot) {
+              final text = snapshot.data;
+              if (text == null || text.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: MemorizationAyahDisplay(
+                    key: const Key('closing_moment_ayah'),
+                    text: text,
+                    surahId: closingSurahId,
+                    ayahNumber: closingAyahNumber,
+                    textColor: textPrimary,
+                    decorationColor: AppColors.gold.withValues(alpha: 0.5),
+                    referenceColor: AppColors.gold,
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            l10n.closingAyahSource,
-            style: AppTypography.labelMedium.copyWith(color: AppColors.gold),
-          ),
-          const SizedBox(height: AppSpacing.md),
           Text(
             summary,
             textAlign: TextAlign.center,

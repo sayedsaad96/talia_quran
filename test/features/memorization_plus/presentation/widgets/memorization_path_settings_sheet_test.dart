@@ -182,6 +182,10 @@ void main() {
           ),
         ),
       );
+      // A profile that never set a parent PIN.
+      when(
+        () => mockRepository.getParentSettings(),
+      ).thenAnswer((_) async => const Right(ParentSettings()));
       when(
         () => mockRepository.resetMemorizationIdentity(),
       ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
@@ -198,6 +202,39 @@ void main() {
       verify(() => mockRepository.resetMemorizationIdentity()).called(1);
       // verifyParentPin must never be called.
       verifyNever(() => mockRepository.verifyParentPin(any()));
+    },
+  );
+
+  testWidgets(
+    'an unlinked child with a parent PIN on this device cannot leave the '
+    'kids track without it',
+    (tester) async {
+      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
+        (_) async => Right(
+          MemorizationProfile.empty().copyWith(
+            selectedPath: MemorizationPath.child,
+          ),
+        ),
+      );
+      when(() => mockRepository.getParentSettings()).thenAnswer(
+        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+      );
+      when(
+        () => mockRepository.verifyParentPin(any()),
+      ).thenAnswer((_) async => const Right(false));
+      when(() => mockPathResolver.notifyChanged()).thenReturn(null);
+
+      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
+      await _openSheetAndConfirmReset(tester);
+
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.enterText(find.byType(TextField), '0000');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockRepository.verifyParentPin('0000')).called(1);
+      verifyNever(() => mockRepository.resetMemorizationIdentity());
     },
   );
 

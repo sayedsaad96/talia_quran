@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -36,6 +35,7 @@ import '../widgets/home_unified_progress.dart';
 import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 import '../widgets/staggered_fade_slide.dart';
+import '../../../../core/router/open_location.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.requestDailyAyahShare = false});
@@ -524,7 +524,7 @@ class _JourneyHeroAction extends StatelessWidget {
       data: data,
       isDark: isDark,
       minutes: state.heroMinutes,
-      onTap: () => context.push(action.route),
+      onTap: () => context.openLocation(action.route),
       onMore: state.alternativeActions.length > 1
           ? () => showHomeAlternativesSheet(
               context,

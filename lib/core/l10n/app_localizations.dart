@@ -954,7 +954,7 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'من {total}'**
-  String azkarCountOfTotal(int total);
+  String azkarCountOfTotal(String total);
 
   /// No description provided for @cancel.
   ///
@@ -1506,8 +1506,98 @@ abstract class AppLocalizations {
   /// No description provided for @signOutWarning.
   ///
   /// In ar, this message translates to:
-  /// **'هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.'**
+  /// **'هل تريد تسجيل الخروج؟ يعود تقدم حسابك عند تسجيل الدخول مجددًا، أما خطة الختمة وسجل الختمات فمحفوظان على هذا الجهاز فقط وسيُحذفان عند تسجيل الخروج.'**
   String get signOutWarning;
+
+  /// No description provided for @memorizationHubNothingToReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد آيات للمراجعة بعد. ابدأ الحفظ أولًا، وستظهر آياتك هنا عندما يحين موعد مراجعتها.'**
+  String get memorizationHubNothingToReview;
+
+  /// No description provided for @homeQuranMemorizedCaption.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ من القرآن'**
+  String get homeQuranMemorizedCaption;
+
+  /// No description provided for @kidsSetupDiscardTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجاهل إعداد الطفل؟'**
+  String get kidsSetupDiscardTitle;
+
+  /// No description provided for @kidsSetupDiscardBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يُحفظ إعداد مسار الأطفال بعد. هل تريد الخروج دون حفظ؟'**
+  String get kidsSetupDiscardBody;
+
+  /// No description provided for @kidsSetupKeepEditing.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة الإعداد'**
+  String get kidsSetupKeepEditing;
+
+  /// No description provided for @kidsSetupDiscard.
+  ///
+  /// In ar, this message translates to:
+  /// **'خروج دون حفظ'**
+  String get kidsSetupDiscard;
+
+  /// No description provided for @listeningReviewStartMemorizing.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الحفظ'**
+  String get listeningReviewStartMemorizing;
+
+  /// No description provided for @customPlanChildSwitchTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانتقال إلى مسار الأطفال؟'**
+  String get customPlanChildSwitchTitle;
+
+  /// No description provided for @customPlanChildSwitchBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطط الأطفال تُدار من مسار الأطفال. سيُنهى مسار الكبار وخطتك الحالية، وتبقى إنجازاتك وسجلك وشهاداتك، ثم يُفتح إعداد مسار الأطفال.'**
+  String get customPlanChildSwitchBody;
+
+  /// No description provided for @customPlanChildSwitchConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتقل إلى مسار الأطفال'**
+  String get customPlanChildSwitchConfirm;
+
+  /// No description provided for @guestImportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل بيانات الحفظ المحلية؟'**
+  String get guestImportTitle;
+
+  /// No description provided for @guestImportBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك بيانات حفظ أنشأتها قبل تسجيل الدخول. انقلها إلى هذا الحساب حتى تظهر في تقدمك ومراجعاتك.'**
+  String get guestImportBody;
+
+  /// No description provided for @guestImportConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقل'**
+  String get guestImportConfirm;
+
+  /// No description provided for @guestImportLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس الآن'**
+  String get guestImportLater;
+
+  /// No description provided for @guestImportDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نقل {countText} من سجلات الحفظ.'**
+  String guestImportDone(String countText);
 
   /// No description provided for @signOutPendingDataTitle.
   ///
@@ -3264,7 +3354,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMemorizationPathNotSelectedDesc.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الكبار أو الأطفال عند بدء الحفظ بلس.'**
+  /// **'اختر مسار الكبار أو الأطفال عند فتح تبويب الحفظ.'**
   String get settingsMemorizationPathNotSelectedDesc;
 
   /// No description provided for @settingsResetPathKeeps.
@@ -3300,19 +3390,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDeleteAccountSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'يحذف الحساب السحابي فقط'**
+  /// **'حذف الحساب والتقدم المرتبط به نهائيًا'**
   String get settingsDeleteAccountSubtitle;
 
   /// No description provided for @settingsDeleteAccountWarning.
   ///
   /// In ar, this message translates to:
-  /// **'سيتم حذف حساب Supabase المرتبط بـ {email} وبياناته السحابية.\n\nلن يتم حذف تقدم القرآن المحلي، أو الحفظ، أو مسار الأطفال، أو الحفظ الذكي من هذا الجهاز.\n\nهل تريد المتابعة؟'**
+  /// **'سيُحذف حساب {email} وملفه وتقدمه وخططه وعلاماته المرجعية وشهاداته وروابط ولي الأمر والمكافآت المرتبطة من السحابة.\n\nسيُمسح أيضًا تقدم الحساب وملفاته المحلية، بما فيها ملفات الأطفال التابعة له والعمليات المعلقة، من هذا الجهاز. لا يمكن التراجع عن الحذف.\n\nتبقى الحسابات المستقلة المرتبطة، والملفات التي حفظتها أو شاركتها خارج التطبيق. يجب تنظيف بيانات التطبيق على أجهزتك الأخرى أيضًا.\n\nهل تريد حذف الحساب نهائيًا؟'**
   String settingsDeleteAccountWarning(Object email);
 
   /// No description provided for @settingsAccountDeletedMessage.
   ///
   /// In ar, this message translates to:
-  /// **'تم حذف الحساب السحابي. بقي تقدمك المحلي محفوظاً على هذا الجهاز.'**
+  /// **'تم حذف الحساب وتنظيف بياناته من هذا الجهاز.'**
   String get settingsAccountDeletedMessage;
 
   /// No description provided for @settingsVersion.
@@ -3840,7 +3930,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingOfflineTrustLine.
   ///
   /// In ar, this message translates to:
-  /// **'يعمل دون إنترنت · بياناتك محفوظة على جهازك'**
+  /// **'يعمل دون إنترنت، بياناتك محفوظة على جهازك'**
   String get onboardingOfflineTrustLine;
 
   /// No description provided for @onboardingErrorGeneric.
@@ -4412,6 +4502,12 @@ abstract class AppLocalizations {
   /// **'مرحباً بطل الحفظ!'**
   String get kidsGamifiedWelcome;
 
+  /// No description provided for @kidsGamifiedWelcomeNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحباً يا {name}، بطل الحفظ!'**
+  String kidsGamifiedWelcomeNamed(String name);
+
   /// No description provided for @kidsGamifiedLevelProgress.
   ///
   /// In ar, this message translates to:
@@ -4421,13 +4517,13 @@ abstract class AppLocalizations {
   /// No description provided for @kidsGamifiedStarsCount.
   ///
   /// In ar, this message translates to:
-  /// **'{count} نجمة'**
-  String kidsGamifiedStarsCount(int count);
+  /// **'{count, plural, =0{{countText} نجمة} =1{نجمة واحدة} =2{نجمتان} few{{countText} نجمات} many{{countText} نجمة} other{{countText} نجمة}}'**
+  String kidsGamifiedStarsCount(int count, String countText);
 
   /// No description provided for @kidsGamifiedLastMission.
   ///
   /// In ar, this message translates to:
-  /// **'آخر مهمة'**
+  /// **'مهمتك الآن'**
   String get kidsGamifiedLastMission;
 
   /// No description provided for @kidsGamifiedContinueNow.
@@ -4661,8 +4757,8 @@ abstract class AppLocalizations {
   /// No description provided for @kidsGamifiedListenFirst.
   ///
   /// In ar, this message translates to:
-  /// **'استمع للآية {count} مرات قبل تسجيل تلاوتك.'**
-  String kidsGamifiedListenFirst(int count);
+  /// **'استمع للآية {count, plural, =1{مرة واحدة} =2{مرتين} few{{countText} مرات} other{{countText} مرة}} قبل تسجيل تلاوتك.'**
+  String kidsGamifiedListenFirst(int count, String countText);
 
   /// No description provided for @kidsGamifiedAudioLoading.
   ///
@@ -4679,8 +4775,8 @@ abstract class AppLocalizations {
   /// No description provided for @kidsGamifiedEarnedStars.
   ///
   /// In ar, this message translates to:
-  /// **'+{count} نجمة'**
-  String kidsGamifiedEarnedStars(int count);
+  /// **'+{count, plural, =0{{countText} نجمة} =1{نجمة واحدة} =2{نجمتان} few{{countText} نجمات} many{{countText} نجمة} other{{countText} نجمة}}'**
+  String kidsGamifiedEarnedStars(int count, String countText);
 
   /// No description provided for @kidsGamifiedEarnedGems.
   ///
@@ -5141,7 +5237,7 @@ abstract class AppLocalizations {
   /// No description provided for @listeningReviewAyahRef.
   ///
   /// In ar, this message translates to:
-  /// **'سورة {surah} · الآية {ayah}'**
+  /// **'سورة {surah}، الآية {ayah}'**
   String listeningReviewAyahRef(String surah, int ayah);
 
   /// No description provided for @listeningReviewNewRound.
@@ -5816,7 +5912,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPlanSurahAyahTitle.
   ///
   /// In ar, this message translates to:
-  /// **'{surah} · آية {ayahNumber}'**
+  /// **'{surah}، آية {ayahNumber}'**
   String dailyPlanSurahAyahTitle(String surah, String ayahNumber);
 
   /// No description provided for @dailyPlanRecordStats.
@@ -6175,7 +6271,7 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanPresetLightDesc.
   ///
   /// In ar, this message translates to:
-  /// **'3 آيات/يوم • 5 أيام • 10 دقائق'**
+  /// **'٣ آيات/يوم • ٥ أيام • ٢٠ دقيقة'**
   String get customPlanPresetLightDesc;
 
   /// No description provided for @customPlanPresetLightName.
@@ -6193,7 +6289,7 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanPresetBalancedDesc.
   ///
   /// In ar, this message translates to:
-  /// **'5 آيات/يوم • 6 أيام • 15 دقيقة'**
+  /// **'٥ آيات/يوم • ٦ أيام • ٣٠ دقيقة'**
   String get customPlanPresetBalancedDesc;
 
   /// No description provided for @customPlanPresetBalancedName.
@@ -6211,7 +6307,7 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanPresetIntensiveDesc.
   ///
   /// In ar, this message translates to:
-  /// **'10 آيات/يوم • كل الأسبوع • 30 دقيقة'**
+  /// **'١٠ آيات/يوم • كل الأسبوع • ٥٠ دقيقة'**
   String get customPlanPresetIntensiveDesc;
 
   /// No description provided for @customPlanPresetIntensiveName.
@@ -6229,8 +6325,14 @@ abstract class AppLocalizations {
   /// No description provided for @customPlanPresetJuzAmmaDesc.
   ///
   /// In ar, this message translates to:
-  /// **'من الناس إلى الفيل • 3 آيات/يوم'**
+  /// **'من الناس إلى النبأ • ٣ آيات/يوم • ٢٠ دقيقة'**
   String get customPlanPresetJuzAmmaDesc;
+
+  /// No description provided for @customPlanMinutesLimitHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'في {minutes} دقيقة يتسع وقت الجلسة لنحو {count} آيات جديدة فقط. زد مدة الجلسة لتحقيق هدفك اليومي.'**
+  String customPlanMinutesLimitHint(String minutes, String count);
 
   /// No description provided for @customPlanPresetJuzAmmaName.
   ///
@@ -7594,61 +7696,61 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS1Does.
   ///
   /// In ar, this message translates to:
-  /// **'تالية تبدأ بشاشة افتتاحية ثم تعريف سريع لأول استخدام، وبعدها تعيدك إلى آخر موضع قراءة أو جلسة قابلة للاستئناف.'**
+  /// **'تبدأ تالية بتعريف قصير تختار فيه مسار الكبار أو الأطفال، ثم تنقلك إلى الرئيسية. يمكنك استخدامها كضيف وتسجيل الدخول لاحقًا.'**
   String get tutorialS1Does;
 
   /// No description provided for @tutorialS1Open.
   ///
   /// In ar, this message translates to:
-  /// **'تظهر تلقائيًا عند فتح التطبيق. بعد ذلك استخدم الشريط السفلي للتنقل بين الرئيسية، القرآن، الحفظ، الأذكار، والتقدم.'**
+  /// **'يظهر عند أول فتح للتطبيق. بعد ذلك استخدم الشريط السفلي للتنقل بين الرئيسية والقرآن والحفظ والأذكار والتقدم.'**
   String get tutorialS1Open;
 
   /// No description provided for @tutorialS1Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للمستخدم الجديد أو لمن يريد فهم خريطة التطبيق قبل البدء بالحفظ أو القراءة.'**
+  /// **'مفيد للمستخدم الجديد الذي يريد فهم خريطة التطبيق قبل القراءة أو الحفظ.'**
   String get tutorialS1Useful;
 
   /// No description provided for @tutorialS1Step1.
   ///
   /// In ar, this message translates to:
-  /// **'أنهِ صفحات التعريف الأولى عند أول تشغيل.'**
+  /// **'أنهِ صفحات التعريف، أو اضغط «تخطي».'**
   String get tutorialS1Step1;
 
   /// No description provided for @tutorialS1Step2.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم الشريط السفلي للانتقال بين أقسام التطبيق الأساسية.'**
+  /// **'اختر مسار الكبار أو الأطفال، ثم تابع كضيف أو سجّل الدخول.'**
   String get tutorialS1Step2;
 
   /// No description provided for @tutorialS1Step3.
   ///
   /// In ar, this message translates to:
-  /// **'إذا ظهر زر استكمال القراءة في الرئيسية فاضغطه للعودة إلى آخر موضع محفوظ.'**
+  /// **'استخدم الشريط السفلي للانتقال بين الأقسام الأساسية.'**
   String get tutorialS1Step3;
 
   /// No description provided for @tutorialS1Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'ابدأ من الصفحة الرئيسية لأنها تجمع ورد اليوم والتقدم والاختصارات.'**
+  /// **'ابدأ من الرئيسية فهي تجمع قراءة اليوم وتقدمك والاختصارات.'**
   String get tutorialS1Tip1;
 
   /// No description provided for @tutorialS1Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'آخر موضع محفوظ يعمل مع صفحات القرآن وبعض مسارات الحفظ الذكي.'**
+  /// **'يمكنك تغيير مسار الحفظ لاحقًا من الإعدادات ثم «القرآن والحفظ».'**
   String get tutorialS1Tip2;
 
   /// No description provided for @tutorialS1Note1.
   ///
   /// In ar, this message translates to:
-  /// **'شاشة البداية والتعريف لا تتغير عند إضافة هذا الدليل.'**
+  /// **'تسجيل الدخول اختياري. بدونه يبقى تقدمك على هذا الجهاز.'**
   String get tutorialS1Note1;
 
   /// No description provided for @tutorialS1Note2.
   ///
   /// In ar, this message translates to:
-  /// **'تسجيل الدخول اختياري، ويفيد في إدارة الحساب وميزات العائلة.'**
+  /// **'الإعدادات خلف أيقونة الترس أعلى الرئيسية.'**
   String get tutorialS1Note2;
 
   /// No description provided for @tutorialS2Title.
@@ -7666,31 +7768,31 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS2Does.
   ///
   /// In ar, this message translates to:
-  /// **'تعرض تحية باسمك إن وجد، وردًا يوميًا، استكمال القراءة، ملخص التقدم، اختصار الأذكار، الخطة المخصصة، الحفظ الذكي، وخريطة نشاطك.'**
+  /// **'تعرض الرئيسية الصلاة القادمة، وبطاقة رئيسية لما تفعله بعد ذلك، والورد اليومي، وسلسلتك ونقاطك، وآية اليوم، ونشاطك الأخير.'**
   String get tutorialS2Does;
 
   /// No description provided for @tutorialS2Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط تبويب الرئيسية من الشريط السفلي، أو ارجع إلى المسار الرئيسي للتطبيق.'**
+  /// **'اضغط تبويب الرئيسية في الشريط السفلي.'**
   String get tutorialS2Open;
 
   /// No description provided for @tutorialS2Useful.
   ///
   /// In ar, this message translates to:
-  /// **'أفضل نقطة انطلاق يومية لأنها تجمع ما تحتاجه للقراءة والحفظ والمتابعة في شاشة واحدة.'**
+  /// **'أفضل نقطة انطلاق يومية: القراءة والحفظ والمتابعة في شاشة واحدة.'**
   String get tutorialS2Useful;
 
   /// No description provided for @tutorialS2Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط بطاقة الورد اليومي لفتح صفحة القرآن المقترحة.'**
+  /// **'اضغط البطاقة الرئيسية لاستكمال القراءة أو استئناف جلسة أو فتح خطة اليوم.'**
   String get tutorialS2Step1;
 
   /// No description provided for @tutorialS2Step2.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم استكمال القراءة للعودة إلى آخر صفحة أو سورة محفوظة.'**
+  /// **'اضغط «شيء آخر» لعرض خيارات أخرى.'**
   String get tutorialS2Step2;
 
   /// No description provided for @tutorialS2Step3.
@@ -7702,37 +7804,37 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS2Step4.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط بطاقة الحفظ الذكي للدخول إلى Memorization Plus.'**
+  /// **'اضغط «اختيار المدينة» لتحديد مدينتك لمواقيت الصلاة.'**
   String get tutorialS2Step4;
 
   /// No description provided for @tutorialS2Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'راجع صف التقدم يوميًا لمعرفة السلسلة و XP.'**
+  /// **'الحلقة تُظهر نسبة ما حفظته من القرآن كله فتنمو ببطء. النقاط السبع هي آخر سبعة أيام وتنتهي باليوم.'**
   String get tutorialS2Tip1;
 
   /// No description provided for @tutorialS2Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'الخطة المخصصة تظهر في الرئيسية عندما تحفظ خطة من الحفظ الذكي.'**
+  /// **'اضغط الأيقونات تحت آية اليوم لمشاركتها أو فتحها في المصحف أو الاستماع إليها.'**
   String get tutorialS2Tip2;
 
   /// No description provided for @tutorialS2Note1.
   ///
   /// In ar, this message translates to:
-  /// **'بعض البطاقات تظهر فقط عند وجود بيانات، مثل آخر موضع قراءة أو خطة مخصصة.'**
+  /// **'بعض البطاقات تظهر فقط عند وجود بيانات، مثل ختمة بدأتها أو موضع قراءة محفوظ.'**
   String get tutorialS2Note1;
 
   /// No description provided for @tutorialS2Note2.
   ///
   /// In ar, this message translates to:
-  /// **'معاينة الشهادات التجريبية تظهر في وضع التطوير فقط وليست جزءًا للمستخدم النهائي.'**
+  /// **'يمكن إخفاء بطاقة الحساب بعلامة ✕.'**
   String get tutorialS2Note2;
 
   /// No description provided for @tutorialS3Title.
   ///
   /// In ar, this message translates to:
-  /// **'قراءة القرآن وعرض صفحات المصحف'**
+  /// **'قراءة القرآن'**
   String get tutorialS3Title;
 
   /// No description provided for @tutorialS3Cat.
@@ -7744,73 +7846,73 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS3Does.
   ///
   /// In ar, this message translates to:
-  /// **'يوفر تبويب القرآن قائمة السور، عرض الأجزاء والصفحات، قارئ المصحف، تشغيل الآيات، النسخ، العلامات المرجعية، حجم الخط، ووضع التركيز.'**
+  /// **'يعرض تبويب القرآن السور والأجزاء وعلاماتك المرجعية. ويعرض القارئ صفحة المصحف بألوان التجويد مع الصوت والعلامات ووضع التركيز.'**
   String get tutorialS3Does;
 
   /// No description provided for @tutorialS3Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط تبويب القرآن، ثم اختر سورة من تبويب السور أو صفحة من تبويب الأجزاء. يمكن فتح الصفحة أيضًا من الورد اليومي.'**
+  /// **'اضغط تبويب القرآن ثم اختر سورة أو جزءًا. ويمكنك فتح ورد اليوم من الرئيسية.'**
   String get tutorialS3Open;
 
   /// No description provided for @tutorialS3Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للورد اليومي، مراجعة آية محددة، القراءة حسب الصفحة، أو التحضير لجلسة حفظ.'**
+  /// **'للورد اليومي، وللبحث عن آية، وللقراءة قبل جلسة الحفظ.'**
   String get tutorialS3Useful;
 
   /// No description provided for @tutorialS3Step1.
   ///
   /// In ar, this message translates to:
-  /// **'ابحث عن السورة من مربع البحث أو اخترها من القائمة.'**
+  /// **'اختر سورة من القائمة، أو استخدم مربع البحث في الأعلى.'**
   String get tutorialS3Step1;
 
   /// No description provided for @tutorialS3Step2.
   ///
   /// In ar, this message translates to:
-  /// **'افتح تبويب الأجزاء للوصول إلى صفحات المصحف حسب الجزء.'**
+  /// **'اسحب لتقليب الصفحة.'**
   String get tutorialS3Step2;
 
   /// No description provided for @tutorialS3Step3.
   ///
   /// In ar, this message translates to:
-  /// **'داخل القارئ اضغط الآية لعرض إجراءات التشغيل والنسخ والحفظ.'**
+  /// **'اضغط على الآية مطولًا للاستماع إليها أو نسخها أو وضع علامة أو مشاركتها أو بدء حفظها.'**
   String get tutorialS3Step3;
 
   /// No description provided for @tutorialS3Step4.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم زر حجم الخط لتكبير النص، وزر التركيز لتقليل التشتيت.'**
+  /// **'افتح القائمة (النقاط الثلاث) للانتقال إلى صفحة أو سورة أو جزء، أو اختيار القارئ، أو تشغيل ألوان التجويد وإيقافها، أو الدخول إلى وضع التركيز.'**
   String get tutorialS3Step4;
 
   /// No description provided for @tutorialS3Step5.
   ///
   /// In ar, this message translates to:
-  /// **'في قارئ الصفحة اضغط تأكيد القراءة ليُحتسب تقدم القراءة.'**
+  /// **'ابقَ في الصفحة بضع ثوانٍ أثناء القراءة: تُحتسب مقروءة تلقائيًا.'**
   String get tutorialS3Step5;
 
   /// No description provided for @tutorialS3Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'البحث يدعم أسماء السور، والبحث النصي في الآيات يعتمد على تطبيع النص العربي.'**
+  /// **'استمع إلى الآية قبل حفظها لتضبط النطق.'**
   String get tutorialS3Tip1;
 
   /// No description provided for @tutorialS3Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم تشغيل الصوت قبل الحفظ لتثبيت النطق.'**
+  /// **'بطاقة «أكمل القراءة» في تبويب القرآن تعيدك إلى آخر صفحة.'**
   String get tutorialS3Tip2;
 
   /// No description provided for @tutorialS3Note1.
   ///
   /// In ar, this message translates to:
-  /// **'بيانات القرآن محملة من ملفات التطبيق المحلية، لذلك يمكن عرض النص بدون اتصال.'**
+  /// **'نص القرآن مضمّن في التطبيق فيُعرض دون اتصال.'**
   String get tutorialS3Note1;
 
   /// No description provided for @tutorialS3Note2.
   ///
   /// In ar, this message translates to:
-  /// **'الصوت قد يحتاج اتصالًا أو ملفًا مخزنًا في الكاش حسب توفره.'**
+  /// **'الصوت يحتاج اتصالًا ما لم يكن مخزّنًا مسبقًا.'**
   String get tutorialS3Note2;
 
   /// No description provided for @tutorialS4Title.
@@ -7828,67 +7930,67 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS4Does.
   ///
   /// In ar, this message translates to:
-  /// **'يسمح لك بالعثور على السور أو الآيات، وحفظ الآيات المهمة كعلامات مرجعية مجمعة حسب السورة.'**
+  /// **'ابحث عن سورة باسمها أو عن آية بكلماتها، واحفظ الآيات المهمة كعلامات مرجعية.'**
   String get tutorialS4Does;
 
   /// No description provided for @tutorialS4Open.
   ///
   /// In ar, this message translates to:
-  /// **'البحث من أعلى تبويب القرآن. العلامات من تبويب العلامات داخل القرآن أو من إجراء الحفظ داخل القارئ.'**
+  /// **'استخدم مربع البحث أعلى تبويب القرآن أو أيقونة البحث في الرئيسية. وللعلامات تبويب خاص في شاشة القرآن.'**
   String get tutorialS4Open;
 
   /// No description provided for @tutorialS4Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد لتجميع آيات المراجعة، الآيات المتشابهة، أو مواضع تريد الرجوع إليها لاحقًا.'**
+  /// **'لجمع آيات المراجعة أو الآيات المتشابهة أو مواضع تريد الرجوع إليها.'**
   String get tutorialS4Useful;
 
   /// No description provided for @tutorialS4Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب اسم سورة أو كلمة من الآية في مربع البحث.'**
+  /// **'اكتب اسم سورة أو كلمات من آية.'**
   String get tutorialS4Step1;
 
   /// No description provided for @tutorialS4Step2.
   ///
   /// In ar, this message translates to:
-  /// **'افتح الآية أو السورة المطلوبة من النتائج.'**
+  /// **'افتح السورة أو الآية من النتائج.'**
   String get tutorialS4Step2;
 
   /// No description provided for @tutorialS4Step3.
   ///
   /// In ar, this message translates to:
-  /// **'من القارئ اختر علامة مرجعية لحفظ الآية.'**
+  /// **'اضغط الآية مطولًا في القارئ واختر «إشارة مرجعية».'**
   String get tutorialS4Step3;
 
   /// No description provided for @tutorialS4Step4.
   ///
   /// In ar, this message translates to:
-  /// **'افتح تبويب العلامات للرجوع إلى الآيات المحفوظة أو حذفها بالسحب/التأكيد.'**
+  /// **'افتح تبويب الإشارة المرجعية للرجوع إلى الآيات المحفوظة أو حذفها.'**
   String get tutorialS4Step4;
 
   /// No description provided for @tutorialS4Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ بدايات مقاطع الحفظ كعلامات لتعود إليها بسرعة.'**
+  /// **'ضع علامة عند بداية كل مقطع حفظ لتعود إليه بسرعة.'**
   String get tutorialS4Tip1;
 
   /// No description provided for @tutorialS4Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم النسخ عند مشاركة آية خارج التطبيق.'**
+  /// **'البحث يتجاهل التشكيل فيمكنك الكتابة بدونه.'**
   String get tutorialS4Tip2;
 
   /// No description provided for @tutorialS4Note1.
   ///
   /// In ar, this message translates to:
-  /// **'العلامات محفوظة محليًا في SharedPreferences.'**
+  /// **'بحث الآيات يعرض 50 نتيجة كحد أقصى: أضف كلمات لتضييقه.'**
   String get tutorialS4Note1;
 
   /// No description provided for @tutorialS4Note2.
   ///
   /// In ar, this message translates to:
-  /// **'إزالة علامة لا تحذف أي تقدم قراءة أو حفظ.'**
+  /// **'حذف علامة لا يؤثر في أي تقدم قراءة أو حفظ.'**
   String get tutorialS4Note2;
 
   /// No description provided for @tutorialS5Title.
@@ -7906,67 +8008,67 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS5Does.
   ///
   /// In ar, this message translates to:
-  /// **'يوفر تبويب الحفظ مسارين: مسار البالغين من البداية، ومسار المبتدئين من قصار السور، مع فتح السور تدريجيًا ومتابعة حالة كل آية.'**
+  /// **'يجمع تبويب الحفظ خطة اليوم والتدرب بالسورة واختبار الاستماع والمراجعة بالتسميع. وتمر كل آية بالتعلّم ثم الحفظ ثم التسميع.'**
   String get tutorialS5Does;
 
   /// No description provided for @tutorialS5Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط تبويب الحفظ، اختر المسار عند أول استخدام، ثم اختر سورة مفتوحة أو غيّر المسار من زر المسار.'**
+  /// **'اضغط تبويب الحفظ. وعند أول استخدام تختار مسار الكبار أو الأطفال.'**
   String get tutorialS5Open;
 
   /// No description provided for @tutorialS5Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للحفظ المنهجي بسور كاملة ومراجعات إجبارية تمنع تراكم النسيان.'**
+  /// **'للحفظ المنهجي مع مراجعات متباعدة حتى يثبت ما تحفظه.'**
   String get tutorialS5Useful;
 
   /// No description provided for @tutorialS5Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار البالغين أو المبتدئين.'**
+  /// **'أنشئ خطة، أو اختر سورة من «تدرّب بالسورة».'**
   String get tutorialS5Step1;
 
   /// No description provided for @tutorialS5Step2.
   ///
   /// In ar, this message translates to:
-  /// **'افتح سورة متاحة من قائمة السور.'**
+  /// **'التعلّم: استمع إلى الآية واقرأها.'**
   String get tutorialS5Step2;
 
   /// No description provided for @tutorialS5Step3.
   ///
   /// In ar, this message translates to:
-  /// **'استمع للآية، ثم ابدأ التسميع عند الحاجة.'**
+  /// **'الحفظ: جرّب دون النظر، واستعن بالتلميحات (أول كلمة، أوائل الكلمات، إظهار الآية) عند الحاجة فقط.'**
   String get tutorialS5Step3;
 
   /// No description provided for @tutorialS5Step4.
   ///
   /// In ar, this message translates to:
-  /// **'أكمل الآيات المطلوبة، وتعامل مع نقاط المراجعة قبل فتح التالي.'**
+  /// **'التسميع: سجّل تلاوتك، أو قيّم نفسك بصدق إن لم يتوفر التعرّف على الكلام. ثم تُسمَّع مجموعة الآيات معًا.'**
   String get tutorialS5Step4;
 
   /// No description provided for @tutorialS5Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم إعداد دقة التسميع من الإعدادات إذا كان التقييم صارمًا أو سهلًا أكثر من اللازم.'**
+  /// **'التلميحات تُسجَّل وتؤثر في موعد عودة الآية للمراجعة.'**
   String get tutorialS5Tip1;
 
   /// No description provided for @tutorialS5Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'راجع الآيات التي تظهر في حالة مراجعة قبل الانتقال السريع.'**
+  /// **'غيّر صرامة التحقق من التسميع من الإعدادات ثم «القرآن والحفظ» ثم «مستوى الدقة».'**
   String get tutorialS5Tip2;
 
   /// No description provided for @tutorialS5Note1.
   ///
   /// In ar, this message translates to:
-  /// **'بعض السور تكون مقفلة حتى يكتمل الشرط السابق في المسار المختار.'**
+  /// **'الخروج من الجلسة يسألك: أكمل لاحقًا أم تخلَّ عنها.'**
   String get tutorialS5Note1;
 
   /// No description provided for @tutorialS5Note2.
   ///
   /// In ar, this message translates to:
-  /// **'تقدم الحفظ محفوظ محليًا في Isar، وقد يزامن سحابيًا عند تسجيل الدخول.'**
+  /// **'إن لم يتوفر التعرّف على الكلام أو إذن الميكروفون فالتقييم الذاتي مسار معتمد.'**
   String get tutorialS5Note2;
 
   /// No description provided for @tutorialS6Title.
@@ -7984,79 +8086,79 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS6Does.
   ///
   /// In ar, this message translates to:
-  /// **'يحتوي على أذكار الصباح والمساء، أذكار عامة، وأدعية، مع عداد تكرار، فهرس، تغيير حجم الخط، نسخ ومشاركة.'**
+  /// **'أذكار الصباح والمساء وأذكار عامة وأدعية، مع عداد تكرار وفهرس ومسبحة حرة وورد ذكي يتبع وقت اليوم.'**
   String get tutorialS6Does;
 
   /// No description provided for @tutorialS6Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط تبويب الأذكار، ثم اختر الصباح أو المساء أو الأذكار العامة أو الأدعية.'**
+  /// **'اضغط تبويب الأذكار ثم اختر الصباح أو المساء أو الأذكار العامة أو الأدعية أو الورد الذكي أو المسبحة الحرة.'**
   String get tutorialS6Open;
 
   /// No description provided for @tutorialS6Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للورد الصباحي والمسائي، جلسات التسبيح، ومشاركة دعاء أو ذكر بسرعة.'**
+  /// **'للورد الصباحي والمسائي وجلسات التسبيح ومشاركة دعاء بسرعة.'**
   String get tutorialS6Useful;
 
   /// No description provided for @tutorialS6Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر فئة الأذكار المطلوبة.'**
+  /// **'اختر فئة؛ وتظهر فئة الوقت الحالي مميّزة في الأعلى.'**
   String get tutorialS6Step1;
 
   /// No description provided for @tutorialS6Step2.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط بطاقة الذكر أو العداد لإكمال التكرارات.'**
+  /// **'اضغط العداد مرة لكل تكرار؛ وينتقل إلى الذكر التالي عند الإتمام.'**
   String get tutorialS6Step2;
 
   /// No description provided for @tutorialS6Step3.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم الفهرس للانتقال إلى ذكر محدد.'**
+  /// **'افتح الفهرس للانتقال إلى ذكر محدد.'**
   String get tutorialS6Step3;
 
   /// No description provided for @tutorialS6Step4.
   ///
   /// In ar, this message translates to:
-  /// **'غيّر حجم الخط من زر التنسيق، وانسخ أو شارك الذكر عند الحاجة.'**
+  /// **'غيّر حجم الخط، وانسخ الذكر أو شاركه عند الحاجة.'**
   String get tutorialS6Step4;
 
   /// No description provided for @tutorialS6Step5.
   ///
   /// In ar, this message translates to:
-  /// **'بعد الإكمال يمكنك اعادة ضبط الجلسة أو العودة للرئيسية.'**
+  /// **'عند الانتهاء أعد ضبط الجلسة أو ارجع.'**
   String get tutorialS6Step5;
 
   /// No description provided for @tutorialS6Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'فعّل تذكيرات الصباح والمساء من الإعدادات.'**
+  /// **'فعّل تذكيرات الصباح والمساء من الإعدادات ثم «الإشعارات».'**
   String get tutorialS6Tip1;
 
   /// No description provided for @tutorialS6Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم تبويب الأدعية للتذكير اليومي بالدعاء.'**
+  /// **'اضغط العداد مطولًا للتراجع عن آخر عدّة.'**
   String get tutorialS6Tip2;
 
   /// No description provided for @tutorialS6Note1.
   ///
   /// In ar, this message translates to:
-  /// **'الأذكار محملة من ملفات التطبيق المحلية.'**
+  /// **'الأذكار مضمّنة في التطبيق وتعمل دون اتصال.'**
   String get tutorialS6Note1;
 
   /// No description provided for @tutorialS6Note2.
   ///
   /// In ar, this message translates to:
-  /// **'عداد الأذكار مخصص للجلسة الحالية، وليس شهادة حفظ.'**
+  /// **'العدّادات لجلسة اليوم الحالي، وليست شهادة حفظ.'**
   String get tutorialS6Note2;
 
   /// No description provided for @tutorialS7Title.
   ///
   /// In ar, this message translates to:
-  /// **'الحفظ الذكي والخطة اليومية'**
+  /// **'الخطة اليومية والمراجعة'**
   String get tutorialS7Title;
 
   /// No description provided for @tutorialS7Cat.
@@ -8068,79 +8170,79 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS7Does.
   ///
   /// In ar, this message translates to:
-  /// **'Memorization Plus ينشئ خطة يومية للبالغين تجمع آيات جديدة ومراجعة قريبة وبعيدة، مع تقييم ممتاز/متوسط/ضعيف واختبار شفهي.'**
+  /// **'تقدّم خطتك كل يوم آيات جديدة ومراجعات. وتعود المراجعات بجدول يعتمد على جودة تسميعك فيثبت ما تحفظه.'**
   String get tutorialS7Does;
 
   /// No description provided for @tutorialS7Open.
   ///
   /// In ar, this message translates to:
-  /// **'من الصفحة الرئيسية أو بطاقة الحفظ الذكي في تبويب الحفظ، ثم اختر مسار البالغين.'**
+  /// **'الحفظ ثم «أكمل خطة اليوم»، أو البطاقة الرئيسية في الرئيسية.'**
   String get tutorialS7Open;
 
   /// No description provided for @tutorialS7Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد لمن يريد حفظًا متدرجًا مع مراجعة ذكية بدل الاعتماد على الذاكرة وحدها.'**
+  /// **'لحفظ متدرج مع مراجعة ذكية بدل الاعتماد على الذاكرة وحدها.'**
   String get tutorialS7Useful;
 
   /// No description provided for @tutorialS7Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار البالغين من شاشة اختيار المسار.'**
+  /// **'افتح «أكمل خطة اليوم» من تبويب الحفظ.'**
   String get tutorialS7Step1;
 
   /// No description provided for @tutorialS7Step2.
   ///
   /// In ar, this message translates to:
-  /// **'افتح الخطة اليومية للسورة الأخيرة أو المختارة.'**
+  /// **'أتمم آيات اليوم الجديدة.'**
   String get tutorialS7Step2;
 
   /// No description provided for @tutorialS7Step3.
   ///
   /// In ar, this message translates to:
-  /// **'راجع كل آية ثم قيّمها: ممتاز، متوسط، أو ضعيف.'**
+  /// **'ابدأ «مراجعة بالتسميع» عندما تستحق آيات المراجعة: تعرض الشارة عددها.'**
   String get tutorialS7Step3;
 
   /// No description provided for @tutorialS7Step4.
   ///
   /// In ar, this message translates to:
-  /// **'ابدأ الاختبار من زر الاختبار لتسميع الآيات صوتيًا.'**
+  /// **'افتح «تفاصيل خطة اليوم» لترى ما أُنجز وما بقي.'**
   String get tutorialS7Step4;
 
   /// No description provided for @tutorialS7Step5.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم زر التحديث لإعادة توليد الخطة عند الحاجة.'**
+  /// **'جرّب «اختبار الاستماع» بعد حفظ بضع آيات: يشغّل آية ويطلب منك ذكر سورتها أو إكمالها.'**
   String get tutorialS7Step5;
 
   /// No description provided for @tutorialS7Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'قيّم بصدق لأن التقييم يحدد قوة الآية وموعد مراجعتها التالي.'**
+  /// **'قيّم نفسك بصدق: فهو يحدد قوة الآية وموعد عودتها.'**
   String get tutorialS7Tip1;
 
   /// No description provided for @tutorialS7Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'ابدأ بعدد آيات قليل إذا كنت تبني عادة يومية جديدة.'**
+  /// **'إن بدت الخطة ثقيلة فخفّض عدد الآيات اليومية من «إعدادات الخطة».'**
   String get tutorialS7Tip2;
 
   /// No description provided for @tutorialS7Note1.
   ///
   /// In ar, this message translates to:
-  /// **'الخطة اليومية تحفظ في SharedPreferences وتستخدم سجلات مراجعة محلية.'**
+  /// **'في أيام الراحة (حسب أيام الأسبوع المحددة) تحصل على المراجعات فقط.'**
   String get tutorialS7Note1;
 
   /// No description provided for @tutorialS7Note2.
   ///
   /// In ar, this message translates to:
-  /// **'الاختبار يحتاج صلاحية الميكروفون والتعرف على الكلام من الجهاز.'**
+  /// **'يحتاج اختبار الاستماع إلى خمس آيات محفوظة على الأقل.'**
   String get tutorialS7Note2;
 
   /// No description provided for @tutorialS8Title.
   ///
   /// In ar, this message translates to:
-  /// **'الخطة المخصصة'**
+  /// **'إعداد خطتك'**
   String get tutorialS8Title;
 
   /// No description provided for @tutorialS8Cat.
@@ -8152,61 +8254,61 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS8Does.
   ///
   /// In ar, this message translates to:
-  /// **'تسمح بإنشاء خطة حفظ باسم ونطاق سور وحمل يومي وأيام أسبوعية ومدة جلسة وصعوبة ومراجعة قريبة/بعيدة.'**
+  /// **'أنشئ خطتك من قالب سريع أو من الصفر: الاسم ونطاق السور والآيات اليومية وأيام الأسبوع ومدة الجلسة والصعوبة والمراجعات.'**
   String get tutorialS8Does;
 
   /// No description provided for @tutorialS8Open.
   ///
   /// In ar, this message translates to:
-  /// **'افتح الحفظ الذكي، ثم اضغط بطاقة الخطة المخصصة من شاشة اختيار المسار.'**
+  /// **'الحفظ ثم «أنشئ خطتك»، أو «إعدادات الخطة» لاحقًا.'**
   String get tutorialS8Open;
 
   /// No description provided for @tutorialS8Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيدة لمن لديه هدف محدد مثل حفظ جزء معين أو تنظيم حفظ طفل بخطة قصيرة.'**
+  /// **'لهدف محدد مثل حفظ جزء بعينه، أو لتنظيم حفظ طفل.'**
   String get tutorialS8Useful;
 
   /// No description provided for @tutorialS8Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب اسم الخطة وحدد هل هي لك أم لطفل.'**
+  /// **'اختر قالبًا سريعًا (خفيف، متوازن، مكثف، جزء عم) أو املأ الحقول بنفسك.'**
   String get tutorialS8Step1;
 
   /// No description provided for @tutorialS8Step2.
   ///
   /// In ar, this message translates to:
-  /// **'اختر بداية ونهاية نطاق السور.'**
+  /// **'اختر نطاق السور. إن اخترت «طفل» فستُنقل إلى مسار الأطفال، لأن خطط الأطفال تُدار منه.'**
   String get tutorialS8Step2;
 
   /// No description provided for @tutorialS8Step3.
   ///
   /// In ar, this message translates to:
-  /// **'اضبط عدد الآيات اليومية وأيام الحفظ ومدة الجلسة.'**
+  /// **'اضبط عدد الآيات اليومية وأيام الأسبوع ومدة الجلسة.'**
   String get tutorialS8Step3;
 
   /// No description provided for @tutorialS8Step4.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مستوى الصعوبة وشغّل أو أوقف المراجعات.'**
+  /// **'اختر الصعوبة وشغّل المراجعة القريبة والبعيدة أو أوقفها.'**
   String get tutorialS8Step4;
 
   /// No description provided for @tutorialS8Step5.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ الخطة للانتقال إلى الخطة اليومية.'**
+  /// **'احفظ الخطة وابدأها.'**
   String get tutorialS8Step5;
 
   /// No description provided for @tutorialS8Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'اجعل نطاق الخطة صغيرًا في البداية لتسهيل الالتزام.'**
+  /// **'مدة الجلسة تحدد الآيات الجديدة بنحو أربع دقائق للآية. وتظهر ملاحظة إن قصرت الدقائق عن هدفك.'**
   String get tutorialS8Tip1;
 
   /// No description provided for @tutorialS8Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'اترك المراجعة القريبة والبعيدة مفعّلتين إن كنت تحفظ يوميًا.'**
+  /// **'ابدأ بقدر صغير لتبني العادة ثم زِد.'**
   String get tutorialS8Tip2;
 
   /// No description provided for @tutorialS8Note1.
@@ -8218,13 +8320,13 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS8Note2.
   ///
   /// In ar, this message translates to:
-  /// **'الخطة تظهر في الصفحة الرئيسية عند وجود خطة نشطة.'**
+  /// **'مدة الإنهاء الظاهرة في الشاشة تقدير تقريبي.'**
   String get tutorialS8Note2;
 
   /// No description provided for @tutorialS9Title.
   ///
   /// In ar, this message translates to:
-  /// **'وضع الأطفال ولوحة ولي الأمر'**
+  /// **'وضع الأطفال وأدوات ولي الأمر'**
   String get tutorialS9Title;
 
   /// No description provided for @tutorialS9Cat.
@@ -8236,67 +8338,67 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Does.
   ///
   /// In ar, this message translates to:
-  /// **'يوفر رحلة أطفال بمراحل ونجوم ومستويات وتكرار صوتي، مع لوحة ولي أمر للملخص والتذكير والمكافآت والربط عن بعد.'**
+  /// **'رحلة بيوت حفظ للأطفال بنجوم ومستويات واستماع متكرر، مع أدوات لولي الأمر للمتابعة.'**
   String get tutorialS9Does;
 
   /// No description provided for @tutorialS9Open.
   ///
   /// In ar, this message translates to:
-  /// **'من الحفظ الذكي اختر مسار الأطفال. لوحة ولي الأمر تظهر من رحلة الأطفال أو من الإعدادات عند اختيار مسار الأطفال أو تفعيل وضع ولي الأمر.'**
+  /// **'اختر مسار الأطفال. ويُضبط رمز ولي الأمر أثناء إعداد الطفل. وتظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.'**
   String get tutorialS9Open;
 
   /// No description provided for @tutorialS9Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للأطفال والمبتدئين، أو للوالد الذي يريد متابعة النجوم والجلسات والمكافآت.'**
+  /// **'للأطفال والمبتدئين، أو لولي أمر يريد متابعة النجوم والجلسات والمكافآت.'**
   String get tutorialS9Useful;
 
   /// No description provided for @tutorialS9Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الأطفال وافتح رحلة السورة.'**
+  /// **'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية ورمز ولي أمر من أربعة أرقام.'**
   String get tutorialS9Step1;
 
   /// No description provided for @tutorialS9Step2.
   ///
   /// In ar, this message translates to:
-  /// **'ابدأ المرحلة المفتوحة، واستمع للآية وكررها.'**
+  /// **'في رئيسية الأطفال اضغط «استكمل الآن»، واستمع إلى الآية ثلاث مرات، ثم جرّب من حفظك.'**
   String get tutorialS9Step2;
 
   /// No description provided for @tutorialS9Step3.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط أنهيت المراجعة لمنح النقاط والنجوم.'**
+  /// **'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي»: يدخل ولي الأمر الرمز للتأكيد.'**
   String get tutorialS9Step3;
 
   /// No description provided for @tutorialS9Step4.
   ///
   /// In ar, this message translates to:
-  /// **'افتح لوحة ولي الأمر لإنشاء رمز، ضبط التذكير، إضافة مكافآت، أو ربط طفل عبر QR/إدخال يدوي.'**
+  /// **'تابع خريطة الرحلة: تُفتح البيوت واحدًا بعد آخر كلما أتممت المهام.'**
   String get tutorialS9Step4;
 
   /// No description provided for @tutorialS9Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم المكافآت الصغيرة لتحويل الحفظ إلى عادة لطيفة.'**
+  /// **'حافظ على سرية الرمز: فهو يحمي أيضًا الخروج من مسار الأطفال.'**
   String get tutorialS9Tip1;
 
   /// No description provided for @tutorialS9Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'فعّل تذكير الطفل اليومي من لوحة ولي الأمر.'**
+  /// **'استخدم تبويب المصحف في رئيسية الأطفال ليقرأ الطفل في القرآن.'**
   String get tutorialS9Tip2;
 
   /// No description provided for @tutorialS9Note1.
   ///
   /// In ar, this message translates to:
-  /// **'المراحل المقفلة تفتح بعد إكمال السابق.'**
+  /// **'ربط طفل من جهاز آخر يحتاج إلى حساب.'**
   String get tutorialS9Note1;
 
   /// No description provided for @tutorialS9Note2.
   ///
   /// In ar, this message translates to:
-  /// **'الربط عن بعد يعتمد على الحساب، بينما تقدم الطفل المحلي محفوظ في الجهاز.'**
+  /// **'طفل واحد لكل جهاز: يستخدم بقية الأطفال أجهزتهم الخاصة مرتبطة بولي الأمر.'**
   String get tutorialS9Note2;
 
   /// No description provided for @tutorialS10Title.
@@ -8314,31 +8416,31 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS10Does.
   ///
   /// In ar, this message translates to:
-  /// **'يعرض إحصاءات القراءة والحفظ، السلسلة اليومية، إنجازات القراءة والحفظ والالتزام، إحصاءات الحفظ الذكي، شهاداتك، ومشاركة التقدم.'**
+  /// **'يعرض إحصاءات القراءة والحفظ وسلسلتك اليومية والإنجازات وشهاداتك، ويتيح مشاركة تقدمك.'**
   String get tutorialS10Does;
 
   /// No description provided for @tutorialS10Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط تبويب التقدم من الشريط السفلي.'**
+  /// **'اضغط تبويب التقدم في الشريط السفلي.'**
   String get tutorialS10Open;
 
   /// No description provided for @tutorialS10Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد للمراجعة الأسبوعية، الاحتفال بالإنجازات، ومتابعة الاتساق عبر السلسلة والنشاط.'**
+  /// **'للمراجعة الأسبوعية والاحتفال بالإنجازات ومتابعة الاستمرار.'**
   String get tutorialS10Useful;
 
   /// No description provided for @tutorialS10Step1.
   ///
   /// In ar, this message translates to:
-  /// **'راجع البطاقات العليا لمعرفة أيام السلسلة والصفحات المقروءة.'**
+  /// **'راجع البطاقات العليا لأيام السلسلة والصفحات المقروءة والنقاط والمراجعات.'**
   String get tutorialS10Step1;
 
   /// No description provided for @tutorialS10Step2.
   ///
   /// In ar, this message translates to:
-  /// **'افتح أقسام القراءة والحفظ لمعرفة الصفحات والآيات والسور والأجزاء.'**
+  /// **'افتح قسمي القراءة والحفظ لمعرفة الصفحات والآيات والسور والأجزاء.'**
   String get tutorialS10Step2;
 
   /// No description provided for @tutorialS10Step3.
@@ -8356,31 +8458,31 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS10Step5.
   ///
   /// In ar, this message translates to:
-  /// **'افتح شهاداتك عند اكتمال سورة أو جزء أو نصف/كامل القرآن.'**
+  /// **'تظهر شهاداتك عند إتمام سورة أو جزء أو القرآن كله.'**
   String get tutorialS10Step5;
 
   /// No description provided for @tutorialS10Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'تأكيد قراءة الصفحة من القارئ هو ما يرفع إحصاءات القراءة.'**
+  /// **'قراءة الختمة تُحتسب في سلسلتك لكن لا تدخل في إحصاءات القراءة الحرة.'**
   String get tutorialS10Tip1;
 
   /// No description provided for @tutorialS10Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'الشهادات تعتمد على اكتمال الحفظ الحقيقي للآيات المطلوبة.'**
+  /// **'الشهادات تعتمد على حفظ حقيقي للآيات المطلوبة.'**
   String get tutorialS10Tip2;
 
   /// No description provided for @tutorialS10Note1.
   ///
   /// In ar, this message translates to:
-  /// **'بعض الإحصاءات تظهر فقط بعد وجود تقدم في الحفظ الذكي أو وضع الأطفال.'**
+  /// **'بعض الإحصاءات تظهر فقط بعد أن تبدأ الحفظ.'**
   String get tutorialS10Note1;
 
   /// No description provided for @tutorialS10Note2.
   ///
   /// In ar, this message translates to:
-  /// **'المشاركة ترسل نصًا فقط ولا تنشر تلقائيًا بدون اختيارك.'**
+  /// **'لا تتم المشاركة إلا عندما تختارها.'**
   String get tutorialS10Note2;
 
   /// No description provided for @tutorialS11Title.
@@ -8398,85 +8500,85 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS11Does.
   ///
   /// In ar, this message translates to:
-  /// **'تجمع الحساب، الملف الشخصي، وضع ولي الأمر، المظهر، اللغة، دقة التسميع، تذكيرات المراجعة والأذكار والدعاء، ومعلومات التطبيق.'**
+  /// **'تجمع حسابك وملفك الشخصي واللغة والمظهر وإعدادات القرآن والحفظ ومواقيت الصلاة والإشعارات ومعلومات التطبيق.'**
   String get tutorialS11Does;
 
   /// No description provided for @tutorialS11Open.
   ///
   /// In ar, this message translates to:
-  /// **'اضغط الترس من الصفحة الرئيسية أو افتح مسار الإعدادات.'**
+  /// **'اضغط أيقونة الترس في الرئيسية.'**
   String get tutorialS11Open;
 
   /// No description provided for @tutorialS11Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد لتخصيص التجربة، حماية التقدم، وضبط التذكيرات بما يناسب يومك.'**
+  /// **'لتخصيص التطبيق وحماية تقدمك وضبط تذكيرات تناسب يومك.'**
   String get tutorialS11Useful;
 
   /// No description provided for @tutorialS11Step1.
   ///
   /// In ar, this message translates to:
-  /// **'سجّل الدخول أو أنشئ حسابًا بالبريد وكلمة المرور لإدارة حسابك وخيارات الاستعادة.'**
+  /// **'سجّل الدخول أو أنشئ حسابًا بالبريد وكلمة المرور لإدارة حسابك.'**
   String get tutorialS11Step1;
 
   /// No description provided for @tutorialS11Step2.
   ///
   /// In ar, this message translates to:
-  /// **'عدّل الاسم والعمر من قسم الملف الشخصي.'**
+  /// **'عدّل اسمك من الملف الشخصي.'**
   String get tutorialS11Step2;
 
   /// No description provided for @tutorialS11Step3.
   ///
   /// In ar, this message translates to:
-  /// **'اختر الوضع الفاتح أو الداكن أو إعداد النظام.'**
+  /// **'اختر العربية أو English، والمظهر الفاتح أو الداكن أو الأسود الكامل أو حسب النظام.'**
   String get tutorialS11Step3;
 
   /// No description provided for @tutorialS11Step4.
   ///
   /// In ar, this message translates to:
-  /// **'اختر العربية أو English من قسم اللغة.'**
+  /// **'من «القرآن والحفظ» اضبط التشغيل في الخلفية ومستوى الدقة، أو أعد ضبط المسار.'**
   String get tutorialS11Step4;
 
   /// No description provided for @tutorialS11Step5.
   ///
   /// In ar, this message translates to:
-  /// **'اضبط دقة التسميع بين سهل ومتوسط وصعب.'**
+  /// **'من «مواقيت الصلاة» اختر مدينتك وطريقة الحساب.'**
   String get tutorialS11Step5;
 
   /// No description provided for @tutorialS11Step6.
   ///
   /// In ar, this message translates to:
-  /// **'فعّل أو أوقف تذكيرات المراجعة والسلسلة وأذكار الصباح والمساء والدعاء.'**
+  /// **'من «الإشعارات» فعّل أو أوقف تذكيرات المراجعة والسلسلة والأذكار والصلاة.'**
   String get tutorialS11Step6;
 
   /// No description provided for @tutorialS11Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب الاسم بالعربية ليظهر أجمل في الشهادات.'**
+  /// **'اكتب اسمك بالعربية ليظهر على الشهادات بشكل جميل.'**
   String get tutorialS11Tip1;
 
   /// No description provided for @tutorialS11Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'فعّل وضع ولي الأمر إذا كنت تستخدم مسار البالغين وتريد متابعة طفل.'**
+  /// **'أعد ضبط المسار من «القرآن والحفظ» للتبديل بين الكبار والأطفال.'**
   String get tutorialS11Tip2;
 
   /// No description provided for @tutorialS11Note1.
   ///
   /// In ar, this message translates to:
-  /// **'الإشعارات تحتاج صلاحيات النظام حتى تعمل.'**
+  /// **'تحتاج الإشعارات إلى إذن النظام لتعمل.'**
   String get tutorialS11Note1;
 
   /// No description provided for @tutorialS11Note2.
   ///
   /// In ar, this message translates to:
-  /// **'تغيير اللغة والمظهر محفوظ محليًا ويطبق على واجهة التطبيق.'**
+  /// **'اللغة والمظهر محفوظان على هذا الجهاز.'**
   String get tutorialS11Note2;
 
   /// No description provided for @tutorialS12Title.
   ///
   /// In ar, this message translates to:
-  /// **'العمل دون اتصال وحفظ البيانات'**
+  /// **'العمل دون اتصال وبياناتك'**
   String get tutorialS12Title;
 
   /// No description provided for @tutorialS12Cat.
@@ -8488,62 +8590,218 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS12Does.
   ///
   /// In ar, this message translates to:
-  /// **'يعتمد التطبيق على بيانات محلية للقرآن والأذكار، ويحفظ الإعدادات والعلامات والخطط في SharedPreferences، وتقدم الحفظ والسلسلة و XP في Isar.'**
+  /// **'نصوص القرآن والأذكار مضمّنة في التطبيق. وتُحفظ تقدّمك وخططك وإعداداتك على الجهاز، ومع الحساب يُزامَن بعضها عبر الإنترنت.'**
   String get tutorialS12Does;
 
   /// No description provided for @tutorialS12Open.
   ///
   /// In ar, this message translates to:
-  /// **'لا توجد شاشة منفصلة لهذه الميزة؛ تعمل تلقائيًا أثناء استخدام القرآن، الأذكار، الحفظ، التقدم، والإعدادات.'**
+  /// **'لا توجد شاشة منفصلة: يعمل تلقائيًا أثناء استخدامك التطبيق.'**
   String get tutorialS12Open;
 
   /// No description provided for @tutorialS12Useful.
   ///
   /// In ar, this message translates to:
-  /// **'مفيد لفهم ما يعمل محليًا وما يحتاج اتصالًا، وتجنب فقدان التقدم المهم.'**
+  /// **'لفهم ما يعمل دون اتصال وتجنب فقدان تقدم مهم.'**
   String get tutorialS12Useful;
 
   /// No description provided for @tutorialS12Step1.
   ///
   /// In ar, this message translates to:
-  /// **'استخدم القرآن والأذكار حتى بدون اتصال لأن النصوص ضمن أصول التطبيق.'**
+  /// **'اقرأ القرآن واستخدم الأذكار حتى دون إنترنت.'**
   String get tutorialS12Step1;
 
   /// No description provided for @tutorialS12Step2.
   ///
   /// In ar, this message translates to:
-  /// **'استمر في القراءة والحفظ ليُحفظ التقدم محليًا.'**
+  /// **'واصل القراءة والحفظ: يُحفظ التقدم على الجهاز.'**
   String get tutorialS12Step2;
 
   /// No description provided for @tutorialS12Step3.
   ///
   /// In ar, this message translates to:
-  /// **'سجّل الدخول عندما تحتاج إلى ميزات الحساب أو استعادة الوصول.'**
+  /// **'سجّل الدخول عندما تريد ميزات الحساب أو استعادة تقدم حفظك.'**
   String get tutorialS12Step3;
 
   /// No description provided for @tutorialS12Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'افتح التطبيق بعد تغيير الجهاز أو إعادة التثبيت ثم سجّل الدخول لاسترجاع ما يدعمه الحساب.'**
+  /// **'على جهاز جديد سجّل الدخول لاستعادة ما يدعمه حسابك.'**
   String get tutorialS12Tip1;
 
   /// No description provided for @tutorialS12Tip2.
   ///
   /// In ar, this message translates to:
-  /// **'حافظ على اتصال جيد عند تشغيل الصوت أو استخدام ميزات الحساب.'**
+  /// **'اتصل بالإنترنت لتشغيل تلاوات غير مخزّنة.'**
   String get tutorialS12Tip2;
 
   /// No description provided for @tutorialS12Note1.
   ///
   /// In ar, this message translates to:
-  /// **'حذف بيانات التطبيق من النظام قد يزيل البيانات المحلية غير المتزامنة.'**
+  /// **'مسح بيانات التطبيق من إعدادات النظام يزيل كل ما لم يُحفظ في حسابك.'**
   String get tutorialS12Note1;
 
   /// No description provided for @tutorialS12Note2.
   ///
   /// In ar, this message translates to:
-  /// **'الاشتراك أو المزايا المدفوعة غير موثقة هنا لأنها غير مفعلة كواجهة مستخدم حالية.'**
+  /// **'تسجيل الخروج يزيل خطة الختمة وسجلها من هذا الجهاز: فهما محفوظان هنا فقط.'**
   String get tutorialS12Note2;
+
+  /// No description provided for @tutorialS14Note2.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد تحتاج التنبيهات الدقيقة إلى إذن المنبّهات الدقيقة في إعدادات الهاتف.'**
+  String get tutorialS14Note2;
+
+  /// No description provided for @tutorialS14Note1.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُحسب المواقيت على الجهاز فتعمل دون اتصال.'**
+  String get tutorialS14Note1;
+
+  /// No description provided for @tutorialS14Tip2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إن لم تعرف الطريقة الأنسب فاختر ما تعتمده الجهة الرسمية في بلدك.'**
+  String get tutorialS14Tip2;
+
+  /// No description provided for @tutorialS14Tip1.
+  ///
+  /// In ar, this message translates to:
+  /// **'إن لم تكن مدينتك في القائمة فاستخدم موقعًا مخصصًا: انسخ إحداثياتها من تطبيق الخرائط.'**
+  String get tutorialS14Tip1;
+
+  /// No description provided for @tutorialS14Step4.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل وضع سكينة الصلاة إن أردت أن تتوقف التلاوة عند دخول وقت الصلاة.'**
+  String get tutorialS14Step4;
+
+  /// No description provided for @tutorialS14Step3.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل تنبيهات الصلاة: تُفعَّل تلقائيًا أول مرة تحدد فيها موقعًا.'**
+  String get tutorialS14Step3;
+
+  /// No description provided for @tutorialS14Step2.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر طريقة الحساب (تلقائي حسب البلد افتراضيًا) وحساب وقت العصر.'**
+  String get tutorialS14Step2;
+
+  /// No description provided for @tutorialS14Step1.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر البلد والمدينة، أو «موقع مخصص» لإدخال الإحداثيات.'**
+  String get tutorialS14Step1;
+
+  /// No description provided for @tutorialS14Useful.
+  ///
+  /// In ar, this message translates to:
+  /// **'لمعرفة مواقيت الصلاة أينما كنت مع تنبيه عند حلول الوقت.'**
+  String get tutorialS14Useful;
+
+  /// No description provided for @tutorialS14Open.
+  ///
+  /// In ar, this message translates to:
+  /// **'في الرئيسية اضغط «اختيار المدينة»، أو افتح الإعدادات ثم «مواقيت الصلاة».'**
+  String get tutorialS14Open;
+
+  /// No description provided for @tutorialS14Does.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعرض الرئيسية مواقيت الصلاة والصلاة القادمة، ويمكنها تنبيهك عند كل صلاة.'**
+  String get tutorialS14Does;
+
+  /// No description provided for @tutorialS14Cat.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإعدادات'**
+  String get tutorialS14Cat;
+
+  /// No description provided for @tutorialS14Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة والتنبيهات'**
+  String get tutorialS14Title;
+
+  /// No description provided for @tutorialS13Note2.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُحفظ على هذا الجهاز فقط، وتُحذف عند تسجيل الخروج.'**
+  String get tutorialS13Note2;
+
+  /// No description provided for @tutorialS13Note1.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة منفصلة عن القراءة الحرة: لا يحرّك أحدهما موضع الآخر.'**
+  String get tutorialS13Note1;
+
+  /// No description provided for @tutorialS13Tip2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إن تأخرت فاستخدم خيارات اللوحة للتعويض.'**
+  String get tutorialS13Tip2;
+
+  /// No description provided for @tutorialS13Tip1.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك إهداء الختمة لشخص عزيز عند إنشائها.'**
+  String get tutorialS13Tip1;
+
+  /// No description provided for @tutorialS13Step4.
+  ///
+  /// In ar, this message translates to:
+  /// **'إن قرأت من مصحف ورقي فاستخدم «تسجيل» لإدخال الصفحات.'**
+  String get tutorialS13Step4;
+
+  /// No description provided for @tutorialS13Step3.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ ورد اليوم: تُسجَّل كل صفحة تقرؤها.'**
+  String get tutorialS13Step3;
+
+  /// No description provided for @tutorialS13Step2.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الختمة واضغط «متابعة القراءة» في اللوحة.'**
+  String get tutorialS13Step2;
+
+  /// No description provided for @tutorialS13Step1.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر عدد الصفحات يوميًا أو المدة، ويمكنك تحديد صفحة البداية.'**
+  String get tutorialS13Step1;
+
+  /// No description provided for @tutorialS13Useful.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقراءة القرآن بانتظام بهدف واضح، كما في رمضان.'**
+  String get tutorialS13Useful;
+
+  /// No description provided for @tutorialS13Open.
+  ///
+  /// In ar, this message translates to:
+  /// **'في الرئيسية اضغط «ابدأ ختمتك»، أو افتح بطاقة الختمة بعد أن تبدأها.'**
+  String get tutorialS13Open;
+
+  /// No description provided for @tutorialS13Does.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطط لقراءة القرآن كاملًا بالوتيرة التي تختارها: صفحات يوميًا أو عدد أيام. وتتابع تالية تقدمك صفحة بصفحة وتحفظ سجل الختمات المكتملة.'**
+  String get tutorialS13Does;
+
+  /// No description provided for @tutorialS13Cat.
+  ///
+  /// In ar, this message translates to:
+  /// **'القرآن'**
+  String get tutorialS13Cat;
+
+  /// No description provided for @tutorialS13Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة: قراءة القرآن كاملًا'**
+  String get tutorialS13Title;
 
   /// No description provided for @tutorialCategoryTitle.
   ///
@@ -8776,7 +9034,7 @@ abstract class AppLocalizations {
   /// Banner body showing active children and total points
   ///
   /// In ar, this message translates to:
-  /// **'{count} نشط اليوم · {points} نقطة'**
+  /// **'{count} نشط اليوم، {points} نقطة'**
   String familyDashboardTodaySummary(int count, int points);
 
   /// Badge for local (same-device) child
@@ -8812,7 +9070,7 @@ abstract class AppLocalizations {
   /// Today summary in child detail page
   ///
   /// In ar, this message translates to:
-  /// **'{sessions} جلسة · {points} نقطة اليوم'**
+  /// **'{sessions} جلسة، {points} نقطة اليوم'**
   String childDetailTodayActivity(int sessions, int points);
 
   /// No activity label in child detail
@@ -9046,7 +9304,7 @@ abstract class AppLocalizations {
   /// No description provided for @v2ManualBlockReviewAction.
   ///
   /// In ar, this message translates to:
-  /// **'أتممت مراجعة الكتلة من حفظي (تقييم ذاتي)'**
+  /// **'قيّم تسميع المقطع بنفسك'**
   String get v2ManualBlockReviewAction;
 
   /// No description provided for @v2RemediationTitle.
@@ -9094,8 +9352,8 @@ abstract class AppLocalizations {
   /// No description provided for @v2BlockReviewSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'النص مخفي الآن. سجّل الآيات {startAyah}-{endAyah} كاملة بدون تلميحات.'**
-  String v2BlockReviewSubtitle(int startAyah, int endAyah);
+  /// **'النص مخفي الآن. سجّل الآيات من {startAyah} إلى {endAyah} كاملة بدون تلميحات.'**
+  String v2BlockReviewSubtitle(String startAyah, String endAyah);
 
   /// No description provided for @v2CompletionTitle.
   ///
@@ -9115,22 +9373,10 @@ abstract class AppLocalizations {
   /// **'لحظة ختام'**
   String get closingMomentLabel;
 
-  /// No description provided for @closingAyah.
-  ///
-  /// In ar, this message translates to:
-  /// **'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'**
-  String get closingAyah;
-
-  /// No description provided for @closingAyahSource.
-  ///
-  /// In ar, this message translates to:
-  /// **'سورة الرعد · الآية ٢٨'**
-  String get closingAyahSource;
-
   /// No description provided for @closingSummaryMemorization.
   ///
   /// In ar, this message translates to:
-  /// **'حفظتَ {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتين} few{{countText} آيات} many{{countText} آية} other{{countText} آية}} في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
+  /// **'تعلّمتَ {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتين} few{{countText} آيات} many{{countText} آية} other{{countText} آية}} في هذه الجلسة، وبالمراجعة تثبت في حفظك بإذن الله.'**
   String closingSummaryMemorization(int count, String countText);
 
   /// No description provided for @closingSummaryReview.
@@ -9250,8 +9496,14 @@ abstract class AppLocalizations {
   /// No description provided for @v2MicrophoneUnavailable.
   ///
   /// In ar, this message translates to:
-  /// **'تعذر استخدام الميكروفون'**
+  /// **'التعرّف على الكلام غير متوفر على هذا الجهاز. قيّم تسميعك بنفسك.'**
   String get v2MicrophoneUnavailable;
+
+  /// No description provided for @v2TryRecordingAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول التسجيل مجددًا'**
+  String get v2TryRecordingAgain;
 
   /// No description provided for @v2NoSpeechDetected.
   ///
@@ -9286,14 +9538,14 @@ abstract class AppLocalizations {
   /// No description provided for @v2AyahRange.
   ///
   /// In ar, this message translates to:
-  /// **'الآيات {startAyah}-{endAyah}'**
-  String v2AyahRange(int startAyah, int endAyah);
+  /// **'الآيات من {startAyah} إلى {endAyah}'**
+  String v2AyahRange(String startAyah, String endAyah);
 
   /// No description provided for @v2BlockProgress.
   ///
   /// In ar, this message translates to:
-  /// **'تم اجتياز {passed}/{total} آيات.'**
-  String v2BlockProgress(int passed, int total);
+  /// **'اجتزتَ {passed} من {total}.'**
+  String v2BlockProgress(String passed, String total);
 
   /// No description provided for @v2AyahOfBlock.
   ///
@@ -10558,7 +10810,7 @@ abstract class AppLocalizations {
   /// No description provided for @ayahOfDaySurahMeta.
   ///
   /// In ar, this message translates to:
-  /// **'{revelation} · {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
+  /// **'{revelation}، {count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
   String ayahOfDaySurahMeta(String revelation, int count, String countText);
 
   /// No description provided for @ayahOfDayReadSurah.
@@ -10642,7 +10894,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeResumeListening.
   ///
   /// In ar, this message translates to:
-  /// **'أكمل الاستماع · {surah}'**
+  /// **'أكمل الاستماع، {surah}'**
   String homeResumeListening(String surah);
 
   /// No description provided for @homeSomethingElse.
@@ -10660,7 +10912,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeOccasionFriday.
   ///
   /// In ar, this message translates to:
-  /// **'الجمعة · سورة الكهف'**
+  /// **'الجمعة، سورة الكهف'**
   String get homeOccasionFriday;
 
   /// No description provided for @homeOccasionRamadan.
@@ -10744,7 +10996,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeWeeklyReflectionBody.
   ///
   /// In ar, this message translates to:
-  /// **'{days} أيام نشاط · {count} أعمال'**
+  /// **'{days} أيام نشاط، {count} أعمال'**
   String homeWeeklyReflectionBody(int days, int count);
 
   /// No description provided for @homeFirstRunTitle.
@@ -10908,6 +11160,120 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إسنا'**
   String get prayerMethodNorthAmerica;
+
+  /// No description provided for @prayerMethodDubai.
+  ///
+  /// In ar, this message translates to:
+  /// **'دبي'**
+  String get prayerMethodDubai;
+
+  /// No description provided for @prayerMethodKuwait.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكويت'**
+  String get prayerMethodKuwait;
+
+  /// No description provided for @prayerMethodQatar.
+  ///
+  /// In ar, this message translates to:
+  /// **'قطر'**
+  String get prayerMethodQatar;
+
+  /// No description provided for @prayerMethodSingapore.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنغافورة وماليزيا وإندونيسيا'**
+  String get prayerMethodSingapore;
+
+  /// No description provided for @prayerMethodTurkey.
+  ///
+  /// In ar, this message translates to:
+  /// **'تركيا (رئاسة الشؤون الدينية)'**
+  String get prayerMethodTurkey;
+
+  /// No description provided for @prayerMethodMoonSighting.
+  ///
+  /// In ar, this message translates to:
+  /// **'لجنة رؤية الهلال'**
+  String get prayerMethodMoonSighting;
+
+  /// No description provided for @prayerMadhabTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب وقت العصر'**
+  String get prayerMadhabTitle;
+
+  /// No description provided for @prayerCustomLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'موقع مخصص (إحداثيات)'**
+  String get prayerCustomLocation;
+
+  /// No description provided for @prayerCustomLatitude.
+  ///
+  /// In ar, this message translates to:
+  /// **'خط العرض'**
+  String get prayerCustomLatitude;
+
+  /// No description provided for @prayerCustomLongitude.
+  ///
+  /// In ar, this message translates to:
+  /// **'خط الطول'**
+  String get prayerCustomLongitude;
+
+  /// No description provided for @prayerCustomHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدينتك غير موجودة؟ انسخ إحداثياتها من تطبيق الخرائط.'**
+  String get prayerCustomHint;
+
+  /// No description provided for @prayerCustomTimeZone.
+  ///
+  /// In ar, this message translates to:
+  /// **'المنطقة الزمنية: {zone}'**
+  String prayerCustomTimeZone(String zone);
+
+  /// No description provided for @prayerCustomSave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الموقع'**
+  String get prayerCustomSave;
+
+  /// No description provided for @prayerCustomSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ الموقع. تُحسب مواقيت الصلاة الآن لإحداثياتك.'**
+  String get prayerCustomSaved;
+
+  /// No description provided for @prayerCustomInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقق من الإحداثيات: خط العرض بين ‎-90‎ و‎90‎، وخط الطول بين ‎-180‎ و‎180‎.'**
+  String get prayerCustomInvalid;
+
+  /// No description provided for @prayerCustomTimeZoneUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحديد المنطقة الزمنية لجهازك.'**
+  String get prayerCustomTimeZoneUnavailable;
+
+  /// No description provided for @prayerMadhabAuto.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلقائي حسب المدينة'**
+  String get prayerMadhabAuto;
+
+  /// No description provided for @prayerMadhabShafi.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجمهور (الشافعي والمالكي والحنبلي)'**
+  String get prayerMadhabShafi;
+
+  /// No description provided for @prayerMadhabHanafi.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحنفي'**
+  String get prayerMadhabHanafi;
 
   /// No description provided for @homeBrandSubtitle.
   ///
@@ -11147,13 +11513,13 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'قبل {count} د'**
-  String homeActivityMinutesAgo(int count);
+  String homeActivityMinutesAgo(String count);
 
   /// No description provided for @homeActivityHoursAgo.
   ///
   /// In ar, this message translates to:
   /// **'قبل {count} س'**
-  String homeActivityHoursAgo(int count);
+  String homeActivityHoursAgo(String count);
 
   /// No description provided for @homeActivityYesterday.
   ///
@@ -11326,7 +11692,7 @@ abstract class AppLocalizations {
   /// No description provided for @microReviewReference.
   ///
   /// In ar, this message translates to:
-  /// **'سورة {surah} · آية {ayah}'**
+  /// **'سورة {surah}، آية {ayah}'**
   String microReviewReference(String surah, String ayah);
 
   /// No description provided for @microReviewRevealHint.
@@ -11706,6 +12072,276 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'نحو المستوى التالي'**
   String get progressXpToNextLevel;
+
+  /// No description provided for @privacyEffectiveDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ النفاذ: 2 أكتوبر 2026'**
+  String get privacyEffectiveDate;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'توضح هذه السياسة كيف يتعامل تطبيق تالية القرآن مع بياناتك على الجهاز وفي الخدمات السحابية، وكيف تتحكم في الأذونات وتطلب حذف بياناتك.'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyManualOptionAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح الحفظ لاستخدام التقييم الذاتي'**
+  String get privacyManualOptionAction;
+
+  /// No description provided for @privacyControllerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١. مقدمة والمسؤول عن البيانات'**
+  String get privacyControllerTitle;
+
+  /// No description provided for @privacyControllerBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تالية القرآن (Talia Quran) تطبيق للقراءة والحفظ والمراجعة والأذكار. المطوّر والمسؤول عن معالجة بيانات التطبيق هو Sayed Saad. تنطبق هذه السياسة على تطبيق تالية وميزات الحساب وربط ولي الأمر. للاستفسارات وطلبات الخصوصية: elsayed.saad2014@feps.edu.eg.'**
+  String get privacyControllerBody;
+
+  /// No description provided for @privacyDataTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٢. المعلومات التي نجمعها وأين تُحفظ'**
+  String get privacyDataTitle;
+
+  /// No description provided for @privacyAccountData.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب: عند التسجيل نعالج البريد الإلكتروني وكلمة المرور عبر Supabase للمصادقة والتحقق واستعادة الحساب، ومعرّف الحساب ورموز الجلسة. تُستخدم بيانات الملف مثل الاسم أو لقب الطفل والعمر عند تقديمها لتخصيص التجربة وعرضها لولي الأمر المرتبط وإصدار الشهادات. لا تطلب إرسال كلمة المرور إلى الدعم.'**
+  String get privacyAccountData;
+
+  /// No description provided for @privacyProgressData.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم والتفضيلات: يحفظ التطبيق القراءة والعلامات المرجعية وخطط الحفظ والمراجعات وتقييماتها وسجل الجلسات والنقاط والسلاسل اليومية والإنجازات والشهادات وإعدادات الطفل وولي الأمر. تُحفظ بيانات التشغيل على الجهاز، وتُزامن الميزات السحابية المتاحة بيانات الحساب المرتبطة عند تسجيل الدخول وتوفر الاتصال. قد تُرسل العمليات المعلقة تلقائيًا عند عودة الاتصال. ليست كل التفضيلات أو الميزات المحلية قابلة للمزامنة.'**
+  String get privacyProgressData;
+
+  /// No description provided for @privacyTechnicalData.
+  ///
+  /// In ar, this message translates to:
+  /// **'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث.'**
+  String get privacyTechnicalData;
+
+  /// No description provided for @privacyPurposeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٣. أغراض المعالجة'**
+  String get privacyPurposeTitle;
+
+  /// No description provided for @privacyPurposeBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'نستخدم البيانات لتشغيل الحساب ومزامنة التقدم وإتاحة المراجعة والتذكيرات والشهادات وربط ولي الأمر الذي تختاره، ولحماية الخدمة والاستجابة للدعم. لا نبيع بياناتك، ولا نستخدم تقدمك أو بيانات الأطفال للإعلانات الموجّهة. طلب الأذونات منفصل عن قبول هذه السياسة؛ يمكنك رفض الأذونات الاختيارية ومواصلة استخدام الوظائف التي لا تحتاجها.'**
+  String get privacyPurposeBody;
+
+  /// No description provided for @privacyPermissionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٤. أذونات الجهاز والصوت'**
+  String get privacyPermissionsTitle;
+
+  /// No description provided for @privacyMicrophone.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميكروفون: يُستخدم عند بدء التسميع للتعرف على قراءتك. يعمل عبر خدمة التعرف الصوتي المدمجة في نظام الجهاز؛ وقد يعالج الصوت مزوّد نظام التشغيل وفق سياساته الخاصة، ولا نضمن بقاء المعالجة دون اتصال. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا. قد تُحفظ نتيجة التقييم ضمن التقدم. يتوفر خيار التقييم الذاتي اليدوي؛ يمكنك إلغاء إذن الميكروفون والتعرف على الكلام من إعدادات الجهاز.'**
+  String get privacyMicrophone;
+
+  /// No description provided for @privacyCamera.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط.'**
+  String get privacyCamera;
+
+  /// No description provided for @privacyNotifications.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإشعارات: تُجدول التذكيرات محليًا على الجهاز للحفظ والقراءة والأذكار ومواقيت الصلاة، ويمكن تعطيلها من التطبيق أو إعدادات النظام. قد تظهر معلومات التذكير على شاشة القفل حسب إعدادات جهازك.'**
+  String get privacyNotifications;
+
+  /// No description provided for @privacyPhotos.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصور والملفات والمشاركة: تُستخدم عند اختيار حفظ شهادة أو بطاقة أو تصديرها أو مشاركتها. قد تحتوي الملفات على الاسم والتقدم الذي اخترت عرضه. تصبح النسخ التي تحفظها خارج التطبيق أو ترسلها لتطبيق آخر تحت سيطرتك وسياسة الجهة المستقبلة؛ حذف الحساب لا يمحوها.'**
+  String get privacyPhotos;
+
+  /// No description provided for @privacyLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة: تُحسب على الجهاز باستخدام المدينة التي تختارها أو الإحداثيات التي تدخلها يدويًا. تُحفظ هذه الإعدادات محليًا. لا يطلب هذا الإصدار تحديد موقع GPS ولا يتتبع موقعك في الخلفية.'**
+  String get privacyLocation;
+
+  /// No description provided for @privacyChildrenTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥. خصوصية الأطفال وولي الأمر'**
+  String get privacyChildrenTitle;
+
+  /// No description provided for @privacyChildrenBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتضمن التطبيق مسارًا للأطفال، وقد تتضمن بياناته لقب الطفل والعمر وتقدم الحفظ والتقييمات والجلسات والمكافآت. ندعو ولي الأمر للإشراف على استخدام الطفل للحساب والمزامنة والتسميع والمشاركة، واستخدام لقب بدلاً من الاسم الكامل وتجنب إرسال معلومات إضافية غير لازمة. ملفات الأطفال المحلية ليست حسابات مستقلة بالضرورة.'**
+  String get privacyChildrenBody;
+
+  /// No description provided for @privacyGuardianSharing.
+  ///
+  /// In ar, this message translates to:
+  /// **'عند إتمام ربط حساب ولي الأمر بموافقتك، يستطيع ولي الأمر المرتبط الاطلاع عبر السحابة على بيانات الطفل المتاحة للمتابعة، ومنها الاسم أو اللقب والعمر والتقدم والجلسات والإنجازات، وإدارة المكافآت. الربط ليس محليًا فقط. يمكنك إلغاء الربط من أدوات ولي الأمر، وطلب مراجعة بيانات الطفل أو حذفها عبر بريد الخصوصية. لا يمحو إلغاء الربط النسخ التي سبق للمستلم حفظها.'**
+  String get privacyGuardianSharing;
+
+  /// No description provided for @privacyChildrenSpeech.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نعرض إعلانات موجهة للأطفال. التسميع الصوتي اختياري، وخدمة التعرف التابعة للنظام قد تعالج الصوت خارج الجهاز؛ يمكن لولي الأمر اختيار التقييم اليدوي وإلغاء الأذونات. لا يُعد ربط QR وحده إثباتًا للموافقة الأبوية القانونية.'**
+  String get privacyChildrenSpeech;
+
+  /// No description provided for @privacyProvidersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٦. الجهات التي قد تتلقى البيانات'**
+  String get privacyProvidersTitle;
+
+  /// No description provided for @privacyProvidersBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه.'**
+  String get privacyProvidersBody;
+
+  /// No description provided for @privacyProviderProtection.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقتصر على البيانات اللازمة للخدمة ونشترط على مزودي المعالجة حماية البيانات بما يتفق مع هذه السياسة ومتطلبات المتاجر والقانون الساري. خدمات نظام الجهاز والتطبيقات التي تختارها للمشاركة تخضع كذلك لسياساتها. قد نفصح بالقدر اللازم للامتثال لطلب قانوني ملزم أو لحماية الحقوق وأمن الخدمة.'**
+  String get privacyProviderProtection;
+
+  /// No description provided for @privacySecurityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٧. الحماية ونقل البيانات'**
+  String get privacySecurityTitle;
+
+  /// No description provided for @privacySecurityBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستخدم اتصالات الحساب HTTPS، وتعتمد صلاحيات السحابة على هوية الحساب وقواعد وصول تسمح بالمشاركة المحددة مع ولي الأمر المرتبط. تُحفظ بعض البيانات الحساسة، مثل رمز حماية ولي الأمر وبيانات حساب مختارة، باستخدام تخزين آمن؛ وتحفظ مكتبة المصادقة الجلسة على الجهاز لتسجيل الدخول المستمر. لا توجد وسيلة حماية مضمونة تمامًا. قد تُعالج بيانات الخدمات لدى مزودين خارج بلدك؛ ونتعامل مع النقل وفق الضمانات والمتطلبات القانونية المنطبقة.'**
+  String get privacySecurityBody;
+
+  /// No description provided for @privacyRetentionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٨. الاحتفاظ بالبيانات'**
+  String get privacyRetentionTitle;
+
+  /// No description provided for @privacyRetentionBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يبقى تقدم الحساب وملفه في الخدمة النشطة ما دام الحساب قائمًا وحتى حذف البيانات أو الحساب. تبقى البيانات المحلية حتى حذفها أو تنظيف بيانات التطبيق. تُزال بيانات الحساب من قواعد التشغيل عند نجاح حذف الحساب؛ قد تبقى نسخ احتياطية أو سجلات أمنية لدى مزود الخدمة خلال دورة الاحتفاظ المحدودة، ولا تُستخدم لإعادة إنشاء الحساب. قد يحتفظ نظام جهازك بنسخة احتياطية وفق إعدادات النسخ الاحتياطي لديك؛ يمكنك إدارتها من إعدادات النظام. تُحفظ مراسلات الدعم بقدر ما يلزم لحل الطلب والالتزامات القانونية. للاستفسار عن المدة المنطبقة على بياناتك تواصل معنا؛ وإذا لزم الاحتفاظ ببيانات لسبب قانوني نوضح الفئات والسبب والمدة في الرد على طلبك.'**
+  String get privacyRetentionBody;
+
+  /// No description provided for @privacyDeletionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'٩. حذف الحساب والبيانات'**
+  String get privacyDeletionTitle;
+
+  /// No description provided for @privacyDeletionBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحذف الحساب: افتح الإعدادات ← الحساب ← حذف الحساب، واقرأ التحذير ثم أكّد. يلزم اتصال بالإنترنت. يحذف ذلك حساب تسجيل الدخول وملفه وبياناته السحابية المرتبطة، بما فيها التقدم والخطط والعلامات المرجعية والشهادات وروابط ولي الأمر والمكافآت المرتبطة. ينهي الجلسة وينظف بيانات الحساب المحلية على هذا الجهاز، بما فيها التقدم والملفات المحلية التابعة للحساب والعمليات المعلقة. الحذف نهائي ولا يُعد تسجيل الخروج أو إلغاء الربط بديلاً عنه. تظهر رسالة النجاح بعد إتمام التنظيف؛ إذا ظهر طلب إعادة المحاولة فاتبع تعليماته.'**
+  String get privacyDeletionBody;
+
+  /// No description provided for @privacyDeletionLimits.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يحذف حذف حساب ولي الأمر حسابات الأطفال المستقلة أو حسابات أولياء الأمور الآخرين؛ تزال روابطها بالحساب المحذوف. لا تُحذف ملفات الشهادات أو البطاقات التي حفظتها أو شاركتها خارج التطبيق، أو النسخ المحلية على أجهزة أخرى بهذه العملية؛ نظّف بيانات التطبيق على تلك الأجهزة أيضًا. قد تبقى إعدادات الجهاز العامة والمحتوى القرآني المحمّل وبيانات الضيف التي يمكن فصلها عن الحساب.'**
+  String get privacyDeletionLimits;
+
+  /// No description provided for @privacyExternalDeletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكن طلب الحذف دون تثبيت التطبيق: أرسل من بريد الحساب إلى elsayed.saad2014@feps.edu.eg بعنوان «طلب حذف حساب تالية القرآن»، واذكر أنك تريد حذف الحساب والبيانات المرتبطة به. سنتحقق من ملكية الحساب قبل التنفيذ ونبلغك بإتمام الحذف أو أي احتفاظ قانوني واجب. لا ترسل كلمة المرور أو رموز التحقق. يمكنك استخدام البريد نفسه لطلب حذف فئات من البيانات مع الإبقاء على الحساب.'**
+  String get privacyExternalDeletion;
+
+  /// No description provided for @privacyRightsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠. خياراتك وحقوقك'**
+  String get privacyRightsTitle;
+
+  /// No description provided for @privacyRightsBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك تعديل بيانات ملفك داخل التطبيق، وإلغاء الأذونات من إعدادات الجهاز، وتعطيل التذكيرات وإلغاء ربط ولي الأمر. بحسب القانون المنطبق، يمكنك طلب الوصول أو نسخة من بياناتك أو تصحيحها أو حذفها أو تقييد المعالجة أو الاعتراض عليها أو سحب الموافقة أو تقديم شكوى للجهة المختصة. تواصل معنا من بريد الحساب لتحديد طلبك؛ قد نطلب معلومات محدودة للتحقق من الهوية. لا يؤثر سحب الموافقة في المعالجة التي تمت قبله.'**
+  String get privacyRightsBody;
+
+  /// No description provided for @privacyChangesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١١. التغييرات على السياسة'**
+  String get privacyChangesTitle;
+
+  /// No description provided for @privacyChangesBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'نحدّث تاريخ النفاذ عند تعديل السياسة، ونُظهر إشعارًا مناسبًا بالتغييرات الجوهرية. إذا احتاج استخدام جديد لبياناتك إلى موافقة، نطلبها قبل بدء هذا الاستخدام. راجع السياسة عند تحديث التطبيق.'**
+  String get privacyChangesBody;
+
+  /// No description provided for @privacyContactTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٢. تواصل معنا'**
+  String get privacyContactTitle;
+
+  /// No description provided for @privacyContactBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'المطوّر: Sayed Saad\nالتطبيق: تالية القرآن — Talia Quran\nللخصوصية وحذف الحساب وبيانات الأطفال: elsayed.saad2014@feps.edu.eg'**
+  String get privacyContactBody;
+
+  /// No description provided for @accountDeletionRemoteConfirmedCleanupFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف الحساب من السحابة، لكن تنظيف بيانات الجهاز لم يكتمل. أعد المحاولة لإتمام التنظيف.'**
+  String get accountDeletionRemoteConfirmedCleanupFailed;
+
+  /// No description provided for @accountDeletionSessionCleanupFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف الحساب، لكن إنهاء الجلسة على الجهاز لم يكتمل. أعد المحاولة.'**
+  String get accountDeletionSessionCleanupFailed;
+
+  /// No description provided for @accountDeletionProgressMarkerFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ حالة عملية الحذف بأمان. لم يبدأ حذف الحساب؛ أعد المحاولة.'**
+  String get accountDeletionProgressMarkerFailed;
+
+  /// No description provided for @accountDeletionUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'خدمة حذف الحساب غير متاحة حاليًا. أعد المحاولة أو تواصل معنا عبر بريد الخصوصية.'**
+  String get accountDeletionUnavailable;
+
+  /// No description provided for @accountDeletionFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تأكيد اكتمال حذف الحساب. تحقق من الاتصال وأعد المحاولة؛ لا تفترض اكتمال الحذف حتى تظهر رسالة النجاح.'**
+  String get accountDeletionFailed;
+
+  /// No description provided for @accountDeletionRetryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إتمام حذف الحساب'**
+  String get accountDeletionRetryTitle;
+
+  /// No description provided for @accountDeletionRetryAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get accountDeletionRetryAction;
 }
 
 class _AppLocalizationsDelegate

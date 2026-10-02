@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -8,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../theme/home_skin.dart';
 import 'islamic_pattern_painter.dart';
 import 'spring_tap.dart';
+import '../../../../core/router/open_location.dart';
 
 class HomeFirstRun extends StatelessWidget {
   const HomeFirstRun({super.key, required this.skin});
@@ -17,7 +17,7 @@ class HomeFirstRun extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SpringTap(
-      onTap: () => context.push(AppRoutes.quran),
+      onTap: () => context.openLocation(AppRoutes.quran),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.cardPadding),
         decoration: BoxDecoration(

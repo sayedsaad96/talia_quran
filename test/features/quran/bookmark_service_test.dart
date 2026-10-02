@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/identity/account_deletion_marker.dart';
 import 'package:talia_quran/core/identity/pending_bookmark_recovery_marker.dart';
 import 'package:talia_quran/core/security/encrypted_account_preferences_store.dart';
 import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
@@ -34,6 +35,58 @@ void main() {
   });
 
   group('BookmarkService', () {
+    test('requested deletion blocks access without erasing on server rejection', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final owner = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('a'));
+      await owner.toggle(createEntry());
+      final original = prefs.getString('quran_bookmarks_owner_a');
+      await AccountDeletionMarker.markRequested(prefs, 'a');
+      expect(owner.getAll(), isEmpty);
+      await expectLater(owner.toggle(createEntry(ayahNumber: 2)), throwsStateError);
+      expect(prefs.getString('quran_bookmarks_owner_a'), original);
+      await AccountDeletionMarker.clear(prefs);
+      expect(owner.getAll(), hasLength(1));
+    });
+
+    test('erasure evicts owner cache and leaves other owner intact', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final a = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('a'));
+      final b = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('b'));
+      await a.toggle(createEntry());
+      await b.toggle(createEntry(ayahNumber: 2));
+      await AccountDeletionMarker.markRequested(prefs, 'a');
+      await AccountDeletionMarker.markRemoteConfirmed(prefs);
+      await a.eraseOwner('a');
+      await AccountDeletionMarker.completeAndClear(prefs, 'a');
+      expect(a.getAll(), isEmpty);
+      expect(prefs.getString('quran_bookmarks_owner_a'), isNull);
+      expect(b.getAll(), hasLength(1));
+      expect(prefs.getString('quran_bookmarks_owner_b'), isNotNull);
+      await expectLater(a.toggle(createEntry()), throwsStateError);
+    });
+
+    test('late cloud pull cannot restore confirmed deleted owner', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final requested = Completer<void>();
+      final response = Completer<dynamic>();
+      final a = BookmarkService(prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+        cloudRpc: (function, {params}) {
+          requested.complete();
+          return response.future;
+        });
+      final pull = a.pullFromCloud();
+      await requested.future;
+      await AccountDeletionMarker.markRequested(prefs, 'a');
+      await AccountDeletionMarker.markRemoteConfirmed(prefs);
+      await a.eraseOwner('a');
+      await AccountDeletionMarker.completeAndClear(prefs, 'a');
+      response.complete([{'surah_id': 1, 'ayah_number': 1,
+        'payload': createEntry().toJson(), 'revision': 1, 'is_deleted': false}]);
+      await pull;
+      expect(a.getAll(), isEmpty);
+      expect(prefs.getString('quran_bookmarks_owner_a'), isNull);
+    });
     test('getAll returns empty list initially', () {
       expect(service.getAll(), isEmpty);
     });

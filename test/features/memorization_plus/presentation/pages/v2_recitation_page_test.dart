@@ -28,6 +28,36 @@ void main() {
     expect(find.byIcon(Icons.mic_none_rounded), findsOneWidget);
     expect(find.byIcon(Icons.mic_rounded), findsOneWidget); // the button
   });
+
+  // Devices without a speech recognizer can never record: the main button
+  // must not keep offering a recording that fails every time.
+  testWidgets('without a speech recognizer self-grading is the main action', (
+    tester,
+  ) async {
+    final state = _activeState(
+      V2HintTracker.empty,
+    ).copyWith(speechIssue: V2SpeechIssue.unavailable);
+
+    await tester.pumpWidget(
+      _TestApp(
+        cubit: _FakeMemorizationSessionCubit(state),
+        child: V2RecitationPage(state: state),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(FilledButton, 'Grade your recitation yourself'),
+      findsOneWidget,
+    );
+    expect(find.text('Try recording again'), findsOneWidget);
+    expect(
+      find.text(
+        'Speech recognition is not available on this device. '
+        'Grade your recitation yourself.',
+      ),
+      findsOneWidget,
+    );
+  });
 }
 
 class _TestApp extends StatelessWidget {

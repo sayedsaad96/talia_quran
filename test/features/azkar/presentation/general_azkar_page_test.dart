@@ -191,8 +191,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('أدعية نبوية (1)'), findsOneWidget);
-    expect(find.text('أدعية من القرآن (1)'), findsOneWidget);
+    expect(find.text('أدعية نبوية (١)'), findsOneWidget);
+    expect(find.text('أدعية من القرآن (١)'), findsOneWidget);
   });
 
   test('sharing from the duas page uses the dua card, from general the azkar card', () {

@@ -111,7 +111,7 @@ void main() {
             category: SocialShareCategory.azkar,
           ),
         ),
-        'ذِكر · أذكار المساء',
+        'ذِكر، أذكار المساء',
       );
       expect(
         ar.eyebrow(
@@ -176,7 +176,7 @@ void main() {
     });
 
     test('ayah reference combines surah and ayah number', () {
-      expect(ar.ayahReference('الإسراء', 9), 'سورة الإسراء · الآية 9');
+      expect(ar.ayahReference('الإسراء', 9), 'سورة الإسراء، الآية 9');
       expect(en.ayahReference('Al-Isra', 9), 'Surah Al-Isra · Ayah 9');
       expect(ar.ayahReference(null, null), 'القرآن الكريم');
     });

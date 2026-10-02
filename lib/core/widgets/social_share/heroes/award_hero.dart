@@ -83,7 +83,7 @@ class AwardHero extends StatelessWidget {
     if (current != null && target != null) {
       status = data.achievementUnlocked == false
           ? copy.progress(current, target)
-          : '${copy.completed} · ${copy.progress(current, target)}';
+          : '${copy.completed}${copy.separator}${copy.progress(current, target)}';
     } else {
       status = copy.achievementComplete;
     }

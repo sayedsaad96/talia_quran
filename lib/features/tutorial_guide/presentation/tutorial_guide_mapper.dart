@@ -236,6 +236,42 @@ class TutorialGuideMapper {
           notes: [l10n.tutorialS12Note1, l10n.tutorialS12Note2],
           whenUseful: l10n.tutorialS12Useful,
         );
+      case TutorialGuideDefinition.khatmah:
+        return TutorialGuideSection(
+          title: l10n.tutorialS13Title,
+          category: l10n.tutorialS13Cat,
+          icon: Icons.auto_stories_rounded,
+          accentColor: AppColors.primary,
+          whatItDoes: l10n.tutorialS13Does,
+          howToOpen: l10n.tutorialS13Open,
+          steps: [
+            l10n.tutorialS13Step1,
+            l10n.tutorialS13Step2,
+            l10n.tutorialS13Step3,
+            l10n.tutorialS13Step4,
+          ],
+          tips: [l10n.tutorialS13Tip1, l10n.tutorialS13Tip2],
+          notes: [l10n.tutorialS13Note1, l10n.tutorialS13Note2],
+          whenUseful: l10n.tutorialS13Useful,
+        );
+      case TutorialGuideDefinition.prayerTimes:
+        return TutorialGuideSection(
+          title: l10n.tutorialS14Title,
+          category: l10n.tutorialS14Cat,
+          icon: Icons.schedule_rounded,
+          accentColor: AppColors.primaryLight,
+          whatItDoes: l10n.tutorialS14Does,
+          howToOpen: l10n.tutorialS14Open,
+          steps: [
+            l10n.tutorialS14Step1,
+            l10n.tutorialS14Step2,
+            l10n.tutorialS14Step3,
+            l10n.tutorialS14Step4,
+          ],
+          tips: [l10n.tutorialS14Tip1, l10n.tutorialS14Tip2],
+          notes: [l10n.tutorialS14Note1, l10n.tutorialS14Note2],
+          whenUseful: l10n.tutorialS14Useful,
+        );
     }
   }
 }

@@ -1,21 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../domain/entities/activity_event.dart';
 import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
+import '../../../../core/router/open_location.dart';
 
 class HomeActivityFeed extends StatelessWidget {
-  const HomeActivityFeed({super.key, required this.state, required this.skin});
+  const HomeActivityFeed({
+    super.key,
+    required this.state,
+    required this.skin,
+    this.reviewLocation = resolveReviewLocation,
+  });
+
+  /// Where a review entry leads: the learner's current review session.
+  final Future<String> Function() reviewLocation;
 
   final HomeLoaded state;
   final HomeSkin skin;
@@ -63,6 +77,7 @@ class HomeActivityFeed extends StatelessWidget {
                 event: events[i],
                 skin: skin,
                 state: state,
+                reviewLocation: reviewLocation,
               ),
             ],
         ],
@@ -76,11 +91,13 @@ class _ActivityRow extends StatelessWidget {
     required this.event,
     required this.skin,
     required this.state,
+    required this.reviewLocation,
   });
 
   final ActivityEvent event;
   final HomeSkin skin;
   final HomeLoaded state;
+  final Future<String> Function() reviewLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +128,7 @@ class _ActivityRow extends StatelessWidget {
               ? SurahNames.nameAr(event.surahId)
               : SurahNames.nameEn(event.surahId))
         : event.pageNumber != null
-        ? context.l10n.homeDailyWirdPage(event.pageNumber.toString())
+        ? context.l10n.homeDailyWirdPage(context.numText(event.pageNumber!))
         : kindLabel;
     final detail = event.startAyah != null && event.endAyah != null
         ? context.l10n.homeAyahRange(
@@ -128,7 +145,7 @@ class _ActivityRow extends StatelessWidget {
           } else if (event.surahId != null) {
             context.push('/quran/surah/${event.surahId}');
           } else {
-            context.push(AppRoutes.quran);
+            context.openLocation(AppRoutes.quran);
           }
           break;
         case ActivityEventKind.khatmah:
@@ -138,16 +155,15 @@ class _ActivityRow extends StatelessWidget {
           break;
         case ActivityEventKind.memorize:
           if (event.surahId != null) {
-            context.push(
-              AppRoutes.hifzPracticeSurah,
-              extra: {'surahId': event.surahId},
-            );
+            // `/hifz?surahId=` resolves to that surah's practice session.
+            context.push('${AppRoutes.hifz}?surahId=${event.surahId}');
           } else {
-            context.push(AppRoutes.memorizationHub);
+            context.openLocation(AppRoutes.memorizationHub);
           }
           break;
         case ActivityEventKind.review:
-          context.push(AppRoutes.memorizationV2Session);
+          // The bare session route has no ayah and bounced to the hub.
+          unawaited(_openReview(context, reviewLocation));
           break;
       }
     }
@@ -179,7 +195,7 @@ class _ActivityRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$detail · ${activityTimeLabel(context.l10n, event.occurredAt)}',
+                    '$detail${context.listSeparator}${activityTimeLabel(context.l10n, event.occurredAt)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.labelSmall.copyWith(
@@ -201,16 +217,25 @@ class _ActivityRow extends StatelessWidget {
   }
 }
 
+/// Clock for relative activity times; tests pin it for stable goldens.
+@visibleForTesting
+DateTime Function() activityClock = DateTime.now;
+
 String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
-  final moment = now ?? DateTime.now();
+  final moment = now ?? activityClock();
   final local = at.toLocal();
   final diff = moment.difference(local);
+  String digits(int value) => l10n.localeName == 'ar'
+      ? MushafHizbHelper.toArabicNumber(value)
+      : '$value';
   if (diff.inMinutes < 1) return l10n.homeActivityJustNow;
-  if (diff.inMinutes < 60) return l10n.homeActivityMinutesAgo(diff.inMinutes);
+  if (diff.inMinutes < 60) {
+    return l10n.homeActivityMinutesAgo(digits(diff.inMinutes));
+  }
   final startOfToday = DateTime(moment.year, moment.month, moment.day);
   final startOfLocal = DateTime(local.year, local.month, local.day);
   if (startOfLocal == startOfToday) {
-    return l10n.homeActivityHoursAgo(diff.inHours.clamp(1, 23));
+    return l10n.homeActivityHoursAgo(digits(diff.inHours.clamp(1, 23)));
   }
   if (startOfLocal == startOfToday.subtract(const Duration(days: 1))) {
     return l10n.homeActivityYesterday;
@@ -220,4 +245,25 @@ String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
     days,
     l10n.localeName == 'ar' ? MushafHizbHelper.toArabicNumber(days) : '$days',
   );
+}
+
+/// The learner's current review session, or the hub when it can't be read.
+Future<String> resolveReviewLocation() async {
+  try {
+    final targets = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).resolve();
+    return targets.reviewQuizLocation;
+  } catch (_) {
+    return AppRoutes.memorizationHub;
+  }
+}
+
+Future<void> _openReview(
+  BuildContext context,
+  Future<String> Function() reviewLocation,
+) async {
+  final location = await reviewLocation();
+  if (!context.mounted) return;
+  await context.openLocation(location);
 }

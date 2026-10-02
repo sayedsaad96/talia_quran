@@ -12,12 +12,12 @@ void main() {
 
     // Check title and key Arabic sections
     expect(find.text('سياسة الخصوصية'), findsOneWidget);
-    expect(find.text('١. مقدمة'), findsOneWidget);
+    expect(find.text('١. مقدمة والمسؤول عن البيانات'), findsOneWidget);
     expect(find.textContaining('المعلومات التي نجمعها'), findsWidgets);
     await _scrollToVoiceDisclosure(tester, 'الميكروفون:');
     expect(find.textContaining('خدمة التعرف الصوتي المدمجة'), findsOneWidget);
     expect(
-      find.textContaining('مزوّد نظام التشغيل وفق سياساته الخاصة'),
+      find.textContaining('ولا نضمن بقاء المعالجة دون اتصال'),
       findsOneWidget,
     );
     expect(
@@ -53,7 +53,7 @@ void main() {
 
     // Check title and key English sections
     expect(find.text('Privacy Policy'), findsOneWidget);
-    expect(find.text('1. Introduction'), findsOneWidget);
+    expect(find.text('1. Introduction and Data Controller'), findsOneWidget);
     expect(find.textContaining('Information We Collect'), findsWidgets);
     await _scrollToVoiceDisclosure(tester, 'Microphone:');
     expect(
@@ -79,13 +79,13 @@ void main() {
     expect(find.textContaining('Children’s Privacy'), findsWidgets);
 
     await tester.scrollUntilVisible(
-      find.textContaining('Contact Us'),
+      find.text('12. Contact Us'),
       400,
       scrollable: find.byType(Scrollable),
     );
     expect(find.textContaining('Contact Us'), findsWidgets);
     await tester.scrollUntilVisible(
-      find.textContaining('elsayed.saad2014@feps.edu.eg'),
+      find.textContaining('elsayed.saad2014@feps.edu.eg').last,
       200,
       scrollable: find.byType(Scrollable),
     );
@@ -220,9 +220,10 @@ Future<void> _scrollToVoiceDisclosure(
 }
 
 Future<void> _scrollToBottom(WidgetTester tester) async {
-  final scrollable = find.byType(Scrollable);
-  for (var i = 0; i < 8; i++) {
-    await tester.drag(scrollable, const Offset(0, -700));
-    await tester.pump();
-  }
+  await tester.scrollUntilVisible(
+    find.byKey(const ValueKey('privacy-manual-option-action')),
+    600,
+    maxScrolls: 40,
+    scrollable: find.byType(Scrollable),
+  );
 }

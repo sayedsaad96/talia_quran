@@ -72,7 +72,12 @@ class UnifiedJourneyActionMapper {
 
       case UnifiedJourneyActionType.dailyReading:
         title = context.l10n.dailyWirdTitle;
-        final pageStr = action.metadata['pageNumber'];
+        final rawPage = action.metadata['pageNumber'];
+        final pageNumber = rawPage == null ? null : int.tryParse(rawPage);
+        // Locale digits, like every other number on Home.
+        final pageStr = pageNumber == null
+            ? rawPage
+            : context.numText(pageNumber);
         final surahName = context.isArabic
             ? action.metadata['surahNameAr']
             : action.metadata['surahNameEn'];

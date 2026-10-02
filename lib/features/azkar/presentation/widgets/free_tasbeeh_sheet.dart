@@ -273,7 +273,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '$_counter',
+                              context.numText(_counter),
                               key: const ValueKey('free-tasbeeh-count-text'),
                               style: AppTypography.displayLarge.copyWith(
                                 color: Colors.white,

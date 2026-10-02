@@ -21,23 +21,50 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
 
 class PathSelectionPage extends StatelessWidget {
-  const PathSelectionPage({super.key, this.preferredPath});
+  const PathSelectionPage({
+    super.key,
+    this.preferredPath,
+    this.openChildSetup = false,
+  });
 
   final MemorizationPath? preferredPath;
+
+  /// Opens the kids setup sheet straight away, for a user who already chose
+  /// the kids path elsewhere (for example from a child plan).
+  final bool openChildSetup;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<MemorizationIdentityCubit>(),
-      child: _PathSelectionView(preferredPath: preferredPath),
+      child: _PathSelectionView(
+        preferredPath: preferredPath,
+        openChildSetup: openChildSetup,
+      ),
     );
   }
 }
 
-class _PathSelectionView extends StatelessWidget {
-  const _PathSelectionView({this.preferredPath});
+class _PathSelectionView extends StatefulWidget {
+  const _PathSelectionView({this.preferredPath, this.openChildSetup = false});
 
   final MemorizationPath? preferredPath;
+  final bool openChildSetup;
+
+  @override
+  State<_PathSelectionView> createState() => _PathSelectionViewState();
+}
+
+class _PathSelectionViewState extends State<_PathSelectionView> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openChildSetup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_showChildSetup(context));
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +179,7 @@ class _PathSelectionView extends StatelessWidget {
     );
     const spacer = SizedBox(height: 24);
 
-    if (preferredPath == MemorizationPath.child) {
+    if (widget.preferredPath == MemorizationPath.child) {
       return [kidsCard, spacer, adultsCard];
     }
     return [adultsCard, spacer, kidsCard];
@@ -307,9 +334,43 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
     });
   }
 
+  /// Anything typed that back would silently throw away.
+  bool get _hasInput =>
+      _nameController.text.trim().isNotEmpty ||
+      _pinController.text.isNotEmpty ||
+      _confirmPinController.text.isNotEmpty;
+
+  Future<void> _confirmDiscard() async {
+    final l10n = context.l10n;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.kidsSetupDiscardTitle),
+        content: Text(l10n.kidsSetupDiscardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.kidsSetupKeepEditing),
+          ),
+          TextButton(
+            key: const Key('kids_setup_discard_button'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.kidsSetupDiscard),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return PopScope(
+      canPop: !_hasInput,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_confirmDiscard());
+      },
+      child: SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           24,
@@ -479,6 +540,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
           ),
         ),
       ),
+    ),
     );
   }
 }

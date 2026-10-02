@@ -30,17 +30,10 @@ class PrayerEventBuilder {
     // Resolve the city exactly like PrayerTimesService does (selected id,
     // first-city fallback) so [timezoneId] always matches the calculation
     // zone and never the device zone.
-    final all = await prayerService.cities();
-    PrayerCity? city;
-    if (all.isNotEmpty) {
-      final id = prayerService.selectedCityId;
-      for (final candidate in all) {
-        if (candidate.id == id) {
-          city = candidate;
-          break;
-        }
-      }
-      city ??= all.first;
+    PrayerCity? city = await prayerService.selectedCity();
+    if (city == null) {
+      final all = await prayerService.cities();
+      if (all.isNotEmpty) city = all.first;
     }
     final timezoneId = city?.timeZone ?? 'UTC';
 

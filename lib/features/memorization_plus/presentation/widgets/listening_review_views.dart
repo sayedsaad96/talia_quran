@@ -6,6 +6,8 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/listening/listening_question.dart';
 import '../../../../core/memorization/listening/listening_round_result.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/router/open_location.dart';
 import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../data/listening/listening_review_stats_store.dart';
@@ -74,6 +76,14 @@ class ListeningNotEnoughView extends StatelessWidget {
       Text(
         context.l10n.listeningReviewNotEnoughBody,
         textAlign: TextAlign.center,
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      // A next step instead of a dead end.
+      FilledButton.icon(
+        key: const Key('listening_review_start_memorizing'),
+        onPressed: () => context.openLocation(AppRoutes.hifzPracticeSurah),
+        icon: const Icon(Icons.auto_stories_rounded),
+        label: Text(context.l10n.listeningReviewStartMemorizing),
       ),
     ],
   );

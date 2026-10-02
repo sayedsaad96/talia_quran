@@ -24,6 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/identity/account_data_reset.dart';
 import '../../../../core/identity/account_data_barrier.dart';
+import '../../../../core/identity/account_deletion_marker.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 
 import '../../../../core/error/app_failure.dart';
 
@@ -64,6 +66,7 @@ class AuthCubit extends Cubit<AuthState> {
              cloudSyncQueue: cloudSyncQueue,
            ),
        super(const AuthInitial()) {
+    _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
     // Listen to Supabase auth state changes.
 
     // Every time a session becomes active (new login OR session restored on
@@ -73,6 +76,10 @@ class AuthCubit extends Cubit<AuthState> {
     _authSub = _authRepository.authStateChanges.listen(
       (user) {
         if (isClosed) return;
+
+        if (_deletionCleanupInProgress) {
+          return;
+        }
 
         // Skip auth state changes triggered during the password update flow;
 
@@ -130,6 +137,12 @@ class AuthCubit extends Cubit<AuthState> {
     // If a session already exists (e.g. app restarted without reinstall),
 
     // pull cloud data once so any remote changes are reflected locally.
+
+    if (_deletionCleanupInProgress) {
+      emit(const AuthAccountDeletionInProgress());
+      unawaited(_resumeDeletedAccountCleanup());
+      return;
+    }
 
     final currentUser = _authRepository.currentUser;
 
@@ -364,6 +377,40 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void>? _authRecoveryInFlight;
 
+  bool _deletionCleanupInProgress = false;
+
+  String? get _pendingDeletionOperationOwnerId {
+    final prefs = _prefs;
+    return prefs == null
+        ? null
+        : AccountDeletionMarker.pendingOperationOwnerId(prefs);
+  }
+
+  Future<void> _resumeDeletedAccountCleanup() async {
+    final prefs = _prefs;
+    final requested = prefs != null &&
+        AccountDeletionMarker.stage(prefs) == AccountDeletionMarker.requestedStage;
+    final result = requested
+        ? await _authRepository.deleteAccount()
+        : await _authRepository.resumeDeletedAccountCleanup();
+    if (isClosed) return;
+    _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
+    result.fold(
+      _emitDeletionFailure,
+      (_) => emit(const AuthAccountDeleted()),
+    );
+  }
+
+  void _emitDeletionFailure(Failure failure) {
+    if (_pendingDeletionOperationOwnerId != null) {
+      emit(AuthAccountDeletionCleanupFailed(failure.toString()));
+      return;
+    }
+    emit(AuthError(failure.toString()));
+    final user = _authRepository.currentUser;
+    if (user != null) emit(AuthAuthenticated(user: user));
+  }
+
   Future<void> _beginControlledIdentityTransition() async {
     if (_controlledIdentityTransitionDepth == 0) {
       _controlledIdentityTransitionCompleter = Completer<void>();
@@ -563,18 +610,74 @@ class AuthCubit extends Cubit<AuthState> {
     return repository.claimLocalReviewRecords();
   }
 
-  Future<void> deleteAccount() async {
-    emit(const AuthLoading());
-    await _beginControlledIdentityTransition();
+  /// Guest review records the signed-in account could import (0 on failure,
+  /// so a read error never blocks routing after sign-in).
+  Future<int> claimableGuestReviewRecordCount() async {
+    final repository = _memPlusRepository;
+    if (repository == null) return 0;
     try {
+      final result = await repository.countClaimableLocalReviewRecords();
+      return result.fold<int>((_) => 0, (count) => count);
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    if (_deletionCleanupInProgress) return;
+    _deletionCleanupInProgress = true;
+    emit(const AuthAccountDeletionInProgress());
+    var transitionStarted = false;
+    try {
+      await _beginControlledIdentityTransition();
+      transitionStarted = true;
       final result = await _authRepository.deleteAccount();
       if (isClosed) return;
+      _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
       result.fold(
-        (failure) => emit(AuthError(failure.toString())),
+        _emitDeletionFailure,
         (_) => emit(const AuthAccountDeleted()),
       );
+    } catch (_) {
+      if (!isClosed) {
+        _emitDeletionFailure(
+          const ServerFailure(CubitMessageCodes.accountDeletionFailed),
+        );
+      }
     } finally {
-      _endControlledIdentityTransition();
+      if (transitionStarted) {
+        _endControlledIdentityTransition();
+      } else {
+        _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
+      }
+    }
+  }
+
+  Future<void> retryAccountDeletionCleanup() async {
+    if (_pendingDeletionOperationOwnerId == null ||
+        (_deletionCleanupInProgress &&
+            state is! AuthAccountDeletionCleanupFailed)) {
+      return;
+    }
+    _deletionCleanupInProgress = true;
+    emit(const AuthAccountDeletionInProgress());
+    var transitionStarted = false;
+    try {
+      await _beginControlledIdentityTransition();
+      transitionStarted = true;
+      await _resumeDeletedAccountCleanup();
+    } catch (_) {
+      if (!isClosed) {
+        _emitDeletionFailure(
+          const ServerFailure(CubitMessageCodes.accountDeletionCleanupFailed),
+        );
+      }
+    } finally {
+      if (transitionStarted) {
+        _endControlledIdentityTransition();
+      } else {
+        _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
+      }
     }
   }
 

@@ -75,6 +75,19 @@ void main() {
       expect(result.recommendations.first.type, RecommendationType.retentionDrop);
     });
 
+    test('no retention alert before there is enough history', () {
+      // A first session: no reviews yet (score 0) or one hesitation (50%).
+      for (final score in [0.0, 0.5]) {
+        final result = usecase.generate(
+          createReport(totalAyahs: 2, retentionScore: score),
+        );
+        expect(
+          result.recommendations.map((r) => r.type),
+          isNot(contains(RecommendationType.retentionDrop)),
+        );
+      }
+    });
+
     test('Retention Excellent Recommendation (> 90%)', () {
       final report = createReport(retentionScore: 0.95);
       final result = usecase.generate(report);

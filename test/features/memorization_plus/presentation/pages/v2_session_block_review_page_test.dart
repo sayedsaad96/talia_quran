@@ -34,7 +34,13 @@ void main() {
             ),
           );
 
-          final action = find.byKey(const ValueKey('v2-manual-recall'));
+          // Without a recognizer self-grading is the main button instead.
+          final action = issue == V2SpeechIssue.unavailable
+              ? find.widgetWithText(
+                  FilledButton,
+                  'Grade your recitation yourself',
+                )
+              : find.byKey(const ValueKey('v2-manual-recall'));
           expect(action, findsOneWidget);
           await tester.tap(action);
           await tester.pumpAndSettle();

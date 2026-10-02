@@ -92,6 +92,10 @@ Future<void> _stubCommon() async {
       .thenAnswer((_) async {});
   when(() => mockNotificationService.configureLocalTimezone())
       .thenAnswer((_) async {});
+  // No selection: the event builder falls back to the first bundled city.
+  when(
+    () => mockPrayerTimesService.selectedCity(),
+  ).thenAnswer((_) async => null);
   when(() => mockPrayerTimesService.cities()).thenAnswer(
     (_) async => const [
       PrayerCity(

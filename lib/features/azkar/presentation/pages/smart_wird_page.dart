@@ -298,9 +298,9 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
             subtitle: [
               if (wird.items[i].zikr.reference.isNotEmpty)
                 wird.items[i].zikr.reference,
-              '${_counts[wird.items[i].zikr.id] ?? 0} / '
-                  '${wird.items[i].zikr.totalCount}',
-            ].join(' · '),
+              '${context.numText(_counts[wird.items[i].zikr.id] ?? 0)} / '
+                  '${context.numText(wird.items[i].zikr.totalCount)}',
+            ].join(context.listSeparator),
             done:
                 (_counts[wird.items[i].zikr.id] ?? 0) >=
                 wird.items[i].zikr.totalCount,
@@ -391,7 +391,10 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                       ),
                     ),
                     Text(
-                      context.l10n.completedCount(completed, totalItems),
+                      context.l10n.completedCount(
+                        context.numText(completed),
+                        context.numText(totalItems),
+                      ),
                       style: AppTypography.labelMedium.copyWith(
                         color: context.tokens.textSecondary,
                       ),
@@ -608,8 +611,8 @@ class _CounterDial extends StatelessWidget {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       button: true,
-      label: context.l10n.tapToTasbeeh(total),
-      value: '$count / $total',
+      label: context.l10n.tapToTasbeeh(context.numText(total)),
+      value: '${context.numText(count)} / ${context.numText(total)}',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -661,7 +664,7 @@ class _CounterDial extends StatelessWidget {
                       size: 38,
                     )
                   : Text(
-                      '$count',
+                      context.numText(count),
                       style: AppTypography.displayMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -727,7 +730,10 @@ class _SmartWirdDoneView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              context.l10n.completedCount(completed, total),
+              context.l10n.completedCount(
+                context.numText(completed),
+                context.numText(total),
+              ),
               style: AppTypography.bodyLarge.copyWith(color: textSecondary),
             ),
             if (xpResult != null) ...[

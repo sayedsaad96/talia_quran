@@ -171,7 +171,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                         ),
                                         child: Text(
                                           context.isArabic
-                                              ? 'آية $currentAyah'
+                                              ? 'آية ${context.numText(currentAyah)}'
                                               : 'Ayah $currentAyah',
                                           style: AppTypography.labelSmall.copyWith(
                                             color: primary,
@@ -361,7 +361,7 @@ class _MushafArtworkBadge extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Text(
-                  '$surahId',
+                  surahId == null ? '' : context.numText(surahId!),
                   style: TextStyle(
                     fontSize: 8.5,
                     fontWeight: FontWeight.bold,

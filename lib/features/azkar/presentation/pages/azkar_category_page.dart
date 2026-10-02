@@ -288,10 +288,10 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
               if (snapshot.sessions[i].zikr.reference.isNotEmpty)
                 snapshot.sessions[i].zikr.reference,
               context.l10n.miniProgressOf(
-                snapshot.sessions[i].zikr.totalCount,
-                snapshot.sessions[i].currentCount,
+                context.numText(snapshot.sessions[i].zikr.totalCount),
+                context.numText(snapshot.sessions[i].currentCount),
               ),
-            ].join(' · '),
+            ].join(context.listSeparator),
             done: snapshot.sessions[i].isDone,
             selected: i == snapshot.currentIndex,
           ),
@@ -390,8 +390,8 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                             const SizedBox(height: 2),
                             Text(
                               context.l10n.completedCount(
-                                widget.state.completedCount,
-                                widget.state.sessions.length,
+                                context.numText(widget.state.completedCount),
+                                context.numText(widget.state.sessions.length),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -783,8 +783,12 @@ class _ZikrReaderPage extends StatelessWidget {
           // ─── Tap Target (Circular Counter) ──────────────────────
           Semantics(
             button: true,
-            label: context.l10n.tapToTasbeeh(session.zikr.totalCount),
-            value: '${session.currentCount} / ${session.zikr.totalCount}',
+            label: context.l10n.tapToTasbeeh(
+              context.numText(session.zikr.totalCount),
+            ),
+            value:
+                '${context.numText(session.currentCount)} / '
+                '${context.numText(session.zikr.totalCount)}',
             child: GestureDetector(
               onTap: onTap,
               onLongPress: onLongPress,
@@ -865,7 +869,7 @@ class _ZikrReaderPage extends StatelessWidget {
                           )
                         else
                           Text(
-                            '${session.currentCount}',
+                            context.numText(session.currentCount),
                             style: AppTypography.displayMedium.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -875,7 +879,7 @@ class _ZikrReaderPage extends StatelessWidget {
 
                         Text(
                           context.l10n.azkarCountOfTotal(
-                            session.zikr.totalCount,
+                            context.numText(session.zikr.totalCount),
                           ),
                           style: AppTypography.titleMedium.copyWith(
                             color: Colors.white.withValues(alpha: 0.8),

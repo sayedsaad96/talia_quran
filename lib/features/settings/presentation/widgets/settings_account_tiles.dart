@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../auth/presentation/widgets/guest_import_dialog.dart';
 import '../../data/user_profile.dart';
 import '../cubits/profile_cubit.dart';
 import 'settings_section.dart';
@@ -331,7 +333,7 @@ class _AccountSectionState extends State<AccountSection> {
         if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(context.localizedCubitMessage(state.message)),
               backgroundColor: AppColors.error,
             ),
           );
@@ -348,10 +350,41 @@ class _AccountSectionState extends State<AccountSection> {
         }
       },
       builder: (context, state) {
-        if (state is AuthLoading) {
+        if (state is AuthLoading || state is AuthAccountDeletionInProgress) {
           return const Padding(
             padding: EdgeInsets.all(24),
             child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is AuthAccountDeletionCleanupFailed) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.accountDeletionRetryTitle,
+                  style: AppTypography.titleSmall.copyWith(
+                    color: context.tokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  context.localizedCubitMessage(state.message),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                FilledButton(
+                  onPressed: () => context
+                      .read<AuthCubit>()
+                      .retryAccountDeletionCleanup(),
+                  child: Text(context.l10n.accountDeletionRetryAction),
+                ),
+              ],
+            ),
           );
         }
 
@@ -674,32 +707,8 @@ class _AccountSectionState extends State<AccountSection> {
   }
 
   Future<void> _confirmGuestDataImport(BuildContext context) async {
-    final shouldImport = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          context.isArabic
-              ? 'نقل بيانات الحفظ المحلية؟'
-              : 'Import local memorization data?',
-        ),
-        content: Text(
-          context.isArabic
-              ? 'سيتم ربط بيانات الحفظ التي أُنشئت دون تسجيل دخول بهذا الحساب ومزامنتها معه.'
-              : 'Guest memorization data will be linked to this account and synced to it.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(context.isArabic ? 'نقل' : 'Import'),
-          ),
-        ],
-      ),
-    );
-    if (shouldImport != true || !context.mounted) return;
+    final shouldImport = await showGuestImportDialog(context);
+    if (!shouldImport || !context.mounted) return;
 
     final claim = await context.read<AuthCubit>().importGuestReviewRecords();
     if (!context.mounted) return;
@@ -707,11 +716,7 @@ class _AccountSectionState extends State<AccountSection> {
       (failure) => _showSettingsError(context, failure.message),
       (count) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.isArabic
-                ? 'تم نقل $count من سجلات الحفظ.'
-                : 'Imported $count memorization records.',
-          ),
+          content: Text(context.l10n.guestImportDone(context.numText(count))),
           backgroundColor: AppColors.primary,
         ),
       ),

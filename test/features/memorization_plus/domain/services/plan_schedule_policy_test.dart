@@ -188,4 +188,33 @@ void main() {
       expect(fit(3, null, 1), 3);
     });
   });
+
+  group('quick presets deliver what they promise', () {
+    final saturday = DateTime(2026, 9, 26);
+
+    // (new ayahs/day, minutes) of the setup page's presets. The light preset
+    // used to promise 3 ayahs in 10 minutes and served 2.
+    const presets = [(3, 20), (5, 30), (10, 50)];
+
+    test('each preset fits its new ayahs alongside a couple of reviews', () {
+      for (final (newPerDay, minutes) in presets) {
+        expect(
+          PlanSchedulePolicy.newAyahBudget(
+            plan(minutes: minutes, newPerDay: newPerDay),
+            reviewItemCount: 2,
+            today: saturday,
+          ),
+          newPerDay,
+          reason: '$newPerDay ayahs in $minutes minutes',
+        );
+      }
+    });
+
+    test('fitting minutes is the per-ayah share, never below one', () {
+      expect(PlanSchedulePolicy.newAyahsFittingMinutes(10), 2);
+      expect(PlanSchedulePolicy.newAyahsFittingMinutes(20), 5);
+      expect(PlanSchedulePolicy.newAyahsFittingMinutes(2), 1);
+    });
+  });
 }
+

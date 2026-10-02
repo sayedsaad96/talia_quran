@@ -12,6 +12,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
@@ -421,7 +422,12 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     final primary = context.tokens.accent;
     final cardBg = context.tokens.card;
 
-    return BlocProvider<KhatmahCubit>.value(
+    // Setup and completion reach the dashboard with `context.go`, leaving it
+    // as the only route: back must lead home instead of closing the app.
+    final hasHistory = FallbackPopScope.hasHistory(context);
+    return FallbackPopScope(
+      fallbackLocation: AppRoutes.home,
+      child: BlocProvider<KhatmahCubit>.value(
       value: _cubit,
       child: BlocConsumer<KhatmahCubit, KhatmahState>(
         listener: (_, state) {
@@ -437,6 +443,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
           if (state is KhatmahProgressFailure && state.plan == null) {
             return Scaffold(
               appBar: AppBar(
+                leading: _fallbackBackButton(hasHistory),
                 title: Text(context.l10n.khatmahKhatmahDashboard),
                 centerTitle: true,
                 actions: _historyAction(context),
@@ -486,6 +493,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
           if (state is KhatmahNoActivePlan) {
             return Scaffold(
               appBar: AppBar(
+                leading: _fallbackBackButton(hasHistory),
                 title: Text(context.l10n.khatmahQuranKhatmah),
                 centerTitle: true,
                 actions: _historyAction(context),
@@ -585,7 +593,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
               ? MushafHizbHelper.toArabicNumber(wirdJuz)
               : '$wirdJuz';
           final wirdRangeText = plan.wirdUnit == KhatmahWirdUnit.juz
-              ? '${context.l10n.khatmahWirdJuz(wirdJuzStr)} · $pagesRange'
+              ? '${context.l10n.khatmahWirdJuz(wirdJuzStr)}${context.listSeparator}$pagesRange'
               : pagesRange;
           final wirdPagesCountStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdPagesCount)
@@ -593,6 +601,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
 
           return Scaffold(
             appBar: AppBar(
+              leading: _fallbackBackButton(hasHistory),
               title: Text(
                 context.l10n.khatmahKhatmahDashboard,
                 style: AppTypography.titleMedium,
@@ -999,6 +1008,19 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
           );
         },
       ),
+      ),
+    );
+  }
+
+  /// Back affordance for a dashboard opened without history (null keeps the
+  /// AppBar's default back button when there is a route to pop to).
+  Widget? _fallbackBackButton(bool hasHistory) {
+    if (hasHistory) return null;
+    return IconButton(
+      key: const Key('khatmah_dashboard_back_button'),
+      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      icon: const BackButtonIcon(),
+      onPressed: () => context.go(AppRoutes.home),
     );
   }
 }

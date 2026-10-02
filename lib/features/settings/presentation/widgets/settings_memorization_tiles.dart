@@ -8,6 +8,8 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
+import '../../data/repositories/settings_repository_impl.dart';
+import '../../domain/repositories/settings_repository.dart';
 import 'settings_section.dart';
 
 class MemorizationPathSummaryTile extends StatelessWidget {
@@ -277,22 +279,21 @@ class AccuracySettingTile extends StatefulWidget {
 }
 
 class _AccuracySettingTileState extends State<AccuracySettingTile> {
-  static const _key = 'similarity_threshold';
-  static const _levels = [0.70, 0.85, 0.92];
-  int _selected = 1; // default = medium (0.85)
+  static const _key = SettingsRepositoryImpl.similarityThresholdKey;
+  static const _levels = [
+    SettingsRepository.lenientPassThreshold,
+    SettingsRepository.balancedPassThreshold,
+    SettingsRepository.strictPassThreshold,
+  ];
+  int _selected = 1; // default = balanced
 
   @override
   void initState() {
     super.initState();
-    final prefs = getIt<SharedPreferences>();
-    final saved = prefs.getDouble(_key) ?? 0.85;
-    if (saved <= 0.70) {
-      _selected = 0;
-    } else if (saved >= 0.92) {
-      _selected = 2;
-    } else {
-      _selected = 1;
-    }
+    final threshold = SettingsRepositoryImpl.levelThreshold(
+      getIt<SharedPreferences>().getDouble(_key),
+    );
+    _selected = _levels.indexOf(threshold);
   }
 
   Future<void> _select(BuildContext context, int value) async {
@@ -334,7 +335,7 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
       context.l10n.accuracyMediumDesc,
       context.l10n.accuracyHardDesc,
     ];
-    final percents = [70, 85, 92];
+    final percents = [for (final level in _levels) (level * 100).round()];
     final colors = [AppColors.success, primary, AppColors.streakOrange];
 
     return Padding(

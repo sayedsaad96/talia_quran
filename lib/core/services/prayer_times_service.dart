@@ -18,6 +18,7 @@ class PrayerCity {
     required this.countryAr,
     required this.countryEn,
     required this.defaultMethod,
+    this.defaultMadhab = PrayerTimesService.shafiMadhab,
   });
 
   final String id;
@@ -33,10 +34,15 @@ class PrayerCity {
   final String countryAr;
   final String countryEn;
 
-  /// Calculation method default for the city country. Only pinned where an
-  /// official method is well established (SA/EG/PK/US/CA); MWL elsewhere.
-  /// Always overridable via [PrayerTimesService.setCalculationMethod].
+  /// Calculation method default for the city country: the local authority's
+  /// method where `adhan` provides it, MWL elsewhere. Always overridable via
+  /// [PrayerTimesService.setCalculationMethod].
   final String defaultMethod;
+
+  /// Asr juristic method used locally ([PrayerTimesService.shafiMadhab] or
+  /// [PrayerTimesService.hanafiMadhab]). Overridable via
+  /// [PrayerTimesService.setMadhab].
+  final String defaultMadhab;
 }
 
 class PrayerCountry {
@@ -95,6 +101,14 @@ class PrayerTimesService {
   static const cityIdKey = 'prayer_city_id';
   static const methodKey = 'prayer_calc_method';
   static const methodManualKey = 'prayer_calc_method_manual';
+  static const madhabKey = 'prayer_madhab';
+  static const madhabManualKey = 'prayer_madhab_manual';
+  static const customCityId = 'custom';
+  static const customLatitudeKey = 'prayer_custom_latitude';
+  static const customLongitudeKey = 'prayer_custom_longitude';
+  static const customTimeZoneKey = 'prayer_custom_time_zone';
+  static const shafiMadhab = 'shafi';
+  static const hanafiMadhab = 'hanafi';
   static const citiesAsset = 'assets/data/prayer_cities.json';
 
   final SharedPreferences _prefs;
@@ -139,6 +153,98 @@ class PrayerTimesService {
       // state explicit so later reads don't mistake it for a manual choice.
       await _prefs.setBool(methodManualKey, false);
     }
+  }
+
+  /// The user's own coordinates, for places outside the bundled cities.
+  /// Null until a valid location has been saved.
+  PrayerCity? get customCity {
+    final latitude = _prefs.getDouble(customLatitudeKey);
+    final longitude = _prefs.getDouble(customLongitudeKey);
+    final timeZone = _prefs.getString(customTimeZoneKey);
+    if (latitude == null || longitude == null || timeZone == null) {
+      return null;
+    }
+    if (!_isValidTimeZone(timeZone)) return null;
+    return PrayerCity(
+      id: customCityId,
+      nameAr: 'موقع مخصص',
+      nameEn: 'Custom location',
+      latitude: latitude,
+      longitude: longitude,
+      timeZone: timeZone,
+      countryId: customCityId,
+      countryAr: 'موقع مخصص',
+      countryEn: 'Custom location',
+      defaultMethod: CalculationMethod.muslim_world_league.name,
+    );
+  }
+
+  static bool _isValidTimeZone(String name) {
+    try {
+      tz.getLocation(name);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Saves and selects a custom location. Returns false (and changes
+  /// nothing) for out-of-range coordinates or an unknown IANA zone.
+  Future<bool> setCustomLocation({
+    required double latitude,
+    required double longitude,
+    required String timeZone,
+  }) async {
+    if (!latitude.isFinite ||
+        !longitude.isFinite ||
+        latitude.abs() > 90 ||
+        longitude.abs() > 180 ||
+        !_isValidTimeZone(timeZone)) {
+      return false;
+    }
+    await _prefs.setDouble(customLatitudeKey, latitude);
+    await _prefs.setDouble(customLongitudeKey, longitude);
+    await _prefs.setString(customTimeZoneKey, timeZone);
+    await setCityId(customCityId);
+    return true;
+  }
+
+  /// The city prayer times are calculated for, including a custom location.
+  Future<PrayerCity?> selectedCity() async {
+    final id = selectedCityId;
+    if (id == null || id.isEmpty) return null;
+    if (id == customCityId) return customCity;
+    for (final city in await cities()) {
+      if (city.id == id) return city;
+    }
+    return null;
+  }
+
+  /// True after the user explicitly picks the Asr madhab; otherwise the
+  /// selected city's default applies.
+  bool get isMadhabManual => _prefs.getBool(madhabManualKey) ?? false;
+
+  /// The explicitly chosen madhab, or null while it follows the city.
+  String? get manualMadhab =>
+      isMadhabManual ? _prefs.getString(madhabKey) : null;
+
+  Future<void> setMadhab(String madhab) async {
+    await _prefs.setString(madhabKey, madhab);
+    await _prefs.setBool(madhabManualKey, true);
+  }
+
+  /// Returns to the selected city's default Asr madhab.
+  Future<void> setMadhabAutomatic() async {
+    await _prefs.setBool(madhabManualKey, false);
+    await _prefs.remove(madhabKey);
+  }
+
+  /// The Asr madhab currently used for the selected city.
+  Future<String> effectiveMadhab() async => _madhabFor(await selectedCity());
+
+  String _madhabFor(PrayerCity? city) {
+    final manual = isMadhabManual ? _prefs.getString(madhabKey) : null;
+    return manual ?? city?.defaultMadhab ?? shafiMadhab;
   }
 
   Future<void> setCalculationMethod(String method) async {
@@ -187,6 +293,9 @@ class PrayerTimesService {
               defaultMethod:
                   item['method'] as String? ??
                   CalculationMethod.muslim_world_league.name,
+              defaultMadhab: item['madhab'] == hanafiMadhab
+                  ? hanafiMadhab
+                  : shafiMadhab,
             ),
       ];
     } catch (_) {
@@ -228,14 +337,7 @@ class PrayerTimesService {
 
   Future<PrayerTimesSnapshot?> current({required bool isArabic}) async {
     if (!isEnabled) return null;
-    final id = selectedCityId;
-    if (id == null || id.isEmpty) return null;
-    final all = await cities();
-    if (all.isEmpty) return null;
-    final city = all.cast<PrayerCity?>().firstWhere(
-      (c) => c?.id == id,
-      orElse: () => null,
-    );
+    final city = await selectedCity();
     if (city == null) return null;
     final location = tz.getLocation(city.timeZone);
     final now = tz.TZDateTime.from(_now(), location);
@@ -292,7 +394,7 @@ class PrayerTimesService {
     final times = PrayerTimes.utc(
       Coordinates(city.latitude, city.longitude),
       DateComponents.from(cityDate),
-      _paramsFor(calculationMethod),
+      _paramsFor(calculationMethod, madhab: _madhabFor(city)),
     );
     return (
       fajr: tz.TZDateTime.from(times.fajr, location),
@@ -304,25 +406,19 @@ class PrayerTimesService {
     );
   }
 
-  CalculationParameters _paramsFor(String method) {
+  CalculationParameters _paramsFor(String method, {required String madhab}) {
     final match = CalculationMethod.values.where((m) => m.name == method);
     final resolved = match.isEmpty
         ? CalculationMethod.muslim_world_league
         : match.first;
-    return resolved.getParameters();
+    return resolved.getParameters()
+      ..madhab = madhab == hanafiMadhab ? Madhab.hanafi : Madhab.shafi;
   }
 
   /// Calculates prayer times for a specific date using the active city and method.
   Future<List<({String key, String nameAr, String nameEn, DateTime time})>>
   timesForDate(DateTime date) async {
-    final id = selectedCityId;
-    if (id == null || id.isEmpty) return const [];
-    final all = await cities();
-    if (all.isEmpty) return const [];
-    final city = all.cast<PrayerCity?>().firstWhere(
-      (c) => c?.id == id,
-      orElse: () => null,
-    );
+    final city = await selectedCity();
     if (city == null) return const [];
     final times = _calculate(city, date);
     return [

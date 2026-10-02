@@ -69,7 +69,7 @@ void main() {
       // first step, so 150 total points = 100/200 = 50% of level 2.
       expect(find.text('Level 2 — 50/100'), findsOneWidget);
       expect(find.text('7 stars'), findsOneWidget);
-      expect(find.text('Last mission'), findsOneWidget);
+      expect(find.text('Your mission'), findsOneWidget);
       expect(find.text('Memorization House 2'), findsOneWidget);
 
       expect(find.text('Home'), findsWidgets);
@@ -162,7 +162,7 @@ void main() {
         // The SRS-first resolver surfaced a due review, so the card must not
         // present it as yesterday's ("last") mission.
         expect(find.text('Ready for review'), findsOneWidget);
-        expect(find.text('Last mission'), findsNothing);
+        expect(find.text('Your mission'), findsNothing);
         // N7: the card describes the ayah the review opens (stage 1), never the
         // current memorization stage's range and progress (stage 2).
         expect(find.textContaining('Ayahs 2-2'), findsOneWidget);

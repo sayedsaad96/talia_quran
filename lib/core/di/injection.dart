@@ -146,6 +146,7 @@ import '../../features/auth/data/services/supabase_account_password_verifier.dar
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
 import '../identity/account_data_barrier.dart';
+import '../identity/account_deletion_marker.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
@@ -171,6 +172,9 @@ Future<void> configureDependencies({bool background = false}) async {
   // ─── External ───────────────────────────────────────────────────────────────
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
+  final deletionPending = AccountDeletionMarker.hasPendingOperation(
+    sharedPrefs,
+  );
 
   final dir = await getApplicationDocumentsDirectory();
   final isar = await openAppIsar(directory: dir.path);
@@ -181,7 +185,9 @@ Future<void> configureDependencies({bool background = false}) async {
 
   // Migrate old SharedPreferences Hifz data to Isar if needed
   final hifzDatasource = IsarHifzLocalDatasourceImpl(isar, sharedPrefs);
-  await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
+  if (!deletionPending) {
+    await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
+  }
   getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
   getIt.registerLazySingleton<RecordOwnerProvider>(
@@ -202,8 +208,6 @@ Future<void> configureDependencies({bool background = false}) async {
     () => CloudSyncQueue(
       getIt<Isar>(),
       getIt<RecordOwnerProvider>(),
-      scheduleBackgroundDelivery:
-          getIt<BackgroundSyncScheduler>().scheduleAccountSync,
     ),
   );
   getIt.registerLazySingleton<AccountDataReset>(
@@ -215,6 +219,8 @@ Future<void> configureDependencies({bool background = false}) async {
       owner: getIt<RecordOwnerProvider>(),
       backgroundSyncScheduler: getIt<BackgroundSyncScheduler>(),
       audioResumeStore: getIt<AudioResumeStore>(),
+      deleteBookmarksForOwner: getIt<BookmarkService>().eraseOwner,
+      cancelAccountNotifications: getIt<TaliaNotificationService>().cancelAll,
     ),
   );
 
@@ -223,8 +229,10 @@ Future<void> configureDependencies({bool background = false}) async {
     isar: isar,
     owner: getIt<RecordOwnerProvider>(),
   );
-  await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
-  await memorizationPlusDatasource.migrateReviewRecordIdentityIfNeeded();
+  if (!deletionPending) {
+    await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
+    await memorizationPlusDatasource.migrateReviewRecordIdentityIfNeeded();
+  }
 
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
@@ -990,6 +998,8 @@ Future<void> configureDependencies({bool background = false}) async {
       reviewOutcomeCommitter: getIt<V2ReviewOutcomeCommitter>(),
       effectOutboxProcessor: getIt<V2ReviewEffectOutboxProcessor>(),
       appSessionService: getIt<AppSessionService>(),
+      recitationPassThreshold: getIt<SettingsRepository>()
+          .getSimilarityThreshold,
     ),
   );
 

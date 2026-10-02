@@ -164,6 +164,23 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
       ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> resumeDeletedAccountCleanup() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resumeDeletedAccountCleanup,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
+            _FakeEither_0<_i6.Failure, _i2.Unit>(
+          this,
+          Invocation.method(
+            #resumeDeletedAccountCleanup,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> syncProgressToCloud() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -354,6 +371,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
               this,
               Invocation.method(
                 #continueWithoutGuardian,
+                [],
+              ),
+            )),
+          ) as _i4.Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>
+      reopenGuardianLinking() => (super.noSuchMethod(
+            Invocation.method(
+              #reopenGuardianLinking,
+              [],
+            ),
+            returnValue: _i4
+                .Future<_i2.Either<_i6.Failure, _i9.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i9.MemorizationProfile>(
+              this,
+              Invocation.method(
+                #reopenGuardianLinking,
                 [],
               ),
             )),
@@ -759,6 +794,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
           this,
           Invocation.method(
             #claimLocalReviewRecords,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, int>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, int>> countClaimableLocalReviewRecords() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #countClaimableLocalReviewRecords,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, int>>.value(
+            _FakeEither_0<_i6.Failure, int>(
+          this,
+          Invocation.method(
+            #countClaimableLocalReviewRecords,
             [],
           ),
         )),
@@ -1460,6 +1512,37 @@ class MockMemorizationPlusRepository extends _i1.Mock
           Invocation.method(
             #removeChild,
             [childUserId],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, void>> updateLinkedChildIdentity({
+    required String? childUserId,
+    required String? nickname,
+    required int? age,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateLinkedChildIdentity,
+          [],
+          {
+            #childUserId: childUserId,
+            #nickname: nickname,
+            #age: age,
+          },
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #updateLinkedChildIdentity,
+            [],
+            {
+              #childUserId: childUserId,
+              #nickname: nickname,
+              #age: age,
+            },
           ),
         )),
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);

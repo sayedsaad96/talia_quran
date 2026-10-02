@@ -1,0 +1,254 @@
+[
+  {
+    "proname": "accept_child_link_token_with_hash",
+    "arguments": "p_token_hash text",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "append_ayah_review_events_v1",
+    "arguments": "p_events jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "claim_parent_reward",
+    "arguments": "p_reward_id bigint",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "compare_and_swap_custom_plan",
+    "arguments": "p_expected_revision bigint, p_payload jsonb, p_is_deleted boolean",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "compare_and_swap_daily_plan",
+    "arguments": "p_expected_revision bigint, p_surah_id integer, p_generated_at timestamp with time zone, p_total_items integer, p_completed_count integer, p_payload jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "create_child_link_request_with_hash",
+    "arguments": "p_token_hash text",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "create_parent_reward",
+    "arguments": "p_child_user_id uuid, p_title text",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "delete_current_user",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "get_remote_children_dashboard",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "handle_new_user",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "proname": "insert_kids_session_log",
+    "arguments": "p_local_id text, p_surah_id integer, p_ayah_number integer, p_repeats_completed integer, p_points_earned integer, p_completed_at timestamp with time zone",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "insert_kids_session_logs_batch",
+    "arguments": "p_data jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "is_valid_quran_ayah_reference",
+    "arguments": "p_surah_id integer, p_ayah_number integer",
+    "security_definer": false,
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "proname": "normalize_child_nickname",
+    "arguments": "p_nickname text",
+    "security_definer": false,
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "proname": "prune_audit_logs",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "proname": "pull_ayah_review_events_since",
+    "arguments": "p_owner_user_id uuid, p_cursor_sequence bigint, p_cursor_event_id text, p_limit integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "pull_ayah_review_records",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "pull_ayah_review_records_page",
+    "arguments": "p_cursor timestamp with time zone, p_cursor_id bigint, p_limit integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "pull_ayah_review_records_since",
+    "arguments": "p_cursor timestamp with time zone, p_limit integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "pull_ayah_review_records_since",
+    "arguments": "p_cursor_updated_at timestamp with time zone, p_cursor_id bigint, p_limit integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "pull_quran_bookmarks",
+    "arguments": "",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "revoke_guardian_link",
+    "arguments": "p_counterpart_user_id uuid",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "set_own_child_nickname",
+    "arguments": "p_nickname text",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "unlock_parent_reward",
+    "arguments": "p_reward_id bigint",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "update_linked_child_identity",
+    "arguments": "p_child_user_id uuid, p_nickname text, p_age integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "update_updated_at",
+    "arguments": "",
+    "security_definer": false,
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "proname": "upsert_ayah_review_records",
+    "arguments": "p_data jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_ayah_review_records_v2",
+    "arguments": "p_data jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_daily_activities_batch",
+    "arguments": "p_data jsonb",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_daily_activity",
+    "arguments": "p_day_key integer, p_activity_count integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_kids_progress_cloud",
+    "arguments": "p_total_points integer, p_current_level integer, p_current_streak integer, p_stars_earned integer, p_ayahs_completed integer, p_last_session_at timestamp with time zone",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_memorization_identity",
+    "arguments": "p_selected_path text, p_guardian_onboarding_status text, p_is_parent_guardian boolean, p_child_age integer, p_updated_at timestamp with time zone",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_quran_bookmark",
+    "arguments": "p_surah_id integer, p_ayah_number integer, p_payload jsonb, p_revision bigint, p_is_deleted boolean",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_reading_progress",
+    "arguments": "p_pages integer[]",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_streak",
+    "arguments": "p_current_streak integer, p_longest_streak integer, p_last_activity_date date, p_freezes_available integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "proname": "upsert_xp",
+    "arguments": "p_total_xp integer",
+    "security_definer": true,
+    "anon_execute": false,
+    "authenticated_execute": true
+  }
+]

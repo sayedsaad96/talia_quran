@@ -85,7 +85,7 @@ void main() {
     expect(find.text('الفاتحة'), findsOneWidget);
 
     // Verify Ayah pill
-    expect(find.text('آية 1'), findsOneWidget);
+    expect(find.text('آية ١'), findsOneWidget);
 
     // Verify Reciter name
     expect(find.text('مشاري راشد العفاسي'), findsOneWidget);

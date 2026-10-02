@@ -15,6 +15,13 @@ class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
+/// Remote deletion has been confirmed and device cleanup is still running.
+/// Routing must keep the current screen stable until cleanup reaches a
+/// terminal state, so the user cannot act through a stale session.
+class AuthAccountDeletionInProgress extends AuthLoading {
+  const AuthAccountDeletionInProgress();
+}
+
 /// Local owner cleanup failed; account data is not ready for navigation.
 class AuthOwnerDataFailure extends AuthState {
   const AuthOwnerDataFailure();
@@ -41,6 +48,17 @@ class AuthUnauthenticated extends AuthState {
 
 class AuthAccountDeleted extends AuthState {
   const AuthAccountDeleted();
+}
+
+/// The cloud account is already deleted, but the resumable device cleanup
+/// still needs a retry. The user is never told that deletion fully succeeded.
+class AuthAccountDeletionCleanupFailed extends AuthState {
+  const AuthAccountDeletionCleanupFailed(this.message);
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class AuthPasswordResetSent extends AuthState {

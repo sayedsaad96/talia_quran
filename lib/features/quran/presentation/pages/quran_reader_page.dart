@@ -826,6 +826,32 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                                   },
                                                 ),
                                           ),
+                                          // Laid out below the header (not
+                                          // pinned at a fixed offset) so the
+                                          // taller khatmah header stays
+                                          // visible.
+                                          ValueListenableBuilder<bool>(
+                                            valueListenable:
+                                                _showLongPressHintNotifier,
+                                            builder: (context, show, _) {
+                                              if (!show) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal:
+                                                          AppSpacing.md,
+                                                    ),
+                                                child: LongPressHintBanner(
+                                                  accent: accent,
+                                                  bg: bg,
+                                                  onDismiss:
+                                                      _dismissLongPressHint,
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ],
                                       ),
                                 bottomBar: ValueListenableBuilder<bool>(
@@ -888,23 +914,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           },
                         ),
 
-                        // ── Long press hint banner ─────────────────────────
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _showLongPressHintNotifier,
-                          builder: (context, show, _) {
-                            if (!show) return const SizedBox.shrink();
-                            return PositionedDirectional(
-                              top: 54,
-                              start: AppSpacing.md,
-                              end: AppSpacing.md,
-                              child: LongPressHintBanner(
-                                accent: accent,
-                                bg: bg,
-                                onDismiss: _dismissLongPressHint,
-                              ),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),

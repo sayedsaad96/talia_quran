@@ -9,10 +9,15 @@ import '../../widgets/settings_prayer_tiles.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
 
 /// Prayer times and Prayer Companion, kept in two separate groups.
-class PrayerSettingsPage extends StatelessWidget {
+class PrayerSettingsPage extends StatefulWidget {
   const PrayerSettingsPage({super.key});
 
-  static final _prayerTimesSectionKey = GlobalKey();
+  @override
+  State<PrayerSettingsPage> createState() => _PrayerSettingsPageState();
+}
+
+class _PrayerSettingsPageState extends State<PrayerSettingsPage> {
+  final _prayerTimesSectionKey = GlobalKey();
 
   void _scrollToPrayerTimes(BuildContext context) {
     final targetContext = _prayerTimesSectionKey.currentContext;
@@ -40,7 +45,14 @@ class PrayerSettingsPage extends StatelessWidget {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-              child: PrayerTimesSettingsSection(isDark: isDark),
+              // Rebuilding the page refreshes the alerts section below,
+              // which reads prayer readiness when it builds.
+              child: PrayerTimesSettingsSection(
+                isDark: isDark,
+                onChanged: () {
+                  if (mounted) setState(() {});
+                },
+              ),
             ),
           ],
         ),

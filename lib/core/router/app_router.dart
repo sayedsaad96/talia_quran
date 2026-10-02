@@ -64,6 +64,7 @@ import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dar
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/fallback_pop_scope.dart';
 
 abstract class AppRoutes {
   static const String splash = '/splash';
@@ -376,6 +377,9 @@ abstract class AppRouter {
       error.message.startsWith('no routes for location');
 
   static String? redirectForAuth(AuthState authState, String location) {
+    if (authState is AuthAccountDeletionInProgress) {
+      return null;
+    }
     if (authState is AuthOwnerDataFailure) {
       return location == AppRoutes.login ? null : AppRoutes.login;
     }
@@ -650,7 +654,11 @@ abstract class AppRouter {
         },
         builder: (context, state) {
           final result = state.extra! as KhatmahReadingResult;
-          return KhatmahCompletionPage(completion: result);
+          // Reached with `context.go` from the reader and the dashboard.
+          return FallbackPopScope(
+            fallbackLocation: AppRoutes.home,
+            child: KhatmahCompletionPage(completion: result),
+          );
         },
       ),
       GoRoute(
@@ -661,7 +669,10 @@ abstract class AppRouter {
           final preferredPath = state.uri.queryParameters['preferred'] == 'kids'
               ? MemorizationPath.child
               : null;
-          return PathSelectionPage(preferredPath: preferredPath);
+          return PathSelectionPage(
+            preferredPath: preferredPath,
+            openChildSetup: state.uri.queryParameters['setup'] == 'kids',
+          );
         },
       ),
       GoRoute(

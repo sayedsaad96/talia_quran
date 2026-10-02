@@ -11,25 +11,25 @@ void main() {
     test('under 60 minutes uses proper Arabic forms', () {
       expect(formatPrayerRemainingTime(1, isArabic: true), 'دقيقة');
       expect(formatPrayerRemainingTime(2, isArabic: true), 'دقيقتين');
-      expect(formatPrayerRemainingTime(3, isArabic: true), '3 دقائق');
-      expect(formatPrayerRemainingTime(5, isArabic: true), '5 دقائق');
-      expect(formatPrayerRemainingTime(10, isArabic: true), '10 دقائق');
-      expect(formatPrayerRemainingTime(11, isArabic: true), '11 دقيقة');
-      expect(formatPrayerRemainingTime(25, isArabic: true), '25 دقيقة');
-      expect(formatPrayerRemainingTime(59, isArabic: true), '59 دقيقة');
+      expect(formatPrayerRemainingTime(3, isArabic: true), '٣ دقائق');
+      expect(formatPrayerRemainingTime(5, isArabic: true), '٥ دقائق');
+      expect(formatPrayerRemainingTime(10, isArabic: true), '١٠ دقائق');
+      expect(formatPrayerRemainingTime(11, isArabic: true), '١١ دقيقة');
+      expect(formatPrayerRemainingTime(25, isArabic: true), '٢٥ دقيقة');
+      expect(formatPrayerRemainingTime(59, isArabic: true), '٥٩ دقيقة');
     });
 
     test('exact hours with 0 remaining minutes', () {
       expect(formatPrayerRemainingTime(60, isArabic: true), 'ساعة');
       expect(formatPrayerRemainingTime(120, isArabic: true), 'ساعتين');
-      expect(formatPrayerRemainingTime(180, isArabic: true), '3 ساعات');
-      expect(formatPrayerRemainingTime(600, isArabic: true), '10 ساعات');
-      expect(formatPrayerRemainingTime(660, isArabic: true), '11 ساعة');
+      expect(formatPrayerRemainingTime(180, isArabic: true), '٣ ساعات');
+      expect(formatPrayerRemainingTime(600, isArabic: true), '١٠ ساعات');
+      expect(formatPrayerRemainingTime(660, isArabic: true), '١١ ساعة');
     });
 
     test('hours with remaining minutes (such as 394 minutes from screenshot)', () {
       // 394 min = 6 hours (6 ساعات) and 34 min (34 دقيقة)
-      expect(formatPrayerRemainingTime(394, isArabic: true), '6 ساعات و 34 دقيقة');
+      expect(formatPrayerRemainingTime(394, isArabic: true), '٦ ساعات و ٣٤ دقيقة');
 
       // 61 min = 1 hour (ساعة) and 1 min (ودقيقة)
       expect(formatPrayerRemainingTime(61, isArabic: true), 'ساعة ودقيقة');
@@ -38,13 +38,13 @@ void main() {
       expect(formatPrayerRemainingTime(62, isArabic: true), 'ساعة ودقيقتين');
 
       // 65 min = 1 hour (ساعة) and 5 min (و 5 دقائق)
-      expect(formatPrayerRemainingTime(65, isArabic: true), 'ساعة و 5 دقائق');
+      expect(formatPrayerRemainingTime(65, isArabic: true), 'ساعة و ٥ دقائق');
 
       // 75 min = 1 hour (ساعة) and 15 min (و 15 دقيقة)
-      expect(formatPrayerRemainingTime(75, isArabic: true), 'ساعة و 15 دقيقة');
+      expect(formatPrayerRemainingTime(75, isArabic: true), 'ساعة و ١٥ دقيقة');
 
       // 125 min = 2 hours (ساعتين) and 5 min (و 5 دقائق)
-      expect(formatPrayerRemainingTime(125, isArabic: true), 'ساعتين و 5 دقائق');
+      expect(formatPrayerRemainingTime(125, isArabic: true), 'ساعتين و ٥ دقائق');
 
       // 122 min = 2 hours (ساعتين) and 2 min (ودقيقتين)
       expect(formatPrayerRemainingTime(122, isArabic: true), 'ساعتين ودقيقتين');
@@ -75,10 +75,10 @@ void main() {
 
   group('formatPrayerRemainingTimeCompact', () {
     test('Arabic compact', () {
-      expect(formatPrayerRemainingTimeCompact(0, isArabic: true), '< 1 د');
-      expect(formatPrayerRemainingTimeCompact(25, isArabic: true), '25 د');
-      expect(formatPrayerRemainingTimeCompact(60, isArabic: true), '1 س');
-      expect(formatPrayerRemainingTimeCompact(394, isArabic: true), '6 س 34 د');
+      expect(formatPrayerRemainingTimeCompact(0, isArabic: true), '< ١ د');
+      expect(formatPrayerRemainingTimeCompact(25, isArabic: true), '٢٥ د');
+      expect(formatPrayerRemainingTimeCompact(60, isArabic: true), '١ س');
+      expect(formatPrayerRemainingTimeCompact(394, isArabic: true), '٦ س ٣٤ د');
     });
 
     test('English compact', () {

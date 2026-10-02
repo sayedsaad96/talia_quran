@@ -1,0 +1,299 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "ayah_review_events",
+    "policyname": "ayah_review_events_owner_insert",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ayah_review_events",
+    "policyname": "ayah_review_events_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) = user_id) OR (EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = ayah_review_events.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ayah_review_records_cloud",
+    "policyname": "ayah_review_records_cloud_owner_select",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "ayah_review_records_cloud",
+    "policyname": "ayah_review_records_cloud_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = ayah_review_records_cloud.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "certificate_awards_cloud",
+    "policyname": "certificate_awards_cloud_owner_insert",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "certificate_awards_cloud",
+    "policyname": "certificate_awards_cloud_owner_select",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "certificate_awards_cloud",
+    "policyname": "certificate_awards_cloud_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = certificate_awards_cloud.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "child_link_requests",
+    "policyname": "child_link_requests_child_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = child_user_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "custom_plans_cloud",
+    "policyname": "custom_plans_cloud_owner_all",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "custom_plans_cloud",
+    "policyname": "custom_plans_cloud_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = custom_plans_cloud.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "daily_activities",
+    "policyname": "daily_activities_all_own",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))",
+    "with_check": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "daily_activities",
+    "policyname": "daily_activities_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = daily_activities.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "daily_plans_cloud",
+    "policyname": "daily_plans_cloud_owner_all",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "daily_plans_cloud",
+    "policyname": "daily_plans_cloud_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = daily_plans_cloud.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "kids_progress_cloud",
+    "policyname": "kids_progress_child_select",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = child_user_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "kids_progress_cloud",
+    "policyname": "kids_progress_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = kids_progress_cloud.child_user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "kids_session_logs",
+    "policyname": "kids_session_logs_child_select",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = child_user_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "kids_session_logs",
+    "policyname": "kids_session_logs_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = kids_session_logs.child_user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "parent_child_links",
+    "policyname": "parent_child_links_parent_or_child_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND ((( SELECT auth.uid() AS uid) = parent_user_id) OR (( SELECT auth.uid() AS uid) = child_user_id)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "parent_rewards",
+    "policyname": "parent_rewards_child_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = child_user_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "parent_rewards",
+    "policyname": "parent_rewards_parent_manage",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((( SELECT auth.uid() AS uid) = parent_user_id) AND (EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = parent_rewards.child_user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text)))))",
+    "with_check": "((( SELECT auth.uid() AS uid) = parent_user_id) AND (EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = parent_rewards.child_user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text)))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_parent_read_linked_child",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = profiles.id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_select_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_update_own",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = id))",
+    "with_check": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "quran_bookmarks_cloud",
+    "policyname": "quran_bookmarks_cloud_owner_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "reading_progress_cloud",
+    "policyname": "reading_progress_cloud_owner_all",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "reading_progress_cloud",
+    "policyname": "reading_progress_cloud_owner_select",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "reading_progress_cloud",
+    "policyname": "reading_progress_cloud_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = reading_progress_cloud.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "streaks",
+    "policyname": "streaks_all_own",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))",
+    "with_check": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "streaks",
+    "policyname": "streaks_parent_read",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM parent_child_links pcl\n  WHERE ((pcl.child_user_id = streaks.user_id) AND (pcl.parent_user_id = ( SELECT auth.uid() AS uid)) AND (pcl.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "xp",
+    "policyname": "xp_all_own",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))",
+    "with_check": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "xp_history",
+    "policyname": "xp_history_insert_own",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "xp_history",
+    "policyname": "xp_history_select_own",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "((( SELECT auth.uid() AS uid) IS NOT NULL) AND (( SELECT auth.uid() AS uid) = user_id))",
+    "with_check": null
+  }
+]

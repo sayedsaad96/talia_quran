@@ -311,6 +311,15 @@ class MemorizationPlusRepositoryImpl
     }
   }
 
+  @override
+  Future<Either<Failure, int>> countClaimableLocalReviewRecords() async {
+    try {
+      return Right(await _datasource.countClaimableLocalReviewRecords());
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
   // ─── Kids progress ───────────────────────────────────────────────────────────
 
   @override

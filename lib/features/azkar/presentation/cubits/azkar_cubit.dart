@@ -44,7 +44,10 @@ class AzkarCubit extends Cubit<AzkarState> {
         AzkarLoaded(
           category: category,
           sessions: sessions,
-          currentIndex: 0,
+          // Resume where the reader stopped instead of on a finished dhikr.
+          currentIndex: allDone || sessions.isEmpty
+              ? 0
+              : sessions.indexWhere((s) => !s.isDone),
           allDone: allDone,
         ),
       );

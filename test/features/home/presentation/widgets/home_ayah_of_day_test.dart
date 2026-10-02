@@ -39,11 +39,11 @@ void main() {
     );
   }
 
-  Widget harness(AyahOfDay ayahEntity) {
+  Widget harness(AyahOfDay ayahEntity, {Locale locale = const Locale('en')}) {
     return BlocProvider<QuranAudioPlayerCubit>.value(
       value: audioCubit,
       child: MaterialApp(
-        locale: const Locale('en'),
+        locale: locale,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -75,6 +75,22 @@ void main() {
     expect(find.text('﴿'), findsOneWidget);
     expect(find.text('﴾'), findsOneWidget);
     expect(find.text('Surah Al-Baqarah, Ayah 255'), findsOneWidget);
+  });
+
+  // The middle dot is indistinguishable from the Eastern Arabic zero:
+  // «مكية · ٢٠ آية» read as 200 ayahs on Al-Muzzammil.
+  testWidgets('the Arabic context line never puts a dot beside the digits',
+      (tester) async {
+    await tester.pumpWidget(
+      harness(
+        ayah(surahType: 'meccan', surahAyahCount: 20),
+        locale: const Locale('ar'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('مكية، ٢٠ آية'), findsOneWidget);
+    expect(find.textContaining('·'), findsNothing);
   });
 
   testWidgets('shows the meccan label for meccan surahs', (tester) async {

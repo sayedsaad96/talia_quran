@@ -117,7 +117,10 @@ class _KidsGamifiedListenView extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  context.l10n.kidsGamifiedListenFirst(state.maxLoops),
+                  context.l10n.kidsGamifiedListenFirst(
+                    state.maxLoops,
+                    context.numText(state.maxLoops),
+                  ),
                 ),
               ),
             );
@@ -697,6 +700,12 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: KidsTheme.goldStar,
               foregroundColor: KidsTheme.nightSkyDark,
+              // The default disabled colours vanish on the night background
+              // and left an empty dark slab on screen.
+              disabledBackgroundColor: KidsTheme.goldStar.withValues(
+                alpha: 0.3,
+              ),
+              disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
               minimumSize: const Size(220, 56),
               shape: const RoundedRectangleBorder(
                 borderRadius: KidsTheme.buttonRadius,
@@ -745,9 +754,14 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                     ),
                   ),
                 )
+              // A finished ayah has nothing left to try: no greyed-out button.
+              : state.isCompleted
+              ? const SizedBox.shrink(
+                  key: ValueKey('kids-gamified-completed-idle'),
+                )
               : FilledButton.icon(
                   key: const ValueKey('kids-gamified-try-from-memory'),
-                  onPressed: state.isCompleted ? null : onTryFromMemory,
+                  onPressed: onTryFromMemory,
                   icon: const Icon(Icons.psychology_rounded),
                   label: Text(context.l10n.kidsGamifiedTryFromMemory),
                   style: FilledButton.styleFrom(
@@ -846,7 +860,10 @@ class _ListenFirstMicHint extends StatelessWidget {
       onPressed: onPlayPressed,
       icon: const Icon(Icons.headphones_rounded),
       label: Text(
-        context.l10n.kidsGamifiedListenFirst(remainingListens),
+        context.l10n.kidsGamifiedListenFirst(
+          remainingListens,
+          context.numText(remainingListens),
+        ),
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(

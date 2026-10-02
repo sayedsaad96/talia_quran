@@ -85,20 +85,20 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final dialText = find.text('0');
+    final dialText = find.text('٠');
     expect(dialText, findsOneWidget);
 
     // The counter dial is tappable: 2 taps finish card 1, the view then
     // advances to card 2 for 2 more taps.
     await tester.tap(dialText);
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('1'));
+    await tester.tap(find.text('١'));
     await tester.pumpAndSettle(const Duration(milliseconds: 400));
 
     expect(find.text('نص تجريبي g-1'), findsOneWidget);
-    await tester.tap(find.text('0'));
+    await tester.tap(find.text('٠'));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('1'));
+    await tester.tap(find.text('١'));
     await tester.pumpAndSettle();
 
     // Completion view shows the localized done title.
@@ -112,7 +112,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('0'));
+    await tester.tap(find.text('٠'));
     await tester.pump();
     await tester.runAsync(() async {
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -146,7 +146,7 @@ void main() {
 
     // The session resumes on card 2 (g-1) with count 1: one more tap on the
     // visible counter completes the whole wird.
-    await tester.tap(find.text('1').first);
+    await tester.tap(find.text('١').first);
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
 
@@ -175,7 +175,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Restored on card 2 with count 1: one tap completes the wird.
-      await tester.tap(find.text('1').first);
+      await tester.tap(find.text('١').first);
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
 
@@ -205,7 +205,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fresh start: one tap on the 0/2 card does not finish the wird.
-      await tester.tap(find.text('0'));
+      await tester.tap(find.text('٠'));
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
 

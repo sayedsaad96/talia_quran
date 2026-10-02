@@ -22,6 +22,11 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   final Future<String> Function(String path) _loadAsset;
   List<SurahModel>? _cachedSurahs;
   Map<int, List<AyahModel>>? _cachedAyahs;
+
+  /// Every ayah with its search-normalized text, built once off the UI
+  /// isolate: normalizing all 6,236 ayahs per query took ~250 ms (desktop
+  /// JIT) on the UI thread. Display text is never altered.
+  Future<List<(AyahModel, String)>>? _searchIndex;
   // BUG-007: Page index for O(1) lookup instead of O(n) iteration
   Map<int, List<AyahModel>>? _cachedByPage;
   Map<int, List<AyahModel>>? _cachedByJuz;
@@ -164,17 +169,32 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     final normalizedQuery = ArabicNormalizer.normalize(query);
     final results = <AyahModel>[];
 
-    for (final ayahs in _cachedAyahs!.values) {
-      for (final ayah in ayahs) {
-        final normalizedText = ArabicNormalizer.normalize(ayah.text);
-        if (normalizedText.contains(normalizedQuery)) {
-          results.add(ayah);
-          if (results.length >= 50) return results;
-        }
+    for (final (ayah, normalizedText) in await _buildSearchIndex()) {
+      if (normalizedText.contains(normalizedQuery)) {
+        results.add(ayah);
+        if (results.length >= 50) return results;
       }
     }
 
     return results;
+  }
+
+  Future<List<(AyahModel, String)>> _buildSearchIndex() {
+    final existing = _searchIndex;
+    if (existing != null) return existing;
+    final ayahs = [for (final list in _cachedAyahs!.values) ...list];
+    final index = compute(_normalizeAll, [for (final a in ayahs) a.text]).then(
+      (normalized) => [
+        for (var i = 0; i < ayahs.length; i++) (ayahs[i], normalized[i]),
+      ],
+    );
+    _searchIndex = index;
+    // A failed build is retried on the next search.
+    index.catchError((Object _) {
+      if (identical(_searchIndex, index)) _searchIndex = null;
+      return const <(AyahModel, String)>[];
+    });
+    return index;
   }
 
   @override
@@ -199,3 +219,6 @@ class QuranParseResult {
   final Map<int, List<AyahModel>> byPage;
   const QuranParseResult(this.ayahs, this.byPage);
 }
+
+List<String> _normalizeAll(List<String> texts) =>
+    [for (final text in texts) ArabicNormalizer.normalize(text)];

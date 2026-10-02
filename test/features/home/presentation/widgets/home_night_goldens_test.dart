@@ -13,6 +13,7 @@ import 'package:talia_quran/features/home/domain/entities/continue_recitation.da
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
 import 'package:talia_quran/features/home/presentation/pages/home_page.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
+import 'package:talia_quran/features/home/presentation/widgets/home_unified_progress.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_background.dart';
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
@@ -24,6 +25,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    // Fixed day: the dots carry weekday letters ending today.
+    HomeUnifiedProgress.clock = () => DateTime(2026, 9, 30, 12);
     HomeSkin.blurEnabled = false;
   });
 

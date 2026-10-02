@@ -293,4 +293,152 @@ void main() {
     expect(snapshot.nextTime.isAfter(snapshot.isha!), isTrue);
     expect(snapshot.minutesUntil, greaterThan(0));
   });
+
+  group('local calculation authorities', () {
+    test('listed cities default to their local authority method', () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = PrayerTimesService(await SharedPreferences.getInstance());
+
+      expect(await service.defaultMethodFor('doha'), 'qatar');
+      expect(await service.defaultMethodFor('kuwait'), 'kuwait');
+      expect(await service.defaultMethodFor('dubai'), 'dubai');
+      expect(await service.defaultMethodFor('istanbul'), 'turkey');
+      expect(await service.defaultMethodFor('jakarta'), 'singapore');
+      expect(await service.defaultMethodFor('kualalumpur'), 'singapore');
+    });
+
+    Future<DateTime> asrFor(Map<String, Object> prefsValues) async {
+      SharedPreferences.setMockInitialValues({
+        PrayerTimesService.enabledKey: true,
+        PrayerTimesService.cityIdKey: 'karachi',
+        ...prefsValues,
+      });
+      final service = PrayerTimesService(
+        await SharedPreferences.getInstance(),
+        now: () => DateTime.utc(2026, 7, 15, 3),
+      );
+      return (await service.current(isArabic: false))!.asr!;
+    }
+
+    test('Karachi follows the Hanafi Asr by default', () async {
+      final asr = await asrFor({});
+
+      final params = CalculationMethod.karachi.getParameters()
+        ..madhab = Madhab.hanafi;
+      final expected = PrayerTimes.utc(
+        Coordinates(24.8607, 67.0011),
+        DateComponents(2026, 7, 15),
+        params,
+      ).asr;
+      expect(asr.toUtc().difference(expected).inMinutes.abs(), lessThan(2));
+    });
+
+    test('a manual madhab choice overrides the city default', () async {
+      final hanafi = await asrFor({});
+      final shafi = await asrFor({
+        PrayerTimesService.madhabKey: 'shafi',
+        PrayerTimesService.madhabManualKey: true,
+      });
+
+      // The Hanafi Asr (shadow twice the object) is always later.
+      expect(hanafi.isAfter(shafi), isTrue);
+      expect(hanafi.difference(shafi).inMinutes, greaterThan(30));
+    });
+
+    test(
+      'madhab follows the city again after returning to automatic',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          PrayerTimesService.enabledKey: true,
+        });
+        final service = PrayerTimesService(
+          await SharedPreferences.getInstance(),
+        );
+
+        await service.setMadhab('shafi');
+        expect(service.isMadhabManual, isTrue);
+        await service.setMadhabAutomatic();
+        await service.setCityId('karachi');
+
+        expect(service.isMadhabManual, isFalse);
+        expect(await service.effectiveMadhab(), 'hanafi');
+      },
+    );
+  });
+
+  group('custom location', () {
+    test('coordinates outside the bundled cities get their own times', () async {
+      SharedPreferences.setMockInitialValues({PrayerTimesService.enabledKey: true});
+      final service = PrayerTimesService(
+        await SharedPreferences.getInstance(),
+        now: () => DateTime.utc(2026, 7, 15, 3),
+      );
+
+      // Algiers is not a bundled city.
+      final saved = await service.setCustomLocation(
+        latitude: 36.7538,
+        longitude: 3.0588,
+        timeZone: 'Africa/Algiers',
+      );
+      expect(saved, isTrue);
+      expect(service.selectedCityId, PrayerTimesService.customCityId);
+
+      final snapshot = (await service.current(isArabic: true))!;
+      expect(snapshot.city.id, PrayerTimesService.customCityId);
+      expect(snapshot.dhuhr!.timeZoneName, 'CET');
+
+      final expected = PrayerTimes.utc(
+        Coordinates(36.7538, 3.0588),
+        DateComponents(2026, 7, 15),
+        CalculationMethod.muslim_world_league.getParameters(),
+      );
+      expect(
+        snapshot.fajr!.toUtc().difference(expected.fajr).inMinutes.abs(),
+        lessThan(2),
+      );
+      expect(await service.timesForDate(DateTime(2026, 7, 15)), hasLength(5));
+      expect(await service.selectedCity(), isNotNull);
+    });
+
+    test('invalid coordinates or zones are rejected', () async {
+      SharedPreferences.setMockInitialValues({PrayerTimesService.enabledKey: true});
+      final service = PrayerTimesService(await SharedPreferences.getInstance());
+
+      expect(
+        await service.setCustomLocation(
+          latitude: 91,
+          longitude: 3,
+          timeZone: 'Africa/Algiers',
+        ),
+        isFalse,
+      );
+      expect(
+        await service.setCustomLocation(
+          latitude: 36,
+          longitude: 3,
+          timeZone: 'Not/AZone',
+        ),
+        isFalse,
+      );
+      expect(service.selectedCityId, isNull);
+    });
+
+    test('a saved custom location survives choosing it again', () async {
+      SharedPreferences.setMockInitialValues({PrayerTimesService.enabledKey: true});
+      final service = PrayerTimesService(await SharedPreferences.getInstance());
+
+      await service.setCustomLocation(
+        latitude: 36.7538,
+        longitude: 3.0588,
+        timeZone: 'Africa/Algiers',
+      );
+      await service.setCityId('cairo');
+      expect((await service.selectedCity())!.id, 'cairo');
+
+      final custom = service.customCity!;
+      expect(custom.latitude, 36.7538);
+      expect(custom.timeZone, 'Africa/Algiers');
+    });
+  });
 }
+
