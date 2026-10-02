@@ -9948,6 +9948,12 @@ abstract class AppLocalizations {
   /// **'بانتظار الطفل'**
   String get kidsHomeMissionAssigned;
 
+  /// No description provided for @kidsHomeMissionReportAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنجزتها!'**
+  String get kidsHomeMissionReportAction;
+
   /// No description provided for @kidsHomeMissionReported.
   ///
   /// In ar, this message translates to:

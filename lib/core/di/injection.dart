@@ -45,6 +45,7 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
+import '../../features/memorization_plus/domain/entities/kids_home_mission.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/kids_review_outcome_committer.dart';
@@ -977,6 +978,11 @@ Future<void> configureDependencies({bool background = false}) async {
         final result = await getIt<MemorizationPlusRepository>()
             .getKidsSessionLogs();
         return result.getOrElse(() => const <KidsSessionLog>[]);
+      },
+      homeMissionsLoader: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getHomeMissions();
+        return result.getOrElse(() => const <KidsHomeMission>[]);
       },
       readingPagesLoader: () async {
         if (!getIt.isRegistered<KidsReadingReceiptStore>()) {

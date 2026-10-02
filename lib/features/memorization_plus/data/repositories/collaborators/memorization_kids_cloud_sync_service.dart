@@ -12,6 +12,7 @@ import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 import 'memorization_cloud_gateway.dart';
+import 'kids_home_mission_child_sync.dart';
 import 'memorization_cloud_mappers.dart';
 
 /// Kids-mode cloud sync: pushes kids progress + session logs to Supabase and
@@ -31,6 +32,9 @@ class MemorizationKidsCloudSyncService {
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
   final RecordOwnerProvider _owner;
+
+  late final KidsHomeMissionChildSync _homeMissionSync =
+      KidsHomeMissionChildSync(_datasource, _mappers, _owner);
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
       _gateway.supabaseOrFailure().leftMap(
@@ -115,6 +119,21 @@ class MemorizationKidsCloudSyncService {
             .toList(),
       );
       _ensureOwner(ownerId);
+      // Home missions never fail the progress pull (the table may be
+      // undeployed or the link revoked); the local list is left untouched.
+      await _homeMissionSync.pull(
+        ownerId: ownerId,
+        fetchRows: () async {
+          final rows = await client
+              .from('kids_home_missions')
+              .select()
+              .eq('child_user_id', user.id)
+              .order('created_at', ascending: true);
+          return rows
+              .map((row) => Map<String, dynamic>.from(row))
+              .toList(growable: false);
+        },
+      );
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
@@ -137,6 +156,18 @@ class MemorizationKidsCloudSyncService {
       if (user == null) return const Right(null);
       final ownerId = user.id;
       _ensureOwner(ownerId);
+
+      // Independent of the progress push: a failing mission keeps its pending
+      // flag and is retried on the next sync only.
+      await _homeMissionSync.push(
+        ownerId: ownerId,
+        reportRpc: (missionId) async {
+          await client.rpc(
+            'report_kids_home_mission',
+            params: {'p_mission_id': missionId},
+          );
+        },
+      );
 
       final logs = await _datasource.getKidsSessionLogs();
       final pendingLogs = logs

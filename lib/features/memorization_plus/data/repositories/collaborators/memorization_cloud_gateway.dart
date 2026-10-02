@@ -21,6 +21,18 @@ class MemorizationCloudGateway {
     }
   }
 
+  /// True when Supabase is initialised and a user is signed in: the same gate
+  /// the kids cloud sync uses to decide it can push. A child is "linked" for
+  /// home-mission reporting exactly when this holds.
+  bool get hasSignedInCloudUser {
+    if (!isSupabaseReady) return false;
+    try {
+      return Supabase.instance.client.auth.currentUser != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   bool get cloudPullEnabled =>
       CloudSyncFeatureFlags.isProductionPullEnabled(_prefs);
 

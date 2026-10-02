@@ -11,15 +11,21 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
   /// never interleave or one side's evidence is silently lost.
   static final Map<String, Future<void>> _kidsLogWriteLocks = {};
 
+  /// Same guarantee for the home-mission list (child report, guardian
+  /// acknowledgement and cloud pull-merge all rewrite the whole list).
+  static final Map<String, Future<void>> _kidsHomeMissionLocks = {};
+
   String _kidsOwnerKey(String base, String ownerId) => '$base|$ownerId';
 
   Future<T> _withKidsLogWriteLock<T>(
     String ownerId,
-    Future<T> Function() action,
-  ) async {
-    final previous = _kidsLogWriteLocks[ownerId];
+    Future<T> Function() action, {
+    Map<String, Future<void>>? locks,
+  }) async {
+    final lockMap = locks ?? _kidsLogWriteLocks;
+    final previous = lockMap[ownerId];
     final completer = Completer<void>();
-    _kidsLogWriteLocks[ownerId] = completer.future;
+    lockMap[ownerId] = completer.future;
     if (previous != null) {
       try {
         await previous;
@@ -29,8 +35,8 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
       return await action();
     } finally {
       completer.complete();
-      if (identical(_kidsLogWriteLocks[ownerId], completer.future)) {
-        unawaited(_kidsLogWriteLocks.remove(ownerId));
+      if (identical(lockMap[ownerId], completer.future)) {
+        unawaited(lockMap.remove(ownerId));
       }
     }
   }
@@ -318,6 +324,10 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
   Future<List<KidsHomeMission>> getHomeMissions() async {
     final ownerId = _owner.currentOwnerId;
     _ensureStorageOwner(ownerId);
+    return _homeMissionsForOwner(ownerId);
+  }
+
+  List<KidsHomeMission> _homeMissionsForOwner(String ownerId) {
     const base = MemorizationPlusLocalDatasourceImpl._kHomeMissions;
     final raw = _readKidsValue(base, ownerId);
     if (raw == null) return const [];
@@ -352,12 +362,33 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
 
   Future<void> saveHomeMissions(List<KidsHomeMission> missions) {
     final ownerId = _owner.currentOwnerId;
-    return _setStringOrThrow(
-      _kidsOwnerKey(
-        MemorizationPlusLocalDatasourceImpl._kHomeMissions,
-        ownerId,
-      ),
-      jsonEncode(missions.map((mission) => mission.toJson()).toList()),
-    );
+    return _withKidsLogWriteLock(ownerId, () async {
+      _ensureStorageOwner(ownerId);
+      await _saveHomeMissionsForOwner(missions, ownerId);
+    }, locks: _kidsHomeMissionLocks);
   }
+
+  Future<List<KidsHomeMission>> updateHomeMissions(
+    Future<List<KidsHomeMission>> Function(List<KidsHomeMission> current)
+    mutate,
+  ) {
+    final ownerId = _owner.currentOwnerId;
+    return _withKidsLogWriteLock(ownerId, () async {
+      _ensureStorageOwner(ownerId);
+      final current = _homeMissionsForOwner(ownerId);
+      final next = await mutate(current);
+      _ensureStorageOwner(ownerId);
+      await _saveHomeMissionsForOwner(next, ownerId);
+      _ensureStorageOwner(ownerId);
+      return next;
+    }, locks: _kidsHomeMissionLocks);
+  }
+
+  Future<void> _saveHomeMissionsForOwner(
+    List<KidsHomeMission> missions,
+    String ownerId,
+  ) => _setStringOrThrow(
+    _kidsOwnerKey(MemorizationPlusLocalDatasourceImpl._kHomeMissions, ownerId),
+    jsonEncode(missions.map((mission) => mission.toJson()).toList()),
+  );
 }

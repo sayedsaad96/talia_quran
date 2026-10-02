@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_adventure_regions.dart';
@@ -25,6 +26,10 @@ typedef KidsJourneySessionLogsLoader = Future<List<KidsSessionLog>?> Function();
 /// throwing) the reading mission is omitted.
 typedef KidsReadingPagesLoader = Future<Set<int>> Function();
 
+/// The child's local home missions («مهمة من البيت»). When absent (or
+/// throwing) no home card is shown; never an error state.
+typedef KidsHomeMissionsLoader = Future<List<KidsHomeMission>> Function();
+
 /// Loads the age-band policy that owns the daily mission caps.
 typedef KidsJourneyPolicyLoader = Future<KidsSessionPolicy> Function();
 
@@ -38,6 +43,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsJourneySessionLogsLoader? sessionLogsLoader,
     KidsReadingPagesLoader? readingPagesLoader,
     KidsJourneyPolicyLoader? policyLoader,
+    KidsHomeMissionsLoader? homeMissionsLoader,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
@@ -45,6 +51,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
        _sessionLogsLoader = sessionLogsLoader,
        _readingPagesLoader = readingPagesLoader,
        _policyLoader = policyLoader,
+       _homeMissionsLoader = homeMissionsLoader,
        _missionResolver = missionResolver,
        _v2Enabled = v2Enabled,
        super(const KidsJourneyInitial());
@@ -57,6 +64,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsJourneySessionLogsLoader? _sessionLogsLoader;
   final KidsReadingPagesLoader? _readingPagesLoader;
   final KidsJourneyPolicyLoader? _policyLoader;
+  final KidsHomeMissionsLoader? _homeMissionsLoader;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -250,17 +258,36 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     } catch (_) {
       pages = null;
     }
+    final homeMission = await _oldestOpenHomeMission();
     final missions = resolveKidsDailyMissions(
       now: DateTime.now(),
       learning: learning,
       dayGoalReached: dayGoalReached,
       logs: logs,
       pagesReadToday: pages ?? const <int>{},
+      homeMission: homeMission,
     );
     if (pages != null) return missions;
     return missions
         .where((m) => m.kind != KidsDailyMissionKind.reading)
         .toList(growable: false);
+  }
+
+  /// The oldest home mission that is not yet acknowledged (fail-open: any
+  /// loader error means no home card). Policy gating arrives with the
+  /// guardian policies.
+  Future<KidsHomeMission?> _oldestOpenHomeMission() async {
+    try {
+      final missions = await _homeMissionsLoader?.call();
+      if (missions == null) return null;
+      final open = missions
+          .where((m) => m.status != KidsHomeMissionStatus.acknowledged)
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return open.isEmpty ? null : open.first;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Today's age-band budget from the local session log. Each part fails

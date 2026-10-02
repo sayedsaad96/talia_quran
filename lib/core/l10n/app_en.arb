@@ -2321,6 +2321,7 @@
   "childDetailHomeMissions": "Home missions",
   "childDetailAddHomeMission": "Add mission",
   "kidsHomeMissionAssigned": "Waiting for child",
+  "kidsHomeMissionReportAction": "I did it!",
   "kidsHomeMissionReported": "Child says it's done",
   "kidsHomeMissionAcknowledged": "Seen by guardian",
   "kidsHomeMissionAcknowledgeAction": "Mark as seen",

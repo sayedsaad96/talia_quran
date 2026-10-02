@@ -4,6 +4,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
@@ -344,6 +345,7 @@ void main() {
     group('daily missions', () {
       Future<KidsJourneyCubit> build({
         KidsReadingPagesLoader? readingPagesLoader,
+        KidsHomeMissionsLoader? homeMissionsLoader,
         bool withTodayLog = true,
       }) async {
         await cubit.close();
@@ -369,6 +371,7 @@ void main() {
               ),
           ],
           readingPagesLoader: readingPagesLoader,
+          homeMissionsLoader: homeMissionsLoader,
         );
       }
 
@@ -400,6 +403,84 @@ void main() {
         expect(
           loaded.dailyMissions.map((m) => m.kind),
           isNot(contains(KidsDailyMissionKind.reading)),
+        );
+      });
+
+      KidsHomeMission homeMission(
+        String id,
+        KidsHomeMissionStatus status,
+        DateTime createdAt,
+      ) => KidsHomeMission(
+        id: id,
+        title: 'مهمة $id',
+        status: status,
+        createdAt: createdAt,
+      );
+
+      test('the oldest non-acknowledged home mission becomes the card', () async {
+        final c = await build(
+          readingPagesLoader: () async => {5},
+          homeMissionsLoader: () async => [
+            homeMission(
+              '3',
+              KidsHomeMissionStatus.assigned,
+              DateTime(2026, 10, 3),
+            ),
+            homeMission(
+              '1',
+              KidsHomeMissionStatus.acknowledged,
+              DateTime(2026, 9, 1),
+            ),
+            homeMission(
+              '2',
+              KidsHomeMissionStatus.reported,
+              DateTime(2026, 10, 2),
+            ),
+          ],
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        final home = loaded.dailyMissions.last;
+        expect(home.kind, KidsDailyMissionKind.home);
+        expect(home.homeMissionId, '2');
+        expect(home.status, KidsDailyMissionStatus.completed);
+      });
+
+      test('a failing home loader shows no home card and no error', () async {
+        final c = await build(
+          readingPagesLoader: () async => {5},
+          homeMissionsLoader: () async => throw StateError('storage'),
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.home)),
+        );
+      });
+
+      test('only acknowledged missions means no home card', () async {
+        final c = await build(
+          readingPagesLoader: () async => {5},
+          homeMissionsLoader: () async => [
+            homeMission(
+              '1',
+              KidsHomeMissionStatus.acknowledged,
+              DateTime(2026, 9, 1),
+            ),
+          ],
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.home)),
         );
       });
 

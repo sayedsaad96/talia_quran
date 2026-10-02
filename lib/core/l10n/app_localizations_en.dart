@@ -5793,6 +5793,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHomeMissionAssigned => 'Waiting for child';
 
   @override
+  String get kidsHomeMissionReportAction => 'I did it!';
+
+  @override
   String get kidsHomeMissionReported => 'Child says it\'s done';
 
   @override

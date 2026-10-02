@@ -110,6 +110,14 @@ abstract class MemorizationPlusLocalDatasource {
   Future<List<KidsHomeMission>> getHomeMissions();
   Future<void> saveHomeMissions(List<KidsHomeMission> missions);
 
+  /// Atomically mutates the home-mission list under a per-owner lock so the
+  /// child report, guardian acknowledgement and cloud pull-merge never lose
+  /// each other's update.
+  Future<List<KidsHomeMission>> updateHomeMissions(
+    Future<List<KidsHomeMission>> Function(List<KidsHomeMission> current)
+    mutate,
+  );
+
   // Custom memorization plan
   Future<CustomMemorizationPlanModel?> getCustomPlan();
   Future<void> saveCustomPlan(CustomMemorizationPlanModel plan);

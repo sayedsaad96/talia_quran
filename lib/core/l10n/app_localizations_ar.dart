@@ -5772,6 +5772,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionAssigned => 'بانتظار الطفل';
 
   @override
+  String get kidsHomeMissionReportAction => 'أنجزتها!';
+
+  @override
   String get kidsHomeMissionReported => 'أخبرنا الطفل أنه أنجزها';
 
   @override

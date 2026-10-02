@@ -440,7 +440,10 @@ class MemorizationPlusRepositoryImpl
   @override
   Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
     String id,
-  ) => _kidsLocal.reportHomeMission(id);
+  ) => _kidsLocal.reportHomeMission(
+    id,
+    markPendingSync: _gateway.hasSignedInCloudUser,
+  );
 
   @override
   Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
@@ -449,8 +452,7 @@ class MemorizationPlusRepositoryImpl
 
   @override
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id) {
-    if (_gateway.isSupabaseReady &&
-        _gateway.supabase.auth.currentUser != null) {
+    if (_gateway.hasSignedInCloudUser) {
       return _kidsCloudSync.claimRemoteParentReward(id);
     }
     return _kidsLocal.claimParentReward(id);

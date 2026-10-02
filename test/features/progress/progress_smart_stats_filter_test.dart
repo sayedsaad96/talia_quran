@@ -123,6 +123,12 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> saveHomeMissions(List<KidsHomeMission> missions) async {}
+
+  @override
+  Future<List<KidsHomeMission>> updateHomeMissions(
+    Future<List<KidsHomeMission>> Function(List<KidsHomeMission> current)
+    mutate,
+  ) async => mutate(const []);
   @override
   Future<void> saveReviewRecord(
     AyahReviewRecordModel record, {

@@ -443,39 +443,56 @@ class MemorizationKidsLocalService {
         );
       }
       final now = DateTime.now();
-      final missions = await _datasource.getHomeMissions();
-      final next = [
-        ...missions,
-        KidsHomeMission(
-          id: 'local-${now.microsecondsSinceEpoch}',
-          title: trimmed,
-          status: KidsHomeMissionStatus.assigned,
-          createdAt: now,
-        ),
-      ];
-      await _datasource.saveHomeMissions(next);
+      final next = await _datasource.updateHomeMissions(
+        (missions) async => [
+          ...missions,
+          KidsHomeMission(
+            id: 'local-${now.microsecondsSinceEpoch}',
+            title: trimmed,
+            status: KidsHomeMissionStatus.assigned,
+            createdAt: now,
+          ),
+        ],
+      );
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
   }
 
+  /// The child reports a mission as done. Idempotent. When
+  /// [markPendingSync] is true (a signed-in, cloud-linked child) the report is
+  /// flagged `pendingReportSync` and a kids push is queued so it reaches the
+  /// guardian once online; an unlinked child stores locally only.
   Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
-    String id,
-  ) async {
+    String id, {
+    bool markPendingSync = false,
+  }) async {
     try {
-      final missions = await _datasource.getHomeMissions();
-      final index = missions.indexWhere((m) => m.id == id);
-      if (index < 0) return const Left(NotFoundFailure());
-      if (missions[index].status != KidsHomeMissionStatus.assigned) {
-        return Right(missions);
+      var found = true;
+      var changed = false;
+      final next = await _datasource.updateHomeMissions((missions) async {
+        final index = missions.indexWhere((m) => m.id == id);
+        if (index < 0) {
+          found = false;
+          return missions;
+        }
+        if (missions[index].status != KidsHomeMissionStatus.assigned) {
+          return missions;
+        }
+        changed = true;
+        final updated = [...missions];
+        updated[index] = missions[index].copyWith(
+          status: KidsHomeMissionStatus.reported,
+          reportedAt: DateTime.now(),
+          pendingReportSync: markPendingSync,
+        );
+        return updated;
+      });
+      if (!found) return const Left(NotFoundFailure());
+      if (changed && markPendingSync) {
+        await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
       }
-      final next = [...missions];
-      next[index] = missions[index].copyWith(
-        status: KidsHomeMissionStatus.reported,
-        reportedAt: DateTime.now(),
-      );
-      await _datasource.saveHomeMissions(next);
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -486,18 +503,27 @@ class MemorizationKidsLocalService {
     String id,
   ) async {
     try {
-      final missions = await _datasource.getHomeMissions();
-      final index = missions.indexWhere((m) => m.id == id);
-      if (index < 0) return const Left(NotFoundFailure());
-      if (missions[index].status != KidsHomeMissionStatus.reported) {
-        return const Left(ValidationFailure());
-      }
-      final next = [...missions];
-      next[index] = missions[index].copyWith(
-        status: KidsHomeMissionStatus.acknowledged,
-        acknowledgedAt: DateTime.now(),
-      );
-      await _datasource.saveHomeMissions(next);
+      var found = true;
+      var valid = true;
+      final next = await _datasource.updateHomeMissions((missions) async {
+        final index = missions.indexWhere((m) => m.id == id);
+        if (index < 0) {
+          found = false;
+          return missions;
+        }
+        if (missions[index].status != KidsHomeMissionStatus.reported) {
+          valid = false;
+          return missions;
+        }
+        final updated = [...missions];
+        updated[index] = missions[index].copyWith(
+          status: KidsHomeMissionStatus.acknowledged,
+          acknowledgedAt: DateTime.now(),
+        );
+        return updated;
+      });
+      if (!found) return const Left(NotFoundFailure());
+      if (!valid) return const Left(ValidationFailure());
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));
