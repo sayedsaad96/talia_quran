@@ -22,6 +22,10 @@ class ParentSettings extends Equatable {
     this.sessionGoalMinutes,
     this.startingSurahId = KidsJourneyPath.firstSurahId,
     this.kidsHifzV2Enabled = false,
+    this.kidsReduceMotion = false,
+    this.maxDailySuggestions = 3,
+    this.homeMissionsEnabled = true,
+    this.policyVersion = 0,
   });
 
   final String? pinHash;
@@ -40,6 +44,18 @@ class ParentSettings extends Equatable {
   final int startingSurahId;
   final bool kidsHifzV2Enabled;
 
+  /// Guardian policy: calm the kids world (no ambient motion).
+  final bool kidsReduceMotion;
+
+  /// Guardian policy: daily suggestions shown to the child (1..3).
+  final int maxDailySuggestions;
+
+  /// Guardian policy: whether home missions appear for the child.
+  final bool homeMissionsEnabled;
+
+  /// Compare-and-swap version of the child policy (0 = never synced).
+  final int policyVersion;
+
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
   ParentSettings copyWith({
@@ -55,6 +71,10 @@ class ParentSettings extends Equatable {
     int? sessionGoalMinutes,
     int? startingSurahId,
     bool? kidsHifzV2Enabled,
+    bool? kidsReduceMotion,
+    int? maxDailySuggestions,
+    bool? homeMissionsEnabled,
+    int? policyVersion,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -67,6 +87,10 @@ class ParentSettings extends Equatable {
     sessionGoalMinutes: sessionGoalMinutes ?? this.sessionGoalMinutes,
     startingSurahId: startingSurahId ?? this.startingSurahId,
     kidsHifzV2Enabled: kidsHifzV2Enabled ?? this.kidsHifzV2Enabled,
+    kidsReduceMotion: kidsReduceMotion ?? this.kidsReduceMotion,
+    maxDailySuggestions: maxDailySuggestions ?? this.maxDailySuggestions,
+    homeMissionsEnabled: homeMissionsEnabled ?? this.homeMissionsEnabled,
+    policyVersion: policyVersion ?? this.policyVersion,
   );
 
   @override
@@ -82,6 +106,10 @@ class ParentSettings extends Equatable {
     sessionGoalMinutes,
     startingSurahId,
     kidsHifzV2Enabled,
+    kidsReduceMotion,
+    maxDailySuggestions,
+    homeMissionsEnabled,
+    policyVersion,
   ];
 }
 

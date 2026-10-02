@@ -45,6 +45,7 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
+import '../../features/memorization_plus/domain/entities/kids_child_policy.dart';
 import '../../features/memorization_plus/domain/entities/kids_home_mission.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
@@ -74,6 +75,7 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
+import '../../features/memorization_plus/presentation/world/kids_policy_controller.dart';
 import '../../features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import '../../features/memorization_plus/data/listening/listening_audio.dart';
 import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
@@ -403,6 +405,21 @@ Future<void> configureDependencies({bool background = false}) async {
         final s = await getIt<PrayerTimesService>().current(isArabic: true);
         if (s == null || s.fajr == null || s.maghrib == null) return null;
         return (fajr: s.fajr!, maghrib: s.maghrib!);
+      },
+    ),
+  );
+  // Does not load at registration; the kids path calls reload().
+  getIt.registerLazySingleton<KidsPolicyController>(
+    () => KidsPolicyController(
+      load: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getParentSettings();
+        return result.fold(
+          (failure) => throw StateError(
+            'Parent settings unavailable: ${failure.message}',
+          ),
+          KidsChildPolicy.fromSettings,
+        );
       },
     ),
   );

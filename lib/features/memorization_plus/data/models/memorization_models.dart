@@ -1,3 +1,4 @@
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/memorization_entities.dart';
 
 // ─── MemorizationProfileModel ────────────────────────────────────────────────
@@ -454,6 +455,10 @@ class ParentSettingsModel extends ParentSettings {
     super.sessionGoalMinutes,
     super.startingSurahId,
     super.kidsHifzV2Enabled,
+    super.kidsReduceMotion,
+    super.maxDailySuggestions,
+    super.homeMissionsEnabled,
+    super.policyVersion,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -472,6 +477,15 @@ class ParentSettingsModel extends ParentSettings {
         startingSurahId:
             json['startingSurahId'] as int? ?? KidsJourneyPath.firstSurahId,
         kidsHifzV2Enabled: json['kidsHifzV2Enabled'] as bool? ?? false,
+        kidsReduceMotion: json['kidsReduceMotion'] as bool? ?? false,
+        maxDailySuggestions: clampKidsMaxDailySuggestions(
+          (json['maxDailySuggestions'] as num?)?.toInt() ??
+              kKidsDefaultDailySuggestions,
+        ),
+        homeMissionsEnabled: json['homeMissionsEnabled'] as bool? ?? true,
+        policyVersion: clampKidsPolicyVersion(
+          (json['policyVersion'] as num?)?.toInt() ?? 0,
+        ),
       );
 
   factory ParentSettingsModel.fromEntity(ParentSettings settings) =>
@@ -487,6 +501,10 @@ class ParentSettingsModel extends ParentSettings {
         sessionGoalMinutes: settings.sessionGoalMinutes,
         startingSurahId: settings.startingSurahId,
         kidsHifzV2Enabled: settings.kidsHifzV2Enabled,
+        kidsReduceMotion: settings.kidsReduceMotion,
+        maxDailySuggestions: settings.maxDailySuggestions,
+        homeMissionsEnabled: settings.homeMissionsEnabled,
+        policyVersion: settings.policyVersion,
       );
 
   Map<String, dynamic> toJson() => {
@@ -501,6 +519,10 @@ class ParentSettingsModel extends ParentSettings {
     'sessionGoalMinutes': sessionGoalMinutes,
     'startingSurahId': startingSurahId,
     'kidsHifzV2Enabled': kidsHifzV2Enabled,
+    'kidsReduceMotion': kidsReduceMotion,
+    'maxDailySuggestions': maxDailySuggestions,
+    'homeMissionsEnabled': homeMissionsEnabled,
+    'policyVersion': policyVersion,
   };
 }
 
