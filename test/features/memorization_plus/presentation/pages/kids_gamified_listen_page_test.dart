@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_ayah_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_chunky_button.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_policy_controller.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_scene.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -624,6 +627,58 @@ void main() {
         await pumpRecording(tester, disableAnimations: true);
 
         expect(tester.hasRunningAnimations, isFalse);
+      });
+
+      group('guardian reduce-motion policy (P3 Task 7)', () {
+        tearDown(() {
+          if (getIt.isRegistered<KidsPolicyController>()) {
+            getIt.unregister<KidsPolicyController>();
+          }
+        });
+
+        Future<KidsPolicyController> registerPolicy(
+          KidsChildPolicy policy,
+        ) async {
+          final controller = KidsPolicyController(load: () async => policy);
+          getIt.registerSingleton<KidsPolicyController>(controller);
+          await controller.reload();
+          return controller;
+        }
+
+        testWidgets('the wave stays still when the guardian reduces motion', (
+          tester,
+        ) async {
+          await registerPolicy(const KidsChildPolicy(reduceMotion: true));
+          await pumpRecording(tester, disableAnimations: false);
+
+          expect(tester.hasRunningAnimations, isFalse);
+        });
+
+        testWidgets('turning the policy off re-enables motion live', (
+          tester,
+        ) async {
+          final controller = await registerPolicy(
+            const KidsChildPolicy(reduceMotion: true),
+          );
+          await pumpRecording(tester, disableAnimations: false);
+          expect(tester.hasRunningAnimations, isFalse);
+
+          controller.value = const KidsChildPolicy();
+          await tester.pump();
+
+          expect(tester.hasRunningAnimations, isTrue);
+          await tester.pumpWidget(const SizedBox());
+        });
+
+        testWidgets('a motion-on policy keeps the recording wave', (
+          tester,
+        ) async {
+          await registerPolicy(const KidsChildPolicy());
+          await pumpRecording(tester, disableAnimations: false);
+
+          expect(tester.hasRunningAnimations, isTrue);
+          await tester.pumpWidget(const SizedBox());
+        });
       });
     });
 

@@ -1006,6 +1006,10 @@ Future<void> configureDependencies({bool background = false}) async {
             .getHomeMissions();
         return result.getOrElse(() => const <KidsHomeMission>[]);
       },
+      // App-lifetime policy singleton: read, refreshed on each home load,
+      // never disposed here.
+      childPolicyReader: () => getIt<KidsPolicyController>().value,
+      childPolicyRefresh: () => getIt<KidsPolicyController>().reload(),
       readingPagesLoader: () async {
         if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
           throw StateError('KidsReadingReceiptStore is not registered');

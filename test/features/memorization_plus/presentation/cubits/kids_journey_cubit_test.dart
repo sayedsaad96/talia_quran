@@ -4,6 +4,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
@@ -346,6 +347,8 @@ void main() {
       Future<KidsJourneyCubit> build({
         KidsReadingPagesLoader? readingPagesLoader,
         KidsHomeMissionsLoader? homeMissionsLoader,
+        KidsChildPolicyReader? childPolicyReader,
+        KidsChildPolicyRefresh? childPolicyRefresh,
         bool withTodayLog = true,
       }) async {
         await cubit.close();
@@ -372,6 +375,8 @@ void main() {
           ],
           readingPagesLoader: readingPagesLoader,
           homeMissionsLoader: homeMissionsLoader,
+          childPolicyReader: childPolicyReader,
+          childPolicyRefresh: childPolicyRefresh,
         );
       }
 
@@ -482,6 +487,110 @@ void main() {
           loaded.dailyMissions.map((m) => m.kind),
           isNot(contains(KidsDailyMissionKind.home)),
         );
+      });
+
+      group('guardian policy (P3 Task 7)', () {
+        List<KidsHomeMission> assigned() => [
+          homeMission(
+            '1',
+            KidsHomeMissionStatus.assigned,
+            DateTime(2026, 10, 2),
+          ),
+        ];
+
+        test('one daily suggestion shows only the learning card', () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+            childPolicyReader: () =>
+                const KidsChildPolicy(maxDailySuggestions: 1),
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions.map((m) => m.kind), [
+            KidsDailyMissionKind.learning,
+          ]);
+        });
+
+        test('home missions disabled hides an assigned mission', () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+            childPolicyReader: () =>
+                const KidsChildPolicy(homeMissionsEnabled: false),
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions.map((m) => m.kind), [
+            KidsDailyMissionKind.learning,
+            KidsDailyMissionKind.reading,
+          ]);
+        });
+
+        test('without a reader the default policy keeps all three', () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions.map((m) => m.kind), [
+            KidsDailyMissionKind.learning,
+            KidsDailyMissionKind.reading,
+            KidsDailyMissionKind.home,
+          ]);
+        });
+
+        test('the home load refreshes the policy before applying it', () async {
+          var policy = const KidsChildPolicy();
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+            childPolicyReader: () => policy,
+            childPolicyRefresh: () async {
+              policy = const KidsChildPolicy(maxDailySuggestions: 1);
+            },
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions, hasLength(1));
+        });
+
+        test('a failing refresh keeps the last known policy', () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+            childPolicyReader: () =>
+                const KidsChildPolicy(maxDailySuggestions: 2),
+            childPolicyRefresh: () async => throw StateError('prefs'),
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions, hasLength(2));
+        });
+
+        test('a throwing reader falls back to the default policy', () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => assigned(),
+            childPolicyReader: () => throw StateError('di'),
+          );
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(loaded.dailyMissions, hasLength(3));
+        });
       });
 
       test('no loader means no reading mission', () async {
