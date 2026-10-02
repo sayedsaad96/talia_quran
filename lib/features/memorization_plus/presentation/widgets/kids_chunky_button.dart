@@ -25,30 +25,30 @@ class _ToneColors {
     final colors = switch (tone) {
       KidsButtonTone.gold => const _ToneColors(
         face: KidsTheme.goldStar,
-        base: Color(0xFFB45309),
+        base: KidsTheme.buttonGoldBase,
         foreground: KidsTheme.nightSkyDark,
       ),
       KidsButtonTone.green => const _ToneColors(
-        face: Color(0xFF15803D),
-        base: Color(0xFF14532D),
+        face: KidsTheme.buttonGreenFace,
+        base: KidsTheme.buttonGreenBase,
         foreground: Colors.white,
       ),
       KidsButtonTone.purple => const _ToneColors(
         face: KidsTheme.reviewPurple,
-        base: Color(0xFF4C1D95),
+        base: KidsTheme.buttonPurpleBase,
         foreground: Colors.white,
       ),
       KidsButtonTone.soft => const _ToneColors(
         face: KidsTheme.creamParchment,
-        base: Color(0xFFD9B970),
+        base: KidsTheme.buttonSoftBase,
         foreground: KidsTheme.inkOnParchment,
       ),
     };
     if (enabled) return colors;
     // Disabled stays readable on the bright scene instead of vanishing.
     return _ToneColors(
-      face: Color.lerp(colors.face, const Color(0xFFCBD5E1), 0.65)!,
-      base: Color.lerp(colors.base, const Color(0xFF94A3B8), 0.65)!,
+      face: Color.lerp(colors.face, KidsTheme.buttonDisabledFace, 0.65)!,
+      base: Color.lerp(colors.base, KidsTheme.buttonDisabledBase, 0.65)!,
       foreground: KidsTheme.inkOnParchment.withValues(alpha: 0.55),
     );
   }

@@ -557,7 +557,7 @@ class _KidsReviewChallengeCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF8B5CF6), Color(0xFF5B21B6)],
+          colors: [KidsTheme.sessionPurpleLight, KidsTheme.sessionPurpleDark],
         ),
         borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
         boxShadow: KidsTheme.card25DShadow,
@@ -712,7 +712,7 @@ class _KidsGamifiedLoopIndicator extends StatelessWidget {
                 child: Text(
                   '${state.currentLoop}/${state.maxLoops}',
                   style: AppTypography.titleMedium.copyWith(
-                    color: const Color(0xFFB45309),
+                    color: KidsTheme.buttonGoldBase,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0,
                   ),
@@ -948,7 +948,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
   late final AnimationController _waveController;
 
   static const _waveColors = [
-    Color(0xFF15803D),
+    KidsTheme.buttonGreenFace,
     KidsTheme.goldStar,
     KidsTheme.reviewPurple,
   ];
@@ -993,7 +993,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: _kidsSoftCardDecoration.copyWith(
-        border: Border.all(color: const Color(0xFF15803D), width: 2),
+        border: Border.all(color: KidsTheme.buttonGreenFace, width: 2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1032,7 +1032,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
               Text(
                 _formatSeconds(widget.seconds),
                 style: AppTypography.titleSmall.copyWith(
-                  color: const Color(0xFF15803D),
+                  color: KidsTheme.buttonGreenFace,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'monospace',
                   letterSpacing: 0,
