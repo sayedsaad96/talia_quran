@@ -50,11 +50,15 @@ String kidsDayKey(DateTime localNow) {
   return '$y-$m-$d';
 }
 
-/// Resolves today's mission cards: learning, reading, then the guardian's home
-/// mission, capped at [maxMissions] (itself clamped to
-/// [kKidsMaxDailyMissions]). [homeMission] is the oldest mission that is not
-/// `acknowledged`; it is `completed` once reported or acknowledged. Completion needs an explicit outcome (a positive session
-/// log / a confirmed page); opening or listening never completes a mission.
+/// Resolves today's mission cards: learning, reading, then the guardian's
+/// home mission. These are positional slots: [maxMissions] (clamped to
+/// [kKidsMaxDailyMissions]) keeps the first N slots, so an empty learning
+/// slot never lets the home card move up into a smaller cap.
+///
+/// [homeMission] is the oldest mission that is not `acknowledged`; it is
+/// `completed` once reported or acknowledged. Completion needs an explicit
+/// outcome (a positive session log / a confirmed page); opening or listening
+/// never completes a mission.
 List<KidsDailyMission> resolveKidsDailyMissions({
   required DateTime now,
   required KidsNextMission? learning,
@@ -74,7 +78,7 @@ List<KidsDailyMission> resolveKidsDailyMissions({
         log.pointsEarned > 0 && kidsDayKey(log.completedAt.toLocal()) == dayKey,
   );
 
-  final cards = <KidsDailyMission>[
+  final slots = <KidsDailyMission?>[
     if (learning != null || learnedToday)
       KidsDailyMission(
         id: '$dayKey:${KidsDailyMissionKind.learning.name}',
@@ -83,7 +87,9 @@ List<KidsDailyMission> resolveKidsDailyMissions({
             ? KidsDailyMissionStatus.completed
             : KidsDailyMissionStatus.available,
         learning: learning,
-      ),
+      )
+    else
+      null,
     KidsDailyMission(
       id: '$dayKey:${KidsDailyMissionKind.reading.name}',
       kind: KidsDailyMissionKind.reading,
@@ -100,7 +106,9 @@ List<KidsDailyMission> resolveKidsDailyMissions({
             : KidsDailyMissionStatus.completed,
         homeMissionId: homeMission.id,
         homeMissionTitle: homeMission.title,
-      ),
+      )
+    else
+      null,
   ];
-  return cards.take(cap).toList(growable: false);
+  return slots.take(cap).nonNulls.toList(growable: false);
 }

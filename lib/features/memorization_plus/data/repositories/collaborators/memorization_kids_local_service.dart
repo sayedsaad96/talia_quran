@@ -14,6 +14,7 @@ import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
 import '../../../../../core/services/streak_reader.dart';
 import '../../../../../core/sync/cloud_sync_queue.dart';
+import '../../../../../core/utils/talia_logger.dart';
 import '../../../../../core/security/parent_pin_secure_store.dart';
 import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
@@ -491,7 +492,13 @@ class MemorizationKidsLocalService {
       });
       if (!found) return const Left(NotFoundFailure());
       if (changed && markPendingSync) {
-        await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
+        // The report is already saved; a queue hiccup must not undo that.
+        // The next sync still finds the pending flag.
+        try {
+          await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
+        } catch (e) {
+          TaliaLogger.w('Home mission report could not be queued', e);
+        }
       }
       return Right(next);
     } catch (e) {

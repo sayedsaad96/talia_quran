@@ -37,6 +37,14 @@ class _FakeProgressEventsBus implements ProgressEventsBus {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _ThrowingQueue implements CloudSyncQueue {
+  @override
+  Future<void> enqueue(String kind) async => throw StateError('isar closed');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _RecordingQueue implements CloudSyncQueue {
   final kinds = <String>[];
 
@@ -184,6 +192,24 @@ void main() {
       expect(queue.kinds, isEmpty);
     });
 
+    test('a throwing enqueue never fails a saved report', () async {
+      final id = await addAssigned();
+      final throwing = MemorizationKidsLocalService(
+        datasource,
+        _UnusedQuranRepository(),
+        _FakeStreakReader(),
+        _FakeProgressEventsBus(),
+        _ThrowingQueue(),
+        owner: provider,
+      );
+      final result = await throwing.reportHomeMission(
+        id,
+        markPendingSync: true,
+      );
+      expect(result.isRight(), isTrue);
+      expect((await stored()).single.pendingReportSync, isTrue);
+    });
+
     test('a repeated report does not queue again', () async {
       final id = await addAssigned();
       await service.reportHomeMission(id, markPendingSync: true);
@@ -202,13 +228,18 @@ void main() {
 
       final calls = <int>[];
       // Offline: the RPC throws, the flag survives.
-      await sync.push(
+      final hadTransient = await sync.push(
         ownerId: ownerId,
         reportRpc: (id) async => throw Exception('offline'),
       );
+      expect(hadTransient, isTrue);
       expect((await stored()).single.pendingReportSync, isTrue);
 
-      await sync.push(ownerId: ownerId, reportRpc: (id) async => calls.add(id));
+      final ok = await sync.push(
+        ownerId: ownerId,
+        reportRpc: (id) async => calls.add(id),
+      );
+      expect(ok, isFalse);
       expect(calls, [7]);
       expect((await stored()).single.pendingReportSync, isFalse);
       expect((await stored()).single.status, KidsHomeMissionStatus.reported);
@@ -219,7 +250,8 @@ void main() {
     });
 
     test(
-      'local-only ids are skipped; one failure does not block others',
+      'local-only ids are skipped; a transient failure does not block others '
+      'and is reported',
       () async {
         await datasource.saveHomeMissions([
           _mission('local-1', KidsHomeMissionStatus.reported, pending: true),
@@ -227,13 +259,14 @@ void main() {
           _mission('9', KidsHomeMissionStatus.reported, pending: true),
         ]);
         final calls = <int>[];
-        await sync.push(
+        final hadTransient = await sync.push(
           ownerId: ownerId,
           reportRpc: (id) async {
             calls.add(id);
-            if (id == 8) throw Exception('Child link is not active');
+            if (id == 8) throw Exception('socket timeout');
           },
         );
+        expect(hadTransient, isTrue);
         expect(calls, [8, 9]);
         final byId = {for (final m in await stored()) m.id: m};
         expect(byId['local-1']!.pendingReportSync, isTrue);
@@ -241,6 +274,47 @@ void main() {
         expect(byId['9']!.pendingReportSync, isFalse);
       },
     );
+
+    for (final message in ['Child link is not active', 'Mission not found']) {
+      test(
+        'terminal "$message" clears the flag, keeps reported, no transient',
+        () async {
+          await datasource.saveHomeMissions([
+            _mission('8', KidsHomeMissionStatus.reported, pending: true),
+          ]);
+          var calls = 0;
+          final hadTransient = await sync.push(
+            ownerId: ownerId,
+            reportRpc: (id) async {
+              calls++;
+              throw Exception('PostgrestException: $message');
+            },
+          );
+          expect(hadTransient, isFalse);
+          expect(calls, 1);
+          final saved = (await stored()).single;
+          expect(saved.pendingReportSync, isFalse);
+          expect(saved.status, KidsHomeMissionStatus.reported);
+
+          // Not retried on the next sync.
+          await sync.push(ownerId: ownerId, reportRpc: (id) async => calls++);
+          expect(calls, 1);
+        },
+      );
+    }
+
+    test('a stale owner neither calls the RPC nor clears anything', () async {
+      await datasource.saveHomeMissions([
+        _mission('8', KidsHomeMissionStatus.reported, pending: true),
+      ]);
+      var calls = 0;
+      await sync.push(
+        ownerId: 'someone-else',
+        reportRpc: (id) async => calls++,
+      );
+      expect(calls, 0);
+      expect((await stored()).single.pendingReportSync, isTrue);
+    });
   });
 
   group('pull', () {
@@ -289,6 +363,19 @@ void main() {
         expect(await stored(), before);
       },
     );
+
+    test('server acknowledged clears a pending local report', () async {
+      await datasource.saveHomeMissions([
+        _mission('7', KidsHomeMissionStatus.reported, pending: true),
+      ]);
+      await sync.pull(
+        ownerId: ownerId,
+        fetchRows: () async => [_row('7', 'acknowledged')],
+      );
+      final saved = (await stored()).single;
+      expect(saved.status, KidsHomeMissionStatus.acknowledged);
+      expect(saved.pendingReportSync, isFalse);
+    });
 
     test('an empty server answer leaves local untouched', () async {
       final before = [_mission('7', KidsHomeMissionStatus.assigned)];
@@ -356,5 +443,20 @@ void main() {
     expect(byId.keys, containsAll(['1', '2']));
     expect(byId['1']!.status, KidsHomeMissionStatus.reported);
     expect(byId['1']!.pendingReportSync, isTrue);
+  });
+
+  test('the lock is released after a throwing mutate', () async {
+    await datasource.saveHomeMissions([
+      _mission('1', KidsHomeMissionStatus.assigned),
+    ]);
+    await expectLater(
+      datasource.updateHomeMissions((_) async => throw StateError('boom')),
+      throwsStateError,
+    );
+    final next = await datasource.updateHomeMissions(
+      (local) async => [for (final m in local) m.copyWith(title: 'after')],
+    );
+    expect(next.single.title, 'after');
+    expect((await stored()).single.title, 'after');
   });
 }

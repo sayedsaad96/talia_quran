@@ -157,18 +157,6 @@ class MemorizationKidsCloudSyncService {
       final ownerId = user.id;
       _ensureOwner(ownerId);
 
-      // Independent of the progress push: a failing mission keeps its pending
-      // flag and is retried on the next sync only.
-      await _homeMissionSync.push(
-        ownerId: ownerId,
-        reportRpc: (missionId) async {
-          await client.rpc(
-            'report_kids_home_mission',
-            params: {'p_mission_id': missionId},
-          );
-        },
-      );
-
       final logs = await _datasource.getKidsSessionLogs();
       final pendingLogs = logs
           .where(
@@ -206,6 +194,25 @@ class MemorizationKidsCloudSyncService {
         },
       );
       _ensureOwner(ownerId);
+
+      // Home-mission reports go last so a slow or failing RPC can never
+      // delay or lose the progress upload. A transient failure surfaces as a
+      // retryable failure (the queue backs off and retries); terminal server
+      // rejections are cleared inside the push.
+      final hadTransientFailure = await _homeMissionSync.push(
+        ownerId: ownerId,
+        reportRpc: (missionId) async {
+          await client.rpc(
+            'report_kids_home_mission',
+            params: {'p_mission_id': missionId},
+          );
+        },
+      );
+      if (hadTransientFailure) {
+        return const Left(
+          NetworkFailure('Kids home mission report is waiting to sync'),
+        );
+      }
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));

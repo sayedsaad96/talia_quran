@@ -35,40 +35,70 @@ class KidsHomeMissionChildSync {
     }
   }
 
-  /// Calls [reportRpc] for every locally pending report with a server id and
-  /// clears the flag on success. A failing mission (offline, link revoked,
-  /// mission not found) keeps its flag and is retried on the next sync only.
-  Future<void> push({
+  /// Server errors that will never succeed for this mission.
+  static const _terminalMessages = [
+    'Child link is not active',
+    'Mission not found',
+  ];
+
+  static bool _isTerminal(Object error) {
+    final text = error.toString();
+    return _terminalMessages.any(text.contains);
+  }
+
+  /// Calls [reportRpc] for every locally pending report with a server id.
+  ///
+  /// - Success clears `pendingReportSync`.
+  /// - A terminal error ("Child link is not active", "Mission not found")
+  ///   also clears the flag so it is not retried forever; the local `reported`
+  ///   status stays. If the child re-links to a guardian later, that old
+  ///   report is NOT re-sent.
+  /// - Any other error is transient: the flag is kept and the method returns
+  ///   `true` so the caller can surface a retryable failure.
+  ///
+  /// Returns whether any transient failure happened. Never throws.
+  Future<bool> push({
     required String ownerId,
     required Future<void> Function(int missionId) reportRpc,
   }) async {
+    var hadTransientFailure = false;
     try {
       final pending = (await _datasource.getHomeMissions())
           .where((m) => m.pendingReportSync)
           .toList();
-      final accepted = <String>{};
+      final toClear = <String>{};
       for (final mission in pending) {
         final serverId = int.tryParse(mission.id);
         if (serverId == null) continue;
         try {
-          if (_owner.currentOwnerId != ownerId) return;
+          if (_owner.currentOwnerId != ownerId) return hadTransientFailure;
           await reportRpc(serverId);
-          accepted.add(mission.id);
+          toClear.add(mission.id);
         } catch (e) {
-          TaliaLogger.w('Kids home mission report push failed', e);
+          if (_isTerminal(e)) {
+            TaliaLogger.w('Kids home mission report rejected', e);
+            toClear.add(mission.id);
+          } else {
+            TaliaLogger.w('Kids home mission report push failed', e);
+            hadTransientFailure = true;
+          }
         }
       }
-      if (accepted.isEmpty || _owner.currentOwnerId != ownerId) return;
+      if (toClear.isEmpty || _owner.currentOwnerId != ownerId) {
+        return hadTransientFailure;
+      }
       await _datasource.updateHomeMissions(
         (local) async => [
           for (final m in local)
-            accepted.contains(m.id) && m.pendingReportSync
+            toClear.contains(m.id) && m.pendingReportSync
                 ? m.copyWith(pendingReportSync: false)
                 : m,
         ],
       );
     } catch (e) {
       TaliaLogger.w('Kids home missions push skipped', e);
+      hadTransientFailure = true;
     }
+    return hadTransientFailure;
   }
 }

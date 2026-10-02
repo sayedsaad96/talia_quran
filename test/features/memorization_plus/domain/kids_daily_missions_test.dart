@@ -150,6 +150,18 @@ void main() {
       ]);
     });
 
+    test('slots are positional: no learning card and max 2 gives no home', () {
+      final home = mission(KidsHomeMissionStatus.assigned);
+      final capped = resolve(learningMission: null, home: home, max: 2);
+      expect(capped.map((m) => m.kind), [KidsDailyMissionKind.reading]);
+
+      final full = resolve(learningMission: null, home: home, max: 3);
+      expect(full.map((m) => m.kind), [
+        KidsDailyMissionKind.reading,
+        KidsDailyMissionKind.home,
+      ]);
+    });
+
     test('no home mission means no home card', () {
       expect(
         resolve().any((m) => m.kind == KidsDailyMissionKind.home),
