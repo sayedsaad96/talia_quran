@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
@@ -29,6 +31,67 @@ class _FakeRepository implements MemorizationPlusRepository {
   final identityUpdates = <String>[];
   Either<Failure, void> identityResult = const Right(null);
   final savedSettings = <ParentSettings>[];
+  final remoteMissionCreates = <String>[];
+  final remoteMissionAcks = <String>[];
+  final localMissionAdds = <String>[];
+  final localMissionAcks = <String>[];
+  Either<Failure, List<KidsHomeMission>> missionResult = const Right([]);
+  final localPolicySaves = <KidsChildPolicy>[];
+  final remotePolicySaves = <String>[];
+  Either<Failure, KidsChildPolicy> policyResult = const Right(
+    KidsChildPolicy(version: 1),
+  );
+  int dashboardCalls = 0;
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) async {
+    localPolicySaves.add(policy);
+    return policyResult;
+  }
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) async {
+    remotePolicySaves.add('$childUserId:v${policy.version}');
+    return policyResult;
+  }
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) async {
+    remoteMissionCreates.add('$childUserId:$title');
+    return missionResult;
+  }
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) async {
+    remoteMissionAcks.add(missionId);
+    return missionResult;
+  }
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) async {
+    localMissionAdds.add(title);
+    return missionResult;
+  }
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) async {
+    localMissionAcks.add(id);
+    return missionResult;
+  }
 
   @override
   Future<Either<Failure, void>> updateLinkedChildIdentity({
@@ -64,8 +127,10 @@ class _FakeRepository implements MemorizationPlusRepository {
       _verifyPinResult;
 
   @override
-  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() async =>
-      dashboardResult;
+  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() async {
+    dashboardCalls++;
+    return dashboardResult;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -317,6 +382,141 @@ void main() {
       await cubit.updateLocalChildNickname('  Maryam   Ali ');
 
       expect(repository.savedSettings.single.localChildNickname, 'Maryam Ali');
+    });
+  });
+
+  group('home missions', () {
+    Future<(_FakeRepository, FamilyDashboardCubit)> loaded() async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await cubit.load();
+      await _unlockAndLoad(cubit);
+      return (repository, cubit);
+    }
+
+    test('a remote child mission goes through the remote create call', () async {
+      final (repository, cubit) = await loaded();
+
+      await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+
+      expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
+      expect(repository.localMissionAdds, isEmpty);
+      expect((cubit.state as FamilyDashboardLoaded).feedback, isNull);
+    });
+
+    test('without a child id the mission goes through the local API', () async {
+      final (repository, cubit) = await loaded();
+
+      await cubit.addHomeMission('  رتّب غرفتك ');
+
+      expect(repository.localMissionAdds, ['رتّب غرفتك']);
+      expect(repository.remoteMissionCreates, isEmpty);
+    });
+
+    test('a failed remote create surfaces failure feedback', () async {
+      final (repository, cubit) = await loaded();
+      repository.missionResult = const Left(NetworkFailure('rpc failed'));
+
+      await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+
+      final feedback = (cubit.state as FamilyDashboardLoaded).feedback;
+      expect(feedback?.type, FamilyDashboardFeedbackType.failure);
+      expect(feedback?.message, 'rpc failed');
+    });
+
+    test('a failed local create surfaces failure feedback', () async {
+      final (repository, cubit) = await loaded();
+      repository.missionResult = const Left(
+        ValidationFailure(CubitMessageCodes.kidsHomeMissionInvalidTitle),
+      );
+
+      await cubit.addHomeMission('x');
+
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback?.message,
+        CubitMessageCodes.kidsHomeMissionInvalidTitle,
+      );
+    });
+
+    test('acknowledge routes remote and local by child id', () async {
+      final (repository, cubit) = await loaded();
+
+      await cubit.acknowledgeHomeMission('7', childId: 'c1');
+      await cubit.acknowledgeHomeMission('local-1');
+
+      expect(repository.remoteMissionAcks, ['7']);
+      expect(repository.localMissionAcks, ['local-1']);
+    });
+
+    test('a failed acknowledge surfaces failure feedback', () async {
+      final (repository, cubit) = await loaded();
+      repository.missionResult = const Left(NetworkFailure('nope'));
+
+      await cubit.acknowledgeHomeMission('7', childId: 'c1');
+
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback?.type,
+        FamilyDashboardFeedbackType.failure,
+      );
+    });
+  });
+
+  group('child policy', () {
+    Future<(_FakeRepository, FamilyDashboardCubit)> loaded() async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await cubit.load();
+      await _unlockAndLoad(cubit);
+      return (repository, cubit);
+    }
+
+    const edit = KidsChildPolicy(reduceMotion: true, version: 4);
+
+    test('without a child id the edit goes through the device path', () async {
+      final (repository, cubit) = await loaded();
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit);
+
+      expect(repository.localPolicySaves, [edit]);
+      expect(repository.remotePolicySaves, isEmpty);
+      expect(repository.dashboardCalls, before + 1);
+    });
+
+    test('a guardian edit uses the CAS with the summary version', () async {
+      final (repository, cubit) = await loaded();
+
+      await cubit.saveChildPolicy(edit, childId: 'c1');
+
+      expect(repository.remotePolicySaves, ['c1:v4']);
+      expect(repository.localPolicySaves, isEmpty);
+    });
+
+    test('a conflict shows kidsPolicyConflict and reloads the dashboard', () async {
+      final (repository, cubit) = await loaded();
+      repository.policyResult = const Left(PolicyConflictFailure());
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit, childId: 'c1');
+
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.type, FamilyDashboardFeedbackType.failure);
+      expect(state.feedback?.message, CubitMessageCodes.kidsPolicyConflict);
+      expect(repository.dashboardCalls, before + 1);
+    });
+
+    test('a network failure surfaces feedback without a reload', () async {
+      final (repository, cubit) = await loaded();
+      repository.policyResult = const Left(NetworkFailure());
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit);
+
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.message, CubitMessageCodes.errorNetwork);
+      expect(repository.dashboardCalls, before);
     });
   });
 }

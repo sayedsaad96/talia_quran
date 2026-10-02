@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/memorization/smart_coach_recommendation.dart';
+import 'kids_child_policy.dart';
+import 'kids_home_mission.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
 import 'parent_dashboard.dart';
@@ -14,6 +16,9 @@ class RemoteChildSummary extends Equatable {
     required this.rewards,
     this.production,
     this.childAge,
+    this.homeMissions = const [],
+    this.policy,
+    this.policyUnavailable = false,
   });
 
   final String childUserId;
@@ -24,6 +29,21 @@ class RemoteChildSummary extends Equatable {
   final KidsProgress progress;
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
+
+  /// Guardian-assigned home missions, newest first. Filled by the family
+  /// dashboard assembly; empty when unavailable.
+  final List<KidsHomeMission> homeMissions;
+
+  /// The child's guardian policy from `kids_child_policies`. Null when the
+  /// child has no row yet or it could not be read (defaults, version 0).
+  final KidsChildPolicy? policy;
+
+  /// True when reading the policy failed: the guardian controls are hidden
+  /// (a failed read must not look like "no row, defaults at version 0").
+  final bool policyUnavailable;
+
+  /// Version a guardian edit compares against.
+  int get policyVersion => policy?.version ?? 0;
 
   /// Additive Phase 7 production-sync summary (V2 SRS, daily plan,
   /// certificates, streak, heatmap, Smart Coach). Null when the cloud rows
@@ -39,6 +59,9 @@ class RemoteChildSummary extends Equatable {
     rewards,
     production,
     childAge,
+    homeMissions,
+    policy,
+    policyUnavailable,
   ];
 }
 

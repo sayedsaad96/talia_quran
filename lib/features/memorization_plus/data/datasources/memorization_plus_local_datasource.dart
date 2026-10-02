@@ -7,6 +7,7 @@ import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../core/memorization/review_record_identity.dart';
 import '../../../../core/memorization/review_record_read_batch.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../models/isar_ayah_review_record.dart';
 import '../models/memorization_models.dart';
@@ -106,6 +107,16 @@ abstract class MemorizationPlusLocalDatasource {
   Future<void> saveParentSettings(ParentSettingsModel settings);
   Future<List<ParentRewardModel>> getParentRewards();
   Future<void> saveParentRewards(List<ParentRewardModel> rewards);
+  Future<List<KidsHomeMission>> getHomeMissions();
+  Future<void> saveHomeMissions(List<KidsHomeMission> missions);
+
+  /// Atomically mutates the home-mission list under a per-owner lock so the
+  /// child report, guardian acknowledgement and cloud pull-merge never lose
+  /// each other's update.
+  Future<List<KidsHomeMission>> updateHomeMissions(
+    Future<List<KidsHomeMission>> Function(List<KidsHomeMission> current)
+    mutate,
+  );
 
   // Custom memorization plan
   Future<CustomMemorizationPlanModel?> getCustomPlan();
@@ -214,6 +225,7 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kKidsSessionLogs = 'mem_plus_kids_session_logs';
   static const _kParentSettings = 'mem_plus_parent_settings';
   static const _kParentRewards = 'mem_plus_parent_rewards';
+  static const _kHomeMissions = 'mem_plus_home_missions';
   static const _kCustomPlan = 'mem_plus_custom_plan';
   static const _kSmartSettings = 'mem_plus_smart_settings';
 

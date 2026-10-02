@@ -67,6 +67,18 @@ class ParseFailure extends Failure {
   const ParseFailure([super.message = CubitMessageCodes.errorParse]);
 }
 
+class ValidationFailure extends Failure {
+  const ValidationFailure([super.message = CubitMessageCodes.errorUnknown]);
+}
+
+/// A compare-and-swap of the kids child policy lost to a newer server
+/// version (`compare_and_swap_child_policy` returned `applied: false`).
+class PolicyConflictFailure extends Failure {
+  const PolicyConflictFailure([
+    super.message = CubitMessageCodes.kidsPolicyConflict,
+  ]);
+}
+
 class UnknownFailure extends Failure {
   const UnknownFailure([super.message = CubitMessageCodes.errorUnknown]);
 

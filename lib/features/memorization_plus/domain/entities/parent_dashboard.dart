@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'ayah_review_record.dart';
+import 'kids_home_mission.dart';
 import 'kids_journey_stage.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
@@ -21,6 +22,12 @@ class ParentSettings extends Equatable {
     this.sessionGoalMinutes,
     this.startingSurahId = KidsJourneyPath.firstSurahId,
     this.kidsHifzV2Enabled = false,
+    this.kidsReduceMotion = false,
+    this.maxDailySuggestions = 3,
+    this.homeMissionsEnabled = true,
+    this.policyVersion = 0,
+    this.policySyncedVersion = 0,
+    this.policyLinkConfirmed,
   });
 
   final String? pinHash;
@@ -39,6 +46,26 @@ class ParentSettings extends Equatable {
   final int startingSurahId;
   final bool kidsHifzV2Enabled;
 
+  /// Guardian policy: calm the kids world (no ambient motion).
+  final bool kidsReduceMotion;
+
+  /// Guardian policy: daily suggestions shown to the child (1..3).
+  final int maxDailySuggestions;
+
+  /// Guardian policy: whether home missions appear for the child.
+  final bool homeMissionsEnabled;
+
+  /// Local edit counter of the child policy (0 = never edited or synced).
+  final int policyVersion;
+
+  /// Last policy version the server acknowledged (0 = none); the CAS
+  /// expected version and the pull threshold.
+  final int policySyncedVersion;
+
+  /// Last link state the server confirmed for this child: true after a CAS
+  /// or pull succeeded, false after "Child link is not active", null unknown.
+  final bool? policyLinkConfirmed;
+
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
   ParentSettings copyWith({
@@ -52,8 +79,16 @@ class ParentSettings extends Equatable {
     String? localChildNickname,
     bool? guidanceAudioEnabled,
     int? sessionGoalMinutes,
+    bool clearSessionGoalMinutes = false,
     int? startingSurahId,
     bool? kidsHifzV2Enabled,
+    bool? kidsReduceMotion,
+    int? maxDailySuggestions,
+    bool? homeMissionsEnabled,
+    int? policyVersion,
+    int? policySyncedVersion,
+    bool? policyLinkConfirmed,
+    bool clearPolicyLinkConfirmed = false,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -63,9 +98,19 @@ class ParentSettings extends Equatable {
     remoteLinkEnabled: remoteLinkEnabled ?? this.remoteLinkEnabled,
     localChildNickname: localChildNickname ?? this.localChildNickname,
     guidanceAudioEnabled: guidanceAudioEnabled ?? this.guidanceAudioEnabled,
-    sessionGoalMinutes: sessionGoalMinutes ?? this.sessionGoalMinutes,
+    sessionGoalMinutes: clearSessionGoalMinutes
+        ? null
+        : (sessionGoalMinutes ?? this.sessionGoalMinutes),
     startingSurahId: startingSurahId ?? this.startingSurahId,
     kidsHifzV2Enabled: kidsHifzV2Enabled ?? this.kidsHifzV2Enabled,
+    kidsReduceMotion: kidsReduceMotion ?? this.kidsReduceMotion,
+    maxDailySuggestions: maxDailySuggestions ?? this.maxDailySuggestions,
+    homeMissionsEnabled: homeMissionsEnabled ?? this.homeMissionsEnabled,
+    policyVersion: policyVersion ?? this.policyVersion,
+    policySyncedVersion: policySyncedVersion ?? this.policySyncedVersion,
+    policyLinkConfirmed: clearPolicyLinkConfirmed
+        ? null
+        : (policyLinkConfirmed ?? this.policyLinkConfirmed),
   );
 
   @override
@@ -81,6 +126,12 @@ class ParentSettings extends Equatable {
     sessionGoalMinutes,
     startingSurahId,
     kidsHifzV2Enabled,
+    kidsReduceMotion,
+    maxDailySuggestions,
+    homeMissionsEnabled,
+    policyVersion,
+    policySyncedVersion,
+    policyLinkConfirmed,
   ];
 }
 
@@ -133,6 +184,7 @@ class ParentDashboard extends Equatable {
     required this.logs,
     required this.rewards,
     required this.settings,
+    this.homeMissions = const [],
   });
 
   final KidsProgress progress;
@@ -140,6 +192,9 @@ class ParentDashboard extends Equatable {
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
   final ParentSettings settings;
+
+  /// Missions the guardian assigned to this device's child.
+  final List<KidsHomeMission> homeMissions;
 
   int get commitmentDays => logs
       .map((log) {
@@ -192,5 +247,12 @@ class ParentDashboard extends Equatable {
   }
 
   @override
-  List<Object?> get props => [progress, stages, logs, rewards, settings];
+  List<Object?> get props => [
+    progress,
+    stages,
+    logs,
+    rewards,
+    settings,
+    homeMissions,
+  ];
 }

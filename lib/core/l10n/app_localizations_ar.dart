@@ -5760,6 +5760,60 @@ class AppLocalizationsAr extends AppLocalizations {
       'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
+  String get kidsHomeMissionInvalidTitle => 'اكتب مهمة من حرف إلى ١٢٠ حرفًا';
+
+  @override
+  String get kidsPolicyReduceMotion => 'تقليل الحركة';
+
+  @override
+  String get kidsPolicyMaxSuggestions => 'عدد مهمات اليوم';
+
+  @override
+  String get kidsPolicyHomeMissions => 'المهمات المنزلية';
+
+  @override
+  String get kidsPolicyConflict => 'تغيّرت الإعدادات من جهاز آخر';
+
+  @override
+  String get kidsHomeMissionUnavailable => 'المهمة ليست متاحة لهذا الإجراء';
+
+  @override
+  String get kidsPolicyUnavailable => 'تعذّر تحميل إعدادات الطفل الآن.';
+
+  @override
+  String get childDetailHomeMissions => 'المهمات المنزلية';
+
+  @override
+  String get childDetailAddHomeMission => 'أضف مهمة';
+
+  @override
+  String get kidsHomeMissionAssigned => 'بانتظار الطفل';
+
+  @override
+  String get kidsHomeMissionReportAction => 'أنجزتها!';
+
+  @override
+  String get kidsHomeMissionReported => 'أخبرنا الطفل أنه أنجزها';
+
+  @override
+  String get kidsHomeMissionAcknowledged => 'اطّلع ولي الأمر';
+
+  @override
+  String get kidsHomeMissionAcknowledgeAction => 'اطّلعت';
+
+  @override
+  String get kidsHomeMissionSuggestTidy => 'رتّب غرفتك';
+
+  @override
+  String get kidsHomeMissionSuggestHelp => 'ساعد في تجهيز المائدة';
+
+  @override
+  String get kidsHomeMissionSuggestKind => 'قل كلمة طيبة لأحد أفراد أسرتك';
+
+  @override
+  String get kidsHomeMissionSuggestShare => 'شارك لعبتك مع غيرك';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
 
@@ -5794,6 +5848,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String kidsSessionGoalValue(int minutes) {
     return '$minutes دقائق';
   }
+
+  @override
+  String get kidsSessionGoalAgeDefault => 'حسب العمر';
 
   @override
   String get kidsSetupReminderTime => 'وقت التذكير';

@@ -4,6 +4,7 @@ import '../../../../core/memorization/pending_ayah_resolver.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/smart_coach_engine.dart';
 import '../../../../core/router/app_router.dart';
+import '../entities/kids_child_policy.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 import '../usecases/get_last_reviewed_surah_id_usecase.dart';
@@ -166,14 +167,14 @@ class MemorizationNavigationResolver {
     );
   }
 
-  /// The parent's session goal, else the age band's default (K36). A read
-  /// failure means no goal — the gentle note simply does not appear.
+  /// The parent's session goal (1..60), else the age band's default (K36).
+  /// An out-of-range goal also falls back to the age band.
   Future<int> _kidsSessionGoalMinutes() async {
     final settings = (await _repository.getParentSettings()).fold(
       (_) => null,
       (settings) => settings,
     );
-    final goal = settings?.sessionGoalMinutes;
+    final goal = sanitizeKidsSessionGoalMinutes(settings?.sessionGoalMinutes);
     if (goal != null) return goal;
     final profile = await _profile();
     return KidsSessionPolicy.forChildAge(profile?.childAge).maxSessionMinutes;

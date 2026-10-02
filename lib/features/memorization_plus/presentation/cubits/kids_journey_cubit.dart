@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_adventure_regions.dart';
@@ -25,8 +29,20 @@ typedef KidsJourneySessionLogsLoader = Future<List<KidsSessionLog>?> Function();
 /// throwing) the reading mission is omitted.
 typedef KidsReadingPagesLoader = Future<Set<int>> Function();
 
+/// The child's local home missions («مهمة من البيت»). When absent (or
+/// throwing) no home card is shown; never an error state.
+typedef KidsHomeMissionsLoader = Future<List<KidsHomeMission>> Function();
+
 /// Loads the age-band policy that owns the daily mission caps.
 typedef KidsJourneyPolicyLoader = Future<KidsSessionPolicy> Function();
+
+/// The guardian's current per-child policy (suggestions cap, home missions).
+/// When absent (or throwing) the default policy applies.
+typedef KidsChildPolicyReader = KidsChildPolicy Function();
+
+/// Refreshes the guardian policy before the home resolves today's missions.
+/// Errors are ignored (the last known policy stays).
+typedef KidsChildPolicyRefresh = Future<void> Function();
 
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
@@ -38,6 +54,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsJourneySessionLogsLoader? sessionLogsLoader,
     KidsReadingPagesLoader? readingPagesLoader,
     KidsJourneyPolicyLoader? policyLoader,
+    KidsHomeMissionsLoader? homeMissionsLoader,
+    KidsChildPolicyReader? childPolicyReader,
+    KidsChildPolicyRefresh? childPolicyRefresh,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
@@ -45,6 +64,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
        _sessionLogsLoader = sessionLogsLoader,
        _readingPagesLoader = readingPagesLoader,
        _policyLoader = policyLoader,
+       _homeMissionsLoader = homeMissionsLoader,
+       _childPolicyReader = childPolicyReader,
+       _childPolicyRefresh = childPolicyRefresh,
        _missionResolver = missionResolver,
        _v2Enabled = v2Enabled,
        super(const KidsJourneyInitial());
@@ -57,6 +79,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsJourneySessionLogsLoader? _sessionLogsLoader;
   final KidsReadingPagesLoader? _readingPagesLoader;
   final KidsJourneyPolicyLoader? _policyLoader;
+  final KidsHomeMissionsLoader? _homeMissionsLoader;
+  final KidsChildPolicyReader? _childPolicyReader;
+  final KidsChildPolicyRefresh? _childPolicyRefresh;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -250,17 +275,80 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     } catch (_) {
       pages = null;
     }
+    try {
+      await _childPolicyRefresh?.call();
+    } catch (_) {
+      // Keep the last known policy.
+    }
+    final policy = _childPolicy();
+    final now = DateTime.now();
+    final homeMission = policy.homeMissionsEnabled
+        ? await _homeCardMission(now)
+        : null;
     final missions = resolveKidsDailyMissions(
-      now: DateTime.now(),
+      now: now,
       learning: learning,
       dayGoalReached: dayGoalReached,
       logs: logs,
       pagesReadToday: pages ?? const <int>{},
+      homeMission: homeMission,
+      // Slots are positional [learning, reading, home]: without home
+      // missions at most the first two can show.
+      maxMissions: policy.homeMissionsEnabled
+          ? policy.maxDailySuggestions
+          : math.min(policy.maxDailySuggestions, 2),
     );
     if (pages != null) return missions;
     return missions
         .where((m) => m.kind != KidsDailyMissionKind.reading)
         .toList(growable: false);
+  }
+
+  /// The guardian policy, sanitized; the default on a missing or failing
+  /// reader so a DI glitch never hides the child's missions.
+  KidsChildPolicy _childPolicy() {
+    try {
+      return (_childPolicyReader?.call() ?? const KidsChildPolicy())
+          .sanitized();
+    } catch (_) {
+      return const KidsChildPolicy();
+    }
+  }
+
+  /// The home mission behind the home card (P3-R16): the oldest `assigned`
+  /// one; else the latest mission reported TODAY (local day, even if already
+  /// acknowledged) so the card shows its done state; else none. A reported mission never blocks newer ones.
+  /// Fail-open: any loader error simply means no home card.
+  Future<KidsHomeMission?> _homeCardMission(DateTime now) async {
+    try {
+      final missions = await _homeMissionsLoader?.call();
+      if (missions == null) return null;
+      final assigned =
+          missions
+              .where((m) => m.status == KidsHomeMissionStatus.assigned)
+              .toList()
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      if (assigned.isNotEmpty) return assigned.first;
+      final today = DateTime(now.year, now.month, now.day);
+      bool reportedToday(KidsHomeMission m) {
+        final at = m.reportedAt?.toLocal();
+        if (at == null) return false;
+        return DateTime(at.year, at.month, at.day) == today;
+      }
+
+      final doneToday =
+          missions
+              .where(
+                (m) =>
+                    m.status != KidsHomeMissionStatus.assigned &&
+                    reportedToday(m),
+              )
+              .toList()
+            ..sort((a, b) => b.reportedAt!.compareTo(a.reportedAt!));
+      return doneToday.isEmpty ? null : doneToday.first;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Today's age-band budget from the local session log. Each part fails

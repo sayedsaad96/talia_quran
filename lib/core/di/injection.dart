@@ -45,6 +45,8 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
+import '../../features/memorization_plus/domain/entities/kids_child_policy.dart';
+import '../../features/memorization_plus/domain/entities/kids_home_mission.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/kids_review_outcome_committer.dart';
@@ -73,6 +75,7 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
+import '../../features/memorization_plus/presentation/world/kids_policy_controller.dart';
 import '../../features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import '../../features/memorization_plus/data/listening/listening_audio.dart';
 import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
@@ -405,6 +408,21 @@ Future<void> configureDependencies({bool background = false}) async {
       },
     ),
   );
+  // Does not load at registration; the kids path calls reload().
+  getIt.registerLazySingleton<KidsPolicyController>(
+    () => KidsPolicyController(
+      load: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getParentSettings();
+        return result.fold(
+          (failure) => throw StateError(
+            'Parent settings unavailable: ${failure.message}',
+          ),
+          KidsChildPolicy.fromSettings,
+        );
+      },
+    ),
+  );
   getIt.registerLazySingleton<PrayerSerenityWatcher>(
     () => PrayerSerenityWatcher(
       prayerTimesProvider: () async {
@@ -584,6 +602,11 @@ Future<void> configureDependencies({bool background = false}) async {
       parentPinStore: getIt<ParentPinSecureStore>(),
       isar: getIt<Isar>(),
       owner: getIt<RecordOwnerProvider>(),
+      onKidsPolicyChanged: () {
+        if (getIt.isRegistered<KidsPolicyController>()) {
+          unawaited(getIt<KidsPolicyController>().reload());
+        }
+      },
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(
@@ -978,6 +1001,15 @@ Future<void> configureDependencies({bool background = false}) async {
             .getKidsSessionLogs();
         return result.getOrElse(() => const <KidsSessionLog>[]);
       },
+      homeMissionsLoader: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getHomeMissions();
+        return result.getOrElse(() => const <KidsHomeMission>[]);
+      },
+      // App-lifetime policy singleton: read, refreshed on each home load,
+      // never disposed here.
+      childPolicyReader: () => getIt<KidsPolicyController>().value,
+      childPolicyRefresh: () => getIt<KidsPolicyController>().reload(),
       readingPagesLoader: () async {
         if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
           throw StateError('KidsReadingReceiptStore is not registered');

@@ -19,6 +19,8 @@ import '../../../../core/services/streak_reader.dart';
 import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_cloud_repository.dart';
 import '../../domain/repositories/memorization_identity_repository.dart';
@@ -55,13 +57,18 @@ class MemorizationPlusRepositoryImpl
     ParentPinSecureStore? parentPinStore,
     Isar? isar,
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+    void Function()? onKidsPolicyChanged,
   }) : _metrics = metrics,
+       _onKidsPolicyChanged = onKidsPolicyChanged,
        _cloudSyncQueue = cloudSyncQueue,
        _parentPinStore = parentPinStore,
        _isar = isar,
        _owner = owner;
 
   final ParentPinSecureStore? _parentPinStore;
+
+  /// Runs after any local kids-policy write (DI reloads the controller).
+  final void Function()? _onKidsPolicyChanged;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -112,6 +119,7 @@ class MemorizationPlusRepositoryImpl
         _gateway,
         _mappers,
         owner: _owner,
+        onKidsPolicyChanged: _onKidsPolicyChanged,
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(
@@ -428,9 +436,30 @@ class MemorizationPlusRepositoryImpl
       _kidsLocal.saveParentReward(title);
 
   @override
+  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() =>
+      _kidsLocal.getHomeMissions();
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) => _kidsLocal.addLocalHomeMission(title);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
+    String id,
+  ) => _kidsLocal.reportHomeMission(
+    id,
+    markPendingSync: _gateway.hasSignedInCloudUser,
+  );
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) => _kidsLocal.acknowledgeLocalHomeMission(id);
+
+  @override
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id) {
-    if (_gateway.isSupabaseReady &&
-        _gateway.supabase.auth.currentUser != null) {
+    if (_gateway.hasSignedInCloudUser) {
       return _kidsCloudSync.claimRemoteParentReward(id);
     }
     return _kidsLocal.claimParentReward(id);
@@ -469,6 +498,39 @@ class MemorizationPlusRepositoryImpl
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
     String rewardId,
   ) => _kidsCloudSync.unlockRemoteParentReward(rewardId);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) => _kidsCloudSync.createRemoteHomeMission(
+    childUserId: childUserId,
+    title: title,
+  );
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) => _kidsCloudSync.acknowledgeRemoteHomeMission(missionId);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
+  ) => _kidsCloudSync.getRemoteHomeMissions(childUserId);
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) => _kidsCloudSync.saveLocalChildPolicy(policy);
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) => _kidsCloudSync.saveRemoteChildPolicy(
+    childUserId: childUserId,
+    policy: policy,
+  );
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
@@ -584,6 +646,15 @@ class MemorizationPlusRepositoryImpl
     if (kidsLogs.any(
       (log) =>
           !log.isSynced && KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    )) {
+      return true;
+    }
+    // An offline home-mission report with a server id must be flushed before
+    // sign-out, or AccountDataReset deletes it. Pending policy edits are NOT
+    // counted: they would block sign-out for non-child accounts.
+    final missions = await _datasource.getHomeMissions();
+    if (missions.any(
+      (m) => m.pendingReportSync && int.tryParse(m.id) != null,
     )) {
       return true;
     }

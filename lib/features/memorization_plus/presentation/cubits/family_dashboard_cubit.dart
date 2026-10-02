@@ -2,8 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/error/app_failure.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../auth/domain/services/account_password_verifier.dart';
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -286,6 +288,85 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
             refresh(feedback: const FamilyDashboardFeedback.rewardAdded()),
       );
     }
+  }
+
+  /// Assigns a home mission: remote (RPC) for a linked child, local otherwise.
+  Future<void> addHomeMission(String title, {String? childId}) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded) return;
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+
+    final result = childId != null
+        ? await _remoteLink.createRemoteHomeMission(
+            childUserId: childId,
+            title: trimmed,
+          )
+        : await _parentAccess.addLocalHomeMission(trimmed);
+    await result.fold(
+      (failure) async => emit(
+        current.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) async => refresh(),
+    );
+  }
+
+  /// Marks a reported home mission as seen by the guardian.
+  Future<void> acknowledgeHomeMission(String id, {String? childId}) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded) return;
+
+    final result = childId != null
+        ? await _remoteLink.acknowledgeRemoteHomeMission(id)
+        : await _parentAccess.acknowledgeLocalHomeMission(id);
+    await result.fold(
+      (failure) async => emit(
+        current.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) async => refresh(),
+    );
+  }
+
+  /// Saves the child policy: the guardian's linked child (CAS with the
+  /// version the dashboard read) when [childId] is set, otherwise this
+  /// device's child. A conflict shows `kidsPolicyConflict` and reloads the
+  /// dashboard so the fresh server values are displayed.
+  Future<void> saveChildPolicy(
+    KidsChildPolicy policy, {
+    String? childId,
+  }) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded) return;
+
+    final result = childId != null
+        ? await _remoteLink.saveRemoteChildPolicy(
+            childUserId: childId,
+            policy: policy,
+          )
+        : await _parentAccess.saveChildPolicy(policy);
+    await result.fold(
+      (failure) async {
+        if (failure is PolicyConflictFailure) {
+          await refresh(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+          );
+          return;
+        }
+        emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
+        );
+      },
+      (_) async => refresh(),
+    );
   }
 
   Future<void> saveSettings(ParentSettings settings) async {

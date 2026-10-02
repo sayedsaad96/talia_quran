@@ -222,6 +222,47 @@ void main() {
         expect(notYet.sessionGoalReached, isFalse);
       });
 
+      group('guardian session goal policy (P3 Task 7)', () {
+        KidsSessionLog timed(String id, int seconds) => KidsSessionLog(
+          id: id,
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 2,
+          pointsEarned: 10,
+          completedAt: DateTime.now(),
+          durationSeconds: seconds,
+        );
+        Future<bool> reachedWith({
+          required int? goalMinutes,
+          required int seconds,
+        }) async {
+          final resolver = MemorizationNavigationResolver(
+            _FakeRepository(
+              kidsStages: const [stage],
+              kidsLogs: [timed('a', seconds)],
+              parentSettings: ParentSettings(sessionGoalMinutes: goalMinutes),
+            ),
+          );
+          final outcome = await resolver.kidsMissionAfterCompletion(
+            surahId: 114,
+            completedAyah: 2,
+          );
+          return outcome.sessionGoalReached;
+        }
+
+        test('a 10-minute goal drives the completion note', () async {
+          expect(await reachedWith(goalMinutes: 10, seconds: 9 * 60), isFalse);
+          expect(await reachedWith(goalMinutes: 10, seconds: 10 * 60), isTrue);
+        });
+
+        test('an out-of-range goal falls back to the age-band default', () async {
+          // No profile → default age band (10 minutes).
+          expect(await reachedWith(goalMinutes: 99, seconds: 10 * 60), isTrue);
+          expect(await reachedWith(goalMinutes: 0, seconds: 10 * 60), isTrue);
+          expect(await reachedWith(goalMinutes: 99, seconds: 9 * 60), isFalse);
+        });
+      });
+
       test(
         'continues at the real frontier past memorized surahs (K17)',
         () async {

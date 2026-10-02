@@ -1,3 +1,4 @@
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/memorization_entities.dart';
 
 // ─── MemorizationProfileModel ────────────────────────────────────────────────
@@ -454,6 +455,12 @@ class ParentSettingsModel extends ParentSettings {
     super.sessionGoalMinutes,
     super.startingSurahId,
     super.kidsHifzV2Enabled,
+    super.kidsReduceMotion,
+    super.maxDailySuggestions,
+    super.homeMissionsEnabled,
+    super.policyVersion,
+    super.policySyncedVersion,
+    super.policyLinkConfirmed,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -472,7 +479,28 @@ class ParentSettingsModel extends ParentSettings {
         startingSurahId:
             json['startingSurahId'] as int? ?? KidsJourneyPath.firstSurahId,
         kidsHifzV2Enabled: json['kidsHifzV2Enabled'] as bool? ?? false,
+        // Policy keys are type-tolerant: a wrong-typed value falls back to
+        // its default instead of failing the whole parse (which would reset
+        // the PIN and nickname too).
+        kidsReduceMotion: _boolOr(json['kidsReduceMotion'], false),
+        maxDailySuggestions: clampKidsMaxDailySuggestions(
+          _intOr(json['maxDailySuggestions'], kKidsDefaultDailySuggestions),
+        ),
+        homeMissionsEnabled: _boolOr(json['homeMissionsEnabled'], true),
+        policyVersion: clampKidsPolicyVersion(_intOr(json['policyVersion'], 0)),
+        policySyncedVersion: clampKidsPolicyVersion(
+          _intOr(json['policySyncedVersion'], 0),
+        ),
+        policyLinkConfirmed: json['policyLinkConfirmed'] is bool
+            ? json['policyLinkConfirmed'] as bool
+            : null,
       );
+
+  static bool _boolOr(Object? raw, bool fallback) =>
+      raw is bool ? raw : fallback;
+
+  static int _intOr(Object? raw, int fallback) =>
+      raw is num && raw.isFinite ? raw.toInt() : fallback;
 
   factory ParentSettingsModel.fromEntity(ParentSettings settings) =>
       ParentSettingsModel(
@@ -487,6 +515,12 @@ class ParentSettingsModel extends ParentSettings {
         sessionGoalMinutes: settings.sessionGoalMinutes,
         startingSurahId: settings.startingSurahId,
         kidsHifzV2Enabled: settings.kidsHifzV2Enabled,
+        kidsReduceMotion: settings.kidsReduceMotion,
+        maxDailySuggestions: settings.maxDailySuggestions,
+        homeMissionsEnabled: settings.homeMissionsEnabled,
+        policyVersion: settings.policyVersion,
+        policySyncedVersion: settings.policySyncedVersion,
+        policyLinkConfirmed: settings.policyLinkConfirmed,
       );
 
   Map<String, dynamic> toJson() => {
@@ -501,6 +535,12 @@ class ParentSettingsModel extends ParentSettings {
     'sessionGoalMinutes': sessionGoalMinutes,
     'startingSurahId': startingSurahId,
     'kidsHifzV2Enabled': kidsHifzV2Enabled,
+    'kidsReduceMotion': kidsReduceMotion,
+    'maxDailySuggestions': maxDailySuggestions,
+    'homeMissionsEnabled': homeMissionsEnabled,
+    'policyVersion': policyVersion,
+    'policySyncedVersion': policySyncedVersion,
+    'policyLinkConfirmed': policyLinkConfirmed,
   };
 }
 

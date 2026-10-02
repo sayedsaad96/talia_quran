@@ -23,6 +23,7 @@ import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
 import '../widgets/kids_section_heading.dart';
+import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 
@@ -76,11 +77,22 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
   /// name instead of a generic "memorization hero".
   String? _nickname;
 
+  /// Talia is briefly `happy` after the child reports a home mission.
+  bool _taliaHappy = false;
+  bool _reportingHomeMission = false;
+  Timer? _happyTimer;
+
   @override
   void initState() {
     super.initState();
     _nickname = widget.childName;
     if (_nickname == null) unawaited(_loadNickname());
+  }
+
+  @override
+  void dispose() {
+    _happyTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadNickname() async {
@@ -183,6 +195,8 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
                 await _reloadAfterReader(context, state.surahId);
               }
             }),
+            taliaHappy: _taliaHappy,
+            onHomeMissionReport: (id) => _reportHomeMission(context, id),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
             onTreasuresTap: () => _openDestination(() async {
@@ -193,6 +207,29 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
         },
       ),
     );
+  }
+
+  /// The child reports a home mission: saved locally (queued for the guardian
+  /// when linked), then the journey reloads so the card shows as done.
+  Future<void> _reportHomeMission(BuildContext context, String id) async {
+    if (_reportingHomeMission) return;
+    if (!getIt.isRegistered<MemorizationPlusRepository>()) return;
+    _reportingHomeMission = true;
+    try {
+      final result = await getIt<MemorizationPlusRepository>()
+          .reportHomeMission(id);
+      if (!mounted) return;
+      if (result.isRight()) {
+        _happyTimer?.cancel();
+        setState(() => _taliaHappy = true);
+        _happyTimer = Timer(const Duration(seconds: 4), () {
+          if (mounted) setState(() => _taliaHappy = false);
+        });
+      }
+      if (context.mounted) await _reloadAfterReader(context, widget.surahId);
+    } finally {
+      _reportingHomeMission = false;
+    }
   }
 
   /// Reloads the journey after the reader closes: a confirmed page completes
@@ -244,6 +281,8 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onPathSettingsTap,
     this.onReadingMissionTap,
     this.onTreasuresTap,
+    this.onHomeMissionReport,
+    this.taliaHappy = false,
   });
 
   final KidsJourneyLoaded state;
@@ -260,6 +299,12 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   /// Opens «كنوزي» from the progress header chip.
   final VoidCallback? onTreasuresTap;
+
+  /// «أنجزتها!» on the home-mission card.
+  final void Function(String missionId)? onHomeMissionReport;
+
+  /// Shows Talia happy (just after a home mission was reported).
+  final bool taliaHappy;
 
   @override
   Widget build(BuildContext context) {
@@ -295,9 +340,17 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onTreasuresTap: onTreasuresTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      KidsTaliaMomentCompanion(
-                        moment: kidsHomeTaliaMoment(state),
-                      ),
+                      if (taliaHappy)
+                        KidsTaliaCompanion(
+                          pose: KidsTaliaPose.happy,
+                          message: context.l10n.kidsTaliaCelebrateBubble,
+                          animate: false,
+                          height: 96,
+                        )
+                      else
+                        KidsTaliaMomentCompanion(
+                          moment: kidsHomeTaliaMoment(state),
+                        ),
                       const SizedBox(height: AppSpacing.lg),
                       // K33: a warm welcome after a few days away.
                       if (state.isReturningAfterBreak) ...[
@@ -378,6 +431,12 @@ class KidsGamifiedHomeContent extends StatelessWidget {
             KidsDailyMissionKind.reading => onReadingMissionTap?.call(),
             _ => onMissionTap(),
           },
+          onReport:
+              mission.kind == KidsDailyMissionKind.home &&
+                  mission.homeMissionId != null &&
+                  onHomeMissionReport != null
+              ? () => onHomeMissionReport!(mission.homeMissionId!)
+              : null,
         ),
       ],
     ];

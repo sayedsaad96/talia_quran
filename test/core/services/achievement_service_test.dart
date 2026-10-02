@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
@@ -355,6 +356,18 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> saveParentRewards(List<ParentRewardModel> rewards) async {}
+
+  @override
+  Future<List<KidsHomeMission>> getHomeMissions() async => const [];
+
+  @override
+  Future<void> saveHomeMissions(List<KidsHomeMission> missions) async {}
+
+  @override
+  Future<List<KidsHomeMission>> updateHomeMissions(
+    Future<List<KidsHomeMission>> Function(List<KidsHomeMission> current)
+    mutate,
+  ) async => mutate(const []);
 
   @override
   Future<CustomMemorizationPlanModel?> getCustomPlan() async => null;

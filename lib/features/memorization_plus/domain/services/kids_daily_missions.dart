@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../entities/kids_home_mission.dart';
 import '../entities/kids_session_log.dart';
 import '../navigation/kids_next_mission_resolver.dart';
 
@@ -17,6 +18,7 @@ final class KidsDailyMission extends Equatable {
     required this.status,
     this.learning,
     this.homeMissionId,
+    this.homeMissionTitle,
   });
 
   /// `'$dayKey:${kind.name}'` (home: `'$dayKey:home:$homeMissionId'`).
@@ -26,8 +28,18 @@ final class KidsDailyMission extends Equatable {
   final KidsNextMission? learning;
   final String? homeMissionId;
 
+  /// The guardian's text for a `home` card.
+  final String? homeMissionTitle;
+
   @override
-  List<Object?> get props => [id, kind, status, learning, homeMissionId];
+  List<Object?> get props => [
+    id,
+    kind,
+    status,
+    learning,
+    homeMissionId,
+    homeMissionTitle,
+  ];
 }
 
 /// Local calendar day key, `yyyy-MM-dd`.
@@ -38,25 +50,36 @@ String kidsDayKey(DateTime localNow) {
   return '$y-$m-$d';
 }
 
-/// Resolves today's mission cards: learning, then reading, capped at
-/// [maxMissions]. Completion needs an explicit outcome (a positive session
-/// log / a confirmed page); opening or listening never completes a mission.
+/// Resolves today's mission cards: learning, reading, then the guardian's
+/// home mission. These are positional slots: [maxMissions] (clamped to
+/// [kKidsMaxDailyMissions]) keeps the first N slots, so an empty learning
+/// slot never lets the home card move up into a smaller cap.
+///
+/// [homeMission] is the oldest `assigned` mission, else one reported today
+/// (P3-R16); it is
+/// `completed` once reported or acknowledged. Completion needs an explicit
+/// outcome (a positive session log / a confirmed page); opening or listening
+/// never completes a mission.
 List<KidsDailyMission> resolveKidsDailyMissions({
   required DateTime now,
   required KidsNextMission? learning,
   required bool dayGoalReached,
   required List<KidsSessionLog> logs,
   required Set<int> pagesReadToday,
+  KidsHomeMission? homeMission,
   int maxMissions = kKidsMaxDailyMissions,
 }) {
   if (maxMissions <= 0) return const [];
-  final dayKey = kidsDayKey(now);
+  final cap = maxMissions > kKidsMaxDailyMissions
+      ? kKidsMaxDailyMissions
+      : maxMissions;
+  final dayKey = kidsDayKey(now.toLocal());
   final learnedToday = logs.any(
     (log) =>
         log.pointsEarned > 0 && kidsDayKey(log.completedAt.toLocal()) == dayKey,
   );
 
-  final cards = <KidsDailyMission>[
+  final slots = <KidsDailyMission?>[
     if (learning != null || learnedToday)
       KidsDailyMission(
         id: '$dayKey:${KidsDailyMissionKind.learning.name}',
@@ -65,7 +88,9 @@ List<KidsDailyMission> resolveKidsDailyMissions({
             ? KidsDailyMissionStatus.completed
             : KidsDailyMissionStatus.available,
         learning: learning,
-      ),
+      )
+    else
+      null,
     KidsDailyMission(
       id: '$dayKey:${KidsDailyMissionKind.reading.name}',
       kind: KidsDailyMissionKind.reading,
@@ -73,6 +98,18 @@ List<KidsDailyMission> resolveKidsDailyMissions({
           ? KidsDailyMissionStatus.completed
           : KidsDailyMissionStatus.available,
     ),
+    if (homeMission != null)
+      KidsDailyMission(
+        id: '$dayKey:${KidsDailyMissionKind.home.name}:${homeMission.id}',
+        kind: KidsDailyMissionKind.home,
+        status: homeMission.status == KidsHomeMissionStatus.assigned
+            ? KidsDailyMissionStatus.available
+            : KidsDailyMissionStatus.completed,
+        homeMissionId: homeMission.id,
+        homeMissionTitle: homeMission.title,
+      )
+    else
+      null,
   ];
-  return cards.take(maxMissions).toList(growable: false);
+  return slots.take(cap).nonNulls.toList(growable: false);
 }

@@ -14,9 +14,11 @@ import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
 import '../../../../../core/services/streak_reader.dart';
 import '../../../../../core/sync/cloud_sync_queue.dart';
+import '../../../../../core/utils/talia_logger.dart';
 import '../../../../../core/security/parent_pin_secure_store.dart';
 import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../../domain/services/kids_due_review_policy.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -293,13 +295,39 @@ class MemorizationKidsLocalService {
     ParentSettings settings,
   ) async {
     try {
+      final stored = await _datasource.getParentSettings();
       await _datasource.saveParentSettings(
-        ParentSettingsModel.fromEntity(settings),
+        ParentSettingsModel.fromEntity(keepNewerPolicy(settings, stored)),
       );
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
+  }
+
+  /// A settings snapshot taken before a policy pull/CAS/edit must not roll
+  /// the policy back: when [incoming] carries an older `policyVersion` or
+  /// `policySyncedVersion`, the stored policy block is kept. Equal versions
+  /// pass through (e.g. onboarding's session-goal write).
+  static ParentSettings keepNewerPolicy(
+    ParentSettings incoming,
+    ParentSettings stored,
+  ) {
+    if (incoming.policyVersion >= stored.policyVersion &&
+        incoming.policySyncedVersion >= stored.policySyncedVersion) {
+      return incoming;
+    }
+    return incoming.copyWith(
+      kidsReduceMotion: stored.kidsReduceMotion,
+      maxDailySuggestions: stored.maxDailySuggestions,
+      homeMissionsEnabled: stored.homeMissionsEnabled,
+      sessionGoalMinutes: stored.sessionGoalMinutes,
+      clearSessionGoalMinutes: stored.sessionGoalMinutes == null,
+      policyVersion: stored.policyVersion,
+      policySyncedVersion: stored.policySyncedVersion,
+      policyLinkConfirmed: stored.policyLinkConfirmed,
+      clearPolicyLinkConfirmed: stored.policyLinkConfirmed == null,
+    );
   }
 
   Future<Either<Failure, bool>> verifyParentPin(String pin) async {
@@ -415,6 +443,120 @@ class MemorizationKidsLocalService {
           )
           .toList();
       await _datasource.saveParentRewards(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  static const kHomeMissionTitleMaxLength = 120;
+
+  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() async {
+    try {
+      return Right(await _datasource.getHomeMissions());
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty || trimmed.length > kHomeMissionTitleMaxLength) {
+        return const Left(
+          ValidationFailure(CubitMessageCodes.kidsHomeMissionInvalidTitle),
+        );
+      }
+      final now = DateTime.now();
+      final next = await _datasource.updateHomeMissions(
+        (missions) async => [
+          ...missions,
+          KidsHomeMission(
+            id: 'local-${now.microsecondsSinceEpoch}',
+            title: trimmed,
+            status: KidsHomeMissionStatus.assigned,
+            createdAt: now,
+          ),
+        ],
+      );
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  /// The child reports a mission as done. Idempotent. When
+  /// [markPendingSync] is true (a signed-in, cloud-linked child) the report is
+  /// flagged `pendingReportSync` and a kids push is queued so it reaches the
+  /// guardian once online; an unlinked child stores locally only.
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
+    String id, {
+    bool markPendingSync = false,
+  }) async {
+    try {
+      var found = true;
+      var changed = false;
+      final next = await _datasource.updateHomeMissions((missions) async {
+        final index = missions.indexWhere((m) => m.id == id);
+        if (index < 0) {
+          found = false;
+          return missions;
+        }
+        if (missions[index].status != KidsHomeMissionStatus.assigned) {
+          return missions;
+        }
+        changed = true;
+        final updated = [...missions];
+        updated[index] = missions[index].copyWith(
+          status: KidsHomeMissionStatus.reported,
+          reportedAt: DateTime.now(),
+          pendingReportSync: markPendingSync,
+        );
+        return updated;
+      });
+      if (!found) return const Left(NotFoundFailure());
+      if (changed && markPendingSync) {
+        // The report is already saved; a queue hiccup must not undo that.
+        // The next sync still finds the pending flag.
+        try {
+          await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
+        } catch (e) {
+          TaliaLogger.w('Home mission report could not be queued', e);
+        }
+      }
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) async {
+    try {
+      var found = true;
+      var valid = true;
+      final next = await _datasource.updateHomeMissions((missions) async {
+        final index = missions.indexWhere((m) => m.id == id);
+        if (index < 0) {
+          found = false;
+          return missions;
+        }
+        if (missions[index].status != KidsHomeMissionStatus.reported) {
+          valid = false;
+          return missions;
+        }
+        final updated = [...missions];
+        updated[index] = missions[index].copyWith(
+          status: KidsHomeMissionStatus.acknowledged,
+          acknowledgedAt: DateTime.now(),
+        );
+        return updated;
+      });
+      if (!found) return const Left(NotFoundFailure());
+      if (!valid) return const Left(ValidationFailure());
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));

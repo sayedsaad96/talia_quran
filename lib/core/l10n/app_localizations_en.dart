@@ -5780,6 +5780,64 @@ class AppLocalizationsEn extends AppLocalizations {
       'You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.';
 
   @override
+  String get kidsHomeMissionInvalidTitle =>
+      'Write a mission between 1 and 120 characters';
+
+  @override
+  String get kidsPolicyReduceMotion => 'Reduce motion';
+
+  @override
+  String get kidsPolicyMaxSuggestions => 'Missions per day';
+
+  @override
+  String get kidsPolicyHomeMissions => 'Home missions';
+
+  @override
+  String get kidsPolicyConflict => 'Settings changed on another device';
+
+  @override
+  String get kidsHomeMissionUnavailable =>
+      'This mission is not available for this action';
+
+  @override
+  String get kidsPolicyUnavailable =>
+      'Couldn\'t load the child\'s settings right now.';
+
+  @override
+  String get childDetailHomeMissions => 'Home missions';
+
+  @override
+  String get childDetailAddHomeMission => 'Add mission';
+
+  @override
+  String get kidsHomeMissionAssigned => 'Waiting for child';
+
+  @override
+  String get kidsHomeMissionReportAction => 'I did it!';
+
+  @override
+  String get kidsHomeMissionReported => 'Child says it\'s done';
+
+  @override
+  String get kidsHomeMissionAcknowledged => 'Seen by guardian';
+
+  @override
+  String get kidsHomeMissionAcknowledgeAction => 'Mark as seen';
+
+  @override
+  String get kidsHomeMissionSuggestTidy => 'Tidy your room';
+
+  @override
+  String get kidsHomeMissionSuggestHelp => 'Help set the table';
+
+  @override
+  String get kidsHomeMissionSuggestKind =>
+      'Say something kind to a family member';
+
+  @override
+  String get kidsHomeMissionSuggestShare => 'Share your toy with someone';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'You already completed this ayah. Open the map to continue.';
 
@@ -5814,6 +5872,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String kidsSessionGoalValue(int minutes) {
     return '$minutes minutes';
   }
+
+  @override
+  String get kidsSessionGoalAgeDefault => 'Age default';
 
   @override
   String get kidsSetupReminderTime => 'Reminder time';

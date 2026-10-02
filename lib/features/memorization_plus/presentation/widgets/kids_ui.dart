@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/services/kids_world_phase.dart';
 import '../theme/kids_theme.dart';
+import '../world/kids_policy_controller.dart';
 import '../world/kids_world_palette.dart';
 import '../world/kids_world_phase_controller.dart';
 import '../world/kids_world_scene.dart';
@@ -23,12 +27,21 @@ class KidsBackground extends StatefulWidget {
 
 class _KidsBackgroundState extends State<KidsBackground> {
   KidsWorldPhaseController? _controller;
+  KidsPolicyController? _policy;
 
   @override
   void initState() {
     super.initState();
     if (getIt.isRegistered<KidsWorldPhaseController>()) {
       _controller = getIt<KidsWorldPhaseController>()..ensureStarted();
+    }
+    // App-lifetime singleton: listened to here, never disposed here.
+    if (getIt.isRegistered<KidsPolicyController>()) {
+      _policy = getIt<KidsPolicyController>();
+      // Cold start / deep link: load the guardian's reduce-motion now instead
+      // of waiting for the home cubit. The controller's generation guard
+      // handles concurrent reloads.
+      unawaited(_policy!.reload());
     }
   }
 
@@ -43,13 +56,34 @@ class _KidsBackgroundState extends State<KidsBackground> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _world() {
     final controller = _controller;
     if (controller == null) return _scene(KidsWorldPhase.night);
     return ValueListenableBuilder<KidsWorldPhase>(
       valueListenable: controller,
       builder: (context, phase, _) => _scene(phase),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final policy = _policy;
+    if (policy == null) return _world();
+    // The guardian's reduce-motion policy stills every kids loop the same
+    // way the OS setting does (scene, Talia, rings, recording wave).
+    return ValueListenableBuilder<KidsChildPolicy>(
+      valueListenable: policy,
+      // Always wrapped so a live toggle keeps the subtree's state.
+      builder: (context, value, child) {
+        final data = MediaQuery.maybeOf(context) ?? const MediaQueryData();
+        return MediaQuery(
+          data: value.reduceMotion
+              ? data.copyWith(disableAnimations: true)
+              : data,
+          child: child!,
+        );
+      },
+      child: _world(),
     );
   }
 }

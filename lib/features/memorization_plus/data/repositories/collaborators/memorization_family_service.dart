@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../../core/error/app_failure.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import 'memorization_kids_cloud_sync_service.dart';
@@ -39,6 +40,7 @@ class MemorizationFamilyService {
         );
         final logs = await _datasource.getKidsSessionLogs();
         final rewards = await _datasource.getParentRewards();
+        final homeMissions = await _datasource.getHomeMissions();
         final latestLog = logs.isEmpty
             ? null
             : logs.reduce(
@@ -71,6 +73,7 @@ class MemorizationFamilyService {
           logs: logs,
           rewards: rewards,
           settings: settings,
+          homeMissions: homeMissions,
         );
         children.add(
           FamilyChildEntry(
@@ -84,6 +87,7 @@ class MemorizationFamilyService {
 
       // ─── 2. Remote children (Supabase) ────────────────────────────────────
       final remoteResult = await _kidsCloudSync.getRemoteChildren();
+      final remoteEntries = <RemoteChildSummary>[];
       remoteResult.fold(
         (_) {}, // silently ignore remote errors; show local child if any
         (remoteChildren) {
@@ -93,19 +97,48 @@ class MemorizationFamilyService {
               (c) => c.childUserId == r.childUserId,
             );
             if (!alreadyAdded) {
-              children.add(
-                FamilyChildEntry(
-                  childUserId: r.childUserId,
-                  displayName: r.displayName,
-                  isLocal: false,
-                  remoteSummary: r,
-                  childAge: r.childAge,
-                ),
-              );
+              remoteEntries.add(r);
             }
           }
         },
       );
+      for (final r in remoteEntries) {
+        // A failed or unavailable mission read leaves the panel empty rather
+        // than hiding the child.
+        final missions = (await _kidsCloudSync.getRemoteHomeMissions(
+          r.childUserId,
+        )).getOrElse(() => const <KidsHomeMission>[]);
+        // Policy: no row → defaults at version 0; a failed read is flagged
+        // so the guardian controls are hidden instead of showing defaults.
+        final policyResult = await _kidsCloudSync.getRemoteChildPolicy(
+          r.childUserId,
+        );
+        final policy = policyResult.getOrElse(() => null);
+        final policyUnavailable = policyResult.isLeft();
+        final summary = missions.isEmpty && policy == null && !policyUnavailable
+            ? r
+            : RemoteChildSummary(
+                childUserId: r.childUserId,
+                displayName: r.displayName,
+                progress: r.progress,
+                logs: r.logs,
+                rewards: r.rewards,
+                production: r.production,
+                childAge: r.childAge,
+                homeMissions: missions,
+                policy: policy,
+                policyUnavailable: policyUnavailable,
+              );
+        children.add(
+          FamilyChildEntry(
+            childUserId: summary.childUserId,
+            displayName: summary.displayName,
+            isLocal: false,
+            remoteSummary: summary,
+            childAge: summary.childAge,
+          ),
+        );
+      }
 
       return Right(FamilyDashboard(children: children, settings: settings));
     } catch (e) {

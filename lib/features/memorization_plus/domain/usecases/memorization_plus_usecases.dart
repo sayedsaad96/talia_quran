@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
+import '../entities/kids_child_policy.dart';
+import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 
@@ -408,6 +410,18 @@ class ParentAccessUsecase {
 
   Future<Either<Failure, List<ParentReward>>> claimReward(String id) =>
       _repository.claimParentReward(id);
+
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) => _repository.addLocalHomeMission(title);
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) => _repository.acknowledgeLocalHomeMission(id);
+
+  Future<Either<Failure, KidsChildPolicy>> saveChildPolicy(
+    KidsChildPolicy policy,
+  ) => _repository.saveLocalChildPolicy(policy);
 }
 
 class ParentRemoteLinkUsecase {
@@ -436,6 +450,26 @@ class ParentRemoteLinkUsecase {
   }) => _repository.saveRemoteParentReward(
     childUserId: childUserId,
     title: title,
+  );
+
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) => _repository.createRemoteHomeMission(
+    childUserId: childUserId,
+    title: title,
+  );
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) => _repository.acknowledgeRemoteHomeMission(missionId);
+
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) => _repository.saveRemoteChildPolicy(
+    childUserId: childUserId,
+    policy: policy,
   );
 
   /// Parent-initiated unlink: revokes the guardian link server-side so the

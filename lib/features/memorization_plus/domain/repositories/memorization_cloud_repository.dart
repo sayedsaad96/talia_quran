@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/error/app_failure.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
 
 abstract class MemorizationCloudRepository {
@@ -18,6 +19,16 @@ abstract class MemorizationCloudRepository {
   });
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
     String rewardId,
+  );
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  });
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  );
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
   );
 
   Future<Either<Failure, void>> resyncProductionDataToCloud();

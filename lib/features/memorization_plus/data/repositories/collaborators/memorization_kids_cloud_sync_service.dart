@@ -7,10 +7,15 @@ import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
+import '../../../../../core/utils/talia_logger.dart';
+import '../../../domain/entities/kids_child_policy.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 import 'memorization_cloud_gateway.dart';
+import 'kids_child_policy_sync.dart';
+import 'kids_home_mission_child_sync.dart';
 import 'memorization_cloud_mappers.dart';
 
 /// Kids-mode cloud sync: pushes kids progress + session logs to Supabase and
@@ -23,13 +28,26 @@ class MemorizationKidsCloudSyncService {
     this._gateway,
     this._mappers, {
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _owner = owner;
+    void Function()? onKidsPolicyChanged,
+  }) : _owner = owner,
+       _onKidsPolicyChanged = onKidsPolicyChanged;
 
   final MemorizationPlusLocalDatasource _datasource;
   final StreakReader _streakReader;
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
   final RecordOwnerProvider _owner;
+
+  final void Function()? _onKidsPolicyChanged;
+
+  late final KidsHomeMissionChildSync _homeMissionSync =
+      KidsHomeMissionChildSync(_datasource, _mappers, _owner);
+
+  late final KidsChildPolicySync _policySync = KidsChildPolicySync(
+    _datasource,
+    _owner,
+    onPolicyChanged: _onKidsPolicyChanged,
+  );
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
       _gateway.supabaseOrFailure().leftMap(
@@ -114,6 +132,34 @@ class MemorizationKidsCloudSyncService {
             .toList(),
       );
       _ensureOwner(ownerId);
+      // Home missions never fail the progress pull (the table may be
+      // undeployed or the link revoked); the local list is left untouched.
+      await _homeMissionSync.pull(
+        ownerId: ownerId,
+        fetchRows: () async {
+          final rows = await client
+              .from('kids_home_missions')
+              .select()
+              .eq('child_user_id', user.id)
+              .order('created_at', ascending: true);
+          return rows
+              .map((row) => Map<String, dynamic>.from(row))
+              .toList(growable: false);
+        },
+      );
+      // Same best-effort rule for the guardian policy: a newer server
+      // version replaces the local policy fields; errors are swallowed.
+      await _policySync.pull(
+        ownerId: ownerId,
+        fetchRow: () async {
+          final rows = await client
+              .from('kids_child_policies')
+              .select()
+              .eq('child_user_id', user.id)
+              .limit(1);
+          return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
+        },
+      );
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
@@ -174,6 +220,34 @@ class MemorizationKidsCloudSyncService {
         },
       );
       _ensureOwner(ownerId);
+
+      // Home-mission reports go last so a slow or failing RPC can never
+      // delay or lose the progress upload. A transient failure surfaces as a
+      // retryable failure (the queue backs off and retries); terminal server
+      // rejections are cleared inside the push.
+      final hadTransientFailure = await _homeMissionSync.push(
+        ownerId: ownerId,
+        reportRpc: (missionId) async {
+          await client.rpc(
+            'report_kids_home_mission',
+            params: {'p_mission_id': missionId},
+          );
+        },
+      );
+      // Policy edits the server has not acknowledged (e.g. made before
+      // linking) go last, best-effort: pushPending never throws and a
+      // transport error just leaves the edit pending for the next sync.
+      await _policySync.pushPending(
+        ownerId: ownerId,
+        childUserId: user.id,
+        casRpc: (params) =>
+            client.rpc('compare_and_swap_child_policy', params: params),
+      );
+      if (hadTransientFailure) {
+        return const Left(
+          NetworkFailure('Kids home mission report is waiting to sync'),
+        );
+      }
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
@@ -367,6 +441,224 @@ class MemorizationKidsCloudSyncService {
     } catch (e) {
       return Left(NetworkFailure.from(e));
     }
+  }
+
+  /// Guardian assigns a home mission to a linked child. The server re-checks
+  /// the active link; the cache is never touched (the guardian reads remotely).
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty || trimmed.length > kHomeMissionTitleMaxLength) {
+        return const Left(
+          ValidationFailure(CubitMessageCodes.kidsHomeMissionInvalidTitle),
+        );
+      }
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      await client.rpc(
+        'create_kids_home_mission',
+        params: {'p_child_user_id': childUserId, 'p_title': trimmed},
+      );
+      return await _selectHomeMissions(client, childUserId);
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  /// Guardian marks a reported mission as seen. Returns the child's refreshed
+  /// mission list (the child id comes from the row the RPC returns).
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) async {
+    try {
+      final parsedId = int.tryParse(missionId);
+      if (parsedId == null) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.kidsHomeMissionUnavailable),
+        );
+      }
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      final response = await client.rpc(
+        'acknowledge_kids_home_mission',
+        params: {'p_mission_id': parsedId},
+      );
+      final rows = (response as List<dynamic>).whereType<Map>().toList();
+      if (rows.isEmpty) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.kidsHomeMissionUnavailable),
+        );
+      }
+      final childId = rows.first['child_user_id'] as String?;
+      if (childId == null) {
+        return Right(
+          rows
+              .map(
+                (row) => _mappers.homeMissionFromCloud(
+                  Map<String, dynamic>.from(row),
+                ),
+              )
+              .toList(),
+        );
+      }
+      return await _selectHomeMissions(client, childId);
+    } catch (e) {
+      return Left(acknowledgeFailure(e));
+    }
+  }
+
+  /// Maps an `acknowledge_kids_home_mission` error to a message code; raw
+  /// server text never reaches the UI.
+  @visibleForTesting
+  static Failure acknowledgeFailure(Object error) {
+    final text = error.toString();
+    if (text.contains('Child link is not active')) {
+      TaliaLogger.w('Kids home mission acknowledge rejected', error);
+      return const NetworkFailure(CubitMessageCodes.guardianChildNotLinked);
+    }
+    if (text.contains('Mission not found') ||
+        text.contains('Invalid mission transition')) {
+      TaliaLogger.w('Kids home mission acknowledge rejected', error);
+      return const NetworkFailure(
+        CubitMessageCodes.kidsHomeMissionUnavailable,
+      );
+    }
+    return NetworkFailure.from(error);
+  }
+
+  /// Reads a linked child's home missions (parent SELECT RLS), newest first.
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
+  ) async {
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      return await _selectHomeMissions(client, childUserId);
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  static const kHomeMissionTitleMaxLength = 120;
+
+  /// Child device policy edit (behind the PIN). Linked (a signed-in cloud
+  /// user, the same gate home-mission reports use) → compare-and-swap with
+  /// the local version; otherwise local only with `policyVersion + 1`.
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) async {
+    SupabaseClient? client;
+    String? childUserId;
+    if (_gateway.hasSignedInCloudUser) {
+      client = _gateway.supabaseOrFailure().fold((_) => null, (c) => c);
+      childUserId = client?.auth.currentUser?.id;
+    }
+    return _policySync.saveOnDevice(
+      policy: policy,
+      linkedChildUserId: childUserId,
+      casRpc: (params) async =>
+          client!.rpc('compare_and_swap_child_policy', params: params),
+    );
+  }
+
+  /// Guardian edit of a linked child's policy; [policy].version is the
+  /// version the guardian last read (from [getRemoteChildPolicy]).
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) async {
+    final clientResult = _supabaseOrFailure;
+    final clientFailure = clientResult.fold((failure) => failure, (_) => null);
+    if (clientFailure != null) return Left(clientFailure);
+    final client = clientResult.getOrElse(
+      () => throw StateError('unreachable'),
+    );
+    if (client.auth.currentUser == null) {
+      return const Left(
+        NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+      );
+    }
+    return _policySync.casRemote(
+      childUserId: childUserId,
+      policy: policy,
+      expectedVersion: policy.version,
+      casRpc: (params) =>
+          client.rpc('compare_and_swap_child_policy', params: params),
+    );
+  }
+
+  /// Reads a linked child's policy row (parent SELECT RLS). Right(null) when
+  /// the child has no row yet (defaults, version 0).
+  Future<Either<Failure, KidsChildPolicy?>> getRemoteChildPolicy(
+    String childUserId,
+  ) async {
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      final rows = await client
+          .from('kids_child_policies')
+          .select()
+          .eq('child_user_id', childUserId)
+          .limit(1);
+      return Right(
+        rows.isEmpty ? null : KidsChildPolicySync.policyFromRow(rows.first),
+      );
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> _selectHomeMissions(
+    SupabaseClient client,
+    String childUserId,
+  ) async {
+    final rows = await client
+        .from('kids_home_missions')
+        .select()
+        .eq('child_user_id', childUserId)
+        .order('created_at', ascending: false);
+    return Right(rows.map(_mappers.homeMissionFromCloud).toList());
   }
 
   /// Guardian-side correction of a linked child's name and age. The server

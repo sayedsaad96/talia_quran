@@ -6,6 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
+import 'package:dartz/dartz.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
@@ -777,6 +782,182 @@ void main() {
         expect(find.text('مهماتي اليوم'), findsOneWidget);
       });
     });
+
+    group('home mission card', () {
+      const homeAvailable = KidsDailyMission(
+        id: '2026-10-02:home:12',
+        kind: KidsDailyMissionKind.home,
+        status: KidsDailyMissionStatus.available,
+        homeMissionId: '12',
+        homeMissionTitle: 'Tidy your room',
+      );
+      const homeDone = KidsDailyMission(
+        id: '2026-10-02:home:12',
+        kind: KidsDailyMissionKind.home,
+        status: KidsDailyMissionStatus.completed,
+        homeMissionId: '12',
+        homeMissionTitle: 'Tidy your room',
+      );
+
+      Widget home(
+        KidsJourneyLoaded state, {
+        void Function(String)? onReport,
+        bool happy = false,
+      }) => _TestApp(
+        child: KidsGamifiedHomeContent(
+          state: state,
+          onHomeTap: () {},
+          onMushafTap: () {},
+          onJourneyTap: () {},
+          onMissionTap: () {},
+          onHomeMissionReport: onReport,
+          taliaHappy: happy,
+        ),
+      );
+
+      void bigView(WidgetTester tester) {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+      }
+
+      bool happyShown(WidgetTester tester) => tester
+          .widgetList<KidsTaliaCompanion>(find.byType(KidsTaliaCompanion))
+          .any((w) => w.pose == KidsTaliaPose.happy);
+
+      testWidgets('shows the guardian title and an I-did-it button', (
+        tester,
+      ) async {
+        bigView(tester);
+        String? reported;
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(dailyMissions: const [homeAvailable]),
+            onReport: (id) => reported = id,
+          ),
+        );
+
+        expect(find.text('Tidy your room'), findsOneWidget);
+        expect(find.text('I did it!'), findsOneWidget);
+        await tester.tap(
+          find.byKey(const ValueKey('kids-home-mission-report')),
+        );
+        expect(reported, '12');
+      });
+
+      testWidgets('a reported mission shows Done and no button', (tester) async {
+        bigView(tester);
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(dailyMissions: const [homeDone]),
+            onReport: (_) {},
+          ),
+        );
+
+        expect(find.text('Tidy your room'), findsOneWidget);
+        expect(find.text('Done ✓'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('kids-home-mission-report')),
+          findsNothing,
+        );
+      });
+
+      testWidgets('a 120-character title fits 320 px at text scale 1.3', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 640);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+        final long = KidsDailyMission(
+          id: '2026-10-02:home:12',
+          kind: KidsDailyMissionKind.home,
+          status: KidsDailyMissionStatus.available,
+          homeMissionId: '12',
+          homeMissionTitle: List.filled(20, 'tidy').join(' ').padRight(120, 'x'),
+        );
+
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(1.3),
+            ),
+            child: home(
+              _loadedState.copyWith(dailyMissions: [long]),
+              onReport: (_) {},
+            ),
+          ),
+        );
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('kids-home-mission-report')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('Talia is happy only when asked to be', (tester) async {
+        bigView(tester);
+        await tester.pumpWidget(home(_loadedState));
+        expect(happyShown(tester), isFalse);
+
+        await tester.pumpWidget(home(_loadedState, happy: true));
+        expect(happyShown(tester), isTrue);
+      });
+
+      testWidgets(
+        'tapping report calls the repository, reloads, shows Done and Talia '
+        'happy for a moment',
+        (tester) async {
+          bigView(tester);
+          final repo = _FakeHomeMissionRepository();
+          final cubit = _HomeMissionCubit(repo);
+          getIt.registerFactory<KidsJourneyCubit>(() => cubit);
+          getIt.registerSingleton<MemorizationPlusRepository>(repo);
+          addTearDown(() async {
+            await tester.pumpWidget(const SizedBox());
+            if (getIt.isRegistered<KidsJourneyCubit>()) {
+              getIt.unregister<KidsJourneyCubit>();
+            }
+            if (getIt.isRegistered<MemorizationPlusRepository>()) {
+              getIt.unregister<MemorizationPlusRepository>();
+            }
+          });
+
+          await tester.pumpWidget(
+            const _TestApp(
+              child: KidsGamifiedHomePage(surahId: 114, childName: 'Sami'),
+            ),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(cubit.loads, 1);
+          expect(find.text('Tidy your room'), findsOneWidget);
+          expect(find.text('Done ✓'), findsNothing);
+
+          await tester.tap(
+            find.byKey(const ValueKey('kids-home-mission-report')),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+
+          expect(repo.reportedIds, ['12']);
+          expect(cubit.loads, 2);
+          expect(find.text('Done ✓'), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('kids-home-mission-report')),
+            findsNothing,
+          );
+          expect(happyShown(tester), isTrue);
+
+          await tester.pump(const Duration(seconds: 5));
+          expect(happyShown(tester), isFalse);
+        },
+      );
+    });
   });
 }
 
@@ -846,4 +1027,52 @@ class _TestApp extends StatelessWidget {
       home: child,
     );
   }
+}
+
+class _FakeHomeMissionRepository implements MemorizationPlusRepository {
+  final reportedIds = <String>[];
+  bool reported = false;
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
+    String id,
+  ) async {
+    reportedIds.add(id);
+    reported = true;
+    return const Right([]);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _HomeMissionCubit extends Cubit<KidsJourneyState>
+    implements KidsJourneyCubit {
+  _HomeMissionCubit(this._repo) : super(const KidsJourneyInitial());
+
+  final _FakeHomeMissionRepository _repo;
+  int loads = 0;
+
+  @override
+  Future<void> load({required int surahId, bool followFrontier = false}) async {
+    loads++;
+    emit(
+      _loadedState.copyWith(
+        dailyMissions: [
+          KidsDailyMission(
+            id: '2026-10-02:home:12',
+            kind: KidsDailyMissionKind.home,
+            status: _repo.reported
+                ? KidsDailyMissionStatus.completed
+                : KidsDailyMissionStatus.available,
+            homeMissionId: '12',
+            homeMissionTitle: 'Tidy your room',
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
