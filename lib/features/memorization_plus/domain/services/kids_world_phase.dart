@@ -92,12 +92,14 @@ DateTime _kidsWorldNextBoundaryFallback(DateTime now) {
       kKidsWorldFallbackNightStartHour,
     );
   } else {
-    // In night phase, next boundary is 06:00 next day
-    final nextDay = now.add(const Duration(days: 1));
+    // Night phase: after midnight (hour < 6) the boundary is today's 06:00;
+    // from 18:00 onwards it is next wall-clock day's 06:00. Built from
+    // calendar fields (day + 1 normalises) so DST 23/25h days cannot skew it.
+    final dayOffset = hour < kKidsWorldFallbackDayStartHour ? 0 : 1;
     return DateTime(
-      nextDay.year,
-      nextDay.month,
-      nextDay.day,
+      now.year,
+      now.month,
+      now.day + dayOffset,
       kKidsWorldFallbackDayStartHour,
     );
   }
