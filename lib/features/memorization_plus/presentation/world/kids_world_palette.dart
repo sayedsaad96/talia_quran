@@ -27,6 +27,10 @@ final class KidsWorldPalette {
     onSceneMuted: Color(0xFFCBD5E1),
   );
 
+  /// Sun glow (day) and moon disc (night); identical in both palettes.
+  static const sunGlow = Color(0xFFFFF3C4);
+  static const moon = Color(0xFFFDE68A);
+
   final List<Color> skyStops;
   final List<Color> hills;
   final Color onScene;

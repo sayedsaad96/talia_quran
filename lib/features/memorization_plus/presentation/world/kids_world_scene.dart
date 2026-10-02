@@ -141,8 +141,8 @@ class _ScenePainter extends CustomPainter {
           ..shader =
               RadialGradient(
                 colors: [
-                  const Color(0xFFFFF3C4).withValues(alpha: 0.85),
-                  const Color(0xFFFFF3C4).withValues(alpha: 0),
+                  KidsWorldPalette.sunGlow.withValues(alpha: 0.85),
+                  KidsWorldPalette.sunGlow.withValues(alpha: 0),
                 ],
               ).createShader(
                 Rect.fromCircle(
@@ -209,7 +209,7 @@ class _ScenePainter extends CustomPainter {
     );
     final bite = Offset(rtl ? -radius * 0.55 : radius * 0.55, -radius * 0.2);
     canvas
-      ..drawCircle(center, radius, Paint()..color = const Color(0xFFFDE68A))
+      ..drawCircle(center, radius, Paint()..color = KidsWorldPalette.moon)
       ..drawCircle(
         center + bite,
         radius * 0.9,
