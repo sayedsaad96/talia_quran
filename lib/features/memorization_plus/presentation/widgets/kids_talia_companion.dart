@@ -17,7 +17,11 @@ enum KidsTaliaPose {
   speaking('assets/images/talia/talia_speaking.png'),
   encourage('assets/images/talia/talia_encourage.png'),
   celebrate('assets/images/talia/talia_celebrate.png'),
-  pointRight('assets/images/talia/talia_point_right.png');
+  pointRight('assets/images/talia/talia_point_right.png'),
+  idle('assets/images/talia/talia_idle.png'),
+  wave('assets/images/talia/talia_wave.png'),
+  happy('assets/images/talia/talia_happy.png'),
+  readingQuran('assets/images/talia/talia_reading_quran.png');
 
   const KidsTaliaPose(this.asset);
 
@@ -42,7 +46,13 @@ KidsTaliaPose kidsTaliaPoseFor(KidsModeLoaded state) {
 String kidsTaliaBubbleFor(BuildContext context, KidsTaliaPose pose) {
   final l10n = context.l10n;
   return switch (pose) {
-    KidsTaliaPose.listening => l10n.kidsTaliaListenBubble,
+    // idle/wave/happy/readingQuran reuse the listen line until Task 9 adds
+    // moment-specific bubbles.
+    KidsTaliaPose.listening ||
+    KidsTaliaPose.idle ||
+    KidsTaliaPose.wave ||
+    KidsTaliaPose.happy ||
+    KidsTaliaPose.readingQuran => l10n.kidsTaliaListenBubble,
     KidsTaliaPose.thinking => l10n.kidsTaliaRecallBubble,
     KidsTaliaPose.speaking => l10n.kidsTaliaRecordingBubble,
     KidsTaliaPose.encourage => l10n.kidsTaliaEncourageBubble,
