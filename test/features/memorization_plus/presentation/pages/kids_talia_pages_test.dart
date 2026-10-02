@@ -59,7 +59,6 @@ Widget _app(Widget child, {double scale = 1}) => MaterialApp(
 Widget _home() => KidsGamifiedHomeContent(
   state: _state,
   childName: 'يوسف',
-  onHomeTap: () {},
   onMushafTap: () {},
   onJourneyTap: () {},
   onMissionTap: () {},

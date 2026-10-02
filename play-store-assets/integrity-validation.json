@@ -1,0 +1,62 @@
+[
+  {
+    "file": "01-talia-hero.png",
+    "rawSha256": "CEBD45422C7E915F17F1F444195E4A7ED53A476DC6EE7046156A1875EDE3C39E",
+    "matchesOriginal": true,
+    "cropTop": 32,
+    "cropBottom": 1792,
+    "uniformScale": 0.8333333333333334,
+    "uiAreaPercent": 63.7,
+    "finalSha256": "34568073BE4B1FD5F5F6A13C18A4BA760F65D559D9B2BA069129B9824B6CE719"
+  },
+  {
+    "file": "02-talia-journey.png",
+    "rawSha256": "58D53C0F77FBD4A33E6264ECA9BF864F1005095797B7DA71C28DA203F0E8EBE8",
+    "matchesOriginal": true,
+    "cropTop": 440,
+    "cropBottom": 1780,
+    "uniformScale": 0.9259259259259259,
+    "uiAreaPercent": 59.8,
+    "finalSha256": "8279D63C3AAF6CEFBFA0ACD575ACB0F3E4B3AB898690F553FFAF900DE01C9E9B"
+  },
+  {
+    "file": "03-talia-listen-repeat.png",
+    "rawSha256": "625156763E80214E1D4D843FF9C466A5754A3C4DAF617F0ECEB5C1A1C016B5CD",
+    "matchesOriginal": true,
+    "cropTop": 0,
+    "cropBottom": 1710,
+    "uniformScale": 0.8703703703703703,
+    "uiAreaPercent": 67.5,
+    "finalSha256": "12E61815FA638E32EF4BC63A11E3AE0AC25BE4C45689E71C251F91209FE25D67"
+  },
+  {
+    "file": "04-talia-kids-mushaf.png",
+    "rawSha256": "EF4AB2F3A3FBB518D3D3A2E33F7C468FE5AD652133640D65B9FD1063A6855AD4",
+    "matchesOriginal": true,
+    "cropTop": 480,
+    "cropBottom": 1910,
+    "uniformScale": 0.9259259259259259,
+    "uiAreaPercent": 63.9,
+    "finalSha256": "70928D31A285E0988D7600F065AAF1B6B7626073260B68D5FCC9F1626C777238"
+  },
+  {
+    "file": "05-talia-recall.png",
+    "rawSha256": "BD9C74EAF186DEC5C4FA0A1FDB62E59B14D1E8F959888787815E7F7953D56209",
+    "matchesOriginal": true,
+    "cropTop": 0,
+    "cropBottom": 1840,
+    "uniformScale": 0.8055555555555556,
+    "uiAreaPercent": 62.2,
+    "finalSha256": "48AF041EA8B7DD4CECFD179086FBC07FB3696CA74409B7D3B96F8EBD1A654371"
+  },
+  {
+    "file": "06-talia-treasures.png",
+    "rawSha256": "C0D68DAC132BCD8267CB2D5D93C755EC819CCC2E330E1E7CA8690494E4F97872",
+    "matchesOriginal": true,
+    "cropTop": 0,
+    "cropBottom": 1510,
+    "uniformScale": 0.9074074074074074,
+    "uiAreaPercent": 64.8,
+    "finalSha256": "8E6113B9183ADD784D5765F3324EE093E8232C3B0111E803DCDFA8364A54957C"
+  }
+]

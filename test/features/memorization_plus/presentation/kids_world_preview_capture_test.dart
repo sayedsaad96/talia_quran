@@ -166,7 +166,6 @@ void main() {
     'home': () => KidsGamifiedHomeContent(
       state: _journey,
       childName: 'سارة',
-      onHomeTap: () {},
       onMushafTap: () {},
       onJourneyTap: () {},
       onMissionTap: () {},
@@ -189,7 +188,6 @@ void main() {
         ],
       ),
       childName: 'سارة',
-      onHomeTap: () {},
       onMushafTap: () {},
       onJourneyTap: () {},
       onMissionTap: () {},

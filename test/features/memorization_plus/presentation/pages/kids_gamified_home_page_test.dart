@@ -54,36 +54,36 @@ void main() {
       );
     });
 
-    testWidgets('treasures chip appears only with a callback and taps through', (
-      tester,
-    ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
-      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+    testWidgets(
+      'treasures chip appears only with a callback and taps through',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
-      var taps = 0;
-      Widget content({VoidCallback? onTreasuresTap}) => _TestApp(
-        child: KidsGamifiedHomeContent(
-          state: _loadedState,
-          onHomeTap: () {},
-          onMushafTap: () {},
-          onJourneyTap: () {},
-          onMissionTap: () {},
-          onTreasuresTap: onTreasuresTap,
-        ),
-      );
+        var taps = 0;
+        Widget content({VoidCallback? onTreasuresTap}) => _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: _loadedState,
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+            onTreasuresTap: onTreasuresTap,
+          ),
+        );
 
-      await tester.pumpWidget(content());
-      expect(find.byKey(const ValueKey('kids-home-treasures')), findsNothing);
+        await tester.pumpWidget(content());
+        expect(find.byKey(const ValueKey('kids-home-treasures')), findsNothing);
 
-      await tester.pumpWidget(content(onTreasuresTap: () => taps++));
-      expect(find.text('My treasures'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('kids-home-treasures')));
-      expect(taps, 1);
-    });
+        await tester.pumpWidget(content(onTreasuresTap: () => taps++));
+        expect(find.text('My treasures'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('kids-home-treasures')));
+        expect(taps, 1);
+      },
+    );
 
-    testWidgets('renders progress, mission, and bottom navigation actions', (
+    testWidgets('renders progress, mission, and in-page navigation cards', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
@@ -97,7 +97,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
-            onHomeTap: () => tapped.add('home'),
             onMushafTap: () => tapped.add('mushaf'),
             onJourneyTap: () => tapped.add('journey'),
             onMissionTap: () => tapped.add('missions'),
@@ -113,33 +112,49 @@ void main() {
       expect(find.text('Your mission'), findsOneWidget);
       expect(find.text('Memorization House 2'), findsOneWidget);
 
-      expect(find.text('Home'), findsWidgets);
       expect(find.text('Mushaf'), findsWidgets);
       expect(find.text('My journey'), findsWidgets);
       expect(find.text('Missions'), findsWidgets);
-      expect(
-        find.byKey(const ValueKey('kids-home-action-mushaf')),
-        findsNothing,
-      );
-      expect(
+      expect(find.byType(NavigationBar), findsNothing);
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('Mushaf'), findsOneWidget);
+      expect(find.bySemanticsLabel('My journey'), findsOneWidget);
+      expect(find.bySemanticsLabel('Missions'), findsOneWidget);
+      final mushaf = find.byKey(const ValueKey('kids-home-action-mushaf'));
+      final journey = find.byKey(const ValueKey('kids-home-action-journey'));
+      final missions = find.byKey(const ValueKey('kids-home-action-missions'));
+      expect(tester.getSize(mushaf), tester.getSize(journey));
+      expect(tester.getSize(journey), tester.getSize(missions));
+      expect(tester.getSize(mushaf).width, tester.getSize(mushaf).height);
+      expect(tester.getTopLeft(mushaf).dy, tester.getTopLeft(journey).dy);
+      expect(tester.getTopLeft(journey).dy, tester.getTopLeft(missions).dy);
+
+      await tester.scrollUntilVisible(
         find.byKey(const ValueKey('kids-home-action-journey')),
-        findsNothing,
+        200,
+        scrollable: find.byType(Scrollable).first,
       );
-      expect(
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('kids-home-action-mushaf')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('kids-home-action-mushaf')));
+      await tester.pump();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('kids-home-action-journey')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('kids-home-action-journey')));
+      await tester.pump();
+      await tester.ensureVisible(
         find.byKey(const ValueKey('kids-home-action-missions')),
-        findsNothing,
       );
-
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-home')));
       await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-journey')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-missions')));
+      await tester.tap(find.byKey(const ValueKey('kids-home-action-missions')));
       await tester.pump();
 
-      expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
+      expect(tapped, ['mushaf', 'journey', 'missions']);
+      semantics.dispose();
     });
 
     testWidgets('Mushaf action targets Kids Quran mode, not adult Quran', (
@@ -156,7 +171,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
-            onHomeTap: () {},
             onMushafTap: () =>
                 location = kidsQuranReaderLocation(_loadedState.surahId),
             onJourneyTap: () {},
@@ -165,7 +179,12 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('kids-home-action-mushaf')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const ValueKey('kids-home-action-mushaf')));
       await tester.pump();
 
       expect(location, '${AppRoutes.memorizationPlusKidsQuran}?surahId=114');
@@ -192,7 +211,6 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: reviewState,
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -228,7 +246,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: dayDoneState,
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -278,7 +295,6 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: surahDoneState,
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -334,7 +350,6 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: budgetSpentState,
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -368,7 +383,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: reviewElsewhere,
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -392,7 +406,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState.copyWith(isReturningAfterBreak: returning),
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -436,7 +449,6 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: finishedState,
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -478,7 +490,6 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: firstTimeState,
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -508,7 +519,6 @@ void main() {
           child: KidsGamifiedHomeContent(
             state: _loadedState,
             childName: 'يوسف',
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -519,39 +529,79 @@ void main() {
       expect(find.textContaining('يوسف'), findsOneWidget);
     });
 
-    testWidgets('bottom navigation buttons trigger correct callbacks', (
-      tester,
-    ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
-      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+    testWidgets(
+      'navigation cards stay tappable in narrow Arabic at large text',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 640);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
-      final tapped = <String>[];
+        final tapped = <String>[];
 
-      await tester.pumpWidget(
-        _TestApp(
-          child: KidsGamifiedHomeContent(
-            state: _loadedState,
-            onHomeTap: () => tapped.add('home'),
-            onMushafTap: () => tapped.add('mushaf'),
-            onJourneyTap: () => tapped.add('journey'),
-            onMissionTap: () => tapped.add('missions'),
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ar'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: KidsGamifiedHomeContent(
+              state: _loadedState,
+              onMushafTap: () => tapped.add('mushaf'),
+              onJourneyTap: () => tapped.add('journey'),
+              onMissionTap: () => tapped.add('missions'),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-home')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-journey')));
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-missions')));
-      await tester.pump();
+        final semantics = tester.ensureSemantics();
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('kids-home-action-journey')),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.bySemanticsLabel('المصحف'), findsOneWidget);
+        expect(find.bySemanticsLabel('رحلتي'), findsOneWidget);
+        expect(find.bySemanticsLabel('المهام'), findsOneWidget);
 
-      expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
-    });
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('kids-home-action-mushaf')),
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('kids-home-action-mushaf')));
+        await tester.pump();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('kids-home-action-journey')),
+        );
+        await tester.pump();
+        await tester.tap(
+          find.byKey(const ValueKey('kids-home-action-journey')),
+        );
+        await tester.pump();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('kids-home-action-missions')),
+        );
+        await tester.pump();
+        await tester.tap(
+          find.byKey(const ValueKey('kids-home-action-missions')),
+        );
+        await tester.pump();
+
+        expect(tapped, ['mushaf', 'journey', 'missions']);
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      },
+    );
 
     testWidgets('returning from the Mushaf tab reloads the journey', (
       tester,
@@ -603,7 +653,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(cubit.loads, 1);
 
-      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('kids-home-action-mushaf')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const ValueKey('kids-home-action-mushaf')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byKey(const ValueKey('fake-reader-back')), findsOneWidget);
@@ -615,6 +670,85 @@ void main() {
 
       expect(cubit.loads, 2);
     });
+
+    testWidgets(
+      'cards still open after a destination returns home with go, not pop',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        final cubit = _FakeJourneyCubit();
+        getIt.registerFactory<KidsJourneyCubit>(() => cubit);
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox());
+          if (getIt.isRegistered<KidsJourneyCubit>()) {
+            getIt.unregister<KidsJourneyCubit>();
+          }
+        });
+
+        final router = GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const KidsGamifiedHomePage(surahId: 114),
+            ),
+            GoRoute(
+              path: AppRoutes.memorizationPlusKidsQuran,
+              // The real Kids reader leaves with `context.go(home)`, which
+              // never completes the home page's `push` future.
+              builder: (context, _) => Scaffold(
+                body: TextButton(
+                  key: const ValueKey('fake-reader-home'),
+                  onPressed: () => context.go('/'),
+                  child: const Text('home'),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: AppRoutes.memorizationPlusKidsJourney,
+              builder: (_, _) => const Scaffold(
+                body: Text('journey', key: ValueKey('fake-journey')),
+              ),
+            ),
+          ],
+        );
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerConfig: router,
+            locale: const Locale('en'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        Future<void> tapCard(String key) async {
+          await tester.scrollUntilVisible(
+            find.byKey(ValueKey(key)),
+            200,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.tap(find.byKey(ValueKey(key)));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+
+        await tapCard('kids-home-action-mushaf');
+        await tester.tap(find.byKey(const ValueKey('fake-reader-home')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.byKey(const ValueKey('fake-reader-home')), findsNothing);
+
+        await tapCard('kids-home-action-journey');
+        expect(find.byKey(const ValueKey('fake-journey')), findsOneWidget);
+      },
+    );
 
     group("today's missions", () {
       const readingAvailable = KidsDailyMission(
@@ -632,7 +766,6 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: state,
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -765,7 +898,6 @@ void main() {
               state: _loadedState.copyWith(
                 dailyMissions: const [readingAvailable],
               ),
-              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -806,7 +938,6 @@ void main() {
       }) => _TestApp(
         child: KidsGamifiedHomeContent(
           state: state,
-          onHomeTap: () {},
           onMushafTap: () {},
           onJourneyTap: () {},
           onMissionTap: () {},
@@ -846,7 +977,9 @@ void main() {
         expect(reported, '12');
       });
 
-      testWidgets('a reported mission shows Done and no button', (tester) async {
+      testWidgets('a reported mission shows Done and no button', (
+        tester,
+      ) async {
         bigView(tester);
         await tester.pumpWidget(
           home(
@@ -875,7 +1008,10 @@ void main() {
           kind: KidsDailyMissionKind.home,
           status: KidsDailyMissionStatus.available,
           homeMissionId: '12',
-          homeMissionTitle: List.filled(20, 'tidy').join(' ').padRight(120, 'x'),
+          homeMissionTitle: List.filled(
+            20,
+            'tidy',
+          ).join(' ').padRight(120, 'x'),
         );
 
         await tester.pumpWidget(

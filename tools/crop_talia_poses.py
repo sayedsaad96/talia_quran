@@ -6,6 +6,7 @@ downsizes it (alpha bbox -> top 56 % -> re-trim -> 360 px high, Lanczos).
 
 Usage (from the repo root):
     python tools/crop_talia_poses.py idle wave happy reading_quran
+    python tools/crop_talia_poses.py --avatar   # square kids-header avatar
 """
 import os
 import sys
@@ -34,7 +35,31 @@ def crop_pose(name):
     return out, w
 
 
+AVATAR_SIZE = 256
+
+
+def crop_avatar(name='happy'):
+    """Square head-and-shoulders crop for the kids header avatar circle."""
+    im = Image.open(os.path.join(SRC, f'talia_{name}.png')).convert('RGBA')
+    l, t, r, b = _bbox(im)
+    side = int((b - t) * 0.36)
+    head = im.crop((l, t, r, t + int((b - t) * 0.12)))
+    hl, _, hr, _ = _bbox(head)
+    cx = l + (hl + hr) // 2
+    top = t - int(side * 0.04)
+    box = (cx - side // 2, top, cx + side // 2, top + side)
+    out = os.path.join(DST, 'talia_avatar.png')
+    im.crop(box).resize((AVATAR_SIZE, AVATAR_SIZE), Image.LANCZOS).save(
+        out, optimize=True)
+    return out
+
+
 def main(names):
+    if names == ['--avatar']:
+        os.makedirs(DST, exist_ok=True)
+        out = crop_avatar()
+        print(f'{out} {AVATAR_SIZE}x{AVATAR_SIZE}')
+        return 0
     if not names:
         print(__doc__)
         return 1

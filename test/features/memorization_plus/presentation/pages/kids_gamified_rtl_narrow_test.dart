@@ -30,7 +30,6 @@ void main() {
         KidsGamifiedHomeContent(
           state: _journeyState,
           childName: 'يوسف',
-          onHomeTap: () {},
           onMushafTap: () {},
           onJourneyTap: () {},
           onMissionTap: () {},
@@ -116,7 +115,6 @@ void main() {
               ),
             ),
             childName: 'يوسف',
-            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -193,7 +191,6 @@ void main() {
             dailyGoalCap: 1,
           ),
           childName: 'يوسف',
-          onHomeTap: () {},
           onMushafTap: () {},
           onJourneyTap: () {},
           onMissionTap: () {},

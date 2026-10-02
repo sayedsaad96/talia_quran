@@ -17,6 +17,7 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_daily_mission_tile.dart';
 import '../widgets/kids_journey_complete_card.dart';
 import '../widgets/kids_day_complete_card.dart';
+import '../widgets/kids_home_navigation_cards.dart';
 import '../widgets/kids_welcome_back_card.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
@@ -73,6 +74,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
   /// destination on top of each other — a very real pattern with children.
   bool _destinationOpen = false;
 
+  /// Set once the open destination actually covers home, so the guard can be
+  /// released when home is current again.
+  bool _coveredByDestination = false;
+
   /// The nickname entered at kids setup, so the greeting uses the child's
   /// name instead of a generic "memorization hero".
   String? _nickname;
@@ -87,6 +92,32 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
     super.initState();
     _nickname = widget.childName;
     if (_nickname == null) unawaited(_loadNickname());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isCurrent = ModalRoute.isCurrentOf(context) ?? true;
+    if (!isCurrent) {
+      if (_destinationOpen) _coveredByDestination = true;
+      return;
+    }
+    if (_coveredByDestination) {
+      // Destinations that return with `context.go(home)` (the Kids reader,
+      // mission pages) never complete the `push` future, which would leave
+      // the guard set and every card dead. Home being current again is the
+      // real "destination closed" signal.
+      _coveredByDestination = false;
+      if (_destinationOpen) {
+        _destinationOpen = false;
+        unawaited(
+          context.read<KidsJourneyCubit>().load(
+            surahId: widget.surahId,
+            followFrontier: true,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -119,6 +150,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
     } finally {
       if (mounted) {
         _destinationOpen = false;
+        _coveredByDestination = false;
       }
     }
   }
@@ -155,10 +187,6 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
           return KidsGamifiedHomeContent(
             state: state,
             childName: _nickname,
-            // The home tab is only ever tappable while the home screen is
-            // already visible: navigating to the same route would rebuild the
-            // page and flash a loading state at the child for no reason.
-            onHomeTap: () {},
             onRefresh: () => context.read<KidsJourneyCubit>().load(
               surahId: surahId,
               followFrontier: true,
@@ -272,7 +300,6 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   const KidsGamifiedHomeContent({
     super.key,
     required this.state,
-    required this.onHomeTap,
     required this.onMushafTap,
     required this.onJourneyTap,
     required this.onMissionTap,
@@ -286,7 +313,6 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   });
 
   final KidsJourneyLoaded state;
-  final VoidCallback onHomeTap;
   final VoidCallback onMushafTap;
   final VoidCallback onJourneyTap;
   final VoidCallback onMissionTap;
@@ -311,12 +337,6 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        bottomNavigationBar: _KidsHomeBottomNav(
-          onHomeTap: onHomeTap,
-          onMushafTap: onMushafTap,
-          onJourneyTap: onJourneyTap,
-          onMissionTap: onMissionTap,
-        ),
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: onRefresh ?? () async {},
@@ -397,8 +417,14 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           reviewAyahs: state.nextMission?.ayahNumbers,
                         ),
                       ],
+                      const SizedBox(height: AppSpacing.lg),
+                      KidsHomeNavigationCards(
+                        onMushafTap: onMushafTap,
+                        onJourneyTap: onJourneyTap,
+                        onMissionTap: onMissionTap,
+                      ),
                       ..._missionTiles(context),
-                      const SizedBox(height: 96),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
@@ -440,85 +466,5 @@ class KidsGamifiedHomeContent extends StatelessWidget {
         ),
       ],
     ];
-  }
-}
-
-class _KidsHomeBottomNav extends StatelessWidget {
-  const _KidsHomeBottomNav({
-    required this.onHomeTap,
-    required this.onMushafTap,
-    required this.onJourneyTap,
-    required this.onMissionTap,
-  });
-
-  final VoidCallback onHomeTap;
-  final VoidCallback onMushafTap;
-  final VoidCallback onJourneyTap;
-  final VoidCallback onMissionTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompact = MediaQuery.sizeOf(context).width < 360;
-
-    return NavigationBar(
-      key: const ValueKey('kids-home-bottom-nav'),
-      selectedIndex: 0,
-      backgroundColor: KidsTheme.nightSkyMid,
-      indicatorColor: KidsTheme.goldStar.withValues(alpha: 0.18),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      labelTextStyle: WidgetStateProperty.resolveWith(
-        (states) => TextStyle(
-          color: states.contains(WidgetState.selected)
-              ? KidsTheme.goldLight
-              : KidsTheme.shellTextSecondary,
-          fontWeight: states.contains(WidgetState.selected)
-              ? FontWeight.w700
-              : FontWeight.w500,
-        ),
-      ),
-      labelBehavior: isCompact
-          ? NavigationDestinationLabelBehavior.onlyShowSelected
-          : NavigationDestinationLabelBehavior.alwaysShow,
-      onDestinationSelected: (index) {
-        switch (index) {
-          case 0:
-            onHomeTap();
-          case 1:
-            onMushafTap();
-          case 2:
-            onJourneyTap();
-          case 3:
-            onMissionTap();
-        }
-      },
-      destinations: [
-        NavigationDestination(
-          key: const ValueKey('kids-home-nav-home'),
-          icon: const Icon(Icons.home_outlined),
-          selectedIcon: const Icon(Icons.home_rounded),
-          label: context.l10n.home,
-        ),
-        NavigationDestination(
-          key: const ValueKey('kids-home-nav-mushaf'),
-          icon: const Icon(Icons.menu_book_outlined),
-          selectedIcon: const Icon(Icons.menu_book_rounded),
-          label: context.l10n.kidsGamifiedMushaf,
-        ),
-        NavigationDestination(
-          key: const ValueKey('kids-home-nav-journey'),
-          icon: const Icon(Icons.map_outlined),
-          selectedIcon: const Icon(Icons.map_rounded),
-          label: context.l10n.kidsGamifiedJourney,
-        ),
-        NavigationDestination(
-          key: const ValueKey('kids-home-nav-missions'),
-          icon: const Icon(Icons.flag_outlined),
-          selectedIcon: const Icon(Icons.flag_rounded),
-          label: context.l10n.kidsGamifiedMissions,
-        ),
-      ],
-    );
   }
 }

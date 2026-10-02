@@ -1,0 +1,44 @@
+[
+  {
+    "file": "01-talia-hero.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 647009
+  },
+  {
+    "file": "02-talia-journey.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 657095
+  },
+  {
+    "file": "03-talia-listen-repeat.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 545501
+  },
+  {
+    "file": "04-talia-kids-mushaf.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 614551
+  },
+  {
+    "file": "05-talia-recall.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 541412
+  },
+  {
+    "file": "06-talia-treasures.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 543928
+  }
+]

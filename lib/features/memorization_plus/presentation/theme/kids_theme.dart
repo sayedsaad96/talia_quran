@@ -95,7 +95,9 @@ abstract final class KidsTheme {
     Radius.circular(16),
   );
 
-  static const String kidAvatarAsset = 'assets/images/kids/kid_avatar.png';
+  /// The kids header avatar: Talia's official art, cropped to a square
+  /// head-and-shoulders portrait (`tools/crop_talia_poses.py --avatar`).
+  static const String taliaAvatarAsset = 'assets/images/talia/talia_avatar.png';
   static const String taliaHeroAsset = 'assets/images/character/talia_hero.png';
   static const String houseCompletedAsset =
       'assets/images/kids/house_completed.png';

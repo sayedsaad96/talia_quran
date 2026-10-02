@@ -37,7 +37,7 @@ class KidsProgressHeader extends StatelessWidget {
     final reducedMotion = MediaQuery.of(context).disableAnimations;
 
     Widget avatarImage = Image.asset(
-      KidsTheme.kidAvatarAsset,
+      KidsTheme.taliaAvatarAsset,
       width: 64,
       height: 64,
       fit: BoxFit.contain,
