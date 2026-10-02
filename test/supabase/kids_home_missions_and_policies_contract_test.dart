@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _migrationName = '20261002140000_kids_home_missions_and_policies.sql';
+const _migrationName = '20261002155433_kids_home_missions_and_policies.sql';
 
 void main() {
   late String migration;
