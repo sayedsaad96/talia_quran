@@ -12,7 +12,7 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_ayah_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_chunky_button.dart';
-import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_session_scene.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_scene.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
@@ -862,8 +862,8 @@ void main() {
       final talia = tester.widget<KidsTaliaCompanion>(
         find.byType(KidsTaliaCompanion),
       );
-      final scene = tester.widget<KidsSessionScene>(
-        find.byType(KidsSessionScene),
+      final scene = tester.widget<KidsWorldScene>(
+        find.byType(KidsWorldScene),
       );
       expect(talia.animate, isFalse);
       expect(scene.animate, isFalse);

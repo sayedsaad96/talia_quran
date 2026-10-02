@@ -22,7 +22,8 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_loading_widget.dart';
-import '../widgets/kids_session_scene.dart';
+import '../../domain/services/kids_world_phase.dart';
+import '../world/kids_world_scene.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
 
@@ -296,7 +297,8 @@ class KidsGamifiedListenContent extends StatelessWidget {
     final calm = state.isPlaying || state.isRecording;
     final pose = kidsTaliaPoseFor(state);
 
-    return KidsSessionScene(
+    return KidsWorldScene(
+      phase: KidsWorldPhase.day,
       animate: !calm,
       child: Scaffold(
         backgroundColor: Colors.transparent,
