@@ -2484,6 +2484,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get kidsDailyMissionsTitle => 'مهماتي اليوم';
+
+  @override
+  String get kidsReadingMissionTitle => 'اقرأ صفحة من مصحفك';
+
+  @override
+  String get kidsMissionDone => 'تمّت ✓';
+
+  @override
   String get kidsGamifiedCurrentStage => 'مهمتك الحالية';
 
   @override

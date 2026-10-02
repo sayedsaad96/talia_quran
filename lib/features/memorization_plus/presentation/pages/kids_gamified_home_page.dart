@@ -8,11 +8,14 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
+import '../widgets/kids_daily_mission_tile.dart';
 import '../widgets/kids_journey_complete_card.dart';
 import '../widgets/kids_day_complete_card.dart';
 import '../widgets/kids_welcome_back_card.dart';
@@ -22,6 +25,7 @@ import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
+import '../world/kids_world_palette.dart';
 
 class KidsGamifiedHomePage extends StatelessWidget {
   const KidsGamifiedHomePage({
@@ -169,6 +173,17 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
             }),
             onMissionTap: () =>
                 _openDestination(() => _openCurrentMission(context, state)),
+            onReadingMissionTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(kidsQuranReaderLocation(state.surahId));
+              if (context.mounted) {
+                // A confirmed page completes the reading card.
+                await context.read<KidsJourneyCubit>().load(
+                  surahId: state.surahId,
+                  followFrontier: true,
+                );
+              }
+            }),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
           );
@@ -215,6 +230,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.childName,
     this.onRefresh,
     this.onPathSettingsTap,
+    this.onReadingMissionTap,
   });
 
   final KidsJourneyLoaded state;
@@ -225,6 +241,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   final String? childName;
   final Future<void> Function()? onRefresh;
   final VoidCallback? onPathSettingsTap;
+
+  /// Opens the kids Mushaf for the reading mission card.
+  final VoidCallback? onReadingMissionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -308,6 +327,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           reviewAyahs: state.nextMission?.ayahNumbers,
                         ),
                       ],
+                      ..._missionTiles(context),
                       const SizedBox(height: 96),
                     ],
                   ),
@@ -318,6 +338,39 @@ class KidsGamifiedHomeContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// «مهماتي اليوم»: a tile for every mission after the learning card (which
+  /// is the existing mission / day-complete card above).
+  List<Widget> _missionTiles(BuildContext context) {
+    final others = state.dailyMissions
+        .where((m) => m.kind != KidsDailyMissionKind.learning)
+        .toList(growable: false);
+    if (others.isEmpty) return const [];
+    return [
+      const SizedBox(height: AppSpacing.lg),
+      Semantics(
+        header: true,
+        child: Text(
+          context.l10n.kidsDailyMissionsTitle,
+          style: AppTypography.titleMedium.copyWith(
+            color: KidsWorldPalette.of(context).onScene,
+            fontFamily: 'Amiri',
+            letterSpacing: 0,
+          ),
+        ),
+      ),
+      for (final mission in others) ...[
+        const SizedBox(height: AppSpacing.sm),
+        KidsDailyMissionTile(
+          mission: mission,
+          onTap: () => switch (mission.kind) {
+            KidsDailyMissionKind.reading => onReadingMissionTap?.call(),
+            _ => onMissionTap(),
+          },
+        ),
+      ],
+    ];
   }
 }
 

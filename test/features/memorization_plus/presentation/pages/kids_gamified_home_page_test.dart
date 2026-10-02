@@ -5,9 +5,11 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_daily_mission_tile.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_day_complete_card.dart';
 
@@ -510,6 +512,149 @@ void main() {
       await tester.pump();
 
       expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
+    });
+
+    group("today's missions", () {
+      const readingAvailable = KidsDailyMission(
+        id: '2026-10-02:reading',
+        kind: KidsDailyMissionKind.reading,
+        status: KidsDailyMissionStatus.available,
+      );
+      const readingDone = KidsDailyMission(
+        id: '2026-10-02:reading',
+        kind: KidsDailyMissionKind.reading,
+        status: KidsDailyMissionStatus.completed,
+      );
+
+      Widget home(KidsJourneyLoaded state, {VoidCallback? onReading}) =>
+          _TestApp(
+            child: KidsGamifiedHomeContent(
+              state: state,
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+              onReadingMissionTap: onReading,
+            ),
+          );
+
+      testWidgets('shows the header and the reading tile', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+        var taps = 0;
+
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(dailyMissions: const [readingAvailable]),
+            onReading: () => taps++,
+          ),
+        );
+
+        expect(find.text("Today's missions"), findsOneWidget);
+        expect(find.text('Read a page of your Mushaf'), findsOneWidget);
+        expect(find.text('Done ✓'), findsNothing);
+        await tester.tap(find.byType(KidsDailyMissionTile));
+        expect(taps, 1);
+      });
+
+      testWidgets('day-complete card and reading tile both show', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(
+              clearNextMission: true,
+              dailyGoalCap: 3,
+              dailyMissions: const [readingAvailable],
+            ),
+          ),
+        );
+
+        expect(find.byType(KidsDayCompleteCard), findsOneWidget);
+        expect(find.text('Read a page of your Mushaf'), findsOneWidget);
+      });
+
+      testWidgets('a completed tile says Done and keeps its label', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(
+          home(_loadedState.copyWith(dailyMissions: const [readingDone])),
+        );
+
+        expect(find.text('Done ✓'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel(RegExp('Read a page of your Mushaf')),
+          findsOneWidget,
+        );
+        handle.dispose();
+      });
+
+      testWidgets('no missions renders no header', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(home(_loadedState));
+
+        expect(find.text("Today's missions"), findsNothing);
+      });
+
+      testWidgets('fits 320 px, Arabic, text scale 1.3', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 640);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ar'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: KidsGamifiedHomeContent(
+              state: _loadedState.copyWith(
+                dailyMissions: const [readingAvailable],
+              ),
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+            ),
+          ),
+        );
+        await tester.scrollUntilVisible(
+          find.text('اقرأ صفحة من مصحفك'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('مهماتي اليوم'), findsOneWidget);
+      });
     });
   });
 }

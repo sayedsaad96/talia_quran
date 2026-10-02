@@ -970,6 +970,9 @@
       }
     }
   },
+  "kidsDailyMissionsTitle": "مهماتي اليوم",
+  "kidsReadingMissionTitle": "اقرأ صفحة من مصحفك",
+  "kidsMissionDone": "تمّت ✓",
   "kidsGamifiedCurrentStage": "مهمتك الحالية",
   "kidsGamifiedCompletedStage": "أحسنت، اكتمل البيت",
   "kidsGamifiedNeedsReview": "جاهز للمراجعة",

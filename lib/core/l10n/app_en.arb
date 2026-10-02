@@ -966,6 +966,9 @@
       }
     }
   },
+  "kidsDailyMissionsTitle": "Today's missions",
+  "kidsReadingMissionTitle": "Read a page of your Mushaf",
+  "kidsMissionDone": "Done ✓",
   "kidsGamifiedCurrentStage": "Your current mission",
   "kidsGamifiedCompletedStage": "Well done, house completed",
   "kidsGamifiedNeedsReview": "Ready for review",

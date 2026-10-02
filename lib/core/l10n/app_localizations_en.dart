@@ -2501,6 +2501,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get kidsDailyMissionsTitle => 'Today\'s missions';
+
+  @override
+  String get kidsReadingMissionTitle => 'Read a page of your Mushaf';
+
+  @override
+  String get kidsMissionDone => 'Done ✓';
+
+  @override
   String get kidsGamifiedCurrentStage => 'Your current mission';
 
   @override

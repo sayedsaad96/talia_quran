@@ -6,6 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -244,6 +245,81 @@ void main() {
       expect(loaded.nextMission, isNull);
       expect(loaded.dailyGoalCap, 1);
       expect(loaded.dailyGoalReached, isTrue);
+    });
+
+    group('daily missions', () {
+      Future<KidsJourneyCubit> build({
+        KidsReadingPagesLoader? readingPagesLoader,
+        bool withTodayLog = true,
+      }) async {
+        await cubit.close();
+        when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(tSurahId),
+        ).thenAnswer((_) async => const Right(tSurahDetail));
+        return cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          sessionLogsLoader: () async => [
+            if (withTodayLog)
+              KidsSessionLog(
+                id: 'today',
+                surahId: tSurahId,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.now(),
+                missionType: KidsMissionType.newMemorization,
+              ),
+          ],
+          readingPagesLoader: readingPagesLoader,
+        );
+      }
+
+      test("learning and reading are completed by today's work", () async {
+        final c = await build(readingPagesLoader: () async => {5});
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(loaded.dailyMissions.map((m) => m.kind), [
+          KidsDailyMissionKind.learning,
+          KidsDailyMissionKind.reading,
+        ]);
+        expect(
+          loaded.dailyMissions.map((m) => m.status),
+          everyElement(KidsDailyMissionStatus.completed),
+        );
+      });
+
+      test('a loader error omits the reading mission (fail-open)', () async {
+        final c = await build(
+          readingPagesLoader: () async => throw StateError('prefs'),
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(loaded, isA<KidsJourneyLoaded>());
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.reading)),
+        );
+      });
+
+      test('no loader means no reading mission', () async {
+        final c = await build();
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.reading)),
+        );
+      });
     });
 
     test('an unreadable session log never reports the day complete', () async {

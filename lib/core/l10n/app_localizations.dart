@@ -4586,6 +4586,24 @@ abstract class AppLocalizations {
   /// **'أنجزت مهام اليوم، ما شاء الله! عُد غداً لبيت جديد.'**
   String kidsGamifiedDailyLimitReached(int count);
 
+  /// No description provided for @kidsDailyMissionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهماتي اليوم'**
+  String get kidsDailyMissionsTitle;
+
+  /// No description provided for @kidsReadingMissionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ صفحة من مصحفك'**
+  String get kidsReadingMissionTitle;
+
+  /// No description provided for @kidsMissionDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمّت ✓'**
+  String get kidsMissionDone;
+
   /// No description provided for @kidsGamifiedCurrentStage.
   ///
   /// In ar, this message translates to:

@@ -6,6 +6,7 @@ import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_daily_budget.dart';
+import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/services/kids_return_policy.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -18,6 +19,10 @@ typedef KidsResumeMissionLoader = Future<KidsNextMission?> Function();
 /// Optional: when unavailable (or throwing) the budget is not enforced.
 typedef KidsJourneySessionLogsLoader = Future<List<KidsSessionLog>?> Function();
 
+/// Today's confirmed Mushaf pages for the reading mission. When absent (or
+/// throwing) the reading mission is omitted.
+typedef KidsReadingPagesLoader = Future<Set<int>> Function();
+
 /// Loads the age-band policy that owns the daily mission caps.
 typedef KidsJourneyPolicyLoader = Future<KidsSessionPolicy> Function();
 
@@ -29,12 +34,14 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsReviewRecordsLoader? reviewRecordsLoader,
     KidsResumeMissionLoader? resumeMissionLoader,
     KidsJourneySessionLogsLoader? sessionLogsLoader,
+    KidsReadingPagesLoader? readingPagesLoader,
     KidsJourneyPolicyLoader? policyLoader,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
        _resumeMissionLoader = resumeMissionLoader,
        _sessionLogsLoader = sessionLogsLoader,
+       _readingPagesLoader = readingPagesLoader,
        _policyLoader = policyLoader,
        _missionResolver = missionResolver,
        _v2Enabled = v2Enabled,
@@ -46,6 +53,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsReviewRecordsLoader? _reviewRecordsLoader;
   final KidsResumeMissionLoader? _resumeMissionLoader;
   final KidsJourneySessionLogsLoader? _sessionLogsLoader;
+  final KidsReadingPagesLoader? _readingPagesLoader;
   final KidsJourneyPolicyLoader? _policyLoader;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
@@ -105,8 +113,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         // A corrupt or unavailable resume row must not block today's mission.
       }
     }
+    final logs = await _loadSessionLogs();
     final budget = _v2Enabled
-        ? await _loadDailyBudget()
+        ? await _loadDailyBudget(logs)
         : KidsDailyBudget.unlimited;
     final continuation = _v2Enabled
         ? await _missionResolver.findContinuation(
@@ -130,6 +139,18 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         ? resolveWith(budget)
         : _legacyMission(stages);
     final missionSurahId = nextMission?.surahId;
+    final dailyGoalCap = _missionResolver.dailyGoalCap(
+      mission: nextMission,
+      budget: budget,
+      resolveWith: resolveWith,
+    );
+    final dailyMissions = followFrontier
+        ? await _resolveDailyMissions(
+            learning: nextMission,
+            dayGoalReached: dailyGoalCap != null,
+            logs: logs ?? const <KidsSessionLog>[],
+          )
+        : const <KidsDailyMission>[];
 
     emit(
       KidsJourneyLoaded(
@@ -138,11 +159,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         progress: progressResult.getOrElse(() => const KidsProgress.initial()),
         surahName: surahName,
         nextMission: nextMission,
-        dailyGoalCap: _missionResolver.dailyGoalCap(
-          mission: nextMission,
-          budget: budget,
-          resolveWith: resolveWith,
-        ),
+        dailyGoalCap: dailyGoalCap,
+        dailyMissions: dailyMissions,
         missionSurahName:
             missionSurahId == null || missionSurahId == activeSurahId
             ? null
@@ -183,16 +201,44 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     return null;
   }
 
+  Future<List<KidsSessionLog>?> _loadSessionLogs() async {
+    try {
+      return await _sessionLogsLoader?.call();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// «مهماتي اليوم». Reading needs a working pages loader; without one (or on
+  /// a read error) that card is omitted rather than shown wrongly.
+  Future<List<KidsDailyMission>> _resolveDailyMissions({
+    required KidsNextMission? learning,
+    required bool dayGoalReached,
+    required List<KidsSessionLog> logs,
+  }) async {
+    Set<int>? pages;
+    try {
+      pages = await _readingPagesLoader?.call();
+    } catch (_) {
+      pages = null;
+    }
+    final missions = resolveKidsDailyMissions(
+      now: DateTime.now(),
+      learning: learning,
+      dayGoalReached: dayGoalReached,
+      logs: logs,
+      pagesReadToday: pages ?? const <int>{},
+    );
+    if (pages != null) return missions;
+    return missions
+        .where((m) => m.kind != KidsDailyMissionKind.reading)
+        .toList(growable: false);
+  }
+
   /// Today's age-band budget from the local session log. Each part fails
   /// open independently so a storage glitch can never lock a child out of
   /// their mission pipeline.
-  Future<KidsDailyBudget> _loadDailyBudget() async {
-    List<KidsSessionLog>? logs;
-    try {
-      logs = await _sessionLogsLoader?.call();
-    } catch (_) {
-      logs = null;
-    }
+  Future<KidsDailyBudget> _loadDailyBudget(List<KidsSessionLog>? logs) async {
     KidsSessionPolicy? policy;
     try {
       policy = await _policyLoader?.call();

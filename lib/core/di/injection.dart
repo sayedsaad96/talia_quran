@@ -124,6 +124,7 @@ import '../../features/memorization_plus/data/datasources/memorization_plus_loca
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
+import '../../features/memorization_plus/domain/services/kids_daily_missions.dart';
 import '../../features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_identity_repository.dart';
@@ -967,6 +968,14 @@ Future<void> configureDependencies({bool background = false}) async {
         final result = await getIt<MemorizationPlusRepository>()
             .getKidsSessionLogs();
         return result.getOrElse(() => const <KidsSessionLog>[]);
+      },
+      readingPagesLoader: () async {
+        if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
+          throw StateError('KidsReadingReceiptStore is not registered');
+        }
+        return getIt<KidsReadingReceiptStore>().pagesOn(
+          kidsDayKey(DateTime.now()),
+        );
       },
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
