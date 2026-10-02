@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -14,6 +13,7 @@ import '../../domain/services/kids_adventure_regions.dart';
 import '../cubits/kids_treasures_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_loading_widget.dart';
+import '../widgets/kids_region_name.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
 import '../world/kids_world_palette.dart';
@@ -140,13 +140,6 @@ class KidsTreasuresContent extends StatelessWidget {
   }
 }
 
-String _regionName(AppLocalizations l10n, KidsRegionId id) => switch (id) {
-  KidsRegionId.beginning => l10n.kidsRegionBeginning,
-  KidsRegionId.palmOasis => l10n.kidsRegionPalmOasis,
-  KidsRegionId.flowerValley => l10n.kidsRegionFlowerValley,
-  KidsRegionId.starMountain => l10n.kidsRegionStarMountain,
-  KidsRegionId.pearlSea => l10n.kidsRegionPearlSea,
-};
 
 IconData _regionIcon(KidsRegionId id) => switch (id) {
   KidsRegionId.beginning => Icons.flag_rounded,
@@ -188,7 +181,7 @@ class _RegionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _regionName(l10n, id),
+                  kidsRegionName(l10n, id),
                   style: AppTypography.titleMedium.copyWith(
                     color: KidsTheme.inkOnParchment,
                     fontWeight: FontWeight.bold,

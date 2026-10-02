@@ -14,6 +14,10 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
@@ -21,6 +25,7 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_g
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -73,6 +78,12 @@ const _journey = KidsJourneyLoaded(
   surahId: 114,
   stages: _stages,
   progress: _progress,
+);
+
+const _learning = KidsNextMission(
+  type: KidsMissionType.newMemorization,
+  surahId: 114,
+  ayahNumbers: [3],
 );
 
 void main() {
@@ -159,6 +170,46 @@ void main() {
       onMushafTap: () {},
       onJourneyTap: () {},
       onMissionTap: () {},
+    ),
+    'home_missions': () => KidsGamifiedHomeContent(
+      state: _journey.copyWith(
+        nextMission: _learning,
+        dailyMissions: const [
+          KidsDailyMission(
+            id: '2026-10-02:learning',
+            kind: KidsDailyMissionKind.learning,
+            status: KidsDailyMissionStatus.available,
+            learning: _learning,
+          ),
+          KidsDailyMission(
+            id: '2026-10-02:reading',
+            kind: KidsDailyMissionKind.reading,
+            status: KidsDailyMissionStatus.available,
+          ),
+        ],
+      ),
+      childName: 'سارة',
+      onHomeTap: () {},
+      onMushafTap: () {},
+      onJourneyTap: () {},
+      onMissionTap: () {},
+      onReadingMissionTap: () {},
+      onTreasuresTap: () {},
+    ),
+    'treasures': () => KidsTreasuresContent(
+      regions: kidsRegionProgress({114, 113, 112, 111, 110, 109, 108}),
+      certificates: [
+        CertificateAward(
+          id: 'c1',
+          titleAr: 'شهادة حفظ سورة الناس',
+          type: CertificateType.surah,
+          earnedAt: DateTime(2026, 10, 1),
+          surahId: 114,
+          surahNameAr: 'الناس',
+          surahNameEn: 'An-Nas',
+        ),
+      ],
+      onBack: () {},
     ),
     'journey': () => KidsGamifiedJourneyContent(
       state: _journey,

@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/services/kids_adventure_regions.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/services/kids_return_policy.dart';
@@ -161,6 +163,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         nextMission: nextMission,
         dailyGoalCap: dailyGoalCap,
         dailyMissions: dailyMissions,
+        currentRegion: await _currentRegion(activeSurahId, logs),
         missionSurahName:
             missionSurahId == null || missionSurahId == activeSurahId
             ? null
@@ -178,6 +181,31 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     try {
       final result = await _quranRepository.getSurahDetail(surahId);
       return result.fold<String?>((_) => null, (detail) => detail.surah.nameAr);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Region progress for [surahId]. Null off the kids path or when the logs or
+  /// the surah list cannot be read: a label never blocks the journey.
+  Future<KidsRegionProgress?> _currentRegion(
+    int surahId,
+    List<KidsSessionLog>? logs,
+  ) async {
+    if (logs == null) return null;
+    try {
+      final region = kidsRegionOf(surahId);
+      final surahs = (await _quranRepository.getSurahs()).fold<List<Surah>?>(
+        (_) => null,
+        (list) => list,
+      );
+      if (surahs == null) return null;
+      final memorized = kidsMemorizedSurahIds(logs, {
+        for (final surah in surahs) surah.id: surah.ayahCount,
+      });
+      return kidsRegionProgress(memorized).firstWhere(
+        (progress) => progress.region.id == region.id,
+      );
     } catch (_) {
       return null;
     }
