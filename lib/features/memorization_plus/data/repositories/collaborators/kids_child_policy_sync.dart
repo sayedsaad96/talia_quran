@@ -61,6 +61,9 @@ class KidsChildPolicySync {
   ///   `Left(PolicyConflictFailure)` and the local policy is refreshed from
   ///   the returned server row (the edit is dropped). Either way both
   ///   versions become the server version and the link is confirmed.
+  /// - Not applied with no server row while `expected > 0` (the row
+  ///   vanished) → the edit is kept pending (`policySyncedVersion = 0`) and
+  ///   `Right` is returned; the next push recreates the row.
   /// - "Child link is not active" → local edit (+1), link unconfirmed.
   /// - Transport error → `Left(NetworkFailure)` (local unchanged) only when
   ///   the link is confirmed; otherwise the edit is kept locally (+1) and
@@ -95,6 +98,13 @@ class KidsChildPolicySync {
           final stored =
               parsed.policy ?? edit.copyWith(version: parsed.version);
           await _storeServer(fresh, stored);
+          return Right(stored);
+        }
+        if (parsed.policy == null && local.policySyncedVersion > 0) {
+          // The row vanished (no conflict to show): keep the EDIT pending so
+          // the next push recreates the row with expected = 0.
+          final stored = edit.copyWith(version: fresh.policyVersion + 1);
+          await _store(fresh, stored, syncedVersion: 0, linkConfirmed: true);
           return Right(stored);
         }
         await _storeServer(
@@ -135,7 +145,14 @@ class KidsChildPolicySync {
   /// (`policyVersion > policySyncedVersion`, e.g. edits made before linking)
   /// with `expected = policySyncedVersion`. Applied → stored; conflict → the
   /// server row is adopted (the guardian wins); "Child link is not active" →
-  /// link unconfirmed; transport error → stays pending. Never throws.
+  /// link unconfirmed; transport error → stays pending; the row vanished
+  /// (not applied, no row, `expected > 0`) → local values stay pending with
+  /// `policySyncedVersion = 0` so the next push recreates it.
+  ///
+  /// Upgrade from P2 (P3-R17): `policySyncedVersion == 0` with an unknown
+  /// link state (`policyLinkConfirmed == null`) is also pending, so one create
+  /// with `expected = 0` is sent; an existing row conflicts and is adopted
+  /// (the guardian's choice wins). Never throws.
   Future<void> pushPending({
     required String ownerId,
     required String childUserId,
@@ -144,7 +161,11 @@ class KidsChildPolicySync {
     try {
       if (_owner.currentOwnerId != ownerId) return;
       final local = await _datasource.getParentSettings();
-      if (local.policyVersion <= local.policySyncedVersion) return;
+      final upgradeFromP2 =
+          local.policySyncedVersion == 0 && local.policyLinkConfirmed == null;
+      if (local.policyVersion <= local.policySyncedVersion && !upgradeFromP2) {
+        return;
+      }
       final edit = KidsChildPolicy.fromSettings(local);
       final _CasResponse parsed;
       try {
@@ -177,6 +198,20 @@ class KidsChildPolicySync {
               policyLinkConfirmed: true,
             ),
           ),
+        );
+        return;
+      }
+      if (!parsed.applied &&
+          parsed.policy == null &&
+          local.policySyncedVersion > 0) {
+        // The row vanished: keep the local values pending for a re-create.
+        await _store(
+          fresh,
+          KidsChildPolicy.fromSettings(
+            fresh,
+          ).copyWith(version: fresh.policyVersion + 1),
+          syncedVersion: 0,
+          linkConfirmed: true,
         );
         return;
       }

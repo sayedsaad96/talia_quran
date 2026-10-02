@@ -14,6 +14,7 @@ import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/memorization_profile_service.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
@@ -429,6 +430,36 @@ void main() {
         repeatsCompleted: 3,
       );
 
+      expect(await repository.hasPendingCloudWork(), isTrue);
+    });
+
+    test('a pending home-mission report is pending cloud work', () async {
+      // A fresh review-pull cursor so nothing else counts as pending.
+      await prefs.setString(
+        'ayah_review_pull_cursor_pulled_at',
+        DateTime.now().toUtc().toIso8601String(),
+      );
+      expect(await repository.hasPendingCloudWork(), isFalse);
+      await datasource.saveHomeMissions([
+        KidsHomeMission(
+          id: 'local-1',
+          title: 'مهمة',
+          status: KidsHomeMissionStatus.reported,
+          createdAt: DateTime.utc(2026, 10, 1),
+          pendingReportSync: true,
+        ),
+      ]);
+      expect(await repository.hasPendingCloudWork(), isFalse);
+
+      await datasource.saveHomeMissions([
+        KidsHomeMission(
+          id: '42',
+          title: 'مهمة',
+          status: KidsHomeMissionStatus.reported,
+          createdAt: DateTime.utc(2026, 10, 1),
+          pendingReportSync: true,
+        ),
+      ]);
       expect(await repository.hasPendingCloudWork(), isTrue);
     });
 

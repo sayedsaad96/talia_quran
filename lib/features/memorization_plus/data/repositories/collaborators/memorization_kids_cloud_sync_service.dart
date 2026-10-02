@@ -7,6 +7,7 @@ import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
+import '../../../../../core/utils/talia_logger.dart';
 import '../../../domain/entities/kids_child_policy.dart';
 import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
@@ -487,7 +488,9 @@ class MemorizationKidsCloudSyncService {
     try {
       final parsedId = int.tryParse(missionId);
       if (parsedId == null) {
-        return const Left(CacheFailure('معرّف المهمة غير صالح'));
+        return const Left(
+          CacheFailure(CubitMessageCodes.kidsHomeMissionUnavailable),
+        );
       }
       final clientResult = _supabaseOrFailure;
       final clientFailure = clientResult.fold(
@@ -509,7 +512,9 @@ class MemorizationKidsCloudSyncService {
       );
       final rows = (response as List<dynamic>).whereType<Map>().toList();
       if (rows.isEmpty) {
-        return const Left(NetworkFailure('المهمة ليست متاحة لهذا الإجراء'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.kidsHomeMissionUnavailable),
+        );
       }
       final childId = rows.first['child_user_id'] as String?;
       if (childId == null) {
@@ -525,8 +530,27 @@ class MemorizationKidsCloudSyncService {
       }
       return await _selectHomeMissions(client, childId);
     } catch (e) {
-      return Left(NetworkFailure.from(e));
+      return Left(acknowledgeFailure(e));
     }
+  }
+
+  /// Maps an `acknowledge_kids_home_mission` error to a message code; raw
+  /// server text never reaches the UI.
+  @visibleForTesting
+  static Failure acknowledgeFailure(Object error) {
+    final text = error.toString();
+    if (text.contains('Child link is not active')) {
+      TaliaLogger.w('Kids home mission acknowledge rejected', error);
+      return const NetworkFailure(CubitMessageCodes.guardianChildNotLinked);
+    }
+    if (text.contains('Mission not found') ||
+        text.contains('Invalid mission transition')) {
+      TaliaLogger.w('Kids home mission acknowledge rejected', error);
+      return const NetworkFailure(
+        CubitMessageCodes.kidsHomeMissionUnavailable,
+      );
+    }
+    return NetworkFailure.from(error);
   }
 
   /// Reads a linked child's home missions (parent SELECT RLS), newest first.

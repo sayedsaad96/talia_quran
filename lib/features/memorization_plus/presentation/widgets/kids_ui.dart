@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -36,6 +38,10 @@ class _KidsBackgroundState extends State<KidsBackground> {
     // App-lifetime singleton: listened to here, never disposed here.
     if (getIt.isRegistered<KidsPolicyController>()) {
       _policy = getIt<KidsPolicyController>();
+      // Cold start / deep link: load the guardian's reduce-motion now instead
+      // of waiting for the home cubit. The controller's generation guard
+      // handles concurrent reloads.
+      unawaited(_policy!.reload());
     }
   }
 

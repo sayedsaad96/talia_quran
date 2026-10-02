@@ -377,10 +377,58 @@ void main() {
       expect(saved.pendingReportSync, isFalse);
     });
 
-    test('an empty server answer leaves local untouched', () async {
+    test('an empty server answer keeps local-only and pending rows', () async {
+      final localOnly = _mission('local-1', KidsHomeMissionStatus.assigned);
+      final pending = _mission(
+        '9',
+        KidsHomeMissionStatus.reported,
+        pending: true,
+      );
+      await datasource.saveHomeMissions([
+        _mission('7', KidsHomeMissionStatus.assigned),
+        localOnly,
+        pending,
+      ]);
+      await sync.pull(ownerId: ownerId, fetchRows: () async => []);
+      expect(await stored(), [localOnly, pending]);
+    });
+
+    test('an orphan server-id mission is dropped on a successful pull '
+        '(P3-R14)', () async {
+      await datasource.saveHomeMissions([
+        _mission('7', KidsHomeMissionStatus.assigned),
+        _mission('8', KidsHomeMissionStatus.reported),
+      ]);
+      await sync.pull(
+        ownerId: ownerId,
+        fetchRows: () async => [_row('8', 'reported')],
+      );
+      expect((await stored()).map((m) => m.id), ['8']);
+    });
+
+    test('a pending orphan report is kept on pull (P3-R14)', () async {
+      final pending = _mission(
+        '7',
+        KidsHomeMissionStatus.reported,
+        pending: true,
+      );
+      await datasource.saveHomeMissions([pending]);
+      await sync.pull(
+        ownerId: ownerId,
+        fetchRows: () async => [_row('8', 'assigned')],
+      );
+      final byId = {for (final m in await stored()) m.id: m};
+      expect(byId['7'], pending);
+      expect(byId.keys, containsAll(['7', '8']));
+    });
+
+    test('a failed fetch never drops orphans', () async {
       final before = [_mission('7', KidsHomeMissionStatus.assigned)];
       await datasource.saveHomeMissions(before);
-      await sync.pull(ownerId: ownerId, fetchRows: () async => []);
+      await sync.pull(
+        ownerId: ownerId,
+        fetchRows: () async => throw Exception('network down'),
+      );
       expect(await stored(), before);
     });
 

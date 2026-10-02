@@ -55,7 +55,8 @@ String kidsDayKey(DateTime localNow) {
 /// [kKidsMaxDailyMissions]) keeps the first N slots, so an empty learning
 /// slot never lets the home card move up into a smaller cap.
 ///
-/// [homeMission] is the oldest mission that is not `acknowledged`; it is
+/// [homeMission] is the oldest `assigned` mission, else one reported today
+/// (P3-R16); it is
 /// `completed` once reported or acknowledged. Completion needs an explicit
 /// outcome (a positive session log / a confirmed page); opening or listening
 /// never completes a mission.

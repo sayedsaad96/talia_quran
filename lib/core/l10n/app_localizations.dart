@@ -9954,6 +9954,12 @@ abstract class AppLocalizations {
   /// **'تغيّرت الإعدادات من جهاز آخر'**
   String get kidsPolicyConflict;
 
+  /// No description provided for @kidsHomeMissionUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'المهمة ليست متاحة لهذا الإجراء'**
+  String get kidsHomeMissionUnavailable;
+
   /// No description provided for @kidsPolicyUnavailable.
   ///
   /// In ar, this message translates to:
@@ -10085,6 +10091,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{minutes} دقائق'**
   String kidsSessionGoalValue(int minutes);
+
+  /// No description provided for @kidsSessionGoalAgeDefault.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب العمر'**
+  String get kidsSessionGoalAgeDefault;
 
   /// No description provided for @kidsSetupReminderTime.
   ///

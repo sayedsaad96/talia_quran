@@ -414,15 +414,18 @@ void main() {
       KidsHomeMission homeMission(
         String id,
         KidsHomeMissionStatus status,
-        DateTime createdAt,
-      ) => KidsHomeMission(
+        DateTime createdAt, {
+        DateTime? reportedAt,
+      }) => KidsHomeMission(
         id: id,
         title: 'مهمة $id',
         status: status,
         createdAt: createdAt,
+        reportedAt: reportedAt,
       );
 
-      test('the oldest non-acknowledged home mission becomes the card', () async {
+      test('a reported mission does not block a newer assigned one '
+          '(P3-R16)', () async {
         final c = await build(
           readingPagesLoader: () async => {5},
           homeMissionsLoader: () async => [
@@ -449,8 +452,58 @@ void main() {
         final loaded = c.state as KidsJourneyLoaded;
         final home = loaded.dailyMissions.last;
         expect(home.kind, KidsDailyMissionKind.home);
+        expect(home.homeMissionId, '3');
+        expect(home.status, KidsDailyMissionStatus.available);
+      });
+
+      test('with nothing assigned, a mission reported today shows done', () async {
+        final c = await build(
+          readingPagesLoader: () async => {5},
+          homeMissionsLoader: () async => [
+            homeMission(
+              '1',
+              KidsHomeMissionStatus.reported,
+              DateTime(2026, 9, 1),
+              reportedAt: DateTime.now().subtract(const Duration(days: 2)),
+            ),
+            homeMission(
+              '2',
+              KidsHomeMissionStatus.reported,
+              DateTime(2026, 9, 2),
+              reportedAt: DateTime.now(),
+            ),
+          ],
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        final home = loaded.dailyMissions.last;
+        expect(home.kind, KidsDailyMissionKind.home);
         expect(home.homeMissionId, '2');
         expect(home.status, KidsDailyMissionStatus.completed);
+      });
+
+      test('a mission reported on an earlier day shows no home card', () async {
+        final c = await build(
+          readingPagesLoader: () async => {5},
+          homeMissionsLoader: () async => [
+            homeMission(
+              '1',
+              KidsHomeMissionStatus.reported,
+              DateTime(2026, 9, 1),
+              reportedAt: DateTime.now().subtract(const Duration(days: 2)),
+            ),
+          ],
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.home)),
+        );
       });
 
       test('a failing home loader shows no home card and no error', () async {

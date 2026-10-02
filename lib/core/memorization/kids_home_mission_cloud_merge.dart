@@ -9,16 +9,27 @@ import '../../features/memorization_plus/domain/entities/kids_home_mission.dart'
 ///   report not pushed yet) keeps its local state and its pending flag;
 /// - server rows missing locally are added (oldest first, after local ones);
 /// - local rows missing on the server (never-synced `local-...` ids) are
-///   untouched.
+///   untouched;
+/// - with [dropMissingServerIds] (a SUCCESSFUL child pull, P3-R14), local
+///   rows whose id is a server id but absent from [remote] are orphans (link
+///   revoked, mission removed) and are dropped, unless a report is still
+///   pending (`pendingReportSync`) so it is never lost silently.
 abstract final class KidsHomeMissionCloudMerge {
   static List<KidsHomeMission> merge({
     required List<KidsHomeMission> local,
     required List<KidsHomeMission> remote,
+    bool dropMissingServerIds = false,
   }) {
     final remoteById = {for (final m in remote) m.id: m};
     final localIds = {for (final m in local) m.id};
+    bool isOrphan(KidsHomeMission m) =>
+        dropMissingServerIds &&
+        !remoteById.containsKey(m.id) &&
+        int.tryParse(m.id) != null &&
+        !m.pendingReportSync;
     final merged = <KidsHomeMission>[
-      for (final mission in local) _mergeOne(mission, remoteById[mission.id]),
+      for (final mission in local)
+        if (!isOrphan(mission)) _mergeOne(mission, remoteById[mission.id]),
       ...(remote.where((m) => !localIds.contains(m.id)).toList()
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt))),
     ];

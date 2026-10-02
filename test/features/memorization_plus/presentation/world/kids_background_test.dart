@@ -104,6 +104,55 @@ void main() {
       expect(disabled, isFalse);
     });
 
+    testWidgets('cold start: the background loads reduceMotion itself and '
+        'nothing animates', (tester) async {
+      // No home cubit and no prior reload: a deep link straight into a kids
+      // screen must still honour the guardian's reduce-motion.
+      final controller = KidsPolicyController(
+        load: () async => const KidsChildPolicy(reduceMotion: true),
+      );
+      getIt.registerSingleton<KidsPolicyController>(controller);
+      disabled = null;
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: KidsBackground(animate: true, child: motionProbe()),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(controller.value.reduceMotion, isTrue);
+      expect(disabled, isTrue);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets('without reduceMotion the animated scene does run', (
+      tester,
+    ) async {
+      final controller = KidsPolicyController(
+        load: () async => const KidsChildPolicy(),
+      );
+      getIt.registerSingleton<KidsPolicyController>(controller);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: KidsBackground(animate: true, child: motionProbe()),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(tester.hasRunningAnimations, isTrue);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('without a registered policy the OS setting is kept', (
       tester,
     ) async {

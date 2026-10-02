@@ -223,6 +223,8 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.kidsHomeMissionInvalidTitle =>
         l10n.kidsHomeMissionInvalidTitle,
       CubitMessageCodes.kidsPolicyConflict => l10n.kidsPolicyConflict,
+      CubitMessageCodes.kidsHomeMissionUnavailable =>
+        l10n.kidsHomeMissionUnavailable,
       CubitMessageCodes.accountDeletionFailed => l10n.accountDeletionFailed,
       CubitMessageCodes.accountDeletionCleanupFailed =>
         l10n.accountDeletionRemoteConfirmedCleanupFailed,

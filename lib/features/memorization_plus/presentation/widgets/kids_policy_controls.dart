@@ -8,6 +8,10 @@ import '../../domain/entities/kids_child_policy.dart';
 /// Session-goal choices offered to the guardian (minutes).
 const List<int> kKidsSessionGoalChoices = [6, 8, 10];
 
+/// Dropdown value standing for "no override" (a null session goal: the
+/// age-band default). Never a valid goal (goals are 1..60).
+const int _kAgeDefaultGoal = 0;
+
 /// Guardian controls for the kids child policy: reduce motion, missions per
 /// day (1..3), home missions and the session goal. Stateless: every change
 /// is reported through [onChanged] with the edited policy (same version),
@@ -29,8 +33,13 @@ class KidsPolicyControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final goal = policy.sessionGoalMinutes ?? kKidsSessionGoalChoices.first;
-    final goalChoices = {...kKidsSessionGoalChoices, goal}.toList()..sort();
+    // A null goal is the age-band default, shown as such (never as 6).
+    final current = policy.sessionGoalMinutes;
+    final goal = current ?? _kAgeDefaultGoal;
+    final goalChoices = {
+      ...kKidsSessionGoalChoices,
+      ?current,
+    }.toList()..sort();
     // Own transparent Material so the tiles' ink shows on a decorated card.
     return Material(
       type: MaterialType.transparency,
@@ -99,6 +108,13 @@ class KidsPolicyControls extends StatelessWidget {
               key: const ValueKey('kids-policy-session-goal'),
               value: goal,
               items: [
+                DropdownMenuItem(
+                  value: _kAgeDefaultGoal,
+                  child: Text(
+                    l10n.kidsSessionGoalAgeDefault,
+                    key: const ValueKey('kids-policy-session-goal-age-default'),
+                  ),
+                ),
                 for (final minutes in goalChoices)
                   DropdownMenuItem(
                     value: minutes,
@@ -107,11 +123,12 @@ class KidsPolicyControls extends StatelessWidget {
               ],
               onChanged: enabled
                   ? (minutes) {
-                      if (minutes == null ||
-                          minutes == policy.sessionGoalMinutes) {
-                        return;
-                      }
-                      onChanged(policy.copyWith(sessionGoalMinutes: minutes));
+                      if (minutes == null || minutes == goal) return;
+                      onChanged(
+                        minutes == _kAgeDefaultGoal
+                            ? policy.copyWith(clearSessionGoalMinutes: true)
+                            : policy.copyWith(sessionGoalMinutes: minutes),
+                      );
                     }
                   : null,
             ),

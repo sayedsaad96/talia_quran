@@ -5796,6 +5796,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsPolicyConflict => 'Settings changed on another device';
 
   @override
+  String get kidsHomeMissionUnavailable =>
+      'This mission is not available for this action';
+
+  @override
   String get kidsPolicyUnavailable =>
       'Couldn\'t load the child\'s settings right now.';
 
@@ -5868,6 +5872,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String kidsSessionGoalValue(int minutes) {
     return '$minutes minutes';
   }
+
+  @override
+  String get kidsSessionGoalAgeDefault => 'Age default';
 
   @override
   String get kidsSetupReminderTime => 'Reminder time';

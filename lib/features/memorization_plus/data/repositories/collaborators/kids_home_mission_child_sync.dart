@@ -16,6 +16,8 @@ class KidsHomeMissionChildSync {
   final RecordOwnerProvider _owner;
 
   /// Fetches the child's server rows and merges them under the local lock.
+  /// Only after a successful fetch, server-id missions the server no longer
+  /// returns are dropped unless their report is still pending (P3-R14).
   Future<void> pull({
     required String ownerId,
     required Future<List<Map<String, dynamic>>> Function() fetchRows,
@@ -28,7 +30,11 @@ class KidsHomeMissionChildSync {
           .toList();
       await _datasource.updateHomeMissions(
         (local) async =>
-            KidsHomeMissionCloudMerge.merge(local: local, remote: remote),
+            KidsHomeMissionCloudMerge.merge(
+              local: local,
+              remote: remote,
+              dropMissingServerIds: true,
+            ),
       );
     } catch (e) {
       TaliaLogger.w('Kids home missions pull skipped', e);

@@ -59,7 +59,17 @@ REVOKE INSERT, UPDATE, DELETE ON public.kids_child_policies FROM authenticated;
 
 DROP POLICY IF EXISTS kids_home_missions_read ON public.kids_home_missions;
 CREATE POLICY kids_home_missions_read ON public.kids_home_missions FOR SELECT TO authenticated USING (
-  child_user_id = (SELECT auth.uid())
+  -- The child sees only missions of a guardian it is still actively linked
+  -- to (P3-R14): a revoked guardian's missions disappear from the pull.
+  (
+    child_user_id = (SELECT auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.parent_user_id = kids_home_missions.parent_user_id
+        AND pcl.child_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  )
   OR EXISTS (
     SELECT 1 FROM public.parent_child_links pcl
     WHERE pcl.child_user_id = kids_home_missions.child_user_id
@@ -203,10 +213,12 @@ BEGIN
   FROM public.kids_home_missions m
   WHERE m.id = p_mission_id
   FOR UPDATE;
-  IF NOT FOUND OR v_mission.parent_user_id <> v_caller THEN
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'Mission not found';
   END IF;
 
+  -- Any guardian actively linked to the mission's child may acknowledge, not
+  -- only the creator (P3-R15). Others learn nothing: 'Mission not found'.
   PERFORM 1
   FROM public.parent_child_links pcl
   WHERE pcl.parent_user_id = v_caller
@@ -214,7 +226,10 @@ BEGIN
     AND pcl.status = 'active'
   FOR UPDATE;
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Child link is not active';
+    IF v_mission.parent_user_id = v_caller THEN
+      RAISE EXCEPTION 'Child link is not active';
+    END IF;
+    RAISE EXCEPTION 'Mission not found';
   END IF;
 
   IF v_mission.status = 'acknowledged' THEN

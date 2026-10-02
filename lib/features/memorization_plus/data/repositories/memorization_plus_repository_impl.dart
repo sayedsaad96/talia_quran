@@ -649,6 +649,15 @@ class MemorizationPlusRepositoryImpl
     )) {
       return true;
     }
+    // An offline home-mission report with a server id must be flushed before
+    // sign-out, or AccountDataReset deletes it. Pending policy edits are NOT
+    // counted: they would block sign-out for non-child accounts.
+    final missions = await _datasource.getHomeMissions();
+    if (missions.any(
+      (m) => m.pendingReportSync && int.tryParse(m.id) != null,
+    )) {
+      return true;
+    }
     return _productionSync.hasPendingCloudWork();
   }
 

@@ -5775,6 +5775,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsPolicyConflict => 'تغيّرت الإعدادات من جهاز آخر';
 
   @override
+  String get kidsHomeMissionUnavailable => 'المهمة ليست متاحة لهذا الإجراء';
+
+  @override
   String get kidsPolicyUnavailable => 'تعذّر تحميل إعدادات الطفل الآن.';
 
   @override
@@ -5845,6 +5848,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String kidsSessionGoalValue(int minutes) {
     return '$minutes دقائق';
   }
+
+  @override
+  String get kidsSessionGoalAgeDefault => 'حسب العمر';
 
   @override
   String get kidsSetupReminderTime => 'وقت التذكير';

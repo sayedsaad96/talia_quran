@@ -223,6 +223,52 @@ void main() {
       },
     );
 
+    test('row vanished (not applied, no row, expected > 0): the edit stays '
+        'pending, Right, no conflict', () async {
+      final cas = _FakeCas([
+        {'applied': false, 'version': 0, 'policy': null},
+      ]);
+
+      final result = await sync.saveOnDevice(
+        policy: edit,
+        linkedChildUserId: ownerId,
+        casRpc: cas.call,
+      );
+
+      expect(cas.calls.single['p_expected_version'], 3);
+      expect(result.isRight(), isTrue);
+      final saved = await local();
+      expect(saved.policySyncedVersion, 0);
+      expect(saved.policyVersion, greaterThan(saved.policySyncedVersion));
+      expect(saved.kidsReduceMotion, isTrue);
+      expect(saved.maxDailySuggestions, 1);
+      expect(saved.homeMissionsEnabled, isFalse);
+      expect(saved.sessionGoalMinutes, 10);
+
+      // The next push recreates the row with expected = 0.
+      final push = _FakeCas([
+        {
+          'applied': true,
+          'version': 1,
+          'policy': _row(
+            reduceMotion: true,
+            maxDaily: 1,
+            homeMissions: false,
+            sessionGoal: 10,
+            version: 1,
+          ),
+        },
+      ]);
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: push.call,
+      );
+      expect(push.calls.single['p_expected_version'], 0);
+      expect(push.calls.single['p_reduce_motion'], isTrue);
+      expect((await local()).policySyncedVersion, 1);
+    });
+
     test('offline on a confirmed-linked device: Left(NetworkFailure), '
         'local unchanged', () async {
       final cas = _FakeCas([Exception('SocketException: offline')]);
@@ -525,6 +571,100 @@ void main() {
         expect(await local(), ParentSettingsModel.fromEntity(pending));
       },
     );
+
+    test('row vanished on push: local values stay pending', () async {
+      await seed(pending.copyWith(policySyncedVersion: 2));
+      final cas = _FakeCas([
+        {'applied': false, 'version': 0, 'policy': null},
+      ]);
+
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: cas.call,
+      );
+
+      expect(cas.calls.single['p_expected_version'], 2);
+      final saved = await local();
+      expect(saved.policySyncedVersion, 0);
+      expect(saved.policyVersion, greaterThan(0));
+      expect(saved.kidsReduceMotion, isTrue);
+      expect(saved.maxDailySuggestions, 1);
+      expect(saved.sessionGoalMinutes, 10);
+    });
+
+    test('upgrade from P2 (synced 0, link unknown): one create with '
+        'expected 0; an existing row wins (P3-R17)', () async {
+      // P2 stored the onboarding session goal only; no policy versions.
+      await seed(
+        const ParentSettings(pinHash: 'secure-v2', sessionGoalMinutes: 6),
+      );
+      final cas = _FakeCas([
+        {
+          'applied': false,
+          'version': 2,
+          'policy': _row(sessionGoal: 12, version: 2),
+        },
+      ]);
+
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: cas.call,
+      );
+
+      expect(cas.calls.single['p_expected_version'], 0);
+      final saved = await local();
+      expect(saved.sessionGoalMinutes, 12);
+      expect(saved.policySyncedVersion, 2);
+      expect(saved.policyLinkConfirmed, isTrue);
+
+      // Not pending any more.
+      final again = _FakeCas([]);
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: again.call,
+      );
+      expect(again.calls, isEmpty);
+    });
+
+    test('upgrade from P2 without a server row creates it', () async {
+      await seed(
+        const ParentSettings(pinHash: 'secure-v2', sessionGoalMinutes: 6),
+      );
+      final cas = _FakeCas([
+        {'applied': true, 'version': 1, 'policy': _row(sessionGoal: 6)},
+      ]);
+
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: cas.call,
+      );
+
+      expect(cas.calls.single['p_expected_version'], 0);
+      expect(cas.calls.single['p_session_goal_minutes'], 6);
+      expect((await local()).policySyncedVersion, 1);
+    });
+
+    test('a device known unlinked (synced 0, link false) is not pending', () async {
+      await seed(
+        const ParentSettings(
+          pinHash: 'secure-v2',
+          policyLinkConfirmed: false,
+        ),
+      );
+      final cas = _FakeCas([]);
+
+      await sync.pushPending(
+        ownerId: ownerId,
+        childUserId: ownerId,
+        casRpc: cas.call,
+      );
+
+      expect(cas.calls, isEmpty);
+    });
 
     test('nothing pending sends nothing', () async {
       final cas = _FakeCas([]);

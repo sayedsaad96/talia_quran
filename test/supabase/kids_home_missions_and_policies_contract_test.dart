@@ -90,6 +90,20 @@ void main() {
     for (final policy in policies) {
       expect(policy, contains(' for select '));
     }
+    // P3-R14: the child branch requires an active link to the mission's
+    // guardian, so a revoked guardian's missions are not returned.
+    final missionsRead = policies.firstWhere(
+      (p) => p.contains('kids_home_missions_read'),
+    );
+    expect(
+      missionsRead,
+      contains(
+        'child_user_id = (select auth.uid()) and exists ( select 1 from '
+        'public.parent_child_links pcl where pcl.parent_user_id = '
+        'kids_home_missions.parent_user_id and pcl.child_user_id = '
+        "(select auth.uid()) and pcl.status = 'active' )",
+      ),
+    );
   });
 
   test('RPCs are granted to authenticated only', () {
@@ -135,7 +149,18 @@ void main() {
     final ack = functionBody('acknowledge_kids_home_mission');
     expect(ack, contains("v_mission.status <> 'reported'"));
     expect(ack, contains("raise exception 'invalid mission transition'"));
-    expect(ack, contains('v_mission.parent_user_id <> v_caller'));
+    // P3-R15: any guardian actively linked to the child, not only the
+    // creator; everyone else gets 'Mission not found'.
+    expect(ack, isNot(contains('v_mission.parent_user_id <> v_caller')));
+    expect(
+      ack,
+      contains(
+        'where pcl.parent_user_id = v_caller and pcl.child_user_id = '
+        "v_mission.child_user_id and pcl.status = 'active' for update; "
+        'if not found then',
+      ),
+    );
+    expect(ack, contains("raise exception 'mission not found'"));
     final report = functionBody('report_kids_home_mission');
     expect(report, contains('v_mission.child_user_id <> v_caller'));
     expect(report, contains("v_mission.status = 'assigned'"));

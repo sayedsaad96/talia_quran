@@ -281,11 +281,12 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       // Keep the last known policy.
     }
     final policy = _childPolicy();
+    final now = DateTime.now();
     final homeMission = policy.homeMissionsEnabled
-        ? await _oldestOpenHomeMission()
+        ? await _homeCardMission(now)
         : null;
     final missions = resolveKidsDailyMissions(
-      now: DateTime.now(),
+      now: now,
       learning: learning,
       dayGoalReached: dayGoalReached,
       logs: logs,
@@ -314,18 +315,37 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     }
   }
 
-  /// The oldest home mission that is not yet acknowledged (fail-open: any
-  /// loader error means no home card). Not loaded at all when the guardian
-  /// turned home missions off.
-  Future<KidsHomeMission?> _oldestOpenHomeMission() async {
+  /// The home mission behind the home card (P3-R16): the oldest `assigned`
+  /// one; else the latest mission reported TODAY (local day, even if already
+  /// acknowledged) so the card shows its done state; else none. A reported mission never blocks newer ones.
+  /// Fail-open: any loader error simply means no home card.
+  Future<KidsHomeMission?> _homeCardMission(DateTime now) async {
     try {
       final missions = await _homeMissionsLoader?.call();
       if (missions == null) return null;
-      final open = missions
-          .where((m) => m.status != KidsHomeMissionStatus.acknowledged)
-          .toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      return open.isEmpty ? null : open.first;
+      final assigned =
+          missions
+              .where((m) => m.status == KidsHomeMissionStatus.assigned)
+              .toList()
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      if (assigned.isNotEmpty) return assigned.first;
+      final today = DateTime(now.year, now.month, now.day);
+      bool reportedToday(KidsHomeMission m) {
+        final at = m.reportedAt?.toLocal();
+        if (at == null) return false;
+        return DateTime(at.year, at.month, at.day) == today;
+      }
+
+      final doneToday =
+          missions
+              .where(
+                (m) =>
+                    m.status != KidsHomeMissionStatus.assigned &&
+                    reportedToday(m),
+              )
+              .toList()
+            ..sort((a, b) => b.reportedAt!.compareTo(a.reportedAt!));
+      return doneToday.isEmpty ? null : doneToday.first;
     } catch (_) {
       return null;
     }

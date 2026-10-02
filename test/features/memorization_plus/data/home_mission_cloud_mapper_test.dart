@@ -102,7 +102,32 @@ void main() {
 
     test('rejects a non-numeric mission id', () async {
       final result = await service.acknowledgeRemoteHomeMission('abc');
-      expect(result.isLeft(), isTrue);
+      expect(
+        result.fold((f) => f.message, (_) => null),
+        CubitMessageCodes.kidsHomeMissionUnavailable,
+      );
+    });
+
+    test('acknowledge server errors map to message codes, never raw text', () {
+      String code(Object error) =>
+          MemorizationKidsCloudSyncService.acknowledgeFailure(error).message;
+
+      expect(
+        code(Exception('PostgrestException: Mission not found')),
+        CubitMessageCodes.kidsHomeMissionUnavailable,
+      );
+      expect(
+        code(Exception('Invalid mission transition')),
+        CubitMessageCodes.kidsHomeMissionUnavailable,
+      );
+      expect(
+        code(Exception('Child link is not active')),
+        CubitMessageCodes.guardianChildNotLinked,
+      );
+      expect(
+        code(Exception('relation "x" does not exist')),
+        CubitMessageCodes.errorNetwork,
+      );
     });
 
     test('reports cloud unavailable when Supabase is not ready', () async {
