@@ -19,6 +19,7 @@ import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_progress_header.dart';
 import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
+import '../world/kids_world_palette.dart';
 
 class KidsGamifiedJourneyPage extends StatelessWidget {
   const KidsGamifiedJourneyPage({super.key, required this.surahId});
@@ -335,7 +336,7 @@ class _JourneyMapHeader extends StatelessWidget {
             Text(
               mapTitle,
               style: AppTypography.headlineSmall.copyWith(
-                color: KidsTheme.shellTextPrimary,
+                color: KidsWorldPalette.of(context).onScene,
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0,
@@ -354,7 +355,7 @@ class _JourneyMapHeader extends StatelessWidget {
         Text(
           subtitle,
           style: AppTypography.bodySmall.copyWith(
-            color: KidsTheme.shellTextSecondary,
+            color: KidsWorldPalette.of(context).onSceneMuted,
             fontFamily: 'Amiri',
             letterSpacing: 0,
           ),

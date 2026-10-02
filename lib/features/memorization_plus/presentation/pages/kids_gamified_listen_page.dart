@@ -22,8 +22,6 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_loading_widget.dart';
-import '../../domain/services/kids_world_phase.dart';
-import '../world/kids_world_scene.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
 
@@ -297,20 +295,17 @@ class KidsGamifiedListenContent extends StatelessWidget {
     final calm = state.isPlaying || state.isRecording;
     final pose = kidsTaliaPoseFor(state);
 
-    return KidsWorldScene(
-      phase: KidsWorldPhase.day,
+    return KidsBackground(
       animate: !calm,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
-              _KidsSessionTopBand(
-                child: KidsTopBar(
-                  title: context.l10n.kidsGamifiedListenAndRepeat,
-                  onBack: onBack,
-                  backLabel: context.l10n.goBack,
-                ),
+              KidsTopBar(
+                title: context.l10n.kidsGamifiedListenAndRepeat,
+                onBack: onBack,
+                backLabel: context.l10n.goBack,
               ),
               Expanded(
                 child: CustomScrollView(
@@ -395,32 +390,6 @@ class KidsGamifiedListenContent extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Solid band behind the top bar so its light text stays readable over the
-/// bright sky scene.
-class _KidsSessionTopBand extends StatelessWidget {
-  const _KidsSessionTopBand({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.xs,
-        AppSpacing.sm,
-        0,
-      ),
-      decoration: const BoxDecoration(
-        gradient: KidsTheme.heroCardGradient,
-        borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
-        boxShadow: KidsTheme.card25DShadow,
-      ),
-      child: child,
     );
   }
 }
