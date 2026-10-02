@@ -1,0 +1,758 @@
+{
+  "project": "Talia_Quran",
+  "project_id": "vxsqwozctxkvhgxkciua",
+  "tables": [
+    {
+      "name": "public.profiles",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "uuid"
+        },
+        {
+          "name": "display_name",
+          "format": "text",
+          "check": "char_length(display_name) <= 100"
+        },
+        {
+          "name": "avatar_url",
+          "format": "text",
+          "check": "avatar_url IS NULL OR char_length(avatar_url) <= 500"
+        },
+        {
+          "name": "age",
+          "format": "int4",
+          "check": "age IS NULL OR age >= 1 AND age <= 150"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "selected_path",
+          "format": "text",
+          "check": "selected_path IS NULL OR (selected_path = ANY (ARRAY['adult'::text, 'child'::text]))"
+        },
+        {
+          "name": "guardian_onboarding_status",
+          "format": "text",
+          "check": "guardian_onboarding_status IS NULL OR (guardian_onboarding_status = ANY (ARRAY['required'::text, 'skipped'::text, 'completed'::text]))"
+        },
+        {
+          "name": "is_parent_guardian",
+          "format": "bool"
+        },
+        {
+          "name": "child_nickname",
+          "format": "text",
+          "check": "child_nickname IS NULL OR char_length(child_nickname) >= 1 AND char_length(child_nickname) <= 50 AND child_nickname = btrim(child_nickname) AND child_nickname !~ '[[:cntrl:]]'::text"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.streaks",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "current_streak",
+          "format": "int4",
+          "check": "current_streak >= 0 AND current_streak <= 36500"
+        },
+        {
+          "name": "longest_streak",
+          "format": "int4",
+          "check": "longest_streak >= 0 AND longest_streak <= 36500"
+        },
+        {
+          "name": "last_activity_date",
+          "format": "date"
+        },
+        {
+          "name": "freezes_available",
+          "format": "int4",
+          "check": "freezes_available >= 0 AND freezes_available <= 30"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ]
+    },
+    {
+      "name": "public.xp",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "total_xp",
+          "format": "int4",
+          "check": "total_xp >= 0 AND total_xp <= 100000000"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ]
+    },
+    {
+      "name": "public.xp_history",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "int8"
+        },
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "action",
+          "format": "text",
+          "check": "char_length(action) <= 50"
+        },
+        {
+          "name": "xp_gained",
+          "format": "int4",
+          "check": "xp_gained >= 0 AND xp_gained <= 1000"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.daily_activities",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "day_key",
+          "format": "int4"
+        },
+        {
+          "name": "activity_count",
+          "format": "int4"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "user_id",
+        "day_key"
+      ]
+    },
+    {
+      "name": "public.child_link_requests",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "uuid"
+        },
+        {
+          "name": "child_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "token_hash",
+          "format": "text",
+          "check": "char_length(token_hash) = 64"
+        },
+        {
+          "name": "expires_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "used_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.parent_child_links",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "parent_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "child_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "status",
+          "format": "text",
+          "check": "status = ANY (ARRAY['active'::text, 'revoked'::text])"
+        },
+        {
+          "name": "linked_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "revoked_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "parent_user_id",
+        "child_user_id"
+      ]
+    },
+    {
+      "name": "public.kids_progress_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "child_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "total_points",
+          "format": "int4",
+          "check": "total_points >= 0"
+        },
+        {
+          "name": "current_level",
+          "format": "int4",
+          "check": "current_level >= 1"
+        },
+        {
+          "name": "current_streak",
+          "format": "int4",
+          "check": "current_streak >= 0"
+        },
+        {
+          "name": "stars_earned",
+          "format": "int4",
+          "check": "stars_earned >= 0"
+        },
+        {
+          "name": "ayahs_completed",
+          "format": "int4",
+          "check": "ayahs_completed >= 0"
+        },
+        {
+          "name": "last_session_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "child_user_id"
+      ]
+    },
+    {
+      "name": "public.kids_session_logs",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "int8"
+        },
+        {
+          "name": "child_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "local_id",
+          "format": "text",
+          "check": "char_length(local_id) <= 120"
+        },
+        {
+          "name": "surah_id",
+          "format": "int4",
+          "check": "surah_id >= 1 AND surah_id <= 114"
+        },
+        {
+          "name": "ayah_number",
+          "format": "int4",
+          "check": "ayah_number >= 1 AND ayah_number <= 286"
+        },
+        {
+          "name": "repeats_completed",
+          "format": "int4",
+          "check": "repeats_completed >= 0"
+        },
+        {
+          "name": "points_earned",
+          "format": "int4",
+          "check": "points_earned >= 0"
+        },
+        {
+          "name": "completed_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.parent_rewards",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "int8"
+        },
+        {
+          "name": "parent_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "child_user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "title",
+          "format": "text",
+          "check": "char_length(title) >= 1 AND char_length(title) <= 120"
+        },
+        {
+          "name": "status",
+          "format": "text",
+          "check": "status = ANY (ARRAY['locked'::text, 'unlocked'::text, 'claimed'::text])"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "unlocked_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "claimed_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.ayah_review_records_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "int8"
+        },
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "surah_id",
+          "format": "int4",
+          "check": "surah_id >= 1 AND surah_id <= 114"
+        },
+        {
+          "name": "ayah_number",
+          "format": "int4",
+          "check": "ayah_number >= 1 AND ayah_number <= 286"
+        },
+        {
+          "name": "strength_level",
+          "format": "int4",
+          "check": "strength_level >= 0"
+        },
+        {
+          "name": "interval_days",
+          "format": "int4",
+          "check": "interval_days >= 0"
+        },
+        {
+          "name": "last_reviewed_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "next_review_date",
+          "format": "timestamptz"
+        },
+        {
+          "name": "total_reviews",
+          "format": "int4",
+          "check": "total_reviews >= 0"
+        },
+        {
+          "name": "last_rating",
+          "format": "text",
+          "check": "last_rating = ANY (ARRAY['excellent'::text, 'average'::text, 'weak'::text])"
+        },
+        {
+          "name": "ease_factor",
+          "format": "float8"
+        },
+        {
+          "name": "lapses",
+          "format": "int4",
+          "check": "lapses >= 0"
+        },
+        {
+          "name": "review_state",
+          "format": "text",
+          "check": "review_state = ANY (ARRAY['newCard'::text, 'learning'::text, 'review'::text, 'relearning'::text])"
+        },
+        {
+          "name": "created_by_mode",
+          "format": "text",
+          "check": "created_by_mode = ANY (ARRAY['v2Session'::text, 'kidsMode'::text])"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "difficulty",
+          "format": "float8"
+        },
+        {
+          "name": "stability",
+          "format": "float8"
+        },
+        {
+          "name": "sync_version",
+          "format": "int8"
+        },
+        {
+          "name": "audience",
+          "format": "text"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.daily_plans_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "surah_id",
+          "format": "int4",
+          "check": "surah_id >= 1 AND surah_id <= 114"
+        },
+        {
+          "name": "generated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "total_items",
+          "format": "int4",
+          "check": "total_items >= 0"
+        },
+        {
+          "name": "completed_count",
+          "format": "int4",
+          "check": "completed_count >= 0"
+        },
+        {
+          "name": "payload",
+          "format": "jsonb",
+          "check": "pg_column_size(payload) <= 20000"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "revision",
+          "format": "int8",
+          "check": "revision >= 0"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ]
+    },
+    {
+      "name": "public.certificate_awards_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "id",
+          "format": "int8"
+        },
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "cert_id",
+          "format": "text",
+          "check": "char_length(cert_id) <= 60"
+        },
+        {
+          "name": "title_ar",
+          "format": "text",
+          "check": "char_length(title_ar) <= 200"
+        },
+        {
+          "name": "cert_type",
+          "format": "text",
+          "check": "cert_type = ANY (ARRAY['juz'::text, 'surah'::text, 'halfQuran'::text, 'fullQuran'::text])"
+        },
+        {
+          "name": "earned_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "created_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "public.custom_plans_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "payload",
+          "format": "jsonb",
+          "check": "pg_column_size(payload) <= 20000"
+        },
+        {
+          "name": "deleted_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "revision",
+          "format": "int8",
+          "check": "revision >= 0"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ]
+    },
+    {
+      "name": "public.reading_progress_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "pages",
+          "format": "_int4",
+          "check": "cardinality(pages) <= 604"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ]
+    },
+    {
+      "name": "public.quran_bookmarks_cloud",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "surah_id",
+          "format": "int4",
+          "check": "surah_id >= 1 AND surah_id <= 114"
+        },
+        {
+          "name": "ayah_number",
+          "format": "int4",
+          "check": "ayah_number >= 1 AND ayah_number <= 286"
+        },
+        {
+          "name": "payload",
+          "format": "jsonb",
+          "check": "pg_column_size(payload) <= 12000"
+        },
+        {
+          "name": "is_deleted",
+          "format": "bool"
+        },
+        {
+          "name": "revision",
+          "format": "int8",
+          "check": "revision >= 0"
+        },
+        {
+          "name": "updated_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "deleted_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "user_id",
+        "surah_id",
+        "ayah_number"
+      ]
+    },
+    {
+      "name": "public.ayah_review_events",
+      "rls_enabled": true,
+      "columns": [
+        {
+          "name": "server_sequence",
+          "format": "int8"
+        },
+        {
+          "name": "event_id",
+          "format": "text",
+          "check": "char_length(event_id) >= 1 AND char_length(event_id) <= 160"
+        },
+        {
+          "name": "user_id",
+          "format": "uuid"
+        },
+        {
+          "name": "audience",
+          "format": "text",
+          "check": "audience = ANY (ARRAY['adult'::text, 'kids'::text])"
+        },
+        {
+          "name": "session_id",
+          "format": "text",
+          "check": "char_length(session_id) >= 1 AND char_length(session_id) <= 160"
+        },
+        {
+          "name": "task_id",
+          "format": "text",
+          "check": "char_length(task_id) >= 1 AND char_length(task_id) <= 240"
+        },
+        {
+          "name": "surah_id",
+          "format": "int4"
+        },
+        {
+          "name": "ayah_number",
+          "format": "int4"
+        },
+        {
+          "name": "event_type",
+          "format": "int2",
+          "check": "event_type = ANY (ARRAY[0, 1])"
+        },
+        {
+          "name": "assessment",
+          "format": "int2",
+          "check": "assessment = ANY (ARRAY[0, 1])"
+        },
+        {
+          "name": "outcome",
+          "format": "int2",
+          "check": "outcome = ANY (ARRAY[0, 1, 2])"
+        },
+        {
+          "name": "rating",
+          "format": "int2",
+          "check": "rating = ANY (ARRAY[0, 1, 2])"
+        },
+        {
+          "name": "similarity_score",
+          "format": "numeric",
+          "check": "similarity_score IS NULL OR similarity_score >= 0::numeric AND similarity_score <= 1::numeric"
+        },
+        {
+          "name": "attempt_count",
+          "format": "int4",
+          "check": "attempt_count >= 1 AND attempt_count <= 1000"
+        },
+        {
+          "name": "failure_count",
+          "format": "int4"
+        },
+        {
+          "name": "hint_level",
+          "format": "int2",
+          "check": "hint_level = ANY (ARRAY[0, 1, 2])"
+        },
+        {
+          "name": "occurred_at",
+          "format": "timestamptz"
+        },
+        {
+          "name": "study_day_key",
+          "format": "text",
+          "check": "study_day_key ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'::text"
+        },
+        {
+          "name": "committed_at",
+          "format": "timestamptz"
+        }
+      ],
+      "primary_keys": [
+        "server_sequence"
+      ]
+    }
+  ],
+  "edge_functions": []
+}
