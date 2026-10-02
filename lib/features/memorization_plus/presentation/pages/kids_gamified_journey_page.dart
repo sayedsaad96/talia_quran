@@ -17,6 +17,7 @@ import '../widgets/kids_journey_painters.dart';
 import '../widgets/kids_journey_segment.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../world/kids_world_palette.dart';
@@ -244,6 +245,10 @@ class _KidsGamifiedJourneyContentState
                                 progress: widget.state.progress,
                                 onSettingsTap: widget.onPathSettingsTap,
                               ),
+                              const SizedBox(height: AppSpacing.md),
+                              const KidsTaliaMomentCompanion(
+                                moment: KidsTaliaMoment.mapGuide,
+                              ),
                               const SizedBox(height: AppSpacing.lg),
                               _JourneyMapHeader(
                                 mapTitle: context.l10n.kidsJourneyMapTitle,
@@ -333,20 +338,22 @@ class _JourneyMapHeader extends StatelessWidget {
               size: 24,
             ),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              mapTitle,
-              style: AppTypography.headlineSmall.copyWith(
-                color: KidsWorldPalette.of(context).onScene,
-                fontFamily: 'Amiri',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-                shadows: const [
-                  Shadow(
-                    color: Color(0x66000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+            Expanded(
+              child: Text(
+                mapTitle,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: KidsWorldPalette.of(context).onScene,
+                  fontFamily: 'Amiri',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x66000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

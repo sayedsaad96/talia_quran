@@ -4718,6 +4718,42 @@ abstract class AppLocalizations {
   /// **'أحسنت! بارك الله فيك'**
   String get kidsTaliaCelebrateBubble;
 
+  /// No description provided for @kidsTaliaGuideBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهمتك جاهزة، هيا نبدأ!'**
+  String get kidsTaliaGuideBubble;
+
+  /// No description provided for @kidsTaliaWelcomeBackBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشتقت إليك!'**
+  String get kidsTaliaWelcomeBackBubble;
+
+  /// No description provided for @kidsTaliaFarewellBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت اليوم! نلتقي غدًا'**
+  String get kidsTaliaFarewellBubble;
+
+  /// No description provided for @kidsTaliaJourneyDoneBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت رحلتك كلها!'**
+  String get kidsTaliaJourneyDoneBubble;
+
+  /// No description provided for @kidsTaliaMapBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيا نكمل المغامرة!'**
+  String get kidsTaliaMapBubble;
+
+  /// No description provided for @kidsTaliaStageReadyBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت مستعد؟'**
+  String get kidsTaliaStageReadyBubble;
+
   /// No description provided for @kidsWelcomeBackTitle.
   ///
   /// In ar, this message translates to:

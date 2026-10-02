@@ -2570,6 +2570,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsTaliaCelebrateBubble => 'Well done! May Allah bless you';
 
   @override
+  String get kidsTaliaGuideBubble => 'Your mission is ready, let\'s go!';
+
+  @override
+  String get kidsTaliaWelcomeBackBubble => 'I missed you!';
+
+  @override
+  String get kidsTaliaFarewellBubble => 'Great work today! See you tomorrow';
+
+  @override
+  String get kidsTaliaJourneyDoneBubble => 'You finished the whole journey!';
+
+  @override
+  String get kidsTaliaMapBubble => 'Let\'s continue the adventure!';
+
+  @override
+  String get kidsTaliaStageReadyBubble => 'Are you ready?';
+
+  @override
   String get kidsWelcomeBackTitle => 'Welcome back!';
 
   @override

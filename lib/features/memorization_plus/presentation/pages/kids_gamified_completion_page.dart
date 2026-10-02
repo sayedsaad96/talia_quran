@@ -8,6 +8,7 @@ import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../widgets/kids_reward_dialog.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedCompletionPage extends StatefulWidget {
@@ -143,15 +144,24 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: KidsRewardDialog(
-                starsEarned: starsEarned,
-                pointsEarned: pointsEarned,
-                leveledUpTo: leveledUpTo,
-                showNextButton: showNextButton,
-                dailyGoalCap: dailyGoalCap,
-                sessionGoalReached: sessionGoalReached,
-                onNext: onNext,
-                onReturnToMap: onReturnToMap,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const KidsTaliaMomentCompanion(
+                    moment: KidsTaliaMoment.celebrate,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  KidsRewardDialog(
+                    starsEarned: starsEarned,
+                    pointsEarned: pointsEarned,
+                    leveledUpTo: leveledUpTo,
+                    showNextButton: showNextButton,
+                    dailyGoalCap: dailyGoalCap,
+                    sessionGoalReached: sessionGoalReached,
+                    onNext: onNext,
+                    onReturnToMap: onReturnToMap,
+                  ),
+                ],
               ),
             ),
           ),

@@ -20,6 +20,7 @@ import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedHomePage extends StatelessWidget {
@@ -257,7 +258,11 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
                       ),
-                      const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.md),
+                      KidsTaliaMomentCompanion(
+                        moment: kidsHomeTaliaMoment(state),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       // K33: a warm welcome after a few days away.
                       if (state.isReturningAfterBreak) ...[
                         const KidsWelcomeBackCard(),

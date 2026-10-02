@@ -15,6 +15,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../../memorization_plus/presentation/theme/kids_theme.dart';
 import '../../../memorization_plus/presentation/widgets/kids_loading_widget.dart';
+import '../../../memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../widgets/app_quran_page_view.dart';
@@ -388,6 +389,12 @@ class _KidsQuranHeader extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          // Static, decorative Talia (N2): never animates beside the Mushaf.
+          Image.asset(
+            KidsTaliaPose.readingQuran.asset,
+            height: 40,
+            excludeFromSemantics: true,
           ),
         ],
       ),
