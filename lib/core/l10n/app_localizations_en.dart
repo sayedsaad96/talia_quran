@@ -5780,6 +5780,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.';
 
   @override
+  String get kidsHomeMissionInvalidTitle =>
+      'Write a mission between 1 and 120 characters';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'You already completed this ayah. Open the map to continue.';
 

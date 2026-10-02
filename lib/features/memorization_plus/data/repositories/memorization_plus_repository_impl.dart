@@ -19,6 +19,7 @@ import '../../../../core/services/streak_reader.dart';
 import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_cloud_repository.dart';
 import '../../domain/repositories/memorization_identity_repository.dart';
@@ -426,6 +427,25 @@ class MemorizationPlusRepositoryImpl
   @override
   Future<Either<Failure, List<ParentReward>>> saveParentReward(String title) =>
       _kidsLocal.saveParentReward(title);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() =>
+      _kidsLocal.getHomeMissions();
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) => _kidsLocal.addLocalHomeMission(title);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
+    String id,
+  ) => _kidsLocal.reportHomeMission(id);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) => _kidsLocal.acknowledgeLocalHomeMission(id);
 
   @override
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id) {

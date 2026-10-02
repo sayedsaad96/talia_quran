@@ -2266,6 +2266,7 @@
     }
   },
   "kidsJourneyCompleteHint": "أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.",
+  "kidsHomeMissionInvalidTitle": "اكتب مهمة من حرف إلى ١٢٠ حرفًا",
   "kidsAyahAlreadyCompleted": "أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.",
   "accountSwitchOfflineDataDiscarded": "تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.",
   "startYourJourneyWithQuran": "ابدأ رحلتك مع القرآن",

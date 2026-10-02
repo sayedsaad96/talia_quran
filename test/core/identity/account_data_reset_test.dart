@@ -144,6 +144,7 @@ void main() {
         'khatmah_history': '[{"id":"account-a-plan"}]',
         'khatmah_cloud_dirty': true,
         'mem_plus_profile': '{}',
+        'mem_plus_home_missions|user-a': '[{"id":"local-1"}]',
         'mem_plus_local_records_claimed_by': 'user-a',
         'mem_plus_review_identity_keys_v1': true,
         'hifz_path_mode': 'adult',
@@ -326,6 +327,7 @@ void main() {
       expect(prefs.getString('kids_reading_receipts_user-a'), isNull);
       expect(prefs.getString('audio_resume_position'), isNull);
       expect(prefs.getString('mem_plus_local_records_claimed_by'), isNull);
+      expect(prefs.getString('mem_plus_home_missions|user-a'), isNull);
     });
 
     test(

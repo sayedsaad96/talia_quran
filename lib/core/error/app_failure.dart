@@ -67,6 +67,10 @@ class ParseFailure extends Failure {
   const ParseFailure([super.message = CubitMessageCodes.errorParse]);
 }
 
+class ValidationFailure extends Failure {
+  const ValidationFailure([super.message = CubitMessageCodes.errorUnknown]);
+}
+
 class UnknownFailure extends Failure {
   const UnknownFailure([super.message = CubitMessageCodes.errorUnknown]);
 

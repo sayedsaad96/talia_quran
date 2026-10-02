@@ -5760,6 +5760,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
+  String get kidsHomeMissionInvalidTitle => 'اكتب مهمة من حرف إلى ١٢٠ حرفًا';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
 

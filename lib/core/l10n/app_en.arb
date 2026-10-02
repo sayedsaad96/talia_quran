@@ -2317,6 +2317,7 @@
     }
   },
   "kidsJourneyCompleteHint": "You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.",
+  "kidsHomeMissionInvalidTitle": "Write a mission between 1 and 120 characters",
   "kidsAyahAlreadyCompleted": "You already completed this ayah. Open the map to continue.",
   "accountSwitchOfflineDataDiscarded": "Unsynced progress from the previous account was not uploaded and has been removed from this device.",
   "startYourJourneyWithQuran": "Start your journey with the Quran",

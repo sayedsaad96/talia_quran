@@ -3,6 +3,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/sync/sync_result.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
 import 'memorization_cloud_repository.dart';
 import 'memorization_identity_repository.dart';
@@ -124,6 +125,22 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, void>> resetParentAccess();
   Future<Either<Failure, List<ParentReward>>> saveParentReward(String title);
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id);
+
+  // Home missions (guardian-assigned real-life tasks).
+  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions();
+
+  /// Guardian action (PIN-gated by the caller). Title is trimmed, 1-120 chars.
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  );
+
+  /// Child action; idempotent once reported or acknowledged.
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(String id);
+
+  /// Guardian action; only valid for a reported mission.
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  );
   @override
   Future<Either<Failure, String>> createChildLinkToken();
   @override

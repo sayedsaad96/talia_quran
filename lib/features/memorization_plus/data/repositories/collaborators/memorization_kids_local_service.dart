@@ -17,6 +17,7 @@ import '../../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../../core/security/parent_pin_secure_store.dart';
 import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../../domain/services/kids_due_review_policy.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -415,6 +416,88 @@ class MemorizationKidsLocalService {
           )
           .toList();
       await _datasource.saveParentRewards(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  static const kHomeMissionTitleMaxLength = 120;
+
+  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() async {
+    try {
+      return Right(await _datasource.getHomeMissions());
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty || trimmed.length > kHomeMissionTitleMaxLength) {
+        return const Left(
+          ValidationFailure(CubitMessageCodes.kidsHomeMissionInvalidTitle),
+        );
+      }
+      final now = DateTime.now();
+      final missions = await _datasource.getHomeMissions();
+      final next = [
+        ...missions,
+        KidsHomeMission(
+          id: 'local-${now.microsecondsSinceEpoch}',
+          title: trimmed,
+          status: KidsHomeMissionStatus.assigned,
+          createdAt: now,
+        ),
+      ];
+      await _datasource.saveHomeMissions(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
+    String id,
+  ) async {
+    try {
+      final missions = await _datasource.getHomeMissions();
+      final index = missions.indexWhere((m) => m.id == id);
+      if (index < 0) return const Left(NotFoundFailure());
+      if (missions[index].status != KidsHomeMissionStatus.assigned) {
+        return Right(missions);
+      }
+      final next = [...missions];
+      next[index] = missions[index].copyWith(
+        status: KidsHomeMissionStatus.reported,
+        reportedAt: DateTime.now(),
+      );
+      await _datasource.saveHomeMissions(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) async {
+    try {
+      final missions = await _datasource.getHomeMissions();
+      final index = missions.indexWhere((m) => m.id == id);
+      if (index < 0) return const Left(NotFoundFailure());
+      if (missions[index].status != KidsHomeMissionStatus.reported) {
+        return const Left(ValidationFailure());
+      }
+      final next = [...missions];
+      next[index] = missions[index].copyWith(
+        status: KidsHomeMissionStatus.acknowledged,
+        acknowledgedAt: DateTime.now(),
+      );
+      await _datasource.saveHomeMissions(next);
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));

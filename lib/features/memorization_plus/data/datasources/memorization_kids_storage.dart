@@ -314,4 +314,50 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
       jsonEncode(rewards.map((reward) => reward.toJson()).toList()),
     );
   }
+
+  Future<List<KidsHomeMission>> getHomeMissions() async {
+    final ownerId = _owner.currentOwnerId;
+    _ensureStorageOwner(ownerId);
+    const base = MemorizationPlusLocalDatasourceImpl._kHomeMissions;
+    final raw = _readKidsValue(base, ownerId);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        _quarantineCorruptKidsValue(base, ownerId, raw);
+        return const [];
+      }
+      final missions = <KidsHomeMission>[];
+      var dropped = false;
+      for (final item in decoded) {
+        if (item is Map<String, dynamic>) {
+          try {
+            missions.add(KidsHomeMission.fromJson(item));
+          } catch (_) {
+            dropped = true;
+          }
+        } else {
+          dropped = true;
+        }
+      }
+      if (dropped) {
+        _quarantineCorruptKidsValue(base, ownerId, raw);
+      }
+      return missions;
+    } catch (_) {
+      _quarantineCorruptKidsValue(base, ownerId, raw);
+      return const [];
+    }
+  }
+
+  Future<void> saveHomeMissions(List<KidsHomeMission> missions) {
+    final ownerId = _owner.currentOwnerId;
+    return _setStringOrThrow(
+      _kidsOwnerKey(
+        MemorizationPlusLocalDatasourceImpl._kHomeMissions,
+        ownerId,
+      ),
+      jsonEncode(missions.map((mission) => mission.toJson()).toList()),
+    );
+  }
 }

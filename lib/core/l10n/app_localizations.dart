@@ -9924,6 +9924,12 @@ abstract class AppLocalizations {
   /// **'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
   String get kidsJourneyCompleteHint;
 
+  /// No description provided for @kidsHomeMissionInvalidTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مهمة من حرف إلى ١٢٠ حرفًا'**
+  String get kidsHomeMissionInvalidTitle;
+
   /// No description provided for @kidsAyahAlreadyCompleted.
   ///
   /// In ar, this message translates to:
