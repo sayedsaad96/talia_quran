@@ -4748,6 +4748,59 @@ abstract class AppLocalizations {
   /// **'اشتقت إليك!'**
   String get kidsTaliaWelcomeBackBubble;
 
+  /// No description provided for @kidsTreasuresTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كنوزي'**
+  String get kidsTreasuresTitle;
+
+  /// No description provided for @kidsTreasuresEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ أول سورة لتجد أول كنز!'**
+  String get kidsTreasuresEmpty;
+
+  /// No description provided for @kidsRegionBeginning.
+  ///
+  /// In ar, this message translates to:
+  /// **'البداية'**
+  String get kidsRegionBeginning;
+
+  /// No description provided for @kidsRegionPalmOasis.
+  ///
+  /// In ar, this message translates to:
+  /// **'واحة النخيل'**
+  String get kidsRegionPalmOasis;
+
+  /// No description provided for @kidsRegionFlowerValley.
+  ///
+  /// In ar, this message translates to:
+  /// **'وادي الأزهار'**
+  String get kidsRegionFlowerValley;
+
+  /// No description provided for @kidsRegionStarMountain.
+  ///
+  /// In ar, this message translates to:
+  /// **'جبل النجوم'**
+  String get kidsRegionStarMountain;
+
+  /// No description provided for @kidsRegionPearlSea.
+  ///
+  /// In ar, this message translates to:
+  /// **'بحر اللؤلؤ'**
+  String get kidsRegionPearlSea;
+
+  /// No description provided for @kidsRegionProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{memorizedText} من {totalText} سور'**
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  );
+
   /// No description provided for @kidsTaliaFarewellBubble.
   ///
   /// In ar, this message translates to:

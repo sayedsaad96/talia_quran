@@ -60,6 +60,7 @@ void main() {
         AppRoutes.memorizationPlusKids,
         AppRoutes.memorizationPlusKidsStage,
         AppRoutes.memorizationPlusKidsCompletion,
+        AppRoutes.memorizationPlusKidsTreasures,
         AppRoutes.memorizationPlusGuardianLinking,
       ];
 

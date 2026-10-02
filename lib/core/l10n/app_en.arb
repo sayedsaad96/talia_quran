@@ -993,6 +993,22 @@
   "kidsTaliaCelebrateBubble": "Well done! May Allah bless you",
   "kidsTaliaGuideBubble": "Your mission is ready, let's go!",
   "kidsTaliaWelcomeBackBubble": "I missed you!",
+  "kidsTreasuresTitle": "My treasures",
+  "kidsTreasuresEmpty": "Memorize your first surah to find your first treasure!",
+  "kidsRegionBeginning": "The beginning",
+  "kidsRegionPalmOasis": "Palm Oasis",
+  "kidsRegionFlowerValley": "Flower Valley",
+  "kidsRegionStarMountain": "Star Mountain",
+  "kidsRegionPearlSea": "Pearl Sea",
+  "kidsRegionProgress": "{memorizedText} of {totalText} surahs",
+  "@kidsRegionProgress": {
+    "placeholders": {
+      "memorized": {"type": "int"},
+      "total": {"type": "int"},
+      "memorizedText": {"type": "String"},
+      "totalText": {"type": "String"}
+    }
+  },
   "kidsTaliaFarewellBubble": "Great work today! See you tomorrow",
   "kidsTaliaJourneyDoneBubble": "You finished the whole journey!",
   "kidsTaliaMapBubble": "Let's continue the adventure!",

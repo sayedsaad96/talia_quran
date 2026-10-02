@@ -132,6 +132,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_treasures_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
@@ -950,6 +951,14 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KidsReadingReceiptStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerFactory<KidsTreasuresCubit>(
+    () => KidsTreasuresCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<QuranRepository>(),
+      certificatesLoader: () =>
+          getIt<AchievementService>().getEarnedCertificates(isKids: true),
     ),
   );
   getIt.registerFactory<KidsJourneyCubit>(

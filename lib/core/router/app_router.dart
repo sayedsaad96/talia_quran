@@ -47,6 +47,7 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_home_p
 import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
@@ -97,6 +98,8 @@ abstract class AppRoutes {
       '/memorization-plus/kids-stage';
   static const String memorizationPlusKidsCompletion =
       '/memorization-plus/kids-completion';
+  static const String memorizationPlusKidsTreasures =
+      '/memorization-plus/kids-treasures';
 
   static const String familyDashboard = '/family-dashboard';
   static const String childDetail = '/family-dashboard/child';
@@ -796,6 +799,12 @@ abstract class AppRouter {
                 : int.tryParse(state.uri.queryParameters['ayahNumber'] ?? ''),
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsTreasures,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) => const KidsTreasuresPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

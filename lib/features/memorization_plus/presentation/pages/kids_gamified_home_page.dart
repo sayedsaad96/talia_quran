@@ -186,6 +186,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
             }),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
+            onTreasuresTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(AppRoutes.memorizationPlusKidsTreasures);
+            }),
           );
         },
       ),
@@ -231,6 +235,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onRefresh,
     this.onPathSettingsTap,
     this.onReadingMissionTap,
+    this.onTreasuresTap,
   });
 
   final KidsJourneyLoaded state;
@@ -244,6 +249,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   /// Opens the kids Mushaf for the reading mission card.
   final VoidCallback? onReadingMissionTap;
+
+  /// Opens «كنوزي» from the progress header chip.
+  final VoidCallback? onTreasuresTap;
 
   @override
   Widget build(BuildContext context) {
@@ -276,6 +284,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         progress: state.progress,
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
+                        onTreasuresTap: onTreasuresTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       KidsTaliaMomentCompanion(

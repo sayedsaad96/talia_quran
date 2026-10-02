@@ -997,6 +997,22 @@
   "kidsTaliaCelebrateBubble": "أحسنت! بارك الله فيك",
   "kidsTaliaGuideBubble": "مهمتك جاهزة، هيا نبدأ!",
   "kidsTaliaWelcomeBackBubble": "اشتقت إليك!",
+  "kidsTreasuresTitle": "كنوزي",
+  "kidsTreasuresEmpty": "احفظ أول سورة لتجد أول كنز!",
+  "kidsRegionBeginning": "البداية",
+  "kidsRegionPalmOasis": "واحة النخيل",
+  "kidsRegionFlowerValley": "وادي الأزهار",
+  "kidsRegionStarMountain": "جبل النجوم",
+  "kidsRegionPearlSea": "بحر اللؤلؤ",
+  "kidsRegionProgress": "{memorizedText} من {totalText} سور",
+  "@kidsRegionProgress": {
+    "placeholders": {
+      "memorized": {"type": "int"},
+      "total": {"type": "int"},
+      "memorizedText": {"type": "String"},
+      "totalText": {"type": "String"}
+    }
+  },
   "kidsTaliaFarewellBubble": "أحسنت اليوم! نلتقي غدًا",
   "kidsTaliaJourneyDoneBubble": "أتممت رحلتك كلها!",
   "kidsTaliaMapBubble": "هيا نكمل المغامرة!",

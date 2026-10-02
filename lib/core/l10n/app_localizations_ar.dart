@@ -2566,6 +2566,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsTaliaWelcomeBackBubble => 'اشتقت إليك!';
 
   @override
+  String get kidsTreasuresTitle => 'كنوزي';
+
+  @override
+  String get kidsTreasuresEmpty => 'احفظ أول سورة لتجد أول كنز!';
+
+  @override
+  String get kidsRegionBeginning => 'البداية';
+
+  @override
+  String get kidsRegionPalmOasis => 'واحة النخيل';
+
+  @override
+  String get kidsRegionFlowerValley => 'وادي الأزهار';
+
+  @override
+  String get kidsRegionStarMountain => 'جبل النجوم';
+
+  @override
+  String get kidsRegionPearlSea => 'بحر اللؤلؤ';
+
+  @override
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  ) {
+    return '$memorizedText من $totalText سور';
+  }
+
+  @override
   String get kidsTaliaFarewellBubble => 'أحسنت اليوم! نلتقي غدًا';
 
   @override

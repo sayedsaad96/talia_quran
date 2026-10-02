@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -113,6 +114,8 @@ class _FakeGoRouterState extends Fake implements GoRouterState {
   Object? get extra => null;
 }
 
+class _FakeBuildContext extends Fake implements BuildContext {}
+
 MemorizationProfile _profile(MemorizationPath path) => MemorizationProfile(
   schemaVersion: 1,
   selectedPath: path,
@@ -224,6 +227,30 @@ void main() {
     test('allows guests with no profile', () async {
       registerProfile(null);
       expect(await MemorizationRouteGuard.kidsOnlyRedirect(), isNull);
+    });
+  });
+
+  group('kids treasures route', () {
+    test('is kids-only: adults are redirected, children allowed', () async {
+      registerAuth(const AuthInitial());
+      addTearDown(AppRouter.router.dispose);
+      final match = AppRouter.router.configuration.findMatch(
+        Uri.parse(AppRoutes.memorizationPlusKidsTreasures),
+      );
+      expect(match.error, isNull);
+      final route = match.matches.last.route as GoRoute;
+      final state = _FakeGoRouterState(
+        Uri.parse(AppRoutes.memorizationPlusKidsTreasures),
+      );
+
+      registerProfile(_profile(MemorizationPath.adult));
+      expect(
+        await route.redirect!(_FakeBuildContext(), state),
+        AppRoutes.memorizationPlus,
+      );
+
+      registerProfile(_profile(MemorizationPath.child));
+      expect(await route.redirect!(_FakeBuildContext(), state), isNull);
     });
   });
 

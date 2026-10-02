@@ -44,6 +44,35 @@ void main() {
       );
     });
 
+    testWidgets('treasures chip appears only with a callback and taps through', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      var taps = 0;
+      Widget content({VoidCallback? onTreasuresTap}) => _TestApp(
+        child: KidsGamifiedHomeContent(
+          state: _loadedState,
+          onHomeTap: () {},
+          onMushafTap: () {},
+          onJourneyTap: () {},
+          onMissionTap: () {},
+          onTreasuresTap: onTreasuresTap,
+        ),
+      );
+
+      await tester.pumpWidget(content());
+      expect(find.byKey(const ValueKey('kids-home-treasures')), findsNothing);
+
+      await tester.pumpWidget(content(onTreasuresTap: () => taps++));
+      expect(find.text('My treasures'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('kids-home-treasures')));
+      expect(taps, 1);
+    });
+
     testWidgets('renders progress, mission, and bottom navigation actions', (
       tester,
     ) async {

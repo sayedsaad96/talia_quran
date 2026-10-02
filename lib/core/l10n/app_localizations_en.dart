@@ -2585,6 +2585,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsTaliaWelcomeBackBubble => 'I missed you!';
 
   @override
+  String get kidsTreasuresTitle => 'My treasures';
+
+  @override
+  String get kidsTreasuresEmpty =>
+      'Memorize your first surah to find your first treasure!';
+
+  @override
+  String get kidsRegionBeginning => 'The beginning';
+
+  @override
+  String get kidsRegionPalmOasis => 'Palm Oasis';
+
+  @override
+  String get kidsRegionFlowerValley => 'Flower Valley';
+
+  @override
+  String get kidsRegionStarMountain => 'Star Mountain';
+
+  @override
+  String get kidsRegionPearlSea => 'Pearl Sea';
+
+  @override
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  ) {
+    return '$memorizedText of $totalText surahs';
+  }
+
+  @override
   String get kidsTaliaFarewellBubble => 'Great work today! See you tomorrow';
 
   @override

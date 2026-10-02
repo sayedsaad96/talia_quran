@@ -16,12 +16,16 @@ class KidsProgressHeader extends StatelessWidget {
     this.childName,
     this.onAvatarTap,
     this.onSettingsTap,
+    this.onTreasuresTap,
   });
 
   final KidsProgress progress;
   final String? childName;
   final VoidCallback? onAvatarTap;
   final VoidCallback? onSettingsTap;
+
+  /// Opens «كنوزي» (regions and certificates). No chip when null.
+  final VoidCallback? onTreasuresTap;
 
   @override
   Widget build(BuildContext context) {
@@ -160,10 +164,73 @@ class KidsProgressHeader extends StatelessWidget {
                 starsEarned: progress.starsEarned,
                 streakDays: progress.currentStreak,
               ),
+              if (onTreasuresTap != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _TreasuresChip(onTap: onTreasuresTap!),
+              ],
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// «كنوزي» entry: a gold-trimmed chip with a 48 dp touch target.
+class _TreasuresChip extends StatelessWidget {
+  const _TreasuresChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const ValueKey('kids-home-treasures'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: KidsTheme.goldStar.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              border: Border.all(
+                color: KidsTheme.goldStar.withValues(alpha: 0.45),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: KidsTheme.goldStar,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Flexible(
+                  child: Text(
+                    context.l10n.kidsTreasuresTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
