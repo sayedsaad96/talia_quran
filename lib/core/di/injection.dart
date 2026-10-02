@@ -73,6 +73,7 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
+import '../../features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import '../../features/memorization_plus/data/listening/listening_audio.dart';
 import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
 import '../../features/memorization_plus/data/listening/listening_recitation_capture.dart';
@@ -391,6 +392,15 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<KidsWorldPhaseController>(
+    () => KidsWorldPhaseController(
+      prayerTimes: () async {
+        final s = await getIt<PrayerTimesService>().current(isArabic: true);
+        if (s == null || s.fajr == null || s.maghrib == null) return null;
+        return (fajr: s.fajr!, maghrib: s.maghrib!);
+      },
+    ),
   );
   getIt.registerLazySingleton<PrayerSerenityWatcher>(
     () => PrayerSerenityWatcher(
