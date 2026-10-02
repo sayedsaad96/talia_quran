@@ -161,7 +161,7 @@ class _RewardCard extends StatelessWidget {
         children: [
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.85, end: 1),
-            duration: const Duration(milliseconds: 650),
+            duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 650),
             curve: Curves.elasticOut,
             builder: (context, scale, child) {
               return Transform.scale(scale: scale, child: child);
