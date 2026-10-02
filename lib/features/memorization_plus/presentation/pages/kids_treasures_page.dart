@@ -14,9 +14,9 @@ import '../cubits/kids_treasures_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_region_name.dart';
+import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
-import '../world/kids_world_palette.dart';
 
 /// «كنوزي» — region progress and the child's kids certificates.
 class KidsTreasuresPage extends StatelessWidget {
@@ -84,7 +84,6 @@ class KidsTreasuresContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final palette = KidsWorldPalette.of(context);
     return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -115,13 +114,9 @@ class KidsTreasuresContent extends StatelessWidget {
                     ],
                     if (certificates.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.myCertificates,
-                        style: AppTypography.titleMedium.copyWith(
-                          color: palette.onScene,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0,
-                        ),
+                      KidsSectionHeading(
+                        text: l10n.myCertificates,
+                        fontWeight: FontWeight.bold,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       for (final cert in certificates) ...[
@@ -139,7 +134,6 @@ class KidsTreasuresContent extends StatelessWidget {
     );
   }
 }
-
 
 IconData _regionIcon(KidsRegionId id) => switch (id) {
   KidsRegionId.beginning => Icons.flag_rounded,

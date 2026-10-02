@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 
 Widget _app(Widget child, {double scale = 1, String locale = 'ar'}) =>
     MaterialApp(
@@ -107,6 +110,37 @@ void main() {
     await tester.pumpWidget(_app(_content(certificates: [cert]), locale: 'en'));
     expect(find.text('Surah certificate'), findsOneWidget);
     expect(find.byType(KidsTaliaCompanion), findsNothing);
+  });
+
+  testWidgets('the certificates heading is dark on the day sky', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(tester.view.reset);
+    final controller = KidsWorldPhaseController(
+      prayerTimes: () async => null,
+      clock: () => DateTime(2026, 10, 2, 12),
+    );
+    getIt.registerSingleton<KidsWorldPhaseController>(controller);
+    final cert = CertificateAward(
+      id: 'c1',
+      titleAr: 'شهادة حفظ سورة',
+      titleEn: 'Surah certificate',
+      type: CertificateType.surah,
+      earnedAt: DateTime(2026, 10, 1),
+    );
+
+    await tester.pumpWidget(_app(_content(certificates: [cert]), locale: 'en'));
+    await tester.pump();
+    await tester.pump();
+
+    final heading = tester.widget<Text>(find.text('My Certificates'));
+    expect(heading.style?.color, KidsWorldPalette.day.onScene);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+    getIt.unregister<KidsWorldPhaseController>();
   });
 
   testWidgets('renders at 320 px, Arabic, text scale 1.3 without errors', (

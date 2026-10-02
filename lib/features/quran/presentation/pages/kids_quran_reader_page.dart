@@ -99,6 +99,11 @@ class KidsReaderAudioController {
   }
 }
 
+/// True only when [state] holds the loaded detail of exactly [pageNumber].
+@visibleForTesting
+bool kidsReaderPageIsLoaded(QuranPageState state, int pageNumber) =>
+    state is QuranPageLoaded && state.detail.pageNumber == pageNumber;
+
 /// Plan 2 — the child's explicit «قرأت هذه الصفحة» confirmation. Opening a
 /// page or playing audio never confirms; only [confirm] does, and only when
 /// both the reading log ([confirmRead]) and the day's receipt store accept it.
@@ -218,7 +223,13 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
     // hidden rather than confirming something that is not recorded.
     if (getIt.isRegistered<KidsReadingReceiptStore>()) {
       _confirmation = KidsReaderConfirmation(
-        confirmRead: (page) => _quranPageCubit.confirmRead(page),
+        confirmRead: (page) async {
+          // The cubit is shared: never record a receipt for a page whose
+          // detail is not the one currently loaded.
+          final state = _quranPageCubit.state;
+          if (!kidsReaderPageIsLoaded(state, page)) return false;
+          return _quranPageCubit.confirmRead(page);
+        },
         store: getIt<KidsReadingReceiptStore>(),
       );
       unawaited(_confirmation!.loadToday());

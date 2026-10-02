@@ -8,7 +8,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_daily_missions.dart';
@@ -23,9 +22,9 @@ import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
-import '../world/kids_world_palette.dart';
 
 class KidsGamifiedHomePage extends StatelessWidget {
   const KidsGamifiedHomePage({
@@ -164,6 +163,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
                         ayahNumber: mission.startAyah,
                       ),
               );
+              // A page confirmed in the Mushaf completes the reading card.
+              if (context.mounted) {
+                await _reloadAfterReader(context, state.surahId);
+              }
             }),
             onJourneyTap: () => _openDestination(() async {
               if (!context.mounted) return;
@@ -177,11 +180,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
               if (!context.mounted) return;
               await context.push(kidsQuranReaderLocation(state.surahId));
               if (context.mounted) {
-                // A confirmed page completes the reading card.
-                await context.read<KidsJourneyCubit>().load(
-                  surahId: state.surahId,
-                  followFrontier: true,
-                );
+                await _reloadAfterReader(context, state.surahId);
               }
             }),
             onPathSettingsTap: () =>
@@ -193,6 +192,15 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
           );
         },
       ),
+    );
+  }
+
+  /// Reloads the journey after the reader closes: a confirmed page completes
+  /// the reading card.
+  Future<void> _reloadAfterReader(BuildContext context, int surahId) async {
+    await context.read<KidsJourneyCubit>().load(
+      surahId: surahId,
+      followFrontier: true,
     );
   }
 
@@ -358,16 +366,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     if (others.isEmpty) return const [];
     return [
       const SizedBox(height: AppSpacing.lg),
-      Semantics(
-        header: true,
-        child: Text(
-          context.l10n.kidsDailyMissionsTitle,
-          style: AppTypography.titleMedium.copyWith(
-            color: KidsWorldPalette.of(context).onScene,
-            fontFamily: 'Amiri',
-            letterSpacing: 0,
-          ),
-        ),
+      KidsSectionHeading(
+        text: context.l10n.kidsDailyMissionsTitle,
+        fontFamily: 'Amiri',
       ),
       for (final mission in others) ...[
         const SizedBox(height: AppSpacing.sm),

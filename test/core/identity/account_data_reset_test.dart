@@ -138,6 +138,7 @@ void main() {
         'last_restorable_location': '/memorization-v2/session?surahId=67',
         'daily_read_pages_2026-09-08': '[12]',
         'daily_wird_target_2026-09-08': 12,
+        'kids_reading_receipts_user-a': '{"2026-09-08":[12]}',
         'audio_resume_position': '{"surahId":67,"ayahNumber":1}',
         'khatmah_active_plan': '{"id":"account-a-plan"}',
         'khatmah_history': '[{"id":"account-a-plan"}]',
@@ -322,6 +323,7 @@ void main() {
       expect(prefs.getString('last_restorable_location'), isNull);
       expect(prefs.getString('daily_read_pages_2026-09-08'), isNull);
       expect(prefs.getInt('daily_wird_target_2026-09-08'), isNull);
+      expect(prefs.getString('kids_reading_receipts_user-a'), isNull);
       expect(prefs.getString('audio_resume_position'), isNull);
       expect(prefs.getString('mem_plus_local_records_claimed_by'), isNull);
     });

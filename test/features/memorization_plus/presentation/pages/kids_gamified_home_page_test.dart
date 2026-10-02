@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -12,6 +15,8 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_g
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_daily_mission_tile.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_day_complete_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 
 void main() {
   setUpAll(() {
@@ -543,6 +548,69 @@ void main() {
       expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
     });
 
+    testWidgets('returning from the Mushaf tab reloads the journey', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      final cubit = _FakeJourneyCubit();
+      getIt.registerFactory<KidsJourneyCubit>(() => cubit);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        if (getIt.isRegistered<KidsJourneyCubit>()) {
+          getIt.unregister<KidsJourneyCubit>();
+        }
+      });
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const KidsGamifiedHomePage(surahId: 114),
+          ),
+          GoRoute(
+            path: AppRoutes.memorizationPlusKidsQuran,
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                key: const ValueKey('fake-reader-back'),
+                onPressed: () => context.pop(),
+                child: const Text('back'),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('en'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(cubit.loads, 1);
+
+      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const ValueKey('fake-reader-back')), findsOneWidget);
+      expect(cubit.loads, 1);
+
+      await tester.tap(find.byKey(const ValueKey('fake-reader-back')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(cubit.loads, 2);
+    });
+
     group("today's missions", () {
       const readingAvailable = KidsDailyMission(
         id: '2026-10-02:reading',
@@ -631,6 +699,30 @@ void main() {
         handle.dispose();
       });
 
+      testWidgets('the header is dark on the day sky', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        final controller = KidsWorldPhaseController(
+          prayerTimes: () async => null,
+          clock: () => DateTime(2026, 10, 2, 12),
+        );
+        getIt.registerSingleton<KidsWorldPhaseController>(controller);
+
+        await tester.pumpWidget(
+          home(_loadedState.copyWith(dailyMissions: const [readingAvailable])),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        final heading = tester.widget<Text>(find.text("Today's missions"));
+        expect(heading.style?.color, KidsWorldPalette.day.onScene);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        controller.dispose();
+        getIt.unregister<KidsWorldPhaseController>();
+      });
+
       testWidgets('no missions renders no header', (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(900, 1600);
@@ -717,6 +809,22 @@ const _loadedState = KidsJourneyLoaded(
     lastSessionAt: null,
   ),
 );
+
+class _FakeJourneyCubit extends Cubit<KidsJourneyState>
+    implements KidsJourneyCubit {
+  _FakeJourneyCubit() : super(const KidsJourneyInitial());
+
+  int loads = 0;
+
+  @override
+  Future<void> load({required int surahId, bool followFrontier = false}) async {
+    loads++;
+    emit(_loadedState);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child});

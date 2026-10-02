@@ -123,6 +123,8 @@ class AccountDataReset {
     // Day-scoped reading proof and its fixed ordinary-wird target.
     'daily_read_pages_',
     'daily_wird_target_',
+    // Kids «قرأت هذه الصفحة» receipts (owner-scoped, per day).
+    'kids_reading_receipts_',
     // Opt-in Prayer Companion settings are account-owned device data.
     'prayer_companion_',
   };

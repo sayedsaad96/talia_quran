@@ -10,7 +10,9 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
+import 'package:talia_quran/features/quran/presentation/cubits/quran_page_cubit.dart';
 import 'package:talia_quran/features/quran/presentation/pages/kids_quran_reader_page.dart';
 
 void main() {
@@ -389,6 +391,30 @@ void main() {
 
     testWidgets('a refused confirmRead records nothing', (tester) async {
       await setUpConfirmation(confirmRead: (_) async => false);
+      await tester.pumpWidget(host());
+
+      await tester.tap(find.byKey(confirmKey));
+      await tester.pump();
+      await tester.pump();
+
+      expect(await store.pagesOn(kidsDayKey(now)), isEmpty);
+      expect(find.byKey(confirmKey), findsOneWidget);
+    });
+
+    testWidgets('a page that is not the loaded detail records nothing', (
+      tester,
+    ) async {
+      const loaded = QuranPageLoaded(
+        QuranPageDetail(pageNumber: 13, surahs: [], ayahs: []),
+      );
+      expect(kidsReaderPageIsLoaded(loaded, 13), isTrue);
+      expect(kidsReaderPageIsLoaded(loaded, 12), isFalse);
+      expect(kidsReaderPageIsLoaded(QuranPageLoading(), 13), isFalse);
+
+      // The page asks to confirm 12 while the shared cubit holds page 13.
+      await setUpConfirmation(
+        confirmRead: (page) async => kidsReaderPageIsLoaded(loaded, page),
+      );
       await tester.pumpWidget(host());
 
       await tester.tap(find.byKey(confirmKey));
