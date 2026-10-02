@@ -134,7 +134,7 @@ class _KidsTaliaCompanionState extends State<KidsTaliaCompanion>
         end: 1.03,
       ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut)),
       child: AnimatedSwitcher(
-        duration: reduceMotion
+        duration: reduceMotion || !widget.animate
             ? Duration.zero
             : const Duration(milliseconds: 280),
         transitionBuilder: (child, animation) => FadeTransition(

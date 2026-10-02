@@ -10,6 +10,7 @@ import '../../../features/memorization_plus/domain/entities/memorization_entitie
 import '../../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../identity/record_owner_provider.dart';
 import '../../sync/cloud_sync_queue.dart';
+import '../../utils/talia_logger.dart';
 import '../review_record_audience_scope.dart';
 import '../review_record_identity.dart';
 import 'review_outcome_commit_support.dart';
@@ -22,7 +23,11 @@ import 'session_state.dart';
 /// projection and the session checkpoint are written in ONE Isar transaction
 /// keyed by `sessionId|taskId|final`, so a retried completion never schedules
 /// the ayah's spaced-repetition review a second time. Unlike the adult path it
-/// writes no outbox rows (the outbox `sync` effect uploads adult evidence only).
+/// writes no outbox rows: kids rewards and plan effects are handled by
+/// `awardKidsPoints`, not by the adult effect processor. Evidence upload is
+/// independent of this class; it depends on the `reviewEvidenceTransport` flag
+/// and on `ReviewEvidenceLocalDatasource.ensureSyncEffects` backfilling sync
+/// receipts for every event of the owner (no audience filter).
 final class KidsReviewOutcomeCommitter {
   KidsReviewOutcomeCommitter({
     required Isar isar,
@@ -172,11 +177,17 @@ final class KidsReviewOutcomeCommitter {
       // Same push `saveReviewRecord` triggers; never allowed to fail the commit.
       try {
         unawaited(
-          queue
-              .enqueue(CloudSyncQueueKind.productionPush)
-              .catchError((Object _) {}),
+          queue.enqueue(CloudSyncQueueKind.productionPush).catchError((
+            Object error,
+            StackTrace stack,
+          ) {
+            TaliaLogger.w('Kids review push enqueue failed', error, stack);
+          }),
         );
-      } catch (_) {}
+      } catch (error, stack) {
+        // enqueue threw synchronously before returning a future.
+        TaliaLogger.w('Kids review push enqueue failed', error, stack);
+      }
     }
     return result;
   }

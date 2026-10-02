@@ -11,11 +11,25 @@ void main() {
   Future<({DateTime fajr, DateTime maghrib})?> times() async =>
       (fajr: fajr, maghrib: maghrib);
 
-  test('starts at night, resolves to day after ensureStarted at 10:00', () {
+  test('seeds synchronously from the fallback rule before ensureStarted', () {
+    final noon = KidsWorldPhaseController(
+      prayerTimes: times,
+      clock: () => DateTime(2026, 10, 2, 12),
+    );
+    final evening = KidsWorldPhaseController(
+      prayerTimes: times,
+      clock: () => DateTime(2026, 10, 2, 21),
+    );
+    expect(noon.value, KidsWorldPhase.day);
+    expect(evening.value, KidsWorldPhase.night);
+    noon.dispose();
+    evening.dispose();
+  });
+
+  test('resolves to day after ensureStarted at 10:00', () {
     fakeAsync((async) {
       final now = DateTime(2026, 10, 2, 10);
       final c = KidsWorldPhaseController(prayerTimes: times, clock: () => now);
-      expect(c.value, KidsWorldPhase.night);
       c.ensureStarted();
       c.ensureStarted();
       async.flushMicrotasks();

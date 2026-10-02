@@ -154,4 +154,18 @@ void main() {
     expect(lines[KidsTaliaMoment.stageReady], 'هل أنت مستعد؟');
     expect(lines[KidsTaliaMoment.celebrate], 'أحسنت! بارك الله فيك');
   });
+
+  testWidgets('animate: false swaps pose without a running animation', (
+    tester,
+  ) async {
+    Widget host(KidsTaliaPose pose) => MaterialApp(
+      home: Scaffold(
+        body: KidsTaliaCompanion(pose: pose, message: 'x', animate: false),
+      ),
+    );
+    await tester.pumpWidget(host(KidsTaliaPose.listening));
+    await tester.pumpWidget(host(KidsTaliaPose.speaking));
+    await tester.pump();
+    expect(tester.hasRunningAnimations, isFalse);
+  });
 }

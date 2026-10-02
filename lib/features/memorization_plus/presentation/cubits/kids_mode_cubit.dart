@@ -23,6 +23,7 @@ import '../../../../core/services/activity_event_recorder.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
+import '../../../../core/utils/talia_logger.dart';
 import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -832,7 +833,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           );
           awardSessionId =
               'kids_${commit.sessionId}_${st.surahId}_${st.ayahNumber}';
-        } catch (_) {
+        } catch (error, stack) {
+          TaliaLogger.w('Kids review commit failed', error, stack);
           emit(
             st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
           );

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/utils/talia_logger.dart';
 import '../../domain/services/kids_world_phase.dart';
 
 typedef KidsWorldPrayerTimesLoader =
@@ -17,7 +18,9 @@ class KidsWorldPhaseController extends ValueNotifier<KidsWorldPhase> {
     DateTime Function() clock = DateTime.now,
   }) : _prayerTimes = prayerTimes,
        _clock = clock,
-       super(KidsWorldPhase.night);
+       // Seed synchronously with the fallback rule so a cold launch never paints
+       // the wrong phase before the async prayer-time refresh corrects it.
+       super(kidsWorldPhaseAt(clock()));
 
   final KidsWorldPrayerTimesLoader _prayerTimes;
   final DateTime Function() _clock;
@@ -40,7 +43,8 @@ class KidsWorldPhaseController extends ValueNotifier<KidsWorldPhase> {
     ({DateTime fajr, DateTime maghrib})? times;
     try {
       times = await _prayerTimes();
-    } catch (_) {
+    } catch (error, stack) {
+      TaliaLogger.w('Kids world prayer times unavailable', error, stack);
       times = null;
     }
     // Disposed or superseded by a newer refresh while loading.

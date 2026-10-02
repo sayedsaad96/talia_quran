@@ -70,7 +70,8 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       unawaited(getIt<NotificationScheduler>().refreshNotifications(l10n));
       unawaited(getIt<TaliaNotificationService>().clearBadge());
       getIt<AuthCubit>().resyncOnResume();
-      if (getIt.isRegistered<KidsWorldPhaseController>()) {
+      if (getIt.isRegistered<KidsWorldPhaseController>() &&
+          getIt.checkLazySingletonInstanceExists<KidsWorldPhaseController>()) {
         unawaited(getIt<KidsWorldPhaseController>().refresh());
       }
     } else if (state == AppLifecycleState.inactive ||
