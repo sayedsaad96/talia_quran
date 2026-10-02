@@ -6565,6 +6565,18 @@ abstract class AppLocalizations {
   /// **'إيقاف'**
   String get kidsQuranPausePage;
 
+  /// No description provided for @kidsReaderConfirmPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرأت هذه الصفحة'**
+  String get kidsReaderConfirmPage;
+
+  /// No description provided for @kidsReaderPageConfirmed.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! سُجّلت قراءتك'**
+  String get kidsReaderPageConfirmed;
+
   /// No description provided for @parentDashboardPinInvalid.
   ///
   /// In ar, this message translates to:

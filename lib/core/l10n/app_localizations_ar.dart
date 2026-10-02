@@ -3748,6 +3748,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsQuranPausePage => 'إيقاف';
 
   @override
+  String get kidsReaderConfirmPage => 'قرأت هذه الصفحة';
+
+  @override
+  String get kidsReaderPageConfirmed => 'أحسنت! سُجّلت قراءتك';
+
+  @override
   String get parentDashboardPinInvalid => 'أدخل رمزًا من 4 أرقام';
 
   @override

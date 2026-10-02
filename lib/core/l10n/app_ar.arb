@@ -1516,6 +1516,8 @@
   "kidsQuranLongPressHint": "اضغط مطولاً على أي آية لتسمعها",
   "kidsQuranListenPage": "استمع للصفحة",
   "kidsQuranPausePage": "إيقاف",
+  "kidsReaderConfirmPage": "قرأت هذه الصفحة",
+  "kidsReaderPageConfirmed": "أحسنت! سُجّلت قراءتك",
   "parentDashboardPinInvalid": "أدخل رمزًا من 4 أرقام",
   "parentDashboardPinIncorrect": "رمز غير صحيح",
   "parentDashboardLinking": "جارٍ التحقق من رمز الربط…",

@@ -3741,6 +3741,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsQuranPausePage => 'Pause';
 
   @override
+  String get kidsReaderConfirmPage => 'I read this page';
+
+  @override
+  String get kidsReaderPageConfirmed => 'Well done! Your reading is saved';
+
+  @override
   String get parentDashboardPinInvalid => 'Enter a 4-digit code';
 
   @override

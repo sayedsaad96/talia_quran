@@ -12,8 +12,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../../../memorization_plus/data/datasources/kids_reading_receipt_store.dart';
+import '../../../memorization_plus/domain/services/kids_daily_missions.dart';
 import '../../../memorization_plus/presentation/theme/kids_theme.dart';
+import '../../../memorization_plus/presentation/widgets/kids_chunky_button.dart';
 import '../../../memorization_plus/presentation/widgets/kids_loading_widget.dart';
 import '../../../memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import '../cubits/quran_audio_player_cubit.dart';
@@ -95,6 +99,77 @@ class KidsReaderAudioController {
   }
 }
 
+/// Plan 2 — the child's explicit «قرأت هذه الصفحة» confirmation. Opening a
+/// page or playing audio never confirms; only [confirm] does, and only when
+/// both the reading log ([confirmRead]) and the day's receipt store accept it.
+@visibleForTesting
+class KidsReaderConfirmation extends ChangeNotifier {
+  KidsReaderConfirmation({
+    required Future<bool> Function(int pageNumber) confirmRead,
+    required KidsReadingReceiptStore store,
+    DateTime Function()? clock,
+    this.toastDuration = const Duration(seconds: 2),
+  }) : _confirmRead = confirmRead,
+       _store = store,
+       _clock = clock ?? DateTime.now;
+
+  final Future<bool> Function(int pageNumber) _confirmRead;
+  final KidsReadingReceiptStore _store;
+  final DateTime Function() _clock;
+  final Duration toastDuration;
+
+  final Set<int> _confirmed = <int>{};
+  final Set<int> _inFlight = <int>{};
+  Timer? _toastTimer;
+  bool _showToast = false;
+  bool _disposed = false;
+
+  /// True for [toastDuration] after a successful confirmation.
+  bool get showToast => _showToast;
+
+  bool isConfirmed(int pageNumber) => _confirmed.contains(pageNumber);
+
+  /// Pages already confirmed today (e.g. before the app was reopened).
+  Future<void> loadToday() async {
+    try {
+      final pages = await _store.pagesOn(kidsDayKey(_clock()));
+      if (_disposed) return;
+      _confirmed.addAll(pages);
+      notifyListeners();
+    } catch (error, stack) {
+      TaliaLogger.w('Kids reader: could not load today pages', error, stack);
+    }
+  }
+
+  Future<void> confirm(int pageNumber) async {
+    if (_confirmed.contains(pageNumber) || !_inFlight.add(pageNumber)) return;
+    try {
+      if (!await _confirmRead(pageNumber)) return;
+      await _store.recordPage(pageNumber);
+      if (_disposed) return;
+      _confirmed.add(pageNumber);
+      _showToast = true;
+      _toastTimer?.cancel();
+      _toastTimer = Timer(toastDuration, () {
+        _showToast = false;
+        if (!_disposed) notifyListeners();
+      });
+      notifyListeners();
+    } catch (error, stack) {
+      TaliaLogger.e('Kids reader: page confirmation failed', error, stack);
+    } finally {
+      _inFlight.remove(pageNumber);
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _toastTimer?.cancel();
+    super.dispose();
+  }
+}
+
 class KidsQuranReaderPage extends StatefulWidget {
   const KidsQuranReaderPage({
     super.key,
@@ -120,6 +195,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
   late final KidsReaderAudioController _audioController;
   late int _currentPageNumber;
   QuranPageDetail? _currentDetail;
+  KidsReaderConfirmation? _confirmation;
 
   int _normalizePageNumber(int pageNumber) => pageNumber.clamp(1, 604);
 
@@ -138,6 +214,15 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
     unawaited(_quranPageCubit.loadPage(_currentPageNumber));
     // Lazy-load QCF fonts for the current page and nearby pages.
     unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 8));
+    // The receipt store backs the confirm button; without it the button stays
+    // hidden rather than confirming something that is not recorded.
+    if (getIt.isRegistered<KidsReadingReceiptStore>()) {
+      _confirmation = KidsReaderConfirmation(
+        confirmRead: (page) => _quranPageCubit.confirmRead(page),
+        store: getIt<KidsReadingReceiptStore>(),
+      );
+      unawaited(_confirmation!.loadToday());
+    }
   }
 
   int _pageForSurah(int? surahId) {
@@ -148,6 +233,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
   @override
   void dispose() {
     unawaited(_audioController.stopIfStarted());
+    _confirmation?.dispose();
     _pageController.dispose();
     _quranPageCubit.close();
     super.dispose();
@@ -226,6 +312,8 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
                   audio.currentPageNumber == pageNumber,
               onTogglePageAudio: () =>
                   unawaited(_audioController.togglePage(pageNumber)),
+              confirmation: _confirmation,
+              isAudioPlaying: audio.isPlaying,
             ),
           );
         },
@@ -248,6 +336,8 @@ class KidsQuranReaderContent extends StatelessWidget {
     this.onAyahLongPress,
     this.isPagePlaying = false,
     this.onTogglePageAudio,
+    this.confirmation,
+    this.isAudioPlaying = false,
   });
 
   final PageController? pageController;
@@ -268,6 +358,12 @@ class KidsQuranReaderContent extends StatelessWidget {
 
   /// K26 — plays or pauses the page (null hides the button).
   final VoidCallback? onTogglePageAudio;
+
+  /// Plan 2 — «قرأت هذه الصفحة» (null hides the button).
+  final KidsReaderConfirmation? confirmation;
+
+  /// Any recitation is playing: playback never earns the confirm button.
+  final bool isAudioPlaying;
 
   /// Keeps the Quran surface calm and parchment-based, while using the same
   /// kids-path accent family for navigation, page metadata and highlights.
@@ -309,6 +405,14 @@ class KidsQuranReaderContent extends StatelessWidget {
                               onAyahLongPress!(surahId, ayahNumber),
                   ),
             ),
+            if (confirmation != null)
+              _KidsReaderConfirmBar(
+                confirmation: confirmation!,
+                pageNumber: pageNumber,
+                isAudioPlaying: isAudioPlaying,
+                accent: accent,
+                bg: bg,
+              ),
             _KidsQuranFooter(
               pageNumber: pageNumber,
               accent: accent,
@@ -398,6 +502,91 @@ class _KidsQuranHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _KidsReaderConfirmBar extends StatelessWidget {
+  const _KidsReaderConfirmBar({
+    required this.confirmation,
+    required this.pageNumber,
+    required this.isAudioPlaying,
+    required this.accent,
+    required this.bg,
+  });
+
+  final KidsReaderConfirmation confirmation;
+  final int pageNumber;
+  final bool isAudioPlaying;
+  final Color accent;
+  final Color bg;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: confirmation,
+      builder: (context, _) {
+        final l10n = context.l10n;
+        final Widget child;
+        if (confirmation.isConfirmed(pageNumber)) {
+          child = confirmation.showToast
+              ? KidsTaliaCompanion(
+                  pose: KidsTaliaPose.happy,
+                  message: l10n.kidsReaderPageConfirmed,
+                  animate: false,
+                  height: 72,
+                )
+              : Container(
+                  key: const ValueKey('kids-reader-page-confirmed'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.1),
+                    border: Border.all(color: accent.withValues(alpha: 0.45)),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: accent, size: 18),
+                      const SizedBox(width: AppSpacing.xs),
+                      Flexible(
+                        child: Text(
+                          l10n.kidsReaderPageConfirmed,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+        } else if (isAudioPlaying) {
+          return const SizedBox.shrink();
+        } else {
+          child = KidsChunkyButton(
+            key: const ValueKey('kids-reader-confirm-page'),
+            label: l10n.kidsReaderConfirmPage,
+            icon: Icons.check_rounded,
+            tone: KidsButtonTone.green,
+            height: 52,
+            onPressed: () => unawaited(confirmation.confirm(pageNumber)),
+          );
+        }
+        return Container(
+          color: bg,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            0,
+          ),
+          child: Center(child: child),
+        );
+      },
     );
   }
 }

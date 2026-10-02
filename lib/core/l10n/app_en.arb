@@ -1504,6 +1504,8 @@
   "kidsQuranLongPressHint": "Long-press any ayah to hear it",
   "kidsQuranListenPage": "Listen to the page",
   "kidsQuranPausePage": "Pause",
+  "kidsReaderConfirmPage": "I read this page",
+  "kidsReaderPageConfirmed": "Well done! Your reading is saved",
   "parentDashboardPinInvalid": "Enter a 4-digit code",
   "parentDashboardPinIncorrect": "Incorrect code",
   "parentDashboardLinking": "Verifying pairing code…",
