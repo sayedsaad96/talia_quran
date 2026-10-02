@@ -20,7 +20,10 @@ import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
+import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_loading_widget.dart';
+import '../widgets/kids_session_scene.dart';
+import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedListenPage extends StatelessWidget {
@@ -288,17 +291,24 @@ class KidsGamifiedListenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final audioUnavailable = state.audioError != null;
+    // Nothing moves around the recitation itself: the scene and Talia stay
+    // still while the ayah plays or the child recites (Adventure §7).
+    final calm = state.isPlaying || state.isRecording;
+    final pose = kidsTaliaPoseFor(state);
 
-    return KidsBackground(
+    return KidsSessionScene(
+      animate: !calm,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
-              KidsTopBar(
-                title: context.l10n.kidsGamifiedListenAndRepeat,
-                onBack: onBack,
-                backLabel: context.l10n.goBack,
+              _KidsSessionTopBand(
+                child: KidsTopBar(
+                  title: context.l10n.kidsGamifiedListenAndRepeat,
+                  onBack: onBack,
+                  backLabel: context.l10n.goBack,
+                ),
               ),
               Expanded(
                 child: CustomScrollView(
@@ -307,13 +317,20 @@ class KidsGamifiedListenContent extends StatelessWidget {
                   slivers: [
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
                         AppSpacing.md,
-                        AppSpacing.lg,
+                        AppSpacing.sm,
+                        AppSpacing.md,
                         AppSpacing.xl,
                       ),
                       sliver: SliverList.list(
                         children: [
+                          KidsTaliaCompanion(
+                            key: const ValueKey('kids-talia-companion'),
+                            pose: pose,
+                            message: kidsTaliaBubbleFor(context, pose),
+                            animate: !calm,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
                           if (state.isReview && state.isAwaitingRecitation)
                             const _KidsReviewChallengeCard()
                           else if (state.isRecording ||
@@ -351,10 +368,10 @@ class KidsGamifiedListenContent extends StatelessWidget {
                           ],
                           // A review has no listen gate to count (K28).
                           if (state.maxLoops > 0) ...[
-                            const SizedBox(height: AppSpacing.lg),
+                            const SizedBox(height: AppSpacing.md),
                             _KidsGamifiedLoopIndicator(state: state),
                           ],
-                          const SizedBox(height: AppSpacing.xl),
+                          const SizedBox(height: AppSpacing.lg),
                           _KidsGamifiedAudioControls(
                             state: state,
                             onPlayPause: onPlayPause,
@@ -380,6 +397,67 @@ class KidsGamifiedListenContent extends StatelessWidget {
   }
 }
 
+/// Solid band behind the top bar so its light text stays readable over the
+/// bright sky scene.
+class _KidsSessionTopBand extends StatelessWidget {
+  const _KidsSessionTopBand({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.xs,
+        AppSpacing.sm,
+        0,
+      ),
+      decoration: const BoxDecoration(
+        gradient: KidsTheme.heroCardGradient,
+        borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
+        boxShadow: KidsTheme.card25DShadow,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// A round, glossy icon badge that heads the kids session cards.
+class _KidsMedallion extends StatelessWidget {
+  const _KidsMedallion({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          center: const Alignment(-0.3, -0.4),
+          colors: [Color.lerp(color, Colors.white, 0.35)!, color],
+        ),
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: KidsTheme.card25DShadow,
+      ),
+      child: Icon(icon, color: Colors.white, size: 32),
+    );
+  }
+}
+
+const _kidsSoftCardDecoration = BoxDecoration(
+  color: KidsTheme.creamParchment,
+  borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
+  border: Border.fromBorderSide(
+    BorderSide(color: KidsTheme.parchmentEdge, width: 2),
+  ),
+  boxShadow: KidsTheme.card25DShadow,
+);
+
 /// W2 — child-friendly near-miss feedback: celebrates how close the child
 /// was and guides the next attempt, instead of a bare "did not match".
 class _CloseMatchFeedbackBanner extends StatelessWidget {
@@ -394,33 +472,53 @@ class _CloseMatchFeedbackBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       label: context.l10n.kidsRecitationCloseMatch(matched, total),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: KidsTheme.goldStar.withValues(alpha: 0.13),
-          borderRadius: KidsTheme.cardRadius,
-          border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.4)),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: _kidsSoftCardDecoration.copyWith(
+          border: Border.all(color: KidsTheme.goldStar, width: 2),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.emoji_events_rounded,
+            const _KidsMedallion(
+              icon: Icons.emoji_events_rounded,
               color: KidsTheme.goldStar,
-              size: 26,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Text(
-                context.l10n.kidsRecitationCloseMatch(matched, total),
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  letterSpacing: 0,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    context.l10n.kidsRecitationCloseMatch(matched, total),
+                    style: AppTypography.titleSmall.copyWith(
+                      color: KidsTheme.inkOnParchment,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: matched / total),
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 700),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => LinearProgressIndicator(
+                        value: value,
+                        minHeight: 10,
+                        color: KidsTheme.goldStar,
+                        backgroundColor: KidsTheme.parchmentEdge.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -441,19 +539,18 @@ class _KidsHiddenRecallCard extends StatelessWidget {
         key: const ValueKey('kids-hidden-recall-card'),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.xl,
+          vertical: AppSpacing.lg,
         ),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: KidsTheme.cardRadius,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        decoration: const BoxDecoration(
+          gradient: KidsTheme.heroCardGradient,
+          borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
+          boxShadow: KidsTheme.card25DShadow,
         ),
         child: Column(
           children: [
-            const Icon(
-              Icons.visibility_off_rounded,
-              color: Colors.white,
-              size: 36,
+            const _KidsMedallion(
+              icon: Icons.visibility_off_rounded,
+              color: KidsTheme.mintGlow,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -461,6 +558,7 @@ class _KidsHiddenRecallCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTypography.titleMedium.copyWith(
                 color: Colors.white,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0,
               ),
             ),
@@ -482,22 +580,30 @@ class _KidsReviewChallengeCard extends StatelessWidget {
       key: const ValueKey('kids-review-challenge-card'),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xl,
+        vertical: AppSpacing.lg,
       ),
-      decoration: BoxDecoration(
-        color: KidsTheme.reviewPurple.withValues(alpha: 0.16),
-        borderRadius: KidsTheme.cardRadius,
-        border: Border.all(
-          color: KidsTheme.reviewPurple.withValues(alpha: 0.5),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF8B5CF6), Color(0xFF5B21B6)],
         ),
+        borderRadius: BorderRadius.all(Radius.circular(AppSpacing.radiusXl)),
+        boxShadow: KidsTheme.card25DShadow,
       ),
       child: Column(
         children: [
+          const _KidsMedallion(
+            icon: Icons.star_rounded,
+            color: KidsTheme.goldStar,
+          ),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.l10n.kidsGamifiedReviewChallenge,
             textAlign: TextAlign.center,
             style: AppTypography.titleLarge.copyWith(
               color: Colors.white,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0,
             ),
           ),
@@ -506,7 +612,7 @@ class _KidsReviewChallengeCard extends StatelessWidget {
             context.l10n.kidsGamifiedReviewChallengeSubtitle,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: Colors.white.withValues(alpha: 0.92),
               letterSpacing: 0,
             ),
           ),
@@ -532,22 +638,27 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
       key: const ValueKey('kids-recall-from-memory-card'),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xl,
+        vertical: AppSpacing.lg,
       ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: KidsTheme.cardRadius,
-        border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.35)),
+      decoration: _kidsSoftCardDecoration.copyWith(
+        border: Border.all(
+          color: KidsTheme.reviewPurple.withValues(alpha: 0.45),
+          width: 2,
+        ),
       ),
       child: Column(
         children: [
-          const Icon(Icons.psychology_rounded, color: Colors.white, size: 36),
+          const _KidsMedallion(
+            icon: Icons.psychology_rounded,
+            color: KidsTheme.reviewPurple,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             context.l10n.kidsGamifiedTryToRemember,
             textAlign: TextAlign.center,
             style: AppTypography.titleMedium.copyWith(
-              color: Colors.white,
+              color: KidsTheme.inkOnParchment,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0,
             ),
           ),
@@ -559,7 +670,7 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
               style: MemorizationAyahDisplay.textStyle(
-                color: KidsTheme.goldLight,
+                color: KidsTheme.forestGreen,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -567,7 +678,7 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
               context.l10n.kidsGamifiedFirstWordShown,
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
+                color: KidsTheme.inkOnParchment.withValues(alpha: 0.75),
                 letterSpacing: 0,
               ),
             ),
@@ -585,46 +696,55 @@ class _KidsGamifiedLoopIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: KidsTheme.cardRadius,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: _kidsSoftCardDecoration,
       child: Column(
         children: [
           Text(
             context.l10n.kidsGamifiedRepeatStep,
             style: AppTypography.titleMedium.copyWith(
-              color: Colors.white,
+              color: KidsTheme.inkOnParchment,
               fontFamily: 'Amiri',
+              fontWeight: FontWeight.w700,
               letterSpacing: 0,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
             children: [
+              // Each finished listen pops in as a gold star.
               for (var index = 0; index < state.maxLoops; index++)
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  width: index < state.currentLoop ? 30 : 14,
-                  height: 14,
-                  decoration: BoxDecoration(
+                AnimatedScale(
+                  scale: index < state.currentLoop ? 1 : 0.8,
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 450),
+                  curve: Curves.elasticOut,
+                  child: Icon(
+                    index < state.currentLoop
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    size: 38,
                     color: index < state.currentLoop
                         ? KidsTheme.goldStar
-                        : Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        : KidsTheme.lockedGrey.withValues(alpha: 0.5),
                   ),
                 ),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                '${state.currentLoop}/${state.maxLoops}',
-                style: AppTypography.titleSmall.copyWith(
-                  color: KidsTheme.goldStar,
-                  letterSpacing: 0,
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
+                child: Text(
+                  '${state.currentLoop}/${state.maxLoops}',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: const Color(0xFFB45309),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
                 ),
               ),
             ],
@@ -682,47 +802,36 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
         !isRecording &&
         onManualComplete != null &&
         state.canUseGuardianFallback;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: FilledButton.tonalIcon(
+          child: KidsRoundActionButton(
             key: const ValueKey('kids-gamified-play-audio'),
+            icon: state.isPlaying
+                ? Icons.stop_rounded
+                : Icons.play_arrow_rounded,
+            label: context.l10n.kidsGamifiedListenAndRepeat,
             // No audio during a hidden recitation: it would be the answer.
             onPressed: state.isRecording || state.sessionState.phase.textHidden
                 ? null
                 : onPlayPause,
-            icon: Icon(
-              state.isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-            ),
-            label: Text(context.l10n.kidsGamifiedListenAndRepeat),
-            style: FilledButton.styleFrom(
-              backgroundColor: KidsTheme.goldStar,
-              foregroundColor: KidsTheme.nightSkyDark,
-              // The default disabled colours vanish on the night background
-              // and left an empty dark slab on screen.
-              disabledBackgroundColor: KidsTheme.goldStar.withValues(
-                alpha: 0.3,
-              ),
-              disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
-              minimumSize: const Size(220, 56),
-              shape: const RoundedRectangleBorder(
-                borderRadius: KidsTheme.buttonRadius,
-              ),
-            ),
+            active: state.isPlaying,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
           transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.1),
-                end: Offset.zero,
-              ).animate(animation),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.92, end: 1).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+              ),
               child: child,
             ),
           ),
@@ -740,18 +849,14 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                   onPlayPressed: onPlayPause,
                 )
               : recalling
-              ? FilledButton.icon(
+              ? Center(
                   key: const ValueKey('kids-gamified-record-recitation-idle'),
-                  onPressed: micDisabled ? null : onRecordRecitation,
-                  icon: const Icon(Icons.mic_rounded),
-                  label: Text(context.l10n.kidsGamifiedRecordYourVoice),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KidsTheme.forestGreen,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(56),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: KidsTheme.buttonRadius,
-                    ),
+                  child: KidsRoundActionButton(
+                    icon: Icons.mic_rounded,
+                    label: context.l10n.kidsGamifiedRecordYourVoice,
+                    tone: KidsButtonTone.green,
+                    diameter: 100,
+                    onPressed: micDisabled ? null : onRecordRecitation,
                   ),
                 )
               // A finished ayah has nothing left to try: no greyed-out button.
@@ -759,80 +864,62 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
               ? const SizedBox.shrink(
                   key: ValueKey('kids-gamified-completed-idle'),
                 )
-              : FilledButton.icon(
+              : KidsChunkyButton(
                   key: const ValueKey('kids-gamified-try-from-memory'),
                   onPressed: onTryFromMemory,
-                  icon: const Icon(Icons.psychology_rounded),
-                  label: Text(context.l10n.kidsGamifiedTryFromMemory),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KidsTheme.forestGreen,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(56),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: KidsTheme.buttonRadius,
-                    ),
-                  ),
+                  icon: Icons.psychology_rounded,
+                  label: context.l10n.kidsGamifiedTryFromMemory,
+                  tone: KidsButtonTone.purple,
                 ),
         ),
         if (showFirstWordHint) ...[
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
+          const SizedBox(height: AppSpacing.md),
+          KidsChunkyButton(
             key: const ValueKey('kids-gamified-first-word-hint'),
             onPressed: onRevealFirstWord,
-            icon: const Icon(Icons.lightbulb_rounded),
-            label: Text(context.l10n.kidsGamifiedGiveMeTheStart),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: KidsTheme.goldLight,
-              side: BorderSide(
-                color: KidsTheme.goldStar.withValues(alpha: 0.5),
-              ),
-              minimumSize: const Size.fromHeight(52),
-              shape: const RoundedRectangleBorder(
-                borderRadius: KidsTheme.buttonRadius,
-              ),
-            ),
+            icon: Icons.lightbulb_rounded,
+            label: context.l10n.kidsGamifiedGiveMeTheStart,
+            tone: KidsButtonTone.soft,
+            height: 56,
           ),
         ],
         if (showRemindMe) ...[
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
+          const SizedBox(height: AppSpacing.md),
+          KidsChunkyButton(
             key: const ValueKey('kids-gamified-remind-me'),
             onPressed: onRemindMe,
-            icon: const Icon(Icons.visibility_rounded),
-            label: Text(context.l10n.kidsGamifiedRemindMe),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
-              minimumSize: const Size.fromHeight(52),
-              shape: const RoundedRectangleBorder(
-                borderRadius: KidsTheme.buttonRadius,
-              ),
-            ),
+            icon: Icons.visibility_rounded,
+            label: context.l10n.kidsGamifiedRemindMe,
+            tone: KidsButtonTone.soft,
+            height: 56,
           ),
         ],
         if (showManualComplete) ...[
           const SizedBox(height: AppSpacing.md),
-          Text(
-            context.l10n.kidsManualCompleteHint,
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(
-              color: Colors.white.withValues(alpha: 0.75),
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
-            key: const ValueKey('kids-gamified-manual-complete'),
-            onPressed: onManualComplete,
-            icon: const Icon(Icons.verified_rounded),
-            label: Text(context.l10n.kidsManualCompleteAction),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
-              minimumSize: const Size.fromHeight(52),
-              shape: const RoundedRectangleBorder(
-                borderRadius: KidsTheme.buttonRadius,
-              ),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: _kidsSoftCardDecoration,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.kidsManualCompleteHint,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: KidsTheme.inkOnParchment.withValues(alpha: 0.8),
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                KidsChunkyButton(
+                  key: const ValueKey('kids-gamified-manual-complete'),
+                  onPressed: onManualComplete,
+                  icon: Icons.verified_rounded,
+                  label: context.l10n.kidsManualCompleteAction,
+                  tone: KidsButtonTone.green,
+                  height: 56,
+                ),
+              ],
             ),
           ),
         ],
@@ -855,25 +942,16 @@ class _ListenFirstMicHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return KidsChunkyButton(
       key: const ValueKey('kids-gamified-listen-first-hint'),
       onPressed: onPlayPressed,
-      icon: const Icon(Icons.headphones_rounded),
-      label: Text(
-        context.l10n.kidsGamifiedListenFirst(
-          remainingListens,
-          context.numText(remainingListens),
-        ),
-        textAlign: TextAlign.center,
+      icon: Icons.headphones_rounded,
+      label: context.l10n.kidsGamifiedListenFirst(
+        remainingListens,
+        context.numText(remainingListens),
       ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: KidsTheme.goldStar,
-        side: BorderSide(color: KidsTheme.goldStar.withValues(alpha: 0.5)),
-        minimumSize: const Size.fromHeight(56),
-        shape: const RoundedRectangleBorder(
-          borderRadius: KidsTheme.buttonRadius,
-        ),
-      ),
+      tone: KidsButtonTone.soft,
+      maxLines: 3,
     );
   }
 }
@@ -897,6 +975,12 @@ class _RecordingActivePanel extends StatefulWidget {
 class _RecordingActivePanelState extends State<_RecordingActivePanel>
     with TickerProviderStateMixin {
   late final AnimationController _waveController;
+
+  static const _waveColors = [
+    Color(0xFF15803D),
+    KidsTheme.goldStar,
+    KidsTheme.reviewPurple,
+  ];
 
   @override
   void initState() {
@@ -936,17 +1020,9 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: KidsTheme.forestGreen.withValues(alpha: 0.15),
-        borderRadius: KidsTheme.buttonRadius,
-        border: Border.all(
-          color: KidsTheme.forestGreen.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: _kidsSoftCardDecoration.copyWith(
+        border: Border.all(color: const Color(0xFF15803D), width: 2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -959,8 +1035,8 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
               AnimatedBuilder(
                 animation: _waveController,
                 builder: (_, _) => Container(
-                  width: 12,
-                  height: 12,
+                  width: 14,
+                  height: 14,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.error.withValues(
@@ -970,19 +1046,22 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                context.l10n.kidsGamifiedRecordingInProgress,
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0,
+              Flexible(
+                child: Text(
+                  context.l10n.kidsGamifiedRecordingInProgress,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleSmall.copyWith(
+                    color: KidsTheme.inkOnParchment,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 _formatSeconds(widget.seconds),
                 style: AppTypography.titleSmall.copyWith(
-                  color: KidsTheme.forestGreen,
+                  color: const Color(0xFF15803D),
                   fontWeight: FontWeight.w800,
                   fontFamily: 'monospace',
                   letterSpacing: 0,
@@ -1004,22 +1083,20 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                   for (var i = 0; i < heights.length; i++) ...[
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 120),
-                      width: 5,
+                      width: 7,
                       height:
-                          8 +
-                          (24 *
+                          10 +
+                          (30 *
                               heights[i] *
                               (0.4 + 0.6 * ((v + i * 0.15) % 1.0))),
                       decoration: BoxDecoration(
-                        color: KidsTheme.forestGreen.withValues(
-                          alpha: 0.6 + 0.4 * ((v + i * 0.1) % 1.0),
-                        ),
+                        color: _waveColors[i % _waveColors.length],
                         borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusXs,
+                          AppSpacing.radiusFull,
                         ),
                       ),
                     ),
-                    if (i < heights.length - 1) const SizedBox(width: 4),
+                    if (i < heights.length - 1) const SizedBox(width: 5),
                   ],
                 ],
               );
@@ -1027,22 +1104,13 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
           ),
           const SizedBox(height: AppSpacing.md),
           // Done button
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              key: const ValueKey('kids-gamified-stop-recording'),
-              onPressed: widget.onDone,
-              icon: const Icon(Icons.check_circle_rounded),
-              label: Text(context.l10n.kidsGamifiedDoneRecording),
-              style: FilledButton.styleFrom(
-                backgroundColor: KidsTheme.forestGreen,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(50),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: KidsTheme.buttonRadius,
-                ),
-              ),
-            ),
+          KidsChunkyButton(
+            key: const ValueKey('kids-gamified-stop-recording'),
+            onPressed: widget.onDone,
+            icon: Icons.check_circle_rounded,
+            label: context.l10n.kidsGamifiedDoneRecording,
+            tone: KidsButtonTone.green,
+            height: 56,
           ),
         ],
       ),

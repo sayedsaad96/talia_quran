@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
+import 'kids_chunky_button.dart';
 
 /// W2 — multi-sensory celebration: the reward card plays a confetti burst and
 /// a celebratory haptic when it appears. Both respect the platform's
@@ -266,34 +267,22 @@ class _RewardActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final returnToMap = OutlinedButton.icon(
+    final returnToMap = KidsChunkyButton(
       onPressed: onReturnToMap,
-      icon: const Icon(Icons.map_rounded),
-      label: Text(context.l10n.kidsGamifiedReturnToMap),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.52)),
-        minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
-        shape: const RoundedRectangleBorder(
-          borderRadius: KidsTheme.buttonRadius,
-        ),
-      ),
+      icon: Icons.map_rounded,
+      label: context.l10n.kidsGamifiedReturnToMap,
+      tone: KidsButtonTone.soft,
+      height: AppSpacing.buttonHeight,
     );
     if (!showNextButton) return returnToMap;
 
-    final next = FilledButton.icon(
+    final next = KidsChunkyButton(
       onPressed: onNext,
       // Mirrors itself under RTL: it points left in Arabic.
-      icon: const Icon(Icons.arrow_forward_rounded),
-      label: Text(context.l10n.kidsGamifiedStartMission),
-      style: FilledButton.styleFrom(
-        backgroundColor: KidsTheme.goldStar,
-        foregroundColor: KidsTheme.nightSkyDark,
-        minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
-        shape: const RoundedRectangleBorder(
-          borderRadius: KidsTheme.buttonRadius,
-        ),
-      ),
+      icon: Icons.arrow_forward_rounded,
+      label: context.l10n.kidsGamifiedStartMission,
+      tone: KidsButtonTone.gold,
+      height: AppSpacing.buttonHeight,
     );
 
     final textScale = MediaQuery.textScalerOf(context).scale(1);

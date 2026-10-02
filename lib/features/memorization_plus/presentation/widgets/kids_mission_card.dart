@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
+import 'kids_chunky_button.dart';
 
 class KidsMissionCard extends StatelessWidget {
   const KidsMissionCard({
@@ -105,26 +106,11 @@ class KidsMissionCard extends StatelessWidget {
       ],
     );
 
-    final continueButton = FilledButton.icon(
+    final continueButton = KidsChunkyButton(
       onPressed: onContinue,
-      icon: const Icon(Icons.play_arrow_rounded, size: 28),
-      label: Text(
-        context.l10n.kidsGamifiedContinueNow,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
-      ),
-      style: FilledButton.styleFrom(
-        backgroundColor: KidsTheme.forestGreen,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 56),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        shape: const RoundedRectangleBorder(
-          borderRadius: KidsTheme.buttonRadius,
-        ),
-        elevation: 8,
-        shadowColor: KidsTheme.forestGreen.withValues(alpha: 0.4),
-      ),
+      icon: Icons.play_arrow_rounded,
+      label: context.l10n.kidsGamifiedContinueNow,
+      maxLines: 1,
     );
 
     final actionButton = continueButton;

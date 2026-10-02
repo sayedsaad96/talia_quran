@@ -3,6 +3,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
+import 'kids_chunky_button.dart';
 
 /// Gamified Loading Widget for Kids Mode
 class KidsLoadingWidget extends StatelessWidget {
@@ -75,14 +76,12 @@ class KidsErrorWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          FilledButton(
+          KidsChunkyButton(
             onPressed: onRetry,
-            style: FilledButton.styleFrom(
-              backgroundColor: KidsTheme.goldStar,
-              foregroundColor: KidsTheme.nightSkyDark,
-              minimumSize: const Size.fromHeight(52),
-            ),
-            child: Text(actionLabel ?? context.l10n.tryAgain),
+            icon: Icons.refresh_rounded,
+            label: actionLabel ?? context.l10n.tryAgain,
+            tone: KidsButtonTone.gold,
+            height: 56,
           ),
         ],
       ),

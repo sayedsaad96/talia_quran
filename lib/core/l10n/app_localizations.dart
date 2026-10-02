@@ -4682,6 +4682,42 @@ abstract class AppLocalizations {
   /// **'ذكّرني'**
   String get kidsGamifiedRemindMe;
 
+  /// No description provided for @kidsTaliaListenBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمع الآية معي، ثم ردّدها!'**
+  String get kidsTaliaListenBubble;
+
+  /// No description provided for @kidsTaliaRecallBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت تقدر! تذكّرها على مهلك'**
+  String get kidsTaliaRecallBubble;
+
+  /// No description provided for @kidsTaliaRecordingBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا أسمعك…'**
+  String get kidsTaliaRecordingBubble;
+
+  /// No description provided for @kidsTaliaReviewBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيا نرى ماذا تتذكّر!'**
+  String get kidsTaliaReviewBubble;
+
+  /// No description provided for @kidsTaliaEncourageBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولة رائعة! مرة أخرى'**
+  String get kidsTaliaEncourageBubble;
+
+  /// No description provided for @kidsTaliaCelebrateBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! بارك الله فيك'**
+  String get kidsTaliaCelebrateBubble;
+
   /// No description provided for @kidsWelcomeBackTitle.
   ///
   /// In ar, this message translates to:

@@ -40,15 +40,14 @@ class KidsAyahCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: KidsTheme.parchmentGradient,
-        borderRadius: KidsTheme.cardRadius,
-        border: Border.all(color: KidsTheme.parchmentEdge, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: const BorderRadius.all(
+          Radius.circular(AppSpacing.radiusXl),
+        ),
+        border: Border.all(
+          color: KidsTheme.goldStar.withValues(alpha: 0.7),
+          width: 2.5,
+        ),
+        boxShadow: KidsTheme.card25DShadow,
       ),
       child: Directionality(
         textDirection: TextDirection.rtl,
@@ -63,15 +62,28 @@ class KidsAyahCard extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: KidsTheme.forestGreen.withValues(alpha: 0.12),
+                    gradient: KidsTheme.completedHouseGradient,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: Text(
-                    '${context.l10n.ayah} $ayahNumber',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: KidsTheme.forestGreen,
-                      letterSpacing: 0,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        '${context.l10n.ayah} $ayahNumber',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: KidsTheme.inkOnParchment,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),

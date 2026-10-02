@@ -2533,6 +2533,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedRemindMe => 'ذكّرني';
 
   @override
+  String get kidsTaliaListenBubble => 'اسمع الآية معي، ثم ردّدها!';
+
+  @override
+  String get kidsTaliaRecallBubble => 'أنت تقدر! تذكّرها على مهلك';
+
+  @override
+  String get kidsTaliaRecordingBubble => 'أنا أسمعك…';
+
+  @override
+  String get kidsTaliaReviewBubble => 'هيا نرى ماذا تتذكّر!';
+
+  @override
+  String get kidsTaliaEncourageBubble => 'محاولة رائعة! مرة أخرى';
+
+  @override
+  String get kidsTaliaCelebrateBubble => 'أحسنت! بارك الله فيك';
+
+  @override
   String get kidsWelcomeBackTitle => 'أهلاً بعودتك!';
 
   @override

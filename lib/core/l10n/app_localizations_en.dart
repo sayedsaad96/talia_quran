@@ -2552,6 +2552,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedRemindMe => 'Remind me';
 
   @override
+  String get kidsTaliaListenBubble => 'Listen with me, then repeat it!';
+
+  @override
+  String get kidsTaliaRecallBubble => 'You can do it! Take your time';
+
+  @override
+  String get kidsTaliaRecordingBubble => 'I am listening…';
+
+  @override
+  String get kidsTaliaReviewBubble => 'Let\'s see what you remember!';
+
+  @override
+  String get kidsTaliaEncourageBubble => 'Great try! One more time';
+
+  @override
+  String get kidsTaliaCelebrateBubble => 'Well done! May Allah bless you';
+
+  @override
   String get kidsWelcomeBackTitle => 'Welcome back!';
 
   @override
