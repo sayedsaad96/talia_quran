@@ -46,6 +46,7 @@ abstract final class CubitMessageCodes {
   static const errorUnknown = '@error/unknown';
   static const kidsHomeMissionInvalidTitle =
       'kids_home_mission_invalid_title';
+  static const kidsPolicyConflict = 'kids_policy_conflict';
 
   // Account deletion is a multi-step remote/local transaction. These codes
   // deliberately conceal backend and storage details from the UI.

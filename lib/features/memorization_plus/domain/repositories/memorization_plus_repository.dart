@@ -3,6 +3,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/sync/sync_result.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
 import 'memorization_cloud_repository.dart';
@@ -178,6 +179,19 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
     String childUserId,
   );
+
+  /// Child device policy edit (PIN-gated by the caller). Linked → CAS with
+  /// the local version (`Left(PolicyConflictFailure)` when it lost);
+  /// unlinked → local only with `policyVersion + 1`.
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  );
+
+  /// Guardian edit of a linked child's policy; CAS with [policy].version.
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  });
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     bool completionAuthorized = false,
     String? sessionId,

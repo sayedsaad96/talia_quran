@@ -5763,6 +5763,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionInvalidTitle => 'اكتب مهمة من حرف إلى ١٢٠ حرفًا';
 
   @override
+  String get kidsPolicyReduceMotion => 'تقليل الحركة';
+
+  @override
+  String get kidsPolicyMaxSuggestions => 'عدد مهمات اليوم';
+
+  @override
+  String get kidsPolicyHomeMissions => 'المهمات المنزلية';
+
+  @override
+  String get kidsPolicyConflict => 'تغيّرت الإعدادات من جهاز آخر';
+
+  @override
   String get childDetailHomeMissions => 'المهمات المنزلية';
 
   @override

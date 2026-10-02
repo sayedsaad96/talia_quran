@@ -602,6 +602,11 @@ Future<void> configureDependencies({bool background = false}) async {
       parentPinStore: getIt<ParentPinSecureStore>(),
       isar: getIt<Isar>(),
       owner: getIt<RecordOwnerProvider>(),
+      onKidsPolicyChanged: () {
+        if (getIt.isRegistered<KidsPolicyController>()) {
+          unawaited(getIt<KidsPolicyController>().reload());
+        }
+      },
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(

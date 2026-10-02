@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -35,6 +36,29 @@ class _FakeRepository implements MemorizationPlusRepository {
   final localMissionAdds = <String>[];
   final localMissionAcks = <String>[];
   Either<Failure, List<KidsHomeMission>> missionResult = const Right([]);
+  final localPolicySaves = <KidsChildPolicy>[];
+  final remotePolicySaves = <String>[];
+  Either<Failure, KidsChildPolicy> policyResult = const Right(
+    KidsChildPolicy(version: 1),
+  );
+  int dashboardCalls = 0;
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) async {
+    localPolicySaves.add(policy);
+    return policyResult;
+  }
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) async {
+    remotePolicySaves.add('$childUserId:v${policy.version}');
+    return policyResult;
+  }
 
   @override
   Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
@@ -103,8 +127,10 @@ class _FakeRepository implements MemorizationPlusRepository {
       _verifyPinResult;
 
   @override
-  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() async =>
-      dashboardResult;
+  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() async {
+    dashboardCalls++;
+    return dashboardResult;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -433,6 +459,64 @@ void main() {
         (cubit.state as FamilyDashboardLoaded).feedback?.type,
         FamilyDashboardFeedbackType.failure,
       );
+    });
+  });
+
+  group('child policy', () {
+    Future<(_FakeRepository, FamilyDashboardCubit)> loaded() async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await cubit.load();
+      await _unlockAndLoad(cubit);
+      return (repository, cubit);
+    }
+
+    const edit = KidsChildPolicy(reduceMotion: true, version: 4);
+
+    test('without a child id the edit goes through the device path', () async {
+      final (repository, cubit) = await loaded();
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit);
+
+      expect(repository.localPolicySaves, [edit]);
+      expect(repository.remotePolicySaves, isEmpty);
+      expect(repository.dashboardCalls, before + 1);
+    });
+
+    test('a guardian edit uses the CAS with the summary version', () async {
+      final (repository, cubit) = await loaded();
+
+      await cubit.saveChildPolicy(edit, childId: 'c1');
+
+      expect(repository.remotePolicySaves, ['c1:v4']);
+      expect(repository.localPolicySaves, isEmpty);
+    });
+
+    test('a conflict shows kidsPolicyConflict and reloads the dashboard', () async {
+      final (repository, cubit) = await loaded();
+      repository.policyResult = const Left(PolicyConflictFailure());
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit, childId: 'c1');
+
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.type, FamilyDashboardFeedbackType.failure);
+      expect(state.feedback?.message, CubitMessageCodes.kidsPolicyConflict);
+      expect(repository.dashboardCalls, before + 1);
+    });
+
+    test('a network failure surfaces feedback without a reload', () async {
+      final (repository, cubit) = await loaded();
+      repository.policyResult = const Left(NetworkFailure());
+      final before = repository.dashboardCalls;
+
+      await cubit.saveChildPolicy(edit);
+
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.message, CubitMessageCodes.errorNetwork);
+      expect(repository.dashboardCalls, before);
     });
   });
 }

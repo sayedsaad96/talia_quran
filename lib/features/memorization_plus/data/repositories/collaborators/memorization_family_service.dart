@@ -108,7 +108,11 @@ class MemorizationFamilyService {
         final missions = (await _kidsCloudSync.getRemoteHomeMissions(
           r.childUserId,
         )).getOrElse(() => const <KidsHomeMission>[]);
-        final summary = missions.isEmpty
+        // Same for the policy: unreadable or absent → defaults, version 0.
+        final policy = (await _kidsCloudSync.getRemoteChildPolicy(
+          r.childUserId,
+        )).getOrElse(() => null);
+        final summary = missions.isEmpty && policy == null
             ? r
             : RemoteChildSummary(
                 childUserId: r.childUserId,
@@ -119,6 +123,7 @@ class MemorizationFamilyService {
                 production: r.production,
                 childAge: r.childAge,
                 homeMissions: missions,
+                policy: policy,
               );
         children.add(
           FamilyChildEntry(

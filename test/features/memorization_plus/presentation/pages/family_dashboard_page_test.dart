@@ -9,6 +9,7 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
@@ -55,6 +56,63 @@ void main() {
       expect(find.text('Guide voice'), findsNothing);
       // The other kid settings stay visible.
       expect(find.text('Target session length'), findsOneWidget);
+    });
+
+    testWidgets('settings sheet edits the child policy under the PIN', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases();
+      usecases.settings = const ParentSettings(
+        pinHash: 'secure-v2',
+        policyVersion: 2,
+      );
+      usecases.dashboard = FamilyDashboard(
+        settings: usecases.settings,
+        children: _dashboard().children,
+      );
+
+      await tester.pumpWidget(
+        // ignore: prefer_const_constructors
+        _TestApp(cubit: _buildCubit(usecases)),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reduce motion'), findsOneWidget);
+      expect(find.text('Missions per day'), findsOneWidget);
+      expect(find.text('Home missions'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('kids-policy-max-1')));
+      await tester.pumpAndSettle();
+
+      expect(usecases.policySaves.single.maxDailySuggestions, 1);
+      expect(usecases.policySaves.single.version, 2);
+    });
+
+    testWidgets('a policy conflict shows the conflict message', (tester) async {
+      final usecases = _FakeUsecases();
+      usecases.settings = const ParentSettings(pinHash: 'secure-v2');
+      usecases.dashboard = _dashboard();
+      usecases.policyResult = const Left(PolicyConflictFailure());
+
+      await tester.pumpWidget(
+        // ignore: prefer_const_constructors
+        _TestApp(cubit: _buildCubit(usecases)),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('kids-policy-reduce-motion')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Settings changed on another device'), findsOneWidget);
     });
 
     testWidgets('dashboard shows the family summary and children grid', (
@@ -595,6 +653,10 @@ class _FakeUsecases {
   final remoteRewards = <String>[];
   final identityUpdates = <String>[];
   Either<Failure, void> acceptResult = const Right(null);
+  final policySaves = <KidsChildPolicy>[];
+  Either<Failure, KidsChildPolicy> policyResult = const Right(
+    KidsChildPolicy(),
+  );
 
   late final parentAccess = _FakeParentAccess(this);
   late final remoteLink = _FakeRemoteLink(this);
@@ -636,6 +698,14 @@ class _FakeParentAccess implements ParentAccessUsecase {
   @override
   Future<Either<Failure, List<ParentReward>>> saveReward(String title) async =>
       const Right([]);
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveChildPolicy(
+    KidsChildPolicy policy,
+  ) async {
+    _owner.policySaves.add(policy);
+    return _owner.policyResult;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

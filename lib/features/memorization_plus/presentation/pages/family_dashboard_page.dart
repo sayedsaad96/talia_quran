@@ -13,9 +13,11 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
+import '../widgets/kids_policy_controls.dart';
 import 'child_detail_page.dart';
 
 class FamilyDashboardPage extends StatelessWidget {
@@ -217,6 +219,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
   }
 
   void _showSettingsSheet(BuildContext context, ParentSettings settings) {
+    // The sheet builder's context sits above the BlocProvider.value below,
+    // so the controls use the dashboard's cubit captured here.
+    final dashboardCubit = context.read<FamilyDashboardCubit>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -229,7 +234,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -245,11 +250,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                   subtitle: Text(context.l10n.kidsJourneyBetaDescription),
                   value: settings.kidsHifzV2Enabled,
                   onChanged: (value) async {
-                    await sheetContext
-                        .read<FamilyDashboardCubit>()
-                        .saveSettings(
-                          settings.copyWith(kidsHifzV2Enabled: value),
-                        );
+                    await dashboardCubit.saveSettings(
+                      settings.copyWith(kidsHifzV2Enabled: value),
+                    );
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                 ),
@@ -257,30 +260,14 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                 // until the kids session consumes the setting (K10 in
                 // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings
                 // keeps the stored value so nothing is lost meanwhile.
-                ListTile(
-                  title: Text(context.l10n.kidsSessionGoalTitle),
-                  trailing: DropdownButton<int>(
-                    value: settings.sessionGoalMinutes ?? 6,
-                    items: [6, 8, 10]
-                        .map(
-                          (minutes) => DropdownMenuItem(
-                            value: minutes,
-                            child: Text(
-                              context.l10n.kidsSessionGoalValue(minutes),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (minutes) async {
-                      if (minutes == null) return;
-                      await sheetContext
-                          .read<FamilyDashboardCubit>()
-                          .saveSettings(
-                            settings.copyWith(sessionGoalMinutes: minutes),
-                          );
-                      if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    },
-                  ),
+                // Policy fields (incl. the session goal) save through the
+                // policy path: CAS when this device is linked, else local.
+                KidsPolicyControls(
+                  policy: KidsChildPolicy.fromSettings(settings),
+                  onChanged: (policy) async {
+                    await dashboardCubit.saveChildPolicy(policy);
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
                 ),
                 const Divider(),
                 Text(
@@ -297,7 +284,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                   ),
                   value: settings.reminderEnabled,
                   onChanged: (val) async {
-                    final cubit = sheetContext.read<FamilyDashboardCubit>();
+                    final cubit = dashboardCubit;
                     final l10n = sheetContext.l10n;
                     if (val) {
                       final time = await showTimePicker(

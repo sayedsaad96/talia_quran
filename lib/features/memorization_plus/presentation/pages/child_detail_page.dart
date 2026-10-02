@@ -6,10 +6,12 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/home_missions_panel.dart';
+import '../widgets/kids_policy_controls.dart';
 import '../widgets/parent_support_tip.dart';
 import 'family_dashboard_page.dart';
 
@@ -183,6 +185,22 @@ class _ChildDetailBody extends StatelessWidget {
               ),
         ),
         const SizedBox(height: AppSpacing.md),
+
+        // ─── Child policy (linked child; CAS with the version read) ────────
+        if (child.remoteSummary case final summary? when !child.isLocal) ...[
+          _Panel(
+            title: context.l10n.settings,
+            child: KidsPolicyControls(
+              policy: summary.policy ?? const KidsChildPolicy(),
+              onChanged: (policy) =>
+                  context.read<FamilyDashboardCubit>().saveChildPolicy(
+                    policy,
+                    childId: child.childUserId,
+                  ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         // ─── Edit name (local child) / name and age (linked child) ─────────
         if (child.isLocal)

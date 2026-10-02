@@ -53,6 +53,33 @@ final class KidsChildPolicy extends Equatable {
   final int? sessionGoalMinutes;
   final int version;
 
+  KidsChildPolicy copyWith({
+    bool? reduceMotion,
+    int? maxDailySuggestions,
+    bool? homeMissionsEnabled,
+    int? sessionGoalMinutes,
+    bool clearSessionGoalMinutes = false,
+    int? version,
+  }) => KidsChildPolicy(
+    reduceMotion: reduceMotion ?? this.reduceMotion,
+    maxDailySuggestions: maxDailySuggestions ?? this.maxDailySuggestions,
+    homeMissionsEnabled: homeMissionsEnabled ?? this.homeMissionsEnabled,
+    sessionGoalMinutes: clearSessionGoalMinutes
+        ? null
+        : (sessionGoalMinutes ?? this.sessionGoalMinutes),
+    version: version ?? this.version,
+  );
+
+  /// Values clamped/sanitized into the policy limits (1..3 suggestions,
+  /// 1..60 minutes or null, version >= 0).
+  KidsChildPolicy sanitized() => KidsChildPolicy(
+    reduceMotion: reduceMotion,
+    maxDailySuggestions: clampKidsMaxDailySuggestions(maxDailySuggestions),
+    homeMissionsEnabled: homeMissionsEnabled,
+    sessionGoalMinutes: sanitizeKidsSessionGoalMinutes(sessionGoalMinutes),
+    version: clampKidsPolicyVersion(version),
+  );
+
   @override
   List<Object?> get props => [
     reduceMotion,

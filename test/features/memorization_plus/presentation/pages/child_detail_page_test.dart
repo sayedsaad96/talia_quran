@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -22,8 +23,10 @@ KidsHomeMission _mission(String id, KidsHomeMissionStatus status) =>
       createdAt: DateTime.utc(2026, 10, 1),
     );
 
-FamilyChildEntry _remoteChild(List<KidsHomeMission> missions) =>
-    FamilyChildEntry(
+FamilyChildEntry _remoteChild(
+  List<KidsHomeMission> missions, {
+  KidsChildPolicy? policy,
+}) => FamilyChildEntry(
       childUserId: 'c1',
       displayName: 'Fatima',
       isLocal: false,
@@ -34,6 +37,7 @@ FamilyChildEntry _remoteChild(List<KidsHomeMission> missions) =>
         logs: const [],
         rewards: const [],
         homeMissions: missions,
+        policy: policy,
       ),
     );
 
@@ -60,6 +64,19 @@ class _Repo implements MemorizationPlusRepository {
   final remoteAcks = <String>[];
   final localAdds = <String>[];
   final localAcks = <String>[];
+  final remotePolicies = <String>[];
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) async {
+    remotePolicies.add(
+      '$childUserId:v${policy.version}:${policy.reduceMotion}:'
+      '${policy.maxDailySuggestions}:${policy.homeMissionsEnabled}',
+    );
+    return Right(policy);
+  }
 
   @override
   Future<Either<Failure, ParentSettings>> getParentSettings() async =>
@@ -164,7 +181,7 @@ void main() {
         _mission('3', KidsHomeMissionStatus.acknowledged),
       ]),
     );
-    await _scrollTo(tester, find.text('Home missions'));
+    await _scrollTo(tester, find.text('Home missions').first);
 
     expect(find.text('Waiting for child'), findsOneWidget);
     expect(find.text("Child says it's done"), findsOneWidget);
@@ -244,9 +261,47 @@ void main() {
       _remoteChild([_mission('2', KidsHomeMissionStatus.reported)]),
       locale: const Locale('ar'),
     );
-    await _scrollTo(tester, find.text('المهمات المنزلية'));
+    await _scrollTo(tester, find.text('المهمات المنزلية').first);
 
     expect(find.text('اطّلعت'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a remote child edits its policy with the summary version', (
+    tester,
+  ) async {
+    final repo = await _pump(
+      tester,
+      _remoteChild(
+        const [],
+        policy: const KidsChildPolicy(maxDailySuggestions: 2, version: 5),
+      ),
+    );
+    final reduceMotion = find.byKey(const ValueKey('kids-policy-reduce-motion'));
+    await _scrollTo(tester, reduceMotion);
+    await tester.ensureVisible(reduceMotion);
+    await tester.pumpAndSettle();
+    expect(find.text('Reduce motion'), findsOneWidget);
+    expect(find.text('Missions per day'), findsOneWidget);
+    await tester.tap(reduceMotion);
+    await tester.pumpAndSettle();
+
+    expect(repo.remotePolicies, ['c1:v5:true:2:true']);
+  });
+
+  testWidgets('a remote child without a policy row edits from version 0', (
+    tester,
+  ) async {
+    final repo = await _pump(tester, _remoteChild(const []));
+    final homeMissions = find.byKey(
+      const ValueKey('kids-policy-home-missions'),
+    );
+    await _scrollTo(tester, homeMissions);
+    await tester.ensureVisible(homeMissions);
+    await tester.pumpAndSettle();
+    await tester.tap(homeMissions);
+    await tester.pumpAndSettle();
+
+    expect(repo.remotePolicies, ['c1:v0:false:3:false']);
   });
 }

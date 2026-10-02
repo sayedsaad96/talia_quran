@@ -9930,6 +9930,30 @@ abstract class AppLocalizations {
   /// **'اكتب مهمة من حرف إلى ١٢٠ حرفًا'**
   String get kidsHomeMissionInvalidTitle;
 
+  /// No description provided for @kidsPolicyReduceMotion.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقليل الحركة'**
+  String get kidsPolicyReduceMotion;
+
+  /// No description provided for @kidsPolicyMaxSuggestions.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد مهمات اليوم'**
+  String get kidsPolicyMaxSuggestions;
+
+  /// No description provided for @kidsPolicyHomeMissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'المهمات المنزلية'**
+  String get kidsPolicyHomeMissions;
+
+  /// No description provided for @kidsPolicyConflict.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيّرت الإعدادات من جهاز آخر'**
+  String get kidsPolicyConflict;
+
   /// No description provided for @childDetailHomeMissions.
   ///
   /// In ar, this message translates to:

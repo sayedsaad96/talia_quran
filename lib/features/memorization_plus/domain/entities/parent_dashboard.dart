@@ -69,6 +69,7 @@ class ParentSettings extends Equatable {
     String? localChildNickname,
     bool? guidanceAudioEnabled,
     int? sessionGoalMinutes,
+    bool clearSessionGoalMinutes = false,
     int? startingSurahId,
     bool? kidsHifzV2Enabled,
     bool? kidsReduceMotion,
@@ -84,7 +85,9 @@ class ParentSettings extends Equatable {
     remoteLinkEnabled: remoteLinkEnabled ?? this.remoteLinkEnabled,
     localChildNickname: localChildNickname ?? this.localChildNickname,
     guidanceAudioEnabled: guidanceAudioEnabled ?? this.guidanceAudioEnabled,
-    sessionGoalMinutes: sessionGoalMinutes ?? this.sessionGoalMinutes,
+    sessionGoalMinutes: clearSessionGoalMinutes
+        ? null
+        : (sessionGoalMinutes ?? this.sessionGoalMinutes),
     startingSurahId: startingSurahId ?? this.startingSurahId,
     kidsHifzV2Enabled: kidsHifzV2Enabled ?? this.kidsHifzV2Enabled,
     kidsReduceMotion: kidsReduceMotion ?? this.kidsReduceMotion,

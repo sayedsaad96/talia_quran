@@ -5784,6 +5784,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Write a mission between 1 and 120 characters';
 
   @override
+  String get kidsPolicyReduceMotion => 'Reduce motion';
+
+  @override
+  String get kidsPolicyMaxSuggestions => 'Missions per day';
+
+  @override
+  String get kidsPolicyHomeMissions => 'Home missions';
+
+  @override
+  String get kidsPolicyConflict => 'Settings changed on another device';
+
+  @override
   String get childDetailHomeMissions => 'Home missions';
 
   @override

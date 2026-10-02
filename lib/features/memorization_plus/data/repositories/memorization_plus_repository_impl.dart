@@ -19,6 +19,7 @@ import '../../../../core/services/streak_reader.dart';
 import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_cloud_repository.dart';
@@ -56,13 +57,18 @@ class MemorizationPlusRepositoryImpl
     ParentPinSecureStore? parentPinStore,
     Isar? isar,
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+    void Function()? onKidsPolicyChanged,
   }) : _metrics = metrics,
+       _onKidsPolicyChanged = onKidsPolicyChanged,
        _cloudSyncQueue = cloudSyncQueue,
        _parentPinStore = parentPinStore,
        _isar = isar,
        _owner = owner;
 
   final ParentPinSecureStore? _parentPinStore;
+
+  /// Runs after any local kids-policy write (DI reloads the controller).
+  final void Function()? _onKidsPolicyChanged;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -113,6 +119,7 @@ class MemorizationPlusRepositoryImpl
         _gateway,
         _mappers,
         owner: _owner,
+        onKidsPolicyChanged: _onKidsPolicyChanged,
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(
@@ -510,6 +517,20 @@ class MemorizationPlusRepositoryImpl
   Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
     String childUserId,
   ) => _kidsCloudSync.getRemoteHomeMissions(childUserId);
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) => _kidsCloudSync.saveLocalChildPolicy(policy);
+
+  @override
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) => _kidsCloudSync.saveRemoteChildPolicy(
+    childUserId: childUserId,
+    policy: policy,
+  );
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({

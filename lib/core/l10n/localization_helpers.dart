@@ -222,6 +222,7 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.errorUnknown => l10n.errorUnknownMessage,
       CubitMessageCodes.kidsHomeMissionInvalidTitle =>
         l10n.kidsHomeMissionInvalidTitle,
+      CubitMessageCodes.kidsPolicyConflict => l10n.kidsPolicyConflict,
       CubitMessageCodes.accountDeletionFailed => l10n.accountDeletionFailed,
       CubitMessageCodes.accountDeletionCleanupFailed =>
         l10n.accountDeletionRemoteConfirmedCleanupFailed,

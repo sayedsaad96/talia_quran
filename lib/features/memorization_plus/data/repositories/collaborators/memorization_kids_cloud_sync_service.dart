@@ -7,11 +7,13 @@ import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
+import '../../../domain/entities/kids_child_policy.dart';
 import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 import 'memorization_cloud_gateway.dart';
+import 'kids_child_policy_sync.dart';
 import 'kids_home_mission_child_sync.dart';
 import 'memorization_cloud_mappers.dart';
 
@@ -25,7 +27,9 @@ class MemorizationKidsCloudSyncService {
     this._gateway,
     this._mappers, {
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _owner = owner;
+    void Function()? onKidsPolicyChanged,
+  }) : _owner = owner,
+       _onKidsPolicyChanged = onKidsPolicyChanged;
 
   final MemorizationPlusLocalDatasource _datasource;
   final StreakReader _streakReader;
@@ -33,8 +37,16 @@ class MemorizationKidsCloudSyncService {
   final MemorizationCloudMappers _mappers;
   final RecordOwnerProvider _owner;
 
+  final void Function()? _onKidsPolicyChanged;
+
   late final KidsHomeMissionChildSync _homeMissionSync =
       KidsHomeMissionChildSync(_datasource, _mappers, _owner);
+
+  late final KidsChildPolicySync _policySync = KidsChildPolicySync(
+    _datasource,
+    _owner,
+    onPolicyChanged: _onKidsPolicyChanged,
+  );
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
       _gateway.supabaseOrFailure().leftMap(
@@ -132,6 +144,19 @@ class MemorizationKidsCloudSyncService {
           return rows
               .map((row) => Map<String, dynamic>.from(row))
               .toList(growable: false);
+        },
+      );
+      // Same best-effort rule for the guardian policy: a newer server
+      // version replaces the local policy fields; errors are swallowed.
+      await _policySync.pull(
+        ownerId: ownerId,
+        fetchRow: () async {
+          final rows = await client
+              .from('kids_child_policies')
+              .select()
+              .eq('child_user_id', user.id)
+              .limit(1);
+          return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
         },
       );
       return const Right(null);
@@ -516,6 +541,80 @@ class MemorizationKidsCloudSyncService {
   }
 
   static const kHomeMissionTitleMaxLength = 120;
+
+  /// Child device policy edit (behind the PIN). Linked (a signed-in cloud
+  /// user, the same gate home-mission reports use) → compare-and-swap with
+  /// the local version; otherwise local only with `policyVersion + 1`.
+  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
+    KidsChildPolicy policy,
+  ) async {
+    SupabaseClient? client;
+    String? childUserId;
+    if (_gateway.hasSignedInCloudUser) {
+      client = _gateway.supabaseOrFailure().fold((_) => null, (c) => c);
+      childUserId = client?.auth.currentUser?.id;
+    }
+    return _policySync.saveOnDevice(
+      policy: policy,
+      linkedChildUserId: childUserId,
+      casRpc: (params) async =>
+          client!.rpc('compare_and_swap_child_policy', params: params),
+    );
+  }
+
+  /// Guardian edit of a linked child's policy; [policy].version is the
+  /// version the guardian last read (from [getRemoteChildPolicy]).
+  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
+    required String childUserId,
+    required KidsChildPolicy policy,
+  }) async {
+    final clientResult = _supabaseOrFailure;
+    final clientFailure = clientResult.fold((failure) => failure, (_) => null);
+    if (clientFailure != null) return Left(clientFailure);
+    final client = clientResult.getOrElse(
+      () => throw StateError('unreachable'),
+    );
+    if (client.auth.currentUser == null) {
+      return const Left(
+        NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+      );
+    }
+    return _policySync.casRemote(
+      childUserId: childUserId,
+      policy: policy,
+      expectedVersion: policy.version,
+      casRpc: (params) =>
+          client.rpc('compare_and_swap_child_policy', params: params),
+    );
+  }
+
+  /// Reads a linked child's policy row (parent SELECT RLS). Right(null) when
+  /// the child has no row yet (defaults, version 0).
+  Future<Either<Failure, KidsChildPolicy?>> getRemoteChildPolicy(
+    String childUserId,
+  ) async {
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      final rows = await client
+          .from('kids_child_policies')
+          .select()
+          .eq('child_user_id', childUserId)
+          .limit(1);
+      return Right(
+        rows.isEmpty ? null : KidsChildPolicySync.policyFromRow(rows.first),
+      );
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
 
   Future<Either<Failure, List<KidsHomeMission>>> _selectHomeMissions(
     SupabaseClient client,
