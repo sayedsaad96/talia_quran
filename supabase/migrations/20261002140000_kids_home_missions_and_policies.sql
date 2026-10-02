@@ -8,7 +8,9 @@
 --    limits. Written through a compare-and-swap RPC (optimistic `version`).
 --
 -- The guardian PIN never leaves the device. Every remote call authorizes
--- through auth.uid() and an ACTIVE row in public.parent_child_links. Direct
+-- through auth.uid() and an ACTIVE row in public.parent_child_links: either
+-- side (guardian or child) must hold an active link, so an unlinked user or a
+-- child whose link was revoked cannot create or change anything. Direct
 -- INSERT/UPDATE/DELETE is revoked; all writes go through the RPCs below.
 
 -- -- 1. Tables ---------------------------------------------------------------
@@ -215,6 +217,12 @@ BEGIN
     RAISE EXCEPTION 'Child link is not active';
   END IF;
 
+  IF v_mission.status = 'acknowledged' THEN
+    -- Idempotent: a retried acknowledge changes nothing.
+    RETURN NEXT v_mission;
+    RETURN;
+  END IF;
+
   IF v_mission.status <> 'reported' THEN
     RAISE EXCEPTION 'Invalid mission transition';
   END IF;
@@ -259,8 +267,17 @@ BEGIN
   END IF;
 
   IF v_caller = p_child_user_id THEN
-    NULL;
+    -- Child branch: the child itself must still hold an active link.
+    PERFORM 1
+    FROM public.parent_child_links pcl
+    WHERE pcl.child_user_id = v_caller
+      AND pcl.status = 'active'
+    FOR UPDATE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Child link is not active';
+    END IF;
   ELSE
+    -- Parent branch: the guardian needs an active link to this exact child.
     PERFORM 1
     FROM public.parent_child_links pcl
     WHERE pcl.parent_user_id = v_caller

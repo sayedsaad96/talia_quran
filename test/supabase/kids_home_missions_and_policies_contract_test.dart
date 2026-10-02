@@ -11,7 +11,9 @@ void main() {
   setUpAll(() {
     final file = File('supabase/migrations/$_migrationName');
     expect(file.existsSync(), isTrue, reason: 'new migration must exist');
-    migration = _normalized(file.readAsStringSync());
+    migration = _normalized(
+      file.readAsStringSync().replaceAll(RegExp(r'--[^\r\n]*'), ''),
+    );
     verifier = _normalized(
       File('scripts/verify_supabase_contract.ps1').readAsStringSync(),
     );
@@ -48,6 +50,18 @@ void main() {
         functionBody(name),
         contains("raise exception 'not authenticated'"),
       );
+      final body = functionBody(name);
+      expect(
+        body.indexOf("raise exception 'not authenticated'"),
+        lessThan(body.indexOf('from public.')),
+        reason: '$name must authenticate before reading any data',
+      );
+    }
+    for (final name in [
+      'report_kids_home_mission',
+      'acknowledge_kids_home_mission',
+    ]) {
+      expect(functionBody(name), contains('for update'));
     }
   });
 
@@ -128,6 +142,21 @@ void main() {
     expect(report, contains("set status = 'reported', reported_at = now()"));
   });
 
+  test('acknowledging an acknowledged mission is an idempotent no-op', () {
+    final ack = functionBody('acknowledge_kids_home_mission');
+    expect(
+      ack,
+      contains(
+        "if v_mission.status = 'acknowledged' then return next "
+        'v_mission; return; end if;',
+      ),
+    );
+    expect(
+      ack.indexOf("v_mission.status = 'acknowledged'"),
+      lessThan(ack.indexOf("v_mission.status <> 'reported'")),
+    );
+  });
+
   test('policy CAS compares and bumps the version, validating ranges', () {
     final cas = functionBody('compare_and_swap_child_policy');
     expect(cas, contains('version = p_expected_version'));
@@ -137,7 +166,16 @@ void main() {
     expect(cas, contains("'applied'"));
     expect(cas, contains('p_max_daily_suggestions not between 1 and 3'));
     expect(cas, contains('p_session_goal_minutes not between 1 and 60'));
-    expect(cas, contains('v_caller = p_child_user_id'));
+    expect(
+      cas,
+      contains(
+        'if v_caller = p_child_user_id then perform 1 from '
+        'public.parent_child_links pcl where pcl.child_user_id = v_caller '
+        "and pcl.status = 'active' for update; if not found then raise "
+        "exception 'child link is not active'; end if; else",
+      ),
+    );
+    expect(cas, contains('on conflict (child_user_id) do nothing'));
   });
 
   test('migration uses no dynamic SQL', () {
