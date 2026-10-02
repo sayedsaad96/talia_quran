@@ -56,10 +56,17 @@ void main() {
   });
 
   test('reload after dispose is a no-op', () async {
+    var calls = 0;
     final c = KidsPolicyController(
-      load: () async => const KidsChildPolicy(version: 1),
+      load: () async {
+        calls++;
+        return const KidsChildPolicy(version: 1);
+      },
     );
+    final before = c.value;
     c.dispose();
     await c.reload();
+    expect(calls, 0);
+    expect(c.value, before);
   });
 }

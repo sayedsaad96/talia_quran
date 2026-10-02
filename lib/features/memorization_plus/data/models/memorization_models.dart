@@ -477,16 +477,22 @@ class ParentSettingsModel extends ParentSettings {
         startingSurahId:
             json['startingSurahId'] as int? ?? KidsJourneyPath.firstSurahId,
         kidsHifzV2Enabled: json['kidsHifzV2Enabled'] as bool? ?? false,
-        kidsReduceMotion: json['kidsReduceMotion'] as bool? ?? false,
+        // Policy keys are type-tolerant: a wrong-typed value falls back to
+        // its default instead of failing the whole parse (which would reset
+        // the PIN and nickname too).
+        kidsReduceMotion: _boolOr(json['kidsReduceMotion'], false),
         maxDailySuggestions: clampKidsMaxDailySuggestions(
-          (json['maxDailySuggestions'] as num?)?.toInt() ??
-              kKidsDefaultDailySuggestions,
+          _intOr(json['maxDailySuggestions'], kKidsDefaultDailySuggestions),
         ),
-        homeMissionsEnabled: json['homeMissionsEnabled'] as bool? ?? true,
-        policyVersion: clampKidsPolicyVersion(
-          (json['policyVersion'] as num?)?.toInt() ?? 0,
-        ),
+        homeMissionsEnabled: _boolOr(json['homeMissionsEnabled'], true),
+        policyVersion: clampKidsPolicyVersion(_intOr(json['policyVersion'], 0)),
       );
+
+  static bool _boolOr(Object? raw, bool fallback) =>
+      raw is bool ? raw : fallback;
+
+  static int _intOr(Object? raw, int fallback) =>
+      raw is num && raw.isFinite ? raw.toInt() : fallback;
 
   factory ParentSettingsModel.fromEntity(ParentSettings settings) =>
       ParentSettingsModel(

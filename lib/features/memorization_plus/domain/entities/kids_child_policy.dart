@@ -14,6 +14,19 @@ int clampKidsMaxDailySuggestions(int raw) =>
 /// A policy version is never negative; 0 means "never synced".
 int clampKidsPolicyVersion(int raw) => raw < 0 ? 0 : raw;
 
+/// Bounds for a guardian session goal; outside them means "no override".
+const int kKidsMinSessionGoalMinutes = 1;
+const int kKidsMaxSessionGoalMinutes = 60;
+
+/// Keeps a session goal in 1..60; anything else becomes null (age-band
+/// default).
+int? sanitizeKidsSessionGoalMinutes(int? raw) =>
+    raw == null ||
+        raw < kKidsMinSessionGoalMinutes ||
+        raw > kKidsMaxSessionGoalMinutes
+    ? null
+    : raw;
+
 /// The guardian-set policy the kids path applies on this device.
 final class KidsChildPolicy extends Equatable {
   const KidsChildPolicy({
@@ -28,7 +41,7 @@ final class KidsChildPolicy extends Equatable {
     reduceMotion: s.kidsReduceMotion,
     maxDailySuggestions: clampKidsMaxDailySuggestions(s.maxDailySuggestions),
     homeMissionsEnabled: s.homeMissionsEnabled,
-    sessionGoalMinutes: s.sessionGoalMinutes,
+    sessionGoalMinutes: sanitizeKidsSessionGoalMinutes(s.sessionGoalMinutes),
     version: clampKidsPolicyVersion(s.policyVersion),
   );
 

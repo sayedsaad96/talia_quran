@@ -52,6 +52,34 @@ void main() {
     });
   });
 
+  group('ParentSettingsModel wrong-typed policy keys', () {
+    test('keep the other settings and fall back to defaults', () {
+      final m = ParentSettingsModel.fromJson(const {
+        'pinHash': 'abc123',
+        'localChildNickname': 'Sara',
+        'kidsReduceMotion': 'yes',
+        'maxDailySuggestions': '2',
+        'homeMissionsEnabled': 1,
+        'policyVersion': '3',
+      });
+      expect(m.pinHash, 'abc123');
+      expect(m.localChildNickname, 'Sara');
+      expect(m.kidsReduceMotion, isFalse);
+      expect(m.maxDailySuggestions, 3);
+      expect(m.homeMissionsEnabled, isTrue);
+      expect(m.policyVersion, 0);
+    });
+
+    test('numeric doubles are accepted and clamped', () {
+      final m = ParentSettingsModel.fromJson(const {
+        'maxDailySuggestions': 2.0,
+        'policyVersion': 5.0,
+      });
+      expect(m.maxDailySuggestions, 2);
+      expect(m.policyVersion, 5);
+    });
+  });
+
   group('ParentSettings entity', () {
     test('props and copyWith include the new fields', () {
       const base = ParentSettings();
@@ -84,6 +112,25 @@ void main() {
           version: 4,
         ),
       );
+    });
+
+    test('sessionGoalMinutes outside 1..60 maps to null', () {
+      for (final (raw, expected) in [
+        (0, null),
+        (61, null),
+        (-5, null),
+        (1, 1),
+        (30, 30),
+        (60, 60),
+      ]) {
+        expect(
+          KidsChildPolicy.fromSettings(
+            ParentSettings(sessionGoalMinutes: raw),
+          ).sessionGoalMinutes,
+          expected,
+          reason: 'raw $raw',
+        );
+      }
     });
 
     test('clamps maxDailySuggestions', () {

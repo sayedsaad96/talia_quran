@@ -9,6 +9,9 @@ typedef KidsChildPolicyLoader = Future<KidsChildPolicy> Function();
 ///
 /// Starts at the default policy and never loads on its own; callers invoke
 /// [reload] (on entering the kids world, after a sync, after an edit).
+///
+/// App-lifetime DI singleton: widgets must never call `dispose()` on
+/// `getIt<KidsPolicyController>()`.
 class KidsPolicyController extends ValueNotifier<KidsChildPolicy> {
   KidsPolicyController({required KidsChildPolicyLoader load})
     : _load = load,
