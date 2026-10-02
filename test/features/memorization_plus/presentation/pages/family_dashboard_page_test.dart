@@ -419,6 +419,10 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).last,
       );
+      // The home-missions panel makes the list taller than the first layout
+      // estimate, so settle at the true end before tapping.
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
       await tester.tap(editButton);
       await tester.pumpAndSettle();
       await submitDialogText(tester, 'Maryam');
@@ -460,6 +464,10 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).last,
       );
+      // The home-missions panel makes the list taller than the first layout
+      // estimate, so settle at the true end before tapping.
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
       await tester.tap(editButton);
       await tester.pumpAndSettle();
 
@@ -484,6 +492,9 @@ void main() {
 
       expect(usecases.identityUpdates, ['child-2:Fatima Zahra:9']);
       expect(find.textContaining('Fatima Zahra'), findsWidgets);
+      // The header is built only while scrolled to the top.
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, 1500));
+      await tester.pumpAndSettle();
       expect(find.text('9 years old'), findsOneWidget);
       expect(
         find.text(

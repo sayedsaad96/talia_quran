@@ -6,8 +6,10 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
+import '../widgets/home_missions_panel.dart';
 import '../widgets/parent_support_tip.dart';
 import 'family_dashboard_page.dart';
 
@@ -121,6 +123,9 @@ class _ChildDetailBody extends StatelessWidget {
     final rewards = child.isLocal
         ? (child.localData?.rewards ?? [])
         : (child.remoteSummary?.rewards ?? []);
+    final homeMissions = child.isLocal
+        ? (child.localData?.homeMissions ?? const <KidsHomeMission>[])
+        : (child.remoteSummary?.homeMissions ?? const <KidsHomeMission>[]);
     final production = child.remoteSummary?.production;
 
     return ListView(
@@ -163,6 +168,21 @@ class _ChildDetailBody extends StatelessWidget {
           _RewardsCard(rewards: rewards),
           const SizedBox(height: AppSpacing.md),
         ],
+
+        // ─── Home missions ─────────────────────────────────────────────────
+        HomeMissionsPanel(
+          missions: homeMissions,
+          onAdd: (title) => context.read<FamilyDashboardCubit>().addHomeMission(
+            title,
+            childId: child.isLocal ? null : child.childUserId,
+          ),
+          onAcknowledge: (id) =>
+              context.read<FamilyDashboardCubit>().acknowledgeHomeMission(
+                id,
+                childId: child.isLocal ? null : child.childUserId,
+              ),
+        ),
+        const SizedBox(height: AppSpacing.md),
 
         // ─── Edit name (local child) / name and age (linked child) ─────────
         if (child.isLocal)

@@ -9930,6 +9930,66 @@ abstract class AppLocalizations {
   /// **'اكتب مهمة من حرف إلى ١٢٠ حرفًا'**
   String get kidsHomeMissionInvalidTitle;
 
+  /// No description provided for @childDetailHomeMissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'المهمات المنزلية'**
+  String get childDetailHomeMissions;
+
+  /// No description provided for @childDetailAddHomeMission.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف مهمة'**
+  String get childDetailAddHomeMission;
+
+  /// No description provided for @kidsHomeMissionAssigned.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار الطفل'**
+  String get kidsHomeMissionAssigned;
+
+  /// No description provided for @kidsHomeMissionReported.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخبرنا الطفل أنه أنجزها'**
+  String get kidsHomeMissionReported;
+
+  /// No description provided for @kidsHomeMissionAcknowledged.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطّلع ولي الأمر'**
+  String get kidsHomeMissionAcknowledged;
+
+  /// No description provided for @kidsHomeMissionAcknowledgeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطّلعت'**
+  String get kidsHomeMissionAcknowledgeAction;
+
+  /// No description provided for @kidsHomeMissionSuggestTidy.
+  ///
+  /// In ar, this message translates to:
+  /// **'رتّب غرفتك'**
+  String get kidsHomeMissionSuggestTidy;
+
+  /// No description provided for @kidsHomeMissionSuggestHelp.
+  ///
+  /// In ar, this message translates to:
+  /// **'ساعد في تجهيز المائدة'**
+  String get kidsHomeMissionSuggestHelp;
+
+  /// No description provided for @kidsHomeMissionSuggestKind.
+  ///
+  /// In ar, this message translates to:
+  /// **'قل كلمة طيبة لأحد أفراد أسرتك'**
+  String get kidsHomeMissionSuggestKind;
+
+  /// No description provided for @kidsHomeMissionSuggestShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'شارك لعبتك مع غيرك'**
+  String get kidsHomeMissionSuggestShare;
+
   /// No description provided for @kidsAyahAlreadyCompleted.
   ///
   /// In ar, this message translates to:

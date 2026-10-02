@@ -5784,6 +5784,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'Write a mission between 1 and 120 characters';
 
   @override
+  String get childDetailHomeMissions => 'Home missions';
+
+  @override
+  String get childDetailAddHomeMission => 'Add mission';
+
+  @override
+  String get kidsHomeMissionAssigned => 'Waiting for child';
+
+  @override
+  String get kidsHomeMissionReported => 'Child says it\'s done';
+
+  @override
+  String get kidsHomeMissionAcknowledged => 'Seen by guardian';
+
+  @override
+  String get kidsHomeMissionAcknowledgeAction => 'Mark as seen';
+
+  @override
+  String get kidsHomeMissionSuggestTidy => 'Tidy your room';
+
+  @override
+  String get kidsHomeMissionSuggestHelp => 'Help set the table';
+
+  @override
+  String get kidsHomeMissionSuggestKind =>
+      'Say something kind to a family member';
+
+  @override
+  String get kidsHomeMissionSuggestShare => 'Share your toy with someone';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'You already completed this ayah. Open the map to continue.';
 

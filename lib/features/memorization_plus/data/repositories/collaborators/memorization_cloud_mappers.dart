@@ -1,6 +1,7 @@
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../../core/memorization/remote_child_production_summary_builder.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 
 /// Pure cloud-row → domain-entity mappings shared by the kids-cloud-sync and
@@ -95,6 +96,23 @@ class MemorizationCloudMappers {
         ? null
         : DateTime.parse(row['claimed_at'] as String),
   );
+
+  KidsHomeMission homeMissionFromCloud(Map<String, dynamic> row) =>
+      KidsHomeMission(
+        id: row['id'].toString(),
+        title: row['title'] as String,
+        status: KidsHomeMissionStatus.values.firstWhere(
+          (status) => status.name == row['status'],
+          orElse: () => KidsHomeMissionStatus.assigned,
+        ),
+        createdAt: DateTime.parse(row['created_at'] as String),
+        reportedAt: row['reported_at'] == null
+            ? null
+            : DateTime.parse(row['reported_at'] as String),
+        acknowledgedAt: row['acknowledged_at'] == null
+            ? null
+            : DateTime.parse(row['acknowledged_at'] as String),
+      );
 
   AyahReviewRecord reviewRecordFromCloud(Map<String, dynamic> row) =>
       RemoteChildProductionSummaryBuilder.reviewRecordFromCloud(row);

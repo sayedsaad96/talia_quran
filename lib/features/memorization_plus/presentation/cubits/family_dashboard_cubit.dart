@@ -288,6 +288,49 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     }
   }
 
+  /// Assigns a home mission: remote (RPC) for a linked child, local otherwise.
+  Future<void> addHomeMission(String title, {String? childId}) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded) return;
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+
+    final result = childId != null
+        ? await _remoteLink.createRemoteHomeMission(
+            childUserId: childId,
+            title: trimmed,
+          )
+        : await _parentAccess.addLocalHomeMission(trimmed);
+    await result.fold(
+      (failure) async => emit(
+        current.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) async => refresh(),
+    );
+  }
+
+  /// Marks a reported home mission as seen by the guardian.
+  Future<void> acknowledgeHomeMission(String id, {String? childId}) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded) return;
+
+    final result = childId != null
+        ? await _remoteLink.acknowledgeRemoteHomeMission(id)
+        : await _parentAccess.acknowledgeLocalHomeMission(id);
+    await result.fold(
+      (failure) async => emit(
+        current.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) async => refresh(),
+    );
+  }
+
   Future<void> saveSettings(ParentSettings settings) async {
     final current = state;
     if (current is! FamilyDashboardLoaded) return;

@@ -165,6 +165,19 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
     String rewardId,
   );
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  });
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  );
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
+  );
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     bool completionAuthorized = false,
     String? sessionId,

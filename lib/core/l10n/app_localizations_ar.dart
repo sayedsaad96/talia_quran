@@ -5763,6 +5763,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionInvalidTitle => 'اكتب مهمة من حرف إلى ١٢٠ حرفًا';
 
   @override
+  String get childDetailHomeMissions => 'المهمات المنزلية';
+
+  @override
+  String get childDetailAddHomeMission => 'أضف مهمة';
+
+  @override
+  String get kidsHomeMissionAssigned => 'بانتظار الطفل';
+
+  @override
+  String get kidsHomeMissionReported => 'أخبرنا الطفل أنه أنجزها';
+
+  @override
+  String get kidsHomeMissionAcknowledged => 'اطّلع ولي الأمر';
+
+  @override
+  String get kidsHomeMissionAcknowledgeAction => 'اطّلعت';
+
+  @override
+  String get kidsHomeMissionSuggestTidy => 'رتّب غرفتك';
+
+  @override
+  String get kidsHomeMissionSuggestHelp => 'ساعد في تجهيز المائدة';
+
+  @override
+  String get kidsHomeMissionSuggestKind => 'قل كلمة طيبة لأحد أفراد أسرتك';
+
+  @override
+  String get kidsHomeMissionSuggestShare => 'شارك لعبتك مع غيرك';
+
+  @override
   String get kidsAyahAlreadyCompleted =>
       'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
 

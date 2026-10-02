@@ -7,6 +7,7 @@ import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
+import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -367,6 +368,127 @@ class MemorizationKidsCloudSyncService {
     } catch (e) {
       return Left(NetworkFailure.from(e));
     }
+  }
+
+  /// Guardian assigns a home mission to a linked child. The server re-checks
+  /// the active link; the cache is never touched (the guardian reads remotely).
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty || trimmed.length > kHomeMissionTitleMaxLength) {
+        return const Left(
+          ValidationFailure(CubitMessageCodes.kidsHomeMissionInvalidTitle),
+        );
+      }
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      await client.rpc(
+        'create_kids_home_mission',
+        params: {'p_child_user_id': childUserId, 'p_title': trimmed},
+      );
+      return await _selectHomeMissions(client, childUserId);
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  /// Guardian marks a reported mission as seen. Returns the child's refreshed
+  /// mission list (the child id comes from the row the RPC returns).
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) async {
+    try {
+      final parsedId = int.tryParse(missionId);
+      if (parsedId == null) {
+        return const Left(CacheFailure('معرّف المهمة غير صالح'));
+      }
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      final response = await client.rpc(
+        'acknowledge_kids_home_mission',
+        params: {'p_mission_id': parsedId},
+      );
+      final rows = (response as List<dynamic>).whereType<Map>().toList();
+      if (rows.isEmpty) {
+        return const Left(NetworkFailure('المهمة ليست متاحة لهذا الإجراء'));
+      }
+      final childId = rows.first['child_user_id'] as String?;
+      if (childId == null) {
+        return Right(
+          rows
+              .map(
+                (row) => _mappers.homeMissionFromCloud(
+                  Map<String, dynamic>.from(row),
+                ),
+              )
+              .toList(),
+        );
+      }
+      return await _selectHomeMissions(client, childId);
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  /// Reads a linked child's home missions (parent SELECT RLS), newest first.
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
+  ) async {
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+      return await _selectHomeMissions(client, childUserId);
+    } catch (e) {
+      return Left(NetworkFailure.from(e));
+    }
+  }
+
+  static const kHomeMissionTitleMaxLength = 120;
+
+  Future<Either<Failure, List<KidsHomeMission>>> _selectHomeMissions(
+    SupabaseClient client,
+    String childUserId,
+  ) async {
+    final rows = await client
+        .from('kids_home_missions')
+        .select()
+        .eq('child_user_id', childUserId)
+        .order('created_at', ascending: false);
+    return Right(rows.map(_mappers.homeMissionFromCloud).toList());
   }
 
   /// Guardian-side correction of a linked child's name and age. The server

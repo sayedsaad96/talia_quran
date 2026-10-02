@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
+import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 
@@ -408,6 +409,14 @@ class ParentAccessUsecase {
 
   Future<Either<Failure, List<ParentReward>>> claimReward(String id) =>
       _repository.claimParentReward(id);
+
+  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
+    String title,
+  ) => _repository.addLocalHomeMission(title);
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
+    String id,
+  ) => _repository.acknowledgeLocalHomeMission(id);
 }
 
 class ParentRemoteLinkUsecase {
@@ -437,6 +446,18 @@ class ParentRemoteLinkUsecase {
     childUserId: childUserId,
     title: title,
   );
+
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) => _repository.createRemoteHomeMission(
+    childUserId: childUserId,
+    title: title,
+  );
+
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) => _repository.acknowledgeRemoteHomeMission(missionId);
 
   /// Parent-initiated unlink: revokes the guardian link server-side so the
   /// child no longer appears in the parent's dashboard nor the parent in the

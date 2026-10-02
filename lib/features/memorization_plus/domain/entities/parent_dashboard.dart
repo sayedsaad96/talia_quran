@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'ayah_review_record.dart';
+import 'kids_home_mission.dart';
 import 'kids_journey_stage.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
@@ -133,6 +134,7 @@ class ParentDashboard extends Equatable {
     required this.logs,
     required this.rewards,
     required this.settings,
+    this.homeMissions = const [],
   });
 
   final KidsProgress progress;
@@ -140,6 +142,9 @@ class ParentDashboard extends Equatable {
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
   final ParentSettings settings;
+
+  /// Missions the guardian assigned to this device's child.
+  final List<KidsHomeMission> homeMissions;
 
   int get commitmentDays => logs
       .map((log) {
@@ -192,5 +197,12 @@ class ParentDashboard extends Equatable {
   }
 
   @override
-  List<Object?> get props => [progress, stages, logs, rewards, settings];
+  List<Object?> get props => [
+    progress,
+    stages,
+    logs,
+    rewards,
+    settings,
+    homeMissions,
+  ];
 }

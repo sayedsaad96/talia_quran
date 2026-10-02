@@ -491,6 +491,25 @@ class MemorizationPlusRepositoryImpl
   ) => _kidsCloudSync.unlockRemoteParentReward(rewardId);
 
   @override
+  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
+    required String childUserId,
+    required String title,
+  }) => _kidsCloudSync.createRemoteHomeMission(
+    childUserId: childUserId,
+    title: title,
+  );
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
+    String missionId,
+  ) => _kidsCloudSync.acknowledgeRemoteHomeMission(missionId);
+
+  @override
+  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
+    String childUserId,
+  ) => _kidsCloudSync.getRemoteHomeMissions(childUserId);
+
+  @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     bool completionAuthorized = false,
     String? sessionId,
