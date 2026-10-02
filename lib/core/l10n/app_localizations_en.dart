@@ -2501,6 +2501,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get kidsDailyMissionsTitle => 'Today\'s missions';
+
+  @override
+  String get kidsReadingMissionTitle => 'Read a page of your Mushaf';
+
+  @override
+  String get kidsMissionDone => 'Done ✓';
+
+  @override
   String get kidsGamifiedCurrentStage => 'Your current mission';
 
   @override
@@ -2550,6 +2559,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsGamifiedRemindMe => 'Remind me';
+
+  @override
+  String get kidsTaliaListenBubble => 'Listen with me, then repeat it!';
+
+  @override
+  String get kidsTaliaRecallBubble => 'You can do it! Take your time';
+
+  @override
+  String get kidsTaliaRecordingBubble => 'I am listening…';
+
+  @override
+  String get kidsTaliaReviewBubble => 'Let\'s see what you remember!';
+
+  @override
+  String get kidsTaliaEncourageBubble => 'Great try! One more time';
+
+  @override
+  String get kidsTaliaCelebrateBubble => 'Well done! May Allah bless you';
+
+  @override
+  String get kidsTaliaGuideBubble => 'Your mission is ready, let\'s go!';
+
+  @override
+  String get kidsTaliaWelcomeBackBubble => 'I missed you!';
+
+  @override
+  String get kidsTreasuresTitle => 'My treasures';
+
+  @override
+  String get kidsTreasuresEmpty =>
+      'Memorize your first surah to find your first treasure!';
+
+  @override
+  String get kidsRegionBeginning => 'The beginning';
+
+  @override
+  String get kidsRegionPalmOasis => 'Palm Oasis';
+
+  @override
+  String get kidsRegionFlowerValley => 'Flower Valley';
+
+  @override
+  String get kidsRegionStarMountain => 'Star Mountain';
+
+  @override
+  String get kidsRegionPearlSea => 'Pearl Sea';
+
+  @override
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  ) {
+    return '$memorizedText of $totalText surahs';
+  }
+
+  @override
+  String get kidsTaliaFarewellBubble => 'Great work today! See you tomorrow';
+
+  @override
+  String get kidsTaliaJourneyDoneBubble => 'You finished the whole journey!';
+
+  @override
+  String get kidsTaliaMapBubble => 'Let\'s continue the adventure!';
+
+  @override
+  String get kidsTaliaStageReadyBubble => 'Are you ready?';
 
   @override
   String get kidsWelcomeBackTitle => 'Welcome back!';
@@ -3703,6 +3780,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsQuranPausePage => 'Pause';
+
+  @override
+  String get kidsReaderConfirmPage => 'I read this page';
+
+  @override
+  String get kidsReaderPageConfirmed => 'Well done! Your reading is saved';
 
   @override
   String get parentDashboardPinInvalid => 'Enter a 4-digit code';

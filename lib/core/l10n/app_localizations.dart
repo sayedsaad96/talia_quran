@@ -4586,6 +4586,24 @@ abstract class AppLocalizations {
   /// **'أنجزت مهام اليوم، ما شاء الله! عُد غداً لبيت جديد.'**
   String kidsGamifiedDailyLimitReached(int count);
 
+  /// No description provided for @kidsDailyMissionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهماتي اليوم'**
+  String get kidsDailyMissionsTitle;
+
+  /// No description provided for @kidsReadingMissionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ صفحة من مصحفك'**
+  String get kidsReadingMissionTitle;
+
+  /// No description provided for @kidsMissionDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمّت ✓'**
+  String get kidsMissionDone;
+
   /// No description provided for @kidsGamifiedCurrentStage.
   ///
   /// In ar, this message translates to:
@@ -4681,6 +4699,131 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'ذكّرني'**
   String get kidsGamifiedRemindMe;
+
+  /// No description provided for @kidsTaliaListenBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمع الآية معي، ثم ردّدها!'**
+  String get kidsTaliaListenBubble;
+
+  /// No description provided for @kidsTaliaRecallBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت تقدر! تذكّرها على مهلك'**
+  String get kidsTaliaRecallBubble;
+
+  /// No description provided for @kidsTaliaRecordingBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا أسمعك…'**
+  String get kidsTaliaRecordingBubble;
+
+  /// No description provided for @kidsTaliaReviewBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيا نرى ماذا تتذكّر!'**
+  String get kidsTaliaReviewBubble;
+
+  /// No description provided for @kidsTaliaEncourageBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولة رائعة! مرة أخرى'**
+  String get kidsTaliaEncourageBubble;
+
+  /// No description provided for @kidsTaliaCelebrateBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! بارك الله فيك'**
+  String get kidsTaliaCelebrateBubble;
+
+  /// No description provided for @kidsTaliaGuideBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهمتك جاهزة، هيا نبدأ!'**
+  String get kidsTaliaGuideBubble;
+
+  /// No description provided for @kidsTaliaWelcomeBackBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشتقت إليك!'**
+  String get kidsTaliaWelcomeBackBubble;
+
+  /// No description provided for @kidsTreasuresTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كنوزي'**
+  String get kidsTreasuresTitle;
+
+  /// No description provided for @kidsTreasuresEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ أول سورة لتجد أول كنز!'**
+  String get kidsTreasuresEmpty;
+
+  /// No description provided for @kidsRegionBeginning.
+  ///
+  /// In ar, this message translates to:
+  /// **'البداية'**
+  String get kidsRegionBeginning;
+
+  /// No description provided for @kidsRegionPalmOasis.
+  ///
+  /// In ar, this message translates to:
+  /// **'واحة النخيل'**
+  String get kidsRegionPalmOasis;
+
+  /// No description provided for @kidsRegionFlowerValley.
+  ///
+  /// In ar, this message translates to:
+  /// **'وادي الأزهار'**
+  String get kidsRegionFlowerValley;
+
+  /// No description provided for @kidsRegionStarMountain.
+  ///
+  /// In ar, this message translates to:
+  /// **'جبل النجوم'**
+  String get kidsRegionStarMountain;
+
+  /// No description provided for @kidsRegionPearlSea.
+  ///
+  /// In ar, this message translates to:
+  /// **'بحر اللؤلؤ'**
+  String get kidsRegionPearlSea;
+
+  /// No description provided for @kidsRegionProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{memorizedText} من {totalText} سور'**
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  );
+
+  /// No description provided for @kidsTaliaFarewellBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت اليوم! نلتقي غدًا'**
+  String get kidsTaliaFarewellBubble;
+
+  /// No description provided for @kidsTaliaJourneyDoneBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت رحلتك كلها!'**
+  String get kidsTaliaJourneyDoneBubble;
+
+  /// No description provided for @kidsTaliaMapBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيا نكمل المغامرة!'**
+  String get kidsTaliaMapBubble;
+
+  /// No description provided for @kidsTaliaStageReadyBubble.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت مستعد؟'**
+  String get kidsTaliaStageReadyBubble;
 
   /// No description provided for @kidsWelcomeBackTitle.
   ///
@@ -6492,6 +6635,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إيقاف'**
   String get kidsQuranPausePage;
+
+  /// No description provided for @kidsReaderConfirmPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرأت هذه الصفحة'**
+  String get kidsReaderConfirmPage;
+
+  /// No description provided for @kidsReaderPageConfirmed.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! سُجّلت قراءتك'**
+  String get kidsReaderPageConfirmed;
 
   /// No description provided for @parentDashboardPinInvalid.
   ///

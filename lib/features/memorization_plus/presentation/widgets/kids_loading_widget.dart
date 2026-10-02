@@ -3,6 +3,8 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
+import '../world/kids_world_palette.dart';
+import 'kids_chunky_button.dart';
 
 /// Gamified Loading Widget for Kids Mode
 class KidsLoadingWidget extends StatelessWidget {
@@ -30,7 +32,7 @@ class KidsLoadingWidget extends StatelessWidget {
             context.l10n.kidsPreparing,
             style: AppTypography.titleSmall.copyWith(
               fontFamily: 'Amiri',
-              color: KidsTheme.goldStar,
+              color: KidsWorldPalette.of(context).onScene,
             ),
           ),
         ],
@@ -71,18 +73,16 @@ class KidsErrorWidget extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTypography.titleMedium.copyWith(
               fontFamily: 'Amiri',
-              color: Colors.white,
+              color: KidsWorldPalette.of(context).onScene,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          FilledButton(
+          KidsChunkyButton(
             onPressed: onRetry,
-            style: FilledButton.styleFrom(
-              backgroundColor: KidsTheme.goldStar,
-              foregroundColor: KidsTheme.nightSkyDark,
-              minimumSize: const Size.fromHeight(52),
-            ),
-            child: Text(actionLabel ?? context.l10n.tryAgain),
+            icon: Icons.refresh_rounded,
+            label: actionLabel ?? context.l10n.tryAgain,
+            tone: KidsButtonTone.gold,
+            height: 56,
           ),
         ],
       ),

@@ -18,6 +18,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
     required String ownerId,
     required String sessionId,
     required LearningLaunchContext? launchContext,
+    MemorizationAudience audience = MemorizationAudience.adult,
   }) {
     final failures = <int, int>{};
     for (final failure in state.failureTracker.allFailures) {
@@ -39,7 +40,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
       hintLevels: hints,
       blockReviewRequired: state.blockReviewRequired,
       ownerId: ownerId,
-      audience: MemorizationAudience.adult,
+      audience: audience,
       sessionId: sessionId,
       launchContext: launchContext,
       review: state.isReview,

@@ -121,6 +121,17 @@ abstract final class KidsTheme {
   static const Color heroCardTop = Color(0xFF0F7D6B);
   static const Color heroCardBot = Color(0xFF074D40);
 
+  // ─── Session / buttons ───
+  static const Color buttonGreenFace = Color(0xFF15803D);
+  static const Color buttonGreenBase = Color(0xFF14532D);
+  static const Color buttonGoldBase = Color(0xFFB45309);
+  static const Color buttonPurpleBase = Color(0xFF4C1D95);
+  static const Color buttonSoftBase = Color(0xFFD9B970);
+  static const Color buttonDisabledFace = Color(0xFFCBD5E1);
+  static const Color buttonDisabledBase = Color(0xFF94A3B8);
+  static const Color sessionPurpleLight = Color(0xFF8B5CF6);
+  static const Color sessionPurpleDark = Color(0xFF5B21B6);
+
   static const LinearGradient heroCardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

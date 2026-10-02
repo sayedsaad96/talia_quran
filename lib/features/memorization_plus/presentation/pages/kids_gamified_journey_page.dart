@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/kids_map_celebration_store.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../../domain/services/kids_adventure_regions.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_journey_complete_card.dart';
@@ -17,8 +18,11 @@ import '../widgets/kids_journey_painters.dart';
 import '../widgets/kids_journey_segment.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_region_name.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
+import '../world/kids_world_palette.dart';
 
 class KidsGamifiedJourneyPage extends StatelessWidget {
   const KidsGamifiedJourneyPage({super.key, required this.surahId});
@@ -243,6 +247,16 @@ class _KidsGamifiedJourneyContentState
                                 progress: widget.state.progress,
                                 onSettingsTap: widget.onPathSettingsTap,
                               ),
+                              const SizedBox(height: AppSpacing.md),
+                              const KidsTaliaMomentCompanion(
+                                moment: KidsTaliaMoment.mapGuide,
+                              ),
+                              if (widget.state.currentRegion != null) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                _RegionBanner(
+                                  progress: widget.state.currentRegion!,
+                                ),
+                              ],
                               const SizedBox(height: AppSpacing.lg),
                               _JourneyMapHeader(
                                 mapTitle: context.l10n.kidsJourneyMapTitle,
@@ -332,20 +346,22 @@ class _JourneyMapHeader extends StatelessWidget {
               size: 24,
             ),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              mapTitle,
-              style: AppTypography.headlineSmall.copyWith(
-                color: KidsTheme.shellTextPrimary,
-                fontFamily: 'Amiri',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-                shadows: const [
-                  Shadow(
-                    color: Color(0x66000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+            Expanded(
+              child: Text(
+                mapTitle,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: KidsWorldPalette.of(context).onScene,
+                  fontFamily: 'Amiri',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x66000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -354,12 +370,82 @@ class _JourneyMapHeader extends StatelessWidget {
         Text(
           subtitle,
           style: AppTypography.bodySmall.copyWith(
-            color: KidsTheme.shellTextSecondary,
+            color: KidsWorldPalette.of(context).onSceneMuted,
             fontFamily: 'Amiri',
             letterSpacing: 0,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Opaque card above the map: the region the journey surah belongs to.
+class _RegionBanner extends StatelessWidget {
+  const _RegionBanner({required this.progress});
+
+  final KidsRegionProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final name = kidsRegionName(l10n, progress.region.id);
+    final progressText = l10n.kidsRegionProgress(
+      progress.memorized,
+      progress.total,
+      context.numText(progress.memorized),
+      context.numText(progress.total),
+    );
+    return Semantics(
+      container: true,
+      label: '$name. $progressText',
+      child: ExcludeSemantics(
+        child: Container(
+          key: const ValueKey('kids-journey-region-banner'),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: KidsTheme.parchmentGradient,
+            borderRadius: KidsTheme.cardRadius,
+            border: Border.all(color: KidsTheme.parchmentEdge, width: 1.5),
+            boxShadow: KidsTheme.card25DShadow,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: KidsTheme.inkOnParchment,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      progressText,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: KidsTheme.inkOnParchment,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (progress.isComplete) ...[
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: KidsTheme.goldStar,
+                  size: 32,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

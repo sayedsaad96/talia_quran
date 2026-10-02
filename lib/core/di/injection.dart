@@ -47,6 +47,7 @@ import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
+import '../memorization/v2/kids_review_outcome_committer.dart';
 import '../memorization/v2/review_outcome_committer.dart';
 import '../memorization/v2/session_engine.dart';
 import '../memorization/v2/session_phase.dart';
@@ -72,6 +73,7 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
+import '../../features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import '../../features/memorization_plus/data/listening/listening_audio.dart';
 import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
 import '../../features/memorization_plus/data/listening/listening_recitation_capture.dart';
@@ -117,10 +119,12 @@ import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
+import '../../features/memorization_plus/domain/services/kids_daily_missions.dart';
 import '../../features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_identity_repository.dart';
@@ -128,6 +132,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_treasures_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
@@ -391,6 +396,15 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),
   );
+  getIt.registerLazySingleton<KidsWorldPhaseController>(
+    () => KidsWorldPhaseController(
+      prayerTimes: () async {
+        final s = await getIt<PrayerTimesService>().current(isArabic: true);
+        if (s == null || s.fajr == null || s.maghrib == null) return null;
+        return (fajr: s.fajr!, maghrib: s.maghrib!);
+      },
+    ),
+  );
   getIt.registerLazySingleton<PrayerSerenityWatcher>(
     () => PrayerSerenityWatcher(
       prayerTimesProvider: () async {
@@ -613,6 +627,16 @@ Future<void> configureDependencies({bool background = false}) async {
       owner: getIt<RecordOwnerProvider>(),
       scheduler: getIt<ScheduleNextReviewUsecase>(),
       activityRecorder: getIt<ActivityEventRecorder>(),
+    ),
+  );
+  getIt.registerLazySingleton<KidsReviewOutcomeCommitter>(
+    () => KidsReviewOutcomeCommitter(
+      isar: getIt<Isar>(),
+      owner: getIt<RecordOwnerProvider>(),
+      scheduler: getIt<ScheduleNextReviewUsecase>(),
+      cloudSyncQueue: getIt.isRegistered<CloudSyncQueue>()
+          ? getIt<CloudSyncQueue>()
+          : null,
     ),
   );
   getIt.registerLazySingleton<V2ReviewEffectOutboxProcessor>(
@@ -909,6 +933,7 @@ Future<void> configureDependencies({bool background = false}) async {
         audience: MemorizationAudience.kids,
       ),
       getIt<ActivityEventRecorder>(),
+      getIt<KidsReviewOutcomeCommitter>(),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -919,6 +944,21 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KidsMapCelebrationStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
+    ),
+  );
+  // Plan 2 — pages the child confirmed reading today (owner-scoped).
+  getIt.registerLazySingleton<KidsReadingReceiptStore>(
+    () => KidsReadingReceiptStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerFactory<KidsTreasuresCubit>(
+    () => KidsTreasuresCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<QuranRepository>(),
+      certificatesLoader: () =>
+          getIt<AchievementService>().getEarnedCertificates(isKids: true),
     ),
   );
   getIt.registerFactory<KidsJourneyCubit>(
@@ -937,6 +977,14 @@ Future<void> configureDependencies({bool background = false}) async {
         final result = await getIt<MemorizationPlusRepository>()
             .getKidsSessionLogs();
         return result.getOrElse(() => const <KidsSessionLog>[]);
+      },
+      readingPagesLoader: () async {
+        if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
+          throw StateError('KidsReadingReceiptStore is not registered');
+        }
+        return getIt<KidsReadingReceiptStore>().pagesOn(
+          kidsDayKey(DateTime.now()),
+        );
       },
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()

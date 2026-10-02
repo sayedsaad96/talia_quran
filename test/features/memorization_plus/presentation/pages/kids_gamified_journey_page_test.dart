@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_house_card.dart';
@@ -191,6 +192,129 @@ void main() {
 
       expect(find.byType(KidsHouseCard).evaluate().length, lessThan(100));
     });
+    testWidgets('the region banner shows name and progress', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(
+              currentRegion: KidsRegionProgress(kKidsAdventureRegions[1], 1),
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+
+      final banner = find.byKey(const ValueKey('kids-journey-region-banner'));
+      expect(banner, findsOneWidget);
+      expect(
+        find.descendant(of: banner, matching: find.text('واحة النخيل')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: banner, matching: find.textContaining('١ من ٦')),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
+    });
+
+    testWidgets('no region banner without a current region', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState,
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('kids-journey-region-banner')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a completed region shows the gold badge', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(
+              currentRegion: KidsRegionProgress(kKidsAdventureRegions[0], 1),
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('kids-journey-region-banner')),
+          matching: find.byIcon(Icons.workspace_premium_rounded),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the region banner fits 320 px Arabic at text scale 1.3', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 900);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 900),
+            textScaler: TextScaler.linear(1.3),
+          ),
+          child: _TestApp(
+            locale: const Locale('ar'),
+            child: KidsGamifiedJourneyContent(
+              state: _loadedState.copyWith(
+                currentRegion: KidsRegionProgress(kKidsAdventureRegions[3], 10),
+              ),
+              onBack: () {},
+              onStageSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('kids-journey-region-banner')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('back button triggers onBack callback', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
@@ -258,14 +382,15 @@ const _loadedState = KidsJourneyLoaded(
 );
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.child, this.locale = const Locale('en')});
 
   final Widget child;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,

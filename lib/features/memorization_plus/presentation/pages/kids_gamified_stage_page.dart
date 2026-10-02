@@ -10,6 +10,7 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_stage_details.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedStagePage extends StatefulWidget {
@@ -162,6 +163,10 @@ class KidsGamifiedStageContent extends StatelessWidget {
                       ),
                       sliver: SliverList.list(
                         children: [
+                          const KidsTaliaMomentCompanion(
+                            moment: KidsTaliaMoment.stageReady,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           DecoratedBox(
                             decoration: BoxDecoration(
                               color: KidsTheme.creamParchment,

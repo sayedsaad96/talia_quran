@@ -6,6 +6,8 @@ import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -244,6 +246,174 @@ void main() {
       expect(loaded.nextMission, isNull);
       expect(loaded.dailyGoalCap, 1);
       expect(loaded.dailyGoalReached, isTrue);
+    });
+
+    group('current region', () {
+      const stage113 = <KidsJourneyStage>[
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 113,
+          startAyah: 1,
+          endAyah: 5,
+          completedAyahs: [],
+          status: KidsJourneyStageStatus.current,
+        ),
+      ];
+
+      Surah surah(int id, int count) => Surah(
+        id: id,
+        nameAr: 's$id',
+        nameEn: 's$id',
+        ayahCount: count,
+        juz: 30,
+        type: 'meccan',
+        page: 604,
+      );
+
+      KidsSessionLog log(int surahId, int ayah) => KidsSessionLog(
+        id: '$surahId-$ayah',
+        surahId: surahId,
+        ayahNumber: ayah,
+        repeatsCompleted: 3,
+        pointsEarned: 10,
+        completedAt: DateTime(2026, 10, 1),
+        missionType: KidsMissionType.newMemorization,
+      );
+
+      Future<KidsJourneyLoaded> loadFor(
+        int surahId, {
+        KidsJourneySessionLogsLoader? logs,
+        bool stubSurahs = true,
+      }) async {
+        await cubit.close();
+        cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          sessionLogsLoader: logs,
+        );
+        when(
+          mockGetJourney(any),
+        ).thenAnswer((_) async => const Right(stage113));
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(any),
+        ).thenAnswer((_) async => const Right(tSurahDetail));
+        if (stubSurahs) {
+          when(mockQuranRepo.getSurahs()).thenAnswer(
+            (_) async => Right([surah(114, 6), surah(113, 5), surah(1, 7)]),
+          );
+        }
+        await cubit.load(surahId: surahId);
+        return cubit.state as KidsJourneyLoaded;
+      }
+
+      test('counts memorized surahs of the journey surah region', () async {
+        final loaded = await loadFor(
+          113,
+          logs: () async => [for (var a = 1; a <= 6; a++) log(114, a)],
+        );
+        expect(loaded.currentRegion?.region.id, KidsRegionId.palmOasis);
+        expect(loaded.currentRegion?.memorized, 1);
+        expect(loaded.currentRegion?.total, 6);
+      });
+
+      test('is null when the surah is off the kids path', () async {
+        final loaded = await loadFor(2, logs: () async => const []);
+        expect(loaded.currentRegion, isNull);
+      });
+
+      test('is null when the surah list cannot be loaded', () async {
+        final loaded = await loadFor(
+          113,
+          logs: () async => const [],
+          stubSurahs: false,
+        );
+        expect(loaded.currentRegion, isNull);
+      });
+
+      test('is null when session logs are unreadable', () async {
+        final loaded = await loadFor(
+          113,
+          logs: () async => throw StateError('storage'),
+        );
+        expect(loaded.currentRegion, isNull);
+      });
+    });
+
+    group('daily missions', () {
+      Future<KidsJourneyCubit> build({
+        KidsReadingPagesLoader? readingPagesLoader,
+        bool withTodayLog = true,
+      }) async {
+        await cubit.close();
+        when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(tSurahId),
+        ).thenAnswer((_) async => const Right(tSurahDetail));
+        return cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          sessionLogsLoader: () async => [
+            if (withTodayLog)
+              KidsSessionLog(
+                id: 'today',
+                surahId: tSurahId,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.now(),
+                missionType: KidsMissionType.newMemorization,
+              ),
+          ],
+          readingPagesLoader: readingPagesLoader,
+        );
+      }
+
+      test("learning and reading are completed by today's work", () async {
+        final c = await build(readingPagesLoader: () async => {5});
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(loaded.dailyMissions.map((m) => m.kind), [
+          KidsDailyMissionKind.learning,
+          KidsDailyMissionKind.reading,
+        ]);
+        expect(
+          loaded.dailyMissions.map((m) => m.status),
+          everyElement(KidsDailyMissionStatus.completed),
+        );
+      });
+
+      test('a loader error omits the reading mission (fail-open)', () async {
+        final c = await build(
+          readingPagesLoader: () async => throw StateError('prefs'),
+        );
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(loaded, isA<KidsJourneyLoaded>());
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.reading)),
+        );
+      });
+
+      test('no loader means no reading mission', () async {
+        final c = await build();
+
+        await c.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = c.state as KidsJourneyLoaded;
+        expect(
+          loaded.dailyMissions.map((m) => m.kind),
+          isNot(contains(KidsDailyMissionKind.reading)),
+        );
+      });
     });
 
     test('an unreadable session log never reports the day complete', () async {

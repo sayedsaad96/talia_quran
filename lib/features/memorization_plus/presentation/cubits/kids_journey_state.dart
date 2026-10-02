@@ -37,6 +37,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.dailyGoalCap,
     this.missionSurahName,
     this.isReturningAfterBreak = false,
+    this.dailyMissions = const [],
+    this.currentRegion,
   });
 
   final int surahId;
@@ -61,6 +63,12 @@ class KidsJourneyLoaded extends KidsJourneyState {
 
   /// K33 — back after three or more days: home greets the child warmly.
   final bool isReturningAfterBreak;
+
+  /// «مهماتي اليوم»: learning, then reading. Only the kids home computes it.
+  final List<KidsDailyMission> dailyMissions;
+
+  /// Region progress of [surahId]; null when off the kids path or unreadable.
+  final KidsRegionProgress? currentRegion;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
@@ -105,6 +113,9 @@ class KidsJourneyLoaded extends KidsJourneyState {
     bool clearDailyGoalCap = false,
     String? missionSurahName,
     bool? isReturningAfterBreak,
+    List<KidsDailyMission>? dailyMissions,
+    KidsRegionProgress? currentRegion,
+    bool clearCurrentRegion = false,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -119,6 +130,10 @@ class KidsJourneyLoaded extends KidsJourneyState {
         : (dailyGoalCap ?? this.dailyGoalCap),
     missionSurahName: missionSurahName ?? this.missionSurahName,
     isReturningAfterBreak: isReturningAfterBreak ?? this.isReturningAfterBreak,
+    dailyMissions: dailyMissions ?? this.dailyMissions,
+    currentRegion: clearCurrentRegion
+        ? null
+        : (currentRegion ?? this.currentRegion),
   );
 
   @override
@@ -134,5 +149,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     dailyGoalCap,
     missionSurahName,
     isReturningAfterBreak,
+    dailyMissions,
+    currentRegion,
   ];
 }

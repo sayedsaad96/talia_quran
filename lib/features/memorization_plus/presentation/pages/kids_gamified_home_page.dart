@@ -10,9 +10,11 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
+import '../widgets/kids_daily_mission_tile.dart';
 import '../widgets/kids_journey_complete_card.dart';
 import '../widgets/kids_day_complete_card.dart';
 import '../widgets/kids_welcome_back_card.dart';
@@ -20,6 +22,8 @@ import '../widgets/kids_loading_widget.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_section_heading.dart';
+import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 
 class KidsGamifiedHomePage extends StatelessWidget {
@@ -159,6 +163,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
                         ayahNumber: mission.startAyah,
                       ),
               );
+              // A page confirmed in the Mushaf completes the reading card.
+              if (context.mounted) {
+                await _reloadAfterReader(context, state.surahId);
+              }
             }),
             onJourneyTap: () => _openDestination(() async {
               if (!context.mounted) return;
@@ -168,11 +176,31 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
             }),
             onMissionTap: () =>
                 _openDestination(() => _openCurrentMission(context, state)),
+            onReadingMissionTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(kidsQuranReaderLocation(state.surahId));
+              if (context.mounted) {
+                await _reloadAfterReader(context, state.surahId);
+              }
+            }),
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
+            onTreasuresTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(AppRoutes.memorizationPlusKidsTreasures);
+            }),
           );
         },
       ),
+    );
+  }
+
+  /// Reloads the journey after the reader closes: a confirmed page completes
+  /// the reading card.
+  Future<void> _reloadAfterReader(BuildContext context, int surahId) async {
+    await context.read<KidsJourneyCubit>().load(
+      surahId: surahId,
+      followFrontier: true,
     );
   }
 
@@ -214,6 +242,8 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.childName,
     this.onRefresh,
     this.onPathSettingsTap,
+    this.onReadingMissionTap,
+    this.onTreasuresTap,
   });
 
   final KidsJourneyLoaded state;
@@ -224,6 +254,12 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   final String? childName;
   final Future<void> Function()? onRefresh;
   final VoidCallback? onPathSettingsTap;
+
+  /// Opens the kids Mushaf for the reading mission card.
+  final VoidCallback? onReadingMissionTap;
+
+  /// Opens «كنوزي» from the progress header chip.
+  final VoidCallback? onTreasuresTap;
 
   @override
   Widget build(BuildContext context) {
@@ -256,8 +292,13 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         progress: state.progress,
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
+                        onTreasuresTap: onTreasuresTap,
                       ),
-                      const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.md),
+                      KidsTaliaMomentCompanion(
+                        moment: kidsHomeTaliaMoment(state),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       // K33: a warm welcome after a few days away.
                       if (state.isReturningAfterBreak) ...[
                         const KidsWelcomeBackCard(),
@@ -303,6 +344,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           reviewAyahs: state.nextMission?.ayahNumbers,
                         ),
                       ],
+                      ..._missionTiles(context),
                       const SizedBox(height: 96),
                     ],
                   ),
@@ -313,6 +355,32 @@ class KidsGamifiedHomeContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// «مهماتي اليوم»: a tile for every mission after the learning card (which
+  /// is the existing mission / day-complete card above).
+  List<Widget> _missionTiles(BuildContext context) {
+    final others = state.dailyMissions
+        .where((m) => m.kind != KidsDailyMissionKind.learning)
+        .toList(growable: false);
+    if (others.isEmpty) return const [];
+    return [
+      const SizedBox(height: AppSpacing.lg),
+      KidsSectionHeading(
+        text: context.l10n.kidsDailyMissionsTitle,
+        fontFamily: 'Amiri',
+      ),
+      for (final mission in others) ...[
+        const SizedBox(height: AppSpacing.sm),
+        KidsDailyMissionTile(
+          mission: mission,
+          onTap: () => switch (mission.kind) {
+            KidsDailyMissionKind.reading => onReadingMissionTap?.call(),
+            _ => onMissionTap(),
+          },
+        ),
+      ],
+    ];
   }
 }
 

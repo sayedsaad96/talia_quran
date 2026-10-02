@@ -8,6 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/memorization/review_record_identity.dart';
+import 'package:talia_quran/core/memorization/v2/kids_review_outcome_committer.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
@@ -1728,6 +1734,148 @@ void main() {
     );
   });
 
+  group('KidsModeCubit kids committer', () {
+    late _FakeMemorizationPlusRepository repository;
+    late Isar isar;
+    late Directory tempDir;
+    const owner = FixedRecordOwnerProvider('owner-a');
+    final cubits = <KidsModeCubit>[];
+
+    KidsModeCubit build({KidsReviewOutcomeCommitter? committer}) {
+      final cubit = KidsModeCubit(
+        GetKidsProgressUsecase(repository),
+        GetKidsJourneyUsecase(repository),
+        AwardKidsPointsUsecase(repository),
+        _FakeAchievementService(),
+        const _ResumeQuranRepository(),
+        V2SessionEngine(),
+        V2SessionReviewAdapter(
+          repository: repository,
+          scheduler: const ScheduleNextReviewUsecase(),
+        ),
+        _FakeStreakService(),
+        _FakeKidsRecitationRecorder(),
+        null,
+        (pin) async => pin == '1234',
+        null,
+        null,
+        V2SessionProgressAdapter(
+          datasource: V2SessionLocalDatasource(isar, owner: owner),
+          audience: MemorizationAudience.kids,
+        ),
+        null,
+        committer,
+      );
+      cubits.add(cubit);
+      return cubit;
+    }
+
+    KidsReviewOutcomeCommitter buildCommitter() => KidsReviewOutcomeCommitter(
+      isar: isar,
+      owner: owner,
+      scheduler: const ScheduleNextReviewUsecase(),
+    );
+
+    Future<IsarAyahReviewRecord?> kidsRecord() =>
+        isar.isarAyahReviewRecords.getByCompositeKey(
+          const ReviewRecordIdentity(
+            ownerUserId: 'owner-a',
+            audience: ReviewRecordReadScope.kids,
+            surahId: 114,
+            ayahNumber: 1,
+          ).storageKey,
+        );
+
+    setUp(() async {
+      repository = _FakeMemorizationPlusRepository();
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 14,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+      await _initializeKidsResumeIsarCoreForTests();
+      tempDir = await Directory.systemTemp.createTemp('talia_kids_commit_');
+      isar = await Isar.open(
+        [
+          IsarAyahReviewRecordSchema,
+          IsarV2SessionSchema,
+          IsarReviewEvidenceEventSchema,
+          IsarReviewEffectOutboxSchema,
+        ],
+        directory: tempDir.path,
+        name: 'kids_commit_${DateTime.now().microsecondsSinceEpoch}',
+      );
+    });
+
+    tearDown(() async {
+      for (final cubit in cubits) {
+        await cubit.close();
+      }
+      cubits.clear();
+      await isar.close(deleteFromDisk: true);
+      if (tempDir.existsSync()) await tempDir.delete(recursive: true);
+    });
+
+    test('completion goes through the kids committer', () async {
+      final cubit = build(committer: buildCommitter());
+      await cubit.load(114, 1, 'ayah text');
+      await cubit.markCompleted(manualGrade: true);
+
+      expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      expect((await kidsRecord())!.totalReviews, 1);
+      expect(repository.markCalls, 0, reason: 'legacy recordPass bypassed');
+      final evidence = await isar.isarReviewEvidenceEvents.where().findAll();
+      expect(evidence, hasLength(1));
+      expect(
+        repository.lastSessionId,
+        'kids_${evidence.single.sessionId}_114_1',
+      );
+    });
+
+    test('award failure then retry does not reschedule', () async {
+      final committer = buildCommitter();
+      repository.awardFailuresRemaining = 1;
+      final first = build(committer: committer);
+      await first.load(114, 1, 'ayah text');
+      await first.markCompleted(manualGrade: true);
+      expect(first.state, isA<KidsModeError>());
+      final firstId = repository.lastSessionId;
+      expect((await kidsRecord())!.totalReviews, 1);
+
+      final second = build(committer: committer);
+      await second.load(
+        114,
+        1,
+        'ayah text',
+        missionType: KidsMissionType.resume,
+      );
+      await second.markCompleted(manualGrade: true);
+
+      expect((second.state as KidsModeLoaded).isCompleted, isTrue);
+      expect((await kidsRecord())!.totalReviews, 1);
+      expect(await isar.isarReviewEvidenceEvents.count(), 1);
+      expect(repository.awardCalls, 2);
+      expect(repository.lastSessionId, firstId);
+      expect(repository.awardedSessionIds, [firstId]);
+    });
+
+    test('without a committer the legacy recordPass path runs', () async {
+      final cubit = build();
+      await cubit.load(114, 1, 'ayah text');
+      await cubit.markCompleted(manualGrade: true);
+
+      expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      expect(repository.markCalls, 1);
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+    });
+  });
+
   group('KidsSpeechRecitationRecorder', () {
     const permissionChannel = MethodChannel(
       'flutter.baseflow.com/permissions/methods',
@@ -1812,6 +1960,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   int? lastAttemptCount;
   int? lastHintCount;
   PerformanceRating? lastMasteryRating;
+  int awardFailuresRemaining = 0;
+  final awardedSessionIds = <String?>[];
 
   @override
   Future<Either<Failure, KidsProgress>> getKidsProgress() async =>
@@ -1856,9 +2006,16 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     lastMasteryRating = masteryRating;
     repeatsCompletedCalls.add(repeatsCompleted);
     awardCalls++;
+    if (awardFailuresRemaining > 0) {
+      awardFailuresRemaining--;
+      return const Left(CacheFailure('award failed'));
+    }
     final result = await awardCompleter!.future;
     result.fold((_) {}, (completion) {
-      if (!completion.alreadyCompleted) awardLogWrites++;
+      if (!completion.alreadyCompleted) {
+        awardLogWrites++;
+        awardedSessionIds.add(sessionId);
+      }
     });
     return result;
   }

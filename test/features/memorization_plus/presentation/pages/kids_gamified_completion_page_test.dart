@@ -365,6 +365,28 @@ void main() {
       expect(find.byType(ConfettiWidget), findsOneWidget);
       expect(find.textContaining('Level'), findsOneWidget);
     });
+
+    testWidgets('reward image respects reduced motion (R5)', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: _TestApp(
+            child: KidsGamifiedCompletionContent(
+              starsEarned: 2,
+              onNext: () {},
+              onReturnToMap: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.hasRunningAnimations, isFalse);
+    });
   });
 }
 

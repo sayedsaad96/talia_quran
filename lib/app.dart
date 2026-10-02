@@ -9,6 +9,7 @@ import 'core/l10n/app_localizations.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
 import 'core/router/app_router.dart';
+import 'features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import 'core/router/launch_destination.dart';
 
 import 'core/services/app_session_service.dart';
@@ -69,6 +70,10 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       unawaited(getIt<NotificationScheduler>().refreshNotifications(l10n));
       unawaited(getIt<TaliaNotificationService>().clearBadge());
       getIt<AuthCubit>().resyncOnResume();
+      if (getIt.isRegistered<KidsWorldPhaseController>() &&
+          getIt.checkLazySingletonInstanceExists<KidsWorldPhaseController>()) {
+        unawaited(getIt<KidsWorldPhaseController>().refresh());
+      }
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||

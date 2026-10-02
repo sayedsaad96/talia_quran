@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_daily_mission_tile.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_day_complete_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 
 void main() {
   setUpAll(() {
@@ -40,6 +47,35 @@ void main() {
         kidsQuranReaderLocation(114),
         '${AppRoutes.memorizationPlusKidsQuran}?surahId=114',
       );
+    });
+
+    testWidgets('treasures chip appears only with a callback and taps through', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      var taps = 0;
+      Widget content({VoidCallback? onTreasuresTap}) => _TestApp(
+        child: KidsGamifiedHomeContent(
+          state: _loadedState,
+          onHomeTap: () {},
+          onMushafTap: () {},
+          onJourneyTap: () {},
+          onMissionTap: () {},
+          onTreasuresTap: onTreasuresTap,
+        ),
+      );
+
+      await tester.pumpWidget(content());
+      expect(find.byKey(const ValueKey('kids-home-treasures')), findsNothing);
+
+      await tester.pumpWidget(content(onTreasuresTap: () => taps++));
+      expect(find.text('My treasures'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('kids-home-treasures')));
+      expect(taps, 1);
     });
 
     testWidgets('renders progress, mission, and bottom navigation actions', (
@@ -511,6 +547,236 @@ void main() {
 
       expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
     });
+
+    testWidgets('returning from the Mushaf tab reloads the journey', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      final cubit = _FakeJourneyCubit();
+      getIt.registerFactory<KidsJourneyCubit>(() => cubit);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        if (getIt.isRegistered<KidsJourneyCubit>()) {
+          getIt.unregister<KidsJourneyCubit>();
+        }
+      });
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const KidsGamifiedHomePage(surahId: 114),
+          ),
+          GoRoute(
+            path: AppRoutes.memorizationPlusKidsQuran,
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                key: const ValueKey('fake-reader-back'),
+                onPressed: () => context.pop(),
+                child: const Text('back'),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('en'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(cubit.loads, 1);
+
+      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const ValueKey('fake-reader-back')), findsOneWidget);
+      expect(cubit.loads, 1);
+
+      await tester.tap(find.byKey(const ValueKey('fake-reader-back')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(cubit.loads, 2);
+    });
+
+    group("today's missions", () {
+      const readingAvailable = KidsDailyMission(
+        id: '2026-10-02:reading',
+        kind: KidsDailyMissionKind.reading,
+        status: KidsDailyMissionStatus.available,
+      );
+      const readingDone = KidsDailyMission(
+        id: '2026-10-02:reading',
+        kind: KidsDailyMissionKind.reading,
+        status: KidsDailyMissionStatus.completed,
+      );
+
+      Widget home(KidsJourneyLoaded state, {VoidCallback? onReading}) =>
+          _TestApp(
+            child: KidsGamifiedHomeContent(
+              state: state,
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+              onReadingMissionTap: onReading,
+            ),
+          );
+
+      testWidgets('shows the header and the reading tile', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+        var taps = 0;
+
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(dailyMissions: const [readingAvailable]),
+            onReading: () => taps++,
+          ),
+        );
+
+        expect(find.text("Today's missions"), findsOneWidget);
+        expect(find.text('Read a page of your Mushaf'), findsOneWidget);
+        expect(find.text('Done ✓'), findsNothing);
+        await tester.tap(find.byType(KidsDailyMissionTile));
+        expect(taps, 1);
+      });
+
+      testWidgets('day-complete card and reading tile both show', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(
+          home(
+            _loadedState.copyWith(
+              clearNextMission: true,
+              dailyGoalCap: 3,
+              dailyMissions: const [readingAvailable],
+            ),
+          ),
+        );
+
+        expect(find.byType(KidsDayCompleteCard), findsOneWidget);
+        expect(find.text('Read a page of your Mushaf'), findsOneWidget);
+      });
+
+      testWidgets('a completed tile says Done and keeps its label', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(
+          home(_loadedState.copyWith(dailyMissions: const [readingDone])),
+        );
+
+        expect(find.text('Done ✓'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel(RegExp('Read a page of your Mushaf')),
+          findsOneWidget,
+        );
+        handle.dispose();
+      });
+
+      testWidgets('the header is dark on the day sky', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        final controller = KidsWorldPhaseController(
+          prayerTimes: () async => null,
+          clock: () => DateTime(2026, 10, 2, 12),
+        );
+        getIt.registerSingleton<KidsWorldPhaseController>(controller);
+
+        await tester.pumpWidget(
+          home(_loadedState.copyWith(dailyMissions: const [readingAvailable])),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        final heading = tester.widget<Text>(find.text("Today's missions"));
+        expect(heading.style?.color, KidsWorldPalette.day.onScene);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        controller.dispose();
+        getIt.unregister<KidsWorldPhaseController>();
+      });
+
+      testWidgets('no missions renders no header', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(home(_loadedState));
+
+        expect(find.text("Today's missions"), findsNothing);
+      });
+
+      testWidgets('fits 320 px, Arabic, text scale 1.3', (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 640);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ar'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
+            home: KidsGamifiedHomeContent(
+              state: _loadedState.copyWith(
+                dailyMissions: const [readingAvailable],
+              ),
+              onHomeTap: () {},
+              onMushafTap: () {},
+              onJourneyTap: () {},
+              onMissionTap: () {},
+            ),
+          ),
+        );
+        await tester.scrollUntilVisible(
+          find.text('اقرأ صفحة من مصحفك'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('مهماتي اليوم'), findsOneWidget);
+      });
+    });
   });
 }
 
@@ -543,6 +809,22 @@ const _loadedState = KidsJourneyLoaded(
     lastSessionAt: null,
   ),
 );
+
+class _FakeJourneyCubit extends Cubit<KidsJourneyState>
+    implements KidsJourneyCubit {
+  _FakeJourneyCubit() : super(const KidsJourneyInitial());
+
+  int loads = 0;
+
+  @override
+  Future<void> load({required int surahId, bool followFrontier = false}) async {
+    loads++;
+    emit(_loadedState);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child});

@@ -11,6 +11,9 @@ import 'package:talia_quran/features/memorization_plus/domain/entities/memorizat
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_ayah_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_chunky_button.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_scene.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
@@ -119,7 +122,7 @@ void main() {
         expect(find.text('Test ayah text'), findsNothing);
         // No listening gate on a review.
         expect(find.text('0/0'), findsNothing);
-        final play = tester.widget<FilledButton>(
+        final play = tester.widget<KidsRoundActionButton>(
           find.byKey(const ValueKey('kids-gamified-play-audio')),
         );
         expect(play.onPressed, isNull);
@@ -763,6 +766,119 @@ void main() {
 
       expect(state.sessionPointsEarned, 14);
       expect(state.leveledUpTo, 3);
+    });
+  });
+
+  group('Talia companion', () {
+    test('takes a pose for each session moment', () {
+      final engine = V2SessionEngine();
+      final reciting = engine.startReciting(
+        engine.startMemorizing(engine.startLearning(_testSessionState())),
+      );
+
+      expect(kidsTaliaPoseFor(_baseState), KidsTaliaPose.listening);
+      expect(kidsTaliaPoseFor(_recallState()), KidsTaliaPose.thinking);
+      expect(
+        kidsTaliaPoseFor(_baseState.copyWith(sessionState: reciting)),
+        KidsTaliaPose.thinking,
+      );
+      expect(
+        kidsTaliaPoseFor(_baseState.copyWith(isRecording: true)),
+        KidsTaliaPose.speaking,
+      );
+      expect(
+        kidsTaliaPoseFor(_baseState.copyWith(isCompleted: true)),
+        KidsTaliaPose.celebrate,
+      );
+      expect(
+        kidsTaliaPoseFor(
+          _baseState.copyWith(
+            recordingError: CubitMessageCodes.kidsRecitationMismatch,
+            lastMatchedWords: 3,
+            lastTargetWords: 5,
+          ),
+        ),
+        KidsTaliaPose.encourage,
+      );
+      expect(
+        kidsTaliaPoseFor(
+          KidsModeLoaded(
+            surahId: 114,
+            ayahNumber: 3,
+            ayahText: 'Test ayah text',
+            sessionState: engine.startReview(_testSessionState()),
+            progress: _baseState.progress,
+            isPlaying: false,
+            currentLoop: 0,
+            maxLoops: 0,
+            isCompleted: false,
+            isReview: true,
+          ),
+        ),
+        KidsTaliaPose.pointRight,
+      );
+    });
+
+    Future<void> pumpContent(
+      WidgetTester tester,
+      KidsModeLoaded state, {
+      bool disableAnimations = false,
+    }) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1400);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(disableAnimations: disableAnimations),
+          child: _TestApp(
+            child: KidsGamifiedListenContent(
+              state: state,
+              onBack: () {},
+              onPlayPause: () {},
+              onRecordRecitation: () {},
+              onStopRecording: () {},
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('greets the child with a speech bubble', (tester) async {
+      await pumpContent(tester, _baseState);
+
+      expect(
+        find.byKey(const ValueKey('kids-talia-companion')),
+        findsOneWidget,
+      );
+      expect(find.text('Listen with me, then repeat it!'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('Talia and the scene keep still while the ayah plays', (
+      tester,
+    ) async {
+      await pumpContent(tester, _baseState.copyWith(isPlaying: true));
+
+      final talia = tester.widget<KidsTaliaCompanion>(
+        find.byType(KidsTaliaCompanion),
+      );
+      final scene = tester.widget<KidsWorldScene>(
+        find.byType(KidsWorldScene),
+      );
+      expect(talia.animate, isFalse);
+      expect(scene.animate, isFalse);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('nothing loops with reduced motion', (tester) async {
+      await pumpContent(
+        tester,
+        _baseState.copyWith(isPlaying: true),
+        disableAnimations: true,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(tester.hasRunningAnimations, isFalse);
     });
   });
 }

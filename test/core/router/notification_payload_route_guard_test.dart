@@ -53,6 +53,7 @@ const _exactRoutes = <String>{
   AppRoutes.memorizationPlusKidsQuran,
   AppRoutes.memorizationPlusKidsStage,
   AppRoutes.memorizationPlusKidsCompletion,
+  AppRoutes.memorizationPlusKidsTreasures,
   AppRoutes.familyDashboard,
   AppRoutes.childDetail,
   AppRoutes.memorizationPlusCustomPlan,

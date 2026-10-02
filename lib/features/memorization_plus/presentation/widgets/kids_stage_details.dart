@@ -5,6 +5,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
+import 'kids_chunky_button.dart';
 
 class KidsStageDetails extends StatelessWidget {
   const KidsStageDetails({
@@ -20,25 +21,11 @@ class KidsStageDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final startButton = FilledButton.icon(
+    final startButton = KidsChunkyButton(
       onPressed: onStartMission,
-      icon: const Icon(Icons.play_arrow_rounded, size: 28),
-      label: Text(
-        context.l10n.kidsGamifiedStartMission,
-        style: AppTypography.headlineSmall.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      style: FilledButton.styleFrom(
-        backgroundColor: KidsTheme.forestGreen,
-        foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(60),
-        shape: const RoundedRectangleBorder(
-          borderRadius: KidsTheme.buttonRadius,
-        ),
-        elevation: 8,
-        shadowColor: KidsTheme.forestGreen.withValues(alpha: 0.4),
-      ),
+      icon: Icons.play_arrow_rounded,
+      label: context.l10n.kidsGamifiedStartMission,
+      height: 68,
     );
 
     return Column(
