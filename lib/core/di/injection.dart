@@ -47,6 +47,7 @@ import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
+import '../memorization/v2/kids_review_outcome_committer.dart';
 import '../memorization/v2/review_outcome_committer.dart';
 import '../memorization/v2/session_engine.dart';
 import '../memorization/v2/session_phase.dart';
@@ -615,6 +616,16 @@ Future<void> configureDependencies({bool background = false}) async {
       activityRecorder: getIt<ActivityEventRecorder>(),
     ),
   );
+  getIt.registerLazySingleton<KidsReviewOutcomeCommitter>(
+    () => KidsReviewOutcomeCommitter(
+      isar: getIt<Isar>(),
+      owner: getIt<RecordOwnerProvider>(),
+      scheduler: getIt<ScheduleNextReviewUsecase>(),
+      cloudSyncQueue: getIt.isRegistered<CloudSyncQueue>()
+          ? getIt<CloudSyncQueue>()
+          : null,
+    ),
+  );
   getIt.registerLazySingleton<V2ReviewEffectOutboxProcessor>(
     () => V2ReviewEffectOutboxProcessor(
       isar: getIt<Isar>(),
@@ -909,6 +920,7 @@ Future<void> configureDependencies({bool background = false}) async {
         audience: MemorizationAudience.kids,
       ),
       getIt<ActivityEventRecorder>(),
+      getIt<KidsReviewOutcomeCommitter>(),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(

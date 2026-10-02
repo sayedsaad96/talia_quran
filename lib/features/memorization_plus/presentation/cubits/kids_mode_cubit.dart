@@ -12,6 +12,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
+import '../../../../core/memorization/v2/kids_review_outcome_committer.dart';
 import '../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
@@ -59,7 +60,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsSessionLogsLoader? kidsSessionLogsLoader,
     V2SessionProgressAdapter? progressAdapter,
     ActivityEventRecorder? activityRecorder,
+    KidsReviewOutcomeCommitter? reviewOutcomeCommitter,
   ]) : _activityRecorder = activityRecorder,
+       _reviewOutcomeCommitter = reviewOutcomeCommitter,
        _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
        _sessionPolicyLoader = sessionPolicyLoader,
@@ -97,6 +100,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final KidsSessionLogsLoader? _kidsSessionLogsLoader;
   final V2SessionProgressAdapter? _progressAdapter;
   final ActivityEventRecorder? _activityRecorder;
+  final KidsReviewOutcomeCommitter? _reviewOutcomeCommitter;
   late final KidsRecitationRecorder _recitationRecorder;
   final AudioPlayer _player = AudioPlayer();
   late final StreamSubscription<PlayerState> _playerSub;
@@ -108,6 +112,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final V2RecitationEvaluator _evaluator = const V2RecitationEvaluator(
     passThreshold: kKidsPassThreshold,
   );
+
+  /// Stable id of one kids review task; a retried completion of the same
+  /// ayah/mission must reuse it so the committer dedupes.
+  static String kidsReviewTaskId(
+    int surahId,
+    int ayahNumber,
+    KidsMissionType type,
+  ) => '$surahId:$ayahNumber:${type.name}';
 
   int _loopCount = 0;
   final Set<String> _completionsInFlight = <String>{};
@@ -805,29 +817,52 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       // The review record is the source of truth for memorization progress.
       // Do not grant points or complete the session until it is durably saved;
       // otherwise a storage failure can reward progress that cannot be reviewed.
-      final reviewResult = await _reviewAdapter.recordPass(
-        surahId: st.surahId,
-        ayahNumber: st.ayahNumber,
-        hintLevel: effectiveHint,
-        createdByMode: ReviewRecordCreatedByMode.kidsMode,
-        // One mastery measure for both SRS and the reward log (N4).
-        rating: masteryRating,
-      );
-      final reviewFailure = reviewResult.fold(
-        (failure) => failure,
-        (_) => null,
-      );
-      if (reviewFailure != null) {
-        emit(
-          st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
+      String? awardSessionId = _sessionId;
+      final committer = _reviewOutcomeCommitter;
+      if (committer != null) {
+        // Idempotent commit: a retry after an award failure reuses the stored
+        // session id, so neither the SRS schedule nor the award repeats.
+        try {
+          final commit = await committer.commitPass(
+            sessionState: st.sessionState,
+            taskId: kidsReviewTaskId(st.surahId, st.ayahNumber, _missionType),
+            rating: masteryRating,
+            manuallyAssessed: manualGrade,
+            similarityScore: automaticSimilarity,
+          );
+          awardSessionId =
+              'kids_${commit.sessionId}_${st.surahId}_${st.ayahNumber}';
+        } catch (_) {
+          emit(
+            st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
+          );
+          return;
+        }
+      } else {
+        final reviewResult = await _reviewAdapter.recordPass(
+          surahId: st.surahId,
+          ayahNumber: st.ayahNumber,
+          hintLevel: effectiveHint,
+          createdByMode: ReviewRecordCreatedByMode.kidsMode,
+          // One mastery measure for both SRS and the reward log (N4).
+          rating: masteryRating,
         );
-        return;
+        final reviewFailure = reviewResult.fold(
+          (failure) => failure,
+          (_) => null,
+        );
+        if (reviewFailure != null) {
+          emit(
+            st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
+          );
+          return;
+        }
       }
 
       final result = await _awardPoints(
         AwardKidsPointsParams(
           completionAuthorized: true,
-          sessionId: _sessionId,
+          sessionId: awardSessionId,
           surahId: st.surahId,
           ayahNumber: st.ayahNumber,
           repeatsCompleted: _loopCount,
