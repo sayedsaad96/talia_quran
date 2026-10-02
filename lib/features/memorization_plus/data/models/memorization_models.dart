@@ -459,6 +459,8 @@ class ParentSettingsModel extends ParentSettings {
     super.maxDailySuggestions,
     super.homeMissionsEnabled,
     super.policyVersion,
+    super.policySyncedVersion,
+    super.policyLinkConfirmed,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -486,6 +488,12 @@ class ParentSettingsModel extends ParentSettings {
         ),
         homeMissionsEnabled: _boolOr(json['homeMissionsEnabled'], true),
         policyVersion: clampKidsPolicyVersion(_intOr(json['policyVersion'], 0)),
+        policySyncedVersion: clampKidsPolicyVersion(
+          _intOr(json['policySyncedVersion'], 0),
+        ),
+        policyLinkConfirmed: json['policyLinkConfirmed'] is bool
+            ? json['policyLinkConfirmed'] as bool
+            : null,
       );
 
   static bool _boolOr(Object? raw, bool fallback) =>
@@ -511,6 +519,8 @@ class ParentSettingsModel extends ParentSettings {
         maxDailySuggestions: settings.maxDailySuggestions,
         homeMissionsEnabled: settings.homeMissionsEnabled,
         policyVersion: settings.policyVersion,
+        policySyncedVersion: settings.policySyncedVersion,
+        policyLinkConfirmed: settings.policyLinkConfirmed,
       );
 
   Map<String, dynamic> toJson() => {
@@ -529,6 +539,8 @@ class ParentSettingsModel extends ParentSettings {
     'maxDailySuggestions': maxDailySuggestions,
     'homeMissionsEnabled': homeMissionsEnabled,
     'policyVersion': policyVersion,
+    'policySyncedVersion': policySyncedVersion,
+    'policyLinkConfirmed': policyLinkConfirmed,
   };
 }
 

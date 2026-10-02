@@ -2271,6 +2271,7 @@
   "kidsPolicyMaxSuggestions": "عدد مهمات اليوم",
   "kidsPolicyHomeMissions": "المهمات المنزلية",
   "kidsPolicyConflict": "تغيّرت الإعدادات من جهاز آخر",
+  "kidsPolicyUnavailable": "تعذّر تحميل إعدادات الطفل الآن.",
   "childDetailHomeMissions": "المهمات المنزلية",
   "childDetailAddHomeMission": "أضف مهمة",
   "kidsHomeMissionAssigned": "بانتظار الطفل",

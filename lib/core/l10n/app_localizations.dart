@@ -9954,6 +9954,12 @@ abstract class AppLocalizations {
   /// **'تغيّرت الإعدادات من جهاز آخر'**
   String get kidsPolicyConflict;
 
+  /// No description provided for @kidsPolicyUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل إعدادات الطفل الآن.'**
+  String get kidsPolicyUnavailable;
+
   /// No description provided for @childDetailHomeMissions.
   ///
   /// In ar, this message translates to:

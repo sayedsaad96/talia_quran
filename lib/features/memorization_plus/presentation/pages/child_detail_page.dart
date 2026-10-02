@@ -190,14 +190,19 @@ class _ChildDetailBody extends StatelessWidget {
         if (child.remoteSummary case final summary? when !child.isLocal) ...[
           _Panel(
             title: context.l10n.settings,
-            child: KidsPolicyControls(
-              policy: summary.policy ?? const KidsChildPolicy(),
-              onChanged: (policy) =>
-                  context.read<FamilyDashboardCubit>().saveChildPolicy(
-                    policy,
-                    childId: child.childUserId,
+            child: summary.policyUnavailable
+                ? Text(
+                    context.l10n.kidsPolicyUnavailable,
+                    style: AppTypography.bodyMedium,
+                  )
+                : KidsPolicyEditor(
+                    policy: summary.policy ?? const KidsChildPolicy(),
+                    onSave: (policy) =>
+                        context.read<FamilyDashboardCubit>().saveChildPolicy(
+                          policy,
+                          childId: child.childUserId,
+                        ),
                   ),
-            ),
           ),
           const SizedBox(height: AppSpacing.md),
         ],

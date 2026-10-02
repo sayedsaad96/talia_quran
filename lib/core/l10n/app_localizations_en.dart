@@ -5796,6 +5796,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsPolicyConflict => 'Settings changed on another device';
 
   @override
+  String get kidsPolicyUnavailable =>
+      'Couldn\'t load the child\'s settings right now.';
+
+  @override
   String get childDetailHomeMissions => 'Home missions';
 
   @override

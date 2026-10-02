@@ -233,6 +233,15 @@ class MemorizationKidsCloudSyncService {
           );
         },
       );
+      // Policy edits the server has not acknowledged (e.g. made before
+      // linking) go last, best-effort: pushPending never throws and a
+      // transport error just leaves the edit pending for the next sync.
+      await _policySync.pushPending(
+        ownerId: ownerId,
+        childUserId: user.id,
+        casRpc: (params) =>
+            client.rpc('compare_and_swap_child_policy', params: params),
+      );
       if (hadTransientFailure) {
         return const Left(
           NetworkFailure('Kids home mission report is waiting to sync'),

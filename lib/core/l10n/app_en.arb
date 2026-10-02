@@ -2322,6 +2322,7 @@
   "kidsPolicyMaxSuggestions": "Missions per day",
   "kidsPolicyHomeMissions": "Home missions",
   "kidsPolicyConflict": "Settings changed on another device",
+  "kidsPolicyUnavailable": "Couldn't load the child's settings right now.",
   "childDetailHomeMissions": "Home missions",
   "childDetailAddHomeMission": "Add mission",
   "kidsHomeMissionAssigned": "Waiting for child",

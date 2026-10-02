@@ -5775,6 +5775,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsPolicyConflict => 'تغيّرت الإعدادات من جهاز آخر';
 
   @override
+  String get kidsPolicyUnavailable => 'تعذّر تحميل إعدادات الطفل الآن.';
+
+  @override
   String get childDetailHomeMissions => 'المهمات المنزلية';
 
   @override

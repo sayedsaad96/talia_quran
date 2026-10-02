@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +28,7 @@ KidsHomeMission _mission(String id, KidsHomeMissionStatus status) =>
 FamilyChildEntry _remoteChild(
   List<KidsHomeMission> missions, {
   KidsChildPolicy? policy,
+  bool policyUnavailable = false,
 }) => FamilyChildEntry(
       childUserId: 'c1',
       displayName: 'Fatima',
@@ -38,6 +41,7 @@ FamilyChildEntry _remoteChild(
         rewards: const [],
         homeMissions: missions,
         policy: policy,
+        policyUnavailable: policyUnavailable,
       ),
     );
 
@@ -65,6 +69,7 @@ class _Repo implements MemorizationPlusRepository {
   final localAdds = <String>[];
   final localAcks = <String>[];
   final remotePolicies = <String>[];
+  Completer<void>? policyGate;
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
@@ -75,6 +80,7 @@ class _Repo implements MemorizationPlusRepository {
       '$childUserId:v${policy.version}:${policy.reduceMotion}:'
       '${policy.maxDailySuggestions}:${policy.homeMissionsEnabled}',
     );
+    await policyGate?.future;
     return Right(policy);
   }
 
@@ -303,5 +309,46 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.remotePolicies, ['c1:v0:false:3:false']);
+  });
+
+  testWidgets('an unreadable policy hides the controls behind a hint', (
+    tester,
+  ) async {
+    await _pump(tester, _remoteChild(const [], policyUnavailable: true));
+    final hint = find.text("Couldn't load the child's settings right now.");
+    await _scrollTo(tester, hint);
+
+    expect(hint, findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('kids-policy-reduce-motion')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('policy controls are disabled while a save is in flight', (
+    tester,
+  ) async {
+    final child = _remoteChild(
+      const [],
+      policy: const KidsChildPolicy(version: 2),
+    );
+    final repo = await _pump(tester, child);
+    repo.policyGate = Completer<void>();
+    final reduceMotion = find.byKey(const ValueKey('kids-policy-reduce-motion'));
+    await _scrollTo(tester, reduceMotion);
+    await tester.ensureVisible(reduceMotion);
+    await tester.pumpAndSettle();
+
+    await tester.tap(reduceMotion);
+    await tester.pump();
+    expect(tester.widget<SwitchListTile>(reduceMotion).onChanged, isNull);
+    await tester.tap(reduceMotion, warnIfMissed: false);
+    await tester.pump();
+
+    repo.policyGate!.complete();
+    await tester.pumpAndSettle();
+
+    expect(repo.remotePolicies, ['c1:v2:true:3:true']);
+    expect(tester.widget<SwitchListTile>(reduceMotion).onChanged, isNotNull);
   });
 }

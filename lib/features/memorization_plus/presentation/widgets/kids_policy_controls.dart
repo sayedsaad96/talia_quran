@@ -17,10 +17,14 @@ class KidsPolicyControls extends StatelessWidget {
     super.key,
     required this.policy,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final KidsChildPolicy policy;
   final ValueChanged<KidsChildPolicy> onChanged;
+
+  /// False while a save is in flight: every control is inert.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +43,9 @@ class KidsPolicyControls extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.kidsPolicyReduceMotion),
             value: policy.reduceMotion,
-            onChanged: (value) =>
-                onChanged(policy.copyWith(reduceMotion: value)),
+            onChanged: enabled
+                ? (value) => onChanged(policy.copyWith(reduceMotion: value))
+                : null,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -68,18 +73,24 @@ class KidsPolicyControls extends StatelessWidget {
             selected: {
               clampKidsMaxDailySuggestions(policy.maxDailySuggestions),
             },
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              onChanged(policy.copyWith(maxDailySuggestions: selection.first));
-            },
+            onSelectionChanged: enabled
+                ? (selection) {
+                    if (selection.isEmpty) return;
+                    onChanged(
+                      policy.copyWith(maxDailySuggestions: selection.first),
+                    );
+                  }
+                : null,
           ),
           SwitchListTile(
             key: const ValueKey('kids-policy-home-missions'),
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.kidsPolicyHomeMissions),
             value: policy.homeMissionsEnabled,
-            onChanged: (value) =>
-                onChanged(policy.copyWith(homeMissionsEnabled: value)),
+            onChanged: enabled
+                ? (value) =>
+                      onChanged(policy.copyWith(homeMissionsEnabled: value))
+                : null,
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -94,16 +105,56 @@ class KidsPolicyControls extends StatelessWidget {
                     child: Text(l10n.kidsSessionGoalValue(minutes)),
                   ),
               ],
-              onChanged: (minutes) {
-                if (minutes == null || minutes == policy.sessionGoalMinutes) {
-                  return;
-                }
-                onChanged(policy.copyWith(sessionGoalMinutes: minutes));
-              },
+              onChanged: enabled
+                  ? (minutes) {
+                      if (minutes == null ||
+                          minutes == policy.sessionGoalMinutes) {
+                        return;
+                      }
+                      onChanged(policy.copyWith(sessionGoalMinutes: minutes));
+                    }
+                  : null,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+/// [KidsPolicyControls] that disables itself while [onSave] runs, so a
+/// rapid second edit cannot send a CAS with the same (now stale) version.
+class KidsPolicyEditor extends StatefulWidget {
+  const KidsPolicyEditor({
+    super.key,
+    required this.policy,
+    required this.onSave,
+  });
+
+  final KidsChildPolicy policy;
+  final Future<void> Function(KidsChildPolicy policy) onSave;
+
+  @override
+  State<KidsPolicyEditor> createState() => _KidsPolicyEditorState();
+}
+
+class _KidsPolicyEditorState extends State<KidsPolicyEditor> {
+  bool _saving = false;
+
+  Future<void> _save(KidsChildPolicy policy) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(policy);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => KidsPolicyControls(
+    policy: widget.policy,
+    enabled: !_saving,
+    onChanged: _save,
+  );
 }

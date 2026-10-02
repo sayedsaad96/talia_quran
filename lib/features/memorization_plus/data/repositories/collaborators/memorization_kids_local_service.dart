@@ -295,13 +295,39 @@ class MemorizationKidsLocalService {
     ParentSettings settings,
   ) async {
     try {
+      final stored = await _datasource.getParentSettings();
       await _datasource.saveParentSettings(
-        ParentSettingsModel.fromEntity(settings),
+        ParentSettingsModel.fromEntity(keepNewerPolicy(settings, stored)),
       );
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
+  }
+
+  /// A settings snapshot taken before a policy pull/CAS/edit must not roll
+  /// the policy back: when [incoming] carries an older `policyVersion` or
+  /// `policySyncedVersion`, the stored policy block is kept. Equal versions
+  /// pass through (e.g. onboarding's session-goal write).
+  static ParentSettings keepNewerPolicy(
+    ParentSettings incoming,
+    ParentSettings stored,
+  ) {
+    if (incoming.policyVersion >= stored.policyVersion &&
+        incoming.policySyncedVersion >= stored.policySyncedVersion) {
+      return incoming;
+    }
+    return incoming.copyWith(
+      kidsReduceMotion: stored.kidsReduceMotion,
+      maxDailySuggestions: stored.maxDailySuggestions,
+      homeMissionsEnabled: stored.homeMissionsEnabled,
+      sessionGoalMinutes: stored.sessionGoalMinutes,
+      clearSessionGoalMinutes: stored.sessionGoalMinutes == null,
+      policyVersion: stored.policyVersion,
+      policySyncedVersion: stored.policySyncedVersion,
+      policyLinkConfirmed: stored.policyLinkConfirmed,
+      clearPolicyLinkConfirmed: stored.policyLinkConfirmed == null,
+    );
   }
 
   Future<Either<Failure, bool>> verifyParentPin(String pin) async {

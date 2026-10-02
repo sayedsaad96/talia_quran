@@ -33,8 +33,10 @@ class KidsChildPolicySync {
   /// guardian link: the device is treated as unlinked (local-only edit).
   static const _childNotLinked = 'Child link is not active';
 
-  /// Child device: replaces the local policy with the server row when the
-  /// server version is newer. Never throws; a failure leaves local untouched.
+  /// Child device: adopts the server row iff its version is newer than the
+  /// last version the server acknowledged (`policySyncedVersion`). Adopting
+  /// sets both versions to the server version and confirms the link.
+  /// Never throws; a failure leaves local untouched.
   Future<void> pull({
     required String ownerId,
     required Future<Map<String, dynamic>?> Function() fetchRow,
@@ -43,9 +45,9 @@ class KidsChildPolicySync {
       final remote = policyFromRow(await fetchRow());
       if (remote == null || _owner.currentOwnerId != ownerId) return;
       final local = await _datasource.getParentSettings();
-      if (remote.version <= local.policyVersion) return;
+      if (remote.version <= local.policySyncedVersion) return;
       if (_owner.currentOwnerId != ownerId) return;
-      await _store(local, remote);
+      await _storeServer(local, remote);
     } catch (e) {
       TaliaLogger.w('Kids child policy pull skipped', e);
     }
@@ -54,13 +56,15 @@ class KidsChildPolicySync {
   /// Child device edit (already behind the guardian PIN).
   ///
   /// - [linkedChildUserId] null → local only, `policyVersion + 1`.
-  /// - Linked → CAS with the LOCAL `policyVersion` as expected version.
+  /// - Signed in → CAS with `expected = policySyncedVersion` (0 = create).
   ///   Applied → the returned row is stored. Not applied →
   ///   `Left(PolicyConflictFailure)` and the local policy is refreshed from
-  ///   the returned server row (the edit is dropped). When the server has no
-  ///   row yet, the CAS is retried once as a create (expected version 0).
-  /// - "Child link is not active" → treated as unlinked.
-  /// - Any other error → `Left(NetworkFailure)`, local unchanged.
+  ///   the returned server row (the edit is dropped). Either way both
+  ///   versions become the server version and the link is confirmed.
+  /// - "Child link is not active" → local edit (+1), link unconfirmed.
+  /// - Transport error → `Left(NetworkFailure)` (local unchanged) only when
+  ///   the link is confirmed; otherwise the edit is kept locally (+1) and
+  ///   pushed later by [pushPending].
   Future<Either<Failure, KidsChildPolicy>> saveOnDevice({
     required KidsChildPolicy policy,
     required String? linkedChildUserId,
@@ -73,51 +77,123 @@ class KidsChildPolicySync {
       return Left(CacheFailure.from(e));
     }
     final edit = policy.sanitized();
+    bool? linkConfirmed;
 
     if (linkedChildUserId != null) {
       final ownerId = _owner.currentOwnerId;
       try {
-        var response = await casRpc(
-          casParams(linkedChildUserId, edit, local.policyVersion),
+        final parsed = _CasResponse.parse(
+          await casRpc(
+            casParams(linkedChildUserId, edit, local.policySyncedVersion),
+          ),
         );
-        var parsed = _CasResponse.parse(response);
-        if (!parsed.applied &&
-            parsed.policy == null &&
-            local.policyVersion > 0) {
-          // No server row yet (e.g. edits made before linking): create it.
-          response = await casRpc(casParams(linkedChildUserId, edit, 0));
-          parsed = _CasResponse.parse(response);
-        }
         if (_owner.currentOwnerId != ownerId) {
           return const Left(NetworkFailure());
         }
-        final serverPolicy = parsed.policy;
+        final fresh = await _datasource.getParentSettings();
         if (parsed.applied) {
-          final stored = serverPolicy ?? edit.copyWith(version: parsed.version);
-          await _store(await _datasource.getParentSettings(), stored);
+          final stored =
+              parsed.policy ?? edit.copyWith(version: parsed.version);
+          await _storeServer(fresh, stored);
           return Right(stored);
         }
-        if (serverPolicy != null) {
-          await _store(await _datasource.getParentSettings(), serverPolicy);
-        }
+        await _storeServer(
+          fresh,
+          parsed.policy ??
+              // The row vanished: keep local values, restart from a create.
+              KidsChildPolicy.fromSettings(fresh).copyWith(version: 0),
+        );
         return const Left(PolicyConflictFailure());
       } catch (e) {
-        if (!e.toString().contains(_childNotLinked)) {
+        if (_isChildNotLinked(e)) {
+          TaliaLogger.w('Kids child policy saved locally (no active link)', e);
+          linkConfirmed = false;
+        } else if (local.policyLinkConfirmed == true) {
           return Left(NetworkFailure.from(e));
+        } else {
+          TaliaLogger.w('Kids child policy saved locally (offline)', e);
         }
-        TaliaLogger.w('Kids child policy saved locally (no active link)', e);
       }
     }
 
     try {
       final fresh = await _datasource.getParentSettings();
       final stored = edit.copyWith(version: fresh.policyVersion + 1);
-      await _store(fresh, stored);
+      await _store(
+        fresh,
+        stored,
+        syncedVersion: fresh.policySyncedVersion,
+        linkConfirmed: linkConfirmed ?? fresh.policyLinkConfirmed,
+      );
       return Right(stored);
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
   }
+
+  /// Pushes a local policy edit the server has not acknowledged yet
+  /// (`policyVersion > policySyncedVersion`, e.g. edits made before linking)
+  /// with `expected = policySyncedVersion`. Applied → stored; conflict → the
+  /// server row is adopted (the guardian wins); "Child link is not active" →
+  /// link unconfirmed; transport error → stays pending. Never throws.
+  Future<void> pushPending({
+    required String ownerId,
+    required String childUserId,
+    required KidsPolicyCasRpc casRpc,
+  }) async {
+    try {
+      if (_owner.currentOwnerId != ownerId) return;
+      final local = await _datasource.getParentSettings();
+      if (local.policyVersion <= local.policySyncedVersion) return;
+      final edit = KidsChildPolicy.fromSettings(local);
+      final _CasResponse parsed;
+      try {
+        parsed = _CasResponse.parse(
+          await casRpc(casParams(childUserId, edit, local.policySyncedVersion)),
+        );
+      } catch (e) {
+        if (!_isChildNotLinked(e)) {
+          TaliaLogger.w('Kids child policy push pending', e);
+          return;
+        }
+        if (_owner.currentOwnerId != ownerId) return;
+        final fresh = await _datasource.getParentSettings();
+        await _datasource.saveParentSettings(
+          ParentSettingsModel.fromEntity(
+            fresh.copyWith(policyLinkConfirmed: false),
+          ),
+        );
+        return;
+      }
+      if (_owner.currentOwnerId != ownerId) return;
+      final fresh = await _datasource.getParentSettings();
+      if (parsed.applied && fresh.policyVersion != local.policyVersion) {
+        // Edited again during the call: record the acknowledgement only;
+        // the newer edit stays pending for the next sync.
+        await _datasource.saveParentSettings(
+          ParentSettingsModel.fromEntity(
+            fresh.copyWith(
+              policySyncedVersion: parsed.version,
+              policyLinkConfirmed: true,
+            ),
+          ),
+        );
+        return;
+      }
+      await _storeServer(
+        fresh,
+        parsed.policy ??
+            (parsed.applied
+                ? edit.copyWith(version: parsed.version)
+                : edit.copyWith(version: 0)),
+      );
+    } catch (e) {
+      TaliaLogger.w('Kids child policy push skipped', e);
+    }
+  }
+
+  static bool _isChildNotLinked(Object error) =>
+      error.toString().contains(_childNotLinked);
 
   /// Guardian edit of a linked child's policy. Never touches the local cache.
   Future<Either<Failure, KidsChildPolicy>> casRemote({
@@ -180,7 +256,22 @@ class KidsChildPolicySync {
     _ => null,
   };
 
-  Future<void> _store(ParentSettings base, KidsChildPolicy policy) async {
+  /// Stores a server-acknowledged policy: both versions = its version, link
+  /// confirmed.
+  Future<void> _storeServer(ParentSettings base, KidsChildPolicy policy) =>
+      _store(
+        base,
+        policy,
+        syncedVersion: clampKidsPolicyVersion(policy.version),
+        linkConfirmed: true,
+      );
+
+  Future<void> _store(
+    ParentSettings base,
+    KidsChildPolicy policy, {
+    required int syncedVersion,
+    required bool? linkConfirmed,
+  }) async {
     final clean = policy.sanitized();
     await _datasource.saveParentSettings(
       ParentSettingsModel.fromEntity(
@@ -191,6 +282,9 @@ class KidsChildPolicySync {
           sessionGoalMinutes: clean.sessionGoalMinutes,
           clearSessionGoalMinutes: clean.sessionGoalMinutes == null,
           policyVersion: clean.version,
+          policySyncedVersion: syncedVersion,
+          policyLinkConfirmed: linkConfirmed,
+          clearPolicyLinkConfirmed: linkConfirmed == null,
         ),
       ),
     );

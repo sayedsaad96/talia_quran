@@ -108,11 +108,14 @@ class MemorizationFamilyService {
         final missions = (await _kidsCloudSync.getRemoteHomeMissions(
           r.childUserId,
         )).getOrElse(() => const <KidsHomeMission>[]);
-        // Same for the policy: unreadable or absent → defaults, version 0.
-        final policy = (await _kidsCloudSync.getRemoteChildPolicy(
+        // Policy: no row → defaults at version 0; a failed read is flagged
+        // so the guardian controls are hidden instead of showing defaults.
+        final policyResult = await _kidsCloudSync.getRemoteChildPolicy(
           r.childUserId,
-        )).getOrElse(() => null);
-        final summary = missions.isEmpty && policy == null
+        );
+        final policy = policyResult.getOrElse(() => null);
+        final policyUnavailable = policyResult.isLeft();
+        final summary = missions.isEmpty && policy == null && !policyUnavailable
             ? r
             : RemoteChildSummary(
                 childUserId: r.childUserId,
@@ -124,6 +127,7 @@ class MemorizationFamilyService {
                 childAge: r.childAge,
                 homeMissions: missions,
                 policy: policy,
+                policyUnavailable: policyUnavailable,
               );
         children.add(
           FamilyChildEntry(

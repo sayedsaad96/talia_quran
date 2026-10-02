@@ -26,6 +26,8 @@ class ParentSettings extends Equatable {
     this.maxDailySuggestions = 3,
     this.homeMissionsEnabled = true,
     this.policyVersion = 0,
+    this.policySyncedVersion = 0,
+    this.policyLinkConfirmed,
   });
 
   final String? pinHash;
@@ -53,8 +55,16 @@ class ParentSettings extends Equatable {
   /// Guardian policy: whether home missions appear for the child.
   final bool homeMissionsEnabled;
 
-  /// Compare-and-swap version of the child policy (0 = never synced).
+  /// Local edit counter of the child policy (0 = never edited or synced).
   final int policyVersion;
+
+  /// Last policy version the server acknowledged (0 = none); the CAS
+  /// expected version and the pull threshold.
+  final int policySyncedVersion;
+
+  /// Last link state the server confirmed for this child: true after a CAS
+  /// or pull succeeded, false after "Child link is not active", null unknown.
+  final bool? policyLinkConfirmed;
 
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
@@ -76,6 +86,9 @@ class ParentSettings extends Equatable {
     int? maxDailySuggestions,
     bool? homeMissionsEnabled,
     int? policyVersion,
+    int? policySyncedVersion,
+    bool? policyLinkConfirmed,
+    bool clearPolicyLinkConfirmed = false,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -94,6 +107,10 @@ class ParentSettings extends Equatable {
     maxDailySuggestions: maxDailySuggestions ?? this.maxDailySuggestions,
     homeMissionsEnabled: homeMissionsEnabled ?? this.homeMissionsEnabled,
     policyVersion: policyVersion ?? this.policyVersion,
+    policySyncedVersion: policySyncedVersion ?? this.policySyncedVersion,
+    policyLinkConfirmed: clearPolicyLinkConfirmed
+        ? null
+        : (policyLinkConfirmed ?? this.policyLinkConfirmed),
   );
 
   @override
@@ -113,6 +130,8 @@ class ParentSettings extends Equatable {
     maxDailySuggestions,
     homeMissionsEnabled,
     policyVersion,
+    policySyncedVersion,
+    policyLinkConfirmed,
   ];
 }
 
