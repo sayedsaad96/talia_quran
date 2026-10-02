@@ -1,0 +1,71 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/identity/record_owner_provider.dart';
+import '../../domain/services/kids_daily_missions.dart';
+
+/// Owner-scoped record of the Mushaf pages the child explicitly confirmed
+/// reading, per local day. Stored as `{ "yyyy-MM-dd": [sorted unique pages] }`.
+/// Opening a page never records it; only an explicit confirmation does.
+class KidsReadingReceiptStore {
+  KidsReadingReceiptStore(
+    this._prefs,
+    this._owner, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
+
+  static const int retainDays = 60;
+  static const int _lastPage = 604;
+
+  final SharedPreferences _prefs;
+  final RecordOwnerProvider _owner;
+  final DateTime Function() _clock;
+
+  String get _key => 'kids_reading_receipts_${_owner.currentOwnerId}';
+
+  /// Records [pageNumber] (1..604) for today; returns today's unique pages.
+  Future<Set<int>> recordPage(int pageNumber) async {
+    if (pageNumber < 1 || pageNumber > _lastPage) {
+      throw ArgumentError.value(pageNumber, 'pageNumber', 'must be 1..604');
+    }
+    final now = _clock();
+    final today = kidsDayKey(now);
+    final cutoff = kidsDayKey(now.subtract(const Duration(days: retainDays)));
+    final all = _readAll();
+    // yyyy-MM-dd keys compare chronologically as strings.
+    all.removeWhere((day, _) => day.compareTo(cutoff) < 0);
+    final pages = (all[today] ?? <int>{})..add(pageNumber);
+    all[today] = pages;
+    await _prefs.setString(
+      _key,
+      jsonEncode({
+        for (final entry in all.entries)
+          entry.key: entry.value.toList()..sort(),
+      }),
+    );
+    return Set<int>.of(pages);
+  }
+
+  Future<Set<int>> pagesOn(String dayKey) async =>
+      Set<int>.of(_readAll()[dayKey] ?? const <int>{});
+
+  Map<String, Set<int>> _readAll() {
+    try {
+      final raw = _prefs.getString(_key);
+      if (raw == null) return {};
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is List)
+            entry.key as String: {
+              for (final p in entry.value as List)
+                if (p is int && p >= 1 && p <= _lastPage) p,
+            },
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+}

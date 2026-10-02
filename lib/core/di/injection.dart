@@ -119,6 +119,7 @@ import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -939,6 +940,13 @@ Future<void> configureDependencies({bool background = false}) async {
   // K37 — which map houses the child already saw completed (display state).
   getIt.registerLazySingleton<KidsMapCelebrationStore>(
     () => KidsMapCelebrationStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  // Plan 2 — pages the child confirmed reading today (owner-scoped).
+  getIt.registerLazySingleton<KidsReadingReceiptStore>(
+    () => KidsReadingReceiptStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
     ),
