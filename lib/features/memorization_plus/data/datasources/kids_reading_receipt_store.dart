@@ -21,6 +21,7 @@ class KidsReadingReceiptStore {
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
   final DateTime Function() _clock;
+  Future<void> _tail = Future<void>.value();
 
   String get _key => 'kids_reading_receipts_${_owner.currentOwnerId}';
 
@@ -29,6 +30,14 @@ class KidsReadingReceiptStore {
     if (pageNumber < 1 || pageNumber > _lastPage) {
       throw ArgumentError.value(pageNumber, 'pageNumber', 'must be 1..604');
     }
+    // Serialize the read-modify-write so overlapping calls never drop a page,
+    // even if the previous call failed.
+    final result = _tail.then((_) => _record(pageNumber));
+    _tail = result.then<void>((_) {}, onError: (_) {});
+    return result;
+  }
+
+  Future<Set<int>> _record(int pageNumber) async {
     final now = _clock();
     final today = kidsDayKey(now);
     final cutoff = kidsDayKey(now.subtract(const Duration(days: retainDays)));

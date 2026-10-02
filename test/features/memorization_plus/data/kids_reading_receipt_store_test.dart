@@ -81,4 +81,16 @@ void main() {
     expect(await store.pagesOn(old60), {2});
     expect(await store.pagesOn(kidsDayKey(now)), {7});
   });
+
+  test('overlapping recordPage calls keep every page', () async {
+    final store = await storeFor('a');
+    await Future.wait([store.recordPage(1), store.recordPage(2)]);
+    expect(await store.pagesOn(kidsDayKey(now)), {1, 2});
+  });
+
+  test('pages 1 and 604 are accepted', () async {
+    final store = await storeFor('a');
+    await store.recordPage(1);
+    expect(await store.recordPage(604), {1, 604});
+  });
 }
