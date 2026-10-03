@@ -208,6 +208,8 @@ class _QcfContent extends StatelessWidget {
 
       final qcfStyle = qcf.QuranTextStyles.qcfStyle(
         pageNumber: pageNumber,
+        isTajweed: false,
+        isDark: isDark,
         fontSize: fontSize,
         color: textColor,
       ).copyWith(height: 2.0);

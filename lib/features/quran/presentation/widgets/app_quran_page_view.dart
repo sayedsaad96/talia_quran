@@ -4,6 +4,9 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:qcf_quran_plus/src/services/get_page.dart';
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/widgets/bsmallah_widget.dart' as qcf_widgets;
+// ignore: implementation_imports
+import 'package:qcf_quran_plus/src/widgets/quran_page/highlight_index.dart'
+    as qcf_indexes;
 
 import 'mushaf_page_flip_physics.dart';
 import 'quran_page_font_guard.dart';
@@ -77,18 +80,31 @@ class AppQuranPageView extends StatefulWidget {
 
 class _AppQuranPageViewState extends State<AppQuranPageView> {
   static List<qcf.QuranPage>? _cachedPages;
+  static List<Map<int, Map<String, int>>>? _cachedLineOffsets;
 
   /// Fractional page offset (e.g. 1.72 = 72% through page index 1).
   final ValueNotifier<double> _pageOffsetNotifier = ValueNotifier(0);
 
   late final List<qcf.QuranPage> _pages;
+  late final List<Map<int, Map<String, int>>> _lineOffsets;
+  final qcf_indexes.MemoizedBookmarkIndex _bookmarkIndexer =
+      qcf_indexes.MemoizedBookmarkIndex();
+  late qcf_indexes.BookmarkIndex _bookmarkIndex;
   bool _pageZoomed = false;
 
   @override
   void initState() {
     super.initState();
     _pages = _loadQuranData(widget.quranPagesCount);
+    _lineOffsets = _loadLineOffsets(_pages);
+    _bookmarkIndex = _bookmarkIndexer.refresh(widget.highlights);
     widget.pageController.addListener(_onControllerScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppQuranPageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _bookmarkIndex = _bookmarkIndexer.refresh(widget.highlights);
   }
 
   @override
@@ -113,6 +129,44 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
     processor.getQuran(count);
     _cachedPages = processor.staticPages;
     return _cachedPages!;
+  }
+
+  static List<Map<int, Map<String, int>>> _loadLineOffsets(
+    List<qcf.QuranPage> pages,
+  ) {
+    if (_cachedLineOffsets != null &&
+        _cachedLineOffsets!.length == pages.length) {
+      return _cachedLineOffsets!;
+    }
+
+    final offsets = <Map<int, Map<String, int>>>[];
+    final runningCounts = <String, int>{};
+    final wordSplitRegex = RegExp(r'\s+');
+    final digitsRegex = RegExp(r'^[\d٠-٩]+$');
+
+    for (final page in pages) {
+      final pageOffsets = <int, Map<String, int>>{};
+      offsets.add(pageOffsets);
+      for (var lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
+        final lineOffsets = <String, int>{};
+        pageOffsets[lineIndex] = lineOffsets;
+        for (final ayah in page.lines[lineIndex].ayahs) {
+          final key = '${ayah.surahNumber}-${ayah.ayahNumber}';
+          final offset = runningCounts[key] ?? 0;
+          lineOffsets[key] = offset;
+          final wordCount = ayah.ayah
+              .replaceAll('\n', ' ')
+              .trim()
+              .split(wordSplitRegex)
+              .where((word) => word.isNotEmpty && !digitsRegex.hasMatch(word))
+              .length;
+          runningCounts[key] = offset + wordCount;
+        }
+      }
+    }
+
+    _cachedLineOffsets = offsets;
+    return offsets;
   }
 
   @override
@@ -171,13 +225,17 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
                             isTajweed: widget.isTajweed,
                             page: _pages[pageNum - 1],
                             pageIndex: pageNum,
-                            highlights: widget.highlights,
+                            wordHighlightIndex:
+                                qcf_indexes.WordHighlightIndex.empty,
+                            bookmarkIndex: _bookmarkIndex,
                             onLongPress: widget.onLongPress,
                             pageController: widget.pageController,
                             surahHeaderBuilder: widget.surahHeaderBuilder,
                             basmallahBuilder: widget.basmallahBuilder,
                             ayahStyle: widget.ayahStyle,
                             isDark: widget.isDarkMode,
+                            lineOffsets: _lineOffsets[pageNum - 1],
+                            forceFitConstraints: false,
                           ),
                         ),
                       ),
