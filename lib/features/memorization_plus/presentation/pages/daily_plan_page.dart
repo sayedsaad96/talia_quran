@@ -15,6 +15,8 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/services/plan_schedule_policy.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Read-only view of today's cached daily plan with bucket checkmarks (Sprint 3.2).
 class DailyPlanPage extends StatefulWidget {
   const DailyPlanPage({super.key, this.repositoryOverride});
@@ -447,6 +449,10 @@ class _PlanAyahTile extends StatelessWidget {
                     Text(
                       context.l10n.dailyPlanNextReviewInDays(
                         daysUntilReview.clamp(1, 999),
+                        LocaleNumberFormatter.format(
+                          (daysUntilReview.clamp(1, 999)).toString(),
+                          context.l10n.localeName,
+                        ),
                       ),
                       style: AppTypography.bodySmall.copyWith(
                         color: context.tokens.textHint,

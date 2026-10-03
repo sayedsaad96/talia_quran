@@ -6,9 +6,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../khatmah_localizations.dart';
+
 
 class KhatmahHeroCard extends StatefulWidget {
   const KhatmahHeroCard({
@@ -129,7 +129,6 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
     }
 
     final today = _now;
-    final isArabic = context.isArabic;
     final wird = currentPlan.dailyTargetFor(today);
     final dailyComplete = currentPlan.isDailyTargetComplete(today);
     final isPaused = currentPlan.status == KhatmahStatus.paused;
@@ -168,7 +167,9 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    '${(currentPlan.progressPercentage * 100).toStringAsFixed(0)}%',
+                    context.digitText(
+                      '${(currentPlan.progressPercentage * 100).toStringAsFixed(0)}%',
+                    ),
                     style: AppTypography.labelMedium.copyWith(
                       color: AppColors.gold,
                       fontWeight: FontWeight.bold,
@@ -193,12 +194,8 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                 isPaused
                     ? context.l10n.khatmahPausedSummary
                     : context.l10n.khatmahTodayRange(
-                        isArabic
-                            ? MushafHizbHelper.toArabicNumber(wird.startPage)
-                            : wird.startPage.toString(),
-                        isArabic
-                            ? MushafHizbHelper.toArabicNumber(wird.endPage)
-                            : wird.endPage.toString(),
+                        context.numText(wird.startPage),
+                        context.numText(wird.endPage),
                         dailyComplete
                             ? context.l10n.khatmahDailyCompletedSuffix
                             : '',

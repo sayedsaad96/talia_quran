@@ -1,3 +1,4 @@
+import '../../../../core/utils/locale_number_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,8 @@ import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/kids_policy_controls.dart';
 import 'child_detail_page.dart';
+
+import '../../../../core/widgets/locale_time_picker.dart';
 
 class FamilyDashboardPage extends StatelessWidget {
   const FamilyDashboardPage({super.key});
@@ -279,7 +282,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                   title: Text(context.l10n.parentDashboardDailyReminder),
                   subtitle: Text(
                     settings.reminderEnabled
-                        ? '${settings.reminderHour}:${settings.reminderMinute.toString().padLeft(2, '0')}'
+                        ? context.digitText(
+                            '${settings.reminderHour}:${settings.reminderMinute.toString().padLeft(2, '0')}',
+                          )
                         : context.l10n.parentDashboardNotSet,
                   ),
                   value: settings.reminderEnabled,
@@ -287,7 +292,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                     final cubit = dashboardCubit;
                     final l10n = sheetContext.l10n;
                     if (val) {
-                      final time = await showTimePicker(
+                      final time = await showLocaleTimePicker(
                         context: sheetContext,
                         initialTime: TimeOfDay(
                           hour: settings.reminderHour,
@@ -469,8 +474,14 @@ class _FamilySummaryBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   context.l10n.familyDashboardTodaySummary(
-                    activeCount,
-                    totalPoints,
+                    LocaleNumberFormatter.format(
+                      (activeCount).toString(),
+                      context.l10n.localeName,
+                    ),
+                    LocaleNumberFormatter.format(
+                      (totalPoints).toString(),
+                      context.l10n.localeName,
+                    ),
                   ),
                   style: AppTypography.titleMedium.copyWith(
                     color: Colors.white,
@@ -500,7 +511,7 @@ class _ChildCard extends StatelessWidget {
 
     return Semantics(
       label:
-          '${child.displayName}${isActive ? ' — ${context.l10n.familyDashboardChildActiveToday(child.todayPoints)}' : ''}',
+          '${child.displayName}${isActive ? ' — ${context.l10n.familyDashboardChildActiveToday(LocaleNumberFormatter.format((child.todayPoints).toString(), context.l10n.localeName))}' : ''}',
       button: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -572,7 +583,13 @@ class _ChildCard extends StatelessWidget {
               ),
               if (child.childAge case final age?)
                 Text(
-                  context.l10n.childAgeYears(age),
+                  context.l10n.childAgeYears(
+                    age,
+                    LocaleNumberFormatter.format(
+                      (age).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   style: AppTypography.labelSmall.copyWith(
                     color: context.tokens.textSecondary,
                   ),
@@ -611,7 +628,12 @@ class _ChildCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        context.l10n.kidsLevelValue(child.currentLevel),
+                        context.l10n.kidsLevelValue(
+                          LocaleNumberFormatter.format(
+                            (child.currentLevel).toString(),
+                            context.l10n.localeName,
+                          ),
+                        ),
                         style: AppTypography.labelSmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -642,7 +664,10 @@ class _ChildCard extends StatelessWidget {
                   Text(
                     isActive
                         ? context.l10n.familyDashboardChildActiveToday(
-                            child.todayPoints,
+                            LocaleNumberFormatter.format(
+                              (child.todayPoints).toString(),
+                              context.l10n.localeName,
+                            ),
                           )
                         : context.l10n.familyDashboardChildNoActivity,
                     style: AppTypography.labelSmall.copyWith(

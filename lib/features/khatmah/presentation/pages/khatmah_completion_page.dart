@@ -14,7 +14,6 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../../../../core/identity/account_data_barrier.dart';
@@ -78,14 +77,11 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     super.dispose();
   }
 
-  String _formatDate(DateTime date, bool isArabic) {
-    if (isArabic) {
-      return '${MushafHizbHelper.toArabicNumber(date.year)}/${MushafHizbHelper.toArabicNumber(date.month)}/${MushafHizbHelper.toArabicNumber(date.day)}';
-    }
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
+  String _formatDate(DateTime date) => context.digitText(
+    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+  );
 
-  void _shareAchievement(KhatmahReadingResult completion, bool isArabic) {
+  void _shareAchievement(KhatmahReadingResult completion) {
     if (!completion.isValidCompletion) return;
     final plan = completion.plan;
     if (widget.onShare != null) {
@@ -95,9 +91,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
 
     final title = localizedKhatmahPlanTitle(context, plan.title);
     final totalDays = completion.actualElapsedDays;
-    final totalDaysStr = isArabic
-        ? MushafHizbHelper.toArabicNumber(totalDays)
-        : totalDays.toString();
+    final totalDaysStr = context.numText(totalDays);
 
     final buffer = StringBuffer(
       context.l10n.khatmahShareSummary(title, totalDays, totalDaysStr),
@@ -114,7 +108,6 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final isArabic = context.isArabic;
     final gold = isDark ? AppColors.goldLight : AppColors.gold;
     final bg = context.tokens.background;
     final cardBg = context.tokens.card;
@@ -151,11 +144,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     final plan = completion.plan;
     final title = localizedKhatmahPlanTitle(context, plan.title);
     final daysTaken = completion.actualElapsedDays;
-    final daysTakenStr = isArabic
-        ? MushafHizbHelper.toArabicNumber(daysTaken)
-        : daysTaken.toString();
+    final daysTakenStr = context.numText(daysTaken);
     final completedDate = completion.historyEntry!.completedDate.toLocal();
-    final completedDateStr = _formatDate(completedDate, isArabic);
+    final completedDateStr = _formatDate(completedDate);
 
     final hasDedication = plan.dedication.isDedicated;
     final dedication = plan.dedication;
@@ -269,11 +260,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                       children: [
                         _StatItem(
                           label: context.l10n.khatmahPagesLabel,
-                          value: isArabic
-                              ? MushafHizbHelper.toArabicNumber(
-                                  KhatmahSchedulingEngine.totalPages,
-                                )
-                              : KhatmahSchedulingEngine.totalPages.toString(),
+                          value: context.numText(
+                            KhatmahSchedulingEngine.totalPages,
+                          ),
                           icon: Icons.auto_stories_rounded,
                           color: gold,
                         ),
@@ -435,7 +424,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                   // 2. Share Achievement
                   OutlinedButton.icon(
                     key: const Key('khatmah_completion_share_button'),
-                    onPressed: () => _shareAchievement(completion, isArabic),
+                    onPressed: () => _shareAchievement(completion),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: gold,
                       side: BorderSide(color: gold.withValues(alpha: 0.6)),

@@ -25,6 +25,7 @@ import '../cubits/progress_cubit.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/achievement_tier_palette.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
 part '../widgets/progress_stat_cards.dart';
 part '../widgets/progress_detailed_card.dart';
 part '../widgets/progress_achievements.dart';
@@ -496,20 +497,20 @@ class _ProgressContentState extends State<_ProgressContent>
                   extraInfo: [
                     _InfoChip(
                       label: context.l10n.points,
-                      value: '${p.kidsPoints}',
+                      value: context.numText(p.kidsPoints),
                       color: AppColors.primary,
                       isDark: isDark,
                     ),
                     _InfoChip(
                       label: context.l10n.stars,
-                      value: '${p.kidsStars}',
+                      value: context.numText(p.kidsStars),
                       color: AppColors.gold,
                       isDark: isDark,
                     ),
                     if (p.startedAyahs > 0)
                       _InfoChip(
                         label: context.l10n.startedAyahsLabel,
-                        value: '${p.startedAyahs}',
+                        value: context.numText(p.startedAyahs),
                         color: AppColors.warning,
                         isDark: isDark,
                       ),
@@ -519,7 +520,10 @@ class _ProgressContentState extends State<_ProgressContent>
                         label: context.l10n.lastMemorizedLabel,
                         value: context.l10n.surahAyahFormat(
                           context.localizedSurahName(p.lastMemorizedSurahId!),
-                          p.lastMemorizedAyahNumber!,
+                          LocaleNumberFormatter.format(
+                            (p.lastMemorizedAyahNumber!).toString(),
+                            context.l10n.localeName,
+                          ),
                         ),
                         color: AppColors.primary,
                         isDark: isDark,
@@ -572,43 +576,49 @@ class _ProgressContentState extends State<_ProgressContent>
                   extraInfo: [
                     _InfoChip(
                       label: context.l10n.learning,
-                      value: '${p.learningAyahs}',
+                      value: context.numText(p.learningAyahs),
                       color: AppColors.warning,
                       isDark: isDark,
                     ),
                     _InfoChip(
                       label: context.l10n.progressDueReviewsLabel,
-                      value: '${p.reviewAyahs}',
+                      value: context.numText(p.reviewAyahs),
                       color: AppColors.info,
                       isDark: isDark,
                     ),
                     if (p.overdueReviews > 0)
                       _InfoChip(
                         label: context.l10n.overdueReviewsLabel,
-                        value: '${p.overdueReviews}',
+                        value: context.numText(p.overdueReviews),
                         color: AppColors.error,
                         isDark: isDark,
                       ),
                     if (p.reviewedAyahsTotal > 0)
                       _InfoChip(
                         label: context.l10n.reviewedAyahsTotalLabel,
-                        value: '${p.reviewedAyahsTotal}',
+                        value: context.numText(p.reviewedAyahsTotal),
                         color: AppColors.primary,
                         isDark: isDark,
                       ),
                     if (p.startedAyahs > 0)
                       _InfoChip(
                         label: context.l10n.retentionRateLabel,
-                        value: '${(p.retentionRate * 100).toStringAsFixed(0)}%',
+                        value: context.digitText(
+                          context.digitText(
+                            '${(p.retentionRate * 100).toStringAsFixed(0)}%',
+                          ),
+                        ),
                         color: AppColors.primary,
                         isDark: isDark,
                       ),
                     if (p.lastReviewedAt case final reviewedAt?)
                       _InfoChip(
                         label: context.l10n.lastReviewLabel,
-                        value: MaterialLocalizations.of(
-                          context,
-                        ).formatShortDate(reviewedAt.toLocal()),
+                        value: context.digitText(
+                          MaterialLocalizations.of(
+                            context,
+                          ).formatShortDate(reviewedAt.toLocal()),
+                        ),
                         color: AppColors.gold,
                         isDark: isDark,
                       ),
@@ -618,7 +628,10 @@ class _ProgressContentState extends State<_ProgressContent>
                         label: context.l10n.lastMemorizedLabel,
                         value: context.l10n.surahAyahFormat(
                           context.localizedSurahName(p.lastMemorizedSurahId!),
-                          p.lastMemorizedAyahNumber!,
+                          LocaleNumberFormatter.format(
+                            (p.lastMemorizedAyahNumber!).toString(),
+                            context.l10n.localeName,
+                          ),
                         ),
                         color: AppColors.primary,
                         isDark: isDark,
@@ -667,8 +680,14 @@ class _ProgressContentState extends State<_ProgressContent>
                     ),
                     child: Text(
                       context.l10n.countOfTotal(
-                        p.unlockedAchievements,
-                        p.achievements.length,
+                        LocaleNumberFormatter.format(
+                          (p.unlockedAchievements).toString(),
+                          context.l10n.localeName,
+                        ),
+                        LocaleNumberFormatter.format(
+                          (p.achievements.length).toString(),
+                          context.l10n.localeName,
+                        ),
                       ),
                       style: AppTypography.labelSmall.copyWith(
                         color: context.tokens.accent,

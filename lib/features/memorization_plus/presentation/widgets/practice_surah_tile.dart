@@ -74,7 +74,7 @@ class _PracticeSurahTileState extends State<PracticeSurahTile> {
               ),
               child: Center(
                 child: Text(
-                  '${surah.id}',
+                  context.numText(surah.id),
                   style: AppTypography.labelMedium.copyWith(color: primary),
                 ),
               ),

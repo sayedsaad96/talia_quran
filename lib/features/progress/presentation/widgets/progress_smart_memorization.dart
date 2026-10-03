@@ -58,7 +58,7 @@ class _SmartMemorizationCard extends StatelessWidget {
               Expanded(
                 child: _StatBox(
                   label: context.l10n.points,
-                  value: '${progress.kidsPoints}',
+                  value: context.numText(progress.kidsPoints),
                   icon: Icons.military_tech_rounded,
                   color: AppColors.primary,
                   isDark: isDark,
@@ -68,7 +68,7 @@ class _SmartMemorizationCard extends StatelessWidget {
               Expanded(
                 child: _StatBox(
                   label: context.l10n.stars,
-                  value: '${progress.kidsStars}',
+                  value: context.numText(progress.kidsStars),
                   icon: Icons.star_rounded,
                   color: AppColors.gold,
                   isDark: isDark,

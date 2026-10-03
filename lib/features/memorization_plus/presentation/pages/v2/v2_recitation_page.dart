@@ -1,3 +1,4 @@
+import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_recitation_page.dart
 
 import 'package:flutter/material.dart';
@@ -262,7 +263,12 @@ class _SelfGradeSheetState extends State<_SelfGradeSheet> {
           key: ValueKey('v2-stumbled-ayah-${ayah.numberInSurah}'),
           leading: const Icon(Icons.flag_rounded),
           title: Text(
-            context.l10n.v2StumbledAyahOption(ayah.numberInSurah),
+            context.l10n.v2StumbledAyahOption(
+              LocaleNumberFormatter.format(
+                (ayah.numberInSurah).toString(),
+                context.l10n.localeName,
+              ),
+            ),
             style: AppTypography.titleSmall,
           ),
           onTap: () => Navigator.of(

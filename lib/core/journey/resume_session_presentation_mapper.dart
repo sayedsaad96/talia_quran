@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/surah_names.dart';
-import '../utils/mushaf_hizb_helper.dart';
+import '../utils/locale_number_formatter.dart';
 import '../router/app_router.dart';
 import 'journey_presentation_data.dart';
 import 'resume_session_presentation_input.dart';
@@ -39,7 +39,7 @@ class ResumeSessionPresentationMapper {
         subtitle: page == null
             ? input.l10n.lastSavedReading
             : input.isArabic
-            ? 'الصفحة ${MushafHizbHelper.toArabicNumber(int.tryParse(page) ?? 0)}'
+            ? 'الصفحة ${LocaleNumberFormatter.format(page, input.l10n.localeName)}'
             : 'Page $page',
         icon: Icons.menu_book_rounded,
         route: input.route,
@@ -109,13 +109,13 @@ class ResumeSessionPresentationMapper {
       title: stage == null
           ? (input.isArabic ? 'تابع مهمة الطفل' : 'Continue Kids Mission')
           : input.isArabic
-          ? 'تابع المرحلة $stage'
-          : 'Continue Stage $stage',
+          ? 'تابع المرحلة ${LocaleNumberFormatter.number(stage, input.l10n.localeName)}'
+          : 'Continue Stage ${LocaleNumberFormatter.number(stage, input.l10n.localeName)}',
       subtitle: ayahNumber == null
           ? input.l10n.incompleteKidsSession
           : input.isArabic
-          ? '$surah، الآية $ayahNumber'
-          : '$surah, ayah $ayahNumber',
+          ? '$surah، الآية ${LocaleNumberFormatter.number(ayahNumber, input.l10n.localeName)}'
+          : '$surah, ayah ${LocaleNumberFormatter.number(ayahNumber, input.l10n.localeName)}',
       icon: Icons.flag_rounded,
       route: input.route,
     );

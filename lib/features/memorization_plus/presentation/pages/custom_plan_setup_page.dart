@@ -1,12 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -18,6 +19,7 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/services/plan_schedule_policy.dart';
 import '../cubits/custom_plan_cubit.dart';
+
 
 const List<int> _standardSurahAyahCounts = [
   0,
@@ -180,6 +182,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     }
     return preset.name;
   }
+
   int _availableDays = 7;
   int _sessionMinutes = 30;
   MemorizationDifficulty _difficulty = MemorizationDifficulty.moderate;
@@ -202,6 +205,14 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final formatted = context.digitText(
+      LocaleNumberFormatter.western(_startAyahController.text),
+    );
+    if (_startAyahController.text != formatted) {
+      _startAyahController.value = _startAyahController.value.copyWith(
+        text: formatted,
+      );
+    }
     if (_didLoadSurahNames) return;
     _didLoadSurahNames = true;
     _loadSurahNames();
@@ -256,7 +267,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     _startSurahId = plan.startSurahId;
     _endSurahId = plan.endSurahId;
     _startAyah = plan.startAyah;
-    _startAyahController.text = _startAyah.toString();
+    _startAyahController.text = context.numText(_startAyah);
     _newAyahsPerDay = plan.newAyahsPerDay;
     _availableDays = plan.availableDaysPerWeek;
     _sessionMinutes = plan.sessionMinutes;
@@ -314,17 +325,21 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     final maxAyah = _ayahCountForSurah(_startSurahId);
     if (_startAyah > maxAyah) {
       _startAyah = maxAyah;
-      _startAyahController.text = _startAyah.toString();
+      _startAyahController.text = context.numText(_startAyah);
     }
     if (_startAyah < 1) {
       _startAyah = 1;
-      _startAyahController.text = '1';
+      _startAyahController.text = context.numText(1);
     }
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    _startAyah = int.tryParse(_startAyahController.text.trim()) ?? _startAyah;
+    _startAyah =
+        int.tryParse(
+          LocaleNumberFormatter.western(_startAyahController.text.trim()),
+        ) ??
+        _startAyah;
 
     final plan = CustomMemorizationPlan(
       name: _nameController.text.trim(),
@@ -517,7 +532,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 color: const Color(
                                   0xFF0D5C53,
                                 ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                                 border: Border.all(
                                   color: const Color(
                                     0xFF0D5C53,
@@ -617,9 +634,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                             ))
                           Padding(
                             key: const Key('custom_plan_minutes_limit_hint'),
-                            padding: const EdgeInsets.only(
-                              top: AppSpacing.sm,
-                            ),
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
                             child: Text(
                               context.l10n.customPlanMinutesLimitHint(
                                 context.numText(_sessionMinutes),
@@ -873,12 +888,27 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 child: TextFormField(
                   controller: _startAyahController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      final text = context.digitText(
+                        LocaleNumberFormatter.western(newValue.text),
+                      );
+                      return newValue.copyWith(
+                        text: text,
+                        selection: TextSelection.collapsed(offset: text.length),
+                      );
+                    }),
+                  ],
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyMedium.copyWith(
                     color: context.tokens.textPrimary,
                   ),
                   decoration: InputDecoration(
-                    helperText: '1-${_ayahCountForSurah(_startSurahId)}',
+                    helperText: context.digitText(
+                      context.digitText(
+                        '1-${_ayahCountForSurah(_startSurahId)}',
+                      ),
+                    ),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -889,13 +919,17 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     ),
                   ),
                   onChanged: (v) {
-                    final parsed = int.tryParse(v);
+                    final parsed = int.tryParse(
+                      LocaleNumberFormatter.western(v),
+                    );
                     if (parsed != null && parsed >= 1) {
                       setState(() => _startAyah = parsed);
                     }
                   },
                   validator: (v) {
-                    final parsed = int.tryParse((v ?? '').trim());
+                    final parsed = int.tryParse(
+                      LocaleNumberFormatter.western((v ?? '').trim()),
+                    );
                     final maxAyah = _ayahCountForSurah(_startSurahId);
                     if (parsed == null || parsed < 1) {
                       return context.l10n.customPlanInvalidAyah;
@@ -926,11 +960,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: context.tokens.textSecondary,
-          size: 20,
-        ),
+        Icon(icon, color: context.tokens.textSecondary, size: 20),
         const SizedBox(width: AppSpacing.sm),
         Text(
           label,
@@ -1361,7 +1391,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           ),
         ),
         Text(
-          '$value',
+          context.numText(value),
           style: AppTypography.labelMedium.copyWith(
             color: color,
             fontWeight: FontWeight.bold,
@@ -1394,12 +1424,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   Widget _buildEstimatedDuration(bool isDark) {
     // Exact ayah totals from the loaded surah table (works in both
     // directions — a Juz Amma plan 114→78 is measured identically).
-    final lo = _startSurahId <= _endSurahId
-        ? _startSurahId
-        : _endSurahId;
-    final hi = _startSurahId <= _endSurahId
-        ? _endSurahId
-        : _startSurahId;
+    final lo = _startSurahId <= _endSurahId ? _startSurahId : _endSurahId;
+    final hi = _startSurahId <= _endSurahId ? _endSurahId : _startSurahId;
     var totalAyahsEstimate = 0;
     for (var surahId = lo; surahId <= hi; surahId++) {
       totalAyahsEstimate += _ayahCountForSurah(surahId);
@@ -1420,10 +1446,15 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     if (months > 12) {
       final years = (months / 12.0);
       durationText = context.l10n.customPlanApproxYears(
-        years.toStringAsFixed(1),
+        context.digitText(years.toStringAsFixed(1)),
       );
     } else if (months > 1) {
-      durationText = context.l10n.customPlanApproxMonths(months);
+      durationText = context.l10n.customPlanApproxMonths(
+        LocaleNumberFormatter.format(
+          (months).toString(),
+          context.l10n.localeName,
+        ),
+      );
     } else {
       durationText = context.l10n.customPlanApproxWeeks(
         weeks,
@@ -1748,11 +1779,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: context.tokens.textSecondary,
-        ),
+        Icon(icon, size: 20, color: context.tokens.textSecondary),
         const SizedBox(width: 8),
         Text(
           title,

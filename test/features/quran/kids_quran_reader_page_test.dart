@@ -410,6 +410,22 @@ void main() {
       expect(kidsReaderPageIsLoaded(loaded, 13), isTrue);
       expect(kidsReaderPageIsLoaded(loaded, 12), isFalse);
       expect(kidsReaderPageIsLoaded(QuranPageLoading(), 13), isFalse);
+      expect(
+        kidsReaderCanConfirmPage(
+          loaded,
+          currentPageNumber: 12,
+          pageNumber: 12,
+        ),
+        isFalse,
+      );
+      expect(
+        kidsReaderCanConfirmPage(
+          loaded,
+          currentPageNumber: 13,
+          pageNumber: 13,
+        ),
+        isTrue,
+      );
 
       // The page asks to confirm 12 while the shared cubit holds page 13.
       await setUpConfirmation(

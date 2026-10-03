@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
+import 'core/l10n/digit_material_localizations.dart';
 import 'core/router/app_router.dart';
 import 'features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import 'core/router/launch_destination.dart';
@@ -23,6 +23,7 @@ import 'features/auth/presentation/cubits/auth_cubit.dart';
 import 'features/prayer_companion/application/prayer_companion_controller.dart';
 import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
+
 
 /// Notifier that signals when [AppInitializer] has finished.
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
@@ -100,7 +101,10 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         darkTheme: AppTheme.dark,
         locale: const Locale('ar'),
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: const [
+          DigitMaterialLocalizations.delegate,
+          ...AppLocalizations.localizationsDelegates,
+        ],
         routerConfig: AppRouter.splashOnlyRouter,
       );
     }
@@ -157,6 +161,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
             unawaited(
               getIt<NotificationScheduler>().refreshNotifications(
                 lookupAppLocalizations(locale),
+                force: true,
               ),
             );
           },
@@ -176,6 +181,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                     supportedLocales: AppLocalizations.supportedLocales,
                     localizationsDelegates: const [
                       AppLocalizations.delegate,
+                      DigitMaterialLocalizations.delegate,
                       GlobalMaterialLocalizations.delegate,
                       GlobalWidgetsLocalizations.delegate,
                       GlobalCupertinoLocalizations.delegate,

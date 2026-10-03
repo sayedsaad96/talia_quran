@@ -21,7 +21,7 @@ const _removedLiterals = <String, List<String>>{
   'lib/features/memorization_plus/data/repositories/collaborators/memorization_kids_local_service.dart':
       ['اكتب اسم المكافأة أولاً', 'يمكن إضافة 3 مكافآت فقط'],
   'lib/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart':
-      ['أدخل رمزًا من 4 أرقام', 'رمز غير صحيح'],
+      ['أدخل رمزًا من ٤ أرقام', 'رمز غير صحيح'],
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
     'اضغط مطولاً للتراجع',
   ],
@@ -67,7 +67,7 @@ void main() {
 
       expect(ar.hifzStartRecitation, 'ابدأ التسميع');
       expect(ar.hifzLeaveSessionMessage, contains('سيتم حفظ تقدمك الحالي'));
-      expect(ar.hifzAyahNumberLabel(3), 'آية 3');
+      expect(ar.hifzAyahNumberLabel('٣'), 'آية ٣');
       expect(ar.hifzEvaluatingAyah, 'جارِ التقييم...');
       expect(ar.hifzRecordingAyahHint, 'يتم التسجيل، اقرأ الآية من حفظك...');
       expect(ar.hifzExcellentMemorization, 'ممتاز! حفظ متقن.');
@@ -76,18 +76,18 @@ void main() {
       expect(ar.v2LearningTitle, 'تعلّم الآية');
       expect(ar.v2BlockReviewSubtitle('١', '٥'), contains('من ١ إلى ٥'));
       expect(ar.kidsPreparing, 'جارٍ التحضير...');
-      expect(ar.parentDashboardPinInvalid, 'أدخل رمزًا من 4 أرقام');
+      expect(ar.parentDashboardPinInvalid, 'أدخل رمزًا من ٤ أرقام');
       expect(ar.parentDashboardPinIncorrect, 'رمز غير صحيح');
       expect(ar.bookmarkSaveError, isNotEmpty);
       expect(ar.longPressToUndo, isNotEmpty);
-      expect(ar.hifzReviewRangeHint(1, 5), contains('1'));
-      expect(ar.hifzReviewRangeHint(1, 5), contains('5'));
+      expect(ar.hifzReviewRangeHint('١', '٥'), contains('١'));
+      expect(ar.hifzReviewRangeHint('١', '٥'), contains('٥'));
       expect(ar.signOutPendingDataTitle, 'تقدم غير مزامن');
       expect(ar.signOutAnyway, 'تسجيل الخروج على أي حال');
 
       expect(en.hifzStartRecitation, 'Start recitation');
       expect(en.hifzLeaveSessionMessage, contains('will be saved'));
-      expect(en.hifzAyahNumberLabel(4), 'Ayah 4');
+      expect(en.hifzAyahNumberLabel('4'), 'Ayah 4');
       expect(en.hifzEvaluatingAyah, 'Evaluating...');
       expect(en.hifzRecordingAyahHint, 'Recording, recite from memory...');
       expect(en.hifzExcellentMemorization, 'Excellent! Perfect memorization.');
@@ -101,8 +101,8 @@ void main() {
       expect(en.guardianLinkingSlowHint, isNotEmpty);
       expect(en.signOutPendingDataTitle, 'Unsynced progress');
       expect(en.signOutAnyway, 'Sign out anyway');
-      expect(en.hifzReviewRangeHint(2, 4), contains('2'));
-      expect(en.hifzReviewRangeHint(2, 4), contains('4'));
+      expect(en.hifzReviewRangeHint('2', '4'), contains('2'));
+      expect(en.hifzReviewRangeHint('2', '4'), contains('4'));
     });
 
     test('source files no longer contain extracted Arabic literals', () {

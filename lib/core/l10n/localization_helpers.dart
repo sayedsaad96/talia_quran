@@ -7,15 +7,19 @@ import '../services/achievement_service.dart';
 import 'app_localizations.dart';
 import 'cubit_message_codes.dart';
 
+import '../utils/locale_number_formatter.dart';
+
 extension TaliaLocalizationHelpers on BuildContext {
   AppLocalizations get _l10n => AppLocalizations.of(this);
   bool get _isArabic => Localizations.localeOf(this).languageCode == 'ar';
 
   String localizedSurahName(int surahId) {
     if (_isArabic) {
-      return SurahNames.arabic[surahId] ?? '$surahId';
+      return SurahNames.arabic[surahId] ??
+          LocaleNumberFormatter.number(surahId, _l10n.localeName);
     }
-    return SurahNames.english[surahId] ?? '$surahId';
+    return SurahNames.english[surahId] ??
+        LocaleNumberFormatter.number(surahId, _l10n.localeName);
   }
 
   String localizedJuzName(int juzNumber) {
@@ -55,7 +59,7 @@ extension TaliaLocalizationHelpers on BuildContext {
     if (_isArabic && juzNumber >= 1 && juzNumber <= arabicNames.length) {
       return arabicNames[juzNumber - 1];
     }
-    return '$juzNumber';
+    return LocaleNumberFormatter.number(juzNumber, _l10n.localeName);
   }
 
   String localizedAchievementTitle(Achievement achievement) {
@@ -127,7 +131,9 @@ extension TaliaLocalizationHelpers on BuildContext {
   String localizedCertificateTitle(CertificateAward award) {
     final l10n = _l10n;
     return switch (award.type) {
-      CertificateType.juz => l10n.certificateTitleJuz(award.juzNumber ?? 1),
+      CertificateType.juz => l10n.certificateTitleJuz(
+        LocaleNumberFormatter.number(award.juzNumber ?? 1, _l10n.localeName),
+      ),
       CertificateType.surah => _localizedSurahCertificateTitle(award),
       CertificateType.halfQuran => l10n.certificateTitleHalfQuran,
       CertificateType.fullQuran => l10n.certificateTitleFullQuran,
@@ -204,11 +210,20 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.parentRewardLimitReached =>
         l10n.parentRewardErrorLimitReached,
       CubitMessageCodes.childNicknameInvalid => l10n.childErrorNicknameInvalid(
-        ChildIdentityPolicy.maxNicknameLength,
+        LocaleNumberFormatter.format(
+          (ChildIdentityPolicy.maxNicknameLength).toString(),
+          l10n.localeName,
+        ),
       ),
       CubitMessageCodes.childAgeInvalid => l10n.childErrorAgeInvalid(
-        ChildIdentityPolicy.minAge,
-        ChildIdentityPolicy.maxAge,
+        LocaleNumberFormatter.format(
+          (ChildIdentityPolicy.minAge).toString(),
+          l10n.localeName,
+        ),
+        LocaleNumberFormatter.format(
+          (ChildIdentityPolicy.maxAge).toString(),
+          l10n.localeName,
+        ),
       ),
       CubitMessageCodes.guardianChildNotLinked =>
         l10n.guardianErrorChildNotLinked,

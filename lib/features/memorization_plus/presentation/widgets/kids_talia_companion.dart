@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -8,6 +7,7 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../theme/kids_theme.dart';
+
 
 /// Talia's official poses (cropped from `assets/talia/`), one per session
 /// moment.
@@ -127,30 +127,32 @@ class _KidsTaliaCompanionState extends State<KidsTaliaCompanion>
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final talia = ScaleTransition(
-      alignment: Alignment.bottomCenter,
-      scale: Tween<double>(
-        begin: 1,
-        end: 1.03,
-      ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut)),
-      child: AnimatedSwitcher(
-        duration: reduceMotion || !widget.animate
-            ? Duration.zero
-            : const Duration(milliseconds: 280),
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.9, end: 1).animate(animation),
-            child: child,
+    final talia = RepaintBoundary(
+      child: ScaleTransition(
+        alignment: Alignment.bottomCenter,
+        scale: Tween<double>(
+          begin: 1,
+          end: 1.03,
+        ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut)),
+        child: AnimatedSwitcher(
+          duration: reduceMotion || !widget.animate
+              ? Duration.zero
+              : const Duration(milliseconds: 280),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.9, end: 1).animate(animation),
+              child: child,
+            ),
           ),
-        ),
-        child: Image.asset(
-          widget.pose.asset,
-          key: ValueKey(widget.pose),
-          height: widget.height,
-          fit: BoxFit.contain,
-          excludeFromSemantics: true,
-          errorBuilder: (_, _, _) => SizedBox(height: widget.height),
+          child: Image.asset(
+            widget.pose.asset,
+            key: ValueKey(widget.pose),
+            height: widget.height,
+            fit: BoxFit.contain,
+            excludeFromSemantics: true,
+            errorBuilder: (_, _, _) => SizedBox(height: widget.height),
+          ),
         ),
       ),
     );

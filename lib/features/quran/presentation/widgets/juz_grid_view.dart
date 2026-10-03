@@ -8,6 +8,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../../domain/entities/juz_summary.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 typedef JuzSelectedCallback = void Function(int juzNumber, int initialPage);
 
 class JuzGridView extends StatelessWidget {
@@ -97,7 +99,9 @@ class JuzGridView extends StatelessWidget {
     if (q.isEmpty) return all;
     final isArabic = context.isArabic;
     return all.where((juzNumber) {
-      if ('$juzNumber'.contains(query.trim())) return true;
+      if ('$juzNumber'.contains(LocaleNumberFormatter.western(query.trim()))) {
+        return true;
+      }
       final summary = _summaryFor(juzNumber);
       if (summary == null || !summary.hasRange) return false;
       for (final surah in summary.surahs) {
@@ -166,7 +170,7 @@ class _JuzCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        '$juzNumber',
+                        context.numText(juzNumber),
                         style: AppTypography.labelMedium.copyWith(
                           color: primary,
                           fontWeight: FontWeight.w700,

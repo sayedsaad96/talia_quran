@@ -8,6 +8,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 import 'kids_chunky_button.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// W2 — multi-sensory celebration: the reward card plays a confetti burst and
 /// a celebratory haptic when it appears. Both respect the platform's
 /// disable-animations setting; the haptic still fires for reduced-motion
@@ -206,14 +208,24 @@ class _RewardCard extends StatelessWidget {
               if (pointsEarned > 0)
                 _RewardPill(
                   icon: Icons.diamond_rounded,
-                  label: context.l10n.kidsGamifiedEarnedGems(pointsEarned),
+                  label: context.l10n.kidsGamifiedEarnedGems(
+                    LocaleNumberFormatter.format(
+                      (pointsEarned).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   color: KidsTheme.mintGlow,
                 ),
               // K11: level-up celebration pill on top of the session rewards.
               if (leveledUpTo != null)
                 _RewardPill(
                   icon: Icons.military_tech_rounded,
-                  label: context.l10n.kidsLevelValue(leveledUpTo!),
+                  label: context.l10n.kidsLevelValue(
+                    LocaleNumberFormatter.format(
+                      (leveledUpTo!).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   color: KidsTheme.reviewPurple,
                 ),
             ],
@@ -321,7 +333,8 @@ class _RewardPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final pill = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -348,6 +361,17 @@ class _RewardPill extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (reduceMotion) return pill;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.75, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) =>
+          Transform.scale(scale: scale, child: child),
+      child: pill,
     );
   }
 }

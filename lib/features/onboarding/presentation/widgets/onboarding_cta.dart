@@ -80,10 +80,8 @@ class OnboardingPrimaryCta extends StatelessWidget {
                     ),
                     if (trailingArrow) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      Icon(
-                        Directionality.of(context) == TextDirection.rtl
-                            ? Icons.arrow_back_rounded
-                            : Icons.arrow_forward_rounded,
+                      const Icon(
+                        Icons.arrow_forward_rounded,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -123,37 +121,140 @@ class JourneyEntrance extends StatelessWidget {
   }
 }
 
-/// Scrollable body of a feature slide. Content that fits is centred in the
-/// space above the CTA instead of leaving a void under it; taller content
-/// (small phones, large text) scrolls from the top.
-class JourneySlide extends StatelessWidget {
-  const JourneySlide({super.key, required this.children});
+/// Responsive layout metrics for an onboarding slide based on viewport height.
+class JourneySlideMetrics {
+  final double topPadding;
+  final double bottomPadding;
+  final double badgeToTitle;
+  final double titleToSubtitle;
+  final double headerToBento;
+  final double cardSpacing;
+  final double secondaryCardHeight;
+  final EdgeInsets heroPadding;
+  final EdgeInsets secondaryCardPadding;
 
-  final List<Widget> children;
+  const JourneySlideMetrics({
+    required this.topPadding,
+    required this.bottomPadding,
+    required this.badgeToTitle,
+    required this.titleToSubtitle,
+    required this.headerToBento,
+    required this.cardSpacing,
+    required this.secondaryCardHeight,
+    required this.heroPadding,
+    required this.secondaryCardPadding,
+  });
+
+  factory JourneySlideMetrics.fromHeight(double height) {
+    if (height < 580) {
+      // Compact phones / landscape (< 580px)
+      return const JourneySlideMetrics(
+        topPadding: 10,
+        bottomPadding: 10,
+        badgeToTitle: 8,
+        titleToSubtitle: 6,
+        headerToBento: 14,
+        cardSpacing: 10,
+        secondaryCardHeight: 126,
+        heroPadding: EdgeInsets.all(12),
+        secondaryCardPadding: EdgeInsets.all(10),
+      );
+    } else if (height < 680) {
+      // Standard phones (580px - 680px)
+      return const JourneySlideMetrics(
+        topPadding: 16,
+        bottomPadding: 14,
+        badgeToTitle: 10,
+        titleToSubtitle: 8,
+        headerToBento: 20,
+        cardSpacing: 12,
+        secondaryCardHeight: 136,
+        heroPadding: EdgeInsets.all(AppSpacing.md),
+        secondaryCardPadding: EdgeInsets.all(12),
+      );
+    } else if (height < 780) {
+      // Tall phones (680px - 780px, e.g. Samsung Galaxy S22 Ultra)
+      return const JourneySlideMetrics(
+        topPadding: 24,
+        bottomPadding: 20,
+        badgeToTitle: 12,
+        titleToSubtitle: 10,
+        headerToBento: 26,
+        cardSpacing: 14,
+        secondaryCardHeight: 146,
+        heroPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 18,
+        ),
+        secondaryCardPadding: EdgeInsets.all(14),
+      );
+    } else {
+      // Extra tall devices (>= 780px)
+      return const JourneySlideMetrics(
+        topPadding: 32,
+        bottomPadding: 26,
+        badgeToTitle: 14,
+        titleToSubtitle: 12,
+        headerToBento: 30,
+        cardSpacing: 16,
+        secondaryCardHeight: 154,
+        heroPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: 20,
+        ),
+        secondaryCardPadding: EdgeInsets.all(16),
+      );
+    }
+  }
+}
+
+/// Scrollable, adaptive body of a feature slide. Adapts padding, inter-widget
+/// spacing, and bento card dimensions to the available viewport height so
+/// content breathes naturally across all device sizes without excessive voids.
+class JourneySlide extends StatelessWidget {
+  const JourneySlide({super.key, this.children, this.builder})
+    : assert(
+        children != null || builder != null,
+        'Either children or builder must be provided',
+      );
+
+  final List<Widget>? children;
+  final Widget Function(BuildContext context, JourneySlideMetrics metrics)?
+  builder;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.pagePadding,
-          vertical: AppSpacing.xs,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: (constraints.maxHeight - AppSpacing.xs * 2).clamp(
-              0.0,
-              double.infinity,
-            ),
-          ),
-          child: Column(
+      builder: (context, constraints) {
+        final height = constraints.maxHeight;
+        final metrics = JourneySlideMetrics.fromHeight(height);
+
+        final Widget content;
+        if (builder != null) {
+          content = builder!(context, metrics);
+        } else {
+          content = Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
+            children: children!,
+          );
+        }
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+            vertical: metrics.topPadding,
           ),
-        ),
-      ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: (height - metrics.topPadding - metrics.bottomPadding)
+                  .clamp(0.0, double.infinity),
+            ),
+            child: content,
+          ),
+        );
+      },
     );
   }
 }

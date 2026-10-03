@@ -108,7 +108,7 @@ void main() {
     (tester) async {
       await pumpCard(tester, _ayah(userName: 'سيد'));
       expect(find.text('آية قرآنية'), findsOneWidget);
-      expect(find.text('سورة الإسراء، الآية 9'), findsOneWidget);
+      expect(find.text('سورة الإسراء، الآية ٩'), findsOneWidget);
       expect(find.byKey(const ValueKey('share-watermark')), findsOneWidget);
       expect(find.byKey(const ValueKey('share-logo')), findsOneWidget);
       expect(find.text('شاركها… لعلّها تهدي قلبًا'), findsOneWidget);

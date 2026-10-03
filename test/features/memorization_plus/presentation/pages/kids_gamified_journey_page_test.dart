@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_house_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_policy_controller.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -16,6 +19,55 @@ void main() {
   });
 
   group('KidsGamifiedJourneyPage', () {
+    for (final reduceMotion in [false, true]) {
+      testWidgets(
+        'map auto-scroll respects guardian reduceMotion=$reduceMotion',
+        (tester) async {
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = const Size(900, 900);
+          final policy = KidsPolicyController(
+            load: () async => KidsChildPolicy(reduceMotion: reduceMotion),
+          );
+          getIt.registerSingleton<KidsPolicyController>(policy);
+          await policy.reload();
+          addTearDown(() async {
+            await tester.pumpWidget(const SizedBox());
+            await getIt.unregister<KidsPolicyController>();
+            policy.dispose();
+            tester.view.reset();
+          });
+
+          await tester.pumpWidget(
+            _TestApp(
+              child: KidsGamifiedJourneyContent(
+                state: _loadedState,
+                onBack: () {},
+                onStageSelected: (_) {},
+              ),
+            ),
+          );
+          final scrollable = find.descendant(
+            of: find.byType(CustomScrollView),
+            matching: find.byType(Scrollable),
+          );
+          final position = tester.state<ScrollableState>(scrollable).position;
+          await tester.pump();
+          final initialOffset = position.pixels;
+          await tester.pump(const Duration(milliseconds: 100));
+
+          expect(position.pixels, greaterThan(0));
+          expect(position.isScrollingNotifier.value, !reduceMotion);
+          if (reduceMotion) {
+            expect(position.pixels, initialOffset);
+          } else {
+            expect(position.pixels, greaterThan(initialOffset));
+            await tester.pump(const Duration(milliseconds: 650));
+            expect(position.isScrollingNotifier.value, isFalse);
+          }
+        },
+      );
+    }
+
     testWidgets('renders journey stages and selects unlocked house', (
       tester,
     ) async {

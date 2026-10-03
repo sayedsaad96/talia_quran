@@ -5,6 +5,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Session-goal choices offered to the guardian (minutes).
 const List<int> kKidsSessionGoalChoices = [6, 8, 10];
 
@@ -36,10 +38,7 @@ class KidsPolicyControls extends StatelessWidget {
     // A null goal is the age-band default, shown as such (never as 6).
     final current = policy.sessionGoalMinutes;
     final goal = current ?? _kAgeDefaultGoal;
-    final goalChoices = {
-      ...kKidsSessionGoalChoices,
-      ?current,
-    }.toList()..sort();
+    final goalChoices = {...kKidsSessionGoalChoices, ?current}.toList()..sort();
     // Own transparent Material so the tiles' ink shows on a decorated card.
     return Material(
       type: MaterialType.transparency,
@@ -74,7 +73,7 @@ class KidsPolicyControls extends StatelessWidget {
                 ButtonSegment<int>(
                   value: count,
                   label: Text(
-                    '$count',
+                    context.numText(count),
                     key: ValueKey('kids-policy-max-$count'),
                   ),
                 ),
@@ -118,7 +117,14 @@ class KidsPolicyControls extends StatelessWidget {
                 for (final minutes in goalChoices)
                   DropdownMenuItem(
                     value: minutes,
-                    child: Text(l10n.kidsSessionGoalValue(minutes)),
+                    child: Text(
+                      l10n.kidsSessionGoalValue(
+                        LocaleNumberFormatter.format(
+                          (minutes).toString(),
+                          l10n.localeName,
+                        ),
+                      ),
+                    ),
                   ),
               ],
               onChanged: enabled

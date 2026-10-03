@@ -7,6 +7,8 @@ import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 import 'kids_chunky_button.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class KidsMissionCard extends StatelessWidget {
   const KidsMissionCard({
     super.key,
@@ -39,11 +41,22 @@ class KidsMissionCard extends StatelessWidget {
         ? (surahName ?? context.l10n.kidsGamifiedNeedsReview)
         : currentStage == null
         ? context.l10n.kidsStartFirstStageToday
-        : context.l10n.kidsGamifiedHouseTitle(currentStage.stageNumber);
+        : context.l10n.kidsGamifiedHouseTitle(
+            LocaleNumberFormatter.format(
+              (currentStage.stageNumber).toString(),
+              context.l10n.localeName,
+            ),
+          );
     final subtitle = missionAyahs != null && missionAyahs.isNotEmpty
         ? context.l10n.kidsGamifiedAyahRange(
-            missionAyahs.first,
-            missionAyahs.last,
+            LocaleNumberFormatter.format(
+              (missionAyahs.first).toString(),
+              context.l10n.localeName,
+            ),
+            LocaleNumberFormatter.format(
+              (missionAyahs.last).toString(),
+              context.l10n.localeName,
+            ),
           )
         : currentStage == null
         ? context.l10n.kidsFirstMissionSubtitle
@@ -51,12 +64,24 @@ class KidsMissionCard extends StatelessWidget {
             // ignore: use_null_aware_elements
             if (surahName != null) surahName!,
             context.l10n.kidsGamifiedAyahRange(
-              currentStage.startAyah,
-              currentStage.endAyah,
+              LocaleNumberFormatter.format(
+                (currentStage.startAyah).toString(),
+                context.l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (currentStage.endAyah).toString(),
+                context.l10n.localeName,
+              ),
             ),
             context.l10n.kidsGamifiedProgressCount(
-              currentStage.completedCount,
-              currentStage.totalAyahs,
+              LocaleNumberFormatter.format(
+                (currentStage.completedCount).toString(),
+                context.l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (currentStage.totalAyahs).toString(),
+                context.l10n.localeName,
+              ),
             ),
           ].join(' • ');
 

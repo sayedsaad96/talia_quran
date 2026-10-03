@@ -10,6 +10,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
 import '../../../../core/constants/app_spacing.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class FreeTasbeehSheet extends StatefulWidget {
   const FreeTasbeehSheet({
     super.key,
@@ -25,7 +27,8 @@ class FreeTasbeehSheet extends StatefulWidget {
     AzkarPreferencesStore? store,
     bool? isDark,
   }) async {
-    final effectiveStore = store ??
+    final effectiveStore =
+        store ??
         (getIt.isRegistered<AzkarPreferencesStore>()
             ? getIt<AzkarPreferencesStore>()
             : AzkarPreferencesStore());
@@ -89,8 +92,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
     showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor:
-            context.tokens.surface,
+        backgroundColor: context.tokens.surface,
         title: Text(
           context.l10n.azkarTasbeehResetTitle,
           style: AppTypography.titleMedium.copyWith(
@@ -129,10 +131,8 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor =
-        context.tokens.surface;
-    final textColor =
-        context.tokens.textPrimary;
+    final surfaceColor = context.tokens.surface;
+    final textColor = context.tokens.textPrimary;
     final hintColor = context.tokens.textSecondary;
 
     final progress = _target > 0 ? (_counter % _target) / _target : 0.0;
@@ -156,8 +156,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: context.tokens.textHint
-                      .withValues(alpha: 0.4),
+                  color: context.tokens.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
               ),
@@ -193,10 +192,11 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               // Target Selector Chips
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: _targetOptions                .map((opt) {
+                children: _targetOptions.map((opt) {
                   final isSelected = _target == opt;
-                  final label =
-                      opt == 0 ? context.l10n.azkarTasbeehOpenTarget : '$opt';
+                  final label = opt == 0
+                      ? context.l10n.azkarTasbeehOpenTarget
+                      : context.numText(opt);
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: ChoiceChip(
@@ -213,8 +213,9 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                       ),
                       labelStyle: AppTypography.labelMedium.copyWith(
                         color: isSelected ? Colors.white : hintColor,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   );
@@ -225,7 +226,12 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
               // Interactive Large Counter Button
               Semantics(
                 button: true,
-                label: context.l10n.azkarTasbeehTapSemantics(_counter),
+                label: context.l10n.azkarTasbeehTapSemantics(
+                  LocaleNumberFormatter.format(
+                    (_counter).toString(),
+                    context.l10n.localeName,
+                  ),
+                ),
                 child: GestureDetector(
                   key: const ValueKey('free-tasbeeh-tap-area'),
                   onTap: _onTapCounter,
@@ -238,7 +244,9 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                           width: 200,
                           height: 200,
                           child: CircularProgressIndicator(
-                            value: progress == 0.0 && _counter > 0 ? 1.0 : progress,
+                            value: progress == 0.0 && _counter > 0
+                                ? 1.0
+                                : progress,
                             strokeWidth: 8,
                             backgroundColor: context.tokens.divider,
                             valueColor: const AlwaysStoppedAnimation<Color>(
@@ -285,9 +293,13 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                               const SizedBox(height: 2),
                               Text(
                                 rounds > 0
-                                    ? '${context.l10n.azkarTasbeehTargetLabel(_target)} (${context.l10n.azkarTasbeehRound(rounds)})'
+                                    ? '${context.l10n.azkarTasbeehTargetLabel(LocaleNumberFormatter.format((_target).toString(), context.l10n.localeName))} (${context.l10n.azkarTasbeehRound(LocaleNumberFormatter.format((rounds).toString(), context.l10n.localeName))})'
                                     : context.l10n.azkarTasbeehTargetLabel(
-                                        _target),
+                                        LocaleNumberFormatter.format(
+                                          (_target).toString(),
+                                          context.l10n.localeName,
+                                        ),
+                                      ),
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.white70,
                                 ),
@@ -304,9 +316,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
 
               Text(
                 context.l10n.azkarTasbeehTapHint,
-                style: AppTypography.bodySmall.copyWith(
-                  color: hintColor,
-                ),
+                style: AppTypography.bodySmall.copyWith(color: hintColor),
               ),
             ],
           ),

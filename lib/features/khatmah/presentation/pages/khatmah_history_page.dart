@@ -7,7 +7,6 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
@@ -49,55 +48,55 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
     child: FallbackPopScope(
       fallbackLocation: AppRoutes.khatmahDashboard,
       child: Scaffold(
-      appBar: AppBar(
-        leading: FallbackPopScope.hasHistory(context)
-            ? null
-            : const TaliaBackButton(
-                key: Key('khatmah_history_back_button'),
-                fallbackLocation: AppRoutes.khatmahDashboard,
-              ),
-        title: Text(context.l10n.khatmahRecentCompletions),
-      ),
-      body: BlocBuilder<KhatmahHistoryCubit, KhatmahHistoryState>(
-        builder: (context, state) => switch (state) {
-          KhatmahHistoryInitial() || KhatmahHistoryLoading() => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          KhatmahHistoryEmpty() => _HistoryMessage(
-            key: const Key('khatmah_history_empty'),
-            icon: Icons.history_rounded,
-            message: context.l10n.khatmahHistoryEmpty,
-          ),
-          KhatmahHistoryFailure() => _HistoryMessage(
-            key: const Key('khatmah_history_failure'),
-            icon: Icons.error_outline_rounded,
-            message: context.l10n.khatmahHistoryLoadError,
-            action: FilledButton.icon(
-              key: const Key('khatmah_history_retry'),
-              onPressed: _cubit.load,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(context.l10n.khatmahRetry),
+        appBar: AppBar(
+          leading: FallbackPopScope.hasHistory(context)
+              ? null
+              : const TaliaBackButton(
+                  key: Key('khatmah_history_back_button'),
+                  fallbackLocation: AppRoutes.khatmahDashboard,
+                ),
+          title: Text(context.l10n.khatmahRecentCompletions),
+        ),
+        body: BlocBuilder<KhatmahHistoryCubit, KhatmahHistoryState>(
+          builder: (context, state) => switch (state) {
+            KhatmahHistoryInitial() || KhatmahHistoryLoading() => const Center(
+              child: CircularProgressIndicator(),
             ),
-          ),
-          KhatmahHistoryCorrupt(:final validEntries) =>
-            validEntries.isEmpty
-                ? _HistoryMessage(
-                    key: const Key('khatmah_history_corrupt'),
-                    icon: Icons.warning_amber_rounded,
-                    message: context.l10n.khatmahHistoryCorrupt,
-                    action: _HistoryRetryButton(onPressed: _cubit.load),
-                  )
-                : _HistoryList(
-                    entries: validEntries,
-                    corruptWarning: context.l10n.khatmahHistoryCorrupt,
-                    onRetry: _cubit.load,
-                  ),
-          KhatmahHistoryLoaded(:final entries) => _HistoryList(
-            entries: entries,
-          ),
-        },
+            KhatmahHistoryEmpty() => _HistoryMessage(
+              key: const Key('khatmah_history_empty'),
+              icon: Icons.history_rounded,
+              message: context.l10n.khatmahHistoryEmpty,
+            ),
+            KhatmahHistoryFailure() => _HistoryMessage(
+              key: const Key('khatmah_history_failure'),
+              icon: Icons.error_outline_rounded,
+              message: context.l10n.khatmahHistoryLoadError,
+              action: FilledButton.icon(
+                key: const Key('khatmah_history_retry'),
+                onPressed: _cubit.load,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.l10n.khatmahRetry),
+              ),
+            ),
+            KhatmahHistoryCorrupt(:final validEntries) =>
+              validEntries.isEmpty
+                  ? _HistoryMessage(
+                      key: const Key('khatmah_history_corrupt'),
+                      icon: Icons.warning_amber_rounded,
+                      message: context.l10n.khatmahHistoryCorrupt,
+                      action: _HistoryRetryButton(onPressed: _cubit.load),
+                    )
+                  : _HistoryList(
+                      entries: validEntries,
+                      corruptWarning: context.l10n.khatmahHistoryCorrupt,
+                      onRetry: _cubit.load,
+                    ),
+            KhatmahHistoryLoaded(:final entries) => _HistoryList(
+              entries: entries,
+            ),
+          },
+        ),
       ),
-    ),
     ),
   );
 }
@@ -174,8 +173,7 @@ class _HistoryStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String number(int value) =>
-        context.isArabic ? MushafHizbHelper.toArabicNumber(value) : '$value';
+    String number(int value) => context.numText(value);
     return Card(
       key: const Key('khatmah_history_stats'),
       child: Padding(

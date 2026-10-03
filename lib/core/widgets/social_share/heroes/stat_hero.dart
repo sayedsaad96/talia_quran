@@ -96,7 +96,7 @@ class StatHero extends StatelessWidget {
             : copy.longestStreak(longest));
     final note = _nonEmpty(data.content);
     return [
-      _numeral('$days'),
+      _numeral(copy.number(days)),
       _label(copy.streakHeroLabel(days)),
       if (record != null) _line(record, palette.textAccent),
       if (note != null) _line(note, palette.textSecondary),
@@ -125,7 +125,7 @@ class StatHero extends StatelessWidget {
             ),
           ),
         ),
-      _numeral('$ayahs'),
+      _numeral(copy.number(ayahs)),
       _label(copy.memorizedAyahsHeroLabel(ayahs)),
       if (target > 0) ...[
         _bar(ayahs / target),
@@ -161,7 +161,7 @@ class StatHero extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   HeroNumeral(
-                    text: '$value',
+                    text: copy.number(value),
                     color: palette.textAccent,
                     size: metrics.statNumeralSize,
                   ),
@@ -187,7 +187,11 @@ class StatHero extends StatelessWidget {
     final completed = data.currentValue ?? 0;
     final total = data.targetValue ?? 0;
     return [
-      _numeral(total > 0 ? '$completed / $total' : '$completed'),
+      _numeral(
+        total > 0
+            ? '${copy.number(completed)} / ${copy.number(total)}'
+            : copy.number(completed),
+      ),
       _label(copy.wirdCompletedLabel),
       if (total > 0) _bar(completed / total),
     ];

@@ -10,6 +10,7 @@ import '../../../../core/memorization/surah_memorization_status.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
 part 'surah_list_state.dart';
 
 class SurahListCubit extends Cubit<SurahListState> {
@@ -79,7 +80,7 @@ class SurahListCubit extends Cubit<SurahListState> {
       return matchAr ||
           s.nameAr.contains(qRaw) ||
           s.nameEn.toLowerCase().contains(qRaw) ||
-          s.id.toString() == qRaw;
+          s.id.toString() == LocaleNumberFormatter.western(qRaw);
     }).toList();
     emit(current.copyWith(filtered: filtered, query: query));
   }

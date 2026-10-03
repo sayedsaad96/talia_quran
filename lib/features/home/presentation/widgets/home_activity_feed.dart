@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,7 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -19,6 +18,7 @@ import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
 import '../../../../core/router/open_location.dart';
+
 
 class HomeActivityFeed extends StatelessWidget {
   const HomeActivityFeed({
@@ -225,9 +225,8 @@ String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
   final moment = now ?? activityClock();
   final local = at.toLocal();
   final diff = moment.difference(local);
-  String digits(int value) => l10n.localeName == 'ar'
-      ? MushafHizbHelper.toArabicNumber(value)
-      : '$value';
+  String digits(int value) =>
+      LocaleNumberFormatter.number(value, l10n.localeName);
   if (diff.inMinutes < 1) return l10n.homeActivityJustNow;
   if (diff.inMinutes < 60) {
     return l10n.homeActivityMinutesAgo(digits(diff.inMinutes));
@@ -243,7 +242,7 @@ String activityTimeLabel(AppLocalizations l10n, DateTime at, [DateTime? now]) {
   final days = diff.inDays.clamp(1, 9999);
   return l10n.homeActivityDaysAgo(
     days,
-    l10n.localeName == 'ar' ? MushafHizbHelper.toArabicNumber(days) : '$days',
+    LocaleNumberFormatter.number(days, l10n.localeName),
   );
 }
 

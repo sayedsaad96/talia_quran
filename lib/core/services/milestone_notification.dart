@@ -9,6 +9,8 @@ import '../utils/talia_logger.dart';
 import '../../features/certificate/domain/entities/certificate_award.dart';
 import 'notification_service.dart';
 
+import '../utils/locale_number_formatter.dart';
+
 /// The milestone celebrations Phase C can fire. [streak] is defined for the
 /// l10n surface but is currently NOT derivable from any certificate creation
 /// path (no award or code path distinguishes a 30-day streak), so nothing
@@ -116,8 +118,18 @@ Future<void> fireMilestoneCelebration(MilestoneNotificationData data) async {
     final l10n = await _loadSavedLocaleL10n();
     final (title, body) = switch (data.type) {
       MilestoneNotificationType.juz => (
-        l10n.notificationMilestoneJuzTitle(data.juzNumber!),
-        l10n.notificationMilestoneJuzBody(data.juzNumber!),
+        l10n.notificationMilestoneJuzTitle(
+          LocaleNumberFormatter.format(
+            (data.juzNumber!).toString(),
+            l10n.localeName,
+          ),
+        ),
+        l10n.notificationMilestoneJuzBody(
+          LocaleNumberFormatter.format(
+            (data.juzNumber!).toString(),
+            l10n.localeName,
+          ),
+        ),
       ),
       MilestoneNotificationType.surah => (
         l10n.notificationMilestoneSurahTitle(data.surahName!),

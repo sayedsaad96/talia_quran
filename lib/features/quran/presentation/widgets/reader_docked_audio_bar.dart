@@ -34,8 +34,8 @@ class ReaderDockedAudioBar extends StatelessWidget {
             : SurahNames.nameEn(state.currentSurahId);
         final ayahText = state.currentAyahNumber != null
             ? (context.isArabic
-                ? 'آية ${state.currentAyahNumber}'
-                : 'Ayah ${state.currentAyahNumber}')
+                  ? 'آية ${context.numText(state.currentAyahNumber!)}'
+                  : 'Ayah ${context.numText(state.currentAyahNumber!)}')
             : '';
 
         return Container(
@@ -84,21 +84,21 @@ class ReaderDockedAudioBar extends StatelessWidget {
                 ),
               ),
               if (state.hasPrevious)
-              IconButton(
-                icon: Icon(
-                  context.isArabic
-                      ? Icons.skip_next_rounded
-                      : Icons.skip_previous_rounded,
-                  size: 20,
-                  color: primary,
+                IconButton(
+                  icon: Icon(
+                    context.isArabic
+                        ? Icons.skip_next_rounded
+                        : Icons.skip_previous_rounded,
+                    size: 20,
+                    color: primary,
+                  ),
+                  tooltip: context.l10n.prevAyah,
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    context.read<QuranAudioPlayerCubit>().previousAyah();
+                  },
+                  visualDensity: VisualDensity.compact,
                 ),
-                tooltip: context.l10n.prevAyah,
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  context.read<QuranAudioPlayerCubit>().previousAyah();
-                },
-                visualDensity: VisualDensity.compact,
-              ),
               if (state.hasNext)
                 IconButton(
                   icon: Icon(

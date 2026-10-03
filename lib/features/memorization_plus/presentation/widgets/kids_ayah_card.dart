@@ -36,86 +36,105 @@ class KidsAyahCard extends StatelessWidget {
         ? context.l10n.kidsGamifiedAudioLoading
         : null;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: KidsTheme.parchmentGradient,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(AppSpacing.radiusXl),
+    final borderColor = isCompleted
+        ? KidsTheme.forestGreen
+        : KidsTheme.goldStar.withValues(alpha: 0.7);
+    final borderShadow = isCompleted
+        ? const [
+            BoxShadow(
+              color: Color(0x330D5C53),
+              blurRadius: 18,
+              spreadRadius: 2,
+              offset: Offset(0, 4),
+            ),
+          ]
+        : KidsTheme.card25DShadow;
+
+    return RepaintBoundary(
+      child: AnimatedContainer(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          gradient: KidsTheme.parchmentGradient,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(AppSpacing.radiusXl),
+          ),
+          border: Border.all(color: borderColor, width: 2.5),
+          boxShadow: borderShadow,
         ),
-        border: Border.all(
-          color: KidsTheme.goldStar.withValues(alpha: 0.7),
-          width: 2.5,
-        ),
-        boxShadow: KidsTheme.card25DShadow,
-      ),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: KidsTheme.completedHouseGradient,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        color: Colors.white,
-                        size: 18,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: KidsTheme.completedHouseGradient,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        '${context.l10n.ayah} $ayahNumber',
-                        style: AppTypography.labelLarge.copyWith(
-                          color: KidsTheme.inkOnParchment,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Colors.white,
+                          size: 18,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          '${context.l10n.ayah} ${context.numText(ayahNumber)}',
+                          style: AppTypography.labelLarge.copyWith(
+                            color: KidsTheme.inkOnParchment,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.auto_stories_rounded,
-                  color: KidsTheme.houseBrown.withValues(alpha: 0.42),
-                  size: 28,
+                  const Spacer(),
+                  Icon(
+                    Icons.auto_stories_rounded,
+                    color: KidsTheme.houseBrown.withValues(alpha: 0.42),
+                    size: 28,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // The card always has a parchment background, so its Quran text
+              // stays dark even when the app itself uses a dark theme.
+              MemorizationAyahDisplay(
+                text: ayahText,
+                surahId: surahId,
+                ayahNumber: ayahNumber,
+                textColor: KidsTheme.nightSkyDark,
+                decorationColor: KidsTheme.houseBrown.withValues(alpha: 0.5),
+                referenceColor: KidsTheme.forestGreen,
+                isCompleted: isCompleted,
+                wordHighlights: recalledWords,
+                highlightColor: KidsTheme.forestGreen.withValues(alpha: 0.18),
+              ),
+              if (audioMessage != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _AudioStatusMessage(
+                  message: audioMessage,
+                  isLoading: isAudioLoading && !audioUnavailable,
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            // The card always has a parchment background, so its Quran text
-            // stays dark even when the app itself uses a dark theme.
-            MemorizationAyahDisplay(
-              text: ayahText,
-              surahId: surahId,
-              ayahNumber: ayahNumber,
-              textColor: KidsTheme.nightSkyDark,
-              decorationColor: KidsTheme.houseBrown.withValues(alpha: 0.5),
-              referenceColor: KidsTheme.forestGreen,
-              isCompleted: isCompleted,
-              wordHighlights: recalledWords,
-              highlightColor: KidsTheme.forestGreen.withValues(alpha: 0.18),
-            ),
-            if (audioMessage != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              _AudioStatusMessage(
-                message: audioMessage,
-                isLoading: isAudioLoading && !audioUnavailable,
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );

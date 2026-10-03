@@ -6,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
@@ -34,7 +35,8 @@ import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
 
-import 'memorization_session_cubit_test.mocks.dart' show MockSpeechToText;
+import 'memorization_session_cubit_test.mocks.dart'
+    show MockAudioPlayer, MockSpeechToText;
 
 bool _kidsResumeIsarCoreInitialized = false;
 
@@ -92,6 +94,8 @@ void main() {
       V2SessionProgressAdapter? progressAdapter,
       List<KidsSessionLog>? kidsSessionLogs,
       V2SessionEngine? engine,
+      AudioPlayer? audioPlayer,
+      KidsAudioSourceLoader? audioSourceLoader,
     }) => KidsModeCubit(
       GetKidsProgressUsecase(repository),
       GetKidsJourneyUsecase(repository),
@@ -110,6 +114,10 @@ void main() {
       policy == null ? null : () async => policy,
       kidsSessionLogs == null ? null : () async => kidsSessionLogs,
       progressAdapter,
+      null,
+      null,
+      audioPlayer,
+      audioSourceLoader,
     );
 
     setUp(() {
@@ -526,6 +534,221 @@ void main() {
         expect(achievementService.checkCalls, 0);
       },
     );
+
+    group('completed listen progress', () {
+      late MockAudioPlayer player;
+      late StreamController<PlayerState> playback;
+      late StreamController<ProcessingState> processing;
+      late Completer<String> source;
+
+      KidsModeLoaded getLoaded() => cubit.state as KidsModeLoaded;
+
+      Future<void> finishListen() async {
+        playback.add(PlayerState(true, ProcessingState.completed));
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      setUp(() async {
+        await cubit.close();
+        playback = StreamController<PlayerState>.broadcast(sync: true);
+        processing = StreamController<ProcessingState>.broadcast(sync: true);
+        source = Completer<String>();
+        player = MockAudioPlayer();
+        when(player.playerStateStream).thenAnswer((_) => playback.stream);
+        when(player.processingStateStream).thenAnswer((_) => processing.stream);
+        when(player.setUrl(any)).thenAnswer((_) async => Duration.zero);
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          policy: KidsSessionPolicy.forAge(6),
+          audioPlayer: player,
+          audioSourceLoader: (_, _) => source.future,
+        );
+        await cubit.load(114, 1, 'ayah text');
+        addTearDown(playback.close);
+        addTearDown(processing.close);
+      });
+
+      test(
+        'buffering and the active final listen earn no early stars',
+        () async {
+          final playing = cubit.playAudio();
+          expect(getLoaded().currentLoop, 0);
+          expect(getLoaded().isBuffering, isTrue);
+          source.complete('https://example.test/ayah.mp3');
+          await playing;
+          for (var completed = 1; completed <= 2; completed++) {
+            await finishListen();
+            expect(getLoaded().currentLoop, completed);
+            expect(getLoaded().isPlaying, isTrue);
+          }
+          await cubit.tryFromMemory();
+          expect(getLoaded().isRecallingFromMemory, isFalse);
+          await finishListen();
+          expect(getLoaded().currentLoop, 3);
+          expect(getLoaded().isPlaying, isFalse);
+          expect(getLoaded().isBuffering, isFalse);
+          await cubit.tryFromMemory();
+          expect(getLoaded().isRecallingFromMemory, isTrue);
+        },
+      );
+
+      test(
+        'stop preserves completions and rejects a shutdown completion',
+        () async {
+          source.complete('https://example.test/ayah.mp3');
+          await cubit.playAudio();
+          await finishListen();
+          when(player.stop()).thenAnswer((_) async {
+            playback.add(PlayerState(false, ProcessingState.completed));
+          });
+          await cubit.stopAudio();
+          expect(getLoaded().currentLoop, 1);
+          expect(getLoaded().isPlaying, isFalse);
+          expect(getLoaded().isBuffering, isFalse);
+          playback.add(PlayerState(false, ProcessingState.completed));
+          expect(getLoaded().currentLoop, 1);
+          await cubit.playAudio();
+          expect(getLoaded().currentLoop, 0);
+          when(player.stop()).thenAnswer((_) async {});
+        },
+      );
+
+      test('failure before the first listen earns no star', () async {
+        final playing = cubit.playAudio();
+        source.completeError(StateError('audio unavailable'));
+        await playing;
+        expect(getLoaded().currentLoop, 0);
+        expect(
+          getLoaded().audioError,
+          CubitMessageCodes.kidsAudioPlaybackFailed,
+        );
+        expect(getLoaded().isPlaying, isFalse);
+        expect(getLoaded().isBuffering, isFalse);
+        playback.add(PlayerState(false, ProcessingState.completed));
+        expect(getLoaded().currentLoop, 0);
+      });
+
+      test(
+        'stopping while buffering never starts the resolved source',
+        () async {
+          final playing = cubit.playAudio();
+          await cubit.stopAudio();
+          source.complete('https://example.test/ayah.mp3');
+          await playing;
+          expect(getLoaded().currentLoop, 0);
+          expect(getLoaded().isPlaying, isFalse);
+          verifyNever(player.setUrl(any));
+          verifyNever(player.play());
+        },
+      );
+
+      for (final fails in [false, true]) {
+        test(
+          'replay ignores a stale source ${fails ? 'failure' : 'success'}',
+          () async {
+            final firstSource = source;
+            final firstPlaying = cubit.playAudio();
+            await cubit.stopAudio();
+            source = Completer<String>();
+            final replay = cubit.playAudio();
+            source.complete('https://example.test/replay.mp3');
+            await replay;
+            if (fails) {
+              firstSource.completeError(StateError('stale source failed'));
+            } else {
+              firstSource.complete('https://example.test/stale.mp3');
+            }
+            await firstPlaying;
+            expect(getLoaded().currentLoop, 0);
+            expect(getLoaded().isPlaying, isTrue);
+            expect(getLoaded().audioError, isNull);
+            verify(player.setUrl('https://example.test/replay.mp3')).called(1);
+            verifyNever(player.setUrl('https://example.test/stale.mp3'));
+          },
+        );
+      }
+
+      test('replay waits for the player shutdown to finish', () async {
+        final firstSource = source;
+        final firstPlaying = cubit.playAudio();
+        final shutdown = Completer<void>();
+        when(player.stop()).thenAnswer((_) => shutdown.future);
+        final stopping = cubit.stopAudio();
+        source = Completer<String>();
+        final replay = cubit.playAudio();
+        expect(getLoaded().isPlaying, isFalse);
+        verifyNever(player.setUrl(any));
+        shutdown.complete();
+        await stopping;
+        source.complete('https://example.test/replay.mp3');
+        await replay;
+        firstSource.complete('https://example.test/stale.mp3');
+        await firstPlaying;
+        expect(getLoaded().isPlaying, isTrue);
+        verify(player.setUrl('https://example.test/replay.mp3')).called(1);
+        verifyNever(player.setUrl('https://example.test/stale.mp3'));
+      });
+
+      test('late buffering cannot revive a stopped session', () async {
+        source.complete('https://example.test/ayah.mp3');
+        await cubit.playAudio();
+        await cubit.stopAudio();
+        processing.add(ProcessingState.buffering);
+        expect(getLoaded().isBuffering, isFalse);
+      });
+
+      test(
+        'closing rejects a shutdown completion without another listen',
+        () async {
+          source.complete('https://example.test/ayah.mp3');
+          await cubit.playAudio();
+          when(player.stop()).thenAnswer((_) async {
+            playback.add(PlayerState(false, ProcessingState.completed));
+          });
+          await cubit.close();
+          expect(getLoaded().currentLoop, 0);
+          verify(player.setUrl('https://example.test/ayah.mp3')).called(1);
+          when(player.stop()).thenAnswer((_) async {});
+        },
+      );
+
+      test(
+        'a later playback failure preserves only completed listens',
+        () async {
+          source.complete('https://example.test/ayah.mp3');
+          await cubit.playAudio();
+          when(player.setUrl(any)).thenThrow(StateError('source failed'));
+          await finishListen();
+          expect(getLoaded().currentLoop, 1);
+          expect(getLoaded().isPlaying, isFalse);
+          expect(getLoaded().isBuffering, isFalse);
+          expect(
+            getLoaded().audioError,
+            CubitMessageCodes.kidsAudioPlaybackFailed,
+          );
+          playback.add(PlayerState(false, ProcessingState.completed));
+          expect(getLoaded().currentLoop, 1);
+        },
+      );
+
+      test('optional replays keep the fulfilled listen gate open', () async {
+        source.complete('https://example.test/ayah.mp3');
+        await cubit.playAudio();
+        for (var completed = 0; completed < 3; completed++) {
+          await finishListen();
+        }
+        await cubit.playAudio();
+        expect(getLoaded().currentLoop, 3);
+        await cubit.stopAudio();
+        expect(getLoaded().currentLoop, 3);
+        await cubit.playAudio();
+        await finishListen();
+        expect(getLoaded().currentLoop, 3);
+        expect(getLoaded().isPlaying, isFalse);
+        await cubit.tryFromMemory();
+        expect(getLoaded().isRecallingFromMemory, isTrue);
+      });
+    });
 
     test('load defaults to the age-8 policy listen repetitions', () async {
       await cubit.load(114, 1, 'ayah text');

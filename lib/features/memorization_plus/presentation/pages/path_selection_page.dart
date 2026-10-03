@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../../core/utils/locale_number_formatter.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +20,8 @@ import '../cubits/memorization_identity_cubit.dart';
 import '../widgets/memorization_path_choice_card.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
+
+import '../../../../core/widgets/locale_time_picker.dart';
 
 class PathSelectionPage extends StatelessWidget {
   const PathSelectionPage({
@@ -371,176 +374,191 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
         if (!didPop) unawaited(_confirmDiscard());
       },
       child: SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          MediaQuery.viewInsetsOf(context).bottom + 24,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                context.l10n.memorizationPathKidsTitle,
-                style: AppTypography.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _nameController,
-                textInputAction: TextInputAction.next,
-                maxLength: ChildIdentityPolicy.maxNicknameLength,
-                decoration: InputDecoration(
-                  labelText: context.l10n.name,
-                  hintText: context.l10n.enterName,
-                  counterText: '',
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            12,
+            24,
+            MediaQuery.viewInsetsOf(context).bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.memorizationPathKidsTitle,
+                  style: AppTypography.headlineSmall,
+                  textAlign: TextAlign.center,
                 ),
-                onChanged: (_) => _refreshValidity(),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                initialValue: _age,
-                decoration: InputDecoration(labelText: context.l10n.age),
-                items: [
-                  for (
-                    var value = ChildIdentityPolicy.minAge;
-                    value <= ChildIdentityPolicy.maxAge;
-                    value++
-                  )
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(context.l10n.childAgeYears(value)),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _age = value;
-                      _guidanceAudioEnabled = value <= 7;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                initialValue: _startingSurahId,
-                decoration: InputDecoration(
-                  labelText: context.l10n.kidsSetupStartingSurah,
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _nameController,
+                  textInputAction: TextInputAction.next,
+                  maxLength: ChildIdentityPolicy.maxNicknameLength,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.name,
+                    hintText: context.l10n.enterName,
+                    counterText: '',
+                  ),
+                  onChanged: (_) => _refreshValidity(),
                 ),
-                items: [
-                  // Al-Fatiha first, then Juz Amma in memorization order.
-                  for (final value in KidsJourneyPath.surahIds)
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(
-                        context.isArabic
-                            ? SurahNames.nameAr(value)
-                            : SurahNames.nameEn(value),
-                      ),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _startingSurahId = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                initialValue: _weeklyGoalSessions,
-                decoration: InputDecoration(
-                  labelText: context.l10n.kidsSetupWeeklyGoal,
-                ),
-                items: [
-                  for (final value in const [3, 5, 7])
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(context.l10n.kidsSetupWeeklyGoalValue(value)),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _weeklyGoalSessions = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.l10n.kidsSetupReminderTime),
-                trailing: TextButton(
-                  onPressed: () async {
-                    final selected = await showTimePicker(
-                      context: context,
-                      initialTime: _reminderTime,
-                    );
-                    if (selected != null && mounted) {
-                      setState(() => _reminderTime = selected);
-                    }
-                  },
-                  child: Text(_reminderTime.format(context)),
-                ),
-              ),
-              // The "guidance audio" switch stays intentionally hidden until
-              // the kids session consumes the setting (K10 in
-              // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). The draft field
-              // still records the age-based default so stored settings stay
-              // consistent.
-              TextField(
-                controller: _pinController,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                maxLength: 4,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: context.l10n.parentDashboardCreatePinTitle,
-                  helperText: context.l10n.parentDashboardPinHelp,
-                ),
-                onChanged: (_) => _refreshValidity(),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _confirmPinController,
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                maxLength: 4,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: context.l10n.parentDashboardPinConfirm,
-                ),
-                onChanged: (_) => _refreshValidity(),
-              ),
-              const SizedBox(height: 20),
-              FilledButton(
-                onPressed: !_canSubmit
-                    ? null
-                    : () => Navigator.pop(
-                        context,
-                        _ChildSetupDraft(
-                          nickname: _nameController.text.trim(),
-                          age: _age,
-                          pin: _pinController.text,
-                          reminderHour: _reminderTime.hour,
-                          reminderMinute: _reminderTime.minute,
-                          weeklyGoalSessions: _weeklyGoalSessions,
-                          guidanceAudioEnabled: _guidanceAudioEnabled,
-                          startingSurahId: _startingSurahId,
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: _age,
+                  decoration: InputDecoration(labelText: context.l10n.age),
+                  items: [
+                    for (
+                      var value = ChildIdentityPolicy.minAge;
+                      value <= ChildIdentityPolicy.maxAge;
+                      value++
+                    )
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          context.l10n.childAgeYears(
+                            value,
+                            LocaleNumberFormatter.format(
+                              (value).toString(),
+                              context.l10n.localeName,
+                            ),
+                          ),
                         ),
                       ),
-                child: Text(context.l10n.confirm),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(context.l10n.cancel),
-              ),
-            ],
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _age = value;
+                        _guidanceAudioEnabled = value <= 7;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: _startingSurahId,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.kidsSetupStartingSurah,
+                  ),
+                  items: [
+                    // Al-Fatiha first, then Juz Amma in memorization order.
+                    for (final value in KidsJourneyPath.surahIds)
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          context.isArabic
+                              ? SurahNames.nameAr(value)
+                              : SurahNames.nameEn(value),
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _startingSurahId = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: _weeklyGoalSessions,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.kidsSetupWeeklyGoal,
+                  ),
+                  items: [
+                    for (final value in const [3, 5, 7])
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          context.l10n.kidsSetupWeeklyGoalValue(
+                            LocaleNumberFormatter.format(
+                              (value).toString(),
+                              context.l10n.localeName,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _weeklyGoalSessions = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(context.l10n.kidsSetupReminderTime),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      final selected = await showLocaleTimePicker(
+                        context: context,
+                        initialTime: _reminderTime,
+                      );
+                      if (selected != null && mounted) {
+                        setState(() => _reminderTime = selected);
+                      }
+                    },
+                    child: Text(_reminderTime.format(context)),
+                  ),
+                ),
+                // The "guidance audio" switch stays intentionally hidden until
+                // the kids session consumes the setting (K10 in
+                // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). The draft field
+                // still records the age-based default so stored settings stay
+                // consistent.
+                TextField(
+                  controller: _pinController,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: context.l10n.parentDashboardCreatePinTitle,
+                    helperText: context.l10n.parentDashboardPinHelp,
+                  ),
+                  onChanged: (_) => _refreshValidity(),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _confirmPinController,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: context.l10n.parentDashboardPinConfirm,
+                  ),
+                  onChanged: (_) => _refreshValidity(),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: !_canSubmit
+                      ? null
+                      : () => Navigator.pop(
+                          context,
+                          _ChildSetupDraft(
+                            nickname: _nameController.text.trim(),
+                            age: _age,
+                            pin: _pinController.text,
+                            reminderHour: _reminderTime.hour,
+                            reminderMinute: _reminderTime.minute,
+                            weeklyGoalSessions: _weeklyGoalSessions,
+                            guidanceAudioEnabled: _guidanceAudioEnabled,
+                            startingSurahId: _startingSurahId,
+                          ),
+                        ),
+                  child: Text(context.l10n.confirm),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(context.l10n.cancel),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }

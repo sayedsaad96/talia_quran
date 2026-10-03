@@ -194,7 +194,9 @@ class _KidsGamifiedJourneyContentState
       Scrollable.ensureVisible(
         activeContext,
         alignment: 0.28,
-        duration: const Duration(milliseconds: 650),
+        duration: MediaQuery.disableAnimationsOf(activeContext)
+            ? Duration.zero
+            : const Duration(milliseconds: 650),
         curve: Curves.easeInOutCubic,
       );
     }

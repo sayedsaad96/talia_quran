@@ -263,12 +263,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something unexpected happened. Please try again.';
 
   @override
-  String celebrationAyah(int xp) {
+  String celebrationAyah(String xp) {
     return 'Well done! +$xp XP ⭐';
   }
 
   @override
-  String celebrationPage(int xp) {
+  String celebrationPage(String xp) {
     return 'Page complete! +$xp XP 🎯';
   }
 
@@ -856,12 +856,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Talia\'s knowledge hub and feature guide';
 
   @override
-  String tutorialGuideTopicsCount(int count) {
+  String tutorialGuideTopicsCount(String count) {
     return 'Topics: $count';
   }
 
   @override
-  String tutorialGuideTipsCount(int count) {
+  String tutorialGuideTipsCount(String count) {
     return 'Tips & explanations: $count';
   }
 
@@ -1258,7 +1258,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarSmartWirdSubtitle => 'A wird built for this moment';
 
   @override
-  String azkarSmartWirdDone(int count) {
+  String azkarSmartWirdDone(String count) {
     return 'Completed $count smart wird session(s) today';
   }
 
@@ -1302,12 +1302,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarTasbeehOpenTarget => 'Open';
 
   @override
-  String azkarTasbeehTargetLabel(int target) {
+  String azkarTasbeehTargetLabel(String target) {
     return 'Target: $target';
   }
 
   @override
-  String azkarTasbeehRound(int round) {
+  String azkarTasbeehRound(String round) {
     return 'Round $round';
   }
 
@@ -1315,7 +1315,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarTasbeehTapHint => 'Tap anywhere in the circle to count';
 
   @override
-  String azkarTasbeehTapSemantics(int count) {
+  String azkarTasbeehTapSemantics(String count) {
     return 'Tap to count, current $count';
   }
 
@@ -1618,14 +1618,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementDescYearStreak => 'Keep a 365-day streak';
 
   @override
-  String bookmarksCountItem(int count) {
+  String bookmarksCountItem(int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'bookmarks',
       one: 'bookmark',
     );
-    return '$count $_temp0';
+    return '$countText $_temp0';
   }
 
   @override
@@ -1702,7 +1702,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications are turned off in system settings';
 
   @override
-  String notificationStatusSummary(int enabled, int total) {
+  String notificationStatusSummary(String enabled, String total) {
     return '$enabled of $total reminders on';
   }
 
@@ -1908,7 +1908,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String guardianPairingExpiresIn(int minutes) {
+  String guardianPairingExpiresIn(String minutes) {
     return 'Expires in $minutes min';
   }
 
@@ -2163,12 +2163,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsJourneySignpost3 => 'We continue Allah\'s book';
 
   @override
-  String kidsPointsValue(int points) {
+  String kidsPointsValue(String points) {
     return '$points points';
   }
 
   @override
-  String kidsLevelValue(int level) {
+  String kidsLevelValue(String level) {
     return 'Level $level';
   }
 
@@ -2176,7 +2176,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsStartFirstStageToday => 'Start your first stage today';
 
   @override
-  String kidsStageAyahRange(int stage, int startAyah, int endAyah) {
+  String kidsStageAyahRange(String stage, String startAyah, String endAyah) {
     return 'Stage $stage: ayahs $startAyah-$endAyah';
   }
 
@@ -2194,16 +2194,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open the guardian dashboard on the other device and scan the code.';
 
   @override
-  String kidsStageTitle(int stage) {
+  String kidsStageTitle(String stage) {
     return 'Stage $stage';
   }
 
   @override
   String kidsStageProgress(
-    int startAyah,
-    int endAyah,
-    int completed,
-    int total,
+    String startAyah,
+    String endAyah,
+    String completed,
+    String total,
   ) {
     return 'Ayahs $startAyah-$endAyah • $completed/$total';
   }
@@ -2260,7 +2260,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accuracyHardDesc => 'For advanced learners';
 
   @override
-  String accuracyRequiredPercent(int percent) {
+  String accuracyRequiredPercent(String percent) {
     return '$percent% required';
   }
 
@@ -2415,7 +2415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsFirstMissionToday => 'Your first mission today';
 
   @override
-  String kidsCompleteStageToday(int stage) {
+  String kidsCompleteStageToday(String stage) {
     return 'Complete stage $stage today';
   }
 
@@ -2424,7 +2424,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start listening and repeating, every step brings you closer to a new star.';
 
   @override
-  String kidsRemainingAyahs(int count) {
+  String kidsRemainingAyahs(String count) {
     return '$count ayahs remaining in this stage.';
   }
 
@@ -2442,7 +2442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String kidsGamifiedLevelProgress(int level, int progress) {
+  String kidsGamifiedLevelProgress(String level, String progress) {
     return 'Level $level — $progress/100';
   }
 
@@ -2473,22 +2473,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedMissions => 'Missions';
 
   @override
-  String kidsGamifiedHouseTitle(int number) {
+  String kidsGamifiedHouseTitle(String number) {
     return 'Memorization House $number';
   }
 
   @override
-  String kidsGamifiedReviewHouseTitle(int number) {
+  String kidsGamifiedReviewHouseTitle(String number) {
     return 'Review House $number';
   }
 
   @override
-  String kidsGamifiedAyahRange(int startAyah, int endAyah) {
+  String kidsGamifiedAyahRange(String startAyah, String endAyah) {
     return 'Ayahs $startAyah-$endAyah';
   }
 
   @override
-  String kidsGamifiedProgressCount(int completed, int total) {
+  String kidsGamifiedProgressCount(String completed, String total) {
     return '$completed/$total';
   }
 
@@ -2697,7 +2697,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String kidsGamifiedEarnedGems(int count) {
+  String kidsGamifiedEarnedGems(String count) {
     return '+$count gems';
   }
 
@@ -2780,7 +2780,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'MashaAllah! You completed Today\'s Plan';
 
   @override
-  String dailyPlanCompletedSubtitle(int count) {
+  String dailyPlanCompletedSubtitle(String count) {
     return 'You completed $count items successfully.\nKeep going with this steady pace.';
   }
 
@@ -2794,7 +2794,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanBlessingAction => 'May Allah bless you ✨';
 
   @override
-  String dailyPlanRatingExcellent(int ayahNumber) {
+  String dailyPlanRatingExcellent(String ayahNumber) {
     return '✅ Excellent! Ayah $ayahNumber was scheduled for a longer review interval';
   }
 
@@ -2803,7 +2803,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '⏰ Good effort, this will be reviewed after a moderate interval';
 
   @override
-  String dailyPlanRatingWeak(int ayahNumber) {
+  String dailyPlanRatingWeak(String ayahNumber) {
     return '🔁 Needs practice, ayah $ayahNumber will be reviewed tomorrow';
   }
 
@@ -2881,7 +2881,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewModeMixed => 'Mixed';
 
   @override
-  String listeningReviewLastScore(int correct, int total) {
+  String listeningReviewLastScore(String correct, String total) {
     return 'Last round: $correct of $total';
   }
 
@@ -2900,12 +2900,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewRetry => 'Try again';
 
   @override
-  String listeningReviewQuestionProgress(int current, int total) {
+  String listeningReviewQuestionProgress(String current, String total) {
     return 'Question $current of $total';
   }
 
   @override
-  String listeningReviewReplay(int remaining) {
+  String listeningReviewReplay(String remaining) {
     return 'Replay ($remaining)';
   }
 
@@ -2952,7 +2952,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewResultTitle => 'Round complete';
 
   @override
-  String listeningReviewResultScore(int correct, int total) {
+  String listeningReviewResultScore(String correct, String total) {
     return '$correct of $total';
   }
 
@@ -2963,7 +2963,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewNoWeakLinks => 'No weak links this round';
 
   @override
-  String listeningReviewAyahRef(String surah, int ayah) {
+  String listeningReviewAyahRef(String surah, String ayah) {
     return 'Surah $surah · Ayah $ayah';
   }
 
@@ -2974,12 +2974,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewAudioPlaying => 'Playing the ayah…';
 
   @override
-  String listeningReviewBreakdownWhichSurah(int correct, int total) {
+  String listeningReviewBreakdownWhichSurah(String correct, String total) {
     return 'Which surah?: $correct of $total';
   }
 
   @override
-  String listeningReviewBreakdownNextAyah(int correct, int total) {
+  String listeningReviewBreakdownNextAyah(String correct, String total) {
     return 'Continue the next ayah: $correct of $total';
   }
 
@@ -3043,10 +3043,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String parentDashboardSessionSummary(
-    int surahId,
-    int ayahNumber,
-    int repeats,
-    int points,
+    String surahId,
+    String ayahNumber,
+    String repeats,
+    String points,
   ) {
     return 'Surah $surahId • Ayah $ayahNumber\n$repeats repeats • $points points';
   }
@@ -3151,12 +3151,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentRewardErrorLimitReached => 'You can add up to 3 rewards.';
 
   @override
-  String childErrorNicknameInvalid(int max) {
+  String childErrorNicknameInvalid(String max) {
     return 'Enter a name of 1 to $max characters.';
   }
 
   @override
-  String childErrorAgeInvalid(int min, int max) {
+  String childErrorAgeInvalid(String min, String max) {
     return 'Choose an age between $min and $max.';
   }
 
@@ -3169,11 +3169,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Editing the child\'s details isn\'t available right now. Try again later.';
 
   @override
-  String childAgeYears(int age) {
+  String childAgeYears(int age, String ageText) {
     String _temp0 = intl.Intl.pluralLogic(
       age,
       locale: localeName,
-      other: '$age years old',
+      other: '$ageText years old',
       one: '1 year old',
     );
     return '$_temp0';
@@ -3201,7 +3201,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Today: no sessions yet. Encourage a short session.';
 
   @override
-  String parentDashboardTodayCompleted(int count) {
+  String parentDashboardTodayCompleted(String count) {
     return 'Today: the child completed $count sessions. Encourage the next review.';
   }
 
@@ -3252,31 +3252,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardNoRemoteChild => 'No remote child is linked yet.';
 
   @override
-  String parentDashboardRemoteChildSummary(int ayahs, int points) {
+  String parentDashboardRemoteChildSummary(String ayahs, String points) {
     return '$ayahs ayahs • $points points';
   }
 
   @override
   String parentDashboardMemorizedSummary(
-    int memorized,
-    int total,
-    int percent,
+    String memorized,
+    String total,
+    String percent,
   ) {
     return '$memorized/$total ayahs memorized • $percent%';
   }
 
   @override
-  String parentDashboardReviewsSummary(int completed, int overdue) {
+  String parentDashboardReviewsSummary(String completed, String overdue) {
     return '$completed reviews completed • $overdue overdue';
   }
 
   @override
-  String parentDashboardStreakSummary(int days) {
+  String parentDashboardStreakSummary(String days) {
     return 'Streak: $days days';
   }
 
   @override
-  String parentDashboardCertificatesSummary(int count) {
+  String parentDashboardCertificatesSummary(String count) {
     return '$count certificates earned';
   }
 
@@ -3341,12 +3341,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardNoKidsSessions => 'No kids sessions yet.';
 
   @override
-  String parentDashboardLogTitle(int surahId, int ayahNumber) {
+  String parentDashboardLogTitle(String surahId, String ayahNumber) {
     return 'Surah $surahId • Ayah $ayahNumber';
   }
 
   @override
-  String parentDashboardLogSubtitle(int repeats, int points) {
+  String parentDashboardLogSubtitle(String repeats, String points) {
     return '$repeats repeats • $points points';
   }
 
@@ -3395,7 +3395,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String dailyPlanAyahTitle(int ayahNumber) {
+  String dailyPlanAyahTitle(String ayahNumber) {
     return 'Ayah $ayahNumber';
   }
 
@@ -3405,7 +3405,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String dailyPlanRecordStats(int strength, int reviews) {
+  String dailyPlanRecordStats(String strength, String reviews) {
     return 'Strength: $strength • Reviews: $reviews';
   }
 
@@ -3589,7 +3589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanApproxMonths(int count) {
+  String customPlanApproxMonths(String count) {
     return '$count months approx.';
   }
 
@@ -3768,7 +3768,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsQuranBackToHome => 'Back to Kids Home';
 
   @override
-  String kidsQuranPageLabel(int pageNumber) {
+  String kidsQuranPageLabel(String pageNumber) {
     return 'Page $pageNumber';
   }
 
@@ -3820,7 +3820,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Review the full surah before finishing it';
 
   @override
-  String hifzReviewRangeHint(int startAyah, int endAyah) {
+  String hifzReviewRangeHint(String startAyah, String endAyah) {
     return 'Review ayahs $startAyah to $endAyah before moving to the next ayah';
   }
 
@@ -3845,7 +3845,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationDiscardSession => 'Discard session';
 
   @override
-  String hifzAyahNumberLabel(int ayahNumber) {
+  String hifzAyahNumberLabel(String ayahNumber) {
     return 'Ayah $ayahNumber';
   }
 
@@ -4167,12 +4167,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Celebrations when you complete a juz, a surah, or a full khatmah';
 
   @override
-  String notificationMilestoneJuzTitle(int juz) {
+  String notificationMilestoneJuzTitle(String juz) {
     return '🎉 Juz $juz memorized!';
   }
 
   @override
-  String notificationMilestoneJuzBody(int juz) {
+  String notificationMilestoneJuzBody(String juz) {
     return 'Masha\'Allah, tabarak Allah! You have completed memorizing all of Juz $juz. May Allah keep it firm in your heart.';
   }
 
@@ -4293,7 +4293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationWeeklyImpactTitle => 'Your impact this week 🌿';
 
   @override
-  String notificationWeeklyImpactBody(int count) {
+  String notificationWeeklyImpactBody(String count) {
     return '$count days of your week were with the Quran — every page leaves a lasting impact';
   }
 
@@ -5217,7 +5217,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialWhenUsefulTitle => 'When is it useful?';
 
   @override
-  String certificateCelebrationMultiple(int count) {
+  String certificateCelebrationMultiple(String count) {
     return 'You earned $count new certificates!';
   }
 
@@ -5325,7 +5325,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyDashboardTodaySummaryTitle => 'Today in Our Family';
 
   @override
-  String familyDashboardTodaySummary(int count, int points) {
+  String familyDashboardTodaySummary(String count, String points) {
     return '$count active today · $points pts';
   }
 
@@ -5333,7 +5333,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyDashboardLocalBadge => 'On this device';
 
   @override
-  String familyDashboardChildActiveToday(int points) {
+  String familyDashboardChildActiveToday(String points) {
     return '$points pts today';
   }
 
@@ -5349,7 +5349,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String childDetailTodayActivity(int sessions, int points) {
+  String childDetailTodayActivity(String sessions, String points) {
     return '$sessions sessions · $points pts today';
   }
 
@@ -5363,7 +5363,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get childDetailRecentSessions => 'Recent Sessions';
 
   @override
-  String childDetailRewards(int count) {
+  String childDetailRewards(String count) {
     return 'Rewards ($count)';
   }
 
@@ -5469,7 +5469,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2StumbledAyahTitle => 'Where did you stumble?';
 
   @override
-  String v2StumbledAyahOption(int ayahNumber) {
+  String v2StumbledAyahOption(String ayahNumber) {
     return 'Ayah $ayahNumber';
   }
 
@@ -5584,7 +5584,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2MemorizationHub => 'Memorization Hub';
 
   @override
-  String v2NextPlanItem(int count) {
+  String v2NextPlanItem(String count) {
     return 'Next in today\'s plan ($count left)';
   }
 
@@ -5627,7 +5627,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not play the ayah audio. Try again.';
 
   @override
-  String v2RemediationAttempts(int count) {
+  String v2RemediationAttempts(String count) {
     return 'Attempts needing remediation: $count';
   }
 
@@ -5677,7 +5677,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2ResultNeedsWork => 'This ayah needs review';
 
   @override
-  String v2ResultSimilarity(int score) {
+  String v2ResultSimilarity(String score) {
     return 'Match: $score%';
   }
 
@@ -5771,7 +5771,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The ayah did not match. Listen again and then record your recitation.';
 
   @override
-  String kidsRecitationCloseMatch(int matched, int total) {
+  String kidsRecitationCloseMatch(String matched, String total) {
     return 'So close! You got $matched of $total words right. Listen again and try once more.';
   }
 
@@ -5869,7 +5869,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSessionGoalTitle => 'Target session length';
 
   @override
-  String kidsSessionGoalValue(int minutes) {
+  String kidsSessionGoalValue(String minutes) {
     return '$minutes minutes';
   }
 
@@ -5883,7 +5883,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSetupWeeklyGoal => 'Weekly goal';
 
   @override
-  String kidsSetupWeeklyGoalValue(int sessions) {
+  String kidsSetupWeeklyGoalValue(String sessions) {
     return '$sessions sessions per week';
   }
 
@@ -5891,27 +5891,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSetupStartingSurah => 'Starting surah';
 
   @override
-  String parentCommitmentDays(int count) {
+  String parentCommitmentDays(String count) {
     return '$count commitment days';
   }
 
   @override
-  String parentDueReviews(int count) {
+  String parentDueReviews(String count) {
     return '$count reviews due';
   }
 
   @override
-  String parentNeedsSupport(int count) {
+  String parentNeedsSupport(String count) {
     return '$count ayahs need support';
   }
 
   @override
-  String parentAverageDuration(int minutes) {
+  String parentAverageDuration(String minutes) {
     return '$minutes min average';
   }
 
   @override
-  String parentHintUses(int count) {
+  String parentHintUses(String count) {
     return '$count hints used';
   }
 
@@ -6460,7 +6460,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xpLabel => 'XP';
 
   @override
-  String countOfTotal(int count, int total) {
+  String countOfTotal(String count, String total) {
     return '$count of $total';
   }
 
@@ -6489,7 +6489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStreakAtRisk => 'Your streak is at risk';
 
   @override
-  String homeFreezesAvailable(int count) {
+  String homeFreezesAvailable(String count) {
     return '$count freezes available';
   }
 
@@ -6613,7 +6613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeWeeklyReflectionTitle => 'This week';
 
   @override
-  String homeWeeklyReflectionBody(int days, int count) {
+  String homeWeeklyReflectionBody(String days, String count) {
     return '$days active days · $count activities';
   }
 
@@ -6631,7 +6631,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFirstRunMemorize => 'Start memorizing';
 
   @override
-  String homeChildStreak(int count) {
+  String homeChildStreak(String count) {
     return '$count-day streak';
   }
 
@@ -6660,7 +6660,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerMethodAuto => 'Automatic by country';
 
   @override
-  String homePrayerChip(String name, int minutes) {
+  String homePrayerChip(String name, String minutes) {
     return '$name in $minutes min';
   }
 
@@ -6847,7 +6847,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDailyChallenge => 'Daily challenge';
 
   @override
-  String homeDailyChallengePages(int count) {
+  String homeDailyChallengePages(String count) {
     return 'Complete $count pages today';
   }
 
@@ -6855,12 +6855,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDailyChallengeTasks => 'Complete today\'s tasks';
 
   @override
-  String homeChallengeProgress(int current, int total) {
+  String homeChallengeProgress(String current, String total) {
     return '$current of $total';
   }
 
   @override
-  String homeStreakDays(int count) {
+  String homeStreakDays(String count) {
     return '$count-day streak';
   }
 
@@ -6874,12 +6874,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeJourneyKhatmah => 'Khatmah';
 
   @override
-  String homeJourneyMemorizedAyahs(int count) {
+  String homeJourneyMemorizedAyahs(String count) {
     return '$count ayahs memorized';
   }
 
   @override
-  String homeJourneyKhatmahPages(int current, int total) {
+  String homeJourneyKhatmahPages(String current, String total) {
     return '$current of $total pages';
   }
 
@@ -7017,7 +7017,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCompanionActionNotYet => 'Not yet';
 
   @override
-  String prayerCompanionConfirmedCount(int confirmed, int total) {
+  String prayerCompanionConfirmedCount(String confirmed, String total) {
     return '$confirmed of $total confirmed';
   }
 
@@ -7071,7 +7071,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCompanionPreparationDisabled => 'Disabled';
 
   @override
-  String prayerCompanionMinutesValue(int minutes) {
+  String prayerCompanionMinutesValue(String minutes) {
     return '$minutes minutes';
   }
 
@@ -7195,11 +7195,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationHubReviewDueNone => 'No reviews due right now';
 
   @override
-  String dailyPlanNextReviewInDays(int count) {
+  String dailyPlanNextReviewInDays(int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count days',
+      other: '$countText days',
       one: '1 day',
       zero: 'today',
     );
@@ -7240,7 +7240,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldRequired => 'This field is required';
 
   @override
-  String fieldTooLong(int maxLength) {
+  String fieldTooLong(String maxLength) {
     return 'Cannot exceed $maxLength characters';
   }
 
@@ -7262,7 +7262,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressNextMilestoneTitle => 'Your next milestone';
 
   @override
-  String progressNextMilestoneRemaining(int remaining) {
+  String progressNextMilestoneRemaining(String remaining) {
     return '$remaining to go';
   }
 
@@ -7271,11 +7271,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Masha\'Allah! You\'ve unlocked every achievement';
 
   @override
-  String progressDueReviewsNudge(int count) {
+  String progressDueReviewsNudge(int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count ayahs are due for review',
+      other: '$countText ayahs are due for review',
       one: '1 ayah is due for review',
     );
     return '$_temp0';
@@ -7285,11 +7285,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressStartReview => 'Start review';
 
   @override
-  String progressActiveDays(int count) {
+  String progressActiveDays(int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active days',
+      other: '$countText active days',
       one: '1 active day',
       zero: 'No active days yet',
     );

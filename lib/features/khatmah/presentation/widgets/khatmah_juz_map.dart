@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_plan.dart';
 
 /// Thirty juz cells, each tinted by the share of its pages already read.
@@ -23,8 +22,7 @@ class KhatmahJuzMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = context.tokens.accent;
-    String number(int value) =>
-        context.isArabic ? MushafHizbHelper.toArabicNumber(value) : '$value';
+    String number(int value) => context.numText(value);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

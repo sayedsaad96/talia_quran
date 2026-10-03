@@ -1,3 +1,4 @@
+import 'dart:convert';
 // lib/core/services/hifz_migration_service.dart
 //
 // One-time migration from legacy Hifz AyahProgress records → AyahReviewRecord.
@@ -20,7 +21,6 @@
 //   —                               → AyahReviewRecord.createdByMode     = hifz
 //   —                               → AyahReviewRecord.lastRating        = null
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';

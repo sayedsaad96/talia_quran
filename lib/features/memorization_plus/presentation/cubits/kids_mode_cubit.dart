@@ -39,6 +39,8 @@ part 'kids_mode_state.dart';
 
 typedef KidsGuardianPinVerifier = Future<bool> Function(String pin);
 typedef KidsSessionPolicyLoader = Future<KidsSessionPolicy> Function();
+typedef KidsAudioSourceLoader =
+    Future<String> Function(int surahId, int ayahNumber);
 
 /// K15 — reads the local kids session log for the daily-limit gate.
 /// Optional: when unavailable (or throwing) the limit fails open.
@@ -62,6 +64,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     V2SessionProgressAdapter? progressAdapter,
     ActivityEventRecorder? activityRecorder,
     KidsReviewOutcomeCommitter? reviewOutcomeCommitter,
+    AudioPlayer? audioPlayer,
+    KidsAudioSourceLoader? audioSourceLoader,
   ]) : _activityRecorder = activityRecorder,
        _reviewOutcomeCommitter = reviewOutcomeCommitter,
        _appSessionService = appSessionService,
@@ -69,6 +73,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
        _sessionPolicyLoader = sessionPolicyLoader,
        _kidsSessionLogsLoader = kidsSessionLogsLoader,
        _progressAdapter = progressAdapter,
+       _player = audioPlayer ?? AudioPlayer(),
+       _audioSourceLoader =
+           audioSourceLoader ?? AudioCacheService.instance.getAudioSource,
        super(const KidsModeInitial()) {
     _recitationRecorder = recitationRecorder ?? KidsSpeechRecitationRecorder();
     AudioLifecycleManager.instance.register(_player);
@@ -80,9 +87,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // Track buffering state separately so the UI shows a precise loading indicator
     _bufferingSub = _player.processingStateStream.listen((ps) {
       if (state is KidsModeLoaded) {
+        if (_closingAudio) return;
+        final loaded = state as KidsModeLoaded;
         final buffering =
-            ps == ProcessingState.loading || ps == ProcessingState.buffering;
-        emit((state as KidsModeLoaded).copyWith(isBuffering: buffering));
+            loaded.isPlaying &&
+            (ps == ProcessingState.loading || ps == ProcessingState.buffering);
+        emit(loaded.copyWith(isBuffering: buffering));
       }
     });
   }
@@ -103,7 +113,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final ActivityEventRecorder? _activityRecorder;
   final KidsReviewOutcomeCommitter? _reviewOutcomeCommitter;
   late final KidsRecitationRecorder _recitationRecorder;
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player;
+  final KidsAudioSourceLoader _audioSourceLoader;
   late final StreamSubscription<PlayerState> _playerSub;
   late final StreamSubscription<ProcessingState> _bufferingSub;
 
@@ -123,6 +134,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   ) => '$surahId:$ayahNumber:${type.name}';
 
   int _loopCount = 0;
+  int _playbackGeneration = 0;
+  bool _closingAudio = false;
+  Future<void>? _audioStopFuture;
   final Set<String> _completionsInFlight = <String>{};
 
   /// Listen-before-recite repetitions, resolved from the age-band policy in
@@ -403,11 +417,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   Future<void> playAudio() async {
-    if (state is! KidsModeLoaded) return;
+    final pendingStop = _audioStopFuture;
+    if (pendingStop != null) await pendingStop;
+    if (_closingAudio || state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
     // Playing during hidden-text recitation would give the answer away
     // (Product Rules, Phase 3); "remind me" is the honest way back (K28).
     if (st.sessionState.phase.textHidden) return;
+    final generation = ++_playbackGeneration;
 
     // An optional replay after the mandatory listen gate has opened must not
     // re-close the microphone or regress the loop progress dots (M1); only a
@@ -419,27 +436,39 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       st.copyWith(
         isPlaying: true,
         isBuffering: true,
-        currentLoop: _loopCount < maxLoops ? 1 : maxLoops,
+        currentLoop: min(_loopCount, maxLoops),
         clearAudioError: true,
       ),
     );
-    await _playAyah(st.surahId, st.ayahNumber);
+    await _playAyah(st.surahId, st.ayahNumber, generation);
   }
 
-  Future<void> _playAyah(int surahId, int ayahNumber) async {
+  bool _isCurrentPlayback(int generation) =>
+      !isClosed &&
+      !_closingAudio &&
+      generation == _playbackGeneration &&
+      state is KidsModeLoaded &&
+      (state as KidsModeLoaded).isPlaying;
+
+  Future<void> _playAyah(int surahId, int ayahNumber, int generation) async {
     try {
       // Cache-first playback lets optional child-requested replays reuse the
       // same source without creating an automatic playback loop.
-      final source = await AudioCacheService.instance.getAudioSource(
-        surahId,
-        ayahNumber,
-      );
-      await AudioCacheService.playFromSource(_player, source);
+      final source = await _audioSourceLoader(surahId, ayahNumber);
+      if (!_isCurrentPlayback(generation)) return;
+      if (source.startsWith('http://') || source.startsWith('https://')) {
+        await _player.setUrl(source);
+      } else {
+        await _player.setFilePath(source);
+      }
+      if (!_isCurrentPlayback(generation)) return;
+      await _player.play();
     } catch (_) {
-      if (state is KidsModeLoaded) {
+      if (_isCurrentPlayback(generation)) {
         emit(
           (state as KidsModeLoaded).copyWith(
             isPlaying: false,
+            isBuffering: false,
             audioError: CubitMessageCodes.kidsAudioPlaybackFailed,
           ),
         );
@@ -450,15 +479,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   void _onPlaybackCompleted() {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
-
+    if (_closingAudio || !st.isPlaying) return;
     _loopCount++;
     if (_loopCount < maxLoops) {
-      emit(st.copyWith(currentLoop: _loopCount + 1, clearAudioError: true));
-      _playAyah(st.surahId, st.ayahNumber);
+      emit(st.copyWith(currentLoop: _loopCount, clearAudioError: true));
+      _playAyah(st.surahId, st.ayahNumber, _playbackGeneration);
     } else {
       emit(
         st.copyWith(
           isPlaying: false,
+          isBuffering: false,
           currentLoop: maxLoops,
           clearAudioError: true,
         ),
@@ -466,8 +496,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  Future<void> stopAudio() async {
-    await _player.stop();
+  Future<void> stopAudio() =>
+      _audioStopFuture ??= _stopAudio().whenComplete(() {
+        _audioStopFuture = null;
+      });
+
+  Future<void> _stopAudio() async {
+    _playbackGeneration++;
+    // Reject late playback completions while the player shuts down.
     if (state is KidsModeLoaded) {
       emit(
         (state as KidsModeLoaded).copyWith(
@@ -476,6 +512,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ),
       );
     }
+    await _player.stop();
   }
 
   /// Hides the ayah so the child recalls it before reciting ("try from
@@ -1025,15 +1062,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   @override
   Future<void> close() async {
+    _closingAudio = true;
+    _playbackGeneration++;
     final current = state;
     if (current is KidsModeLoaded && !current.isCompleted) {
       await _saveKidsSession(current.sessionState);
     }
     AudioLifecycleManager.instance.unregister(_player);
     _recordingTimer?.cancel();
-    await _player.stop();
     await _playerSub.cancel();
     await _bufferingSub.cancel();
+    final pendingStop = _audioStopFuture;
+    if (pendingStop != null) await pendingStop;
+    await _player.stop();
     await _player.dispose();
     await _recitationRecorder.dispose();
     return super.close();

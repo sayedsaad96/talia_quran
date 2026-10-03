@@ -16,6 +16,8 @@ import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/services/home_occasion_service.dart';
 import '../cubits/home_cubit.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class HomeContextBar extends StatelessWidget {
   const HomeContextBar({super.key, required this.state, required this.isDark});
 
@@ -100,7 +102,9 @@ class HomeContextBar extends StatelessWidget {
                       onPressed: () => context.push(AppRoutes.quranSearch),
                       icon: const Icon(Icons.search_rounded),
                       color: Colors.white.withValues(alpha: 0.82),
-                      style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
                     ),
                     IconButton(
                       tooltip: context.l10n.settings,
@@ -130,9 +134,7 @@ class HomeContextBar extends StatelessWidget {
                 ],
                 if (state.prayerSnapshot != null) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  _PrayerCapsule(
-                    snapshot: state.prayerSnapshot!,
-                  ),
+                  _PrayerCapsule(snapshot: state.prayerSnapshot!),
                 ],
               ],
             ),
@@ -311,27 +313,33 @@ class _PrayerCapsule extends StatelessWidget {
   final PrayerTimesSnapshot snapshot;
 
   String _localizedName(BuildContext context) => switch (snapshot.nextName) {
-        'fajr' => context.l10n.prayerFajr,
-        'sunrise' => context.l10n.prayerSunrise,
-        'dhuhr' => context.l10n.prayerDhuhr,
-        'asr' => context.l10n.prayerAsr,
-        'maghrib' => context.l10n.prayerMaghrib,
-        'isha' => context.l10n.prayerIsha,
-        _ => snapshot.nextName,
-      };
+    'fajr' => context.l10n.prayerFajr,
+    'sunrise' => context.l10n.prayerSunrise,
+    'dhuhr' => context.l10n.prayerDhuhr,
+    'asr' => context.l10n.prayerAsr,
+    'maghrib' => context.l10n.prayerMaghrib,
+    'isha' => context.l10n.prayerIsha,
+    _ => snapshot.nextName,
+  };
 
-  String _formattedTime() {
+  String _formattedTime(BuildContext context) {
     final t = snapshot.nextTime;
     final h = t.hour > 12 ? t.hour - 12 : t.hour;
     final m = t.minute.toString().padLeft(2, '0');
     final period = t.hour >= 12 ? 'م' : 'ص';
-    return '$h:$m $period';
+    return context.digitText('$h:$m $period');
   }
 
   @override
   Widget build(BuildContext context) {
     final name = _localizedName(context);
-    final remaining = context.l10n.homePrayerChip(name, snapshot.minutesUntil);
+    final remaining = context.l10n.homePrayerChip(
+      name,
+      LocaleNumberFormatter.format(
+        (snapshot.minutesUntil).toString(),
+        context.l10n.localeName,
+      ),
+    );
 
     return Semantics(
       label: remaining,
@@ -340,21 +348,15 @@ class _PrayerCapsule extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.mosque_rounded,
-              size: 16,
-              color: Colors.white,
-            ),
+            const Icon(Icons.mosque_rounded, size: 16, color: Colors.white),
             const SizedBox(width: 6),
             Text(
-              '$name  ${_formattedTime()}',
+              '$name  ${_formattedTime(context)}',
               style: AppTypography.labelMedium.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -371,7 +373,7 @@ class _PrayerCapsule extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '${snapshot.minutesUntil} د',
+              '${context.numText(snapshot.minutesUntil)} د',
               style: AppTypography.labelSmall.copyWith(
                 color: Colors.white.withValues(alpha: 0.8),
               ),

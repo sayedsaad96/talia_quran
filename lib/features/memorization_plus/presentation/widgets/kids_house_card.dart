@@ -8,6 +8,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// 2.5D gamified destination stop representing a Quran memorization house
 /// along the adventure path.
 class KidsHouseCard extends StatelessWidget {
@@ -41,8 +43,18 @@ class KidsHouseCard extends StatelessWidget {
     final reducedMotion = MediaQuery.of(context).disableAnimations;
 
     final title = _isReview
-        ? l10n.kidsGamifiedReviewHouseTitle(stage.stageNumber)
-        : l10n.kidsGamifiedHouseTitle(stage.stageNumber);
+        ? l10n.kidsGamifiedReviewHouseTitle(
+            LocaleNumberFormatter.format(
+              (stage.stageNumber).toString(),
+              l10n.localeName,
+            ),
+          )
+        : l10n.kidsGamifiedHouseTitle(
+            LocaleNumberFormatter.format(
+              (stage.stageNumber).toString(),
+              l10n.localeName,
+            ),
+          );
 
     final visualStars = _calculateVisualStars(stage);
 
@@ -123,8 +135,14 @@ class KidsHouseCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       l10n.kidsGamifiedAyahRange(
-                        stage.startAyah,
-                        stage.endAyah,
+                        LocaleNumberFormatter.format(
+                          (stage.startAyah).toString(),
+                          l10n.localeName,
+                        ),
+                        LocaleNumberFormatter.format(
+                          (stage.endAyah).toString(),
+                          l10n.localeName,
+                        ),
                       ),
                       textAlign: TextAlign.center,
                       style: AppTypography.labelSmall.copyWith(
@@ -155,8 +173,14 @@ class KidsHouseCard extends StatelessWidget {
                     // Progress Ayah Count
                     Text(
                       l10n.kidsGamifiedProgressCount(
-                        stage.completedCount,
-                        stage.totalAyahs,
+                        LocaleNumberFormatter.format(
+                          (stage.completedCount).toString(),
+                          l10n.localeName,
+                        ),
+                        LocaleNumberFormatter.format(
+                          (stage.totalAyahs).toString(),
+                          l10n.localeName,
+                        ),
                       ),
                       style: AppTypography.labelSmall.copyWith(
                         color: _secondaryTextColor(stage.status),
@@ -433,7 +457,7 @@ class _StageNumberBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        '$stageNumber',
+        context.numText(stageNumber),
         style: AppTypography.labelMedium.copyWith(
           color: textColor,
           fontWeight: FontWeight.bold,
@@ -685,15 +709,17 @@ class _CelebrationGlowState extends State<_CelebrationGlow>
         child: widget.child,
       );
     }
-    return AnimatedBuilder(
-      key: const ValueKey('kids-house-celebration'),
-      animation: _controller,
-      builder: (context, child) {
-        // Rises and fades back: sin(πt) peaks mid-way and ends at zero.
-        final strength = math.sin(math.pi * _controller.value);
-        return DecoratedBox(decoration: _glow(strength), child: child);
-      },
-      child: widget.child,
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        key: const ValueKey('kids-house-celebration'),
+        animation: _controller,
+        builder: (context, child) {
+          // Rises and fades back: sin(πt) peaks mid-way and ends at zero.
+          final strength = math.sin(math.pi * _controller.value);
+          return DecoratedBox(decoration: _glow(strength), child: child);
+        },
+        child: widget.child,
+      ),
     );
   }
 }

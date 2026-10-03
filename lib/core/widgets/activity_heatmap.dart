@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../extensions/context_extensions.dart';
 import '../constants/app_spacing.dart';
 
+import '../utils/locale_number_formatter.dart';
+
 class ActivityHeatmap extends StatelessWidget {
   const ActivityHeatmap({
     super.key,
@@ -72,7 +74,13 @@ class ActivityHeatmap extends StatelessWidget {
               ),
             ),
             Text(
-              context.l10n.progressActiveDays(activeDays),
+              context.l10n.progressActiveDays(
+                activeDays,
+                LocaleNumberFormatter.format(
+                  (activeDays).toString(),
+                  context.l10n.localeName,
+                ),
+              ),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w700,
@@ -90,7 +98,7 @@ class ActivityHeatmap extends StatelessWidget {
               return Tooltip(
                 message:
                     '${localizations.formatMediumDate(day)}\n'
-                    '${context.l10n.activityTooltip(count)}',
+                    '${context.l10n.activityTooltip(LocaleNumberFormatter.format((count).toString(), context.l10n.localeName))}',
                 child: Container(
                   width: 10,
                   height: 10,

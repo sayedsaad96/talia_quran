@@ -167,7 +167,7 @@ class HomeContinueCard extends StatelessWidget {
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Text(
-                              '$percent%',
+                              '${context.numText(percent)}%',
                               style: AppTypography.labelMedium.copyWith(
                                 color: skin.gold,
                                 fontWeight: FontWeight.w800,

@@ -11,14 +11,15 @@ class _AnimatedCount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    if (reduceMotion) return Text('$value', style: style);
+    if (reduceMotion) return Text(context.numText(value), style: style);
     return TweenAnimationBuilder<double>(
       // `begin` only applies to the first build; later value changes
       // animate from wherever the count currently is.
       tween: Tween<double>(begin: 0, end: value.toDouble()),
       duration: const Duration(milliseconds: 700),
       curve: Curves.easeOutCubic,
-      builder: (context, v, _) => Text('${v.round()}', style: style),
+      builder: (context, v, _) =>
+          Text(context.numText(v.round()), style: style),
     );
   }
 }
@@ -33,7 +34,7 @@ class _StreakCard extends StatelessWidget {
     final unit = context.l10n.progressStreakDaysUnit(streakDays);
     return Semantics(
       container: true,
-      label: '${context.l10n.streak}: $streakDays $unit',
+      label: '${context.l10n.streak}: ${context.numText(streakDays)} $unit',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -122,7 +123,7 @@ class _StatCard extends StatelessWidget {
     return Semantics(
       container: true,
       button: onTap != null,
-      label: '$label: $value $unit',
+      label: '$label: ${context.numText(value)} $unit',
       excludeSemantics: true,
       child: Material(
         color: surface,
@@ -249,7 +250,7 @@ class _NextMilestoneCard extends StatelessWidget {
       button: true,
       label:
           '${context.l10n.progressNextMilestoneTitle}: $title, '
-          '${context.l10n.countOfTotal(milestone.currentValue, milestone.targetValue)}',
+          '${context.l10n.countOfTotal(LocaleNumberFormatter.format((milestone.currentValue).toString(), context.l10n.localeName), LocaleNumberFormatter.format((milestone.targetValue).toString(), context.l10n.localeName))}',
       excludeSemantics: true,
       child: Material(
         color: accent.withValues(alpha: 0.08),
@@ -311,8 +312,14 @@ class _NextMilestoneCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               context.l10n.countOfTotal(
-                                milestone.currentValue,
-                                milestone.targetValue,
+                                LocaleNumberFormatter.format(
+                                  (milestone.currentValue).toString(),
+                                  context.l10n.localeName,
+                                ),
+                                LocaleNumberFormatter.format(
+                                  (milestone.targetValue).toString(),
+                                  context.l10n.localeName,
+                                ),
                               ),
                               style: AppTypography.labelSmall.copyWith(
                                 color: context.tokens.textSecondary,
@@ -321,7 +328,10 @@ class _NextMilestoneCard extends StatelessWidget {
                           ),
                           Text(
                             context.l10n.progressNextMilestoneRemaining(
-                              milestone.remaining,
+                              LocaleNumberFormatter.format(
+                                (milestone.remaining).toString(),
+                                context.l10n.localeName,
+                              ),
                             ),
                             style: AppTypography.labelSmall.copyWith(
                               color: context.tokens.textSecondary,
@@ -380,7 +390,13 @@ class _DueReviewsBanner extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  context.l10n.progressDueReviewsNudge(dueCount),
+                  context.l10n.progressDueReviewsNudge(
+                    dueCount,
+                    LocaleNumberFormatter.format(
+                      (dueCount).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   style: AppTypography.bodySmall.copyWith(
                     color: context.tokens.textPrimary,
                     fontWeight: FontWeight.w600,

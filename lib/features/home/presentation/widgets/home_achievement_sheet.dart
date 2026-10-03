@@ -26,8 +26,7 @@ class HomeAchievementSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeSkin =
-        skin ?? HomeSkin.of(context);
+    final themeSkin = skin ?? HomeSkin.of(context);
     final xpService = getIt<XpService>();
     final level = xpService.getCurrentLevel(totalXp);
     final progressRatio = xpService.progressToNextLevel(totalXp);
@@ -181,7 +180,7 @@ class HomeAchievementSheet extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                '$totalXp ${context.l10n.xpLabel}',
+                                '${context.numText(totalXp)} ${context.l10n.xpLabel}',
                                 style: AppTypography.labelMedium.copyWith(
                                   color: themeSkin.gold,
                                   fontWeight: FontWeight.w700,
@@ -192,22 +191,25 @@ class HomeAchievementSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusFull,
+                          ),
                           child: LinearProgressIndicator(
                             value: progressRatio.clamp(0.0, 1.0),
                             minHeight: 8,
-                            backgroundColor:
-                                themeSkin.glassBorder.withValues(alpha: 0.2),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(themeSkin.gold),
+                            backgroundColor: themeSkin.glassBorder.withValues(
+                              alpha: 0.2,
+                            ),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              themeSkin.gold,
+                            ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           context.isArabic
-                              ? '${(progressRatio * 100).toInt()}% نحو المستوى التالي'
-                              : '${(progressRatio * 100).toInt()}% to next rank',
+                              ? '${context.numText((progressRatio * 100).toInt())}% نحو المستوى التالي'
+                              : '${context.numText((progressRatio * 100).toInt())}% to next rank',
                           style: AppTypography.labelSmall.copyWith(
                             color: themeSkin.textSecondary,
                           ),
@@ -218,7 +220,9 @@ class HomeAchievementSheet extends StatelessWidget {
                   const SizedBox(height: AppSpacing.lg),
                   // Achievements list
                   Text(
-                    context.isArabic ? 'الأوسمة والإنجازات' : 'Badges & Achievements',
+                    context.isArabic
+                        ? 'الأوسمة والإنجازات'
+                        : 'Badges & Achievements',
                     style: AppTypography.titleSmall.copyWith(
                       color: themeSkin.textPrimary,
                       fontWeight: FontWeight.w700,
@@ -227,7 +231,9 @@ class HomeAchievementSheet extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   if (progress.achievements.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
                       child: Center(
                         child: Text(
                           context.isArabic
@@ -242,13 +248,16 @@ class HomeAchievementSheet extends StatelessWidget {
                   else
                     for (final achievement in progress.achievements) ...[
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xs,
+                        ),
                         child: Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: themeSkin.glassFill,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
                             border: Border.all(color: themeSkin.glassBorder),
                           ),
                           child: Row(
@@ -257,7 +266,9 @@ class HomeAchievementSheet extends StatelessWidget {
                                 radius: 18,
                                 backgroundColor: achievement.isUnlocked
                                     ? themeSkin.gold.withValues(alpha: 0.2)
-                                    : themeSkin.textSecondary.withValues(alpha: 0.1),
+                                    : themeSkin.textSecondary.withValues(
+                                        alpha: 0.1,
+                                      ),
                                 child: Icon(
                                   achievement.isUnlocked
                                       ? Icons.military_tech_rounded
@@ -274,14 +285,18 @@ class HomeAchievementSheet extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      context.localizedAchievementTitle(achievement),
+                                      context.localizedAchievementTitle(
+                                        achievement,
+                                      ),
                                       style: AppTypography.titleSmall.copyWith(
                                         color: themeSkin.textPrimary,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                     Text(
-                                      context.localizedAchievementDescription(achievement),
+                                      context.localizedAchievementDescription(
+                                        achievement,
+                                      ),
                                       style: AppTypography.bodySmall.copyWith(
                                         color: themeSkin.textSecondary,
                                       ),

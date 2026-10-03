@@ -1,3 +1,5 @@
+import 'locale_number_formatter.dart';
+
 /// Utility for formatting remaining time until next prayer in Arabic and English.
 ///
 /// Follows standard Arabic grammatical rules:
@@ -109,7 +111,4 @@ String _arabicMinutesConjunction(int minutes) {
 
 /// Eastern Arabic digits for Arabic text, like every other number in the
 /// Arabic UI ("53 دقيقة" → "٥٣ دقيقة").
-String _arabicDigits(String text) => text.replaceAllMapped(
-  RegExp('[0-9]'),
-  (match) => String.fromCharCode(0x0660 + int.parse(match[0]!)),
-);
+String _arabicDigits(String text) => LocaleNumberFormatter.format(text, 'ar');

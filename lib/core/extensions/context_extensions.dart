@@ -1,9 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/talia_tokens.dart';
-import '../utils/mushaf_hizb_helper.dart';
+import '../utils/locale_number_formatter.dart';
+
 
 extension BuildContextX on BuildContext {
   // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -24,6 +24,7 @@ extension BuildContextX on BuildContext {
   bool get isArabic => Localizations.localeOf(this).languageCode == 'ar';
   TextDirection get textDirection =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
+
   /// Separator between short facts in one line. The middle dot reads as the
   /// Eastern Arabic zero (٠) next to Arabic digits («٢٠ ·» looks like ٢٠٠),
   /// so Arabic uses its own comma.
@@ -37,11 +38,16 @@ extension BuildContextX on BuildContext {
   /// convention already used on the Mushaf, khatmah and Home (N7), Western
   /// otherwise. Pass the result as a message's `…Text` placeholder; the int
   /// itself still selects the plural form.
-  String numText(int number) {
-    if (!isArabic) return '$number';
-    final digits = MushafHizbHelper.toArabicNumber(number.abs());
-    return number < 0 ? '-$digits' : digits;
-  }
+  String numText(int number) => LocaleNumberFormatter.number(
+    number,
+    Localizations.localeOf(this).languageCode,
+  );
+
+  /// Shapes a preformatted numeric value, such as a duration or percentage.
+  String digitText(String numericText) => LocaleNumberFormatter.format(
+    numericText,
+    Localizations.localeOf(this).languageCode,
+  );
 
   // ─── Sizing ──────────────────────────────────────────────────────────────────
   Size get screenSize => MediaQuery.sizeOf(this);

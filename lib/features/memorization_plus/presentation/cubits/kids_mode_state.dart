@@ -56,6 +56,8 @@ class KidsModeLoaded extends KidsModeState {
   final V2SessionState sessionState;
   final KidsProgress progress;
   final bool isPlaying;
+
+  /// Completed required listens, capped at [maxLoops]; never the active ordinal.
   final int currentLoop;
   final int maxLoops;
   final bool isCompleted;

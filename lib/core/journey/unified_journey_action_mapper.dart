@@ -9,6 +9,8 @@ import 'journey_presentation_data.dart';
 import 'resume_session_presentation_input.dart';
 import 'resume_session_presentation_mapper.dart';
 
+import '../utils/locale_number_formatter.dart';
+
 class UnifiedJourneyActionMapper {
   const UnifiedJourneyActionMapper();
 
@@ -82,9 +84,20 @@ class UnifiedJourneyActionMapper {
             ? action.metadata['surahNameAr']
             : action.metadata['surahNameEn'];
         if (pageStr != null && surahName != null && surahName.isNotEmpty) {
-          subtitle = context.l10n.homeDailyWirdSurahPage(pageStr, surahName);
+          subtitle = context.l10n.homeDailyWirdSurahPage(
+            LocaleNumberFormatter.format(
+              (pageStr).toString(),
+              context.l10n.localeName,
+            ),
+            surahName,
+          );
         } else if (pageStr != null) {
-          subtitle = context.l10n.homeDailyWirdPage(pageStr);
+          subtitle = context.l10n.homeDailyWirdPage(
+            LocaleNumberFormatter.format(
+              (pageStr).toString(),
+              context.l10n.localeName,
+            ),
+          );
         } else {
           subtitle = context.l10n.dailyWirdSubtitle;
         }
@@ -146,8 +159,22 @@ class UnifiedJourneyActionMapper {
     final ayahLabel = coach.startAyah == null
         ? ''
         : coach.endAyah == null || coach.endAyah == coach.startAyah
-        ? context.l10n.journeyAyahLabel(coach.startAyah!)
-        : context.l10n.journeyAyahsLabel(coach.startAyah!, coach.endAyah!);
+        ? context.l10n.journeyAyahLabel(
+            LocaleNumberFormatter.format(
+              (coach.startAyah!).toString(),
+              context.l10n.localeName,
+            ),
+          )
+        : context.l10n.journeyAyahsLabel(
+            LocaleNumberFormatter.format(
+              (coach.startAyah!).toString(),
+              context.l10n.localeName,
+            ),
+            LocaleNumberFormatter.format(
+              (coach.endAyah!).toString(),
+              context.l10n.localeName,
+            ),
+          );
     final values = switch (coach.kind) {
       SmartCoachRecommendationKind.reviewDueNear => (
         context.l10n.journeyReviewBeforeNewTitle,
@@ -172,8 +199,14 @@ class UnifiedJourneyActionMapper {
       SmartCoachRecommendationKind.continueDailyPlan => (
         context.l10n.journeyContinueDailyPlanTitle,
         context.l10n.journeyContinueDailyPlanDesc(
-          coach.completedCount ?? 0,
-          coach.totalCount ?? 0,
+          LocaleNumberFormatter.format(
+            (coach.completedCount ?? 0).toString(),
+            context.l10n.localeName,
+          ),
+          LocaleNumberFormatter.format(
+            (coach.totalCount ?? 0).toString(),
+            context.l10n.localeName,
+          ),
         ),
         Icons.today_rounded,
       ),

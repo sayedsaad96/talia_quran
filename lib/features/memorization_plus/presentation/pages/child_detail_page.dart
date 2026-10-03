@@ -15,6 +15,8 @@ import '../widgets/kids_policy_controls.dart';
 import '../widgets/parent_support_tip.dart';
 import 'family_dashboard_page.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Route payload for [ChildDetailPage]. The page is pushed as its own root
 /// route, outside the dashboard's widget subtree, so the dashboard's cubit
 /// travels with the route instead of being looked up from ancestors.
@@ -197,11 +199,9 @@ class _ChildDetailBody extends StatelessWidget {
                   )
                 : KidsPolicyEditor(
                     policy: summary.policy ?? const KidsChildPolicy(),
-                    onSave: (policy) =>
-                        context.read<FamilyDashboardCubit>().saveChildPolicy(
-                          policy,
-                          childId: child.childUserId,
-                        ),
+                    onSave: (policy) => context
+                        .read<FamilyDashboardCubit>()
+                        .saveChildPolicy(policy, childId: child.childUserId),
                   ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -306,7 +306,13 @@ class _ChildHeaderCard extends StatelessWidget {
                 ),
                 if (child.childAge case final age?)
                   Text(
-                    context.l10n.childAgeYears(age),
+                    context.l10n.childAgeYears(
+                      age,
+                      LocaleNumberFormatter.format(
+                        (age).toString(),
+                        context.l10n.localeName,
+                      ),
+                    ),
                     style: AppTypography.bodyMedium.copyWith(
                       color: Colors.white.withValues(alpha: 0.85),
                     ),
@@ -351,8 +357,14 @@ class _TodayCard extends StatelessWidget {
       child: child.isActiveToday
           ? Text(
               context.l10n.childDetailTodayActivity(
-                child.todaySessions,
-                child.todayPoints,
+                LocaleNumberFormatter.format(
+                  (child.todaySessions).toString(),
+                  context.l10n.localeName,
+                ),
+                LocaleNumberFormatter.format(
+                  (child.todayPoints).toString(),
+                  context.l10n.localeName,
+                ),
               ),
               style: AppTypography.bodyMedium,
             )
@@ -377,15 +389,24 @@ class _MetricsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _MetricChip(icon: '⭐', label: 'Lv.${child.currentLevel}'),
+          child: _MetricChip(
+            icon: '⭐',
+            label: 'Lv.${context.numText(child.currentLevel)}',
+          ),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: '🌟', label: '${child.starsEarned}'),
+          child: _MetricChip(
+            icon: '🌟',
+            label: context.numText(child.starsEarned),
+          ),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: '🔥', label: '${child.currentStreak}'),
+          child: _MetricChip(
+            icon: '🔥',
+            label: context.numText(child.currentStreak),
+          ),
         ),
       ],
     );
@@ -433,25 +454,48 @@ class _LearningSupportCard extends StatelessWidget {
         children: [
           _SupportMetric(
             icon: Icons.calendar_today_rounded,
-            label: context.l10n.parentCommitmentDays(dashboard.commitmentDays),
+            label: context.l10n.parentCommitmentDays(
+              LocaleNumberFormatter.format(
+                (dashboard.commitmentDays).toString(),
+                context.l10n.localeName,
+              ),
+            ),
           ),
           _SupportMetric(
             icon: Icons.replay_rounded,
-            label: context.l10n.parentDueReviews(dashboard.dueReviewCount),
+            label: context.l10n.parentDueReviews(
+              LocaleNumberFormatter.format(
+                (dashboard.dueReviewCount).toString(),
+                context.l10n.localeName,
+              ),
+            ),
           ),
           _SupportMetric(
             icon: Icons.volunteer_activism_rounded,
             label: context.l10n.parentNeedsSupport(
-              dashboard.ayahsNeedingSupport,
+              LocaleNumberFormatter.format(
+                (dashboard.ayahsNeedingSupport).toString(),
+                context.l10n.localeName,
+              ),
             ),
           ),
           _SupportMetric(
             icon: Icons.timer_outlined,
-            label: context.l10n.parentAverageDuration(averageMinutes),
+            label: context.l10n.parentAverageDuration(
+              LocaleNumberFormatter.format(
+                (averageMinutes).toString(),
+                context.l10n.localeName,
+              ),
+            ),
           ),
           _SupportMetric(
             icon: Icons.lightbulb_outline_rounded,
-            label: context.l10n.parentHintUses(dashboard.totalHintUses),
+            label: context.l10n.parentHintUses(
+              LocaleNumberFormatter.format(
+                (dashboard.totalHintUses).toString(),
+                context.l10n.localeName,
+              ),
+            ),
           ),
           // K35: a number needs a next step the parent can take.
           if (dashboard.ayahsNeedingSupport > 0) const ParentSupportTip(),
@@ -495,11 +539,11 @@ class _MemorizationProgressCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${production.totalMemorizedAyahs}/${production.totalAyahsTracked} ${context.l10n.ayahs}',
+                '${context.numText(production.totalMemorizedAyahs)}/${context.numText(production.totalAyahsTracked)} ${context.l10n.ayahs}',
                 style: AppTypography.bodyMedium,
               ),
               Text(
-                '${production.completionPercent.round()}%',
+                '${context.numText(production.completionPercent.round())}%',
                 style: AppTypography.labelMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
@@ -521,8 +565,14 @@ class _MemorizationProgressCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               context.l10n.parentDashboardReviewsSummary(
-                production.reviewsCompleted,
-                production.reviewsOverdue,
+                LocaleNumberFormatter.format(
+                  (production.reviewsCompleted).toString(),
+                  context.l10n.localeName,
+                ),
+                LocaleNumberFormatter.format(
+                  (production.reviewsOverdue).toString(),
+                  context.l10n.localeName,
+                ),
               ),
               style: AppTypography.bodySmall,
             ),
@@ -564,10 +614,22 @@ class _RecentSessionsCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           context.l10n.parentDashboardSessionSummary(
-                            log.surahId,
-                            log.ayahNumber,
-                            log.repeatsCompleted,
-                            log.pointsEarned,
+                            LocaleNumberFormatter.format(
+                              (log.surahId).toString(),
+                              context.l10n.localeName,
+                            ),
+                            LocaleNumberFormatter.format(
+                              (log.ayahNumber).toString(),
+                              context.l10n.localeName,
+                            ),
+                            LocaleNumberFormatter.format(
+                              (log.repeatsCompleted).toString(),
+                              context.l10n.localeName,
+                            ),
+                            LocaleNumberFormatter.format(
+                              (log.pointsEarned).toString(),
+                              context.l10n.localeName,
+                            ),
                           ),
                           style: AppTypography.bodySmall,
                         ),
@@ -590,7 +652,12 @@ class _RewardsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      title: context.l10n.childDetailRewards(rewards.length),
+      title: context.l10n.childDetailRewards(
+        LocaleNumberFormatter.format(
+          (rewards.length).toString(),
+          context.l10n.localeName,
+        ),
+      ),
       child: Column(
         children: rewards.take(3).map((reward) {
           return Padding(
@@ -692,7 +759,12 @@ class _TextInputDialogState extends State<_TextInputDialog> {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return context.l10n.fieldRequired;
     if (trimmed.length > _TextInputDialog.maxLength) {
-      return context.l10n.fieldTooLong(_TextInputDialog.maxLength);
+      return context.l10n.fieldTooLong(
+        LocaleNumberFormatter.format(
+          (_TextInputDialog.maxLength).toString(),
+          context.l10n.localeName,
+        ),
+      );
     }
     return null;
   }
@@ -780,14 +852,23 @@ class _ChildIdentityDialogState extends State<_ChildIdentityDialog> {
     setState(() {
       _nameError = name == null
           ? l10n.childErrorNicknameInvalid(
-              ChildIdentityPolicy.maxNicknameLength,
+              LocaleNumberFormatter.format(
+                (ChildIdentityPolicy.maxNicknameLength).toString(),
+                l10n.localeName,
+              ),
             )
           : null;
       _ageError = ageValid
           ? null
           : l10n.childErrorAgeInvalid(
-              ChildIdentityPolicy.minAge,
-              ChildIdentityPolicy.maxAge,
+              LocaleNumberFormatter.format(
+                (ChildIdentityPolicy.minAge).toString(),
+                l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (ChildIdentityPolicy.maxAge).toString(),
+                l10n.localeName,
+              ),
             );
     });
     if (name == null || age == null || !ageValid) return;
@@ -832,7 +913,15 @@ class _ChildIdentityDialogState extends State<_ChildIdentityDialog> {
                 )
                   DropdownMenuItem(
                     value: age,
-                    child: Text(context.l10n.childAgeYears(age)),
+                    child: Text(
+                      context.l10n.childAgeYears(
+                        age,
+                        LocaleNumberFormatter.format(
+                          (age).toString(),
+                          context.l10n.localeName,
+                        ),
+                      ),
+                    ),
                   ),
               ],
               onChanged: (value) => setState(() {

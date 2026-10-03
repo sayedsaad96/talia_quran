@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +23,7 @@ import '../widgets/azkar_index_sheet.dart';
 import '../widgets/zikr_audio_state_builder.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
+
 
 /// A resumable recitation screen for the composed smart wird. Progress is
 /// persisted continuously so the user can leave and come back mid-session;
@@ -146,8 +146,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
     // share its key with the same day's later evening. Keep them apart.
     final savedAfterMidnight = saved.updatedAt.hour < 4;
     final nowAfterMidnight = wird.composedAt.hour < 4;
-    return savedPeriod == wird.period &&
-        savedAfterMidnight == nowAfterMidnight;
+    return savedPeriod == wird.period && savedAfterMidnight == nowAfterMidnight;
   }
 
   Future<void> _persistProgress() async {
@@ -739,7 +738,7 @@ class _SmartWirdDoneView extends StatelessWidget {
             if (xpResult != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                '+${xpResult!.xpAdded} XP',
+                '+${context.numText(xpResult!.xpAdded)} XP',
                 style: AppTypography.titleMedium.copyWith(
                   color: AppColors.success,
                   fontWeight: FontWeight.w700,

@@ -10,6 +10,8 @@ import '../../../prayer_companion/domain/entities/prayer_companion.dart';
 import '../theme/home_skin.dart';
 import 'home_prayer_times_sheet.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 // ---------------------------------------------------------------------------
 // Data model
 // ---------------------------------------------------------------------------
@@ -221,7 +223,7 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
     final period = context.isArabic
         ? (t.hour >= 12 ? 'م' : 'ص')
         : (t.hour >= 12 ? 'PM' : 'AM');
-    return '$hour12:$min $period';
+    return context.digitText('$hour12:$min $period');
   }
 
   void _openSheet(BuildContext context) {
@@ -463,7 +465,7 @@ class _StationNode extends StatelessWidget {
     return Semantics(
       label:
           '${data.name}${timeText != null ? " $timeText" : ""}'
-          '${isNext ? " — ${context.l10n.homePrayerChip(data.name, minutesUntil)}" : ""}',
+          '${isNext ? " — ${context.l10n.homePrayerChip(data.name, LocaleNumberFormatter.format((minutesUntil).toString(), context.l10n.localeName))}" : ""}',
       child: Opacity(
         opacity: opacity,
         child: Column(

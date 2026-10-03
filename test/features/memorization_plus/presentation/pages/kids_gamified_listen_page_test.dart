@@ -248,6 +248,23 @@ void main() {
         );
       });
 
+      testWidgets('reveals the first word with one short transition', (
+        tester,
+      ) async {
+        await pumpRecall(tester, state: _recallState());
+        expect(
+          find.byKey(const ValueKey('kids-first-word-empty')),
+          findsOneWidget,
+        );
+
+        await pumpRecall(tester, state: _recallState(firstWordRevealed: true));
+        expect(find.byKey(const ValueKey('kids-first-word')), findsOneWidget);
+        expect(tester.hasRunningAnimations, isTrue);
+
+        await tester.pump(const Duration(milliseconds: 220));
+        expect(tester.hasRunningAnimations, isFalse);
+      });
+
       testWidgets('recording hides the first word too', (tester) async {
         await pumpRecall(
           tester,
@@ -623,6 +640,22 @@ void main() {
         await tester.pumpWidget(const SizedBox());
       });
 
+      testWidgets('wave bars keep stable layout bounds while moving', (
+        tester,
+      ) async {
+        await pumpRecording(tester, disableAnimations: false);
+        final firstBar = find.byKey(
+          const ValueKey('kids-recording-waveform-bar-0'),
+        );
+        final initialSize = tester.getSize(firstBar);
+
+        await tester.pump(const Duration(milliseconds: 160));
+
+        expect(initialSize, const Size(7, 40));
+        expect(tester.getSize(firstBar), initialSize);
+        await tester.pumpWidget(const SizedBox());
+      });
+
       testWidgets('the wave stays still with reduced motion', (tester) async {
         await pumpRecording(tester, disableAnimations: true);
 
@@ -793,6 +826,73 @@ void main() {
       expect(find.text('2/3'), findsOneWidget);
     });
 
+    testWidgets('a star pulses only for a newly completed listen', (
+      tester,
+    ) async {
+      Future<void> pumpForLoop(int currentLoop, {bool reducedMotion = false}) {
+        return tester.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(disableAnimations: reducedMotion),
+            child: _TestApp(
+              child: KidsGamifiedListenContent(
+                state: _baseState.copyWith(currentLoop: currentLoop),
+                onBack: () {},
+                onPlayPause: () {},
+                onRecordRecitation: () {},
+                onStopRecording: () {},
+              ),
+            ),
+          ),
+        );
+      }
+
+      await pumpForLoop(0);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsNothing,
+      );
+
+      await pumpForLoop(1);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(milliseconds: 340));
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsNothing,
+      );
+
+      // Rebuilding an already-earned count or decreasing it never replays.
+      await pumpForLoop(1);
+      await pumpForLoop(0);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsNothing,
+      );
+
+      // A restored count is progress from a previous session, not a reward.
+      await tester.pumpWidget(const SizedBox());
+      await pumpForLoop(2);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-1')),
+        findsNothing,
+      );
+
+      // Changing the motion preference interrupts an active pulse at once.
+      await pumpForLoop(0);
+      await pumpForLoop(1);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsOneWidget,
+      );
+      await pumpForLoop(1, reducedMotion: true);
+      expect(
+        find.byKey(const ValueKey('kids-loop-star-pulse-0')),
+        findsNothing,
+      );
+    });
+
     test('tracks session stars separately from level stars', () {
       const leveledProgress = KidsProgress(
         totalPoints: 3500,
@@ -917,9 +1017,21 @@ void main() {
       final talia = tester.widget<KidsTaliaCompanion>(
         find.byType(KidsTaliaCompanion),
       );
-      final scene = tester.widget<KidsWorldScene>(
-        find.byType(KidsWorldScene),
+      final scene = tester.widget<KidsWorldScene>(find.byType(KidsWorldScene));
+      expect(talia.animate, isFalse);
+      expect(scene.animate, isFalse);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('Talia and the scene keep still while the child recalls', (
+      tester,
+    ) async {
+      await pumpContent(tester, _recallState());
+
+      final talia = tester.widget<KidsTaliaCompanion>(
+        find.byType(KidsTaliaCompanion),
       );
+      final scene = tester.widget<KidsWorldScene>(find.byType(KidsWorldScene));
       expect(talia.animate, isFalse);
       expect(scene.animate, isFalse);
       await tester.pumpWidget(const SizedBox());

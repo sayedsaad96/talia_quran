@@ -84,9 +84,21 @@
   "errorParseMessage": "Something went wrong while reading the content. Please try again.",
   "errorUnknownMessage": "Something unexpected happened. Please try again.",
   "celebrationAyah": "Well done! +{xp} XP ⭐",
-  "@celebrationAyah": { "placeholders": { "xp": { "type": "int" } } },
+  "@celebrationAyah": {
+    "placeholders": {
+      "xp": {
+        "type": "String"
+      }
+    }
+  },
   "celebrationPage": "Page complete! +{xp} XP 🎯",
-  "@celebrationPage": { "placeholders": { "xp": { "type": "int" } } },
+  "@celebrationPage": {
+    "placeholders": {
+      "xp": {
+        "type": "String"
+      }
+    }
+  },
   "celebrationJuzDone": "You've completed the entire juz, by Allah's grace",
   "tutorialQuickStartTitle": "Your quick Talia map",
   "tutorialQuickStartSubtitle": "The five key areas for daily use",
@@ -419,7 +431,13 @@
   "azkarSmartWird": "Smart Wird",
   "azkarSmartWirdSubtitle": "A wird built for this moment",
   "azkarSmartWirdDone": "Completed {count} smart wird session(s) today",
-  "@azkarSmartWirdDone": {"placeholders": {"count": {"type": "int"}}},
+  "@azkarSmartWirdDone": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "azkarSmartWirdResume": "Resume",
   "azkarSmartWirdCompleted": "Smart wird complete",
   "azkarQuietNight": "Quiet Night",
@@ -434,12 +452,30 @@
   "azkarTasbeehResetTooltip": "Reset counter",
   "azkarTasbeehOpenTarget": "Open",
   "azkarTasbeehTargetLabel": "Target: {target}",
-  "@azkarTasbeehTargetLabel": {"placeholders": {"target": {"type": "int"}}},
+  "@azkarTasbeehTargetLabel": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
   "azkarTasbeehRound": "Round {round}",
-  "@azkarTasbeehRound": {"placeholders": {"round": {"type": "int"}}},
+  "@azkarTasbeehRound": {
+    "placeholders": {
+      "round": {
+        "type": "String"
+      }
+    }
+  },
   "azkarTasbeehTapHint": "Tap anywhere in the circle to count",
   "azkarTasbeehTapSemantics": "Tap to count, current {count}",
-  "@azkarTasbeehTapSemantics": {"placeholders": {"count": {"type": "int"}}},
+  "@azkarTasbeehTapSemantics": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "azkarCompletedDesc": "All azkar in this category are complete",
   "generalAzkarSubtitle": "A collection of comprehensive azkar",
   "duasSubtitle": "Duas from the Quran and Sunnah",
@@ -533,11 +569,14 @@
   "achievementDescNinetyDayStreak": "Keep a 90-day streak",
   "achievementTitleYearStreak": "Full Year",
   "achievementDescYearStreak": "Keep a 365-day streak",
-  "bookmarksCountItem": "{count} {count, plural, =1{bookmark} other{bookmarks}}",
+  "bookmarksCountItem": "{countText} {count, plural, =1{bookmark} other{bookmarks}}",
   "@bookmarksCountItem": {
     "placeholders": {
       "count": {
         "type": "int"
+      },
+      "countText": {
+        "type": "String"
       }
     }
   },
@@ -567,8 +606,12 @@
   "notificationStatusSummary": "{enabled} of {total} reminders on",
   "@notificationStatusSummary": {
     "placeholders": {
-      "enabled": {"type": "int"},
-      "total": {"type": "int"}
+      "enabled": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "notificationTestInteractiveTitle": "Try a notification",
@@ -656,7 +699,7 @@
   "@guardianPairingExpiresIn": {
     "placeholders": {
       "minutes": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -742,7 +785,7 @@
   "@kidsPointsValue": {
     "placeholders": {
       "points": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -750,7 +793,7 @@
   "@kidsLevelValue": {
     "placeholders": {
       "level": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -759,13 +802,13 @@
   "@kidsStageAyahRange": {
     "placeholders": {
       "stage": {
-        "type": "int"
+        "type": "String"
       },
       "startAyah": {
-        "type": "int"
+        "type": "String"
       },
       "endAyah": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -777,7 +820,7 @@
   "@kidsStageTitle": {
     "placeholders": {
       "stage": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -785,16 +828,16 @@
   "@kidsStageProgress": {
     "placeholders": {
       "startAyah": {
-        "type": "int"
+        "type": "String"
       },
       "endAyah": {
-        "type": "int"
+        "type": "String"
       },
       "completed": {
-        "type": "int"
+        "type": "String"
       },
       "total": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -818,7 +861,7 @@
   "@accuracyRequiredPercent": {
     "placeholders": {
       "percent": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -872,7 +915,7 @@
   "@kidsCompleteStageToday": {
     "placeholders": {
       "stage": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -881,7 +924,7 @@
   "@kidsRemainingAyahs": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -900,10 +943,10 @@
   "@kidsGamifiedLevelProgress": {
     "placeholders": {
       "level": {
-        "type": "int"
+        "type": "String"
       },
       "progress": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -923,7 +966,7 @@
   "@kidsGamifiedHouseTitle": {
     "placeholders": {
       "number": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -931,7 +974,7 @@
   "@kidsGamifiedReviewHouseTitle": {
     "placeholders": {
       "number": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -939,10 +982,10 @@
   "@kidsGamifiedAyahRange": {
     "placeholders": {
       "startAyah": {
-        "type": "int"
+        "type": "String"
       },
       "endAyah": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -950,10 +993,10 @@
   "@kidsGamifiedProgressCount": {
     "placeholders": {
       "completed": {
-        "type": "int"
+        "type": "String"
       },
       "total": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1045,7 +1088,7 @@
   "@kidsGamifiedEarnedGems": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1076,7 +1119,7 @@
   "@dailyPlanCompletedSubtitle": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1087,7 +1130,7 @@
   "@dailyPlanRatingExcellent": {
     "placeholders": {
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1096,7 +1139,7 @@
   "@dailyPlanRatingWeak": {
     "placeholders": {
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1170,16 +1213,16 @@
   "@parentDashboardSessionSummary": {
     "placeholders": {
       "surahId": {
-        "type": "int"
+        "type": "String"
       },
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       },
       "repeats": {
-        "type": "int"
+        "type": "String"
       },
       "points": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1219,22 +1262,33 @@
   "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
   "@childErrorNicknameInvalid": {
     "placeholders": {
-      "max": { "type": "int" }
+      "max": {
+        "type": "String"
+      }
     }
   },
   "childErrorAgeInvalid": "Choose an age between {min} and {max}.",
   "@childErrorAgeInvalid": {
     "placeholders": {
-      "min": { "type": "int" },
-      "max": { "type": "int" }
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
     }
   },
   "guardianErrorChildNotLinked": "This child is no longer linked to your account.",
   "childErrorIdentityUpdateUnavailable": "Editing the child's details isn't available right now. Try again later.",
-  "childAgeYears": "{age, plural, =1{1 year old} other{{age} years old}}",
+  "childAgeYears": "{age, plural, =1{1 year old} other{{ageText} years old}}",
   "@childAgeYears": {
     "placeholders": {
-      "age": { "type": "int" }
+      "age": {
+        "type": "int"
+      },
+      "ageText": {
+        "type": "String"
+      }
     }
   },
   "childEditIdentity": "Edit name and age",
@@ -1247,7 +1301,7 @@
   "@parentDashboardTodayCompleted": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1270,10 +1324,10 @@
   "@parentDashboardRemoteChildSummary": {
     "placeholders": {
       "ayahs": {
-        "type": "int"
+        "type": "String"
       },
       "points": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1281,13 +1335,13 @@
   "@parentDashboardMemorizedSummary": {
     "placeholders": {
       "memorized": {
-        "type": "int"
+        "type": "String"
       },
       "total": {
-        "type": "int"
+        "type": "String"
       },
       "percent": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1295,10 +1349,10 @@
   "@parentDashboardReviewsSummary": {
     "placeholders": {
       "completed": {
-        "type": "int"
+        "type": "String"
       },
       "overdue": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1306,7 +1360,7 @@
   "@parentDashboardStreakSummary": {
     "placeholders": {
       "days": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1314,7 +1368,7 @@
   "@parentDashboardCertificatesSummary": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1348,10 +1402,10 @@
   "@parentDashboardLogTitle": {
     "placeholders": {
       "surahId": {
-        "type": "int"
+        "type": "String"
       },
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1359,10 +1413,10 @@
   "@parentDashboardLogSubtitle": {
     "placeholders": {
       "repeats": {
-        "type": "int"
+        "type": "String"
       },
       "points": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1380,7 +1434,7 @@
   "@dailyPlanAyahTitle": {
     "placeholders": {
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1390,10 +1444,10 @@
   "@dailyPlanRecordStats": {
     "placeholders": {
       "strength": {
-        "type": "int"
+        "type": "String"
       },
       "reviews": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1455,7 +1509,7 @@
   "@customPlanApproxMonths": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1516,7 +1570,7 @@
   "@kidsQuranPageLabel": {
     "placeholders": {
       "pageNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1543,10 +1597,10 @@
   "@hifzReviewRangeHint": {
     "placeholders": {
       "startAyah": {
-        "type": "int"
+        "type": "String"
       },
       "endAyah": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1560,7 +1614,7 @@
   "@hifzAyahNumberLabel": {
     "placeholders": {
       "ayahNumber": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1695,9 +1749,21 @@
   "notificationChannelMilestonesName": "Achievement celebrations",
   "notificationChannelMilestonesDesc": "Celebrations when you complete a juz, a surah, or a full khatmah",
   "notificationMilestoneJuzTitle": "🎉 Juz {juz} memorized!",
-  "@notificationMilestoneJuzTitle": { "placeholders": { "juz": { "type": "int" } } },
+  "@notificationMilestoneJuzTitle": {
+    "placeholders": {
+      "juz": {
+        "type": "String"
+      }
+    }
+  },
   "notificationMilestoneJuzBody": "Masha'Allah, tabarak Allah! You have completed memorizing all of Juz {juz}. May Allah keep it firm in your heart.",
-  "@notificationMilestoneJuzBody": { "placeholders": { "juz": { "type": "int" } } },
+  "@notificationMilestoneJuzBody": {
+    "placeholders": {
+      "juz": {
+        "type": "String"
+      }
+    }
+  },
   "notificationMilestoneSurahTitle": "🎉 Surah {surah} memorized!",
   "@notificationMilestoneSurahTitle": { "placeholders": { "surah": { "type": "String" } } },
   "notificationMilestoneSurahBody": "Masha'Allah! You have completed memorizing Surah {surah}. May Allah bless it and make it a light for you.",
@@ -1748,7 +1814,13 @@
   "notificationFridayKahfTitle": "Surah Al-Kahf Reminder 🌿",
   "notificationWeeklyImpactTitle": "Your impact this week 🌿",
   "notificationWeeklyImpactBody": "{count} days of your week were with the Quran — every page leaves a lasting impact",
-  "@notificationWeeklyImpactBody": {"placeholders": {"count": {"type": "int"}}},
+  "@notificationWeeklyImpactBody": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "notificationWeeklyImpactQuietBody": "A new week begins — one page makes a difference 🌱",
   "notificationSettingsWeeklyImpact": "Weekly impact (Friday)",
   "notificationFridayKahfBody": "Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨",
@@ -2066,7 +2138,7 @@
   "@certificateCelebrationMultiple": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -2126,8 +2198,12 @@
   "@familyDashboardTodaySummary": {
     "description": "Banner body showing active children and total points",
     "placeholders": {
-      "count": { "type": "int" },
-      "points": { "type": "int" }
+      "count": {
+        "type": "String"
+      },
+      "points": {
+        "type": "String"
+      }
     }
   },
 
@@ -2138,7 +2214,9 @@
   "@familyDashboardChildActiveToday": {
     "description": "Points earned today label on child card",
     "placeholders": {
-      "points": { "type": "int" }
+      "points": {
+        "type": "String"
+      }
     }
   },
 
@@ -2160,8 +2238,12 @@
   "@childDetailTodayActivity": {
     "description": "Today summary in child detail page",
     "placeholders": {
-      "sessions": { "type": "int" },
-      "points": { "type": "int" }
+      "sessions": {
+        "type": "String"
+      },
+      "points": {
+        "type": "String"
+      }
     }
   },
 
@@ -2178,7 +2260,9 @@
   "@childDetailRewards": {
     "description": "Section title for rewards with count",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "String"
+      }
     }
   },
 
@@ -2218,7 +2302,13 @@
   "v2BlockGradeForgot": "Forgot an ayah",
   "v2StumbledAyahTitle": "Where did you stumble?",
   "v2StumbledAyahOption": "Ayah {ayahNumber}",
-  "@v2StumbledAyahOption": {"placeholders": {"ayahNumber": {"type": "int"}}},
+  "@v2StumbledAyahOption": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "String"
+      }
+    }
+  },
   "v2ManualRecallHint": "No microphone? Confirm you recited from memory and your progress will be saved.",
   "v2ManualBlockReviewAction": "Grade the block recitation yourself",
   "v2RemediationTitle": "Short remediation",
@@ -2251,7 +2341,13 @@
   "closingRestNote": "Take a breath… your memorization awaits you tomorrow, in shaa Allah.",
   "v2MemorizationHub": "Memorization Hub",
   "v2NextPlanItem": "Next in today's plan ({count} left)",
-  "@v2NextPlanItem": {"placeholders": {"count": {"type": "int"}}},
+  "@v2NextPlanItem": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "v2TryWithoutHint": "Try without a hint first",
   "v2FirstWordRevealed": "First word revealed",
   "v2Evaluating": "Evaluating...",
@@ -2264,7 +2360,13 @@
   "v2MicrophoneOpenSettings": "Microphone access is blocked. Open Settings to allow it.",
   "v2AudioPlaybackFailed": "Could not play the ayah audio. Try again.",
   "v2RemediationAttempts": "Attempts needing remediation: {count}",
-  "@v2RemediationAttempts": { "placeholders": { "count": { "type": "int" } } },
+  "@v2RemediationAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "v2AyahRange": "Ayahs {startAyah}-{endAyah}",
   "@v2AyahRange": { "placeholders": { "startAyah": { "type": "String" }, "endAyah": { "type": "String" } } },
   "v2BlockProgress": "{passed}/{total} ayahs passed individually.",
@@ -2282,7 +2384,13 @@
   "v2ResultRetrying": "So close! Try again",
   "v2ResultNeedsWork": "This ayah needs review",
   "v2ResultSimilarity": "Match: {score}%",
-  "@v2ResultSimilarity": { "placeholders": { "score": { "type": "int" } } },
+  "@v2ResultSimilarity": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
   "v2ResultManualGrade": "Self-graded recitation",
   "v2ResultContinue": "Continue",
   "v2ResultRetryNow": "Recite again now",
@@ -2312,8 +2420,12 @@
   "@kidsRecitationCloseMatch": {
     "description": "Child-friendly progress feedback after a near-miss recitation",
     "placeholders": {
-      "matched": { "type": "int" },
-      "total": { "type": "int" }
+      "matched": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "kidsJourneyCompleteHint": "You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.",
@@ -2345,23 +2457,65 @@
   "kidsGuidanceAudioDescription": "Short prompts that never play over Quran recitation.",
   "kidsSessionGoalTitle": "Target session length",
   "kidsSessionGoalValue": "{minutes} minutes",
-  "@kidsSessionGoalValue": { "placeholders": { "minutes": { "type": "int" } } },
+  "@kidsSessionGoalValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "kidsSessionGoalAgeDefault": "Age default",
   "kidsSetupReminderTime": "Reminder time",
   "kidsSetupWeeklyGoal": "Weekly goal",
   "kidsSetupWeeklyGoalValue": "{sessions} sessions per week",
-  "@kidsSetupWeeklyGoalValue": { "placeholders": { "sessions": { "type": "int" } } },
+  "@kidsSetupWeeklyGoalValue": {
+    "placeholders": {
+      "sessions": {
+        "type": "String"
+      }
+    }
+  },
   "kidsSetupStartingSurah": "Starting surah",
   "parentCommitmentDays": "{count} commitment days",
-  "@parentCommitmentDays": { "placeholders": { "count": { "type": "int" } } },
+  "@parentCommitmentDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "parentDueReviews": "{count} reviews due",
-  "@parentDueReviews": { "placeholders": { "count": { "type": "int" } } },
+  "@parentDueReviews": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "parentNeedsSupport": "{count} ayahs need support",
-  "@parentNeedsSupport": { "placeholders": { "count": { "type": "int" } } },
+  "@parentNeedsSupport": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "parentAverageDuration": "{minutes} min average",
-  "@parentAverageDuration": { "placeholders": { "minutes": { "type": "int" } } },
+  "@parentAverageDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "parentHintUses": "{count} hints used",
-  "@parentHintUses": { "placeholders": { "count": { "type": "int" } } },
+  "@parentHintUses": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "khatmahStartAction": "Start Khatmah",
   "khatmahResumeAction": "Resume",
   "khatmahNoPlanTitle": "No Khatmah plan yet",
@@ -2539,7 +2693,13 @@
   "homeTodayTodo": "To do",
   "homeStreakAtRisk": "Your streak is at risk",
   "homeFreezesAvailable": "{count} freezes available",
-  "@homeFreezesAvailable": {"placeholders":{"count":{"type":"int"}}},
+  "@homeFreezesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeAyahOfDay": "Ayah of the day",
   "surahRevelationMeccan": "Meccan",
   "surahRevelationMedinan": "Medinan",
@@ -2578,13 +2738,28 @@
   "homeSlotOpen": "Open",
   "homeWeeklyReflectionTitle": "This week",
   "homeWeeklyReflectionBody": "{days} active days · {count} activities",
-  "@homeWeeklyReflectionBody": {"placeholders":{"days":{"type":"int"},"count":{"type":"int"}}},
+  "@homeWeeklyReflectionBody": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeFirstRunTitle": "Start your first step",
   "homeFirstRunBody": "Read a page, begin memorizing, or start a Khatmah.",
   "homeFirstRunRead": "Read the Quran",
   "homeFirstRunMemorize": "Start memorizing",
   "homeChildStreak": "{count}-day streak",
-  "@homeChildStreak": {"placeholders":{"count":{"type":"int"}}},
+  "@homeChildStreak": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeSearchTitle": "Search the Quran",
   "homeSearchNoResults": "No matching ayahs or surahs",
   "homePrayerTimes": "Prayer times",
@@ -2594,7 +2769,16 @@
   "homePrayerMethod": "Calculation method",
   "prayerMethodAuto": "Automatic by country",
   "homePrayerChip": "{name} in {minutes} min",
-  "@homePrayerChip": {"placeholders":{"name":{"type":"String"},"minutes":{"type":"int"}}},
+  "@homePrayerChip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "prayerTimelineNext": "{name} in {timeRemaining}",
   "@prayerTimelineNext": {"placeholders":{"name":{"type":"String"},"timeRemaining":{"type":"String"}}},
   "prayerTimelineSunriseNext": "Sunrise in {timeRemaining}",
@@ -2651,19 +2835,55 @@
   "homeTileReadHint": "Open the mushaf",
   "homeDailyChallenge": "Daily challenge",
   "homeDailyChallengePages": "Complete {count} pages today",
-  "@homeDailyChallengePages": {"placeholders":{"count":{"type":"int"}}},
+  "@homeDailyChallengePages": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeDailyChallengeTasks": "Complete today's tasks",
   "homeChallengeProgress": "{current} of {total}",
-  "@homeChallengeProgress": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "@homeChallengeProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "homeStreakDays": "{count}-day streak",
-  "@homeStreakDays": {"placeholders":{"count":{"type":"int"}}},
+  "@homeStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeQuranJourney": "Your journey with the Quran",
   "homeJourneyMemorization": "Memorization",
   "homeJourneyKhatmah": "Khatmah",
   "homeJourneyMemorizedAyahs": "{count} ayahs memorized",
-  "@homeJourneyMemorizedAyahs": {"placeholders":{"count":{"type":"int"}}},
+  "@homeJourneyMemorizedAyahs": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "homeJourneyKhatmahPages": "{current} of {total} pages",
-  "@homeJourneyKhatmahPages": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "@homeJourneyKhatmahPages": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "homeJourneyNotStartedTitle": "Your journey hasn't started yet",
   "homeJourneyNotStartedBody": "Begin memorizing or open a khatmah, and your real progress will be tracked here",
   "homeJourneyStartMemorization": "Start memorizing",
@@ -2707,7 +2927,16 @@
   "prayerCompanionActionRemindLater": "Remind me later",
   "prayerCompanionActionNotYet": "Not yet",
   "prayerCompanionConfirmedCount": "{confirmed} of {total} confirmed",
-  "@prayerCompanionConfirmedCount": {"placeholders": {"confirmed": {"type": "int"}, "total": {"type": "int"}}},
+  "@prayerCompanionConfirmedCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "prayerCompanionRowSemantics": "{prayer}: {status}",
   "@prayerCompanionRowSemantics": {"placeholders": {"prayer": {"type": "String"}, "status": {"type": "String"}}},
   "prayerCompanionSettingsTitle": "Prayer Companion",
@@ -2725,7 +2954,13 @@
   "prayerCompanionPreparation": "Preparation reminder",
   "prayerCompanionPreparationDisabled": "Disabled",
   "prayerCompanionMinutesValue": "{minutes} minutes",
-  "@prayerCompanionMinutesValue": {"placeholders": {"minutes": {"type": "int"}}},
+  "@prayerCompanionMinutesValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "prayerCompanionCheckIn": "Post-prayer check-in",
   "prayerCompanionCheckInSub": "A gentle reminder arrives 20 minutes after the prayer.",
   "prayerCompanionFollowUp": "Allow one follow-up reminder",
@@ -2760,8 +2995,17 @@
   ,"memorizationHubReviewDueBadge": "{count, plural, =1{{countText} ayah} other{{countText} ayahs}} due for review"
   ,"@memorizationHubReviewDueBadge": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"memorizationHubReviewDueNone": "No reviews due right now"
-  ,"dailyPlanNextReviewInDays": "Next review in {count, plural, =0{today} =1{1 day} other{{count} days}}"
-  ,"@dailyPlanNextReviewInDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"dailyPlanNextReviewInDays": "Next review in {count, plural, =0{today} =1{1 day} other{{countText} days}}"
+  ,"@dailyPlanNextReviewInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "countText": {
+        "type": "String"
+      }
+    }
+  }
   ,"dailyPlanStrengthWeak": "Weak memorization"
   ,"dailyPlanStrengthLearning": "Still settling"
   ,"dailyPlanStrengthStrong": "Solid memorization"
@@ -2775,19 +3019,50 @@
   ,"fieldRequired": "This field is required"
   ,"@fieldRequired": { "description": "Validation: field must not be empty" }
   ,"fieldTooLong": "Cannot exceed {maxLength} characters"
-  ,"@fieldTooLong": { "description": "Validation: field exceeds max length", "placeholders": { "maxLength": { "type": "int" } } }
+  ,"@fieldTooLong": {
+    "description": "Validation: field exceeds max length",
+    "placeholders": {
+      "maxLength": {
+        "type": "String"
+      }
+    }
+  }
   ,"progressDueReviewsLabel": "Due reviews"
   ,"progressStreakDaysUnit": "{count, plural, =1{day} other{days}}"
   ,"@progressStreakDaysUnit": { "placeholders": { "count": { "type": "int" } } }
   ,"progressNextMilestoneTitle": "Your next milestone"
   ,"progressNextMilestoneRemaining": "{remaining} to go"
-  ,"@progressNextMilestoneRemaining": { "placeholders": { "remaining": { "type": "int" } } }
+  ,"@progressNextMilestoneRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  }
   ,"progressAllAchievementsUnlocked": "Masha'Allah! You've unlocked every achievement"
-  ,"progressDueReviewsNudge": "{count, plural, =1{1 ayah is due for review} other{{count} ayahs are due for review}}"
-  ,"@progressDueReviewsNudge": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressDueReviewsNudge": "{count, plural, =1{1 ayah is due for review} other{{countText} ayahs are due for review}}"
+  ,"@progressDueReviewsNudge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "countText": {
+        "type": "String"
+      }
+    }
+  }
   ,"progressStartReview": "Start review"
-  ,"progressActiveDays": "{count, plural, =0{No active days yet} =1{1 active day} other{{count} active days}}"
-  ,"@progressActiveDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"progressActiveDays": "{count, plural, =0{No active days yet} =1{1 active day} other{{countText} active days}}"
+  ,"@progressActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "countText": {
+        "type": "String"
+      }
+    }
+  }
   ,"progressXpToNextLevel": "Toward next level"
   ,"privacyEffectiveDate": "Effective date: October 2, 2026"
   ,"privacyIntro": "This policy explains how Talia Quran handles your data on your device and through cloud services, and how you control permissions and request deletion."

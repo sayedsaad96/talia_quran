@@ -27,7 +27,7 @@ void main() {
       tester,
       SocialShareData.streak(streakDays: 45, longestStreak: 45),
     );
-    expect(find.text('45'), findsOneWidget);
+    expect(find.text('٤٥'), findsOneWidget);
     expect(find.text('يومًا مع القرآن'), findsOneWidget);
     expect(find.text('رقم قياسي جديد! 🎉'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -40,7 +40,7 @@ void main() {
       tester,
       SocialShareData.streak(streakDays: 30, longestStreak: 45),
     );
-    expect(find.text('أطول سلسلة: 45 يوم'), findsOneWidget);
+    expect(find.text('أطول سلسلة: ٤٥ يوم'), findsOneWidget);
   });
 
   testWidgets('streak without values shows zero and no record line', (
@@ -50,7 +50,7 @@ void main() {
       tester,
       const SocialShareData(content: '', category: SocialShareCategory.streak),
     );
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('٠'), findsOneWidget);
     expect(find.textContaining('أطول'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -66,10 +66,10 @@ void main() {
         targetAyahs: 500,
       ),
     );
-    expect(find.text('250'), findsOneWidget);
+    expect(find.text('٢٥٠'), findsOneWidget);
     expect(find.text('آيةً في قلبي'), findsOneWidget);
-    expect(find.text('12 سورة مكتملة'), findsOneWidget);
-    expect(find.text('250 من 500'), findsOneWidget);
+    expect(find.text('١٢ سورة مكتملة'), findsOneWidget);
+    expect(find.text('٢٥٠ من ٥٠٠'), findsOneWidget);
     expect(progressLine, findsOneWidget);
   });
 
@@ -100,7 +100,7 @@ void main() {
         streakDays: 14,
       ),
     );
-    for (final v in ['85', '250', '14']) {
+    for (final v in ['٨٥', '٢٥٠', '١٤']) {
       expect(find.text(v), findsOneWidget);
     }
     expect(find.text('صفحات مقروءة'), findsOneWidget);
@@ -117,7 +117,7 @@ void main() {
         totalCount: 15,
       ),
     );
-    expect(find.text('12 / 15'), findsOneWidget);
+    expect(find.text('١٢ / ١٥'), findsOneWidget);
     expect(find.text('أذكار أتممتُها'), findsOneWidget);
     expect(progressLine, findsOneWidget);
   });
@@ -145,7 +145,7 @@ void main() {
       ),
     );
     expect(numeralParagraph(tester).didExceedMaxLines, isFalse);
-    expect(find.text('100 / 100'), findsOneWidget);
+    expect(find.text('١٠٠ / ١٠٠'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -177,7 +177,7 @@ void main() {
         totalCount: 0,
       ),
     );
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('٠'), findsOneWidget);
     expect(progressLine, findsNothing);
     expect(tester.takeException(), isNull);
   });

@@ -7,6 +7,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../constants/app_spacing.dart';
 
+import '../utils/locale_number_formatter.dart';
+
 enum CelebrationType { ayah, page, juz }
 
 class CelebrationOverlay extends StatefulWidget {
@@ -64,8 +66,18 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
   }
 
   String _getMessage(AppLocalizations l10n) => switch (widget.type) {
-    CelebrationType.ayah => l10n.celebrationAyah(widget.xpGained),
-    CelebrationType.page => l10n.celebrationPage(widget.xpGained),
+    CelebrationType.ayah => l10n.celebrationAyah(
+      LocaleNumberFormatter.format(
+        (widget.xpGained).toString(),
+        l10n.localeName,
+      ),
+    ),
+    CelebrationType.page => l10n.celebrationPage(
+      LocaleNumberFormatter.format(
+        (widget.xpGained).toString(),
+        l10n.localeName,
+      ),
+    ),
     CelebrationType.juz => l10n.congratulations,
   };
 

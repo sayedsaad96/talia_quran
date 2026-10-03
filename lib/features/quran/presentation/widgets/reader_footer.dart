@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 
 /// Bottom bar of the adult Mushaf reader (presentation only).
 ///
@@ -44,9 +43,7 @@ class ReaderFooter extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              context.l10n.hizbNumberLabel(
-                MushafHizbHelper.toArabicNumber(hizbNumber),
-              ),
+              context.l10n.hizbNumberLabel(context.numText(hizbNumber)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.bodySmall.copyWith(
@@ -76,7 +73,7 @@ class ReaderFooter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   ),
                   child: Text(
-                    MushafHizbHelper.toArabicNumber(pageNumber),
+                    context.numText(pageNumber),
                     style: AppTypography.titleMedium.copyWith(
                       fontFamily: 'Amiri',
                       fontWeight: FontWeight.bold,

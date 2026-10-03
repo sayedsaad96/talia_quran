@@ -64,7 +64,7 @@ class HomeTodayChecklist extends StatelessWidget {
                       MediaQuery.withClampedTextScaling(
                         maxScaleFactor: 1.3,
                         child: Text(
-                          '${checklist.completedCount}/${checklist.tasks.length}',
+                          '${context.numText(checklist.completedCount)}/${context.numText(checklist.tasks.length)}',
                           maxLines: 1,
                           style: AppTypography.labelSmall.copyWith(
                             color: primary,
@@ -77,7 +77,8 @@ class HomeTodayChecklist extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            for (final task in checklist.tasks) _TodayRow(task: task, isDark: isDark),
+            for (final task in checklist.tasks)
+              _TodayRow(task: task, isDark: isDark),
           ],
         ),
       ),

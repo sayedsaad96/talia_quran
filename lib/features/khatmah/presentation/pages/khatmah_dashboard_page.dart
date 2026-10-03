@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +11,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
@@ -21,6 +21,7 @@ import '../khatmah_localizations.dart';
 import '../widgets/khatmah_dedication_form.dart';
 import '../widgets/khatmah_juz_map.dart';
 import '../widgets/khatmah_progress_gauge.dart';
+
 
 class KhatmahDashboardPage extends StatefulWidget {
   const KhatmahDashboardPage({super.key, this.cubit});
@@ -204,11 +205,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
   String _formatDate(DateTime date) {
     String part(int value, [int width = 2]) {
       final padded = value.toString().padLeft(width, '0');
-      return context.isArabic
-          ? MushafHizbHelper.toArabicNumber(
-              int.parse(padded),
-            ).padLeft(width, '٠')
-          : padded;
+      return context.digitText(padded);
     }
 
     return '${part(date.year, 4)}/${part(date.month)}/${part(date.day)}';
@@ -221,9 +218,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     final previous = _recordingPlanFrom(_cubit.state);
     final preview = _cubit.previewAdjustment(kind: kind);
     if (previous == null || preview == null) return;
-    final pages = context.isArabic
-        ? MushafHizbHelper.toArabicNumber(preview.targetPagesPerDay)
-        : '${preview.targetPagesPerDay}';
+    final pages = context.numText(preview.targetPagesPerDay);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -280,9 +275,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
       context: context,
       builder: (sheetContext) {
         final l10n = sheetContext.l10n;
-        String number(int value) => sheetContext.isArabic
-            ? MushafHizbHelper.toArabicNumber(value)
-            : '$value';
+        String number(int value) => sheetContext.numText(value);
         final options = [
           for (final kind in KhatmahAdjustment.values)
             if (_cubit.previewAdjustment(kind: kind) case final preview?)
@@ -369,11 +362,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     );
   }
 
-  Widget _buildDedicationBadge(
-    KhatmahDedication dedication,
-    bool isArabic,
-    bool isDark,
-  ) {
+  Widget _buildDedicationBadge(KhatmahDedication dedication, bool isDark) {
     final recipient = dedication.recipientName ?? '';
     final conditionLabel = localizedKhatmahCondition(
       context,
@@ -417,7 +406,6 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final isArabic = context.isArabic;
     final l10n = context.l10n;
     final primary = context.tokens.accent;
     final cardBg = context.tokens.card;
@@ -428,520 +416,480 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     return FallbackPopScope(
       fallbackLocation: AppRoutes.home,
       child: BlocProvider<KhatmahCubit>.value(
-      value: _cubit,
-      child: BlocConsumer<KhatmahCubit, KhatmahState>(
-        listener: (_, state) {
-          if (state is KhatmahCompleted) _openCompletion(state);
-        },
-        builder: (context, state) {
-          if (state is KhatmahLoading || state is KhatmahInitial) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
+        value: _cubit,
+        child: BlocConsumer<KhatmahCubit, KhatmahState>(
+          listener: (_, state) {
+            if (state is KhatmahCompleted) _openCompletion(state);
+          },
+          builder: (context, state) {
+            if (state is KhatmahLoading || state is KhatmahInitial) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-          if (state is KhatmahProgressFailure && state.plan == null) {
-            return Scaffold(
-              appBar: AppBar(
-                leading: _fallbackBackButton(hasHistory),
-                title: Text(context.l10n.khatmahKhatmahDashboard),
-                centerTitle: true,
-                actions: _historyAction(context),
-              ),
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        key: const Key('khatmah_dashboard_load_failure'),
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        context.l10n.khatmahUnableToLoadYourKhatmah,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.titleMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        // Offline-first: a load failure is local (storage or
-                        // account switch), never a connectivity problem.
-                        context.l10n.khatmahLoadFailureHint,
-                        textAlign: TextAlign.center,
-                        style: AppTypography.bodySmall,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      FilledButton.icon(
-                        key: const Key(
-                          'khatmah_dashboard_load_failure_retry_button',
-                        ),
-                        onPressed: _cubit.load,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: Text(context.l10n.khatmahReload),
-                      ),
-                    ],
-                  ),
+            if (state is KhatmahProgressFailure && state.plan == null) {
+              return Scaffold(
+                appBar: AppBar(
+                  leading: _fallbackBackButton(hasHistory),
+                  title: Text(context.l10n.khatmahKhatmahDashboard),
+                  centerTitle: true,
+                  actions: _historyAction(context),
                 ),
-              ),
-            );
-          }
-
-          if (state is KhatmahNoActivePlan) {
-            return Scaffold(
-              appBar: AppBar(
-                leading: _fallbackBackButton(hasHistory),
-                title: Text(context.l10n.khatmahQuranKhatmah),
-                centerTitle: true,
-                actions: _historyAction(context),
-              ),
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.menu_book_outlined,
-                        size: 64,
-                        color: primary.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        l10n.khatmahNoPlanTitle,
-                        style: AppTypography.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.khatmahNoPlanDescription,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: context.tokens.textSecondary,
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          key: const Key('khatmah_dashboard_load_failure'),
+                          size: 64,
+                          color: Theme.of(context).colorScheme.error,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      FilledButton.icon(
-                        key: const Key('khatmah_dashboard_start_button'),
-                        onPressed: () => context.go(AppRoutes.khatmahSetup),
-                        style: FilledButton.styleFrom(backgroundColor: primary),
-                        icon: const Icon(Icons.add_rounded),
-                        label: Text(l10n.khatmahStartAction),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          KhatmahPlan plan;
-          int wirdStartPage;
-          int wirdEndPage;
-
-          if (state is KhatmahActive) {
-            plan = state.plan;
-            wirdStartPage = state.wirdStartPage;
-            wirdEndPage = state.wirdEndPage;
-          } else if (state is KhatmahPaused) {
-            plan = state.plan;
-            final wird = plan.dailyTargetFor(_cubit.displayDate);
-            wirdStartPage = wird.startPage;
-            wirdEndPage = wird.endPage;
-          } else if (state is KhatmahResuming) {
-            plan = state.plan;
-            final wird = plan.dailyTargetFor(_cubit.displayDate);
-            wirdStartPage = wird.startPage;
-            wirdEndPage = wird.endPage;
-          } else if (state is KhatmahProgressFailure && state.plan != null) {
-            plan = state.plan!;
-            final wird = plan.dailyTargetFor(_cubit.displayDate);
-            wirdStartPage = wird.startPage;
-            wirdEndPage = wird.endPage;
-          } else if (state is KhatmahWirdCompleted) {
-            plan = state.plan;
-            final wird = plan.dailyTargetFor(_cubit.displayDate);
-            wirdStartPage = wird.startPage;
-            wirdEndPage = wird.endPage;
-          } else if (state is KhatmahCompleted) {
-            plan = state.plan;
-            wirdStartPage = 604;
-            wirdEndPage = 604;
-          } else {
-            return const SizedBox.shrink();
-          }
-
-          final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
-          final isPaused = plan.status == KhatmahStatus.paused;
-          final isResuming = state is KhatmahResuming;
-          final dailyComplete = plan.isDailyTargetComplete(_cubit.displayDate);
-          final wirdStartStr = isArabic
-              ? MushafHizbHelper.toArabicNumber(wirdStartPage)
-              : wirdStartPage.toString();
-          final wirdEndStr = isArabic
-              ? MushafHizbHelper.toArabicNumber(wirdEndPage)
-              : wirdEndPage.toString();
-          final wirdJuz = MushafHizbHelper.getJuz(wirdStartPage);
-          final pagesRange = context.l10n.khatmahPagesTo(
-            wirdStartStr,
-            wirdEndStr,
-          );
-          final wirdJuzStr = isArabic
-              ? MushafHizbHelper.toArabicNumber(wirdJuz)
-              : '$wirdJuz';
-          final wirdRangeText = plan.wirdUnit == KhatmahWirdUnit.juz
-              ? '${context.l10n.khatmahWirdJuz(wirdJuzStr)}${context.listSeparator}$pagesRange'
-              : pagesRange;
-          final wirdPagesCountStr = isArabic
-              ? MushafHizbHelper.toArabicNumber(wirdPagesCount)
-              : wirdPagesCount.toString();
-
-          return Scaffold(
-            appBar: AppBar(
-              leading: _fallbackBackButton(hasHistory),
-              title: Text(
-                context.l10n.khatmahKhatmahDashboard,
-                style: AppTypography.titleMedium,
-              ),
-              centerTitle: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              actions: [
-                ..._historyAction(context),
-                // A destructive action belongs in the overflow menu, not
-                // beside everyday navigation like history.
-                PopupMenuButton<void>(
-                  key: const Key('khatmah_dashboard_more_menu'),
-                  itemBuilder: (menuContext) => [
-                    PopupMenuItem<void>(
-                      key: const Key(
-                        'khatmah_dashboard_edit_dedication_button',
-                      ),
-                      onTap: () => unawaited(_showEditDedicationSheet(plan)),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.volunteer_activism_outlined),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(context.l10n.khatmahEditDedication),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<void>(
-                      key: const Key('khatmah_dashboard_abandon_button'),
-                      onTap: () => _showAbandonConfirmDialog(context, plan),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_outline_rounded,
-                            color: Theme.of(context).colorScheme.error,
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          context.l10n.khatmahUnableToLoadYourKhatmah,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          // Offline-first: a load failure is local (storage or
+                          // account switch), never a connectivity problem.
+                          context.l10n.khatmahLoadFailureHint,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        FilledButton.icon(
+                          key: const Key(
+                            'khatmah_dashboard_load_failure_retry_button',
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            context.l10n.khatmahEndKhatmah,
-                            style: TextStyle(
+                          onPressed: _cubit.load,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: Text(context.l10n.khatmahReload),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (state is KhatmahNoActivePlan) {
+              return Scaffold(
+                appBar: AppBar(
+                  leading: _fallbackBackButton(hasHistory),
+                  title: Text(context.l10n.khatmahQuranKhatmah),
+                  centerTitle: true,
+                  actions: _historyAction(context),
+                ),
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.menu_book_outlined,
+                          size: 64,
+                          color: primary.withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          l10n.khatmahNoPlanTitle,
+                          style: AppTypography.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.khatmahNoPlanDescription,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: context.tokens.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        FilledButton.icon(
+                          key: const Key('khatmah_dashboard_start_button'),
+                          onPressed: () => context.go(AppRoutes.khatmahSetup),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: primary,
+                          ),
+                          icon: const Icon(Icons.add_rounded),
+                          label: Text(l10n.khatmahStartAction),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            KhatmahPlan plan;
+            int wirdStartPage;
+            int wirdEndPage;
+
+            if (state is KhatmahActive) {
+              plan = state.plan;
+              wirdStartPage = state.wirdStartPage;
+              wirdEndPage = state.wirdEndPage;
+            } else if (state is KhatmahPaused) {
+              plan = state.plan;
+              final wird = plan.dailyTargetFor(_cubit.displayDate);
+              wirdStartPage = wird.startPage;
+              wirdEndPage = wird.endPage;
+            } else if (state is KhatmahResuming) {
+              plan = state.plan;
+              final wird = plan.dailyTargetFor(_cubit.displayDate);
+              wirdStartPage = wird.startPage;
+              wirdEndPage = wird.endPage;
+            } else if (state is KhatmahProgressFailure && state.plan != null) {
+              plan = state.plan!;
+              final wird = plan.dailyTargetFor(_cubit.displayDate);
+              wirdStartPage = wird.startPage;
+              wirdEndPage = wird.endPage;
+            } else if (state is KhatmahWirdCompleted) {
+              plan = state.plan;
+              final wird = plan.dailyTargetFor(_cubit.displayDate);
+              wirdStartPage = wird.startPage;
+              wirdEndPage = wird.endPage;
+            } else if (state is KhatmahCompleted) {
+              plan = state.plan;
+              wirdStartPage = 604;
+              wirdEndPage = 604;
+            } else {
+              return const SizedBox.shrink();
+            }
+
+            final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
+            final isPaused = plan.status == KhatmahStatus.paused;
+            final isResuming = state is KhatmahResuming;
+            final dailyComplete = plan.isDailyTargetComplete(
+              _cubit.displayDate,
+            );
+            final wirdStartStr = context.numText(wirdStartPage);
+            final wirdEndStr = context.numText(wirdEndPage);
+            final wirdJuz = MushafHizbHelper.getJuz(wirdStartPage);
+            final pagesRange = context.l10n.khatmahPagesTo(
+              wirdStartStr,
+              wirdEndStr,
+            );
+            final wirdJuzStr = context.numText(wirdJuz);
+            final wirdRangeText = plan.wirdUnit == KhatmahWirdUnit.juz
+                ? '${context.l10n.khatmahWirdJuz(wirdJuzStr)}${context.listSeparator}$pagesRange'
+                : pagesRange;
+            final wirdPagesCountStr = context.numText(wirdPagesCount);
+
+            return Scaffold(
+              appBar: AppBar(
+                leading: _fallbackBackButton(hasHistory),
+                title: Text(
+                  context.l10n.khatmahKhatmahDashboard,
+                  style: AppTypography.titleMedium,
+                ),
+                centerTitle: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  ..._historyAction(context),
+                  // A destructive action belongs in the overflow menu, not
+                  // beside everyday navigation like history.
+                  PopupMenuButton<void>(
+                    key: const Key('khatmah_dashboard_more_menu'),
+                    itemBuilder: (menuContext) => [
+                      PopupMenuItem<void>(
+                        key: const Key(
+                          'khatmah_dashboard_edit_dedication_button',
+                        ),
+                        onTap: () => unawaited(_showEditDedicationSheet(plan)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.volunteer_activism_outlined),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(context.l10n.khatmahEditDedication),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<void>(
+                        key: const Key('khatmah_dashboard_abandon_button'),
+                        onTap: () => _showAbandonConfirmDialog(context, plan),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
                               color: Theme.of(context).colorScheme.error,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header with Plan Title & Dedication Badge
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusLg,
-                        ),
-                        border: Border.all(
-                          color: primary.withValues(alpha: 0.15),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              context.l10n.khatmahEndKhatmah,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            localizedKhatmahPlanTitle(context, plan.title),
-                            key: const Key('khatmah_dashboard_title'),
-                            style: AppTypography.headlineSmall.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: primary,
-                            ),
-                            textAlign: TextAlign.center,
+                    ],
+                  ),
+                ],
+              ),
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header with Plan Title & Dedication Badge
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
                           ),
-                          if (plan.dedication.isDedicated &&
-                              plan.dedication.recipientName != null &&
-                              plan.dedication.recipientName!.isNotEmpty)
-                            _buildDedicationBadge(
-                              plan.dedication,
-                              isArabic,
-                              isDark,
+                          border: Border.all(
+                            color: primary.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              localizedKhatmahPlanTitle(context, plan.title),
+                              key: const Key('khatmah_dashboard_title'),
+                              style: AppTypography.headlineSmall.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: primary,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                        ],
+                            if (plan.dedication.isDedicated &&
+                                plan.dedication.recipientName != null &&
+                                plan.dedication.recipientName!.isNotEmpty)
+                              _buildDedicationBadge(plan.dedication, isDark),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    if (state is KhatmahProgressFailure)
-                      _buildProgressFailureBanner(context, state),
-                    if (state is KhatmahProgressFailure)
+                      const SizedBox(height: AppSpacing.md),
+                      if (state is KhatmahProgressFailure)
+                        _buildProgressFailureBanner(context, state),
+                      if (state is KhatmahProgressFailure)
+                        const SizedBox(height: AppSpacing.md),
+
+                      // Progress Gauge
+                      KhatmahProgressGauge(plan: plan),
+                      if (plan.status == KhatmahStatus.active)
+                        _PaceLine(
+                          behind: plan.pagesBehind(_cubit.displayDate),
+                          ahead: plan.daysAhead(_cubit.displayDate),
+                          onRedistribute: _adjusting
+                              ? null
+                              : () => unawaited(_showCatchUpSheet()),
+                        ),
                       const SizedBox(height: AppSpacing.md),
 
-                    // Progress Gauge
-                    KhatmahProgressGauge(plan: plan),
-                    if (plan.status == KhatmahStatus.active)
-                      _PaceLine(
-                        behind: plan.pagesBehind(_cubit.displayDate),
-                        ahead: plan.daysAhead(_cubit.displayDate),
-                        isArabic: isArabic,
-                        onRedistribute: _adjusting
-                            ? null
-                            : () => unawaited(_showCatchUpSheet()),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Today's Wird Card
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? [
-                                  AppColors.darkSurfaceVariant,
-                                  AppColors.darkCard,
-                                ]
-                              : [
-                                  primary.withValues(alpha: 0.08),
-                                  AppColors.lightCard,
-                                ],
+                      // Today's Wird Card
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isDark
+                                ? [
+                                    AppColors.darkSurfaceVariant,
+                                    AppColors.darkCard,
+                                  ]
+                                : [
+                                    primary.withValues(alpha: 0.08),
+                                    AppColors.lightCard,
+                                  ],
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
+                          border: Border.all(
+                            color: primary.withValues(alpha: 0.2),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusLg,
-                        ),
-                        border: Border.all(
-                          color: primary.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.auto_stories_rounded,
-                                color: primary,
-                                size: 22,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: Text(
-                                  dailyComplete
-                                      ? (context
-                                            .l10n
-                                            .khatmahTodaySWirdCompleted)
-                                      : (context.l10n.khatmahTodaySWird),
-                                  style: AppTypography.titleMedium.copyWith(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_stories_rounded,
+                                  color: primary,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    dailyComplete
+                                        ? (context
+                                              .l10n
+                                              .khatmahTodaySWirdCompleted)
+                                        : (context.l10n.khatmahTodaySWird),
+                                    style: AppTypography.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  context.l10n.khatmahPages(
+                                    wirdPagesCount,
+                                    wirdPagesCountStr,
+                                  ),
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: AppColors.gold,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              wirdRangeText,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: context.tokens.textSecondary,
                               ),
-                              Text(
-                                context.l10n.khatmahPages(
-                                  wirdPagesCount,
-                                  wirdPagesCountStr,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            FilledButton.icon(
+                              key: const Key(
+                                'khatmah_dashboard_continue_reading_button',
+                              ),
+                              onPressed: isResuming
+                                  ? null
+                                  : isPaused
+                                  ? () => unawaited(_resumeAndOpenReader())
+                                  : () => context.push(
+                                      '/quran/page/${plan.nextUnreadPage}?mode=khatmah',
+                                    ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: primary,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(48),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
                                 ),
-                                style: AppTypography.labelMedium.copyWith(
-                                  color: AppColors.gold,
+                              ),
+                              icon: isResuming
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isPaused
+                                          ? Icons.play_arrow_rounded
+                                          : Icons.menu_book_rounded,
+                                    ),
+                              label: Text(
+                                isResuming
+                                    ? (context.l10n.khatmahResuming)
+                                    : isPaused
+                                    ? l10n.khatmahResumeAction
+                                    : (context.l10n.khatmahContinueReading),
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            wirdRangeText,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: context.tokens.textSecondary,
                             ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Physical Mushaf Logger Card
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          FilledButton.icon(
-                            key: const Key(
-                              'khatmah_dashboard_continue_reading_button',
+                          border: Border.all(
+                            color: primary.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              context.l10n.khatmahReadFromPhysicalMushaf,
+                              style: AppTypography.labelLarge,
                             ),
-                            onPressed: isResuming
-                                ? null
-                                : isPaused
-                                ? () => unawaited(_resumeAndOpenReader())
-                                : () => context.push(
-                                    '/quran/page/${plan.nextUnreadPage}?mode=khatmah',
+                            Text(
+                              context.l10n.khatmahPhysicalRangeHint,
+                              style: AppTypography.bodySmall,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            OutlinedButton(
+                              key: const Key(
+                                'khatmah_dashboard_log_mushaf_button',
+                              ),
+                              onPressed: plan.status == KhatmahStatus.paused
+                                  ? null
+                                  : () =>
+                                        _showMushafLoggerDialog(context, plan),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: primary,
+                                side: BorderSide(color: primary),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
                                   ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: primary,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd,
                                 ),
                               ),
+                              child: Text(context.l10n.khatmahLog),
                             ),
-                            icon: isResuming
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Icon(
-                                    isPaused
-                                        ? Icons.play_arrow_rounded
-                                        : Icons.menu_book_rounded,
-                                  ),
-                            label: Text(
-                              isResuming
-                                  ? (context.l10n.khatmahResuming)
-                                  : isPaused
-                                  ? l10n.khatmahResumeAction
-                                  : (context.l10n.khatmahContinueReading),
-                              style: AppTypography.labelLarge.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.lg),
 
-                    // Physical Mushaf Logger Card
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusLg,
-                        ),
-                        border: Border.all(
-                          color: primary.withValues(alpha: 0.15),
+                      // Juz map: what is covered, and a way into any juz.
+                      KhatmahJuzMap(
+                        plan: plan,
+                        enabled: plan.status == KhatmahStatus.active,
+                        onOpenPage: (page) =>
+                            context.push('/quran/page/$page?mode=khatmah'),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Adaptive Controls Section
+                      Text(
+                        context.l10n.khatmahCalmAdaptiveControls,
+                        style: AppTypography.labelLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: context.tokens.textSecondary,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      const SizedBox(height: AppSpacing.sm),
+
+                      Row(
                         children: [
-                          Text(
-                            context.l10n.khatmahReadFromPhysicalMushaf,
-                            style: AppTypography.labelLarge,
-                          ),
-                          Text(
-                            context.l10n.khatmahPhysicalRangeHint,
-                            style: AppTypography.bodySmall,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          OutlinedButton(
-                            key: const Key(
-                              'khatmah_dashboard_log_mushaf_button',
-                            ),
-                            onPressed: plan.status == KhatmahStatus.paused
-                                ? null
-                                : () => _showMushafLoggerDialog(context, plan),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: primary,
-                              side: BorderSide(color: primary),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd,
-                                ),
-                              ),
-                            ),
-                            child: Text(context.l10n.khatmahLog),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Juz map: what is covered, and a way into any juz.
-                    KhatmahJuzMap(
-                      plan: plan,
-                      enabled: plan.status == KhatmahStatus.active,
-                      onOpenPage: (page) =>
-                          context.push('/quran/page/$page?mode=khatmah'),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Adaptive Controls Section
-                    Text(
-                      context.l10n.khatmahCalmAdaptiveControls,
-                      style: AppTypography.labelLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: context.tokens.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    Row(
-                      children: [
-                        // Calm adjustment: recalibrate end date
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            key: const Key(
-                              'khatmah_dashboard_calm_adjustment_button',
-                            ),
-                            onPressed:
-                                plan.status != KhatmahStatus.active ||
-                                    _adjusting
-                                ? null
-                                : () => _adjust(KhatmahAdjustment.calm),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.sm,
-                                horizontal: AppSpacing.xs,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.update_rounded, size: 18),
-                            label: Text(
-                              context.l10n.khatmahCalmAdjust,
-                              style: AppTypography.labelMedium,
-                            ),
-                          ),
-                        ),
-                        // Mild compensation: add 1 page/day (pages mode only).
-                        if (plan.wirdUnit == KhatmahWirdUnit.pages) ...[
-                          const SizedBox(width: AppSpacing.sm),
+                          // Calm adjustment: recalibrate end date
                           Expanded(
                             child: OutlinedButton.icon(
                               key: const Key(
-                                'khatmah_dashboard_mild_compensation_button',
+                                'khatmah_dashboard_calm_adjustment_button',
                               ),
                               onPressed:
                                   plan.status != KhatmahStatus.active ||
-                                      _adjusting ||
-                                      !_cubit.canBoost
+                                      _adjusting
                                   ? null
-                                  : () => _adjust(KhatmahAdjustment.mildBoost),
+                                  : () => _adjust(KhatmahAdjustment.calm),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: AppSpacing.sm,
@@ -953,61 +901,94 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                   ),
                                 ),
                               ),
-                              icon: const Icon(
-                                Icons.add_circle_outline_rounded,
-                                size: 18,
-                              ),
+                              icon: const Icon(Icons.update_rounded, size: 18),
                               label: Text(
-                                context.l10n.khatmahMildBoost,
+                                context.l10n.khatmahCalmAdjust,
                                 style: AppTypography.labelMedium,
                               ),
                             ),
                           ),
+                          // Mild compensation: add 1 page/day (pages mode only).
+                          if (plan.wirdUnit == KhatmahWirdUnit.pages) ...[
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                key: const Key(
+                                  'khatmah_dashboard_mild_compensation_button',
+                                ),
+                                onPressed:
+                                    plan.status != KhatmahStatus.active ||
+                                        _adjusting ||
+                                        !_cubit.canBoost
+                                    ? null
+                                    : () =>
+                                          _adjust(KhatmahAdjustment.mildBoost),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: AppSpacing.sm,
+                                    horizontal: AppSpacing.xs,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  context.l10n.khatmahMildBoost,
+                                  style: AppTypography.labelMedium,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
 
-                    // Pause / Resume button
-                    OutlinedButton.icon(
-                      key: const Key('khatmah_dashboard_pause_resume_button'),
-                      onPressed: () {
-                        if (plan.status == KhatmahStatus.active) {
-                          _cubit.pause();
-                        } else {
-                          _cubit.resume();
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusMd,
+                      // Pause / Resume button
+                      OutlinedButton.icon(
+                        key: const Key('khatmah_dashboard_pause_resume_button'),
+                        onPressed: () {
+                          if (plan.status == KhatmahStatus.active) {
+                            _cubit.pause();
+                          } else {
+                            _cubit.resume();
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
                           ),
                         ),
+                        icon: Icon(
+                          plan.status == KhatmahStatus.active
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 18,
+                        ),
+                        label: Text(
+                          plan.status == KhatmahStatus.active
+                              ? (context.l10n.khatmahPause)
+                              : (context.l10n.khatmahResume),
+                          style: AppTypography.labelMedium,
+                        ),
                       ),
-                      icon: Icon(
-                        plan.status == KhatmahStatus.active
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        size: 18,
-                      ),
-                      label: Text(
-                        plan.status == KhatmahStatus.active
-                            ? (context.l10n.khatmahPause)
-                            : (context.l10n.khatmahResume),
-                        style: AppTypography.labelMedium,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -1082,12 +1063,10 @@ class _PhysicalMushafLoggerDialogState
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.isArabic;
     final page = parseKhatmahPageInput(_controller.text);
     final validRange =
         page != null && widget.plan.pagesThrough(page).isNotEmpty;
-    String number(int value) =>
-        isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
+    String number(int value) => context.numText(value);
     final wirdEnd = widget.plan
         .dailyTargetFor(widget.cubit.displayDate)
         .endPage;
@@ -1122,6 +1101,9 @@ class _PhysicalMushafLoggerDialogState
               autofocus: true,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp('[0-9٠-٩]')),
+                LocaleNumericInputFormatter(
+                  Localizations.localeOf(context).languageCode,
+                ),
               ],
               decoration: InputDecoration(
                 labelText: context.l10n.khatmahPageNumber,
@@ -1144,7 +1126,9 @@ class _PhysicalMushafLoggerDialogState
                 ),
                 onPressed: _isSaving
                     ? null
-                    : () => setState(() => _controller.text = '$wirdEnd'),
+                    : () => setState(
+                        () => _controller.text = context.numText(wirdEnd),
+                      ),
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
@@ -1198,18 +1182,12 @@ class _PhysicalMushafLoggerDialogState
 
 /// One calm line telling the learner whether the finish date still holds.
 class _PaceLine extends StatelessWidget {
-  const _PaceLine({
-    required this.behind,
-    this.ahead = 0,
-    required this.isArabic,
-    this.onRedistribute,
-  });
+  const _PaceLine({required this.behind, this.ahead = 0, this.onRedistribute});
 
   final int behind;
 
   /// Whole days the projected finish beats the plan; shown when on track.
   final int ahead;
-  final bool isArabic;
 
   /// Offered when behind: spread the remaining pages to keep the end date.
   final VoidCallback? onRedistribute;
@@ -1219,8 +1197,7 @@ class _PaceLine extends StatelessWidget {
     final onTrack = behind == 0;
     final isAhead = onTrack && ahead > 0;
     final color = onTrack ? AppColors.success : AppColors.warning;
-    String number(int value) =>
-        isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
+    String number(int value) => context.numText(value);
     final pages = number(behind);
     final line = Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),

@@ -14,6 +14,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 Future<void> showCertificateCelebrationDialog(
   BuildContext context,
   List<CertificateAward> awards,
@@ -113,7 +115,9 @@ class _CertificateCelebrationDialogState
     String getLocalizedTitle(CertificateAward award) {
       switch (award.type) {
         case CertificateType.juz:
-          return context.l10n.certificateTitleJuz(award.juzNumber ?? 0);
+          return context.l10n.certificateTitleJuz(
+            context.numText(award.juzNumber ?? 0),
+          );
         case CertificateType.surah:
           final name = context.isArabic ? award.surahNameAr : award.surahNameEn;
           return name != null
@@ -131,7 +135,12 @@ class _CertificateCelebrationDialogState
     }
 
     final subtitle = multiple
-        ? context.l10n.certificateCelebrationMultiple(widget.awards.length)
+        ? context.l10n.certificateCelebrationMultiple(
+            LocaleNumberFormatter.format(
+              (widget.awards.length).toString(),
+              context.l10n.localeName,
+            ),
+          )
         : context.l10n.certificateCelebrationSingle(
             getLocalizedTitle(widget.awards.first),
           );

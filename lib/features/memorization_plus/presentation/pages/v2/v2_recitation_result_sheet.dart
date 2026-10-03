@@ -1,3 +1,4 @@
+import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_recitation_result_sheet.dart
 //
 // Presentation-only result sheet shown right after a recitation evaluation.
@@ -145,7 +146,11 @@ class _ResultHeader extends StatelessWidget {
         else if (result.similarityScore != null)
           Text(
             context.l10n.v2ResultSimilarity(
-              (result.similarityScore!.clamp(0.0, 1.0) * 100).round(),
+              LocaleNumberFormatter.format(
+                ((result.similarityScore!.clamp(0.0, 1.0) * 100).round())
+                    .toString(),
+                context.l10n.localeName,
+              ),
             ),
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
@@ -179,9 +184,7 @@ class _WordDiffView extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.tokens.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: context.tokens.divider,
-        ),
+        border: Border.all(color: context.tokens.divider),
       ),
       child: Wrap(
         spacing: AppSpacing.xs,
@@ -247,7 +250,7 @@ class _DiffLegend extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '$label: $count',
+                '$label: ${context.numText(count)}',
                 style: AppTypography.labelMedium.copyWith(color: secondary),
               ),
             ],

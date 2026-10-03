@@ -14,6 +14,8 @@ import '../theme/home_skin.dart';
 import 'islamic_pattern_painter.dart';
 import 'spring_tap.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class NextBestActionCard extends StatefulWidget {
   const NextBestActionCard({
     super.key,
@@ -128,8 +130,14 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       SmartCoachRecommendationKind.continueDailyPlan => (
         context.l10n.journeyContinueDailyPlanTitle,
         context.l10n.journeyContinueDailyPlanDesc(
-          coach.completedCount ?? 0,
-          coach.totalCount ?? 0,
+          LocaleNumberFormatter.format(
+            (coach.completedCount ?? 0).toString(),
+            context.l10n.localeName,
+          ),
+          LocaleNumberFormatter.format(
+            (coach.totalCount ?? 0).toString(),
+            context.l10n.localeName,
+          ),
         ),
         Icons.today_rounded,
         coach.route,
@@ -172,9 +180,17 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
     final end = coach.endAyah;
     if (start == null) return '';
     if (end == null || end == start) {
-      return context.l10n.journeyAyahLabel(start);
+      return context.l10n.journeyAyahLabel(
+        LocaleNumberFormatter.format(
+          (start).toString(),
+          context.l10n.localeName,
+        ),
+      );
     }
-    return context.l10n.journeyAyahsLabel(start, end);
+    return context.l10n.journeyAyahsLabel(
+      LocaleNumberFormatter.format((start).toString(), context.l10n.localeName),
+      LocaleNumberFormatter.format((end).toString(), context.l10n.localeName),
+    );
   }
 
   @override

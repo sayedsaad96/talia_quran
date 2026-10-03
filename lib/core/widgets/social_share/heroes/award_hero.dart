@@ -126,7 +126,7 @@ class AwardHero extends StatelessWidget {
       if (days != null) ...[
         SizedBox(height: metrics.gap),
         HeroNumeral(
-          text: '$days',
+          text: copy.number(days),
           color: palette.textAccent,
           size: metrics.numeralSize,
         ),

@@ -16,6 +16,8 @@ import '../../data/datasources/bookmark_service.dart';
 import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/bookmark_reader_location.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Dedicated bookmarks browser showing all saved ayahs grouped by Surah.
 class BookmarksPage extends StatelessWidget {
   const BookmarksPage({super.key});
@@ -221,7 +223,13 @@ class _SurahBookmarkGroup extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  context.l10n.bookmarksCountItem(entries.length),
+                  context.l10n.bookmarksCountItem(
+                    entries.length,
+                    LocaleNumberFormatter.format(
+                      (entries.length).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   style: AppTypography.labelSmall.copyWith(color: subtextColor),
                 ),
               ],
@@ -292,7 +300,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              '${entry.ayahNumber}',
+                              context.numText(entry.ayahNumber),
                               style: AppTypography.labelMedium.copyWith(
                                 color: primary,
                               ),

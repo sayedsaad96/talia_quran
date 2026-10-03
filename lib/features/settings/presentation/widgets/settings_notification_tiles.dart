@@ -1,3 +1,4 @@
+import '../../../../core/utils/locale_number_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,6 +15,8 @@ import '../cubits/notification_settings_cubit.dart';
 import '../cubits/notification_settings_state.dart';
 import 'settings_group.dart';
 import 'settings_section.dart';
+
+import '../../../../core/widgets/locale_time_picker.dart';
 
 class NotificationSettingTile extends StatefulWidget {
   const NotificationSettingTile({super.key, required this.isDark, this.cubit});
@@ -111,7 +114,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
 
   Future<void> _pickTime(String key, TimeOfDay initialTime) async {
     final l10n = context.l10n;
-    final newTime = await showTimePicker(
+    final newTime = await showLocaleTimePicker(
       context: context,
       initialTime: initialTime,
       builder: (context, child) {
@@ -133,7 +136,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
   }) async {
     final l10n = context.l10n;
     final currentHour = isStart ? state.quietHoursStart : state.quietHoursEnd;
-    final selected = await showTimePicker(
+    final selected = await showLocaleTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: currentHour, minute: 0),
     );
@@ -455,8 +458,14 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                         state.isSystemPermissionBlocked
                             ? context.l10n.notificationStatusBlocked
                             : context.l10n.notificationStatusSummary(
-                                state.enabledCount,
-                                state.totalCount,
+                                LocaleNumberFormatter.format(
+                                  (state.enabledCount).toString(),
+                                  context.l10n.localeName,
+                                ),
+                                LocaleNumberFormatter.format(
+                                  (state.totalCount).toString(),
+                                  context.l10n.localeName,
+                                ),
                               ),
                         style: AppTypography.labelMedium.copyWith(
                           color: state.isSystemPermissionBlocked

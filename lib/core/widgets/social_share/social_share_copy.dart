@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../utils/locale_number_formatter.dart';
 import 'share_card_palette.dart';
 import 'social_share_model.dart';
 
@@ -9,16 +10,19 @@ import 'social_share_model.dart';
 /// This catalog also covers the share sheet chrome so English users never see
 /// Arabic-only UI strings inside the share flow.
 class SocialShareCopy {
-  const SocialShareCopy._(this.isArabic);
+  const SocialShareCopy._(this.languageCode);
 
   factory SocialShareCopy.of(BuildContext context) =>
-      SocialShareCopy._(Localizations.localeOf(context).languageCode == 'ar');
+      SocialShareCopy._(Localizations.localeOf(context).languageCode);
 
   /// Entry point outside a widget tree (tests, background export).
   factory SocialShareCopy.forLanguage(String languageCode) =>
-      SocialShareCopy._(languageCode == 'ar');
+      SocialShareCopy._(languageCode);
 
-  final bool isArabic;
+  final String languageCode;
+  bool get isArabic => languageCode == 'ar';
+
+  String number(int value) => LocaleNumberFormatter.number(value, languageCode);
 
   /// See `BuildContextX.listSeparator`: the middle dot reads as ٠ beside
   /// Arabic digits.
@@ -47,19 +51,22 @@ class SocialShareCopy {
 
   // ─── Quran verse template ────────────────────────────────────────────────
   String surah(String name) => isArabic ? 'سورة $name' : 'Surah $name';
-  String ayah(int number) => isArabic ? 'الآية $number' : 'Ayah $number';
+  String ayah(int number) =>
+      isArabic ? 'الآية ${this.number(number)}' : 'Ayah ${this.number(number)}';
   String get holyQuran => isArabic ? 'القرآن الكريم' : 'The Holy Quran';
 
   // ─── Achievement template ────────────────────────────────────────────────
   String get completed => isArabic ? 'مكتمل' : 'Completed';
-  String progress(int value, int target) =>
-      isArabic ? '$value من $target' : '$value of $target';
+  String progress(int value, int target) => isArabic
+      ? '${number(value)} من ${number(target)}'
+      : '${number(value)} of ${number(target)}';
   String get achievementComplete =>
       isArabic ? 'تم الإنجاز' : 'Achievement unlocked';
 
   // ─── Streak template ─────────────────────────────────────────────────────
-  String longestStreak(int value) =>
-      isArabic ? 'أطول سلسلة: $value يوم' : 'Longest streak: $value days';
+  String longestStreak(int value) => isArabic
+      ? 'أطول سلسلة: ${number(value)} يوم'
+      : 'Longest streak: ${number(value)} days';
   String get newRecord =>
       isArabic ? 'رقم قياسي جديد! 🎉' : 'New personal record! 🎉';
 
@@ -71,7 +78,7 @@ class SocialShareCopy {
       isArabic ? 'آيات محفوظة' : 'ayahs memorized';
   String get streakDaysLabel => isArabic ? 'أيام متتالية' : 'streak days';
   String pages(int value) =>
-      isArabic ? '$value صفحة مقروءة' : '$value pages read';
+      isArabic ? '${number(value)} صفحة مقروءة' : '${number(value)} pages read';
 
   // ─── Certificate template ────────────────────────────────────────────────
   String verificationCode(String code) =>
@@ -176,7 +183,9 @@ class SocialShareCopy {
 
   String ayahReference(String? surahName, int? ayahNumber) {
     final surahPart = surahName == null ? holyQuran : surah(surahName);
-    return ayahNumber == null ? surahPart : '$surahPart$separator${ayah(ayahNumber)}';
+    return ayahNumber == null
+        ? surahPart
+        : '$surahPart$separator${ayah(ayahNumber)}';
   }
 
   /// Arabic noun agreement: 1, 2, 3–10, and 0 / 11+.
@@ -202,8 +211,8 @@ class SocialShareCopy {
       : '${ayahs == 1 ? 'ayah' : 'ayahs'} memorized';
 
   String surahsCompleted(int count) => isArabic
-      ? '$count ${arabicCountWord(count, one: 'سورة مكتملة', two: 'سورتان مكتملتان', few: 'سور مكتملة', many: 'سورة مكتملة')}'
-      : '$count ${count == 1 ? 'surah' : 'surahs'} completed';
+      ? '${number(count)} ${arabicCountWord(count, one: 'سورة مكتملة', two: 'سورتان مكتملتان', few: 'سور مكتملة', many: 'سورة مكتملة')}'
+      : '${number(count)} ${count == 1 ? 'surah' : 'surahs'} completed';
 
   String khatmahDaysLabel(int days) => isArabic
       ? arabicCountWord(

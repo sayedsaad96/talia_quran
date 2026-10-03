@@ -1,3 +1,4 @@
+import 'package:talia_quran/core/utils/locale_number_formatter.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart';
 
@@ -53,7 +54,15 @@ void main() {
         final l10n = lookupAppLocalizations(locale);
         expect(find.text(l10n.progressNextMilestoneTitle), findsOneWidget);
         expect(find.text(l10n.progressStartReview), findsOneWidget);
-        expect(find.text(l10n.progressDueReviewsNudge(12)), findsOneWidget);
+        expect(
+          find.text(
+            l10n.progressDueReviewsNudge(
+              12,
+              LocaleNumberFormatter.format((12).toString(), l10n.localeName),
+            ),
+          ),
+          findsOneWidget,
+        );
       });
     }
   }

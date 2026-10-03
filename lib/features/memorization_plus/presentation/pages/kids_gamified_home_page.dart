@@ -50,8 +50,13 @@ class KidsGamifiedHomePage extends StatelessWidget {
 }
 
 @visibleForTesting
-String kidsQuranReaderLocation(int surahId, {int? ayahNumber}) =>
+String kidsQuranReaderLocation(
+  int surahId, {
+  int? ayahNumber,
+  int? pageNumber,
+}) =>
     '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId'
+    '${pageNumber == null ? '' : '&pageNumber=$pageNumber'}'
     '${ayahNumber == null ? '' : '&ayahNumber=$ayahNumber'}';
 
 @visibleForTesting
@@ -193,15 +198,11 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
             ),
             onMushafTap: () => _openDestination(() async {
               if (!context.mounted) return;
-              // Open the Mushaf at today's mission ayah, marked (K26).
-              final mission = state.nextMission;
+              // The general Mushaf action opens Al-Fatihah. The surah query
+              // only preserves the return-home context; mission links retain
+              // their explicit ayah.
               await context.push(
-                mission == null
-                    ? kidsQuranReaderLocation(state.surahId)
-                    : kidsQuranReaderLocation(
-                        mission.surahId,
-                        ayahNumber: mission.startAyah,
-                      ),
+                kidsQuranReaderLocation(state.surahId, pageNumber: 1),
               );
               // A page confirmed in the Mushaf completes the reading card.
               if (context.mounted) {

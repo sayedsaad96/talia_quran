@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +15,7 @@ class MockTaliaNotificationService extends Mock
     implements TaliaNotificationService {}
 
 class MockStreakReader extends Mock implements StreakReader {}
+
 class MockStreakService extends Mock implements StreakService {}
 
 void main() {
@@ -36,14 +37,18 @@ void main() {
     mockNotificationService = MockTaliaNotificationService();
     mockStreakReader = MockStreakReader();
 
-    when(() => mockNotificationService.configureLocalTimezone())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakAlert())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakGentleNudge())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelSmartReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.configureLocalTimezone(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakAlert(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakGentleNudge(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelSmartReminder(),
+    ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleStreakGentleNudge(
         title: any(named: 'title'),
@@ -61,8 +66,9 @@ void main() {
         minute: any(named: 'minute'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelFridayKahfReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleFridayKahfReminder(
         title: any(named: 'title'),
@@ -79,14 +85,18 @@ void main() {
         minute: any(named: 'minute'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelWeeklyImpactReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelTahajjudReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKhatmahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelPrayerTimesReminders())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelTahajjudReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKhatmahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelPrayerTimesReminders(),
+    ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleStreakProtectionAlert(
         title: any(named: 'title'),
@@ -96,57 +106,61 @@ void main() {
         minute: any(named: 'minute'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyReviewReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyAyahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelMorningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelEveningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyDuaReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKidsReviewReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyReviewReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyAyahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelMorningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelEveningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyDuaReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKidsReviewReminder(),
+    ).thenAnswer((_) async {});
 
     getIt.registerSingleton<StreakReader>(mockStreakReader);
   });
 
   tearDown(() => getIt.reset());
 
-  test(
-    'cancels streak alert if user already has activity today',
-    () async {
-      final now = DateTime.now();
-      final streakWithActivityToday = StreakEntity(
-        currentStreak: 5,
-        longestStreak: 10,
-        lastActivityDate: now,
-      );
+  test('cancels streak alert if user already has activity today', () async {
+    final now = DateTime.now();
+    final streakWithActivityToday = StreakEntity(
+      currentStreak: 5,
+      longestStreak: 10,
+      lastActivityDate: now,
+    );
 
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakWithActivityToday);
+    when(
+      () => mockStreakReader.getStreak(),
+    ).thenAnswer((_) async => streakWithActivityToday);
 
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
-      );
+    final scheduler = NotificationScheduler(
+      mockNotificationService,
+      streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
+    );
 
-      final l10n = lookupAppLocalizations(const Locale('ar'));
-      await scheduler.refreshNotifications(l10n);
+    final l10n = lookupAppLocalizations(const Locale('ar'));
+    await scheduler.refreshNotifications(l10n);
 
-      verify(() => mockNotificationService.cancelStreakAlert()).called(1);
-      verifyNever(
-        () => mockNotificationService.scheduleStreakProtectionAlert(
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          currentStreak: any(named: 'currentStreak'),
-          hour: any(named: 'hour'),
-          minute: any(named: 'minute'),
-        ),
-      );
-    },
-  );
+    verify(() => mockNotificationService.cancelStreakAlert()).called(1);
+    verifyNever(
+      () => mockNotificationService.scheduleStreakProtectionAlert(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        currentStreak: any(named: 'currentStreak'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    );
+  });
 
   test(
     'schedules streak alert if user has active streak but no activity today',
@@ -159,8 +173,9 @@ void main() {
         lastActivityDate: yesterday,
       );
 
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakAtRisk);
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakAtRisk);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -182,39 +197,37 @@ void main() {
     },
   );
 
-  test(
-    'cancels streak alert if streak is zero even if enabled',
-    () async {
-      final now = DateTime.now();
-      const zeroStreak = StreakEntity(
-        currentStreak: 0,
-        longestStreak: 0,
-        lastActivityDate: null,
-      );
+  test('cancels streak alert if streak is zero even if enabled', () async {
+    final now = DateTime.now();
+    const zeroStreak = StreakEntity(
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActivityDate: null,
+    );
 
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => zeroStreak);
+    when(
+      () => mockStreakReader.getStreak(),
+    ).thenAnswer((_) async => zeroStreak);
 
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
-      );
+    final scheduler = NotificationScheduler(
+      mockNotificationService,
+      streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
+    );
 
-      final l10n = lookupAppLocalizations(const Locale('ar'));
-      await scheduler.refreshNotifications(l10n);
+    final l10n = lookupAppLocalizations(const Locale('ar'));
+    await scheduler.refreshNotifications(l10n);
 
-      verify(() => mockNotificationService.cancelStreakAlert()).called(1);
-      verifyNever(
-        () => mockNotificationService.scheduleStreakProtectionAlert(
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          currentStreak: any(named: 'currentStreak'),
-          hour: any(named: 'hour'),
-          minute: any(named: 'minute'),
-        ),
-      );
-    },
-  );
+    verify(() => mockNotificationService.cancelStreakAlert()).called(1);
+    verifyNever(
+      () => mockNotificationService.scheduleStreakProtectionAlert(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        currentStreak: any(named: 'currentStreak'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    );
+  });
 
   test(
     'schedules weekly impact with the activity days count from the last 7 days',
@@ -225,8 +238,9 @@ void main() {
         longestStreak: 3,
         lastActivityDate: now.subtract(const Duration(days: 9)),
       );
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakIdle);
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakIdle);
 
       final mockStreakService = MockStreakService();
       when(() => mockStreakService.getActivityMap(days: 7)).thenAnswer(
@@ -259,7 +273,22 @@ void main() {
         ),
       ).captured;
       expect(captured[0], equals('أثرك هذا الأسبوع 🌿'));
-      expect(captured[1], contains('3 أيام'));
+      expect(captured[1], contains('٣ أيام'));
+      // A same-day language change must replace the rolling notification text.
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('en')),
+        force: true,
+      );
+      final updated = verify(
+        () => mockNotificationService.scheduleWeeklyImpactReminder(
+          title: captureAny(named: 'title'),
+          body: captureAny(named: 'body'),
+          hour: any(named: 'hour'),
+          minute: any(named: 'minute'),
+        ),
+      ).captured;
+      expect(updated[1], contains('3'));
+      expect(updated[1], isNot(contains('٣')));
     },
   );
 
@@ -272,8 +301,9 @@ void main() {
         longestStreak: 0,
         lastActivityDate: null,
       );
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakIdle);
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakIdle);
 
       final mockStreakService = MockStreakService();
       when(() => mockStreakService.getActivityMap(days: 7)).thenAnswer(
@@ -310,39 +340,37 @@ void main() {
     },
   );
 
-  test(
-    'cancels the weekly impact notification when it is disabled',
-    () async {
-      // SharedPreferences caches its instance, so mutate the live mock
-      // instead of re-seeding initial values.
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(
-        TaliaNotificationService.weeklyImpactPreferenceKey,
-        false,
-      );
-      await prefs.setBool(
-        TaliaNotificationService.streakAlertPreferenceKey,
-        false,
-      );
-      final now = DateTime.now();
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
-      );
+  test('cancels the weekly impact notification when it is disabled', () async {
+    // SharedPreferences caches its instance, so mutate the live mock
+    // instead of re-seeding initial values.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(
+      TaliaNotificationService.weeklyImpactPreferenceKey,
+      false,
+    );
+    await prefs.setBool(
+      TaliaNotificationService.streakAlertPreferenceKey,
+      false,
+    );
+    final now = DateTime.now();
+    final scheduler = NotificationScheduler(
+      mockNotificationService,
+      streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
+    );
 
-      final l10n = lookupAppLocalizations(const Locale('ar'));
-      await scheduler.refreshNotifications(l10n);
+    final l10n = lookupAppLocalizations(const Locale('ar'));
+    await scheduler.refreshNotifications(l10n);
 
-      verify(() => mockNotificationService.cancelWeeklyImpactReminder())
-          .called(1);
-      verifyNever(
-        () => mockNotificationService.scheduleWeeklyImpactReminder(
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          hour: any(named: 'hour'),
-          minute: any(named: 'minute'),
-        ),
-      );
-    },
-  );
+    verify(
+      () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).called(1);
+    verifyNever(
+      () => mockNotificationService.scheduleWeeklyImpactReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    );
+  });
 }

@@ -4,6 +4,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_world_phase.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/theme/kids_theme.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_motion_scope.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_ui.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_policy_controller.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
@@ -168,6 +169,50 @@ void main() {
       );
       expect(disabled, isFalse);
     });
+
+    testWidgets('motion scope preserves the OS preference when the guardian '
+        'preference is off', (tester) async {
+      final controller = KidsPolicyController(
+        load: () async => const KidsChildPolicy(),
+      );
+      getIt.registerSingleton<KidsPolicyController>(controller);
+      disabled = null;
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: KidsMotionScope(child: motionProbe()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(disabled, isTrue);
+    });
+
+    testWidgets('motion scope keeps a stateful child mounted on a live '
+        'guardian toggle', (tester) async {
+      final controller = KidsPolicyController(
+        load: () async => const KidsChildPolicy(),
+      );
+      getIt.registerSingleton<KidsPolicyController>(controller);
+      final childKey = GlobalKey();
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: KidsMotionScope(child: _StateProbe(key: childKey)),
+        ),
+      );
+      final before = childKey.currentState;
+      controller.value = const KidsChildPolicy(reduceMotion: true);
+      await tester.pump();
+
+      expect(childKey.currentState, same(before));
+      expect(MediaQuery.disableAnimationsOf(childKey.currentContext!), isTrue);
+    });
   });
 
   for (final phase in KidsWorldPhase.values) {
@@ -210,4 +255,16 @@ void main() {
       controller.dispose();
     });
   }
+}
+
+class _StateProbe extends StatefulWidget {
+  const _StateProbe({super.key});
+
+  @override
+  State<_StateProbe> createState() => _StateProbeState();
+}
+
+class _StateProbeState extends State<_StateProbe> {
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

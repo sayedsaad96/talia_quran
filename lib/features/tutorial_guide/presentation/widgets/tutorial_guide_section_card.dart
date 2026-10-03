@@ -261,7 +261,7 @@ class _GuideStepListBlock extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Text(
-                      '${index + 1}',
+                      context.numText(index + 1),
                       style: AppTypography.labelSmall.copyWith(
                         color: color,
                         fontWeight: FontWeight.bold,
@@ -362,7 +362,6 @@ class _BlockTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Row(
       children: [
         Icon(icon, color: color, size: 18),

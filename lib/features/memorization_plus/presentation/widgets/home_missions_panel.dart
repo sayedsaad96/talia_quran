@@ -7,6 +7,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_home_mission.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Maximum mission length; mirrors the server and local-service limit.
 const int kHomeMissionDialogMaxLength = 120;
 
@@ -170,8 +172,12 @@ class _HomeMissionDialogState extends State<HomeMissionDialog> {
     }
     if (text.length > kHomeMissionDialogMaxLength) {
       setState(
-        () =>
-            _errorText = context.l10n.fieldTooLong(kHomeMissionDialogMaxLength),
+        () => _errorText = context.l10n.fieldTooLong(
+          LocaleNumberFormatter.format(
+            (kHomeMissionDialogMaxLength).toString(),
+            context.l10n.localeName,
+          ),
+        ),
       );
       return;
     }

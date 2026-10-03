@@ -12,6 +12,8 @@ import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'settings_section.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class MemorizationPathSummaryTile extends StatelessWidget {
   const MemorizationPathSummaryTile({
     super.key,
@@ -164,9 +166,7 @@ class ResetMemorizationPathTile extends StatelessWidget {
                 ],
               ),
             ),
-            SettingsTrailingChevron(
-              color: context.tokens.textSecondary,
-            ),
+            SettingsTrailingChevron(color: context.tokens.textSecondary),
           ],
         ),
       ),
@@ -312,10 +312,7 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
     if (!saved) {
       setState(() => _selected = previous);
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: AppColors.error),
       );
     }
   }
@@ -363,7 +360,12 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
             AccuracyOptionCard(
               title: titles[i],
               description: descriptions[i],
-              percentLabel: context.l10n.accuracyRequiredPercent(percents[i]),
+              percentLabel: context.l10n.accuracyRequiredPercent(
+                LocaleNumberFormatter.format(
+                  (percents[i]).toString(),
+                  context.l10n.localeName,
+                ),
+              ),
               color: colors[i],
               isDark: widget.isDark,
               isSelected: _selected == i,

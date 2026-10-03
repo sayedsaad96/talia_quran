@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../core/extensions/context_extensions.dart';
+import '../../../core/utils/locale_number_formatter.dart';
 import '../domain/entities/khatmah_dedication.dart';
 import '../domain/entities/khatmah_plan.dart';
 
@@ -12,12 +13,8 @@ String localizedKhatmahPlanTitle(BuildContext context, String title) =>
     : title;
 
 /// Physical-page entry accepts both the Arabic and Western numeric keyboards.
-int? parseKhatmahPageInput(String input) => int.tryParse(
-  input.trim().replaceAllMapped(
-    RegExp('[٠-٩]'),
-    (match) => (match.group(0)!.codeUnitAt(0) - 0x0660).toString(),
-  ),
-);
+int? parseKhatmahPageInput(String input) =>
+    int.tryParse(LocaleNumberFormatter.western(input.trim()));
 
 /// Translate known legacy relationship values without changing stored data.
 String localizedKhatmahRelationship(

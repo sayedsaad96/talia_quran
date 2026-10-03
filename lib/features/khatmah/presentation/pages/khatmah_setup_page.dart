@@ -9,7 +9,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
@@ -48,6 +48,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
 
   /// Optional start page (C7); empty means page 1.
   final TextEditingController _startPageController = TextEditingController();
+  String? _languageCode;
 
   @override
   void initState() {
@@ -81,6 +82,22 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
       _cubit.close();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (_languageCode == languageCode) {
+      return;
+    }
+    _languageCode = languageCode;
+    for (final controller in [_customController, _startPageController]) {
+      controller.value = controller.value.copyWith(
+        text: context.digitText(controller.text),
+        selection: TextSelection.collapsed(offset: controller.text.length),
+      );
+    }
   }
 
   void _onDurationSelected(int days) {
@@ -159,7 +176,6 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final isArabic = context.isArabic;
     final l10n = context.l10n;
     final primary = context.tokens.accent;
     final cardBg = context.tokens.card;
@@ -179,10 +195,8 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     final dateStr =
         '${endDate.year}/${endDate.month.toString().padLeft(2, '0')}/${endDate.day.toString().padLeft(2, '0')}';
 
-    final daysDisplay = isArabic
-        ? MushafHizbHelper.toArabicNumber(estimatedDays)
-        : estimatedDays.toString();
-    final dateDisplay = isArabic ? _toArabicDigits(dateStr) : dateStr;
+    final daysDisplay = context.numText(estimatedDays);
+    final dateDisplay = context.digitText(dateStr);
 
     return BlocProvider<KhatmahSetupCubit>.value(
       value: _cubit,
@@ -348,9 +362,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                                   _selectedDays == null &&
                                   _selectedPages == pages &&
                                   _customController.text.isEmpty;
-                              final pagesStr = isArabic
-                                  ? MushafHizbHelper.toArabicNumber(pages)
-                                  : pages.toString();
+                              final pagesStr = context.numText(pages);
                               return ChoiceChip(
                                 key: Key('khatmah_setup_preset_$pages'),
                                 label: Text(
@@ -383,6 +395,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               FilteringTextInputFormatter.allow(
                                 RegExp('[0-9٠-٩]'),
                               ),
+                              LocaleNumericInputFormatter(
+                                Localizations.localeOf(context).languageCode,
+                              ),
                             ],
                             decoration: InputDecoration(
                               labelText:
@@ -407,9 +422,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             spacing: AppSpacing.sm,
                             runSpacing: AppSpacing.xs,
                             children: _durationPresets.map((days) {
-                              final daysStr = isArabic
-                                  ? MushafHizbHelper.toArabicNumber(days)
-                                  : days.toString();
+                              final daysStr = context.numText(days);
                               return ChoiceChip(
                                 key: Key('khatmah_setup_duration_$days'),
                                 label: Text(
@@ -436,6 +449,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
                                 RegExp('[0-9٠-٩]'),
+                              ),
+                              LocaleNumericInputFormatter(
+                                Localizations.localeOf(context).languageCode,
                               ),
                             ],
                             decoration: InputDecoration(
@@ -578,14 +594,6 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
           );
         },
       ),
-    );
-  }
-
-  static String _toArabicDigits(String input) {
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return input.replaceAllMapped(
-      RegExp(r'\d'),
-      (m) => digits[int.parse(m.group(0)!)],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
 import 'certificate_palette.dart';
 
 export 'certificate_palette.dart';
@@ -120,12 +121,17 @@ class CertificateWidget extends StatelessWidget {
     required this.userName,
     required this.award,
     required this.completionDate,
+    this.languageCode = 'ar',
     this.styleType = CertificateStyleType.classicParchment,
   });
 
   final String userName;
   final CertificateAward award;
   final DateTime completionDate;
+
+  /// The app locale used for display-only values in this certificate image.
+  /// The verification code remains a stable, copyable identifier.
+  final String languageCode;
   final CertificateStyleType styleType;
 
   CertificateStyleTheme get theme => CertificateStyleTheme.get(styleType);
@@ -206,9 +212,10 @@ class CertificateWidget extends StatelessWidget {
     return 'قد أتم بنجاح حفظ';
   }
 
-  String get _formattedDate {
-    return '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}';
-  }
+  String get _formattedDate => LocaleNumberFormatter.format(
+    '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}',
+    languageCode,
+  );
 
   bool get _isFullOrHalf =>
       award.type == CertificateType.fullQuran ||

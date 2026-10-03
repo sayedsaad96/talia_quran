@@ -67,24 +67,24 @@ void main() {
     await tester.pumpWidget(buildHarness());
     await tester.pump();
 
-    expect(find.text('الفجر'),   findsOneWidget);
+    expect(find.text('الفجر'), findsOneWidget);
     expect(find.text('الشروق'), findsOneWidget);
-    expect(find.text('الظهر'),   findsOneWidget);
-    expect(find.text('العصر'),   findsOneWidget);
-    expect(find.text('المغرب'),  findsOneWidget);
-    expect(find.text('العشاء'),  findsOneWidget);
+    expect(find.text('الظهر'), findsOneWidget);
+    expect(find.text('العصر'), findsOneWidget);
+    expect(find.text('المغرب'), findsOneWidget);
+    expect(find.text('العشاء'), findsOneWidget);
   });
 
   testWidgets('renders all 6 station names in English', (tester) async {
     await tester.pumpWidget(buildHarness(locale: const Locale('en')));
     await tester.pump();
 
-    expect(find.text('Fajr'),    findsOneWidget);
+    expect(find.text('Fajr'), findsOneWidget);
     expect(find.text('Sunrise'), findsOneWidget);
-    expect(find.text('Dhuhr'),   findsOneWidget);
-    expect(find.text('Asr'),     findsOneWidget);
+    expect(find.text('Dhuhr'), findsOneWidget);
+    expect(find.text('Asr'), findsOneWidget);
     expect(find.text('Maghrib'), findsOneWidget);
-    expect(find.text('Isha'),    findsOneWidget);
+    expect(find.text('Isha'), findsOneWidget);
   });
 
   testWidgets('city name is visible', (tester) async {
@@ -93,42 +93,52 @@ void main() {
     expect(find.text('القاهرة'), findsOneWidget);
   });
 
-  testWidgets('header shows next prayer countdown (dhuhr, 25 min)', (tester) async {
+  testWidgets('header shows next prayer countdown (dhuhr, 25 min)', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildHarness());
     await tester.pump();
     // prayerTimelineNext AR: "أذان الظهر خلال 25 دقيقة"
     expect(find.textContaining('الظهر'), findsWidgets);
-    expect(find.textContaining('25'), findsWidgets);
+    expect(find.textContaining('٢٥'), findsWidgets);
   });
 
-  testWidgets('header shows hours and minutes when next prayer is > 60 min away',
-      (tester) async {
-    final longSnap = PrayerTimesSnapshot(
-      city: city,
-      nextName: 'fajr',
-      nextTime: DateTime(2026, 9, 13, 5, 14),
-      minutesUntil: 394, // 6 hours and 34 minutes
-      fajr: DateTime(2026, 9, 13, 5, 14),
-      sunrise: DateTime(2026, 9, 13, 6, 41),
-      dhuhr: DateTime(2026, 9, 13, 12, 50),
-      asr: DateTime(2026, 9, 13, 16, 18),
-      maghrib: DateTime(2026, 9, 13, 18, 57),
-      isha: DateTime(2026, 9, 13, 20, 15),
-    );
+  testWidgets(
+    'header shows hours and minutes when next prayer is > 60 min away',
+    (tester) async {
+      final longSnap = PrayerTimesSnapshot(
+        city: city,
+        nextName: 'fajr',
+        nextTime: DateTime(2026, 9, 13, 5, 14),
+        minutesUntil: 394, // 6 hours and 34 minutes
+        fajr: DateTime(2026, 9, 13, 5, 14),
+        sunrise: DateTime(2026, 9, 13, 6, 41),
+        dhuhr: DateTime(2026, 9, 13, 12, 50),
+        asr: DateTime(2026, 9, 13, 16, 18),
+        maghrib: DateTime(2026, 9, 13, 18, 57),
+        isha: DateTime(2026, 9, 13, 20, 15),
+      );
 
-    // Arabic test
-    await tester.pumpWidget(buildHarness(snap: longSnap));
-    await tester.pump();
-    expect(find.textContaining('أذان الفجر خلال ٦ ساعات و ٣٤ دقيقة'), findsOneWidget);
+      // Arabic test
+      await tester.pumpWidget(buildHarness(snap: longSnap));
+      await tester.pump();
+      expect(
+        find.textContaining('أذان الفجر خلال ٦ ساعات و ٣٤ دقيقة'),
+        findsOneWidget,
+      );
 
-    // English test
-    await tester.pumpWidget(buildHarness(snap: longSnap, locale: const Locale('en')));
-    await tester.pump();
-    expect(find.textContaining('Fajr in 6h 34m'), findsOneWidget);
-  });
+      // English test
+      await tester.pumpWidget(
+        buildHarness(snap: longSnap, locale: const Locale('en')),
+      );
+      await tester.pump();
+      expect(find.textContaining('Fajr in 6h 34m'), findsOneWidget);
+    },
+  );
 
-  testWidgets('header uses sunrise-specific text when nextName is sunrise',
-      (tester) async {
+  testWidgets('header uses sunrise-specific text when nextName is sunrise', (
+    tester,
+  ) async {
     final sunriseSnap = PrayerTimesSnapshot(
       city: city,
       nextName: 'sunrise',
@@ -147,10 +157,15 @@ void main() {
     );
     await tester.pump();
     // Header should NOT contain "أذان" for sunrise
-    final headerWidgets = tester.widgetList<Text>(find.textContaining('الشروق'));
+    final headerWidgets = tester.widgetList<Text>(
+      find.textContaining('الشروق'),
+    );
     for (final t in headerWidgets) {
-      expect(t.data?.contains('أذان'), isFalse,
-          reason: 'Sunrise header must not contain "أذان"');
+      expect(
+        t.data?.contains('أذان'),
+        isFalse,
+        reason: 'Sunrise header must not contain "أذان"',
+      );
     }
   });
 
@@ -165,8 +180,11 @@ void main() {
         .widgetList<Opacity>(find.byType(Opacity))
         .where((o) => (o.opacity - 0.45).abs() < 0.01)
         .toList();
-    expect(opacities.length, 2,
-        reason: 'Fajr and Sunrise should be the only past stations');
+    expect(
+      opacities.length,
+      2,
+      reason: 'Fajr and Sunrise should be the only past stations',
+    );
   });
 
   testWidgets('tapping the timeline does not crash', (tester) async {
@@ -184,8 +202,9 @@ void main() {
     // No exception = pass
   });
 
-  testWidgets('renders without overflow on narrow screen (320 px wide)',
-      (tester) async {
+  testWidgets('renders without overflow on narrow screen (320 px wide)', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(320 * 3, 800 * 3);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(() => tester.view.reset());
@@ -197,8 +216,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('no AnimationController errors when animations are disabled',
-      (tester) async {
+  testWidgets('no AnimationController errors when animations are disabled', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(disableAnimations: true),

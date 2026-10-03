@@ -3,6 +3,7 @@ import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_ar.dart';
 
 import '../../utils/quran_ayah_display_text.dart';
+import '../../utils/locale_number_formatter.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../../../features/certificate/domain/entities/certificate_award.dart';
 import '../../../../features/khatmah/domain/entities/khatmah_reading_result.dart';
@@ -458,8 +459,7 @@ class SocialShareData {
         copy.khatmahShareSummary(
           shareTitle,
           daysTaken,
-          // Share cards keep Western digits (their own numeral design).
-          '$daysTaken',
+          LocaleNumberFormatter.number(daysTaken, copy.localeName),
         );
 
     return SocialShareData(

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -7,6 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/azkar_entities.dart';
+
 
 /// Row title for the index: the opening of the zikr text, so rows are
 /// distinguishable even when many share the same source. The cut is made on a
@@ -151,7 +151,7 @@ class _AzkarIndexSheetState extends State<_AzkarIndexSheet> {
                                   ? Colors.white
                                   : context.tokens.textPrimary,
                               child: Text(
-                                '${index + 1}',
+                                context.numText(index + 1),
                                 style: AppTypography.labelSmall,
                               ),
                             ),

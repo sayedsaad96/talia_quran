@@ -50,7 +50,7 @@ class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
         : (SurahNames.english[record.surahId] ?? '');
     final reference = l10n.microReviewReference(
       surahName,
-      record.ayahNumber.toString(),
+      context.numText(record.ayahNumber),
     );
 
     return GlassPanel(

@@ -15,6 +15,8 @@ import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/practice_surah_hub_banner.dart';
 import '../widgets/practice_surah_tile.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Adult practice-by-surah picker for Memorization Plus.
 ///
 /// Surah taps open a V2 session via [MemorizationNavigationResolver].
@@ -48,7 +50,7 @@ class _PracticeSurahViewState extends State<_PracticeSurahView> {
     return surahs
         .where(
           (surah) =>
-              '${surah.id}' == query ||
+              '${surah.id}' == LocaleNumberFormatter.western(query) ||
               surah.nameAr.contains(query) ||
               surah.nameEn.toLowerCase().contains(query),
         )

@@ -7,6 +7,7 @@ import 'package:qcf_quran_plus/src/widgets/bsmallah_widget.dart' as qcf_widgets;
 
 import 'mushaf_page_flip_physics.dart';
 import 'quran_page_font_guard.dart';
+import '../../domain/services/quran_page_order_policy.dart';
 
 /// A wrapper around QuranPageView that ensures QCF fonts for each page are
 /// fully loaded before rendering, preventing broken font glyphs on initial page load.
@@ -21,6 +22,7 @@ class AppQuranPageView extends StatefulWidget {
     required this.highlights,
     this.onLongPress,
     this.quranPagesCount = 604,
+    this.pageOrder = QuranPageOrderPolicy.canonical,
     this.topBar,
     this.bottomBar,
     this.surahHeaderBuilder,
@@ -43,6 +45,7 @@ class AppQuranPageView extends StatefulWidget {
   )?
   onLongPress;
   final int quranPagesCount;
+  final QuranPageOrderPolicy pageOrder;
   final Widget Function(BuildContext context, int surahNumber)?
   surahHeaderBuilder;
   final Widget Function(BuildContext context, int surahNumber) basmallahBuilder;
@@ -135,11 +138,17 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
             itemCount: _pages.length,
             onPageChanged: (index) {
               if (_pageZoomed) setState(() => _pageZoomed = false);
-              final int page = index + 1;
+              final page = widget.pageOrder.canonicalPageForIndex(
+                index,
+                pageCount: _pages.length,
+              );
               widget.onPageChanged?.call(page);
             },
             itemBuilder: (context, index) {
-              final int pageNum = index + 1;
+              final pageNum = widget.pageOrder.canonicalPageForIndex(
+                index,
+                pageCount: _pages.length,
+              );
 
               return Column(
                 children: [
@@ -160,7 +169,7 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
                           child: qcf.QuranSinglePageWidget(
                             key: ValueKey('page_content_$pageNum'),
                             isTajweed: widget.isTajweed,
-                            page: _pages[index],
+                            page: _pages[pageNum - 1],
                             pageIndex: pageNum,
                             highlights: widget.highlights,
                             onLongPress: widget.onLongPress,

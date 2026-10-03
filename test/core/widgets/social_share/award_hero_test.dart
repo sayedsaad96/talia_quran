@@ -40,7 +40,7 @@ void main() {
     );
     expect(find.byKey(const ValueKey('share-medal')), findsOneWidget);
     expect(find.text('قارئ جزء كامل'), findsOneWidget);
-    expect(find.text('مكتمل، 20 من 20'), findsOneWidget);
+    expect(find.text('مكتمل، ٢٠ من ٢٠'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -56,7 +56,7 @@ void main() {
         achievementUnlocked: false,
       ),
     );
-    expect(find.text('5 من 20'), findsOneWidget);
+    expect(find.text('٥ من ٢٠'), findsOneWidget);
   });
 
   testWidgets('very long achievement title and description stay inside', (
@@ -103,9 +103,9 @@ void main() {
       ),
     );
     expect(find.text('ختمة رمضان'), findsOneWidget);
-    expect(find.text('30'), findsOneWidget);
+    expect(find.text('٣٠'), findsOneWidget);
     expect(find.text('يومًا'), findsOneWidget);
-    expect(find.text('604 صفحة مقروءة'), findsOneWidget);
+    expect(find.text('٦٠٤ صفحة مقروءة'), findsOneWidget);
     expect(find.text('مُهداة إلى والدتي'), findsOneWidget);
     expect(find.text('summary'), findsNothing);
   });

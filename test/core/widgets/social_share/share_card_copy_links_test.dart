@@ -176,7 +176,7 @@ void main() {
     });
 
     test('ayah reference combines surah and ayah number', () {
-      expect(ar.ayahReference('الإسراء', 9), 'سورة الإسراء، الآية 9');
+      expect(ar.ayahReference('الإسراء', 9), 'سورة الإسراء، الآية ٩');
       expect(en.ayahReference('Al-Isra', 9), 'Surah Al-Isra · Ayah 9');
       expect(ar.ayahReference(null, null), 'القرآن الكريم');
     });
@@ -187,8 +187,8 @@ void main() {
       expect(ar.streakHeroLabel(7), 'أيام مع القرآن');
       expect(ar.streakHeroLabel(45), 'يومًا مع القرآن');
       expect(ar.memorizedAyahsHeroLabel(250), 'آيةً في قلبي');
-      expect(ar.surahsCompleted(2), '2 سورتان مكتملتان');
-      expect(ar.surahsCompleted(12), '12 سورة مكتملة');
+      expect(ar.surahsCompleted(2), '٢ سورتان مكتملتان');
+      expect(ar.surahsCompleted(12), '١٢ سورة مكتملة');
       expect(en.streakHeroLabel(1), 'day with the Quran');
       expect(en.streakHeroLabel(3), 'days with the Quran');
     });

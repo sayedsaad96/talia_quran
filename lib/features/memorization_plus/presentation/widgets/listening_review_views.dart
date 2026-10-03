@@ -16,12 +16,14 @@ import '../cubits/listening_review_cubit.dart';
 import '../cubits/listening_review_state.dart';
 import '../pages/v2/v2_session_widgets.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 String _surahName(BuildContext context, int surahId) {
   final Surah? surah = context
       .read<ListeningReviewCubit>()
       .material
       ?.surahs[surahId];
-  if (surah == null) return '$surahId';
+  if (surah == null) return context.numText(surahId);
   return context.l10n.localeName == 'ar' ? surah.nameAr : surah.nameEn;
 }
 
@@ -123,8 +125,14 @@ class ListeningStartView extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             l10n.listeningReviewLastScore(
-              stats.lastCorrect!,
-              stats.lastScored!,
+              LocaleNumberFormatter.format(
+                (stats.lastCorrect!).toString(),
+                l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (stats.lastScored!).toString(),
+                l10n.localeName,
+              ),
             ),
             textAlign: TextAlign.center,
           ),
@@ -165,8 +173,14 @@ class ListeningQuestionView extends StatelessWidget {
       children: [
         Text(
           l10n.listeningReviewQuestionProgress(
-            round.index + 1,
-            round.questions.length,
+            LocaleNumberFormatter.format(
+              (round.index + 1).toString(),
+              l10n.localeName,
+            ),
+            LocaleNumberFormatter.format(
+              (round.questions.length).toString(),
+              l10n.localeName,
+            ),
           ),
           textAlign: TextAlign.center,
         ),
@@ -190,7 +204,14 @@ class ListeningQuestionView extends StatelessWidget {
           icon: Icon(
             round.isPlaying ? Icons.graphic_eq_rounded : Icons.replay_rounded,
           ),
-          label: Text(l10n.listeningReviewReplay(round.playsLeft)),
+          label: Text(
+            l10n.listeningReviewReplay(
+              LocaleNumberFormatter.format(
+                (round.playsLeft).toString(),
+                l10n.localeName,
+              ),
+            ),
+          ),
         ),
         // Announced to screen readers when playback starts and ends.
         Semantics(
@@ -371,7 +392,10 @@ class _Reveal extends StatelessWidget {
         Text(
           l10n.listeningReviewAyahRef(
             _surahName(context, ref.surahId),
-            ref.ayahNumber,
+            LocaleNumberFormatter.format(
+              (ref.ayahNumber).toString(),
+              l10n.localeName,
+            ),
           ),
           textAlign: TextAlign.center,
         ),
@@ -409,7 +433,16 @@ class ListeningResultView extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          l10n.listeningReviewResultScore(result.correct, result.scored),
+          l10n.listeningReviewResultScore(
+            LocaleNumberFormatter.format(
+              (result.correct).toString(),
+              l10n.localeName,
+            ),
+            LocaleNumberFormatter.format(
+              (result.scored).toString(),
+              l10n.localeName,
+            ),
+          ),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
@@ -417,15 +450,27 @@ class ListeningResultView extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.listeningReviewBreakdownWhichSurah(
-              surahTally.correct,
-              surahTally.scored,
+              LocaleNumberFormatter.format(
+                (surahTally.correct).toString(),
+                l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (surahTally.scored).toString(),
+                l10n.localeName,
+              ),
             ),
             textAlign: TextAlign.center,
           ),
           Text(
             l10n.listeningReviewBreakdownNextAyah(
-              nextTally.correct,
-              nextTally.scored,
+              LocaleNumberFormatter.format(
+                (nextTally.correct).toString(),
+                l10n.localeName,
+              ),
+              LocaleNumberFormatter.format(
+                (nextTally.scored).toString(),
+                l10n.localeName,
+              ),
             ),
             textAlign: TextAlign.center,
           ),
@@ -445,7 +490,10 @@ class ListeningResultView extends StatelessWidget {
               title: Text(
                 l10n.listeningReviewAyahRef(
                   _surahName(context, ref.surahId),
-                  ref.ayahNumber,
+                  LocaleNumberFormatter.format(
+                    (ref.ayahNumber).toString(),
+                    l10n.localeName,
+                  ),
                 ),
               ),
               trailing: const Icon(Icons.chevron_left_rounded),

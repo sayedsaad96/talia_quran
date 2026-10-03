@@ -19,6 +19,8 @@ import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class GuardianLinkingPage extends StatelessWidget {
   const GuardianLinkingPage({super.key});
 
@@ -388,7 +390,12 @@ class _PairingCardState extends State<_PairingCard> {
           Text(
             minutes == 0
                 ? context.l10n.guardianPairingExpired
-                : context.l10n.guardianPairingExpiresIn(minutes),
+                : context.l10n.guardianPairingExpiresIn(
+                    LocaleNumberFormatter.format(
+                      (minutes).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
             textAlign: TextAlign.center,
             style: AppTypography.labelSmall.copyWith(
               color: minutes == 0 ? AppColors.error : AppColors.primary,

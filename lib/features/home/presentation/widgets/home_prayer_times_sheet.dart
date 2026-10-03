@@ -13,6 +13,8 @@ import '../../../prayer_companion/presentation/cubits/prayer_companion_cubit.dar
 import '../../../prayer_companion/presentation/widgets/prayer_companion_status.dart';
 import '../theme/home_skin.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Shows the full [HomePrayerTimesSheet] as a modal bottom sheet.
 Future<void> showHomePrayerTimesSheet(
   BuildContext context, {
@@ -24,8 +26,7 @@ Future<void> showHomePrayerTimesSheet(
   PrayerCompanionController? companionController,
   VoidCallback? onCompanionChanged,
 }) {
-  final themeSkin =
-      skin ?? HomeSkin.of(context);
+  final themeSkin = skin ?? HomeSkin.of(context);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -120,11 +121,11 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
           ...summary.statusByPrayer,
           record.occurrence.prayerKey: record.status,
         },
-        confirmedCount: summary.confirmedCount +
+        confirmedCount:
+            summary.confirmedCount +
             (isConfirmed && !wasConfirmed ? 1 : 0) -
             (!isConfirmed && wasConfirmed ? 1 : 0),
-        actionableOccurrence:
-            isConfirmed ? null : summary.actionableOccurrence,
+        actionableOccurrence: isConfirmed ? null : summary.actionableOccurrence,
       );
     });
   }
@@ -162,8 +163,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
 
   @override
   Widget build(BuildContext context) {
-    final themeSkin =
-        widget.skin ?? HomeSkin.of(context);
+    final themeSkin = widget.skin ?? HomeSkin.of(context);
     final l10n = context.l10n;
     final currentTime = widget.now?.call() ?? DateTime.now();
     final weekday = _weekdayName(context, currentTime.weekday);
@@ -353,9 +353,16 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                               ),
                               Text(
                                 l10n.prayerCompanionConfirmedCount(
-                                  summary.confirmedCount,
-                                  PrayerCompanionDaySummary
-                                      .totalObligatoryPrayers,
+                                  LocaleNumberFormatter.format(
+                                    (summary.confirmedCount).toString(),
+                                    l10n.localeName,
+                                  ),
+                                  LocaleNumberFormatter.format(
+                                    (PrayerCompanionDaySummary
+                                            .totalObligatoryPrayers)
+                                        .toString(),
+                                    l10n.localeName,
+                                  ),
                                 ),
                                 style: AppTypography.bodySmall.copyWith(
                                   color: themeSkin.textSecondary,
@@ -497,7 +504,7 @@ class _PrayerCard extends StatelessWidget {
     final period = context.isArabic
         ? (time.hour >= 12 ? 'م' : 'ص')
         : (time.hour >= 12 ? 'PM' : 'AM');
-    return '$hour12:$minute $period';
+    return context.digitText('$hour12:$minute $period');
   }
 
   @override

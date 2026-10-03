@@ -6,6 +6,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
+import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../domain/entities/juz_summary.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -63,6 +65,7 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
   late final TextEditingController _surahFilterCtrl;
   late double _sliderValue;
   String _surahQuery = '';
+  String? _languageCode;
 
   @override
   void initState() {
@@ -74,6 +77,20 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
       if (mounted) setState(() => _surahQuery = _surahFilterCtrl.text);
     });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (_languageCode == languageCode) return;
+    _languageCode = languageCode;
+    _pageCtrl.value = _pageCtrl.value.copyWith(
+      text: LocaleNumberFormatter.format(_pageCtrl.text, languageCode),
+    );
+  }
+
+  int? _pageFromInput(String value) =>
+      int.tryParse(LocaleNumberFormatter.western(value));
 
   @override
   void dispose() {
@@ -103,139 +120,149 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
       builder: (context, scrollController) {
         return Material(
           color: surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(24),
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.pagePadding),
             child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXs,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  context.l10n.quickNavTitle,
-                  style: AppTypography.titleLarge.copyWith(
-                    fontWeight: FontWeight.bold,
+                  Text(
+                    context.l10n.quickNavTitle,
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    children: [
-                      if (widget.lastPage != null &&
-                          widget.lastPage != widget.currentPage)
-                        _LastReadTile(
-                          page: widget.lastPage!,
-                          primary: primary,
-                          onTap: () => _go(widget.lastPage!),
+                  const SizedBox(height: AppSpacing.md),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        if (widget.lastPage != null &&
+                            widget.lastPage != widget.currentPage)
+                          _LastReadTile(
+                            page: widget.lastPage!,
+                            primary: primary,
+                            onTap: () => _go(widget.lastPage!),
+                          ),
+                        _SectionTitle(
+                          label:
+                              '${context.l10n.page} ${context.numText(widget.currentPage)} / ${context.numText(604)}',
                         ),
-                      _SectionTitle(
-                        label:
-                            '${context.l10n.page} ${context.numText(widget.currentPage)} / ${context.numText(604)}',
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _pageCtrl,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              decoration: InputDecoration(
-                                hintText: context.l10n.quickNavPageHint,
-                                hintStyle: AppTypography.bodySmall.copyWith(
-                                  color: hint,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusMd,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _pageCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp('[0-9٠-٩]'),
+                                  ),
+                                  LocaleNumericInputFormatter(
+                                    Localizations.localeOf(
+                                      context,
+                                    ).languageCode,
+                                  ),
+                                ],
+                                decoration: InputDecoration(
+                                  hintText: context.l10n.quickNavPageHint,
+                                  hintStyle: AppTypography.bodySmall.copyWith(
+                                    color: hint,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: AppSpacing.sm + 4,
                                   ),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.md,
-                                  vertical: AppSpacing.sm + 4,
-                                ),
+                                onSubmitted: (value) {
+                                  final page = _pageFromInput(value);
+                                  if (page != null) _go(page);
+                                },
                               ),
-                              onSubmitted: (value) {
-                                final page = int.tryParse(value);
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            FilledButton(
+                              onPressed: () {
+                                final page = _pageFromInput(_pageCtrl.text);
                                 if (page != null) _go(page);
                               },
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(64, 48),
+                              ),
+                              child: Text(context.l10n.quickNavGo),
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          FilledButton(
-                            onPressed: () {
-                              final page = int.tryParse(_pageCtrl.text);
-                              if (page != null) _go(page);
-                            },
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size(64, 48),
+                          ],
+                        ),
+                        Slider(
+                          value: _sliderValue,
+                          min: 1,
+                          max: 604,
+                          divisions: 603,
+                          label: context.numText(_sliderValue.round()),
+                          onChanged: (value) =>
+                              setState(() => _sliderValue = value),
+                          onChangeEnd: (value) => _go(value.round()),
+                        ),
+                        _SectionTitle(label: context.l10n.surahs),
+                        TextField(
+                          controller: _surahFilterCtrl,
+                          decoration: InputDecoration(
+                            hintText: context.l10n.searchSurah,
+                            hintStyle: AppTypography.bodySmall.copyWith(
+                              color: hint,
                             ),
-                            child: Text(context.l10n.quickNavGo),
-                          ),
-                        ],
-                      ),
-                      Slider(
-                        value: _sliderValue,
-                        min: 1,
-                        max: 604,
-                        divisions: 603,
-                        label: '${_sliderValue.round()}',
-                        onChanged: (value) =>
-                            setState(() => _sliderValue = value),
-                        onChangeEnd: (value) => _go(value.round()),
-                      ),
-                      _SectionTitle(label: context.l10n.surahs),
-                      TextField(
-                        controller: _surahFilterCtrl,
-                        decoration: InputDecoration(
-                          hintText: context.l10n.searchSurah,
-                          hintStyle: AppTypography.bodySmall.copyWith(
-                            color: hint,
-                          ),
-                          prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusMd,
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              size: 20,
                             ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _SurahJumpList(
-                        query: _surahQuery,
-                        primary: primary,
-                        onTap: (surah) => _go(surah.page),
-                      ),
-                      _SectionTitle(label: context.l10n.juz),
-                      _JuzJumpGrid(
-                        summaries: widget.summaries,
-                        onTap: (summary) => _go(summary.startPage),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                    ],
+                        const SizedBox(height: AppSpacing.sm),
+                        _SurahJumpList(
+                          query: _surahQuery,
+                          primary: primary,
+                          onTap: (surah) => _go(surah.page),
+                        ),
+                        _SectionTitle(label: context.l10n.juz),
+                        _JuzJumpGrid(
+                          summaries: widget.summaries,
+                          onTap: (summary) => _go(summary.startPage),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ),
         );
       },
@@ -250,10 +277,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: AppSpacing.md,
-        bottom: AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.sm),
       child: Text(
         label,
         style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
@@ -344,7 +368,10 @@ class _SurahJumpList extends StatelessWidget {
         final visible = q.isEmpty
             ? result
             : result.where((surah) {
-                if (surah.id.toString() == query.trim()) return true;
+                if (surah.id.toString() ==
+                    LocaleNumberFormatter.western(query.trim())) {
+                  return true;
+                }
                 if (ArabicNormalizer.normalize(surah.nameAr).contains(q)) {
                   return true;
                 }
@@ -366,7 +393,7 @@ class _SurahJumpList extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               leading: Text(
-                '${surah.id}',
+                context.numText(surah.id),
                 style: AppTypography.labelMedium.copyWith(color: primary),
               ),
               title: Text(
@@ -414,10 +441,7 @@ class _JuzJumpGrid extends StatelessWidget {
             ),
           );
         }
-        return _Grid(
-          list: JuzSummaries.fromSurahs(surahs),
-          onTap: onTap,
-        );
+        return _Grid(list: JuzSummaries.fromSurahs(surahs), onTap: onTap);
       },
     );
   }

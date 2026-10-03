@@ -21,6 +21,8 @@ import 'home_background.dart';
 import 'home_prayer_timeline.dart';
 import 'home_prayer_times_sheet.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class HomeNightHeader extends StatelessWidget {
   const HomeNightHeader({
     super.key,
@@ -305,7 +307,7 @@ class HomePrayerChip extends StatelessWidget {
     final period = context.isArabic
         ? (t.hour >= 12 ? 'م' : 'ص')
         : (t.hour >= 12 ? 'PM' : 'AM');
-    return '$hour12:$minute $period';
+    return context.digitText('$hour12:$minute $period');
   }
 
   @override
@@ -313,7 +315,13 @@ class HomePrayerChip extends StatelessWidget {
     final name = _localizedName(context);
     return Semantics(
       button: true,
-      label: context.l10n.homePrayerChip(name, snapshot.minutesUntil),
+      label: context.l10n.homePrayerChip(
+        name,
+        LocaleNumberFormatter.format(
+          (snapshot.minutesUntil).toString(),
+          context.l10n.localeName,
+        ),
+      ),
       child: _HeroChip(
         skin: skin,
         icon: Icons.mosque_rounded,

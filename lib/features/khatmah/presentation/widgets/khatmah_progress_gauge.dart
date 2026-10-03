@@ -5,9 +5,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
+
 
 class KhatmahProgressGauge extends StatelessWidget {
   const KhatmahProgressGauge({
@@ -21,30 +21,23 @@ class KhatmahProgressGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.isArabic;
     final percent = (plan.progressPercentage * 100)
         .clamp(0, 100)
         .toStringAsFixed(1);
-    final completedPages = isArabic
-        ? MushafHizbHelper.toArabicNumber(plan.completedPagesCount)
-        : plan.completedPagesCount.toString();
-    final totalPages = isArabic
-        ? MushafHizbHelper.toArabicNumber(KhatmahSchedulingEngine.totalPages)
-        : KhatmahSchedulingEngine.totalPages.toString();
-    final remainingPages = isArabic
-        ? MushafHizbHelper.toArabicNumber(plan.remainingPages)
-        : plan.remainingPages.toString();
+    final completedPages = context.numText(plan.completedPagesCount);
+    final totalPages = context.numText(KhatmahSchedulingEngine.totalPages);
+    final remainingPages = context.numText(plan.remainingPages);
 
     final dateStr =
         '${plan.expectedEndDate.year}/${plan.expectedEndDate.month.toString().padLeft(2, '0')}/${plan.expectedEndDate.day.toString().padLeft(2, '0')}';
-    final formattedDate = isArabic ? _toArabicDigits(dateStr) : dateStr;
+    final formattedDate = context.digitText(dateStr);
     final expectedCompletionLabel = context.l10n.khatmahEstCompletion(
       formattedDate,
     );
     final progressValue = context.l10n.khatmahProgressValue(
       completedPages,
       totalPages,
-      percent,
+      context.digitText(percent),
     );
 
     return Semantics(
@@ -82,7 +75,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '$percent%',
+                        '${context.digitText(percent)}%',
                         key: const Key('khatmah_progress_percentage'),
                         style: AppTypography.headlineMedium.copyWith(
                           color: AppColors.gold,
@@ -140,14 +133,6 @@ class KhatmahProgressGauge extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  static String _toArabicDigits(String input) {
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return input.replaceAllMapped(
-      RegExp(r'\d'),
-      (m) => digits[int.parse(m.group(0)!)],
     );
   }
 }

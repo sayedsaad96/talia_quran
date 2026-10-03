@@ -14,16 +14,20 @@ import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../../domain/services/quran_page_order_policy.dart';
 import '../../../memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../../memorization_plus/domain/services/kids_daily_missions.dart';
 import '../../../memorization_plus/presentation/theme/kids_theme.dart';
 import '../../../memorization_plus/presentation/widgets/kids_chunky_button.dart';
 import '../../../memorization_plus/presentation/widgets/kids_loading_widget.dart';
+import '../../../memorization_plus/presentation/widgets/kids_motion_scope.dart';
 import '../../../memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../widgets/app_quran_page_view.dart';
 import '../widgets/quran_page_font_guard.dart';
+
+import '../../../../core/utils/locale_number_formatter.dart';
 
 /// Page of [ayahNumber] in [surahId], or null when the ayah does not exist.
 int? _pageOfAyah(int? surahId, int? ayahNumber) {
@@ -103,6 +107,16 @@ class KidsReaderAudioController {
 @visibleForTesting
 bool kidsReaderPageIsLoaded(QuranPageState state, int pageNumber) =>
     state is QuranPageLoaded && state.detail.pageNumber == pageNumber;
+
+/// Guards a confirmation against a delayed detail from a previous page turn.
+@visibleForTesting
+bool kidsReaderCanConfirmPage(
+  QuranPageState state, {
+  required int currentPageNumber,
+  required int pageNumber,
+}) =>
+    pageNumber == currentPageNumber &&
+    kidsReaderPageIsLoaded(state, currentPageNumber);
 
 /// Plan 2 — the child's explicit «قرأت هذه الصفحة» confirmation. Opening a
 /// page or playing audio never confirms; only [confirm] does, and only when
@@ -214,7 +228,10 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
         _pageOfAyah(widget.surahId, widget.ayahNumber) ??
         _pageForSurah(widget.surahId);
     _currentPageNumber = _normalizePageNumber(initialPage);
-    _pageController = PageController(initialPage: _currentPageNumber - 1);
+    _pageController = PageController(
+      initialPage: QuranPageOrderPolicy.kidsFatihahFirstReverse
+          .indexForCanonicalPage(_currentPageNumber),
+    );
     _quranPageCubit = getIt<QuranPageCubit>();
     unawaited(_quranPageCubit.loadPage(_currentPageNumber));
     // Lazy-load QCF fonts for the current page and nearby pages.
@@ -224,10 +241,16 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
     if (getIt.isRegistered<KidsReadingReceiptStore>()) {
       _confirmation = KidsReaderConfirmation(
         confirmRead: (page) async {
-          // The cubit is shared: never record a receipt for a page whose
-          // detail is not the one currently loaded.
+          // The cubit is shared: never record a receipt for a page other than
+          // the reader's current canonical page and loaded detail.
           final state = _quranPageCubit.state;
-          if (!kidsReaderPageIsLoaded(state, page)) return false;
+          if (!kidsReaderCanConfirmPage(
+            state,
+            currentPageNumber: _currentPageNumber,
+            pageNumber: page,
+          )) {
+            return false;
+          }
           return _quranPageCubit.confirmRead(page);
         },
         store: getIt<KidsReadingReceiptStore>(),
@@ -237,7 +260,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
   }
 
   int _pageForSurah(int? surahId) {
-    if (surahId == null || surahId < 1 || surahId > 114) return 604;
+    if (surahId == null || surahId < 1 || surahId > 114) return 1;
     return qcf.getPageNumber(surahId, 1);
   }
 
@@ -251,7 +274,8 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
   }
 
   void _loadPage(int pageNumber) {
-    _currentPageNumber = _normalizePageNumber(pageNumber);
+    if (!mounted) return;
+    setState(() => _currentPageNumber = _normalizePageNumber(pageNumber));
     unawaited(_quranPageCubit.loadPage(_currentPageNumber));
     // Lazy-load QCF fonts for nearby pages.
     unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 8));
@@ -266,68 +290,74 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _quranPageCubit,
-      child: BlocBuilder<QuranPageCubit, QuranPageState>(
-        builder: (context, state) {
-          if (state is QuranPageLoaded) {
-            _currentDetail = state.detail;
-          }
+    return KidsMotionScope(
+      child: BlocProvider.value(
+        value: _quranPageCubit,
+        child: BlocBuilder<QuranPageCubit, QuranPageState>(
+          builder: (context, state) {
+            if (state is QuranPageLoaded &&
+                state.detail.pageNumber == _currentPageNumber) {
+              _currentDetail = state.detail;
+            }
 
-          final detail = state is QuranPageLoaded
-              ? state.detail
-              : _currentDetail;
-          if (detail == null && state is QuranPageLoading) {
-            return Scaffold(
-              body: QuranPageSkeletonLoader(isDark: context.isDark),
-            );
-          }
-          if (detail == null && state is QuranPageError) {
-            return Scaffold(
-              // The kids reader keeps the dark night-sky look regardless of
-              // the app brightness — keep the error screen on it too.
-              backgroundColor: KidsTheme.nightSkyDark,
-              body: KidsErrorWidget(
-                onRetry: () => _loadPage(_currentPageNumber),
+            final detail = _currentDetail?.pageNumber == _currentPageNumber
+                ? _currentDetail
+                : null;
+            if (_currentDetail == null && state is QuranPageLoading) {
+              return Scaffold(
+                body: QuranPageSkeletonLoader(isDark: context.isDark),
+              );
+            }
+            if (_currentDetail == null && state is QuranPageError) {
+              return Scaffold(
+                // The kids reader keeps the dark night-sky look regardless of
+                // the app brightness — keep the error screen on it too.
+                backgroundColor: KidsTheme.nightSkyDark,
+                body: KidsErrorWidget(
+                  onRetry: () => _loadPage(_currentPageNumber),
+                ),
+              );
+            }
+
+            final surahName = detail?.surahs.firstOrNull == null
+                ? null
+                : context.isArabic
+                ? detail!.surahs.first.nameAr
+                : detail!.surahs.first.nameEn;
+
+            final pageNumber = _currentPageNumber;
+            final accent = KidsQuranReaderContent.accentFor(context);
+            return BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
+              bloc: _audio,
+              builder: (context, audio) => KidsQuranReaderContent(
+                pageController: _pageController,
+                pageNumber: pageNumber,
+                surahName: surahName,
+                onBack: () => _goBackToKidsHome(context),
+                onPageChanged: _loadPage,
+                highlights: kidsReaderHighlights(
+                  audio: audio,
+                  missionSurahId: widget.surahId,
+                  missionAyah: widget.ayahNumber,
+                  color: accent,
+                ),
+                onAyahLongPress: (surahId, ayahNumber) =>
+                    unawaited(_audioController.playAyah(surahId, ayahNumber)),
+                isPagePlaying:
+                    audio.isPlaying &&
+                    audio.scope == PlayScope.page &&
+                    audio.currentPageNumber == pageNumber,
+                onTogglePageAudio: () =>
+                    unawaited(_audioController.togglePage(pageNumber)),
+                confirmation:
+                    kidsReaderPageIsLoaded(state, _currentPageNumber)
+                    ? _confirmation
+                    : null,
+                isAudioPlaying: audio.isPlaying,
               ),
             );
-          }
-
-          final surahName = detail?.surahs.firstOrNull == null
-              ? null
-              : context.isArabic
-              ? detail!.surahs.first.nameAr
-              : detail!.surahs.first.nameEn;
-
-          final pageNumber = detail?.pageNumber ?? _currentPageNumber;
-          final accent = KidsQuranReaderContent.accentFor(context);
-          return BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
-            bloc: _audio,
-            builder: (context, audio) => KidsQuranReaderContent(
-              pageController: _pageController,
-              pageNumber: pageNumber,
-              surahName: surahName,
-              onBack: () => _goBackToKidsHome(context),
-              onPageChanged: _loadPage,
-              highlights: kidsReaderHighlights(
-                audio: audio,
-                missionSurahId: widget.surahId,
-                missionAyah: widget.ayahNumber,
-                color: accent,
-              ),
-              onAyahLongPress: (surahId, ayahNumber) =>
-                  unawaited(_audioController.playAyah(surahId, ayahNumber)),
-              isPagePlaying:
-                  audio.isPlaying &&
-                  audio.scope == PlayScope.page &&
-                  audio.currentPageNumber == pageNumber,
-              onTogglePageAudio: () =>
-                  unawaited(_audioController.togglePage(pageNumber)),
-              confirmation: _confirmation,
-              isAudioPlaying: audio.isPlaying,
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -408,6 +438,7 @@ class KidsQuranReaderContent extends StatelessWidget {
                     highlights: highlights,
                     isDarkMode: isDark,
                     isTajweed: true,
+                    pageOrder: QuranPageOrderPolicy.kidsFatihahFirstReverse,
                     pageBackgroundColor: bg,
                     onPageChanged: onPageChanged,
                     onLongPress: onAyahLongPress == null
@@ -656,7 +687,12 @@ class _KidsQuranFooter extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
-                  context.l10n.kidsQuranPageLabel(pageNumber),
+                  context.l10n.kidsQuranPageLabel(
+                    LocaleNumberFormatter.format(
+                      (pageNumber).toString(),
+                      context.l10n.localeName,
+                    ),
+                  ),
                   style: AppTypography.labelSmall.copyWith(
                     color: accent,
                     fontWeight: FontWeight.w800,

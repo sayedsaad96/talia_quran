@@ -28,14 +28,14 @@ class ExperienceForkView extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
-        AppSpacing.xs,
+        AppSpacing.sm,
         AppSpacing.pagePadding,
         AppSpacing.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           JourneyEntrance(
             child: Text(
               l10n.onboardingChooseExpTitle,
@@ -48,7 +48,7 @@ class ExperienceForkView extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
           JourneyEntrance(
             delayMs: 60,
             child: Text(

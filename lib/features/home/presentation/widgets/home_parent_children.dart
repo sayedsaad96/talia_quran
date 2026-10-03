@@ -10,6 +10,8 @@ import '../../../memorization_plus/domain/entities/family_dashboard.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class HomeParentChildren extends StatelessWidget {
   const HomeParentChildren({
     super.key,
@@ -46,8 +48,7 @@ class HomeParentChildren extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          for (final child in children)
-            _ChildRow(child: child, skin: skin),
+          for (final child in children) _ChildRow(child: child, skin: skin),
         ],
       ),
     );
@@ -103,7 +104,12 @@ class _ChildRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      context.l10n.homeChildStreak(child.currentStreak),
+                      context.l10n.homeChildStreak(
+                        LocaleNumberFormatter.format(
+                          (child.currentStreak).toString(),
+                          context.l10n.localeName,
+                        ),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.labelSmall.copyWith(

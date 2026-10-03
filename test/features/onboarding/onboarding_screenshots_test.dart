@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dartz/dartz.dart' as dartz;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -144,6 +145,21 @@ Future<void> _loadRealFonts() async {
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
   ]);
+
+  for (final path in const [
+    'D:/dev/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+    'D:/dev/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+  ]) {
+    final file = File(path);
+    if (file.existsSync()) {
+      final loader = FontLoader('MaterialIcons');
+      loader.addFont(
+        file.readAsBytes().then((bytes) => ByteData.view(bytes.buffer)),
+      );
+      await loader.load();
+      break;
+    }
+  }
 }
 
 GoRouter _onboardingRouter() {

@@ -5,7 +5,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
@@ -67,7 +66,6 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           _ => null,
         };
         if (plan == null) return const SizedBox.shrink();
-        final isArabic = context.isArabic;
         final isDark = context.isDark;
         final gold = context.tokens.accent;
         final bg = context.tokens.surface;
@@ -90,15 +88,9 @@ class KhatmahReaderSessionBar extends StatelessWidget {
             .where((page) => page >= target.startPage && page <= target.endPage)
             .length;
 
-        final pageNumStr = isArabic
-            ? MushafHizbHelper.toArabicNumber(current)
-            : current.toString();
-        final wirdIndexStr = isArabic
-            ? MushafHizbHelper.toArabicNumber(wirdIndex)
-            : wirdIndex.toString();
-        final dailyTargetStr = isArabic
-            ? MushafHizbHelper.toArabicNumber(dailyTarget)
-            : dailyTarget.toString();
+        final pageNumStr = context.numText(current);
+        final wirdIndexStr = context.numText(wirdIndex);
+        final dailyTargetStr = context.numText(dailyTarget);
 
         final pageInfo = context.l10n.khatmahPageOfOfTodaySWird(
           (pageNumStr).toString(),

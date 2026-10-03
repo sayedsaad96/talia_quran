@@ -1,3 +1,4 @@
+import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_session_widgets.dart
 //
 // Shared UI components used across all V2 session phase pages.
@@ -335,7 +336,12 @@ class V2FailureSummary extends StatelessWidget {
         color: AppColors.warning,
       ),
       footer: Text(
-        context.l10n.v2RemediationAttempts(failures),
+        context.l10n.v2RemediationAttempts(
+          LocaleNumberFormatter.format(
+            (failures).toString(),
+            context.l10n.localeName,
+          ),
+        ),
         textAlign: TextAlign.center,
       ),
     );
@@ -682,7 +688,7 @@ class V2SummaryRow extends StatelessWidget {
         Expanded(
           child: V2SummaryTile(
             label: context.l10n.v2Retries,
-            value: '$failures',
+            value: context.numText(failures),
             icon: Icons.replay_rounded,
             color: AppColors.warning,
           ),

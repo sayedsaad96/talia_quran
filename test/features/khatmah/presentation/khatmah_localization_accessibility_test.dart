@@ -241,10 +241,10 @@ void main() {
           value,
           contains(
             count == 0
-                ? '0.0'
+                ? (ar ? '٠.٠' : '0.0')
                 : count == 2
-                ? '0.3'
-                : '100.0',
+                ? (ar ? '٠.٣' : '0.3')
+                : (ar ? '١٠٠.٠' : '100.0'),
           ),
         );
         expect(tester.takeException(), isNull);
@@ -398,10 +398,7 @@ void main() {
           ),
           findsWidgets,
         );
-        expect(
-          find.textContaining('مجمع الملك فهد'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('مجمع الملك فهد'), findsOneWidget);
         expect(find.textContaining('مأثور'), findsNothing);
         expect(
           find.textContaining('اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ'),

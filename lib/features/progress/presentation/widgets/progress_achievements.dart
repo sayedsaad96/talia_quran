@@ -201,8 +201,14 @@ class _AchievementTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   context.l10n.countOfTotal(
-                    achievement.currentValue,
-                    achievement.targetValue,
+                    LocaleNumberFormatter.format(
+                      (achievement.currentValue).toString(),
+                      context.l10n.localeName,
+                    ),
+                    LocaleNumberFormatter.format(
+                      (achievement.targetValue).toString(),
+                      context.l10n.localeName,
+                    ),
                   ),
                   style: AppTypography.labelSmall.copyWith(color: hintColor),
                 ),
@@ -287,8 +293,14 @@ void _showAchievementDetailSheet(
             const SizedBox(height: AppSpacing.sm),
             Text(
               context.l10n.countOfTotal(
-                achievement.currentValue,
-                achievement.targetValue,
+                LocaleNumberFormatter.format(
+                  (achievement.currentValue).toString(),
+                  context.l10n.localeName,
+                ),
+                LocaleNumberFormatter.format(
+                  (achievement.targetValue).toString(),
+                  context.l10n.localeName,
+                ),
               ),
               style: AppTypography.labelMedium.copyWith(
                 color: textSecondary,

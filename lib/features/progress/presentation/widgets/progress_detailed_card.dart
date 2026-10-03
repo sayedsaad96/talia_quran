@@ -34,10 +34,12 @@ class _InfoChip {
 
 /// One decimal for small values so early progress is visible (0.3%),
 /// whole numbers once progress is meaningful.
-String _formatPercent(double fraction) {
+String _formatPercent(BuildContext context, double fraction) {
   final pct = (fraction.clamp(0.0, 1.0)) * 100;
-  if (pct == 0 || pct >= 10) return '${pct.toStringAsFixed(0)}%';
-  return '${pct.toStringAsFixed(1)}%';
+  if (pct == 0 || pct >= 10) {
+    return context.digitText('${pct.toStringAsFixed(0)}%');
+  }
+  return context.digitText('${pct.toStringAsFixed(1)}%');
 }
 
 class _DetailedProgressCard extends StatelessWidget {
@@ -91,7 +93,7 @@ class _DetailedProgressCard extends StatelessWidget {
                         Icon(icon, color: iconColor, size: 20),
                         const SizedBox(height: 2),
                         Text(
-                          _formatPercent(percentage),
+                          _formatPercent(context, percentage),
                           style: AppTypography.labelSmall.copyWith(
                             color: iconColor,
                             fontWeight: FontWeight.w700,
@@ -269,7 +271,16 @@ class _ProgressBarRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
-              context.l10n.countOfTotal(row.current, row.total),
+              context.l10n.countOfTotal(
+                LocaleNumberFormatter.format(
+                  (row.current).toString(),
+                  context.l10n.localeName,
+                ),
+                LocaleNumberFormatter.format(
+                  (row.total).toString(),
+                  context.l10n.localeName,
+                ),
+              ),
               style: AppTypography.labelSmall.copyWith(
                 color: textPrimary,
                 fontWeight: FontWeight.w600,

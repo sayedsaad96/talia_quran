@@ -9,6 +9,8 @@ import '../tutorial_guide_mapper.dart';
 import '../widgets/tutorial_guide_quick_start_card.dart';
 import '../widgets/tutorial_guide_section_card.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class TutorialGuidePage extends StatefulWidget {
   const TutorialGuidePage({super.key});
 
@@ -147,9 +149,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
           children: [
             Positioned.fill(
               child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: tokens.heroGradient,
-                ),
+                decoration: BoxDecoration(gradient: tokens.heroGradient),
               ),
             ),
             // Background ambient pattern
@@ -180,13 +180,21 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                       _AppBarBadge(
                         icon: Icons.topic_rounded,
                         label: l10n.tutorialGuideTopicsCount(
-                          _allSections.length,
+                          LocaleNumberFormatter.format(
+                            (_allSections.length).toString(),
+                            l10n.localeName,
+                          ),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       _AppBarBadge(
                         icon: Icons.auto_awesome_rounded,
-                        label: l10n.tutorialGuideTipsCount(tipCount),
+                        label: l10n.tutorialGuideTipsCount(
+                          LocaleNumberFormatter.format(
+                            (tipCount).toString(),
+                            l10n.localeName,
+                          ),
+                        ),
                       ),
                     ],
                   ),

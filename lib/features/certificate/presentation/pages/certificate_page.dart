@@ -16,6 +16,7 @@ import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../widgets/certificate_widget.dart';
 
+
 class CertificatePage extends StatefulWidget {
   const CertificatePage({
     super.key,
@@ -70,6 +71,7 @@ class _CertificatePageState extends State<CertificatePage> {
           userName: widget.userName,
           award: widget.award,
           completionDate: widget.award.earnedAt,
+          languageCode: Localizations.localeOf(context).languageCode,
           styleType: _selectedStyle,
         ),
         pixelRatio: 3.0,
@@ -82,7 +84,7 @@ class _CertificatePageState extends State<CertificatePage> {
       final isArabic = context.isArabic;
       final shareText = switch (widget.award.type) {
         CertificateType.juz => l10n.shareCertificateJuz(
-          widget.award.juzNumber ?? 1,
+          context.numText(widget.award.juzNumber ?? 1),
         ),
         CertificateType.surah => l10n.shareCertificateSurah(
           isArabic
@@ -300,6 +302,9 @@ class _CertificatePageState extends State<CertificatePage> {
                             userName: widget.userName,
                             award: widget.award,
                             completionDate: widget.award.earnedAt,
+                            languageCode: Localizations.localeOf(
+                              context,
+                            ).languageCode,
                             styleType: _selectedStyle,
                           ),
                         ),
@@ -341,7 +346,9 @@ class _CertificatePageState extends State<CertificatePage> {
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -363,19 +370,13 @@ class _CertificatePageState extends State<CertificatePage> {
 
   Widget _buildStyleSwitcher() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         border: Border.all(color: Colors.white24, width: 1),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 10),
         ],
       ),
       child: Row(
@@ -383,17 +384,13 @@ class _CertificatePageState extends State<CertificatePage> {
         children: CertificateStyleType.values.map((style) {
           final isSelected = style == _selectedStyle;
           return Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: ChoiceChip(
               label: Text(
                 style.displayName,
                 style: AppTypography.titleSmall.copyWith(
                   fontFamily: 'Amiri',
-                  fontWeight: isSelected
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? Colors.black : Colors.white70,
                 ),
               ),
@@ -443,10 +440,7 @@ class _CertificatePageState extends State<CertificatePage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: CertificatePagePalette.goldMuted,
             foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(
-              vertical: 10,
-              horizontal: 14,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),

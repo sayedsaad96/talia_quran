@@ -43,10 +43,14 @@ void main() {
       );
     });
 
-    test('the Mushaf opens at the mission ayah (K26)', () {
+    test('reader links preserve explicit missions and support page one', () {
       expect(
         kidsQuranReaderLocation(113, ayahNumber: 4),
         '${AppRoutes.memorizationPlusKidsQuran}?surahId=113&ayahNumber=4',
+      );
+      expect(
+        kidsQuranReaderLocation(114, pageNumber: 1),
+        '${AppRoutes.memorizationPlusKidsQuran}?surahId=114&pageNumber=1',
       );
       expect(
         kidsQuranReaderLocation(114),
@@ -171,8 +175,10 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
-            onMushafTap: () =>
-                location = kidsQuranReaderLocation(_loadedState.surahId),
+            onMushafTap: () => location = kidsQuranReaderLocation(
+              _loadedState.surahId,
+              pageNumber: 1,
+            ),
             onJourneyTap: () {},
             onMissionTap: () {},
           ),
@@ -187,7 +193,10 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('kids-home-action-mushaf')));
       await tester.pump();
 
-      expect(location, '${AppRoutes.memorizationPlusKidsQuran}?surahId=114');
+      expect(
+        location,
+        '${AppRoutes.memorizationPlusKidsQuran}?surahId=114&pageNumber=1',
+      );
       expect(location, isNot(AppRoutes.quran));
     });
 

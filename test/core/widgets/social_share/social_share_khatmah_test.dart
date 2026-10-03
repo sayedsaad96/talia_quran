@@ -66,7 +66,7 @@ void main() {
 
       expect(data.category, SocialShareCategory.khatmah);
       expect(data.title, 'ختمة رمضان');
-      expect(data.content, contains('5'));
+      expect(data.content, contains('٥'));
       expect(data.targetValue, 5);
       expect(data.userName, 'أحمد');
       expect(data.subtitle, isNull);

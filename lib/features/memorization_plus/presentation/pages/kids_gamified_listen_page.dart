@@ -22,8 +22,12 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_loading_widget.dart';
+import '../widgets/kids_loop_progress_indicator.dart';
+import '../widgets/kids_recording_waveform.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
+
+import '../../../../core/utils/locale_number_formatter.dart';
 
 class KidsGamifiedListenPage extends StatelessWidget {
   const KidsGamifiedListenPage({
@@ -292,7 +296,12 @@ class KidsGamifiedListenContent extends StatelessWidget {
     final audioUnavailable = state.audioError != null;
     // Nothing moves around the recitation itself: the scene and Talia stay
     // still while the ayah plays or the child recites (Adventure §7).
-    final calm = state.isPlaying || state.isRecording;
+    final calm =
+        state.isPlaying ||
+        state.isRecording ||
+        state.isRecallingFromMemory ||
+        state.isAwaitingRecitation ||
+        state.sessionState.phase.textHidden;
     final pose = kidsTaliaPoseFor(state);
 
     return KidsBackground(
@@ -366,7 +375,10 @@ class KidsGamifiedListenContent extends StatelessWidget {
                           // A review has no listen gate to count (K28).
                           if (state.maxLoops > 0) ...[
                             const SizedBox(height: AppSpacing.md),
-                            _KidsGamifiedLoopIndicator(state: state),
+                            KidsLoopProgressIndicator(
+                              completedLoops: state.currentLoop,
+                              maxLoops: state.maxLoops,
+                            ),
                           ],
                           const SizedBox(height: AppSpacing.lg),
                           _KidsGamifiedAudioControls(
@@ -444,8 +456,17 @@ class _CloseMatchFeedbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return Semantics(
-      label: context.l10n.kidsRecitationCloseMatch(matched, total),
+    final bannerContent = Semantics(
+      label: context.l10n.kidsRecitationCloseMatch(
+        LocaleNumberFormatter.format(
+          (matched).toString(),
+          context.l10n.localeName,
+        ),
+        LocaleNumberFormatter.format(
+          (total).toString(),
+          context.l10n.localeName,
+        ),
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: _kidsSoftCardDecoration.copyWith(
@@ -463,7 +484,16 @@ class _CloseMatchFeedbackBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    context.l10n.kidsRecitationCloseMatch(matched, total),
+                    context.l10n.kidsRecitationCloseMatch(
+                      LocaleNumberFormatter.format(
+                        (matched).toString(),
+                        context.l10n.localeName,
+                      ),
+                      LocaleNumberFormatter.format(
+                        (total).toString(),
+                        context.l10n.localeName,
+                      ),
+                    ),
                     style: AppTypography.titleSmall.copyWith(
                       color: KidsTheme.inkOnParchment,
                       fontWeight: FontWeight.w700,
@@ -496,6 +526,8 @@ class _CloseMatchFeedbackBanner extends StatelessWidget {
         ),
       ),
     );
+
+    return bannerContent;
   }
 }
 
@@ -633,17 +665,33 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
               letterSpacing: 0,
             ),
           ),
-          if (word != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              word,
-              key: const ValueKey('kids-first-word'),
-              textAlign: TextAlign.center,
-              textDirection: TextDirection.rtl,
-              style: MemorizationAyahDisplay.textStyle(
-                color: KidsTheme.forestGreen,
+          SizedBox(height: word == null ? 0 : AppSpacing.lg),
+          AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.96, end: 1.0).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
+                child: child,
               ),
             ),
+            child: word == null
+                ? const SizedBox(key: ValueKey('kids-first-word-empty'))
+                : Text(
+                    word,
+                    key: const ValueKey('kids-first-word'),
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: MemorizationAyahDisplay.textStyle(
+                      color: KidsTheme.forestGreen,
+                    ),
+                  ),
+          ),
+          if (word != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
               context.l10n.kidsGamifiedFirstWordShown,
@@ -654,72 +702,6 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _KidsGamifiedLoopIndicator extends StatelessWidget {
-  const _KidsGamifiedLoopIndicator({required this.state});
-
-  final KidsModeLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: _kidsSoftCardDecoration,
-      child: Column(
-        children: [
-          Text(
-            context.l10n.kidsGamifiedRepeatStep,
-            style: AppTypography.titleMedium.copyWith(
-              color: KidsTheme.inkOnParchment,
-              fontFamily: 'Amiri',
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              // Each finished listen pops in as a gold star.
-              for (var index = 0; index < state.maxLoops; index++)
-                AnimatedScale(
-                  scale: index < state.currentLoop ? 1 : 0.8,
-                  duration: reduceMotion
-                      ? Duration.zero
-                      : const Duration(milliseconds: 450),
-                  curve: Curves.elasticOut,
-                  child: Icon(
-                    index < state.currentLoop
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    size: 38,
-                    color: index < state.currentLoop
-                        ? KidsTheme.goldStar
-                        : KidsTheme.lockedGrey.withValues(alpha: 0.5),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
-                child: Text(
-                  '${state.currentLoop}/${state.maxLoops}',
-                  style: AppTypography.titleMedium.copyWith(
-                    color: KidsTheme.buttonGoldBase,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -947,12 +929,6 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
     with TickerProviderStateMixin {
   late final AnimationController _waveController;
 
-  static const _waveColors = [
-    KidsTheme.buttonGreenFace,
-    KidsTheme.goldStar,
-    KidsTheme.reviewPurple,
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -985,7 +961,9 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
   String _formatSeconds(int s) {
     final m = s ~/ 60;
     final sec = s % 60;
-    return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+    return context.digitText(
+      '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}',
+    );
   }
 
   @override
@@ -1040,39 +1018,10 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
               ),
             ],
           ),
-          // Animated waveform bars
+          // The waveform paints inside fixed slots, so recording updates do
+          // not trigger a panel relayout on every tick.
           const SizedBox(height: AppSpacing.sm),
-          AnimatedBuilder(
-            animation: _waveController,
-            builder: (_, _) {
-              final v = _waveController.value;
-              final heights = [0.5, 0.9, 0.6, 1.0, 0.7, 0.85, 0.55, 0.75, 0.4];
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < heights.length; i++) ...[
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
-                      width: 7,
-                      height:
-                          10 +
-                          (30 *
-                              heights[i] *
-                              (0.4 + 0.6 * ((v + i * 0.15) % 1.0))),
-                      decoration: BoxDecoration(
-                        color: _waveColors[i % _waveColors.length],
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusFull,
-                        ),
-                      ),
-                    ),
-                    if (i < heights.length - 1) const SizedBox(width: 5),
-                  ],
-                ],
-              );
-            },
-          ),
+          KidsRecordingWaveform(animation: _waveController),
           const SizedBox(height: AppSpacing.md),
           // Done button
           KidsChunkyButton(

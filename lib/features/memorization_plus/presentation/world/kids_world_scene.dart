@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../domain/services/kids_world_phase.dart';
 import 'kids_world_palette.dart';
 
+
 /// 2D scene behind kids screens. Day: sky, sun, drifting clouds, hills.
 /// Night: deep sky, twinkling stars, a crescent moon, dark hills.
 ///
@@ -116,43 +117,43 @@ class _ScenePainter extends CustomPainter {
     (0.44, 0.85, 1.25, 0.75),
   ];
 
+  final Paint _skyPaint = Paint();
+  final Paint _sunPaint = Paint();
+  final Paint _cloudPaint = Paint()..color = const Color(0xD8FFFFFF);
+  final Paint _starPaint = Paint()..style = PaintingStyle.fill;
+  final Paint _moonPaint = Paint()..color = KidsWorldPalette.moon;
+  final Paint _bitePaint = Paint();
+  final Paint _hillPaint = Paint()..style = PaintingStyle.fill;
+
   @override
   void paint(Canvas canvas, Size size) {
     final palette = KidsWorldPalette.forPhase(phase);
     final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: palette.skyStops,
-          stops: [0.0, 0.6, 1.0],
-        ).createShader(rect),
-    );
+    _skyPaint.shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: palette.skyStops,
+      stops: const [0.0, 0.6, 1.0],
+    ).createShader(rect);
+    canvas.drawRect(rect, _skyPaint);
 
     if (phase == KidsWorldPhase.day) {
       // A soft sun glow in the upper corner.
       final sunCenter = Offset(size.width * 0.85, size.height * 0.07);
-      canvas.drawCircle(
-        sunCenter,
-        size.shortestSide * 0.32,
-        Paint()
-          ..shader =
-              RadialGradient(
-                colors: [
-                  KidsWorldPalette.sunGlow.withValues(alpha: 0.85),
-                  KidsWorldPalette.sunGlow.withValues(alpha: 0),
-                ],
-              ).createShader(
-                Rect.fromCircle(
-                  center: sunCenter,
-                  radius: size.shortestSide * 0.32,
-                ),
-              ),
-      );
+      _sunPaint.shader =
+          RadialGradient(
+            colors: [
+              KidsWorldPalette.sunGlow.withValues(alpha: 0.85),
+              KidsWorldPalette.sunGlow.withValues(alpha: 0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: sunCenter,
+              radius: size.shortestSide * 0.32,
+            ),
+          );
+      canvas.drawCircle(sunCenter, size.shortestSide * 0.32, _sunPaint);
 
-      final cloudPaint = Paint()..color = Colors.white.withValues(alpha: 0.85);
       for (final (top, scale, speed, phase) in _clouds) {
         final width = 120.0 * scale;
         final travel = size.width + width * 2;
@@ -161,7 +162,7 @@ class _ScenePainter extends CustomPainter {
           canvas,
           Offset(-width + travel * t, size.height * top),
           scale,
-          cloudPaint,
+          _cloudPaint,
         );
       }
     } else {
@@ -193,10 +194,11 @@ class _ScenePainter extends CustomPainter {
       final alpha = animating
           ? 0.5 + 0.5 * math.sin(2 * math.pi * (t + i / 7))
           : 0.8;
+      _starPaint.color = Colors.white.withValues(alpha: alpha);
       canvas.drawCircle(
         Offset(star.dx * size.width, star.dy * size.height * 0.6),
         1.0 + (i % 3) * 0.5,
-        Paint()..color = Colors.white.withValues(alpha: alpha),
+        _starPaint,
       );
     }
 
@@ -208,13 +210,10 @@ class _ScenePainter extends CustomPainter {
       size.height * 0.1,
     );
     final bite = Offset(rtl ? -radius * 0.55 : radius * 0.55, -radius * 0.2);
+    _bitePaint.color = palette.skyStops.first;
     canvas
-      ..drawCircle(center, radius, Paint()..color = KidsWorldPalette.moon)
-      ..drawCircle(
-        center + bite,
-        radius * 0.9,
-        Paint()..color = palette.skyStops.first,
-      );
+      ..drawCircle(center, radius, _moonPaint)
+      ..drawCircle(center + bite, radius * 0.9, _bitePaint);
   }
 
   void _drawCloud(Canvas canvas, Offset origin, double scale, Paint paint) {
@@ -260,7 +259,8 @@ class _ScenePainter extends CustomPainter {
       ..lineTo(w, size.height)
       ..lineTo(0, size.height)
       ..close();
-    canvas.drawPath(path, Paint()..color = color);
+    _hillPaint.color = color;
+    canvas.drawPath(path, _hillPaint);
   }
 
   @override

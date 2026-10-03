@@ -1,6 +1,6 @@
+import 'dart:async';
 // lib/features/memorization_plus/presentation/pages/v2/v2_memorizing_page.dart
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

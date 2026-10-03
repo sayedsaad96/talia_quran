@@ -1,4 +1,3 @@
-import '../../../../core/memorization/surah_memorization_status.dart';
 import '../widgets/surah_memorization_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +21,8 @@ import '../widgets/continue_reading_card.dart';
 import '../widgets/juz_grid_view.dart';
 import '../widgets/reciter_selector_sheet.dart';
 import 'bookmarks_page.dart';
+
+import '../../../../core/memorization/surah_memorization_status.dart';
 
 class QuranPage extends StatelessWidget {
   const QuranPage({super.key});
@@ -149,9 +150,7 @@ class _QuranViewState extends State<_QuranView>
                           summaries: _juzSummaries(state.surahs),
                           query: _tabIndex == 1 ? _query : '',
                         ),
-                        BookmarksTab(
-                          query: _tabIndex == 2 ? _query : '',
-                        ),
+                        BookmarksTab(query: _tabIndex == 2 ? _query : ''),
                       ],
                     );
                   }
@@ -168,11 +167,7 @@ class _QuranViewState extends State<_QuranView>
   Widget _buildTypeFilter(BuildContext context, bool isDark) {
     final primary = context.tokens.accent;
     final hint = context.tokens.textHint;
-    final options = <String?>[
-      null,
-      'meccan',
-      'medinan',
-    ];
+    final options = <String?>[null, 'meccan', 'medinan'];
     String labelFor(String? type) {
       return switch (type) {
         'meccan' => context.l10n.meccan,
@@ -243,9 +238,7 @@ class _QuranViewState extends State<_QuranView>
       ),
       title: Text(
         context.l10n.quran,
-        style: AppTypography.headlineMedium.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTypography.headlineMedium.copyWith(color: Colors.white),
       ),
       actions: [
         ValueListenableBuilder<QuranReciter>(
@@ -351,16 +344,13 @@ class _SearchBarState extends State<_SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 44),
       child: Container(
         decoration: BoxDecoration(
           color: context.tokens.surfaceVariant,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: context.tokens.divider,
-          ),
+          border: Border.all(color: context.tokens.divider),
         ),
         child: TextField(
           controller: widget.controller,
@@ -424,9 +414,7 @@ class _SurahListView extends StatelessWidget {
     final visible = typeFilter == null
         ? surahs
         : surahs
-              .where(
-                (s) => typeFilter == 'meccan' ? s.isMeccan : !s.isMeccan,
-              )
+              .where((s) => typeFilter == 'meccan' ? s.isMeccan : !s.isMeccan)
               .toList();
     if (visible.isEmpty) {
       return EmptyStateWidget(

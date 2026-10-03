@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import 'settings_section.dart';
@@ -64,10 +65,9 @@ class _PrayerTimesSettingsSectionState
     _cityId = service.selectedCityId;
     _method = service.calculationMethod;
     _methodAuto = !service.isMethodManual;
-    _madhab = service.isMadhabManual
-        ? service.manualMadhab
-        : null;
-    _fillCustomFields();
+    _madhab = service.isMadhabManual ? service.manualMadhab : null;
+    _latitudeController.text = service.customCity?.latitude.toString() ?? '';
+    _longitudeController.text = service.customCity?.longitude.toString() ?? '';
     service.countries().then((countries) {
       if (!mounted) return;
       setState(() {
@@ -86,6 +86,16 @@ class _PrayerTimesSettingsSectionState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final controller in [_latitudeController, _longitudeController]) {
+      controller.value = controller.value.copyWith(
+        text: context.digitText(controller.text),
+      );
+    }
+  }
+
+  @override
   void dispose() {
     _latitudeController.dispose();
     _longitudeController.dispose();
@@ -95,8 +105,8 @@ class _PrayerTimesSettingsSectionState
   void _fillCustomFields() {
     final custom = _service?.customCity;
     if (custom == null) return;
-    _latitudeController.text = custom.latitude.toString();
-    _longitudeController.text = custom.longitude.toString();
+    _latitudeController.text = context.digitText(custom.latitude.toString());
+    _longitudeController.text = context.digitText(custom.longitude.toString());
   }
 
   /// Accepts Western or Eastern Arabic digits and either decimal mark.
@@ -357,23 +367,25 @@ class _PrayerTimesSettingsSectionState
               onSave: _saveCustomLocation,
             )
           else
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.l10n.homePrayerCity),
-            subtitle: DropdownButton<String>(
-              isExpanded: true,
-              value: cities.any((city) => city.id == _cityId) ? _cityId : null,
-              hint: Text(context.l10n.prayerChooseCityAction),
-              items: [
-                for (final city in cities)
-                  DropdownMenuItem(
-                    value: city.id,
-                    child: Text(context.isArabic ? city.nameAr : city.nameEn),
-                  ),
-              ],
-              onChanged: _setCity,
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.l10n.homePrayerCity),
+              subtitle: DropdownButton<String>(
+                isExpanded: true,
+                value: cities.any((city) => city.id == _cityId)
+                    ? _cityId
+                    : null,
+                hint: Text(context.l10n.prayerChooseCityAction),
+                items: [
+                  for (final city in cities)
+                    DropdownMenuItem(
+                      value: city.id,
+                      child: Text(context.isArabic ? city.nameAr : city.nameEn),
+                    ),
+                ],
+                onChanged: _setCity,
+              ),
             ),
-          ),
           SettingsDivider(isDark: widget.isDark),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -455,6 +467,11 @@ class _CustomLocationFields extends StatelessWidget {
                   key: const Key('prayer_custom_latitude'),
                   controller: latitudeController,
                   keyboardType: keyboard,
+                  inputFormatters: [
+                    LocaleNumericInputFormatter(
+                      Localizations.localeOf(context).languageCode,
+                    ),
+                  ],
                   textDirection: TextDirection.ltr,
                   decoration: InputDecoration(
                     labelText: context.l10n.prayerCustomLatitude,
@@ -467,6 +484,11 @@ class _CustomLocationFields extends StatelessWidget {
                   key: const Key('prayer_custom_longitude'),
                   controller: longitudeController,
                   keyboardType: keyboard,
+                  inputFormatters: [
+                    LocaleNumericInputFormatter(
+                      Localizations.localeOf(context).languageCode,
+                    ),
+                  ],
                   textDirection: TextDirection.ltr,
                   decoration: InputDecoration(
                     labelText: context.l10n.prayerCustomLongitude,

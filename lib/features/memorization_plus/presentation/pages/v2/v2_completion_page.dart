@@ -1,6 +1,7 @@
+import 'dart:async';
+import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -141,7 +142,14 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
                 onPressed: () => context.pushReplacement(next.route),
                 style: FilledButton.styleFrom(backgroundColor: primary),
                 icon: const Icon(Icons.skip_next_rounded),
-                label: Text(l10n.v2NextPlanItem(next.remaining)),
+                label: Text(
+                  l10n.v2NextPlanItem(
+                    LocaleNumberFormatter.format(
+                      (next.remaining).toString(),
+                      l10n.localeName,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(

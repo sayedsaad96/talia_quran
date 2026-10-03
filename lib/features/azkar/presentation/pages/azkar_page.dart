@@ -20,6 +20,8 @@ import '../../domain/services/azkar_time_context.dart';
 import '../cubits/azkar_hub_cubit.dart';
 import '../widgets/free_tasbeeh_sheet.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class AzkarPage extends StatelessWidget {
   const AzkarPage({super.key, this.currentTime});
 
@@ -51,8 +53,7 @@ class _AzkarHubView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor:
-          context.tokens.background,
+      backgroundColor: context.tokens.background,
       body: BlocBuilder<AzkarHubCubit, AzkarHubState>(
         builder: (context, state) {
           return Align(
@@ -73,25 +74,25 @@ class _AzkarHubView extends StatelessWidget {
                       delegate: SliverChildListDelegate([
                         ...switch (state.status) {
                           AzkarHubStatus.loading => const [
-                              SizedBox(
-                                height: 180,
-                                child: LoadingWidget(),
-                              ),
-                            ],
+                            SizedBox(height: 180, child: LoadingWidget()),
+                          ],
                           AzkarHubStatus.error => [
-                              SizedBox(
-                                height: 320,
-                                child: ErrorStateWidget(
-                                  message: context.localizedCubitMessage(
-                                    CubitMessageCodes.errorCache,
-                                  ),
-                                  onRetry: () =>
-                                      context.read<AzkarHubCubit>().load(),
+                            SizedBox(
+                              height: 320,
+                              child: ErrorStateWidget(
+                                message: context.localizedCubitMessage(
+                                  CubitMessageCodes.errorCache,
                                 ),
+                                onRetry: () =>
+                                    context.read<AzkarHubCubit>().load(),
                               ),
-                            ],
-                          AzkarHubStatus.ready =>
-                            _buildContent(context, state, isDark),
+                            ),
+                          ],
+                          AzkarHubStatus.ready => _buildContent(
+                            context,
+                            state,
+                            isDark,
+                          ),
                         },
                       ]),
                     ),
@@ -153,13 +154,11 @@ class _AzkarHubView extends StatelessWidget {
           subtitle: isAllDone
               ? context.l10n.azkarWirdCompletedToday
               : (isMorningHero
-                  ? context.l10n.azkarMorningHeroSubtitle
-                  : context.l10n.azkarEveningHeroSubtitle),
+                    ? context.l10n.azkarMorningHeroSubtitle
+                    : context.l10n.azkarEveningHeroSubtitle),
           countText: context.l10n.zikrCount(context.numText(heroCount)),
           isDone: isAllDone,
-          icon: isMorningHero
-              ? Icons.wb_sunny_rounded
-              : Icons.nightlight_round,
+          icon: isMorningHero ? Icons.wb_sunny_rounded : Icons.nightlight_round,
           gradientColors: isMorningHero
               ? const [Color(0xFFE5A642), Color(0xFFC27D16)]
               : const [AppColors.primary, AppColors.primaryDark],
@@ -231,7 +230,10 @@ class _AzkarHubView extends StatelessWidget {
     // Smart Wird card — subtitle reflects the live daily state.
     final smartWirdSubtitle = state.smartWirdCompletedToday
         ? context.l10n.azkarSmartWirdDone(
-            state.smartWirdSessionCountToday,
+            LocaleNumberFormatter.format(
+              (state.smartWirdSessionCountToday).toString(),
+              context.l10n.localeName,
+            ),
           )
         : context.l10n.azkarSmartWirdSubtitle;
     bentoCards.add(
@@ -307,8 +309,7 @@ class _AzkarHubView extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
-      backgroundColor:
-          context.tokens.background,
+      backgroundColor: context.tokens.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -483,7 +484,9 @@ class _ContextualHeroCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusXl,
+                            ),
                           ),
                           child: Text(
                             countText,
@@ -549,14 +552,10 @@ class _BentoGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor =
-        context.tokens.card;
-    final borderColor =
-        context.tokens.divider;
-    final textColor =
-        context.tokens.textPrimary;
-    final subColor =
-        context.tokens.textSecondary;
+    final surfaceColor = context.tokens.card;
+    final borderColor = context.tokens.divider;
+    final textColor = context.tokens.textPrimary;
+    final subColor = context.tokens.textSecondary;
 
     return InkWell(
       onTap: onTap ?? () => context.push('/azkar/$route'),
@@ -616,9 +615,7 @@ class _BentoGridCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: subColor,
-                  ),
+                  style: AppTypography.labelSmall.copyWith(color: subColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

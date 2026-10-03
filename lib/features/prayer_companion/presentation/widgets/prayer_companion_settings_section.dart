@@ -12,6 +12,8 @@ import '../../domain/entities/prayer_companion.dart';
 import '../../domain/repositories/prayer_companion_repository.dart';
 import '../../../settings/presentation/widgets/settings_section.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// Opt-in Prayer Companion settings.
 ///
 /// Owns only Companion preferences and local-history deletion. Existing
@@ -106,7 +108,12 @@ class _PrayerCompanionSettingsSectionState
 
   String _preparationLabel(BuildContext context, int minutes) {
     if (minutes == 0) return context.l10n.prayerCompanionPreparationDisabled;
-    return context.l10n.prayerCompanionMinutesValue(minutes);
+    return context.l10n.prayerCompanionMinutesValue(
+      LocaleNumberFormatter.format(
+        (minutes).toString(),
+        context.l10n.localeName,
+      ),
+    );
   }
 
   Future<void> _confirmClear() async {

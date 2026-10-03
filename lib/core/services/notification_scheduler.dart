@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/locale_number_formatter.dart';
 import '../prayer_delivery/android_prayer_delivery_scheduler.dart';
 import '../prayer_delivery/prayer_delivery_coordinator.dart';
 import '../prayer_delivery/prayer_event_builder.dart';
@@ -23,6 +23,7 @@ import '../../features/prayer_companion/domain/services/prayer_companion_schedul
 import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
 import 'prayer_times_service.dart';
+
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
 
@@ -253,8 +254,8 @@ class NotificationScheduler {
           (
             at: slot.at,
             body: l10n.notificationKhatmahBodyWithTarget(
-              slot.startPage,
-              slot.endPage,
+              LocaleNumberFormatter.number(slot.startPage, l10n.localeName),
+              LocaleNumberFormatter.number(slot.endPage, l10n.localeName),
             ),
             payload: '/quran/page/${slot.startPage}?mode=khatmah',
           ),
@@ -351,7 +352,9 @@ class NotificationScheduler {
           0;
 
       final body = dueReviews > 0
-          ? l10n.notificationDailyReviewBodyCount(dueReviews)
+          ? l10n.notificationDailyReviewBodyCount(
+              LocaleNumberFormatter.number(dueReviews, l10n.localeName),
+            )
           : l10n.notificationDailyReviewBody;
 
       final quietTime = quiet(hour, minute);
@@ -380,7 +383,9 @@ class NotificationScheduler {
       // Stage 1: gentle nudge one hour before the urgent alert.
       if (hour > 0) {
         await _service.scheduleStreakGentleNudge(
-          title: l10n.notificationStreakGentleTitle(currentStreak),
+          title: l10n.notificationStreakGentleTitle(
+            LocaleNumberFormatter.number(currentStreak, l10n.localeName),
+          ),
           body: l10n.notificationStreakGentleBody,
           currentStreak: currentStreak,
           hour: hour - 1,
@@ -390,7 +395,9 @@ class NotificationScheduler {
 
       // Stage 2: urgent high-importance protection alert.
       await _service.scheduleStreakProtectionAlert(
-        title: l10n.notificationStreakAlertTitle(currentStreak),
+        title: l10n.notificationStreakAlertTitle(
+          LocaleNumberFormatter.number(currentStreak, l10n.localeName),
+        ),
         body: l10n.notificationStreakAlertBody,
         currentStreak: currentStreak,
         hour: hour,
@@ -585,7 +592,12 @@ class NotificationScheduler {
       await _service.scheduleWeeklyImpactReminder(
         title: l10n.notificationWeeklyImpactTitle,
         body: daysWithQuran > 0
-            ? l10n.notificationWeeklyImpactBody(daysWithQuran)
+            ? l10n.notificationWeeklyImpactBody(
+                LocaleNumberFormatter.format(
+                  (daysWithQuran).toString(),
+                  l10n.localeName,
+                ),
+              )
             : l10n.notificationWeeklyImpactQuietBody,
         hour: hour,
         minute: minute,

@@ -26,6 +26,10 @@ android {
         versionName = flutter.versionName
     }
 
+    sourceSets {
+        getByName("main").kotlin.directories += "../../packages/talia_prayer_delivery/android/src/main/kotlin"
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

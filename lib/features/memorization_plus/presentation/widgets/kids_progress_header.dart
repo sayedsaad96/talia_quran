@@ -7,6 +7,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 /// 2.5D companion hero card featuring the child's memorization companion,
 /// level progression, motivation, and collected star count.
 class KidsProgressHeader extends StatelessWidget {
@@ -324,7 +326,16 @@ class _LevelProgressSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.kidsGamifiedLevelProgress(level, percentage),
+          context.l10n.kidsGamifiedLevelProgress(
+            LocaleNumberFormatter.format(
+              (level).toString(),
+              context.l10n.localeName,
+            ),
+            LocaleNumberFormatter.format(
+              (percentage).toString(),
+              context.l10n.localeName,
+            ),
+          ),
           style: AppTypography.labelSmall.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
@@ -378,7 +389,12 @@ class _StreakBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Flexible(
             child: Text(
-              context.l10n.homeStreakDays(days),
+              context.l10n.homeStreakDays(
+                LocaleNumberFormatter.format(
+                  (days).toString(),
+                  context.l10n.localeName,
+                ),
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.labelMedium.copyWith(

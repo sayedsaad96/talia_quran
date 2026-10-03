@@ -7,6 +7,8 @@ import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 import 'kids_chunky_button.dart';
 
+import '../../../../core/utils/locale_number_formatter.dart';
+
 class KidsStageDetails extends StatelessWidget {
   const KidsStageDetails({
     super.key,
@@ -81,7 +83,12 @@ class _RibbonHeader extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            context.l10n.kidsGamifiedHouseTitle(stage.stageNumber),
+            context.l10n.kidsGamifiedHouseTitle(
+              LocaleNumberFormatter.format(
+                (stage.stageNumber).toString(),
+                context.l10n.localeName,
+              ),
+            ),
             textAlign: TextAlign.center,
             style: AppTypography.headlineMedium.copyWith(
               color: Colors.white,
@@ -91,7 +98,7 @@ class _RibbonHeader extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '$surahName • ${context.l10n.kidsGamifiedAyahRange(stage.startAyah, stage.endAyah)}',
+            '$surahName • ${context.l10n.kidsGamifiedAyahRange(LocaleNumberFormatter.format((stage.startAyah).toString(), context.l10n.localeName), LocaleNumberFormatter.format((stage.endAyah).toString(), context.l10n.localeName))}',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
               color: Colors.white.withValues(alpha: 0.82),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -7,6 +8,8 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
+import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../auth/presentation/widgets/guest_import_dialog.dart';
@@ -46,8 +49,7 @@ class ProfileSettingTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: context.tokens.accent
-                        .withValues(alpha: 0.1),
+                    color: context.tokens.accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -143,6 +145,14 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ageController.value = _ageController.value.copyWith(
+      text: context.digitText(_ageController.text),
+    );
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _ageController.dispose();
@@ -151,7 +161,6 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
-
     return AlertDialog(
       backgroundColor: context.tokens.card,
       shape: RoundedRectangleBorder(
@@ -194,6 +203,12 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             TextField(
               controller: _ageController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[0-9٠-٩]')),
+                LocaleNumericInputFormatter(
+                  Localizations.localeOf(context).languageCode,
+                ),
+              ],
               style: AppTypography.bodyMedium.copyWith(
                 color: context.tokens.textPrimary,
               ),
@@ -219,7 +234,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           onPressed: () async {
             final name = _nameController.text.trim();
             final ageText = _ageController.text.trim();
-            final age = ageText.isEmpty ? null : int.tryParse(ageText);
+            final age = ageText.isEmpty
+                ? null
+                : int.tryParse(LocaleNumberFormatter.western(ageText));
 
             if (ageText.isNotEmpty && (age == null || age < 1 || age > 120)) {
               _showSettingsError(context, context.l10n.invalidAge);
@@ -378,9 +395,8 @@ class _AccountSectionState extends State<AccountSection> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 FilledButton(
-                  onPressed: () => context
-                      .read<AuthCubit>()
-                      .retryAccountDeletionCleanup(),
+                  onPressed: () =>
+                      context.read<AuthCubit>().retryAccountDeletionCleanup(),
                   child: Text(context.l10n.accountDeletionRetryAction),
                 ),
               ],
@@ -436,10 +452,16 @@ class _AccountSectionState extends State<AccountSection> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusFull,
+                                ),
                                 border: Border.all(
-                                  color: AppColors.success.withValues(alpha: 0.22),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.22,
+                                  ),
                                 ),
                               ),
                               child: Row(
