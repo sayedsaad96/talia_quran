@@ -312,7 +312,7 @@ OS AlarmManager (RTC_WAKEUP, exact when allowed)
 
 Verified facts [V]:
 - `awqat` is used **only** for the bundled clip (`res/raw/adhan.mp3` exists in the pub cache package; iOS `adhan.caf`). Its Dart scheduling API is never imported.
-- The athan channel's sound is permanently attached (`mSound=android.resource://com.example.talia_quran/raw/adhan` observed in `dumpsys notification`), importance max, `bypassDnd=false`.
+- The athan channel's sound is permanently attached (`mSound=android.resource://com.talia.quran/raw/adhan` observed in `dumpsys notification`), importance max, `bypassDnd=false`.
 - `prayer_sound.dart` explicitly reserves a Fajr seam: `_clipFor('fajr') → 'adhan'` today; a future `adhan_fajr` asset "plugs in here without touching the scheduler".
 - There is **no** Flutter audio player, MediaPlayer, Media3, foreground service, MediaSession, or audio-focus code in the prayer path. `just_audio`/`audio_service`/`audio_session` are used exclusively by Quran recitation (`QuranContinuousPlayerService` etc.).
 - No stop action, no preview playback, no mute-while-in-dua logic, no muezzin selection, no downloadable audio. The "Serenity" pause applies to Quran recitation only, never to the adhan.
@@ -361,7 +361,7 @@ UX findings [V]:
 
 ## 12. Runtime Findings (observed vs assumed)
 
-Environment: installed debug build `com.example.talia_quran` on `emulator-5554`; read-only adb inspection; `POST_NOTIFICATIONS` granted via `pm grant`; no clock changes; no UI automation beyond launching the app.
+Environment: installed debug build `com.talia.quran` on `emulator-5554`; read-only adb inspection; `POST_NOTIFICATIONS` granted via `pm grant`; no clock changes; no UI automation beyond launching the app.
 
 | Check | Result |
 |---|---|

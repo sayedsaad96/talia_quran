@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 import android.content.Context
 import android.content.Intent
@@ -20,7 +20,7 @@ import java.io.FileOutputStream
  *   main bundle by the Dart side via rootBundle.
  */
 object AdhanPreviewBridge {
-    private const val AUTHORITY = "com.example.talia_quran.fileprovider"
+    private const val AUTHORITY = "com.talia.quran.fileprovider"
     private const val CACHE_DIR = "adhan_preview"
 
     /** Returns a playable URI/source for the given resolved clip name. */

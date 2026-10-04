@@ -35,7 +35,7 @@ class CloudSyncCoordinator {
        _syncBookmarks = syncBookmarks,
        _localChangeDebounce = localChangeDebounce {
     _progressSubscription = _progressEvents?.changes
-        .where((reason) => reason != ProgressChangedReason.cloudPull)
+        .where(ProgressEventsBus.requiresCloudPush)
         .listen(_schedulePendingPush);
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,6 +78,30 @@ void main() {
       verify(() => streak.recordActivity()).called(1);
       // Free-reading stats, the reading log and the daily wird stay separate.
       verifyNever(() => saveRead(any()));
+      await cubit.close();
+    },
+  );
+
+  test(
+    'a confirmation finishing after the next page loaded keeps that page',
+    () async {
+      const next = QuranPageDetail(pageNumber: 12, surahs: [], ayahs: []);
+      when(
+        () => repository.getQuranPage(12),
+      ).thenAnswer((_) async => const Right(next));
+      final save = Completer<Either<Failure, void>>();
+      when(() => saveRead(11)).thenAnswer((_) => save.future);
+      final cubit = QuranPageCubit(repository, saveRead, streak);
+      await cubit.loadPage(11);
+
+      final confirming = cubit.confirmRead(11);
+      await cubit.loadPage(12);
+      save.complete(const Right(null));
+
+      expect(await confirming, isTrue);
+      final state = cubit.state as QuranPageLoaded;
+      expect(state.detail.pageNumber, 12);
+      expect(state.isReadConfirmed, isFalse);
       await cubit.close();
     },
   );

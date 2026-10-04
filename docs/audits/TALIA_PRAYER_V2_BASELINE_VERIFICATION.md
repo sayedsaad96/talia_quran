@@ -122,7 +122,7 @@ Confirmed directly from current repository:
   - Quiet hours suppresses Companion check-ins/follow-ups at the scheduler layer without shifting prayer times.
 - **Adhan Audio Delivery:**
   - Handled as a notification-channel sound via `flutter_local_notifications` (`talia_prayer_times_athan` channel).
-  - Audio asset: raw resource sound `android.resource://com.example.talia_quran/raw/adhan`.
+  - Audio asset: raw resource sound `android.resource://com.talia.quran/raw/adhan`.
   - No media player, no audio focus management, no playback stop action, no foreground service.
 - **`awqat` Dependency:**
   - Sole functional usage is the bundled asset (`res/raw/adhan.mp3` on Android, `adhan.caf` on iOS).
@@ -164,7 +164,7 @@ Verified from `build/app/intermediates/merged_manifests/debug/processDebugManife
 Verified via `adb -s emulator-5554 shell dumpsys notification --noredact`:
 - **`talia_prayer_times_athan`:**
   - Importance: `5` (`IMPORTANCE_MAX`)
-  - Sound: `android.resource://com.example.talia_quran/raw/adhan`
+  - Sound: `android.resource://com.talia.quran/raw/adhan`
   - AudioAttributes: `usage=USAGE_NOTIFICATION content=CONTENT_TYPE_MUSIC flags=0x0`
   - Lights & Vibration enabled.
 - **`talia_prayer_times`:**
@@ -180,7 +180,7 @@ Verified via `adb -s emulator-5554 shell dumpsys notification --noredact`:
 ## 9. Alarm Baseline (Live Device Inspection)
 
 Verified via `adb -s emulator-5554 shell dumpsys alarm`:
-- Target component: `com.example.talia_quran/com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver`
+- Target component: `com.talia.quran/com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver`
 - Alarms scheduled across the rolling 7-day window with `window=0` (exact `RTC_WAKEUP` alarms):
   - Example observed exact alarms:
     - 2026-09-24 18:49:00 (Maghrib)

@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 /**
  * MethodChannel contract for the Talia prayer delivery pipeline (V2).

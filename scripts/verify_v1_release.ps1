@@ -386,7 +386,7 @@ try {
   }
 
   $androidConfig = Get-Content -LiteralPath (Join-Path $repositoryRoot 'android\app\build.gradle.kts') -Raw
-  if ($androidConfig.Contains('applicationId = "com.example.talia_quran"') -or
+  if ($androidConfig.Contains('applicationId = "com.talia.quran"') -or
       $androidConfig.Contains('signingConfig = signingConfigs.getByName("debug")')) {
     Add-Result 'Store identity and signing' 'BLOCKED' 'default applicationId and/or debug release signing; store artifact NOT READY'
   } else {

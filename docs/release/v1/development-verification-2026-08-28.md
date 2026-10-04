@@ -75,7 +75,7 @@ pwsh -NoProfile -File .\scripts\verify_v1_release.ps1
 
 ## موانع الإصدار الحالية
 
-- `applicationId` ما زال `com.example.talia_quran`، وتوقيع Release مضبوط على مفتاح Debug؛ يلزم قرار هوية وتوقيع حقيقي عند بدء مرحلة الإصدار.
+- `applicationId` ما زال `com.talia.quran`، وتوقيع Release مضبوط على مفتاح Debug؛ يلزم قرار هوية وتوقيع حقيقي عند بدء مرحلة الإصدار.
 - متغيرات `TALIA_SUPABASE_FRESH_DB_URL` و`TALIA_SUPABASE_STAGING_DB_URL` و`SUPABASE_DB_URL` لم تكن متاحة؛ فحوص الخلفية `NOT RUN`.
 - بناء Android Release، فحص أصوله، التثبيت النظيف/الترقية، المسار الداخلي، وسياسات المتجر `NOT RUN`.
 - مساحة العمل غير نظيفة؛ لذلك commit/manifest/artifact غير مجمدة ولا تصلح لاعتماد نهائي.

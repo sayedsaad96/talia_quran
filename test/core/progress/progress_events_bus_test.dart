@@ -32,5 +32,20 @@ void main() {
         isTrue,
       );
     });
+
+    test('activity feed refreshes home only and never pushes to cloud', () {
+      const reason = ProgressChangedReason.activityFeed;
+      expect(ProgressEventsBus.affectsHomeFullReload(reason), isTrue);
+      expect(ProgressEventsBus.affectsProgressTab(reason), isFalse);
+      expect(ProgressEventsBus.requiresCloudPush(reason), isFalse);
+      expect(
+        ProgressEventsBus.requiresCloudPush(ProgressChangedReason.cloudPull),
+        isFalse,
+      );
+      expect(
+        ProgressEventsBus.requiresCloudPush(ProgressChangedReason.reviewRecord),
+        isTrue,
+      );
+    });
   });
 }

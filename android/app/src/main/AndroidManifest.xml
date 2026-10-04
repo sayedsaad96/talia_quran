@@ -84,13 +84,13 @@
              Not exported; fires only from Talia's own AlarmManager intents.
              Dormant until the Dart side migrates to prayer_delivery_version 2. -->
         <receiver
-            android:name="com.example.talia_quran.prayer.PrayerAlarmReceiver"
+            android:name="com.talia.quran.prayer.PrayerAlarmReceiver"
             android:exported="false" />
 
         <!-- Prayer V2 stage 6: owned adhan audio playback. Foreground media
              service with a stop action; audio focus managed explicitly. -->
         <service
-            android:name="com.example.talia_quran.prayer.AdhanPlaybackService"
+            android:name="com.talia.quran.prayer.AdhanPlaybackService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
@@ -98,7 +98,7 @@
              time/timezone changes re-arm the persisted absolute-time prayer
              alarms without starting Flutter or recomputing anything. -->
         <receiver
-            android:name="com.example.talia_quran.prayer.PrayerRecoveryReceiver"
+            android:name="com.talia.quran.prayer.PrayerRecoveryReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

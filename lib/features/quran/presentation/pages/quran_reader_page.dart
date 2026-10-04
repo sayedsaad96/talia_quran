@@ -362,6 +362,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       _readConfirmationGate.clearPending(pageNumber);
       return;
     }
+    // The cubit only reports confirmation for the page it still shows.
+    if (_currentPageNumber != pageNumber) {
+      _readConfirmationGate.markConfirmed(pageNumber);
+    }
     if (widget.readerMode == QuranReaderMode.khatmah) {
       await _khatmahCubit?.recordDigitalPage(pageNumber);
     } else {

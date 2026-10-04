@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 import android.content.Context
 import android.util.Log

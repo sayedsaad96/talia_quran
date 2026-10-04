@@ -12,6 +12,8 @@ import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
+import 'package:talia_quran/core/progress/progress_changed_reason.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
@@ -100,6 +102,35 @@ void main() {
           1,
         );
         expect(await isar.isarReviewEffectOutboxs.count(), 2);
+      },
+    );
+
+    test(
+      'a new pass tells progress screens once; a retry stays silent',
+      () async {
+        final bus = ProgressEventsBus();
+        final reasons = <ProgressChangedReason>[];
+        final sub = bus.changes.listen(reasons.add);
+        final notifying = V2ReviewOutcomeCommitter(
+          isar: isar,
+          owner: const FixedRecordOwnerProvider('owner-a'),
+          scheduler: const ScheduleNextReviewUsecase(),
+          now: () => DateTime.utc(2026, 9, 8, 12),
+          progressEvents: bus,
+        );
+
+        for (var i = 0; i < 2; i++) {
+          await notifying.commitAutomaticPass(
+            previousState: _recitingState,
+            nextState: _nextState,
+            taskId: 'ayah-1',
+          );
+        }
+        await Future<void>.delayed(Duration.zero);
+
+        expect(reasons, [ProgressChangedReason.reviewRecord]);
+        await sub.cancel();
+        bus.dispose();
       },
     );
 

@@ -7,6 +7,8 @@ import '../../../features/memorization_plus/data/models/memorization_models.dart
 import '../../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../identity/record_owner_provider.dart';
+import '../../progress/progress_changed_reason.dart';
+import '../../progress/progress_events_bus.dart';
 import '../review_record_audience_scope.dart';
 import '../review_record_identity.dart';
 import '../../../features/home/domain/entities/activity_event.dart';
@@ -44,13 +46,15 @@ final class V2ReviewOutcomeCommitter {
     DateTime Function()? now,
     String Function()? idGenerator,
     ActivityEventRecorder? activityRecorder,
+    ProgressEventsBus? progressEvents,
   }) : _isar = isar,
        _owner = owner,
        _scheduler = scheduler,
        _now = now ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? V2ReviewOutcomeCommitSupport.newOpaqueId,
        _effects = ReviewEffectOutboxWriter(isar),
-       _activityRecorder = activityRecorder;
+       _activityRecorder = activityRecorder,
+       _progressEvents = progressEvents;
 
   final Isar _isar;
   final RecordOwnerProvider _owner;
@@ -59,6 +63,10 @@ final class V2ReviewOutcomeCommitter {
   final String Function() _idGenerator;
   final ReviewEffectOutboxWriter _effects;
   final ActivityEventRecorder? _activityRecorder;
+
+  /// Per-ayah commits change progress before any completion effect runs, so
+  /// read-side screens must hear about the review record directly.
+  final ProgressEventsBus? _progressEvents;
 
   /// Writes evidence, SM-2 projection, checkpoint, and outbox rows together.
   ///
@@ -239,6 +247,9 @@ final class V2ReviewOutcomeCommitter {
         alreadyCommitted: false,
       );
     });
+    if (!result.alreadyCommitted) {
+      _progressEvents?.notify(ProgressChangedReason.reviewRecord);
+    }
     await _recordSessionActivity(
       result: result,
       kind: ActivityEventKind.memorize,
@@ -395,8 +406,9 @@ final class V2ReviewOutcomeCommitter {
     );
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
+    var demotedRecord = false;
 
-    return _isar.writeTxn(() async {
+    final result = await _isar.writeTxn(() async {
       final existingByEventId = await _isar.isarReviewEvidenceEvents
           .filter()
           .eventIdEqualTo(requestedEventId)
@@ -480,6 +492,7 @@ final class V2ReviewOutcomeCommitter {
               ..cloudDirty = true
               ..lastSyncedAt = null,
           );
+          demotedRecord = true;
         }
       }
 
@@ -532,6 +545,10 @@ final class V2ReviewOutcomeCommitter {
         alreadyCommitted: false,
       );
     });
+    if (demotedRecord) {
+      _progressEvents?.notify(ProgressChangedReason.reviewRecord);
+    }
+    return result;
   }
 
   Future<void> _recordSessionActivity({

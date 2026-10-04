@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 /**
  * Sound-profile → bundled raw-resource mapping (muezzin selection).

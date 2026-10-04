@@ -85,23 +85,29 @@ class QuranPageCubit extends Cubit<QuranPageState> {
       } catch (_) {
         // Streak recording is supplementary and must not invalidate reading.
       }
-      if (isClosed) return true;
-      emit(
-        QuranPageLoaded(
-          current.detail,
-          isReadConfirmed: true,
-          readConfirmationError: current.readConfirmationError,
-        ),
-      );
+      if (_isShowing(pageNumber)) {
+        emit(
+          QuranPageLoaded(
+            current.detail,
+            isReadConfirmed: true,
+            readConfirmationError: current.readConfirmationError,
+          ),
+        );
+      }
       return true;
     }
 
     final saveResult = await _saveReadPage(pageNumber);
     final failure = saveResult.fold((failure) => failure, (_) => null);
     if (failure != null) {
-      emit(
-        QuranPageLoaded(current.detail, readConfirmationError: failure.message),
-      );
+      if (_isShowing(pageNumber)) {
+        emit(
+          QuranPageLoaded(
+            current.detail,
+            readConfirmationError: failure.message,
+          ),
+        );
+      }
       return false;
     }
 
@@ -131,7 +137,19 @@ class QuranPageCubit extends Cubit<QuranPageState> {
         ),
       );
     } catch (_) {}
-    emit(QuranPageLoaded(current.detail, isReadConfirmed: true));
+    if (_isShowing(pageNumber)) {
+      emit(QuranPageLoaded(current.detail, isReadConfirmed: true));
+    }
     return true;
+  }
+
+  /// A confirmation finishes after several awaits; by then the reader may
+  /// have loaded the next page. Emitting the old page's state would replace
+  /// it and cancel that page's read timer, so its read would never count.
+  bool _isShowing(int pageNumber) {
+    final latest = state;
+    return !isClosed &&
+        latest is QuranPageLoaded &&
+        latest.detail.pageNumber == pageNumber;
   }
 }

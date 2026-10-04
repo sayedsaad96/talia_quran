@@ -1,10 +1,10 @@
-package com.example.talia_quran
+package com.talia.quran
 
 import android.media.AudioManager
 import android.media.MediaPlayer
-import com.example.talia_quran.prayer.AdhanClipResolver
-import com.example.talia_quran.prayer.AdhanPreviewBridge
-import com.example.talia_quran.prayer.PrayerDeliveryChannelHandler
+import com.talia.quran.prayer.AdhanClipResolver
+import com.talia.quran.prayer.AdhanPreviewBridge
+import com.talia.quran.prayer.PrayerDeliveryChannelHandler
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel

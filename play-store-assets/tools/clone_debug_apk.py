@@ -225,7 +225,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--old-id", default="com.example.talia_quran")
+    parser.add_argument("--old-id", default="com.talia.quran")
     parser.add_argument("--new-id", default="com.example.talia_shots")
     parser.add_argument("--report", type=Path)
     parser.add_argument("--verify-copy", action="store_true", help="verify source payloads after writing the clone")

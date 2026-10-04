@@ -13,7 +13,7 @@ Prior to modifying dependencies, a full codebase forensic search confirmed:
 - **Dart API usage:** `import 'package:awqat'` was **zero** across both `lib/` and `test/`.
 - **Sole functional role:** Bundling audio assets (`res/raw/adhan.mp3` on Android, `adhan.caf` on iOS).
 - **Sound resolution path:**
-  - Android: `NotificationDetails` → `AndroidNotificationDetails` → `RawResourceAndroidNotificationSound('adhan')`. This maps directly to Android package resource `android.resource://com.example.talia_quran/raw/adhan`.
+  - Android: `NotificationDetails` → `AndroidNotificationDetails` → `RawResourceAndroidNotificationSound('adhan')`. This maps directly to Android package resource `android.resource://com.talia.quran/raw/adhan`.
   - iOS: `DarwinNotificationDetails(sound: 'adhan.caf')` looking for `adhan.caf` in the main application bundle.
 - **Foreign scheduler footprint:**
   - Package manifest injected `USE_EXACT_ALARM` and exported receivers `dev.awqat.awqat.AlarmReceiver` and `dev.awqat.awqat.BootReceiver` into Talia's merged manifest despite its scheduler never being invoked.
@@ -142,7 +142,7 @@ Executed the focused baseline suites across all 22 test files:
 
 ## 8. Runtime Channel & Alarm Verification
 
-- **Sound Resource Resolution:** The application owns `android/app/src/main/res/raw/adhan.mp3`. When `RawResourceAndroidNotificationSound('adhan')` is scheduled on `talia_prayer_times_athan`, Android resolves it to `android.resource://com.example.talia_quran/raw/adhan` (confirmed matching previous runtime baseline).
+- **Sound Resource Resolution:** The application owns `android/app/src/main/res/raw/adhan.mp3`. When `RawResourceAndroidNotificationSound('adhan')` is scheduled on `talia_prayer_times_athan`, Android resolves it to `android.resource://com.talia.quran/raw/adhan` (confirmed matching previous runtime baseline).
 - **Alarm Architecture:** Untouched. Pending alarms continue targeting `ScheduledNotificationReceiver` over FLN.
 
 ---

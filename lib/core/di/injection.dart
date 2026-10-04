@@ -650,6 +650,7 @@ Future<void> configureDependencies({bool background = false}) async {
       owner: getIt<RecordOwnerProvider>(),
       scheduler: getIt<ScheduleNextReviewUsecase>(),
       activityRecorder: getIt<ActivityEventRecorder>(),
+      progressEvents: getIt<ProgressEventsBus>(),
     ),
   );
   getIt.registerLazySingleton<KidsReviewOutcomeCommitter>(
@@ -738,7 +739,10 @@ Future<void> configureDependencies({bool background = false}) async {
     () => ActivityFeedRepositoryImpl(getIt<Isar>()),
   );
   getIt.registerLazySingleton<ActivityEventRecorder>(
-    () => ActivityEventRecorder(getIt<ActivityFeedRepository>()),
+    () => ActivityEventRecorder(
+      getIt<ActivityFeedRepository>(),
+      getIt<ProgressEventsBus>(),
+    ),
   );
   getIt.registerLazySingleton<GetRecentActivityUsecase>(
     () => GetRecentActivityUsecase(getIt<ActivityFeedRepository>()),

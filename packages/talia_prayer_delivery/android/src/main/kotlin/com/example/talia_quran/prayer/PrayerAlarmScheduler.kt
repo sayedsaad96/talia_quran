@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 import android.app.AlarmManager
 import android.app.PendingIntent

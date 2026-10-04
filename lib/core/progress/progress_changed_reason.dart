@@ -23,4 +23,7 @@ enum ProgressChangedReason {
 
   /// Cloud pull merged remote SRS / streak / XP into local storage (B7).
   cloudPull,
+
+  /// A local-only entry was appended to the home "recent activity" feed.
+  activityFeed,
 }

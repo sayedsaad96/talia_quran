@@ -18,7 +18,7 @@ Run in order; between sections always relaunch the app unless stated otherwise.
 - **Expect:** same as §1.
 
 ## 3. App killed (Gate D)
-- `adb shell am force-stop com.example.talia_quran`, wait for the next prayer.
+- `adb shell am force-stop com.talia.quran`, wait for the next prayer.
 - **Expect:** notification + adhan fire (native receiver runs without Flutter).
 
 ## 4. Locked screen (Gate D)
@@ -80,7 +80,7 @@ adb shell dumpsys alarm | grep -A2 talia_quran
 adb shell dumpsys notification | grep -A10 talia_prayer
 
 # running adhan foreground service
-adb shell dumpsys activity services com.example.talia_quran | grep AdhanPlaybackService
+adb shell dumpsys activity services com.talia.quran | grep AdhanPlaybackService
 
 # logs
 adb logcat -s PrayerV2

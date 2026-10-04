@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -67,7 +67,7 @@ object PrayerNotificationFactory {
     /** Body tap → app home (launch intent). */
     private fun buildContentIntent(context: Context, event: PrayerEventData): PendingIntent {
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent().setClassName(context, "com.example.talia_quran.MainActivity")
+            ?: Intent().setClassName(context, "com.talia.quran.MainActivity")
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return PendingIntent.getActivity(
             context,

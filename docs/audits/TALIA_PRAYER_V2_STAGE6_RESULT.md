@@ -29,7 +29,7 @@
 
 ```xml
 <service
-    android:name="com.example.talia_quran.prayer.AdhanPlaybackService"
+    android:name="com.talia.quran.prayer.AdhanPlaybackService"
     android:exported="false"
     android:foregroundServiceType="mediaPlayback" />
 ```

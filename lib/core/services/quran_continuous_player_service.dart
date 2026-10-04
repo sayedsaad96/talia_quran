@@ -579,7 +579,7 @@ class QuranContinuousPlayerService {
           onSeek: seek,
         ),
         config: const AudioServiceConfig(
-          androidNotificationChannelId: 'com.example.talia_quran.channel.audio',
+          androidNotificationChannelId: 'com.talia.quran.channel.audio',
           androidNotificationChannelName: 'تلاوة القرآن الكريم',
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,

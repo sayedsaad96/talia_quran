@@ -21,10 +21,21 @@ class ProgressEventsBus {
     }
   }
 
-  /// Progress tab shows memorization, reading, streak, and certificates — not XP.
+  /// Progress tab shows memorization, reading, streak, and certificates — not
+  /// XP or the home activity feed.
   static bool affectsProgressTab(ProgressChangedReason reason) {
     return switch (reason) {
       ProgressChangedReason.xp => false,
+      ProgressChangedReason.activityFeed => false,
+      _ => true,
+    };
+  }
+
+  /// Local-only changes that have nothing to upload.
+  static bool requiresCloudPush(ProgressChangedReason reason) {
+    return switch (reason) {
+      ProgressChangedReason.cloudPull => false,
+      ProgressChangedReason.activityFeed => false,
       _ => true,
     };
   }

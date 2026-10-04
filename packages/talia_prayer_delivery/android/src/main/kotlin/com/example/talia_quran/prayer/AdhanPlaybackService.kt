@@ -1,4 +1,4 @@
-package com.example.talia_quran.prayer
+package com.talia.quran.prayer
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -33,8 +33,8 @@ import android.util.Log
  */
 class AdhanPlaybackService : Service() {
     companion object {
-        const val ACTION_START = "com.example.talia_quran.prayer.action.START_ADHAN"
-        const val ACTION_STOP = "com.example.talia_quran.prayer.action.STOP_ADHAN"
+        const val ACTION_START = "com.talia.quran.prayer.action.START_ADHAN"
+        const val ACTION_STOP = "com.talia.quran.prayer.action.STOP_ADHAN"
         const val EXTRA_PRAYER_KEY = "prayerKey"
         const val EXTRA_LOCAL_PRAYER_TIME = "localPrayerTime"
         const val EXTRA_SOUND_PROFILE = "soundProfile"
@@ -237,7 +237,7 @@ class AdhanPlaybackService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val launch = packageManager.getLaunchIntentForPackage(packageName)
-            ?: Intent().setClassName(this, "com.example.talia_quran.MainActivity")
+            ?: Intent().setClassName(this, "com.talia.quran.MainActivity")
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val contentIntent = PendingIntent.getActivity(
             this,
