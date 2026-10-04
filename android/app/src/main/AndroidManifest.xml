@@ -20,12 +20,12 @@
         android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
-        android:label="Talia"
+        android:label="Talia Quran"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:roundIcon="@mipmap/launcher_icon">
         <activity
-            android:name=".MainActivity"
+            android:name="com.talia.quran.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
@@ -113,7 +113,7 @@
              in-app player (just_audio) as content:// URIs. -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.talia_quran.fileprovider"
+            android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
