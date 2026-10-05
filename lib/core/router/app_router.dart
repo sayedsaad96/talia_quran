@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
+import '../../features/memorization_plus/application/guardian_session_controller.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../constants/app_constants.dart';
@@ -307,7 +308,13 @@ class MemorizationRouteGuard {
     }
   }
 
+  /// A child profile reaches the family dashboard only inside a guardian
+  /// session (PIN entered on the child's device), signed in or not.
   static Future<String?> parentDashboardRedirect() async {
+    final profile = await _readProfile();
+    if (profile?.isChild == true) {
+      return guardianSessionActive() ? null : AppRoutes.memorizationPlusKidsHome;
+    }
     try {
       final authState = getIt<AuthCubit>().state;
       if (authState is! AuthAuthenticated && authState is! AuthInitial) {
@@ -316,10 +323,12 @@ class MemorizationRouteGuard {
     } catch (_) {
       // Tests and isolated guard callers may not register AuthCubit.
     }
-
-    final profile = await _readProfile();
-    return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
+    return null;
   }
+
+  static bool guardianSessionActive() =>
+      getIt.isRegistered<GuardianSessionController>() &&
+      getIt<GuardianSessionController>().isActive;
 
   /// Legacy `/hifz` deep links: Hub (or V2 via [PendingAyahResolver] when
   /// `surahId` is present). Surah browsing lives at [AppRoutes.hifzPracticeSurah].
@@ -379,7 +388,11 @@ abstract class AppRouter {
       error is GoException &&
       error.message.startsWith('no routes for location');
 
-  static String? redirectForAuth(AuthState authState, String location) {
+  static String? redirectForAuth(
+    AuthState authState,
+    String location, {
+    bool guardianSessionActive = false,
+  }) {
     if (authState is AuthAccountDeletionInProgress) {
       return null;
     }
@@ -387,7 +400,9 @@ abstract class AppRouter {
       return location == AppRoutes.login ? null : AppRoutes.login;
     }
     if (requiresAuthentication(location)) {
-      if (authState is AuthAuthenticated || authState is AuthInitial) {
+      if (authState is AuthAuthenticated ||
+          authState is AuthInitial ||
+          guardianSessionActive) {
         return null;
       }
       return AppRoutes.login;
@@ -427,7 +442,11 @@ abstract class AppRouter {
     redirect: (context, state) async {
       final authState = getIt<AuthCubit>().state;
       final location = state.matchedLocation;
-      final authRedirect = redirectForAuth(authState, location);
+      final authRedirect = redirectForAuth(
+        authState,
+        location,
+        guardianSessionActive: MemorizationRouteGuard.guardianSessionActive(),
+      );
       if (authRedirect != null) return authRedirect;
 
       // Fast path: direct first-time users to onboarding immediately before Home builds.

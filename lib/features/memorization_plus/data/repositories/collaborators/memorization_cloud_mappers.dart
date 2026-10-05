@@ -92,6 +92,9 @@ class MemorizationCloudMappers {
     unlockedAt: row['unlocked_at'] == null
         ? null
         : DateTime.parse(row['unlocked_at'] as String),
+    requestedAt: row['requested_at'] == null
+        ? null
+        : DateTime.parse(row['requested_at'] as String),
     claimedAt: row['claimed_at'] == null
         ? null
         : DateTime.parse(row['claimed_at'] as String),
@@ -135,6 +138,7 @@ class MemorizationCloudMappers {
     final progressRaw = row['progress'];
     final logsRaw = row['logs'] as List<dynamic>? ?? const [];
     final rewardsRaw = row['rewards'] as List<dynamic>? ?? const [];
+    final activity = activityFromDashboardJson(row['activity_snapshot']);
 
     RemoteChildProductionSummary? production;
     try {
@@ -164,6 +168,7 @@ class MemorizationCloudMappers {
           certRows: certRows,
           streakRow: streakRow,
           activityRows: activityRows,
+          activity: activity,
         );
       } else {
         production = buildProductionSummary(
@@ -180,7 +185,8 @@ class MemorizationCloudMappers {
 
     return RemoteChildSummary(
       childUserId: childId,
-      displayName: row['display_name'] as String? ?? 'طفل تالية',
+      // Blank means unnamed; the UI shows its localized default.
+      displayName: (row['display_name'] as String? ?? '').trim(),
       progress: progressFromCloud(
         progressRaw == null
             ? null
@@ -196,6 +202,53 @@ class MemorizationCloudMappers {
           .toList(),
       production: production,
       childAge: (row['age'] as num?)?.toInt(),
+      activity: activity,
+    );
+  }
+
+  /// Parses the dashboard's `activity_snapshot` envelope
+  /// (`{updated_at, snapshot: {...}}`). Returns null when absent or malformed
+  /// so a missing snapshot is never shown as zero activity.
+  RemoteChildActivity? activityFromDashboardJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final updatedAt = raw['updated_at'] is String
+        ? DateTime.tryParse(raw['updated_at'] as String)?.toUtc()
+        : null;
+    final snapshot = raw['snapshot'];
+    if (updatedAt == null || snapshot is! Map) return null;
+    int? count(String key) {
+      final value = snapshot[key];
+      return value is num && value >= 0 ? value.toInt() : null;
+    }
+
+    final dayKey = snapshot['day_key'];
+    final currentStreak = count('current_streak');
+    final longestStreak = count('longest_streak');
+    final activeDays = count('active_days_last_30');
+    final totalXp = count('total_xp');
+    final readPages = count('read_pages_count');
+    final todayActivity = count('today_activity_count');
+    final todayReadPages = count('today_read_pages_count');
+    if (dayKey is! String ||
+        currentStreak == null ||
+        longestStreak == null ||
+        activeDays == null ||
+        totalXp == null ||
+        readPages == null ||
+        todayActivity == null ||
+        todayReadPages == null) {
+      return null;
+    }
+    return RemoteChildActivity(
+      updatedAt: updatedAt,
+      dayKey: dayKey,
+      currentStreak: currentStreak,
+      longestStreak: longestStreak,
+      activeDaysLast30: activeDays,
+      totalXp: totalXp,
+      readPagesCount: readPages,
+      todayActivityCount: todayActivity,
+      todayReadPagesCount: todayReadPages,
     );
   }
 
@@ -226,8 +279,12 @@ class MemorizationCloudMappers {
     required List<Map<String, dynamic>> certRows,
     required Map<String, dynamic>? streakRow,
     required List<Map<String, dynamic>> activityRows,
+    RemoteChildActivity? activity,
   }) {
     final reviewCount = reviewSummary['review_count'] as int? ?? 0;
+    // Servers before `tracked_count` returned one row per ayah as
+    // `review_count`; newer ones return the review-event total there.
+    final trackedCount = reviewSummary['tracked_count'] as int? ?? reviewCount;
     final memorizedCount = reviewSummary['memorized_count'] as int? ?? 0;
     final overdueCount = reviewSummary['overdue_count'] as int? ?? 0;
     final nextReviewRaw = reviewSummary['next_review_at'] as String?;
@@ -242,19 +299,21 @@ class MemorizationCloudMappers {
           ),
         )
         .toList();
-    final activeDays = activityRows
-        .where((row) => (row['activity_count'] as int? ?? 0) > 0)
-        .length;
+    final activeDays =
+        activity?.activeDaysLast30 ??
+        activityRows
+            .where((row) => (row['activity_count'] as int? ?? 0) > 0)
+            .length;
     final planSurahId = dailyPlanRow?['surah_id'] as int?;
     final planTotal = dailyPlanRow?['total_items'] as int? ?? 0;
     final planCompleted = dailyPlanRow?['completed_count'] as int? ?? 0;
-    final completionPercent = reviewCount == 0
+    final completionPercent = trackedCount == 0
         ? 0.0
         : ((memorizedCount / AppConstants.totalAyahs) * 100).clamp(0.0, 100.0);
 
     return RemoteChildProductionSummary(
       totalMemorizedAyahs: memorizedCount,
-      totalAyahsTracked: reviewCount,
+      totalAyahsTracked: trackedCount,
       completionPercent: completionPercent,
       currentSurahId: planSurahId ?? reviewSummary['last_surah_id'] as int?,
       lastMemorizedSurahId: reviewSummary['last_surah_id'] as int?,
@@ -270,8 +329,10 @@ class MemorizationCloudMappers {
       dailyPlanSurahId: planSurahId,
       dailyPlanTotal: planTotal,
       dailyPlanCompleted: planCompleted,
-      currentStreak: streakRow?['current_streak'] as int?,
-      longestStreak: streakRow?['longest_streak'] as int?,
+      currentStreak:
+          streakRow?['current_streak'] as int? ?? activity?.currentStreak,
+      longestStreak:
+          streakRow?['longest_streak'] as int? ?? activity?.longestStreak,
       activeDaysLast30: activeDays,
       certificates: certificates,
       smartCoachKind: null,

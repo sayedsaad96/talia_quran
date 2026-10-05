@@ -6,6 +6,7 @@ import 'kids_home_mission.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
 import 'parent_dashboard.dart';
+import 'remote_child_activity.dart';
 
 class RemoteChildSummary extends Equatable {
   const RemoteChildSummary({
@@ -19,6 +20,9 @@ class RemoteChildSummary extends Equatable {
     this.homeMissions = const [],
     this.policy,
     this.policyUnavailable = false,
+    this.homeMissionsUnavailable = false,
+    this.detailsLoading = false,
+    this.activity,
   });
 
   final String childUserId;
@@ -42,6 +46,14 @@ class RemoteChildSummary extends Equatable {
   /// (a failed read must not look like "no row, defaults at version 0").
   final bool policyUnavailable;
 
+  /// True when reading the home missions failed, so an empty list is not
+  /// shown as "no missions".
+  final bool homeMissionsUnavailable;
+
+  /// True while [homeMissions] and [policy] are still being read; the child
+  /// is already shown with the rest of its summary.
+  final bool detailsLoading;
+
   /// Version a guardian edit compares against.
   int get policyVersion => policy?.version ?? 0;
 
@@ -49,6 +61,32 @@ class RemoteChildSummary extends Equatable {
   /// certificates, streak, heatmap, Smart Coach). Null when the cloud rows
   /// could not be read (e.g. RLS not yet applied, or child never synced).
   final RemoteChildProductionSummary? production;
+
+  /// Null until the child device publishes a family activity snapshot.
+  final RemoteChildActivity? activity;
+
+  RemoteChildSummary copyWith({
+    List<KidsHomeMission>? homeMissions,
+    KidsChildPolicy? policy,
+    bool? policyUnavailable,
+    bool? homeMissionsUnavailable,
+    bool? detailsLoading,
+  }) => RemoteChildSummary(
+    childUserId: childUserId,
+    displayName: displayName,
+    progress: progress,
+    logs: logs,
+    rewards: rewards,
+    production: production,
+    childAge: childAge,
+    homeMissions: homeMissions ?? this.homeMissions,
+    policy: policy ?? this.policy,
+    policyUnavailable: policyUnavailable ?? this.policyUnavailable,
+    homeMissionsUnavailable:
+        homeMissionsUnavailable ?? this.homeMissionsUnavailable,
+    detailsLoading: detailsLoading ?? this.detailsLoading,
+    activity: activity,
+  );
 
   @override
   List<Object?> get props => [
@@ -62,6 +100,9 @@ class RemoteChildSummary extends Equatable {
     homeMissions,
     policy,
     policyUnavailable,
+    homeMissionsUnavailable,
+    detailsLoading,
+    activity,
   ];
 }
 

@@ -1,0 +1,705 @@
+{
+  "recordsCompared": 6236,
+  "identifierDisagreements": 0,
+  "mappingDisagreements": 58,
+  "correctSource": "unresolved; authoritative edition comparison required",
+  "qcfMetadataAlsoPresentIn": "0.0.8",
+  "differences": [
+    {
+      "surah": 3,
+      "ayah": 92,
+      "qcf": {
+        "page": 62,
+        "juz": 4
+      },
+      "bundled": {
+        "page": 62,
+        "juz": 3
+      }
+    },
+    {
+      "surah": 5,
+      "ayah": 77,
+      "qcf": {
+        "page": 120,
+        "juz": 6
+      },
+      "bundled": {
+        "page": 121,
+        "juz": 6
+      }
+    },
+    {
+      "surah": 5,
+      "ayah": 83,
+      "qcf": {
+        "page": 121,
+        "juz": 7
+      },
+      "bundled": {
+        "page": 122,
+        "juz": 7
+      }
+    },
+    {
+      "surah": 5,
+      "ayah": 90,
+      "qcf": {
+        "page": 122,
+        "juz": 7
+      },
+      "bundled": {
+        "page": 123,
+        "juz": 7
+      }
+    },
+    {
+      "surah": 6,
+      "ayah": 131,
+      "qcf": {
+        "page": 145,
+        "juz": 8
+      },
+      "bundled": {
+        "page": 144,
+        "juz": 8
+      }
+    },
+    {
+      "surah": 9,
+      "ayah": 93,
+      "qcf": {
+        "page": 201,
+        "juz": 10
+      },
+      "bundled": {
+        "page": 201,
+        "juz": 11
+      }
+    },
+    {
+      "surah": 55,
+      "ayah": 17,
+      "qcf": {
+        "page": 531,
+        "juz": 27
+      },
+      "bundled": {
+        "page": 532,
+        "juz": 27
+      }
+    },
+    {
+      "surah": 55,
+      "ayah": 18,
+      "qcf": {
+        "page": 531,
+        "juz": 27
+      },
+      "bundled": {
+        "page": 532,
+        "juz": 27
+      }
+    },
+    {
+      "surah": 55,
+      "ayah": 41,
+      "qcf": {
+        "page": 532,
+        "juz": 27
+      },
+      "bundled": {
+        "page": 533,
+        "juz": 27
+      }
+    },
+    {
+      "surah": 55,
+      "ayah": 68,
+      "qcf": {
+        "page": 533,
+        "juz": 27
+      },
+      "bundled": {
+        "page": 534,
+        "juz": 27
+      }
+    },
+    {
+      "surah": 55,
+      "ayah": 69,
+      "qcf": {
+        "page": 533,
+        "juz": 27
+      },
+      "bundled": {
+        "page": 534,
+        "juz": 27
+      }
+    },
+    {
+      "surah": 68,
+      "ayah": 16,
+      "qcf": {
+        "page": 564,
+        "juz": 29
+      },
+      "bundled": {
+        "page": 565,
+        "juz": 29
+      }
+    },
+    {
+      "surah": 69,
+      "ayah": 35,
+      "qcf": {
+        "page": 567,
+        "juz": 29
+      },
+      "bundled": {
+        "page": 568,
+        "juz": 29
+      }
+    },
+    {
+      "surah": 70,
+      "ayah": 40,
+      "qcf": {
+        "page": 569,
+        "juz": 29
+      },
+      "bundled": {
+        "page": 570,
+        "juz": 29
+      }
+    },
+    {
+      "surah": 74,
+      "ayah": 18,
+      "qcf": {
+        "page": 575,
+        "juz": 29
+      },
+      "bundled": {
+        "page": 576,
+        "juz": 29
+      }
+    },
+    {
+      "surah": 79,
+      "ayah": 16,
+      "qcf": {
+        "page": 583,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 584,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 80,
+      "ayah": 41,
+      "qcf": {
+        "page": 586,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 585,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 80,
+      "ayah": 42,
+      "qcf": {
+        "page": 586,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 585,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 83,
+      "ayah": 5,
+      "qcf": {
+        "page": 588,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 587,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 83,
+      "ayah": 6,
+      "qcf": {
+        "page": 588,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 587,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 83,
+      "ayah": 34,
+      "qcf": {
+        "page": 589,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 588,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 84,
+      "ayah": 25,
+      "qcf": {
+        "page": 590,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 589,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 87,
+      "ayah": 11,
+      "qcf": {
+        "page": 592,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 591,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 87,
+      "ayah": 12,
+      "qcf": {
+        "page": 592,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 591,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 87,
+      "ayah": 13,
+      "qcf": {
+        "page": 592,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 591,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 87,
+      "ayah": 14,
+      "qcf": {
+        "page": 592,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 591,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 87,
+      "ayah": 15,
+      "qcf": {
+        "page": 592,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 591,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 88,
+      "ayah": 23,
+      "qcf": {
+        "page": 593,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 592,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 88,
+      "ayah": 24,
+      "qcf": {
+        "page": 593,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 592,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 88,
+      "ayah": 25,
+      "qcf": {
+        "page": 593,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 592,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 88,
+      "ayah": 26,
+      "qcf": {
+        "page": 593,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 592,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 89,
+      "ayah": 23,
+      "qcf": {
+        "page": 594,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 593,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 90,
+      "ayah": 19,
+      "qcf": {
+        "page": 595,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 594,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 90,
+      "ayah": 20,
+      "qcf": {
+        "page": 595,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 594,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 92,
+      "ayah": 10,
+      "qcf": {
+        "page": 596,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 595,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 92,
+      "ayah": 11,
+      "qcf": {
+        "page": 596,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 595,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 92,
+      "ayah": 12,
+      "qcf": {
+        "page": 596,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 595,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 92,
+      "ayah": 13,
+      "qcf": {
+        "page": 596,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 595,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 92,
+      "ayah": 14,
+      "qcf": {
+        "page": 596,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 595,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 3,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 4,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 5,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 6,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 7,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 94,
+      "ayah": 8,
+      "qcf": {
+        "page": 597,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 596,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 13,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 14,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 15,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 16,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 17,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 18,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 96,
+      "ayah": 19,
+      "qcf": {
+        "page": 598,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 597,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 98,
+      "ayah": 6,
+      "qcf": {
+        "page": 599,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 598,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 98,
+      "ayah": 7,
+      "qcf": {
+        "page": 599,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 598,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 100,
+      "ayah": 6,
+      "qcf": {
+        "page": 600,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 599,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 100,
+      "ayah": 7,
+      "qcf": {
+        "page": 600,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 599,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 100,
+      "ayah": 8,
+      "qcf": {
+        "page": 600,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 599,
+        "juz": 30
+      }
+    },
+    {
+      "surah": 100,
+      "ayah": 9,
+      "qcf": {
+        "page": 600,
+        "juz": 30
+      },
+      "bundled": {
+        "page": 599,
+        "juz": 30
+      }
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
@@ -6,8 +8,11 @@ import 'package:talia_quran/features/auth/domain/services/account_password_verif
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/family_dashboard_stream_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/parent_reward_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
+import 'package:talia_quran/features/memorization_plus/domain/usecases/parent_reward_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 
 const _testSettings = ParentSettings(pinHash: 'hash');
@@ -136,6 +141,46 @@ class _FakeRepository implements MemorizationPlusRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Each dashboard read is a stream the test drives by hand.
+class _StreamingRepository extends _FakeRepository
+    implements FamilyDashboardStreamRepository {
+  final reads = <StreamController<Either<Failure, FamilyDashboard>>>[];
+
+  @override
+  Stream<Either<Failure, FamilyDashboard>> watchFamilyDashboard() {
+    final controller = StreamController<Either<Failure, FamilyDashboard>>();
+    reads.add(controller);
+    return controller.stream;
+  }
+}
+
+FamilyDashboard _withLinkedChild(String name, {required bool loading}) =>
+    FamilyDashboard(
+      settings: _testSettings,
+      children: [
+        FamilyChildEntry(
+          childUserId: 'c1',
+          displayName: name,
+          isLocal: false,
+          remoteSummary: RemoteChildSummary(
+            childUserId: 'c1',
+            displayName: name,
+            progress: const KidsProgress.initial(),
+            logs: const [],
+            rewards: const [],
+            detailsLoading: loading,
+          ),
+        ),
+      ],
+    );
+
+bool _loading(FamilyDashboardState state) => (state as FamilyDashboardLoaded)
+    .dashboard
+    .children
+    .single
+    .remoteSummary!
+    .detailsLoading;
+
 class _FakeVerifier implements AccountPasswordVerifier {
   _FakeVerifier(this.result);
 
@@ -155,11 +200,15 @@ class _FakeVerifier implements AccountPasswordVerifier {
 FamilyDashboardCubit _buildCubit(
   _FakeRepository repository, {
   AccountPasswordVerifier? verifier,
+  ParentRewardUsecase? rewards,
+  bool Function()? guardianSessionActive,
 }) => FamilyDashboardCubit(
   ParentAccessUsecase(repository),
   ParentRemoteLinkUsecase(repository),
   GetFamilyDashboardUsecase(repository),
   accountVerifier: verifier,
+  rewards: rewards,
+  guardianSessionActive: guardianSessionActive,
 );
 
 Future<void> _unlockAndLoad(FamilyDashboardCubit cubit) async {
@@ -168,6 +217,81 @@ Future<void> _unlockAndLoad(FamilyDashboardCubit cubit) async {
 }
 
 void main() {
+  group('progressive refresh', () {
+    late _StreamingRepository repository;
+    late FamilyDashboardCubit cubit;
+
+    setUp(() {
+      repository = _StreamingRepository();
+      cubit = _buildCubit(repository, guardianSessionActive: () => true);
+    });
+
+    tearDown(() async {
+      for (final read in repository.reads) {
+        await read.close();
+      }
+      await cubit.close();
+    });
+
+    test('children show first, details fill in, feedback shows once', () async {
+      final done = cubit.refresh(
+        feedback: const FamilyDashboardFeedback.rewardAdded(),
+      );
+      repository.reads.single.add(
+        Right(_withLinkedChild('Maryam', loading: true)),
+      );
+      await pumpEventQueue();
+
+      final first = cubit.state as FamilyDashboardLoaded;
+      expect(_loading(first), isTrue);
+      expect(first.feedback, const FamilyDashboardFeedback.rewardAdded());
+
+      repository.reads.single.add(
+        Right(_withLinkedChild('Maryam', loading: false)),
+      );
+      await repository.reads.single.close();
+      await done;
+
+      final last = cubit.state as FamilyDashboardLoaded;
+      expect(_loading(last), isFalse);
+      expect(last.feedbackEventId, first.feedbackEventId);
+    });
+
+    test('a later failure keeps the last dashboard', () async {
+      final done = cubit.refresh();
+      final read = repository.reads.single
+        ..add(Right(_withLinkedChild('Maryam', loading: true)))
+        ..add(const Left(NetworkFailure()));
+      await read.close();
+      await done;
+
+      expect(_loading(cubit.state), isTrue);
+    });
+
+    test('a newer refresh drops the older one', () async {
+      final older = cubit.refresh();
+      final newer = cubit.refresh();
+      final (olderRead, newerRead) = (repository.reads[0], repository.reads[1]);
+
+      newerRead.add(Right(_withLinkedChild('New', loading: false)));
+      await pumpEventQueue();
+      olderRead.add(Right(_withLinkedChild('Old', loading: false)));
+      await pumpEventQueue();
+
+      expect(
+        (cubit.state as FamilyDashboardLoaded)
+            .dashboard
+            .children
+            .single
+            .displayName,
+        'New',
+      );
+      await newerRead.close();
+      await (older, newer).wait;
+      expect(olderRead.hasListener, isFalse);
+    });
+  });
+
   test('unlock loads the dashboard after PIN verification', () async {
     final cubit = _buildCubit(_FakeRepository());
     addTearDown(cubit.close);
@@ -178,6 +302,33 @@ void main() {
     await _unlockAndLoad(cubit);
     final loaded = cubit.state as FamilyDashboardLoaded;
     expect(loaded.feedback, isNull);
+  });
+
+  test(
+    'a running guardian session opens without asking the PIN again',
+    () async {
+      final cubit = _buildCubit(
+        _FakeRepository(),
+        guardianSessionActive: () => true,
+      );
+      addTearDown(cubit.close);
+
+      await cubit.load();
+
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
+    },
+  );
+
+  test('without a session the PIN gate stays', () async {
+    final cubit = _buildCubit(
+      _FakeRepository(),
+      guardianSessionActive: () => false,
+    );
+    addTearDown(cubit.close);
+
+    await cubit.load();
+
+    expect(cubit.state, isA<FamilyDashboardLocked>());
   });
 
   test(
@@ -395,15 +546,18 @@ void main() {
       return (repository, cubit);
     }
 
-    test('a remote child mission goes through the remote create call', () async {
-      final (repository, cubit) = await loaded();
+    test(
+      'a remote child mission goes through the remote create call',
+      () async {
+        final (repository, cubit) = await loaded();
 
-      await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+        await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
 
-      expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
-      expect(repository.localMissionAdds, isEmpty);
-      expect((cubit.state as FamilyDashboardLoaded).feedback, isNull);
-    });
+        expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
+        expect(repository.localMissionAdds, isEmpty);
+        expect((cubit.state as FamilyDashboardLoaded).feedback, isNull);
+      },
+    );
 
     test('without a child id the mission goes through the local API', () async {
       final (repository, cubit) = await loaded();
@@ -494,18 +648,21 @@ void main() {
       expect(repository.localPolicySaves, isEmpty);
     });
 
-    test('a conflict shows kidsPolicyConflict and reloads the dashboard', () async {
-      final (repository, cubit) = await loaded();
-      repository.policyResult = const Left(PolicyConflictFailure());
-      final before = repository.dashboardCalls;
+    test(
+      'a conflict shows kidsPolicyConflict and reloads the dashboard',
+      () async {
+        final (repository, cubit) = await loaded();
+        repository.policyResult = const Left(PolicyConflictFailure());
+        final before = repository.dashboardCalls;
 
-      await cubit.saveChildPolicy(edit, childId: 'c1');
+        await cubit.saveChildPolicy(edit, childId: 'c1');
 
-      final state = cubit.state as FamilyDashboardLoaded;
-      expect(state.feedback?.type, FamilyDashboardFeedbackType.failure);
-      expect(state.feedback?.message, CubitMessageCodes.kidsPolicyConflict);
-      expect(repository.dashboardCalls, before + 1);
-    });
+        final state = cubit.state as FamilyDashboardLoaded;
+        expect(state.feedback?.type, FamilyDashboardFeedbackType.failure);
+        expect(state.feedback?.message, CubitMessageCodes.kidsPolicyConflict);
+        expect(repository.dashboardCalls, before + 1);
+      },
+    );
 
     test('a network failure surfaces feedback without a reload', () async {
       final (repository, cubit) = await loaded();
@@ -519,4 +676,104 @@ void main() {
       expect(repository.dashboardCalls, before);
     });
   });
+
+  group('gift steps', () {
+    Future<(_FakeRepository, _FakeRewardSteps, FamilyDashboardCubit)>
+    loaded() async {
+      final repository = _FakeRepository();
+      final steps = _FakeRewardSteps();
+      final cubit = _buildCubit(
+        repository,
+        rewards: ParentRewardUsecase(steps),
+      );
+      addTearDown(cubit.close);
+      await cubit.load();
+      await _unlockAndLoad(cubit);
+      return (repository, steps, cubit);
+    }
+
+    test('unlocking a linked child gift goes remote and reloads', () async {
+      final (repository, steps, cubit) = await loaded();
+      final before = repository.dashboardCalls;
+
+      await cubit.unlockReward('7', childId: 'child-1');
+
+      expect(steps.calls, ['unlock:7:child-1']);
+      expect(repository.dashboardCalls, before + 1);
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.type, FamilyDashboardFeedbackType.rewardUnlocked);
+    });
+
+    test('approving a device child gift stays local', () async {
+      final (_, steps, cubit) = await loaded();
+
+      await cubit.approveReward('g1');
+
+      expect(steps.calls, ['approve:g1:null']);
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.type, FamilyDashboardFeedbackType.rewardApproved);
+    });
+
+    test('a refused step shows the failure without a reload', () async {
+      final (repository, steps, cubit) = await loaded();
+      steps.failure = const CacheFailure(
+        CubitMessageCodes.parentRewardUnavailable,
+      );
+      final before = repository.dashboardCalls;
+
+      await cubit.approveReward('g1');
+
+      final state = cubit.state as FamilyDashboardLoaded;
+      expect(state.feedback?.type, FamilyDashboardFeedbackType.failure);
+      expect(
+        state.feedback?.message,
+        CubitMessageCodes.parentRewardUnavailable,
+      );
+      expect(repository.dashboardCalls, before);
+    });
+
+    test('gift steps are ignored while the dashboard is locked', () async {
+      final steps = _FakeRewardSteps();
+      final cubit = _buildCubit(
+        _FakeRepository(),
+        rewards: ParentRewardUsecase(steps),
+      );
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      await cubit.unlockReward('g1');
+
+      expect(steps.calls, isEmpty);
+    });
+  });
+}
+
+class _FakeRewardSteps implements ParentRewardRepository {
+  final calls = <String>[];
+  Failure? failure;
+
+  Future<Either<Failure, List<ParentReward>>> _record(String call) async {
+    calls.add(call);
+    return failure == null ? const Right([]) : Left(failure!);
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> unlockParentReward(
+    String id, {
+    String? childUserId,
+  }) => _record('unlock:$id:$childUserId');
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> approveParentReward(
+    String id, {
+    String? childUserId,
+  }) => _record('approve:$id:$childUserId');
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> getDeviceRewards() =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> requestParentReward(String id) =>
+      throw UnimplementedError();
 }

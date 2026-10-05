@@ -5,6 +5,7 @@ import '../../../../core/utils/usecase.dart';
 import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
 import '../entities/memorization_entities.dart';
+import '../repositories/family_dashboard_stream_repository.dart';
 import '../repositories/memorization_plus_repository.dart';
 
 export 'get_last_reviewed_surah_id_usecase.dart';
@@ -534,4 +535,12 @@ class GetFamilyDashboardUsecase implements UseCaseNoParams<FamilyDashboard> {
   @override
   Future<Either<Failure, FamilyDashboard>> call() =>
       _repository.getFamilyDashboard();
+
+  /// Partial dashboards while linked children load; a single event when the
+  /// repository cannot stream.
+  Stream<Either<Failure, FamilyDashboard>> watch() => switch (_repository) {
+    final FamilyDashboardStreamRepository streaming =>
+      streaming.watchFamilyDashboard(),
+    final repository => Stream.fromFuture(repository.getFamilyDashboard()),
+  };
 }

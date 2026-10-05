@@ -9,7 +9,10 @@ import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../application/guardian_session_controller.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import 'guardian_pin_dialog.dart';
+import 'guardian_unlink_tile.dart';
 
 Future<void> showMemorizationPathSettingsSheet(
   BuildContext context, {
@@ -25,7 +28,15 @@ Future<void> showMemorizationPathSettingsSheet(
       );
   final canLinkGuardian =
       profile != null && profile.isChild && !profile.isGuardianLinked;
+  // A linked child's guardian manages from their own account and device.
+  final canOpenGuardianArea =
+      canLinkGuardian &&
+      (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+        (_) => false,
+        (settings) => settings.hasPin,
+      );
   if (!context.mounted) return;
+  final returnLocation = _currentLocation(context);
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: context.tokens.background,
@@ -77,8 +88,11 @@ Future<void> showMemorizationPathSettingsSheet(
               ),
               onTap: () async {
                 final resetQuestion = ctx.l10n.resetMemorizationPathQuestion;
-                final resetDialog =
-                    ctx.l10n.resetMemorizationPathPreserveProgressDialog;
+                final resetDialog = [
+                  ctx.l10n.resetMemorizationPathPreserveProgressDialog,
+                  if (profile?.isGuardianLinked == true)
+                    ctx.l10n.resetPathUnlinksGuardianWarning,
+                ].join('\n\n');
                 final cancelLabel = ctx.l10n.cancel;
                 final resetLabel = ctx.l10n.reset;
                 Navigator.pop(ctx);
@@ -127,7 +141,10 @@ Future<void> showMemorizationPathSettingsSheet(
                   );
                   if (requiresGuardianPin) {
                     if (!context.mounted) return;
-                    final guardianVerified = await _verifyGuardianPin(context);
+                    final guardianVerified = await verifyGuardianPin(
+                      context,
+                      allowRecovery: profile?.isGuardianLinked == true,
+                    );
                     if (!guardianVerified) return;
                   }
                   final result = await repository.resetMemorizationIdentity();
@@ -137,9 +154,13 @@ Future<void> showMemorizationPathSettingsSheet(
                   );
                   if (failure != null) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(failure.message)));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            context.localizedCubitMessage(failure.message),
+                          ),
+                        ),
+                      );
                     }
                     return;
                   }
@@ -150,6 +171,39 @@ Future<void> showMemorizationPathSettingsSheet(
                 }
               },
             ),
+            if (canOpenGuardianArea)
+              ListTile(
+                key: const ValueKey('kids-open-guardian-area'),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings_rounded,
+                    color: AppColors.primary,
+                  ),
+                ),
+                title: Text(
+                  ctx.l10n.guardianSessionTileTitle,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.tokens.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  ctx.l10n.guardianSessionTileSubtitle,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: context.tokens.textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openGuardianArea(context, returnLocation);
+                },
+              ),
             if (canLinkGuardian)
               ListTile(
                 leading: Container(
@@ -182,6 +236,13 @@ Future<void> showMemorizationPathSettingsSheet(
                   _openGuardianLinking(context);
                 },
               ),
+            if (profile?.isChild == true && profile!.isGuardianLinked)
+              GuardianUnlinkTile(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  runGuardianUnlink(context);
+                },
+              ),
           ],
         ),
       ),
@@ -200,7 +261,7 @@ Future<void> _openGuardianLinking(BuildContext context) async {
   );
   if (settings == null || settings.hasPin) {
     if (!context.mounted) return;
-    final verified = await _verifyGuardianPin(
+    final verified = await verifyGuardianPin(
       context,
       confirmLabel: context.l10n.confirm,
     );
@@ -219,108 +280,25 @@ Future<void> _openGuardianLinking(BuildContext context) async {
   );
 }
 
-Future<bool> _verifyGuardianPin(
-  BuildContext context, {
-  String? confirmLabel,
-}) async {
-  final verified = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (dialogContext) => _GuardianPinDialog(confirmLabel: confirmLabel),
+/// Opens the family dashboard for the guardian on the child's device, after
+/// the PIN, without changing the child's identity.
+Future<void> _openGuardianArea(
+  BuildContext context,
+  String returnLocation,
+) async {
+  final verified = await verifyGuardianPin(
+    context,
+    confirmLabel: context.l10n.confirm,
   );
-  return verified == true;
+  if (!verified || !context.mounted) return;
+  getIt<GuardianSessionController>().start(returnLocation: returnLocation);
+  await context.push(AppRoutes.familyDashboard);
 }
 
-class _GuardianPinDialog extends StatefulWidget {
-  const _GuardianPinDialog({this.confirmLabel});
-
-  /// Defaults to the reset label used by the path-reset flow.
-  final String? confirmLabel;
-
-  @override
-  State<_GuardianPinDialog> createState() => _GuardianPinDialogState();
-}
-
-class _GuardianPinDialogState extends State<_GuardianPinDialog> {
-  late final TextEditingController _controller;
-  String? _error;
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleConfirm() async {
-    if (_isSubmitting) return;
-    final pin = _controller.text.trim();
-    if (pin.length != 4 || int.tryParse(pin) == null) {
-      setState(() => _error = context.l10n.parentDashboardPinInvalid);
-      return;
-    }
-    setState(() {
-      _isSubmitting = true;
-      _error = null;
-    });
-    final result = await getIt<MemorizationPlusRepository>().verifyParentPin(
-      pin,
-    );
-    final isValid = result.getOrElse(() => false);
-    if (!mounted) return;
-    if (isValid) {
-      Navigator.pop(context, true);
-    } else {
-      setState(() {
-        _isSubmitting = false;
-        _error = context.l10n.parentDashboardPinIncorrect;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.l10n.parentDashboardEnterPinTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(context.l10n.parentDashboardPinHelp),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              obscureText: true,
-              maxLength: 4,
-              decoration: InputDecoration(
-                counterText: '',
-                labelText: 'PIN',
-                errorText: _error,
-              ),
-              onSubmitted: (_) => _handleConfirm(),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _isSubmitting ? null : _handleConfirm,
-          child: Text(widget.confirmLabel ?? context.l10n.reset),
-        ),
-      ],
-    );
+String _currentLocation(BuildContext context) {
+  try {
+    return GoRouterState.of(context).uri.toString();
+  } catch (_) {
+    return AppRoutes.memorizationPlusKidsHome;
   }
 }

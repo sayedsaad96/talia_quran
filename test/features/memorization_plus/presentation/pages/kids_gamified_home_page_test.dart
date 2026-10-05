@@ -1104,6 +1104,58 @@ void main() {
       );
     });
   });
+
+  group('guardian refresh', () {
+    Future<_FakeJourneyCubit> pumpHome(WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      final cubit = _FakeJourneyCubit();
+      getIt.registerFactory<KidsJourneyCubit>(() => cubit);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        if (getIt.isRegistered<KidsJourneyCubit>()) {
+          getIt.unregister<KidsJourneyCubit>();
+        }
+      });
+      await tester.pumpWidget(
+        const _TestApp(child: KidsGamifiedHomePage(surahId: 114)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      return cubit;
+    }
+
+    testWidgets('opening the home forces a guardian pull', (tester) async {
+      final cubit = await pumpHome(tester);
+
+      expect(cubit.loads, 1);
+      expect(cubit.guardianRefreshes, [true]);
+    });
+
+    testWidgets('app resume asks for a throttled pull', (tester) async {
+      final cubit = await pumpHome(tester);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      expect(cubit.guardianRefreshes, [true, false]);
+    });
+
+    testWidgets('pull-to-refresh goes through the guardian refresh', (
+      tester,
+    ) async {
+      final cubit = await pumpHome(tester);
+
+      await tester
+          .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+          .onRefresh();
+
+      expect(cubit.pullToRefreshes, 1);
+      expect(cubit.loads, 1);
+    });
+  });
 }
 
 const _loadedState = KidsJourneyLoaded(
@@ -1141,12 +1193,27 @@ class _FakeJourneyCubit extends Cubit<KidsJourneyState>
   _FakeJourneyCubit() : super(const KidsJourneyInitial());
 
   int loads = 0;
+  final guardianRefreshes = <bool>[];
+  int pullToRefreshes = 0;
 
   @override
-  Future<void> load({required int surahId, bool followFrontier = false}) async {
+  Future<void> load({
+    required int surahId,
+    bool followFrontier = false,
+    bool showLoading = true,
+  }) async {
     loads++;
     emit(_loadedState);
   }
+
+  @override
+  Future<void> refreshFromGuardian({
+    required int surahId,
+    bool force = false,
+  }) async => guardianRefreshes.add(force);
+
+  @override
+  Future<void> refresh({required int surahId}) async => pullToRefreshes++;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -1199,7 +1266,17 @@ class _HomeMissionCubit extends Cubit<KidsJourneyState>
   int loads = 0;
 
   @override
-  Future<void> load({required int surahId, bool followFrontier = false}) async {
+  Future<void> refreshFromGuardian({
+    required int surahId,
+    bool force = false,
+  }) async {}
+
+  @override
+  Future<void> load({
+    required int surahId,
+    bool followFrontier = false,
+    bool showLoading = true,
+  }) async {
     loads++;
     emit(
       _loadedState.copyWith(

@@ -93,4 +93,34 @@ void main() {
     await store.recordPage(1);
     expect(await store.recordPage(604), {1, 604});
   });
+
+  test('allPages unions every retained day', () async {
+    final yesterday = kidsDayKey(now.subtract(const Duration(days: 1)));
+    SharedPreferences.setMockInitialValues({
+      'kids_reading_receipts_a': jsonEncode({
+        yesterday: [3, 4],
+      }),
+    });
+    final store = await storeFor('a');
+    await store.recordPage(4);
+    await store.recordPage(9);
+    expect(await store.allPages(), {3, 4, 9});
+  });
+
+  test('onRecorded fires after a save and its failure is swallowed', () async {
+    var calls = 0;
+    final store = KidsReadingReceiptStore(
+      await SharedPreferences.getInstance(),
+      const FixedRecordOwnerProvider('a'),
+      clock: () => now,
+      onRecorded: () async {
+        calls++;
+        throw StateError('sync down');
+      },
+    );
+    expect(await store.recordPage(12), {12});
+    expect(calls, 1);
+    expect(() => store.recordPage(0), throwsArgumentError);
+    expect(calls, 1);
+  });
 }

@@ -12,7 +12,9 @@ import '../../../domain/entities/kids_child_policy.dart';
 import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
+import '../../datasources/remote_children_dashboard_cache.dart';
 import '../../models/memorization_models.dart';
+import 'family_activity_publisher.dart';
 import 'memorization_cloud_gateway.dart';
 import 'kids_child_policy_sync.dart';
 import 'kids_home_mission_child_sync.dart';
@@ -29,8 +31,15 @@ class MemorizationKidsCloudSyncService {
     this._mappers, {
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
     void Function()? onKidsPolicyChanged,
+    FamilyActivityPublisher? activityPublisher,
+    RemoteChildrenDashboardCache? dashboardCache,
   }) : _owner = owner,
-       _onKidsPolicyChanged = onKidsPolicyChanged;
+       _onKidsPolicyChanged = onKidsPolicyChanged,
+       _activityPublisher = activityPublisher,
+       _dashboardCache = dashboardCache;
+
+  final FamilyActivityPublisher? _activityPublisher;
+  final RemoteChildrenDashboardCache? _dashboardCache;
 
   final MemorizationPlusLocalDatasource _datasource;
   final StreakReader _streakReader;
@@ -54,73 +63,111 @@ class MemorizationKidsCloudSyncService {
         (_) => const NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
       );
 
-  Future<Either<Failure, void>> pullKidsProgressFromCloud() async {
+  /// Pulls the child's progress, then what the guardian sent. The inbound
+  /// pull runs even when the progress pull fails.
+  Future<Either<Failure, void>> pullKidsProgressFromCloud() =>
+      _withSignedInClient((client, ownerId) async {
+        final progress = await _guardCloud(
+          () => _pullProgress(client, ownerId),
+        );
+        final inbound = await _guardCloud(() => _pullInbound(client, ownerId));
+        return progress.isLeft() ? progress : inbound;
+      });
+
+  /// What the guardian sends the child: gifts, home missions and the policy.
+  Future<Either<Failure, void>> pullKidsInboundFromCloud() =>
+      _withSignedInClient(
+        (client, ownerId) => _guardCloud(() => _pullInbound(client, ownerId)),
+      );
+
+  /// Signed out is a successful no-op; no cloud client is a failure.
+  Future<Either<Failure, void>> _withSignedInClient(
+    Future<Either<Failure, void>> Function(SupabaseClient, String) run,
+  ) async {
+    final SupabaseClient client;
+    final String? ownerId;
     try {
       final clientResult = _supabaseOrFailure;
-      final clientFailure = clientResult.fold(
-        (failure) => failure,
-        (_) => null,
-      );
-      if (clientFailure != null) return Left(clientFailure);
-      final client = clientResult.getOrElse(
-        () => throw StateError('unreachable'),
-      );
+      final failure = clientResult.fold((failure) => failure, (_) => null);
+      if (failure != null) return Left(failure);
+      client = clientResult.getOrElse(() => throw StateError('unreachable'));
+      ownerId = client.auth.currentUser?.id;
+    } catch (e) {
+      return Left(Failure.fromCloud(e));
+    }
+    if (ownerId == null) return const Right(null);
+    return run(client, ownerId);
+  }
 
-      final user = client.auth.currentUser;
-      if (user == null) return const Right(null);
-      final ownerId = user.id;
-      _ensureOwner(ownerId);
+  Future<Either<Failure, void>> _guardCloud(Future<void> Function() run) async {
+    try {
+      await run();
+      return const Right(null);
+    } catch (e) {
+      return Left(Failure.fromCloud(e));
+    }
+  }
 
-      final progressRows = await client
-          .from('kids_progress_cloud')
-          .select()
-          .eq('child_user_id', user.id)
-          .limit(1);
-      final logRows = await client
-          .from('kids_session_logs')
-          .select()
-          .eq('child_user_id', user.id)
-          .order('completed_at', ascending: true);
+  Future<void> _pullProgress(SupabaseClient client, String ownerId) async {
+    _ensureOwner(ownerId);
+    final progressRows = await client
+        .from('kids_progress_cloud')
+        .select()
+        .eq('child_user_id', ownerId)
+        .limit(1);
+    final logRows = await client
+        .from('kids_session_logs')
+        .select()
+        .eq('child_user_id', ownerId)
+        .order('completed_at', ascending: true);
+    _ensureOwner(ownerId);
+
+    final remote = _mappers.progressFromCloud(
+      progressRows.isEmpty ? null : progressRows.first,
+    );
+    final remoteLogs = logRows
+        .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
+        .toList();
+    // Evidence is persisted before its projection. The merge runs as one
+    // atomic read-modify-write so a concurrent award can never be dropped
+    // between the local read and the merged write-back. If interrupted, the
+    // next read/sync deterministically repairs the aggregate from these
+    // logs.
+    final mergedLogs = await _datasource.updateKidsSessionLogs(
+      (localLogs) async => KidsSessionLogsCloudMerge.merge(
+        local: localLogs,
+        remote: remoteLogs,
+      ).map(KidsSessionLogModel.fromEntity).toList(),
+    );
+    _ensureOwner(ownerId);
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(mergedLogs);
+    // Preserve legacy remote aggregates that cannot yet be reconstructed
+    // because the deployed log contract omits exact awarded stars. Local
+    // stale caches are deliberately not merged back into the projection.
+    final reconciledProgress = KidsProgressCloudMerge.merge(
+      local: rebuilt,
+      remote: remote,
+    );
+    await _datasource.saveKidsLegacyCloudFloor(
+      KidsProgressModel.fromEntity(remote),
+    );
+    _ensureOwner(ownerId);
+    await _datasource.saveKidsProgress(
+      KidsProgressModel.fromEntity(reconciledProgress),
+    );
+  }
+
+  Future<void> _pullInbound(SupabaseClient client, String ownerId) async {
+    _ensureOwner(ownerId);
+    // The gift list mirrors the server only while a guardian is linked. An
+    // unlinked device keeps the gifts its guardian area made locally, and a
+    // child can still read rows of a revoked link that can no longer move.
+    if ((await _datasource.getMemorizationProfile()).isGuardianLinked) {
       final rewardRows = await client
           .from('parent_rewards')
           .select()
-          .eq('child_user_id', user.id)
+          .eq('child_user_id', ownerId)
           .order('created_at', ascending: false);
-      _ensureOwner(ownerId);
-
-      final remote = _mappers.progressFromCloud(
-        progressRows.isEmpty ? null : progressRows.first,
-      );
-      final remoteLogs = logRows
-          .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
-          .toList();
-      // Evidence is persisted before its projection. The merge runs as one
-      // atomic read-modify-write so a concurrent award can never be dropped
-      // between the local read and the merged write-back. If interrupted, the
-      // next read/sync deterministically repairs the aggregate from these
-      // logs.
-      final mergedLogs = await _datasource.updateKidsSessionLogs(
-        (localLogs) async => KidsSessionLogsCloudMerge.merge(
-          local: localLogs,
-          remote: remoteLogs,
-        ).map(KidsSessionLogModel.fromEntity).toList(),
-      );
-      _ensureOwner(ownerId);
-      final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(mergedLogs);
-      // Preserve legacy remote aggregates that cannot yet be reconstructed
-      // because the deployed log contract omits exact awarded stars. Local
-      // stale caches are deliberately not merged back into the projection.
-      final reconciledProgress = KidsProgressCloudMerge.merge(
-        local: rebuilt,
-        remote: remote,
-      );
-      await _datasource.saveKidsLegacyCloudFloor(
-        KidsProgressModel.fromEntity(remote),
-      );
-      _ensureOwner(ownerId);
-      await _datasource.saveKidsProgress(
-        KidsProgressModel.fromEntity(reconciledProgress),
-      );
       _ensureOwner(ownerId);
       await _datasource.saveParentRewards(
         rewardRows
@@ -132,38 +179,35 @@ class MemorizationKidsCloudSyncService {
             .toList(),
       );
       _ensureOwner(ownerId);
-      // Home missions never fail the progress pull (the table may be
-      // undeployed or the link revoked); the local list is left untouched.
-      await _homeMissionSync.pull(
-        ownerId: ownerId,
-        fetchRows: () async {
-          final rows = await client
-              .from('kids_home_missions')
-              .select()
-              .eq('child_user_id', user.id)
-              .order('created_at', ascending: true);
-          return rows
-              .map((row) => Map<String, dynamic>.from(row))
-              .toList(growable: false);
-        },
-      );
-      // Same best-effort rule for the guardian policy: a newer server
-      // version replaces the local policy fields; errors are swallowed.
-      await _policySync.pull(
-        ownerId: ownerId,
-        fetchRow: () async {
-          final rows = await client
-              .from('kids_child_policies')
-              .select()
-              .eq('child_user_id', user.id)
-              .limit(1);
-          return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
-        },
-      );
-      return const Right(null);
-    } catch (e) {
-      return Left(Failure.fromCloud(e));
     }
+    // Home missions never fail the pull (the table may be undeployed or the
+    // link revoked); the local list is left untouched.
+    await _homeMissionSync.pull(
+      ownerId: ownerId,
+      fetchRows: () async {
+        final rows = await client
+            .from('kids_home_missions')
+            .select()
+            .eq('child_user_id', ownerId)
+            .order('created_at', ascending: true);
+        return rows
+            .map((row) => Map<String, dynamic>.from(row))
+            .toList(growable: false);
+      },
+    );
+    // Same best-effort rule for the guardian policy: a newer server
+    // version replaces the local policy fields; errors are swallowed.
+    await _policySync.pull(
+      ownerId: ownerId,
+      fetchRow: () async {
+        final rows = await client
+            .from('kids_child_policies')
+            .select()
+            .eq('child_user_id', ownerId)
+            .limit(1);
+        return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
+      },
+    );
   }
 
   Future<Either<Failure, void>> syncKidsProgressToCloud() async {
@@ -243,6 +287,12 @@ class MemorizationKidsCloudSyncService {
         casRpc: (params) =>
             client.rpc('compare_and_swap_child_policy', params: params),
       );
+      final hadActivityFailure = await _publishFamilyActivity(client, ownerId);
+      if (hadActivityFailure) {
+        return const Left(
+          NetworkFailure('Family activity snapshot is waiting to sync'),
+        );
+      }
       if (hadTransientFailure) {
         return const Left(
           NetworkFailure('Kids home mission report is waiting to sync'),
@@ -252,6 +302,22 @@ class MemorizationKidsCloudSyncService {
     } catch (e) {
       return Left(Failure.fromCloud(e));
     }
+  }
+
+  /// Child devices only: the server rejects other accounts. Returns true
+  /// when the publish should be retried.
+  Future<bool> _publishFamilyActivity(
+    SupabaseClient client,
+    String ownerId,
+  ) async {
+    final publisher = _activityPublisher;
+    if (publisher == null) return false;
+    final profile = await _datasource.getMemorizationProfile();
+    if (!profile.isChild) return false;
+    _ensureOwner(ownerId);
+    return publisher.publish(
+      (params) => client.rpc('publish_child_family_activity', params: params),
+    );
   }
 
   void _ensureOwner(String ownerId) {
@@ -281,7 +347,9 @@ class MemorizationKidsCloudSyncService {
 
       try {
         final payload = await client.rpc('get_remote_children_dashboard');
-        return Right(_mappers.parseRemoteChildrenDashboard(payload));
+        final children = _mappers.parseRemoteChildrenDashboard(payload);
+        await _cacheDashboard(user.id, payload);
+        return Right(children);
       } on PostgrestException catch (e) {
         if (!_gateway.isMissingRpc(e, 'get_remote_children_dashboard')) {
           rethrow;
@@ -291,6 +359,15 @@ class MemorizationKidsCloudSyncService {
       return Right(await _fetchRemoteChildrenLegacy(client, user.id));
     } catch (e) {
       return Left(Failure.fromCloud(e));
+    }
+  }
+
+  /// A cache write failure never fails a successful read.
+  Future<void> _cacheDashboard(String ownerId, Object? payload) async {
+    try {
+      await _dashboardCache?.save(ownerId, payload);
+    } catch (e) {
+      TaliaLogger.w('[KidsCloudSync] dashboard cache write failed: $e');
     }
   }
 
@@ -381,11 +458,16 @@ class MemorizationKidsCloudSyncService {
       children.add(
         RemoteChildSummary(
           childUserId: childId,
+          // Blank means unnamed; the UI shows its localized default.
           displayName: profileRows.isEmpty
-              ? 'طفل تالية'
-              : profileRows.first['child_nickname'] as String? ??
-                    profileRows.first['display_name'] as String? ??
-                    'طفل تالية',
+              ? ''
+              : [
+                      profileRows.first['child_nickname'],
+                      profileRows.first['display_name'],
+                    ]
+                    .whereType<String>()
+                    .map((name) => name.trim())
+                    .firstWhere((name) => name.isNotEmpty, orElse: () => ''),
           childAge: profileRows.isEmpty
               ? null
               : (profileRows.first['age'] as num?)?.toInt(),
@@ -546,9 +628,7 @@ class MemorizationKidsCloudSyncService {
     if (text.contains('Mission not found') ||
         text.contains('Invalid mission transition')) {
       TaliaLogger.w('Kids home mission acknowledge rejected', error);
-      return const NetworkFailure(
-        CubitMessageCodes.kidsHomeMissionUnavailable,
-      );
+      return const NetworkFailure(CubitMessageCodes.kidsHomeMissionUnavailable);
     }
     return NetworkFailure.from(error);
   }
@@ -789,27 +869,39 @@ class MemorizationKidsCloudSyncService {
     return const <String>{};
   }
 
-  /// Claims a server-owned reward only when the authenticated child is allowed
-  /// to transition it from unlocked to claimed. The local cache changes only
-  /// after the RPC returns that exact row.
-  Future<Either<Failure, List<ParentReward>>> claimRemoteParentReward(
+  /// Child: asks to receive an unlocked gift (unlocked → requested). The local
+  /// cache changes only after the RPC returns that exact row.
+  Future<Either<Failure, List<ParentReward>>> requestRemoteParentReward(
     String rewardId,
-  ) => _transitionRemoteParentReward('claim_parent_reward', rewardId);
+  ) => _transitionRemoteParentReward(
+    'request_parent_reward',
+    rewardId,
+    cacheOnDevice: true,
+  );
 
-  /// Parent-only counterpart to [claimRemoteParentReward]. The database RPC
-  /// enforces ownership and the locked-to-unlocked transition.
+  /// Guardian: confirms the hand-over (requested → claimed).
+  Future<Either<Failure, List<ParentReward>>> approveRemoteParentReward(
+    String rewardId,
+  ) => _transitionRemoteParentReward('approve_parent_reward', rewardId);
+
+  /// Guardian: opens a locked gift (locked → unlocked).
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
     String rewardId,
   ) => _transitionRemoteParentReward('unlock_parent_reward', rewardId);
 
+  /// The device's reward cache belongs to the child on this device, so only
+  /// the child's own transitions ([cacheOnDevice]) are written to it.
   Future<Either<Failure, List<ParentReward>>> _transitionRemoteParentReward(
     String rpcName,
-    String rewardId,
-  ) async {
+    String rewardId, {
+    bool cacheOnDevice = false,
+  }) async {
     try {
       final parsedId = int.tryParse(rewardId);
       if (parsedId == null) {
-        return const Left(CacheFailure('معرّف المكافأة غير صالح'));
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardUnavailable),
+        );
       }
       final clientResult = _supabaseOrFailure;
       final clientFailure = clientResult.fold(
@@ -837,8 +929,11 @@ class MemorizationKidsCloudSyncService {
           )
           .toList();
       if (acknowledged.isEmpty) {
-        return const Left(NetworkFailure('المكافأة ليست متاحة لهذا الإجراء'));
+        return const Left(
+          NetworkFailure(CubitMessageCodes.parentRewardUnavailable),
+        );
       }
+      if (!cacheOnDevice) return Right(acknowledged);
 
       final local = await _datasource.getParentRewards();
       final byId = {for (final reward in local) reward.id: reward};
@@ -850,6 +945,14 @@ class MemorizationKidsCloudSyncService {
         merged.map(ParentRewardModel.fromEntity).toList(),
       );
       return Right(merged);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('Invalid reward transition') ||
+          e.message.contains('Reward not found')) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.parentRewardUnavailable),
+        );
+      }
+      return Left(Failure.fromCloud(e));
     } catch (e) {
       return Left(Failure.fromCloud(e));
     }

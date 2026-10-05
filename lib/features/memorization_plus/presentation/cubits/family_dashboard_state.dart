@@ -11,6 +11,8 @@ enum FamilyDashboardFeedbackType {
   childLinked,
   rewardAdded,
   remoteRewardAdded,
+  rewardUnlocked,
+  rewardApproved,
   reminderSaved,
   accountPasswordIncorrect,
   accountCheckUnavailable,
@@ -43,6 +45,12 @@ class FamilyDashboardFeedback extends Equatable {
       message = null;
   const FamilyDashboardFeedback.remoteRewardAdded()
     : type = FamilyDashboardFeedbackType.remoteRewardAdded,
+      message = null;
+  const FamilyDashboardFeedback.rewardUnlocked()
+    : type = FamilyDashboardFeedbackType.rewardUnlocked,
+      message = null;
+  const FamilyDashboardFeedback.rewardApproved()
+    : type = FamilyDashboardFeedbackType.rewardApproved,
       message = null;
   const FamilyDashboardFeedback.reminderSaved()
     : type = FamilyDashboardFeedbackType.reminderSaved,

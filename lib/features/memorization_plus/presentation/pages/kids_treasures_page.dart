@@ -9,14 +9,19 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_adventure_regions.dart';
 import '../cubits/kids_treasures_cubit.dart';
+import '../widgets/kids_gift_card.dart';
+import '../widgets/kids_home_mission_card.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_region_name.dart';
 import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_ui.dart';
+import '../world/kids_world_palette.dart';
 
 /// «كنوزي» — region progress and the child's kids certificates.
 class KidsTreasuresPage extends StatelessWidget {
@@ -42,7 +47,18 @@ class _KidsTreasuresView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: KidsTheme.nightSkyDark,
-      body: BlocBuilder<KidsTreasuresCubit, KidsTreasuresState>(
+      body: BlocConsumer<KidsTreasuresCubit, KidsTreasuresState>(
+        listenWhen: (previous, current) =>
+            current is KidsTreasuresLoaded &&
+            current.rewardMessage != null &&
+            (previous is! KidsTreasuresLoaded ||
+                previous.rewardMessageId != current.rewardMessageId),
+        listener: (context, state) {
+          final message = (state as KidsTreasuresLoaded).rewardMessage!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.localizedCubitMessage(message))),
+          );
+        },
         builder: (context, state) => switch (state) {
           KidsTreasuresLoading() => const Center(child: KidsLoadingWidget()),
           KidsTreasuresError(:final message) => KidsBackground(
@@ -53,10 +69,23 @@ class _KidsTreasuresView extends StatelessWidget {
               ),
             ),
           ),
-          KidsTreasuresLoaded(:final regions, :final certificates) =>
+          KidsTreasuresLoaded(
+            :final regions,
+            :final certificates,
+            :final rewards,
+            :final homeMissions,
+            :final homeMissionsPaused,
+          ) =>
             KidsTreasuresContent(
               regions: regions,
               certificates: certificates,
+              rewards: rewards,
+              homeMissions: homeMissions,
+              homeMissionsPaused: homeMissionsPaused,
+              onRequestReward: context.read<KidsTreasuresCubit>().requestReward,
+              onReportHomeMission: context
+                  .read<KidsTreasuresCubit>()
+                  .reportHomeMission,
               onBack: () => _back(context),
             ),
         },
@@ -72,14 +101,28 @@ class KidsTreasuresContent extends StatelessWidget {
     required this.regions,
     required this.certificates,
     required this.onBack,
+    this.rewards = const [],
+    this.homeMissions = const [],
+    this.homeMissionsPaused = false,
+    this.onRequestReward,
+    this.onReportHomeMission,
   });
 
   final List<KidsRegionProgress> regions;
   final List<CertificateAward> certificates;
   final VoidCallback onBack;
+  final List<ParentReward> rewards;
+  final List<KidsHomeMission> homeMissions;
+  final bool homeMissionsPaused;
+  final void Function(String rewardId)? onRequestReward;
+  final void Function(String missionId)? onReportHomeMission;
 
   bool get _isEmpty =>
-      certificates.isEmpty && regions.every((r) => r.memorized == 0);
+      certificates.isEmpty &&
+      rewards.isEmpty &&
+      homeMissions.isEmpty &&
+      !homeMissionsPaused &&
+      regions.every((r) => r.memorized == 0);
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +150,49 @@ class KidsTreasuresContent extends StatelessWidget {
                         animate: false,
                       ),
                       const SizedBox(height: AppSpacing.md),
+                    ],
+                    if (homeMissions.isNotEmpty || homeMissionsPaused) ...[
+                      KidsSectionHeading(
+                        text: l10n.kidsHomeMissionsTitle,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (homeMissionsPaused)
+                        Text(
+                          l10n.kidsHomeMissionsPaused,
+                          key: const ValueKey('kids-home-missions-paused'),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: KidsWorldPalette.of(context).onScene,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      for (final mission in homeMissions) ...[
+                        KidsHomeMissionCard(
+                          mission: mission,
+                          onReport: onReportHomeMission == null
+                              ? null
+                              : () => onReportHomeMission!(mission.id),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    if (rewards.isNotEmpty) ...[
+                      KidsSectionHeading(
+                        text: l10n.kidsGiftsTitle,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      for (final reward in rewards) ...[
+                        KidsGiftCard(
+                          reward: reward,
+                          onRequest: onRequestReward == null
+                              ? null
+                              : () => onRequestReward!(reward.id),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      const SizedBox(height: AppSpacing.sm),
                     ],
                     for (final region in regions) ...[
                       _RegionCard(progress: region),

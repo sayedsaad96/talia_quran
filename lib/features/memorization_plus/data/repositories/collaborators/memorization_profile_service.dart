@@ -148,6 +148,9 @@ class MemorizationProfileService {
       await _datasource.clearIsParentMode();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(AppConstants.kHifzPathMode);
+      // Keeps the next identity pull from bringing the old path back before
+      // a new one is chosen.
+      await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(await _loadProfile());
     } catch (e) {
       return Left(CacheFailure.from(e));

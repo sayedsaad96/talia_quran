@@ -29,21 +29,23 @@ FamilyChildEntry _remoteChild(
   List<KidsHomeMission> missions, {
   KidsChildPolicy? policy,
   bool policyUnavailable = false,
+  bool homeMissionsUnavailable = false,
 }) => FamilyChildEntry(
-      childUserId: 'c1',
-      displayName: 'Fatima',
-      isLocal: false,
-      remoteSummary: RemoteChildSummary(
-        childUserId: 'c1',
-        displayName: 'Fatima',
-        progress: const KidsProgress.initial(),
-        logs: const [],
-        rewards: const [],
-        homeMissions: missions,
-        policy: policy,
-        policyUnavailable: policyUnavailable,
-      ),
-    );
+  childUserId: 'c1',
+  displayName: 'Fatima',
+  isLocal: false,
+  remoteSummary: RemoteChildSummary(
+    childUserId: 'c1',
+    displayName: 'Fatima',
+    progress: const KidsProgress.initial(),
+    logs: const [],
+    rewards: const [],
+    homeMissions: missions,
+    policy: policy,
+    policyUnavailable: policyUnavailable,
+    homeMissionsUnavailable: homeMissionsUnavailable,
+  ),
+);
 
 FamilyChildEntry _localChild(List<KidsHomeMission> missions) =>
     FamilyChildEntry(
@@ -163,7 +165,11 @@ Future<_Repo> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (child.remoteSummary?.detailsLoading ?? false) {
+    await tester.pump();
+  } else {
+    await tester.pumpAndSettle();
+  }
   return repo;
 }
 
@@ -173,6 +179,8 @@ Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
     200,
     scrollable: find.byType(Scrollable).first,
   );
+  await tester.ensureVisible(finder.first);
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -283,7 +291,9 @@ void main() {
         policy: const KidsChildPolicy(maxDailySuggestions: 2, version: 5),
       ),
     );
-    final reduceMotion = find.byKey(const ValueKey('kids-policy-reduce-motion'));
+    final reduceMotion = find.byKey(
+      const ValueKey('kids-policy-reduce-motion'),
+    );
     await _scrollTo(tester, reduceMotion);
     await tester.ensureVisible(reduceMotion);
     await tester.pumpAndSettle();
@@ -311,6 +321,56 @@ void main() {
     expect(repo.remotePolicies, ['c1:v0:false:3:false']);
   });
 
+  testWidgets('unreadable missions are not shown as an empty list', (
+    tester,
+  ) async {
+    await _pump(tester, _remoteChild(const [], homeMissionsUnavailable: true));
+    final hint = find.byKey(const ValueKey('child-home-missions-unavailable'));
+    await _scrollTo(tester, hint);
+
+    expect(hint, findsOneWidget);
+    expect(find.text('Add mission'), findsNothing);
+  });
+
+  testWidgets('missions and policy show a loading line while read', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 4000);
+    addTearDown(tester.view.reset);
+    await _pump(
+      tester,
+      const FamilyChildEntry(
+        childUserId: 'c1',
+        displayName: 'Fatima',
+        isLocal: false,
+        remoteSummary: RemoteChildSummary(
+          childUserId: 'c1',
+          displayName: 'Fatima',
+          progress: KidsProgress.initial(),
+          logs: [],
+          rewards: [],
+          detailsLoading: true,
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('child-missions-loading')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('child-policy-loading')), findsOneWidget);
+    expect(find.text('Add mission'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('kids-policy-reduce-motion')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('child-home-missions-unavailable')),
+      findsNothing,
+    );
+  });
+
   testWidgets('an unreadable policy hides the controls behind a hint', (
     tester,
   ) async {
@@ -334,7 +394,9 @@ void main() {
     );
     final repo = await _pump(tester, child);
     repo.policyGate = Completer<void>();
-    final reduceMotion = find.byKey(const ValueKey('kids-policy-reduce-motion'));
+    final reduceMotion = find.byKey(
+      const ValueKey('kids-policy-reduce-motion'),
+    );
     await _scrollTo(tester, reduceMotion);
     await tester.ensureVisible(reduceMotion);
     await tester.pumpAndSettle();

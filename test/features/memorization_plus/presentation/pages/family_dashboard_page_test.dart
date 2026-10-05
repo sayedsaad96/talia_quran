@@ -9,6 +9,7 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
+import 'package:talia_quran/features/memorization_plus/application/guardian_session_controller.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
@@ -25,6 +26,123 @@ void main() {
 
   tearDown(() async {
     await getIt.reset();
+  });
+
+  group('guardian session on the child device', () {
+    testWidgets('opens without the PIN gate and goes back to the child', (
+      tester,
+    ) async {
+      final session = GuardianSessionController()
+        ..start(returnLocation: '/kids');
+      getIt.registerSingleton<GuardianSessionController>(session);
+      addTearDown(session.dispose);
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2')
+        ..dashboard = _dashboard();
+      final cubit = _buildCubit(usecases, guardianSessionActive: true);
+      getIt.registerFactory<FamilyDashboardCubit>(() => cubit);
+      final router = GoRouter(
+        initialLocation: '/kids',
+        routes: [
+          GoRoute(
+            path: '/kids',
+            builder: (context, _) => TextButton(
+              onPressed: () => context.push(AppRoutes.familyDashboard),
+              child: const Text('kids screen'),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.familyDashboard,
+            builder: (_, _) => const FamilyDashboardPage(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(_localizedApp(router: router));
+      await tester.tap(find.text('kids screen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter'), findsNothing);
+      expect(find.text('Link New Child'), findsNothing);
+      await tester.tap(
+        find.byKey(const ValueKey('guardian-session-back-to-child')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('kids screen'), findsOneWidget);
+      expect(session.isActive, isFalse);
+    });
+  });
+
+  group('FamilyDashboardPage offline', () {
+    Future<_FakeUsecases> openWith(
+      WidgetTester tester,
+      FamilyDashboard dashboard,
+    ) async {
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2')
+        ..dashboard = dashboard;
+      await tester.pumpWidget(
+        // ignore: prefer_const_constructors
+        _TestApp(cubit: _buildCubit(usecases)),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+      return usecases;
+    }
+
+    testWidgets('a failed read is never shown as "no children"', (
+      tester,
+    ) async {
+      final usecases = await openWith(
+        tester,
+        const FamilyDashboard(
+          children: [],
+          settings: ParentSettings(pinHash: 'secure-v2'),
+          remoteStatus: FamilyRemoteStatus.unavailable,
+        ),
+      );
+
+      expect(
+        find.text(
+          "Couldn't load your linked children. "
+          'Check your connection and try again.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.family_restroom_rounded), findsNothing);
+
+      final before = usecases.dashboardCalls;
+      await tester.tap(find.byKey(const ValueKey('family-remote-retry')));
+      await tester.pumpAndSettle();
+      expect(usecases.dashboardCalls, before + 1);
+    });
+
+    testWidgets('a saved copy says when it was received', (tester) async {
+      await openWith(
+        tester,
+        FamilyDashboard(
+          children: _dashboard().children,
+          settings: const ParentSettings(pinHash: 'secure-v2'),
+          remoteStatus: FamilyRemoteStatus.cached,
+          remoteFetchedAt: DateTime(2026, 10, 5, 9, 30),
+        ),
+      );
+
+      expect(
+        find.textContaining("Couldn't connect. Showing the data received on"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Oct 5'), findsOneWidget);
+    });
+
+    testWidgets('a live read shows no banner', (tester) async {
+      await openWith(tester, _dashboard());
+
+      expect(find.byKey(const ValueKey('family-remote-banner')), findsNothing);
+    });
   });
 
   group('FamilyDashboardPage', () {
@@ -177,6 +295,40 @@ void main() {
       expect(find.text('Yusuf'), findsOneWidget);
       // The add-child card still appears after the list.
       expect(find.text('Link New Child'), findsOneWidget);
+    });
+
+    testWidgets('a linked child still loading details shows a progress line', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases();
+      usecases.settings = const ParentSettings(pinHash: 'secure-v2');
+      usecases.dashboard = _dashboardWithChildren([
+        const FamilyChildEntry(
+          childUserId: 'child-2',
+          displayName: 'Fatima',
+          isLocal: false,
+          remoteSummary: RemoteChildSummary(
+            childUserId: 'child-2',
+            displayName: 'Fatima',
+            progress: KidsProgress.initial(),
+            logs: [],
+            rewards: [],
+            detailsLoading: true,
+          ),
+        ),
+      ]);
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pump();
+
+      expect(find.text('Fatima'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('family-child-details-loading')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('empty state shows placeholder and link-child button', (
@@ -593,11 +745,13 @@ void main() {
 FamilyDashboardCubit _buildCubit(
   _FakeUsecases usecases, {
   AccountPasswordVerifier? verifier,
+  bool guardianSessionActive = false,
 }) => FamilyDashboardCubit(
   usecases.parentAccess,
   usecases.remoteLink,
   usecases.familyDashboard,
   accountVerifier: verifier,
+  guardianSessionActive: () => guardianSessionActive,
 );
 
 class _FakeVerifier implements AccountPasswordVerifier {
@@ -650,6 +804,7 @@ class _FakeUsecases {
     settings: ParentSettings(),
   );
   int resetCount = 0;
+  int dashboardCalls = 0;
   final remoteRewards = <String>[];
   final identityUpdates = <String>[];
   Either<Failure, void> acceptResult = const Right(null);
@@ -770,10 +925,13 @@ class _FakeFamilyDashboard implements GetFamilyDashboardUsecase {
   Future<Either<Failure, FamilyDashboard>> call() async {
     // Mirrors MemorizationFamilyService: the local child's name comes from
     // the saved parent settings.
+    _owner.dashboardCalls++;
     final nickname = _owner.settings.localChildNickname;
     final dashboard = _owner.dashboard;
     return Right(
       FamilyDashboard(
+        remoteStatus: dashboard.remoteStatus,
+        remoteFetchedAt: dashboard.remoteFetchedAt,
         settings: dashboard.settings,
         children: [
           for (final child in dashboard.children)
@@ -789,6 +947,9 @@ class _FakeFamilyDashboard implements GetFamilyDashboardUsecase {
       ),
     );
   }
+
+  @override
+  Stream<Either<Failure, FamilyDashboard>> watch() => Stream.fromFuture(call());
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

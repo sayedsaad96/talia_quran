@@ -108,5 +108,31 @@ void main() {
         );
       }
     });
+
+    test('a guardian session opens the dashboard without sign-in', () {
+      expect(
+        AppRouter.redirectForAuth(
+          const AuthUnauthenticated(),
+          AppRoutes.familyDashboard,
+        ),
+        AppRoutes.login,
+      );
+      expect(
+        AppRouter.redirectForAuth(
+          const AuthUnauthenticated(),
+          AppRoutes.childDetail,
+          guardianSessionActive: true,
+        ),
+        isNull,
+      );
+      expect(
+        AppRouter.redirectForAuth(
+          const AuthOwnerDataFailure(),
+          AppRoutes.familyDashboard,
+          guardianSessionActive: true,
+        ),
+        AppRoutes.login,
+      );
+    });
   });
 }

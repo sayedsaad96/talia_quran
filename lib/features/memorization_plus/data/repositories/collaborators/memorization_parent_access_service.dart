@@ -168,25 +168,31 @@ class MemorizationParentAccessService {
     }
   }
 
+  /// Revokes this child's guardian link on the server, if there is one.
+  ///
+  /// Anything that drops the link locally must call this first: the DB must
+  /// never disagree with what the child device believes about the link.
+  Future<Either<Failure, void>> revokeOwnGuardianLink(
+    MemorizationProfile profile,
+  ) async {
+    final guardianId = profile.guardianId;
+    if (profile.isGuardianLinked && guardianId == null) {
+      return const Left(
+        NetworkFailure('Guardian link counterpart is unavailable'),
+      );
+    }
+    if (guardianId == null) return const Right(null);
+    return revokeGuardianLink(guardianId);
+  }
+
   Future<Either<Failure, MemorizationProfile>> unlinkGuardian() async {
     try {
       final profile = await _loadProfile();
-      // Server-side revocation must succeed first: the DB must never disagree
-      // with what the child device believes about the link (Phase 5).
-      final guardianId = profile.guardianId;
-      if (profile.isGuardianLinked && guardianId == null) {
-        return const Left(
-          NetworkFailure('Guardian link counterpart is unavailable'),
-        );
-      }
-      if (guardianId != null) {
-        final revokeResult = await revokeGuardianLink(guardianId);
-        final revokeFailure = revokeResult.fold(
-          (failure) => failure,
-          (_) => null,
-        );
-        if (revokeFailure != null) return Left(revokeFailure);
-      }
+      final revokeFailure = (await revokeOwnGuardianLink(
+        profile,
+      )).fold((failure) => failure, (_) => null);
+      if (revokeFailure != null) return Left(revokeFailure);
+      if (profile.isGuardianLinked) await _keepClaimedGiftsOnly();
       final saved = await _saveProfile(
         profile.copyWith(
           guardianLinkStatus: GuardianLinkStatus.none,
@@ -201,6 +207,21 @@ class MemorizationParentAccessService {
       return Left(CacheFailure.from(e));
     }
   }
+
+  /// A linked child's gifts mirror the revoked guardian's rows: received ones
+  /// stay as history, the rest could never be opened or approved again. The
+  /// server rows are untouched and come back if the guardian links again.
+  Future<void> _keepClaimedGiftsOnly() async {
+    final rewards = await _datasource.getParentRewards();
+    await _datasource.saveParentRewards(giftsKeptAfterUnlink(rewards));
+  }
+
+  @visibleForTesting
+  static List<T> giftsKeptAfterUnlink<T extends ParentReward>(
+    List<T> rewards,
+  ) => rewards
+      .where((reward) => reward.status == ParentRewardStatus.claimed)
+      .toList();
 
   Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
     bool value,

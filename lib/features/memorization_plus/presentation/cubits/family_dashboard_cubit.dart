@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import '../../../auth/domain/services/account_password_verifier.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
+import '../../domain/usecases/parent_reward_usecases.dart';
 
 part 'family_dashboard_state.dart';
 
@@ -17,18 +19,28 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     this._remoteLink,
     this._getFamilyDashboard, {
     AccountPasswordVerifier? accountVerifier,
+    ParentRewardUsecase? rewards,
+    bool Function()? guardianSessionActive,
   }) : _accountVerifier = accountVerifier,
+       _rewards = rewards,
+       _guardianSessionActive = guardianSessionActive,
        super(const FamilyDashboardInitial());
+
+  /// True when the guardian already entered the PIN for a session on the
+  /// child's device, so the dashboard opens without asking again.
+  final bool Function()? _guardianSessionActive;
 
   final ParentAccessUsecase _parentAccess;
   final ParentRemoteLinkUsecase _remoteLink;
   final GetFamilyDashboardUsecase _getFamilyDashboard;
   final AccountPasswordVerifier? _accountVerifier;
+  final ParentRewardUsecase? _rewards;
 
   /// Email of the signed-in guardian account that can recover a forgotten
   /// PIN, or null when recovery is not possible on this device.
   String? get recoveryAccountEmail => _accountVerifier?.currentEmail;
   int _feedbackEventId = 0;
+  int _refreshGeneration = 0;
 
   int _nextFeedbackEventId() => ++_feedbackEventId;
 
@@ -38,6 +50,10 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     final settings = settingsResult.getOrElse(() => const ParentSettings());
     if (!settings.hasPin) {
       emit(const FamilyDashboardNeedsPin());
+      return;
+    }
+    if (_guardianSessionActive?.call() ?? false) {
+      await refresh();
       return;
     }
     emit(FamilyDashboardLocked(settings: settings));
@@ -94,9 +110,39 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     await refresh();
   }
 
+  /// The children show as soon as they are known; linked children's missions
+  /// and policy fill in as they arrive. A newer refresh drops this one.
   Future<void> refresh({FamilyDashboardFeedback? feedback}) async {
+    final generation = ++_refreshGeneration;
     final previous = state;
-    final result = await _getFamilyDashboard();
+    var first = true;
+    await for (final result in _getFamilyDashboard.watch()) {
+      if (isClosed || generation != _refreshGeneration) return;
+      if (first) {
+        first = false;
+        _applyRefresh(previous, result, feedback);
+        continue;
+      }
+      final latest = state;
+      if (latest is! FamilyDashboardLoaded) continue;
+      result.fold(
+        (_) {},
+        (dashboard) => emit(
+          FamilyDashboardLoaded(
+            dashboard: dashboard,
+            feedback: latest.feedback,
+            feedbackEventId: latest.feedbackEventId,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _applyRefresh(
+    FamilyDashboardState previous,
+    Either<Failure, FamilyDashboard> result,
+    FamilyDashboardFeedback? feedback,
+  ) {
     result.fold(
       (failure) {
         // A transient refresh failure must not evict an already-loaded
@@ -290,6 +336,40 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     }
   }
 
+  /// Opens a locked gift early: [childId] for a linked child, null for the
+  /// child on this device.
+  Future<void> unlockReward(String rewardId, {String? childId}) => _rewardStep(
+    (rewards) => rewards.unlock(rewardId, childUserId: childId),
+    const FamilyDashboardFeedback.rewardUnlocked(),
+  );
+
+  /// Confirms that a gift the child asked for was handed over.
+  Future<void> approveReward(String rewardId, {String? childId}) => _rewardStep(
+    (rewards) => rewards.approve(rewardId, childUserId: childId),
+    const FamilyDashboardFeedback.rewardApproved(),
+  );
+
+  Future<void> _rewardStep(
+    Future<Either<Failure, List<ParentReward>>> Function(ParentRewardUsecase)
+    step,
+    FamilyDashboardFeedback success,
+  ) async {
+    final rewards = _rewards;
+    if (state is! FamilyDashboardLoaded || rewards == null) return;
+    final result = await step(rewards);
+    if (isClosed) return;
+    await result.fold((failure) async {
+      final latest = state;
+      if (latest is! FamilyDashboardLoaded) return;
+      emit(
+        latest.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      );
+    }, (_) async => refresh(feedback: success));
+  }
+
   /// Assigns a home mission: remote (RPC) for a linked child, local otherwise.
   Future<void> addHomeMission(String title, {String? childId}) async {
     final current = state;
@@ -350,23 +430,20 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
             policy: policy,
           )
         : await _parentAccess.saveChildPolicy(policy);
-    await result.fold(
-      (failure) async {
-        if (failure is PolicyConflictFailure) {
-          await refresh(
-            feedback: FamilyDashboardFeedback.failure(failure.message),
-          );
-          return;
-        }
-        emit(
-          current.copyWith(
-            feedback: FamilyDashboardFeedback.failure(failure.message),
-            feedbackEventId: _nextFeedbackEventId(),
-          ),
+    await result.fold((failure) async {
+      if (failure is PolicyConflictFailure) {
+        await refresh(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
         );
-      },
-      (_) async => refresh(),
-    );
+        return;
+      }
+      emit(
+        current.copyWith(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      );
+    }, (_) async => refresh());
   }
 
   Future<void> saveSettings(ParentSettings settings) async {

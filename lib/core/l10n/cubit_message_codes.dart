@@ -31,9 +31,14 @@ abstract final class CubitMessageCodes {
   static const guardianSameAccount = '@guardian/same_account';
   static const parentRewardTitleRequired = '@guardian/reward_title_required';
   static const parentRewardLimitReached = '@guardian/reward_limit_reached';
+  static const parentRewardUnavailable = '@guardian/reward_unavailable';
   static const childNicknameInvalid = '@guardian/child_nickname_invalid';
   static const childAgeInvalid = '@guardian/child_age_invalid';
   static const guardianChildNotLinked = '@guardian/child_not_linked';
+  static const pinRecoveryUnavailable = '@guardian/pin_recovery_unavailable';
+  static const guardianUnlinkFailed = '@guardian/unlink_failed';
+  static const guardianUnlinkBeforePathChangeFailed =
+      '@guardian/unlink_before_path_change_failed';
   static const childIdentityUpdateUnavailable =
       '@guardian/child_identity_update_unavailable';
 
@@ -44,8 +49,7 @@ abstract final class CubitMessageCodes {
   static const errorNotFound = '@error/not_found';
   static const errorParse = '@error/parse';
   static const errorUnknown = '@error/unknown';
-  static const kidsHomeMissionInvalidTitle =
-      'kids_home_mission_invalid_title';
+  static const kidsHomeMissionInvalidTitle = 'kids_home_mission_invalid_title';
   static const kidsPolicyConflict = 'kids_policy_conflict';
   static const kidsHomeMissionUnavailable = 'kids_home_mission_unavailable';
 

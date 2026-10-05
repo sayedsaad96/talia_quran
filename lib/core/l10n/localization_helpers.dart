@@ -209,6 +209,8 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.parentRewardErrorTitleRequired,
       CubitMessageCodes.parentRewardLimitReached =>
         l10n.parentRewardErrorLimitReached,
+      CubitMessageCodes.parentRewardUnavailable =>
+        l10n.parentRewardErrorUnavailable,
       CubitMessageCodes.childNicknameInvalid => l10n.childErrorNicknameInvalid(
         LocaleNumberFormatter.format(
           (ChildIdentityPolicy.maxNicknameLength).toString(),
@@ -227,6 +229,10 @@ extension TaliaLocalizationHelpers on BuildContext {
       ),
       CubitMessageCodes.guardianChildNotLinked =>
         l10n.guardianErrorChildNotLinked,
+      CubitMessageCodes.pinRecoveryUnavailable => l10n.pinRecoveryUnavailable,
+      CubitMessageCodes.guardianUnlinkFailed => l10n.guardianErrorUnlinkFailed,
+      CubitMessageCodes.guardianUnlinkBeforePathChangeFailed =>
+        l10n.guardianErrorUnlinkBeforePathChange,
       CubitMessageCodes.childIdentityUpdateUnavailable =>
         l10n.childErrorIdentityUpdateUnavailable,
       CubitMessageCodes.errorCache => l10n.errorCacheMessage,

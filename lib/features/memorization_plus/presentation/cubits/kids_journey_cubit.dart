@@ -44,6 +44,9 @@ typedef KidsChildPolicyReader = KidsChildPolicy Function();
 /// Errors are ignored (the last known policy stays).
 typedef KidsChildPolicyRefresh = Future<void> Function();
 
+/// Pulls what the guardian sent; true when local data may have changed.
+typedef KidsInboundRefresh = Future<bool> Function({bool force});
+
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
     this._getJourney,
@@ -57,9 +60,11 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsHomeMissionsLoader? homeMissionsLoader,
     KidsChildPolicyReader? childPolicyReader,
     KidsChildPolicyRefresh? childPolicyRefresh,
+    KidsInboundRefresh? inboundRefresh,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
+       _inboundRefresh = inboundRefresh,
        _resumeMissionLoader = resumeMissionLoader,
        _sessionLogsLoader = sessionLogsLoader,
        _readingPagesLoader = readingPagesLoader,
@@ -82,16 +87,60 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsHomeMissionsLoader? _homeMissionsLoader;
   final KidsChildPolicyReader? _childPolicyReader;
   final KidsChildPolicyRefresh? _childPolicyRefresh;
+  final KidsInboundRefresh? _inboundRefresh;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
+
+  /// Only the latest load may emit, so a slower earlier load never
+  /// overwrites newer data.
+  int _loadGeneration = 0;
+
+  /// Pulls what the guardian sent, then reloads in place when it landed.
+  /// [force] skips the resume throttle (home open, pull-to-refresh).
+  Future<void> refreshFromGuardian({
+    required int surahId,
+    bool force = false,
+  }) async {
+    final refresh = _inboundRefresh;
+    if (refresh == null) return;
+    bool landed;
+    try {
+      landed = await refresh(force: force);
+    } catch (_) {
+      landed = false;
+    }
+    if (!landed || isClosed) return;
+    await load(surahId: surahId, followFrontier: true, showLoading: false);
+  }
+
+  /// Pull-to-refresh: guardian data first, then the local journey, without
+  /// replacing the page with a spinner.
+  Future<void> refresh({required int surahId}) async {
+    try {
+      await _inboundRefresh?.call(force: true);
+    } catch (_) {
+      // Local data still reloads.
+    }
+    if (isClosed) return;
+    await load(surahId: surahId, followFrontier: true, showLoading: false);
+  }
 
   /// Loads [surahId]'s journey. With [followFrontier] (the kids home) a
   /// fully memorized surah hands over to the surah where the journey really
   /// continues, so the home map, Mushaf and card move on with the child
   /// instead of staying on the surah the route was opened with (K20). The
-  /// map keeps the surah it was opened for.
-  Future<void> load({required int surahId, bool followFrontier = false}) async {
-    emit(const KidsJourneyLoading());
+  /// map keeps the surah it was opened for. Without [showLoading] the current
+  /// state stays on screen until the new one is ready.
+  Future<void> load({
+    required int surahId,
+    bool followFrontier = false,
+    bool showLoading = true,
+  }) async {
+    final generation = ++_loadGeneration;
+    bool isStale() => isClosed || generation != _loadGeneration;
+    if (showLoading || state is! KidsJourneyLoaded) {
+      emit(const KidsJourneyLoading());
+    }
     var activeSurahId = surahId;
     var journeyResult = await _getJourney(
       GetKidsJourneyParams(surahId: surahId),
@@ -118,7 +167,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         journeyResult.fold((f) => f, (_) => null) ??
         progressResult.fold((f) => f, (_) => null);
     if (failure != null) {
-      emit(KidsJourneyError(failure.message));
+      if (!isStale()) emit(KidsJourneyError(failure.message));
       return;
     }
 
@@ -179,26 +228,25 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           )
         : const <KidsDailyMission>[];
 
-    emit(
-      KidsJourneyLoaded(
-        surahId: activeSurahId,
-        stages: stages,
-        progress: progressResult.getOrElse(() => const KidsProgress.initial()),
-        surahName: surahName,
-        nextMission: nextMission,
-        dailyGoalCap: dailyGoalCap,
-        dailyMissions: dailyMissions,
-        currentRegion: await _currentRegion(activeSurahId, logs),
-        missionSurahName:
-            missionSurahId == null || missionSurahId == activeSurahId
-            ? null
-            : await _surahName(missionSurahId),
-        isReturningAfterBreak: kidsIsReturningAfterBreak(
-          progressResult.fold((_) => null, (p) => p.lastSessionAt),
-          DateTime.now(),
-        ),
+    final loaded = KidsJourneyLoaded(
+      surahId: activeSurahId,
+      stages: stages,
+      progress: progressResult.getOrElse(() => const KidsProgress.initial()),
+      surahName: surahName,
+      nextMission: nextMission,
+      dailyGoalCap: dailyGoalCap,
+      dailyMissions: dailyMissions,
+      currentRegion: await _currentRegion(activeSurahId, logs),
+      missionSurahName:
+          missionSurahId == null || missionSurahId == activeSurahId
+          ? null
+          : await _surahName(missionSurahId),
+      isReturningAfterBreak: kidsIsReturningAfterBreak(
+        progressResult.fold((_) => null, (p) => p.lastSessionAt),
+        DateTime.now(),
       ),
     );
+    if (!isStale()) emit(loaded);
   }
 
   /// A surah's display name, or null — a label never blocks the journey.
@@ -228,9 +276,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       final memorized = kidsMemorizedSurahIds(logs, {
         for (final surah in surahs) surah.id: surah.ayahCount,
       });
-      return kidsRegionProgress(memorized).firstWhere(
-        (progress) => progress.region.id == region.id,
-      );
+      return kidsRegionProgress(
+        memorized,
+      ).firstWhere((progress) => progress.region.id == region.id);
     } catch (_) {
       return null;
     }

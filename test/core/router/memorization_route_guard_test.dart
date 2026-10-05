@@ -9,6 +9,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:talia_quran/features/memorization_plus/application/guardian_session_controller.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -277,6 +278,48 @@ void main() {
       registerProfile(_profile(MemorizationPath.adult));
       registerAuth(const AuthInitial());
       expect(await MemorizationRouteGuard.parentDashboardRedirect(), isNull);
+    });
+
+    group('guardian session on the child device', () {
+      GuardianSessionController registerSession({required bool started}) {
+        final session = GuardianSessionController();
+        if (started) {
+          session.start(returnLocation: AppRoutes.memorizationPlusKidsHome);
+        }
+        getIt.registerSingleton<GuardianSessionController>(session);
+        addTearDown(session.dispose);
+        return session;
+      }
+
+      test('lets a child profile in while the session runs', () async {
+        registerProfile(_profile(MemorizationPath.child));
+        registerAuth(const AuthUnauthenticated());
+        registerSession(started: true);
+
+        expect(await MemorizationRouteGuard.parentDashboardRedirect(), isNull);
+      });
+
+      test('sends the child back once the session ends', () async {
+        registerProfile(_profile(MemorizationPath.child));
+        registerAuth(const AuthInitial());
+        registerSession(started: true).end();
+
+        expect(
+          await MemorizationRouteGuard.parentDashboardRedirect(),
+          AppRoutes.memorizationPlusKidsHome,
+        );
+      });
+
+      test('a session never lets a signed-out adult skip login', () async {
+        registerProfile(_profile(MemorizationPath.adult));
+        registerAuth(const AuthUnauthenticated());
+        registerSession(started: true);
+
+        expect(
+          await MemorizationRouteGuard.parentDashboardRedirect(),
+          AppRoutes.login,
+        );
+      });
     });
   });
 

@@ -125,9 +125,12 @@ class CloudSyncCoordinator {
     } while (_pendingPushRequested);
   }
 
-  /// Syncs on app recovery only when non-exhausted deferred work exists
-  /// (unless [force] is requested). Dead letters require an explicit recovery
-  /// action and are never silently re-armed by an application lifecycle event.
+  /// Syncs on app recovery only when local work is waiting to be pushed
+  /// (queue, bookmarks, auth progress or memorization), unless [force] is
+  /// requested. Resume alone never pulls new server data; the kids home pulls
+  /// guardian data itself through `KidsInboundRefresher`. Dead letters require
+  /// an explicit recovery action and are never silently re-armed by an
+  /// application lifecycle event.
   Future<void> resumeIfNeeded({bool force = false}) async {
     final now = DateTime.now();
     if (!force &&
@@ -137,7 +140,7 @@ class CloudSyncCoordinator {
     }
 
     if (!force && !await _hasPendingSyncWork()) {
-      TaliaLogger.i('Skipping resume sync — no pending outbox/cursor work');
+      TaliaLogger.i('Skipping resume sync — no pending local work');
       return;
     }
     _lastResumeSyncAt = now;

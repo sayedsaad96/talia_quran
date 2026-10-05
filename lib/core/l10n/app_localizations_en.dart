@@ -3151,6 +3151,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentRewardErrorLimitReached => 'You can add up to 3 rewards.';
 
   @override
+  String get parentRewardErrorUnavailable =>
+      'This gift isn\'t available for that step right now. Refresh and try again.';
+
+  @override
+  String get parentRewardUnlockedFeedback => 'Gift unlocked';
+
+  @override
+  String get parentRewardApprovedFeedback => 'Gift hand-over confirmed';
+
+  @override
+  String get parentRewardStatusWaitingForChild =>
+      'Unlocked, waiting for the child to ask';
+
+  @override
+  String get parentRewardStatusRequested => 'The child is asking for it';
+
+  @override
+  String get parentRewardUnlockAction => 'Unlock';
+
+  @override
+  String get parentRewardApproveAction => 'Confirm hand-over';
+
+  @override
+  String familyDashboardOfflineCached(String time) {
+    return 'Couldn\'t connect. Showing the data received on $time.';
+  }
+
+  @override
+  String get familyDashboardRemoteUnavailable =>
+      'Couldn\'t load your linked children. Check your connection and try again.';
+
+  @override
+  String get kidsHomeMissionsUnavailable =>
+      'Couldn\'t load the home missions right now.';
+
+  @override
+  String get guardianSessionTileTitle => 'Guardian area';
+
+  @override
+  String get guardianSessionTileSubtitle =>
+      'For the guardian only, needs the PIN';
+
+  @override
+  String get guardianSessionBackToChild => 'Back to child';
+
+  @override
+  String get kidsGiftsTitle => 'My gifts';
+
+  @override
+  String get kidsGiftLocked => 'Reach your goal to unlock this gift';
+
+  @override
+  String get kidsGiftUnlocked => 'Your gift is ready!';
+
+  @override
+  String get kidsGiftRequested => 'Request sent, waiting for your grown-up';
+
+  @override
+  String get kidsGiftClaimed => 'Received, well done!';
+
+  @override
+  String get kidsGiftRequestAction => 'I want it!';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'Enter a name of 1 to $max characters.';
   }
@@ -3163,6 +3227,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guardianErrorChildNotLinked =>
       'This child is no longer linked to your account.';
+
+  @override
+  String get guardianUnlinkTileTitle => 'Remove guardian link';
+
+  @override
+  String get guardianUnlinkTileSubtitle =>
+      'Needs the PIN and an internet connection';
+
+  @override
+  String get guardianUnlinkConfirmTitle => 'Remove the guardian link?';
+
+  @override
+  String get guardianUnlinkConfirmBody =>
+      'Your guardian won\'t follow your progress anymore, and no new missions or gifts will arrive. Gifts you received stay; unfinished gifts and missions disappear from this device. You can link again later.';
+
+  @override
+  String get guardianUnlinkAction => 'Remove link';
+
+  @override
+  String get guardianUnlinkDone => 'Guardian link removed';
+
+  @override
+  String get guardianErrorUnlinkFailed =>
+      'Couldn\'t remove the link, so nothing changed. Check you\'re online and signed in, then try again.';
+
+  @override
+  String get pinRecoveryUnavailable =>
+      'Recovering the PIN needs a connection and an account linked to a guardian, or the request has expired.';
+
+  @override
+  String get pinRecoveryTitle => 'Replace a forgotten PIN';
+
+  @override
+  String get pinRecoveryInstructions =>
+      'Ask your guardian to open your page in the family dashboard on their device and approve the request. Then type the code they see and a new PIN.';
+
+  @override
+  String get pinRecoveryCodeLabel => 'Guardian\'s code';
+
+  @override
+  String get pinRecoveryNewPinLabel => 'New PIN (4 digits)';
+
+  @override
+  String get pinRecoveryWrongCode =>
+      'The code is wrong, not approved yet, or expired.';
+
+  @override
+  String get pinRecoveryDone => 'PIN changed';
+
+  @override
+  String get pinRecoveryRequestTitle => 'PIN change request';
+
+  @override
+  String get pinRecoveryRequestBody =>
+      'Your child\'s device asked to change the PIN. Approve only if you\'re with them or asked for it yourself.';
+
+  @override
+  String get pinRecoveryApproveAction => 'Approve and show code';
+
+  @override
+  String get pinRecoveryCodeTitle => 'One-time code';
+
+  @override
+  String pinRecoveryCodeBody(String time) {
+    return 'Type this code on your child\'s device with a new PIN. Valid until $time.';
+  }
+
+  @override
+  String get guardianErrorUnlinkBeforePathChange =>
+      'Couldn\'t remove the guardian link, so the path wasn\'t changed. Check you\'re online and signed in, then try again.';
+
+  @override
+  String get resetPathUnlinksGuardianWarning =>
+      'This account is linked to a guardian. Changing the path removes the link, so the guardian won\'t follow progress anymore. This needs an internet connection.';
 
   @override
   String get childErrorIdentityUpdateUnavailable =>
@@ -5360,6 +5498,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get childDetailMemorizationProgress => 'Memorization Progress';
 
   @override
+  String get childDetailActivityTitle => 'Child activity';
+
+  @override
+  String get childDetailActivityNotReceived =>
+      'No activity has arrived from the child\'s device yet';
+
+  @override
+  String childDetailActivityUpdatedAt(String date) {
+    return 'Last updated: $date';
+  }
+
+  @override
+  String childDetailActivityStreak(String days, String longest) {
+    return 'Current streak: $days · Longest: $longest';
+  }
+
+  @override
+  String childDetailActivityActiveDays(String days) {
+    return 'Active days in the last 30: $days';
+  }
+
+  @override
+  String childDetailActivityPages(String total, String today) {
+    return 'Pages read: $total · Today: $today';
+  }
+
+  @override
   String get childDetailRecentSessions => 'Recent Sessions';
 
   @override
@@ -5814,6 +5979,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsHomeMissionReportAction => 'I did it!';
+
+  @override
+  String get familyChildUnnamed => 'My child';
+
+  @override
+  String get familyChildDetailsLoading => 'Loading…';
+
+  @override
+  String get kidsHomeMissionsTitle => 'Missions from your guardian';
+
+  @override
+  String get kidsHomeMissionNew => 'New mission';
+
+  @override
+  String get kidsHomeMissionWaitingGuardian =>
+      'You told your guardian. Waiting for them to see it';
+
+  @override
+  String get kidsHomeMissionsPaused =>
+      'Your guardian paused home missions for now. They\'ll show here again when turned back on.';
 
   @override
   String get kidsHomeMissionReported => 'Child says it\'s done';

@@ -5682,6 +5682,120 @@ abstract class AppLocalizations {
   /// **'يمكن إضافة ٣ مكافآت فقط.'**
   String get parentRewardErrorLimitReached;
 
+  /// No description provided for @parentRewardErrorUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الهدية غير متاحة لهذه الخطوة الآن. حدّث الصفحة وحاول مرة أخرى.'**
+  String get parentRewardErrorUnavailable;
+
+  /// No description provided for @parentRewardUnlockedFeedback.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم فتح الهدية'**
+  String get parentRewardUnlockedFeedback;
+
+  /// No description provided for @parentRewardApprovedFeedback.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تأكيد تسليم الهدية'**
+  String get parentRewardApprovedFeedback;
+
+  /// No description provided for @parentRewardStatusWaitingForChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفتوحة، بانتظار طلب الطفل'**
+  String get parentRewardStatusWaitingForChild;
+
+  /// No description provided for @parentRewardStatusRequested.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطفل يطلب استلامها'**
+  String get parentRewardStatusRequested;
+
+  /// No description provided for @parentRewardUnlockAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح الهدية'**
+  String get parentRewardUnlockAction;
+
+  /// No description provided for @parentRewardApproveAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد التسليم'**
+  String get parentRewardApproveAction;
+
+  /// No description provided for @familyDashboardOfflineCached.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الاتصال. تُعرض آخر بيانات وصلت في {time}.'**
+  String familyDashboardOfflineCached(String time);
+
+  /// No description provided for @familyDashboardRemoteUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.'**
+  String get familyDashboardRemoteUnavailable;
+
+  /// No description provided for @kidsHomeMissionsUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل مهام البيت الآن.'**
+  String get kidsHomeMissionsUnavailable;
+
+  /// No description provided for @guardianSessionTileTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة ولي الأمر'**
+  String get guardianSessionTileTitle;
+
+  /// No description provided for @guardianSessionTileSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لولي الأمر فقط، وتحتاج الرقم السري'**
+  String get guardianSessionTileSubtitle;
+
+  /// No description provided for @guardianSessionBackToChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة إلى الطفل'**
+  String get guardianSessionBackToChild;
+
+  /// No description provided for @kidsGiftsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'هداياي'**
+  String get kidsGiftsTitle;
+
+  /// No description provided for @kidsGiftLocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل هدفك لتُفتح هذه الهدية'**
+  String get kidsGiftLocked;
+
+  /// No description provided for @kidsGiftUnlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'هديتك جاهزة!'**
+  String get kidsGiftUnlocked;
+
+  /// No description provided for @kidsGiftRequested.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرسلنا طلبك، بانتظار ولي أمرك'**
+  String get kidsGiftRequested;
+
+  /// No description provided for @kidsGiftClaimed.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلمتها، مبارك!'**
+  String get kidsGiftClaimed;
+
+  /// No description provided for @kidsGiftRequestAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أريدها!'**
+  String get kidsGiftRequestAction;
+
   /// No description provided for @childErrorNicknameInvalid.
   ///
   /// In ar, this message translates to:
@@ -5699,6 +5813,132 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'هذا الطفل لم يعد مرتبطاً بحسابك.'**
   String get guardianErrorChildNotLinked;
+
+  /// No description provided for @guardianUnlinkTileTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء ربط ولي الأمر'**
+  String get guardianUnlinkTileTitle;
+
+  /// No description provided for @guardianUnlinkTileSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج الرقم السري والاتصال بالإنترنت'**
+  String get guardianUnlinkTileSubtitle;
+
+  /// No description provided for @guardianUnlinkConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء ربط ولي الأمر؟'**
+  String get guardianUnlinkConfirmTitle;
+
+  /// No description provided for @guardianUnlinkConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.'**
+  String get guardianUnlinkConfirmBody;
+
+  /// No description provided for @guardianUnlinkAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الربط'**
+  String get guardianUnlinkAction;
+
+  /// No description provided for @guardianUnlinkDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إلغاء ربط ولي الأمر'**
+  String get guardianUnlinkDone;
+
+  /// No description provided for @guardianErrorUnlinkFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إلغاء الربط، ولم يتغير شيء. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.'**
+  String get guardianErrorUnlinkFailed;
+
+  /// No description provided for @pinRecoveryUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة الرقم السري تحتاج اتصالاً بالإنترنت وحساباً مرتبطاً بولي أمر، أو أن الطلب انتهت صلاحيته.'**
+  String get pinRecoveryUnavailable;
+
+  /// No description provided for @pinRecoveryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير الرقم السري المنسي'**
+  String get pinRecoveryTitle;
+
+  /// No description provided for @pinRecoveryInstructions.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطلب من ولي الأمر فتح صفحتك في لوحة العائلة على جهازه والموافقة على الطلب، ثم اكتب الرمز الذي يظهر له والرقم السري الجديد.'**
+  String get pinRecoveryInstructions;
+
+  /// No description provided for @pinRecoveryCodeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز ولي الأمر'**
+  String get pinRecoveryCodeLabel;
+
+  /// No description provided for @pinRecoveryNewPinLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقم السري الجديد (4 أرقام)'**
+  String get pinRecoveryNewPinLabel;
+
+  /// No description provided for @pinRecoveryWrongCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرمز غير صحيح، أو لم يوافق عليه ولي الأمر بعد، أو انتهت صلاحيته.'**
+  String get pinRecoveryWrongCode;
+
+  /// No description provided for @pinRecoveryDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تغيير الرقم السري'**
+  String get pinRecoveryDone;
+
+  /// No description provided for @pinRecoveryRequestTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب تغيير الرقم السري'**
+  String get pinRecoveryRequestTitle;
+
+  /// No description provided for @pinRecoveryRequestBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب جهاز طفلك تغيير الرقم السري. وافق فقط إن كنت بجانبه أو طلبت ذلك بنفسك.'**
+  String get pinRecoveryRequestBody;
+
+  /// No description provided for @pinRecoveryApproveAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'موافقة وإظهار الرمز'**
+  String get pinRecoveryApproveAction;
+
+  /// No description provided for @pinRecoveryCodeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز لمرة واحدة'**
+  String get pinRecoveryCodeTitle;
+
+  /// No description provided for @pinRecoveryCodeBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب هذا الرمز على جهاز طفلك مع رقم سري جديد. صالح حتى {time}.'**
+  String pinRecoveryCodeBody(String time);
+
+  /// No description provided for @guardianErrorUnlinkBeforePathChange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إلغاء ربط ولي الأمر، فلم يتغير المسار. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.'**
+  String get guardianErrorUnlinkBeforePathChange;
+
+  /// No description provided for @resetPathUnlinksGuardianWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحساب مرتبط بولي أمر. تغيير المسار يلغي الربط، فلن يتابع ولي الأمر التقدم بعدها. يحتاج ذلك اتصالاً بالإنترنت.'**
+  String get resetPathUnlinksGuardianWarning;
 
   /// No description provided for @childErrorIdentityUpdateUnavailable.
   ///
@@ -9244,6 +9484,42 @@ abstract class AppLocalizations {
   /// **'تقدم الحفظ'**
   String get childDetailMemorizationProgress;
 
+  /// Section title for the child's published activity snapshot
+  ///
+  /// In ar, this message translates to:
+  /// **'نشاط الطفل'**
+  String get childDetailActivityTitle;
+
+  /// Shown when the child device has not published an activity snapshot
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تصل بيانات النشاط من جهاز الطفل بعد'**
+  String get childDetailActivityNotReceived;
+
+  /// When the child's activity snapshot was last received
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر تحديث: {date}'**
+  String childDetailActivityUpdatedAt(String date);
+
+  /// Current and longest activity streak in days
+  ///
+  /// In ar, this message translates to:
+  /// **'السلسلة الحالية: {days} · الأطول: {longest}'**
+  String childDetailActivityStreak(String days, String longest);
+
+  /// Active days in the trailing 30 days
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام النشاط في آخر ٣٠ يومًا: {days}'**
+  String childDetailActivityActiveDays(String days);
+
+  /// Total and today's read Mushaf pages
+  ///
+  /// In ar, this message translates to:
+  /// **'الصفحات المقروءة: {total} · اليوم: {today}'**
+  String childDetailActivityPages(String total, String today);
+
   /// Section title for recent sessions
   ///
   /// In ar, this message translates to:
@@ -9993,6 +10269,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أنجزتها!'**
   String get kidsHomeMissionReportAction;
+
+  /// No description provided for @familyChildUnnamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'طفلي'**
+  String get familyChildUnnamed;
+
+  /// No description provided for @familyChildDetailsLoading.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ التحميل…'**
+  String get familyChildDetailsLoading;
+
+  /// No description provided for @kidsHomeMissionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهام من ولي الأمر'**
+  String get kidsHomeMissionsTitle;
+
+  /// No description provided for @kidsHomeMissionNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهمة جديدة'**
+  String get kidsHomeMissionNew;
+
+  /// No description provided for @kidsHomeMissionWaitingGuardian.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخبرت ولي الأمر، وننتظر أن يراها'**
+  String get kidsHomeMissionWaitingGuardian;
+
+  /// No description provided for @kidsHomeMissionsPaused.
+  ///
+  /// In ar, this message translates to:
+  /// **'أوقف ولي الأمر مهام البيت مؤقتًا، وستظهر هنا من جديد عند إعادة تشغيلها.'**
+  String get kidsHomeMissionsPaused;
 
   /// No description provided for @kidsHomeMissionReported.
   ///

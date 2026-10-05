@@ -8,6 +8,7 @@ export 'kids_progress.dart';
 export 'kids_session_policy.dart';
 export 'kids_session_log.dart';
 export 'parent_dashboard.dart';
+export 'remote_child_activity.dart';
 export 'remote_child_summary.dart';
 export 'memorization_profile.dart';
 export 'pairing_session.dart';

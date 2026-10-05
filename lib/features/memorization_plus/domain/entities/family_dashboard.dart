@@ -106,11 +106,40 @@ class FamilyChildEntry extends Equatable {
 // ─── FamilyDashboard ──────────────────────────────────────────────────────────
 
 /// Unified family view: all children linked to a parent, plus parent settings.
+/// How the linked (remote) children were read this time.
+enum FamilyRemoteStatus {
+  /// Fresh from the server.
+  live,
+
+  /// The read failed; the children are the last copy saved at
+  /// [FamilyDashboard.remoteFetchedAt].
+  cached,
+
+  /// The read failed and nothing was saved: linked children may be missing.
+  unavailable,
+
+  /// No guardian account on this device, so there is nothing to read.
+  notConnected,
+}
+
 class FamilyDashboard extends Equatable {
-  const FamilyDashboard({required this.children, required this.settings});
+  const FamilyDashboard({
+    required this.children,
+    required this.settings,
+    this.remoteStatus = FamilyRemoteStatus.live,
+    this.remoteFetchedAt,
+  });
 
   final List<FamilyChildEntry> children;
   final ParentSettings settings;
+  final FamilyRemoteStatus remoteStatus;
+
+  /// When the shown remote children were read; set for [FamilyRemoteStatus.cached].
+  final DateTime? remoteFetchedAt;
+
+  bool get remoteReadFailed =>
+      remoteStatus == FamilyRemoteStatus.cached ||
+      remoteStatus == FamilyRemoteStatus.unavailable;
 
   bool get hasAnyChild => children.isNotEmpty;
 
@@ -122,5 +151,10 @@ class FamilyDashboard extends Equatable {
       children.fold<int>(0, (sum, c) => sum + c.todayPoints);
 
   @override
-  List<Object?> get props => [children, settings];
+  List<Object?> get props => [
+    children,
+    settings,
+    remoteStatus,
+    remoteFetchedAt,
+  ];
 }

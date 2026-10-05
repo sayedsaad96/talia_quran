@@ -13,7 +13,9 @@ class KidsReadingReceiptStore {
     this._prefs,
     this._owner, {
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now;
+    Future<void> Function()? onRecorded,
+  }) : _clock = clock ?? DateTime.now,
+       _onRecorded = onRecorded;
 
   static const int retainDays = 60;
   static const int _lastPage = 604;
@@ -21,6 +23,9 @@ class KidsReadingReceiptStore {
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
   final DateTime Function() _clock;
+
+  /// Runs after a page is stored; its failure never undoes the receipt.
+  final Future<void> Function()? _onRecorded;
   Future<void> _tail = Future<void>.value();
 
   String get _key => 'kids_reading_receipts_${_owner.currentOwnerId}';
@@ -53,11 +58,19 @@ class KidsReadingReceiptStore {
           entry.key: entry.value.toList()..sort(),
       }),
     );
+    try {
+      await _onRecorded?.call();
+    } catch (_) {}
     return Set<int>.of(pages);
   }
 
   Future<Set<int>> pagesOn(String dayKey) async =>
       Set<int>.of(_readAll()[dayKey] ?? const <int>{});
+
+  /// Distinct pages across the retained [retainDays] history.
+  Future<Set<int>> allPages() async => {
+    for (final pages in _readAll().values) ...pages,
+  };
 
   Map<String, Set<int>> _readAll() {
     try {

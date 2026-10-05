@@ -1343,6 +1343,32 @@
   "guardianErrorSameAccount": "لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.",
   "parentRewardErrorTitleRequired": "اكتب اسم المكافأة أولاً.",
   "parentRewardErrorLimitReached": "يمكن إضافة ٣ مكافآت فقط.",
+  "parentRewardErrorUnavailable": "هذه الهدية غير متاحة لهذه الخطوة الآن. حدّث الصفحة وحاول مرة أخرى.",
+  "parentRewardUnlockedFeedback": "تم فتح الهدية",
+  "parentRewardApprovedFeedback": "تم تأكيد تسليم الهدية",
+  "parentRewardStatusWaitingForChild": "مفتوحة، بانتظار طلب الطفل",
+  "parentRewardStatusRequested": "الطفل يطلب استلامها",
+  "parentRewardUnlockAction": "افتح الهدية",
+  "parentRewardApproveAction": "تأكيد التسليم",
+  "familyDashboardOfflineCached": "تعذّر الاتصال. تُعرض آخر بيانات وصلت في {time}.",
+  "@familyDashboardOfflineCached": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "familyDashboardRemoteUnavailable": "تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.",
+  "kidsHomeMissionsUnavailable": "تعذّر تحميل مهام البيت الآن.",
+  "guardianSessionTileTitle": "لوحة ولي الأمر",
+  "guardianSessionTileSubtitle": "لولي الأمر فقط، وتحتاج الرقم السري",
+  "guardianSessionBackToChild": "العودة إلى الطفل",
+  "kidsGiftsTitle": "هداياي",
+  "kidsGiftLocked": "أكمل هدفك لتُفتح هذه الهدية",
+  "kidsGiftUnlocked": "هديتك جاهزة!",
+  "kidsGiftRequested": "أرسلنا طلبك، بانتظار ولي أمرك",
+  "kidsGiftClaimed": "استلمتها، مبارك!",
+  "kidsGiftRequestAction": "أريدها!",
   "childErrorNicknameInvalid": "اكتب اسماً من حرف واحد إلى {max} حرفاً.",
   "@childErrorNicknameInvalid": {
     "placeholders": {
@@ -1363,6 +1389,34 @@
     }
   },
   "guardianErrorChildNotLinked": "هذا الطفل لم يعد مرتبطاً بحسابك.",
+  "guardianUnlinkTileTitle": "إلغاء ربط ولي الأمر",
+  "guardianUnlinkTileSubtitle": "يحتاج الرقم السري والاتصال بالإنترنت",
+  "guardianUnlinkConfirmTitle": "إلغاء ربط ولي الأمر؟",
+  "guardianUnlinkConfirmBody": "لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.",
+  "guardianUnlinkAction": "إلغاء الربط",
+  "guardianUnlinkDone": "تم إلغاء ربط ولي الأمر",
+  "guardianErrorUnlinkFailed": "تعذّر إلغاء الربط، ولم يتغير شيء. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.",
+  "pinRecoveryUnavailable": "استعادة الرقم السري تحتاج اتصالاً بالإنترنت وحساباً مرتبطاً بولي أمر، أو أن الطلب انتهت صلاحيته.",
+  "pinRecoveryTitle": "تغيير الرقم السري المنسي",
+  "pinRecoveryInstructions": "اطلب من ولي الأمر فتح صفحتك في لوحة العائلة على جهازه والموافقة على الطلب، ثم اكتب الرمز الذي يظهر له والرقم السري الجديد.",
+  "pinRecoveryCodeLabel": "رمز ولي الأمر",
+  "pinRecoveryNewPinLabel": "الرقم السري الجديد (4 أرقام)",
+  "pinRecoveryWrongCode": "الرمز غير صحيح، أو لم يوافق عليه ولي الأمر بعد، أو انتهت صلاحيته.",
+  "pinRecoveryDone": "تم تغيير الرقم السري",
+  "pinRecoveryRequestTitle": "طلب تغيير الرقم السري",
+  "pinRecoveryRequestBody": "طلب جهاز طفلك تغيير الرقم السري. وافق فقط إن كنت بجانبه أو طلبت ذلك بنفسك.",
+  "pinRecoveryApproveAction": "موافقة وإظهار الرمز",
+  "pinRecoveryCodeTitle": "رمز لمرة واحدة",
+  "pinRecoveryCodeBody": "اكتب هذا الرمز على جهاز طفلك مع رقم سري جديد. صالح حتى {time}.",
+  "@pinRecoveryCodeBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianErrorUnlinkBeforePathChange": "تعذّر إلغاء ربط ولي الأمر، فلم يتغير المسار. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.",
+  "resetPathUnlinksGuardianWarning": "هذا الحساب مرتبط بولي أمر. تغيير المسار يلغي الربط، فلن يتابع ولي الأمر التقدم بعدها. يحتاج ذلك اتصالاً بالإنترنت.",
   "childErrorIdentityUpdateUnavailable": "تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.",
   "childAgeYears": "{age, plural, =1{سنة واحدة} =2{سنتان} few{{ageText} سنوات} other{{ageText} سنة}}",
   "@childAgeYears": {
@@ -2274,6 +2328,31 @@
   "childDetailMemorizationProgress": "تقدم الحفظ",
   "@childDetailMemorizationProgress": { "description": "Section title for memorization progress" },
 
+  "childDetailActivityTitle": "نشاط الطفل",
+  "@childDetailActivityTitle": { "description": "Section title for the child's published activity snapshot" },
+  "childDetailActivityNotReceived": "لم تصل بيانات النشاط من جهاز الطفل بعد",
+  "@childDetailActivityNotReceived": { "description": "Shown when the child device has not published an activity snapshot" },
+  "childDetailActivityUpdatedAt": "آخر تحديث: {date}",
+  "@childDetailActivityUpdatedAt": {
+    "description": "When the child's activity snapshot was last received",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "childDetailActivityStreak": "السلسلة الحالية: {days} · الأطول: {longest}",
+  "@childDetailActivityStreak": {
+    "description": "Current and longest activity streak in days",
+    "placeholders": { "days": { "type": "String" }, "longest": { "type": "String" } }
+  },
+  "childDetailActivityActiveDays": "أيام النشاط في آخر ٣٠ يومًا: {days}",
+  "@childDetailActivityActiveDays": {
+    "description": "Active days in the trailing 30 days",
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "childDetailActivityPages": "الصفحات المقروءة: {total} · اليوم: {today}",
+  "@childDetailActivityPages": {
+    "description": "Total and today's read Mushaf pages",
+    "placeholders": { "total": { "type": "String" }, "today": { "type": "String" } }
+  },
+
   "childDetailRecentSessions": "آخر الجلسات",
   "@childDetailRecentSessions": { "description": "Section title for recent sessions" },
 
@@ -2461,6 +2540,12 @@
   "childDetailAddHomeMission": "أضف مهمة",
   "kidsHomeMissionAssigned": "بانتظار الطفل",
   "kidsHomeMissionReportAction": "أنجزتها!",
+  "familyChildUnnamed": "طفلي",
+  "familyChildDetailsLoading": "جارٍ التحميل…",
+  "kidsHomeMissionsTitle": "مهام من ولي الأمر",
+  "kidsHomeMissionNew": "مهمة جديدة",
+  "kidsHomeMissionWaitingGuardian": "أخبرت ولي الأمر، وننتظر أن يراها",
+  "kidsHomeMissionsPaused": "أوقف ولي الأمر مهام البيت مؤقتًا، وستظهر هنا من جديد عند إعادة تشغيلها.",
   "kidsHomeMissionReported": "أخبرنا الطفل أنه أنجزها",
   "kidsHomeMissionAcknowledged": "اطّلع ولي الأمر",
   "kidsHomeMissionAcknowledgeAction": "اطّلعت",

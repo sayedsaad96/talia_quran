@@ -1202,6 +1202,85 @@ void main() {
         expect(record, isNotNull);
       },
     );
+
+    group('leaving the kids path with a guardian link', () {
+      Future<void> saveLinkedChild() async {
+        final now = DateTime.now();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.linked,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            guardianId: 'parent-1',
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+
+      Future<void> expectStillLinked() async {
+        final profile = await datasource.getMemorizationProfile();
+        expect(profile.selectedPath, MemorizationPath.child);
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.linked);
+        expect(profile.guardianId, 'parent-1');
+      }
+
+      String? failureCode(Either<Failure, Object?> result) =>
+          result.fold((failure) => failure.message, (_) => null);
+
+      test(
+        'reset is blocked while the server link cannot be revoked',
+        () async {
+          await saveLinkedChild();
+
+          final result = await repository.resetMemorizationIdentity();
+
+          expect(
+            failureCode(result),
+            CubitMessageCodes.guardianUnlinkBeforePathChangeFailed,
+          );
+          await expectStillLinked();
+        },
+      );
+
+      test('choosing the adult path is blocked the same way', () async {
+        await saveLinkedChild();
+
+        final result = await repository.selectMemorizationPath(
+          MemorizationPath.adult,
+        );
+
+        expect(
+          failureCode(result),
+          CubitMessageCodes.guardianUnlinkBeforePathChangeFailed,
+        );
+        await expectStillLinked();
+      });
+
+      test('an unlinked child resets without the server', () async {
+        await repository.selectMemorizationPath(MemorizationPath.child);
+        await prefs.remove(MemorizationProfileService.kIdentityCloudDirty);
+
+        final result = await repository.resetMemorizationIdentity();
+
+        expect(result.isRight(), isTrue);
+        expect(
+          prefs.getBool(MemorizationProfileService.kIdentityCloudDirty),
+          isTrue,
+          reason: 'the next identity pull must not restore the old path',
+        );
+      });
+
+      test('an adult resets without the server', () async {
+        await repository.selectMemorizationPath(MemorizationPath.adult);
+
+        final result = await repository.resetMemorizationIdentity();
+
+        expect(result.isRight(), isTrue);
+      });
+    });
   });
 }
 

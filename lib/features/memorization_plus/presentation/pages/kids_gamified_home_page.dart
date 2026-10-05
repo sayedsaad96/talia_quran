@@ -41,9 +41,12 @@ class KidsGamifiedHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<KidsJourneyCubit>()
-            ..load(surahId: surahId, followFrontier: true),
+      create: (_) {
+        final cubit = getIt<KidsJourneyCubit>();
+        unawaited(cubit.load(surahId: surahId, followFrontier: true));
+        unawaited(cubit.refreshFromGuardian(surahId: surahId, force: true));
+        return cubit;
+      },
       child: _KidsGamifiedHomeView(surahId: surahId, childName: childName),
     );
   }
@@ -74,7 +77,8 @@ class _KidsGamifiedHomeView extends StatefulWidget {
   State<_KidsGamifiedHomeView> createState() => _KidsGamifiedHomeViewState();
 }
 
-class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
+class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
+    with WidgetsBindingObserver {
   /// Guards against rapid double taps stacking two copies of the same
   /// destination on top of each other — a very real pattern with children.
   bool _destinationOpen = false;
@@ -97,6 +101,18 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
     super.initState();
     _nickname = widget.childName;
     if (_nickname == null) unawaited(_loadNickname());
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!(ModalRoute.isCurrentOf(context) ?? true)) return;
+    unawaited(
+      context.read<KidsJourneyCubit>().refreshFromGuardian(
+        surahId: widget.surahId,
+      ),
+    );
   }
 
   @override
@@ -127,6 +143,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _happyTimer?.cancel();
     super.dispose();
   }
@@ -192,10 +209,8 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView> {
           return KidsGamifiedHomeContent(
             state: state,
             childName: _nickname,
-            onRefresh: () => context.read<KidsJourneyCubit>().load(
-              surahId: surahId,
-              followFrontier: true,
-            ),
+            onRefresh: () =>
+                context.read<KidsJourneyCubit>().refresh(surahId: surahId),
             onMushafTap: () => _openDestination(() async {
               if (!context.mounted) return;
               // The general Mushaf action opens Al-Fatihah. The surah query

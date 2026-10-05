@@ -1259,6 +1259,25 @@
   "guardianErrorSameAccount": "A child can't be linked to the same account. The child needs an account separate from the guardian's.",
   "parentRewardErrorTitleRequired": "Enter the reward name first.",
   "parentRewardErrorLimitReached": "You can add up to 3 rewards.",
+  "parentRewardErrorUnavailable": "This gift isn't available for that step right now. Refresh and try again.",
+  "parentRewardUnlockedFeedback": "Gift unlocked",
+  "parentRewardApprovedFeedback": "Gift hand-over confirmed",
+  "parentRewardStatusWaitingForChild": "Unlocked, waiting for the child to ask",
+  "parentRewardStatusRequested": "The child is asking for it",
+  "parentRewardUnlockAction": "Unlock",
+  "parentRewardApproveAction": "Confirm hand-over",
+  "familyDashboardOfflineCached": "Couldn't connect. Showing the data received on {time}.",
+  "familyDashboardRemoteUnavailable": "Couldn't load your linked children. Check your connection and try again.",
+  "kidsHomeMissionsUnavailable": "Couldn't load the home missions right now.",
+  "guardianSessionTileTitle": "Guardian area",
+  "guardianSessionTileSubtitle": "For the guardian only, needs the PIN",
+  "guardianSessionBackToChild": "Back to child",
+  "kidsGiftsTitle": "My gifts",
+  "kidsGiftLocked": "Reach your goal to unlock this gift",
+  "kidsGiftUnlocked": "Your gift is ready!",
+  "kidsGiftRequested": "Request sent, waiting for your grown-up",
+  "kidsGiftClaimed": "Received, well done!",
+  "kidsGiftRequestAction": "I want it!",
   "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
   "@childErrorNicknameInvalid": {
     "placeholders": {
@@ -1279,6 +1298,34 @@
     }
   },
   "guardianErrorChildNotLinked": "This child is no longer linked to your account.",
+  "guardianUnlinkTileTitle": "Remove guardian link",
+  "guardianUnlinkTileSubtitle": "Needs the PIN and an internet connection",
+  "guardianUnlinkConfirmTitle": "Remove the guardian link?",
+  "guardianUnlinkConfirmBody": "Your guardian won't follow your progress anymore, and no new missions or gifts will arrive. Gifts you received stay; unfinished gifts and missions disappear from this device. You can link again later.",
+  "guardianUnlinkAction": "Remove link",
+  "guardianUnlinkDone": "Guardian link removed",
+  "guardianErrorUnlinkFailed": "Couldn't remove the link, so nothing changed. Check you're online and signed in, then try again.",
+  "pinRecoveryUnavailable": "Recovering the PIN needs a connection and an account linked to a guardian, or the request has expired.",
+  "pinRecoveryTitle": "Replace a forgotten PIN",
+  "pinRecoveryInstructions": "Ask your guardian to open your page in the family dashboard on their device and approve the request. Then type the code they see and a new PIN.",
+  "pinRecoveryCodeLabel": "Guardian's code",
+  "pinRecoveryNewPinLabel": "New PIN (4 digits)",
+  "pinRecoveryWrongCode": "The code is wrong, not approved yet, or expired.",
+  "pinRecoveryDone": "PIN changed",
+  "pinRecoveryRequestTitle": "PIN change request",
+  "pinRecoveryRequestBody": "Your child's device asked to change the PIN. Approve only if you're with them or asked for it yourself.",
+  "pinRecoveryApproveAction": "Approve and show code",
+  "pinRecoveryCodeTitle": "One-time code",
+  "pinRecoveryCodeBody": "Type this code on your child's device with a new PIN. Valid until {time}.",
+  "@pinRecoveryCodeBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianErrorUnlinkBeforePathChange": "Couldn't remove the guardian link, so the path wasn't changed. Check you're online and signed in, then try again.",
+  "resetPathUnlinksGuardianWarning": "This account is linked to a guardian. Changing the path removes the link, so the guardian won't follow progress anymore. This needs an internet connection.",
   "childErrorIdentityUpdateUnavailable": "Editing the child's details isn't available right now. Try again later.",
   "childAgeYears": "{age, plural, =1{1 year old} other{{ageText} years old}}",
   "@childAgeYears": {
@@ -2253,6 +2300,31 @@
   "childDetailMemorizationProgress": "Memorization Progress",
   "@childDetailMemorizationProgress": { "description": "Section title for memorization progress" },
 
+  "childDetailActivityTitle": "Child activity",
+  "@childDetailActivityTitle": { "description": "Section title for the child's published activity snapshot" },
+  "childDetailActivityNotReceived": "No activity has arrived from the child's device yet",
+  "@childDetailActivityNotReceived": { "description": "Shown when the child device has not published an activity snapshot" },
+  "childDetailActivityUpdatedAt": "Last updated: {date}",
+  "@childDetailActivityUpdatedAt": {
+    "description": "When the child's activity snapshot was last received",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "childDetailActivityStreak": "Current streak: {days} · Longest: {longest}",
+  "@childDetailActivityStreak": {
+    "description": "Current and longest activity streak in days",
+    "placeholders": { "days": { "type": "String" }, "longest": { "type": "String" } }
+  },
+  "childDetailActivityActiveDays": "Active days in the last 30: {days}",
+  "@childDetailActivityActiveDays": {
+    "description": "Active days in the trailing 30 days",
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "childDetailActivityPages": "Pages read: {total} · Today: {today}",
+  "@childDetailActivityPages": {
+    "description": "Total and today's read Mushaf pages",
+    "placeholders": { "total": { "type": "String" }, "today": { "type": "String" } }
+  },
+
   "childDetailRecentSessions": "Recent Sessions",
   "@childDetailRecentSessions": { "description": "Section title for recent sessions" },
 
@@ -2440,6 +2512,12 @@
   "childDetailAddHomeMission": "Add mission",
   "kidsHomeMissionAssigned": "Waiting for child",
   "kidsHomeMissionReportAction": "I did it!",
+  "familyChildUnnamed": "My child",
+  "familyChildDetailsLoading": "Loading…",
+  "kidsHomeMissionsTitle": "Missions from your guardian",
+  "kidsHomeMissionNew": "New mission",
+  "kidsHomeMissionWaitingGuardian": "You told your guardian. Waiting for them to see it",
+  "kidsHomeMissionsPaused": "Your guardian paused home missions for now. They'll show here again when turned back on.",
   "kidsHomeMissionReported": "Child says it's done",
   "kidsHomeMissionAcknowledged": "Seen by guardian",
   "kidsHomeMissionAcknowledgeAction": "Mark as seen",

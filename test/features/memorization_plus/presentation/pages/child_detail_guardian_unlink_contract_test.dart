@@ -12,8 +12,12 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/famil
 import 'package:talia_quran/features/memorization_plus/presentation/pages/child_detail_page.dart';
 
 void main() {
+  // `revoke_guardian_link` was checked on the hosted project on 2026-10-05
+  // (security definer, authenticated only, active links, child-caller
+  // branch). The guardian-side removal stays hidden; the child's own unlink
+  // is offered only through the PIN-gated kids settings tile.
   test(
-    'presentation pages and widgets do not invoke guardian unlink before hosted proof',
+    'presentation pages and widgets do not invoke guardian unlink directly',
     () {
       final presentationRoot = Directory(
         'lib/features/memorization_plus/presentation',
@@ -56,48 +60,57 @@ void main() {
         violations,
         isEmpty,
         reason:
-            'Guardian unlink/remove-child must stay absent from production '
-            'presentation pages and widgets until hosted proof exists.\n'
+            'Guardian unlink/remove-child must not be called straight from '
+            'presentation pages and widgets.\n'
             '${violations.join('\n')}',
       );
+
+      final childUnlinkUsers = scannedFiles
+          .where(
+            (file) => file.readAsStringSync().contains('UnlinkGuardianUsecase'),
+          )
+          .map((file) => file.uri.pathSegments.last)
+          .toList();
+      expect(childUnlinkUsers, [
+        'guardian_unlink_tile.dart',
+      ], reason: 'the child unlink must stay behind the PIN-gated tile');
     },
   );
 
-  testWidgets(
-    'remote child detail does not expose unlink before hosted proof',
-    (tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1400);
-      addTearDown(tester.view.reset);
-      final repository = _UnusedRepository();
-      final cubit = FamilyDashboardCubit(
-        ParentAccessUsecase(repository),
-        ParentRemoteLinkUsecase(repository),
-        GetFamilyDashboardUsecase(repository),
-      );
-      addTearDown(cubit.close);
+  testWidgets('remote child detail does not expose guardian-side unlink', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(900, 1400);
+    addTearDown(tester.view.reset);
+    final repository = _UnusedRepository();
+    final cubit = FamilyDashboardCubit(
+      ParentAccessUsecase(repository),
+      ParentRemoteLinkUsecase(repository),
+      GetFamilyDashboardUsecase(repository),
+    );
+    addTearDown(cubit.close);
 
-      await tester.pumpWidget(
-        _TestApp(
-          child: BlocProvider.value(
-            value: cubit,
-            child: const ChildDetailPage(
-              child: FamilyChildEntry(
-                childUserId: 'child-1',
-                displayName: 'Remote child',
-                isLocal: false,
-              ),
+    await tester.pumpWidget(
+      _TestApp(
+        child: BlocProvider.value(
+          value: cubit,
+          child: const ChildDetailPage(
+            child: FamilyChildEntry(
+              childUserId: 'child-1',
+              displayName: 'Remote child',
+              isLocal: false,
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Remove child'), findsNothing);
-      expect(find.byTooltip('Remove child'), findsNothing);
-      expect(find.byIcon(Icons.link_off_rounded), findsNothing);
-    },
-  );
+    expect(find.text('Remove child'), findsNothing);
+    expect(find.byTooltip('Remove child'), findsNothing);
+    expect(find.byIcon(Icons.link_off_rounded), findsNothing);
+  });
 }
 
 class _UnusedRepository implements MemorizationPlusRepository {

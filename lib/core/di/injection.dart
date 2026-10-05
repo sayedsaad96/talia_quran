@@ -20,6 +20,7 @@ import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
+import 'family_activity_inputs_loader.dart';
 import '../services/daily_reading_log_service.dart';
 import '../services/audio_resume_store.dart';
 import '../storage/app_isar.dart';
@@ -53,6 +54,7 @@ import '../memorization/v2/kids_review_outcome_committer.dart';
 import '../memorization/v2/review_outcome_committer.dart';
 import '../memorization/v2/session_engine.dart';
 import '../memorization/v2/session_phase.dart';
+import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
@@ -129,7 +131,16 @@ import '../../features/memorization_plus/data/repositories/memorization_plus_rep
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
 import '../../features/memorization_plus/domain/services/kids_daily_missions.dart';
 import '../../features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import '../../features/memorization_plus/domain/repositories/kids_inbound_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
+import '../../features/memorization_plus/application/guardian_session_controller.dart';
+import '../../features/memorization_plus/domain/repositories/parent_pin_recovery_repository.dart';
+import '../../features/memorization_plus/domain/repositories/parent_reward_repository.dart';
+import '../../features/memorization_plus/domain/usecases/guardian_unlink_usecase.dart';
+import '../../features/memorization_plus/domain/usecases/parent_pin_recovery_usecases.dart';
+import '../../features/memorization_plus/domain/services/kids_inbound_refresher.dart';
+import '../../features/memorization_plus/domain/usecases/parent_reward_usecases.dart';
+import '../../features/memorization_plus/domain/usecases/kids_home_missions_usecase.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_identity_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
@@ -213,10 +224,7 @@ Future<void> configureDependencies({bool background = false}) async {
     BackgroundSyncScheduler.new,
   );
   getIt.registerLazySingleton<CloudSyncQueue>(
-    () => CloudSyncQueue(
-      getIt<Isar>(),
-      getIt<RecordOwnerProvider>(),
-    ),
+    () => CloudSyncQueue(getIt<Isar>(), getIt<RecordOwnerProvider>()),
   );
   getIt.registerLazySingleton<AccountDataReset>(
     () => AccountDataReset(
@@ -607,6 +615,7 @@ Future<void> configureDependencies({bool background = false}) async {
           unawaited(getIt<KidsPolicyController>().reload());
         }
       },
+      familyActivityInputs: familyActivityInputsLoader(getIt),
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(
@@ -614,6 +623,26 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<MemorizationCloudRepository>(
     () => getIt<MemorizationPlusRepository>() as MemorizationCloudRepository,
+  );
+  getIt.registerLazySingleton<KidsInboundRepository>(
+    () => getIt<MemorizationPlusRepository>() as KidsInboundRepository,
+  );
+  getIt.registerLazySingleton<GuardianSessionController>(
+    GuardianSessionController.new,
+  );
+  getIt.registerLazySingleton<ParentRewardRepository>(
+    () => getIt<MemorizationPlusRepository>() as ParentRewardRepository,
+  );
+  getIt.registerLazySingleton<ParentRewardUsecase>(
+    () => ParentRewardUsecase(getIt<ParentRewardRepository>()),
+  );
+  getIt.registerLazySingleton<UnlinkGuardianUsecase>(
+    () => UnlinkGuardianUsecase(getIt<MemorizationIdentityRepository>()),
+  );
+  getIt.registerLazySingleton<ParentPinRecoveryUsecase>(
+    () => ParentPinRecoveryUsecase(
+      getIt<MemorizationPlusRepository>() as ParentPinRecoveryRepository,
+    ),
   );
   getIt.registerLazySingleton<MemorizationPathResolver>(
     () => MemorizationPathResolver(getIt<MemorizationPlusRepository>()),
@@ -978,6 +1007,8 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KidsReadingReceiptStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
+      onRecorded: () async =>
+          getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
     ),
   );
   getIt.registerFactory<KidsTreasuresCubit>(
@@ -986,7 +1017,17 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<QuranRepository>(),
       certificatesLoader: () =>
           getIt<AchievementService>().getEarnedCertificates(isKids: true),
+      rewards: getIt<ParentRewardUsecase>(),
+      homeMissions: KidsHomeMissionsUsecase(
+        getIt<MemorizationPlusRepository>(),
+      ),
+      homeMissionsEnabled: () =>
+          getIt<KidsPolicyController>().value.homeMissionsEnabled,
     ),
+  );
+  // App lifetime, so the resume throttle survives the kids home being rebuilt.
+  getIt.registerLazySingleton<KidsInboundRefresher>(
+    () => KidsInboundRefresher(getIt<KidsInboundRepository>()),
   );
   getIt.registerFactory<KidsJourneyCubit>(
     () => KidsJourneyCubit(
@@ -1014,6 +1055,8 @@ Future<void> configureDependencies({bool background = false}) async {
       // never disposed here.
       childPolicyReader: () => getIt<KidsPolicyController>().value,
       childPolicyRefresh: () => getIt<KidsPolicyController>().reload(),
+      inboundRefresh: ({bool force = false}) =>
+          getIt<KidsInboundRefresher>().refresh(force: force),
       readingPagesLoader: () async {
         if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
           throw StateError('KidsReadingReceiptStore is not registered');
@@ -1069,6 +1112,8 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<ParentRemoteLinkUsecase>(),
       getIt<GetFamilyDashboardUsecase>(),
       accountVerifier: const SupabaseAccountPasswordVerifier(),
+      rewards: getIt<ParentRewardUsecase>(),
+      guardianSessionActive: () => getIt<GuardianSessionController>().isActive,
     ),
   );
   getIt.registerFactory<MemorizationSessionCubit>(
@@ -1082,8 +1127,8 @@ Future<void> configureDependencies({bool background = false}) async {
       reviewOutcomeCommitter: getIt<V2ReviewOutcomeCommitter>(),
       effectOutboxProcessor: getIt<V2ReviewEffectOutboxProcessor>(),
       appSessionService: getIt<AppSessionService>(),
-      recitationPassThreshold: getIt<SettingsRepository>()
-          .getSimilarityThreshold,
+      recitationPassThreshold:
+          getIt<SettingsRepository>().getSimilarityThreshold,
     ),
   );
 

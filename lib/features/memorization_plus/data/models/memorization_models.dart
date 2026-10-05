@@ -551,22 +551,24 @@ class ParentRewardModel extends ParentReward {
     required super.status,
     required super.createdAt,
     super.unlockedAt,
+    super.requestedAt,
     super.claimedAt,
   });
 
-  factory ParentRewardModel.fromJson(Map<String, dynamic> json) =>
-      ParentRewardModel(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        status: ParentRewardStatus.values[json['status'] as int],
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        unlockedAt: json['unlockedAt'] == null
-            ? null
-            : DateTime.parse(json['unlockedAt'] as String),
-        claimedAt: json['claimedAt'] == null
-            ? null
-            : DateTime.parse(json['claimedAt'] as String),
-      );
+  factory ParentRewardModel.fromJson(Map<String, dynamic> json) {
+    final index = json['status'] as int;
+    return ParentRewardModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      status: index >= 0 && index < ParentRewardStatus.values.length
+          ? ParentRewardStatus.values[index]
+          : ParentRewardStatus.locked,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      unlockedAt: _optionalDate(json['unlockedAt']),
+      requestedAt: _optionalDate(json['requestedAt']),
+      claimedAt: _optionalDate(json['claimedAt']),
+    );
+  }
 
   factory ParentRewardModel.fromEntity(ParentReward reward) =>
       ParentRewardModel(
@@ -575,8 +577,12 @@ class ParentRewardModel extends ParentReward {
         status: reward.status,
         createdAt: reward.createdAt,
         unlockedAt: reward.unlockedAt,
+        requestedAt: reward.requestedAt,
         claimedAt: reward.claimedAt,
       );
+
+  static DateTime? _optionalDate(Object? value) =>
+      value == null ? null : DateTime.parse(value as String);
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -584,6 +590,7 @@ class ParentRewardModel extends ParentReward {
     'status': status.index,
     'createdAt': createdAt.toIso8601String(),
     'unlockedAt': unlockedAt?.toIso8601String(),
+    'requestedAt': requestedAt?.toIso8601String(),
     'claimedAt': claimedAt?.toIso8601String(),
   };
 }

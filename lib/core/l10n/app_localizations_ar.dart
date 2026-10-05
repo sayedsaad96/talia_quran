@@ -3131,6 +3131,68 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentRewardErrorLimitReached => 'يمكن إضافة ٣ مكافآت فقط.';
 
   @override
+  String get parentRewardErrorUnavailable =>
+      'هذه الهدية غير متاحة لهذه الخطوة الآن. حدّث الصفحة وحاول مرة أخرى.';
+
+  @override
+  String get parentRewardUnlockedFeedback => 'تم فتح الهدية';
+
+  @override
+  String get parentRewardApprovedFeedback => 'تم تأكيد تسليم الهدية';
+
+  @override
+  String get parentRewardStatusWaitingForChild => 'مفتوحة، بانتظار طلب الطفل';
+
+  @override
+  String get parentRewardStatusRequested => 'الطفل يطلب استلامها';
+
+  @override
+  String get parentRewardUnlockAction => 'افتح الهدية';
+
+  @override
+  String get parentRewardApproveAction => 'تأكيد التسليم';
+
+  @override
+  String familyDashboardOfflineCached(String time) {
+    return 'تعذّر الاتصال. تُعرض آخر بيانات وصلت في $time.';
+  }
+
+  @override
+  String get familyDashboardRemoteUnavailable =>
+      'تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get kidsHomeMissionsUnavailable => 'تعذّر تحميل مهام البيت الآن.';
+
+  @override
+  String get guardianSessionTileTitle => 'لوحة ولي الأمر';
+
+  @override
+  String get guardianSessionTileSubtitle =>
+      'لولي الأمر فقط، وتحتاج الرقم السري';
+
+  @override
+  String get guardianSessionBackToChild => 'العودة إلى الطفل';
+
+  @override
+  String get kidsGiftsTitle => 'هداياي';
+
+  @override
+  String get kidsGiftLocked => 'أكمل هدفك لتُفتح هذه الهدية';
+
+  @override
+  String get kidsGiftUnlocked => 'هديتك جاهزة!';
+
+  @override
+  String get kidsGiftRequested => 'أرسلنا طلبك، بانتظار ولي أمرك';
+
+  @override
+  String get kidsGiftClaimed => 'استلمتها، مبارك!';
+
+  @override
+  String get kidsGiftRequestAction => 'أريدها!';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'اكتب اسماً من حرف واحد إلى $max حرفاً.';
   }
@@ -3142,6 +3204,80 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianErrorChildNotLinked => 'هذا الطفل لم يعد مرتبطاً بحسابك.';
+
+  @override
+  String get guardianUnlinkTileTitle => 'إلغاء ربط ولي الأمر';
+
+  @override
+  String get guardianUnlinkTileSubtitle =>
+      'يحتاج الرقم السري والاتصال بالإنترنت';
+
+  @override
+  String get guardianUnlinkConfirmTitle => 'إلغاء ربط ولي الأمر؟';
+
+  @override
+  String get guardianUnlinkConfirmBody =>
+      'لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.';
+
+  @override
+  String get guardianUnlinkAction => 'إلغاء الربط';
+
+  @override
+  String get guardianUnlinkDone => 'تم إلغاء ربط ولي الأمر';
+
+  @override
+  String get guardianErrorUnlinkFailed =>
+      'تعذّر إلغاء الربط، ولم يتغير شيء. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
+
+  @override
+  String get pinRecoveryUnavailable =>
+      'استعادة الرقم السري تحتاج اتصالاً بالإنترنت وحساباً مرتبطاً بولي أمر، أو أن الطلب انتهت صلاحيته.';
+
+  @override
+  String get pinRecoveryTitle => 'تغيير الرقم السري المنسي';
+
+  @override
+  String get pinRecoveryInstructions =>
+      'اطلب من ولي الأمر فتح صفحتك في لوحة العائلة على جهازه والموافقة على الطلب، ثم اكتب الرمز الذي يظهر له والرقم السري الجديد.';
+
+  @override
+  String get pinRecoveryCodeLabel => 'رمز ولي الأمر';
+
+  @override
+  String get pinRecoveryNewPinLabel => 'الرقم السري الجديد (4 أرقام)';
+
+  @override
+  String get pinRecoveryWrongCode =>
+      'الرمز غير صحيح، أو لم يوافق عليه ولي الأمر بعد، أو انتهت صلاحيته.';
+
+  @override
+  String get pinRecoveryDone => 'تم تغيير الرقم السري';
+
+  @override
+  String get pinRecoveryRequestTitle => 'طلب تغيير الرقم السري';
+
+  @override
+  String get pinRecoveryRequestBody =>
+      'طلب جهاز طفلك تغيير الرقم السري. وافق فقط إن كنت بجانبه أو طلبت ذلك بنفسك.';
+
+  @override
+  String get pinRecoveryApproveAction => 'موافقة وإظهار الرمز';
+
+  @override
+  String get pinRecoveryCodeTitle => 'رمز لمرة واحدة';
+
+  @override
+  String pinRecoveryCodeBody(String time) {
+    return 'اكتب هذا الرمز على جهاز طفلك مع رقم سري جديد. صالح حتى $time.';
+  }
+
+  @override
+  String get guardianErrorUnlinkBeforePathChange =>
+      'تعذّر إلغاء ربط ولي الأمر، فلم يتغير المسار. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
+
+  @override
+  String get resetPathUnlinksGuardianWarning =>
+      'هذا الحساب مرتبط بولي أمر. تغيير المسار يلغي الربط، فلن يتابع ولي الأمر التقدم بعدها. يحتاج ذلك اتصالاً بالإنترنت.';
 
   @override
   String get childErrorIdentityUpdateUnavailable =>
@@ -5337,6 +5473,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get childDetailMemorizationProgress => 'تقدم الحفظ';
 
   @override
+  String get childDetailActivityTitle => 'نشاط الطفل';
+
+  @override
+  String get childDetailActivityNotReceived =>
+      'لم تصل بيانات النشاط من جهاز الطفل بعد';
+
+  @override
+  String childDetailActivityUpdatedAt(String date) {
+    return 'آخر تحديث: $date';
+  }
+
+  @override
+  String childDetailActivityStreak(String days, String longest) {
+    return 'السلسلة الحالية: $days · الأطول: $longest';
+  }
+
+  @override
+  String childDetailActivityActiveDays(String days) {
+    return 'أيام النشاط في آخر ٣٠ يومًا: $days';
+  }
+
+  @override
+  String childDetailActivityPages(String total, String today) {
+    return 'الصفحات المقروءة: $total · اليوم: $today';
+  }
+
+  @override
   String get childDetailRecentSessions => 'آخر الجلسات';
 
   @override
@@ -5791,6 +5954,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsHomeMissionReportAction => 'أنجزتها!';
+
+  @override
+  String get familyChildUnnamed => 'طفلي';
+
+  @override
+  String get familyChildDetailsLoading => 'جارٍ التحميل…';
+
+  @override
+  String get kidsHomeMissionsTitle => 'مهام من ولي الأمر';
+
+  @override
+  String get kidsHomeMissionNew => 'مهمة جديدة';
+
+  @override
+  String get kidsHomeMissionWaitingGuardian =>
+      'أخبرت ولي الأمر، وننتظر أن يراها';
+
+  @override
+  String get kidsHomeMissionsPaused =>
+      'أوقف ولي الأمر مهام البيت مؤقتًا، وستظهر هنا من جديد عند إعادة تشغيلها.';
 
   @override
   String get kidsHomeMissionReported => 'أخبرنا الطفل أنه أنجزها';

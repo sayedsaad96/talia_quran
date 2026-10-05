@@ -5,6 +5,7 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/kids_hifz_feature_flags.dart';
@@ -22,10 +23,16 @@ import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/kids_inbound_repository.dart';
 import '../../domain/repositories/memorization_cloud_repository.dart';
 import '../../domain/repositories/memorization_identity_repository.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import '../../domain/repositories/family_dashboard_stream_repository.dart';
+import '../../domain/repositories/parent_pin_recovery_repository.dart';
+import '../../domain/repositories/parent_reward_repository.dart';
+import '../datasources/install_device_id.dart';
 import '../datasources/memorization_plus_local_datasource.dart';
+import '../datasources/remote_children_dashboard_cache.dart';
 import '../models/memorization_models.dart';
 import 'collaborators/memorization_cloud_gateway.dart';
 import 'collaborators/memorization_cloud_mappers.dart';
@@ -37,16 +44,51 @@ import 'collaborators/memorization_kids_local_service.dart';
 import 'collaborators/memorization_parent_access_service.dart';
 import 'collaborators/memorization_production_sync_service.dart';
 import 'collaborators/memorization_profile_service.dart';
+import 'collaborators/family_activity_publisher.dart';
 import 'collaborators/memorization_profile_store.dart';
+import 'collaborators/parent_pin_recovery_service.dart';
 import 'collaborators/review_evidence_sync_service.dart';
 import '../datasources/review_evidence_local_datasource.dart';
 
-class MemorizationPlusRepositoryImpl
+part 'memorization_plus_repository_identity.dart';
+part 'memorization_plus_repository_family.dart';
+
+class MemorizationPlusRepositoryImpl extends _MemorizationPlusRepositoryCore
+    with _MemorizationIdentityReads, _MemorizationFamilyReads
     implements
         MemorizationPlusRepository,
         MemorizationIdentityRepository,
-        MemorizationCloudRepository {
+        MemorizationCloudRepository,
+        KidsInboundRepository,
+        ParentRewardRepository,
+        ParentPinRecoveryRepository,
+        FamilyDashboardStreamRepository {
   MemorizationPlusRepositoryImpl(
+    super._datasource,
+    super._quranRepository,
+    super._streakReader,
+    super._progressEvents,
+    super._prefs, {
+    super.metrics,
+    super.cloudSyncQueue,
+    super.parentPinStore,
+    super.isar,
+    super.owner,
+    super.onKidsPolicyChanged,
+    super.familyActivityInputs,
+  });
+}
+
+abstract class _MemorizationPlusRepositoryCore
+    implements
+        MemorizationPlusRepository,
+        MemorizationIdentityRepository,
+        MemorizationCloudRepository,
+        KidsInboundRepository,
+        ParentRewardRepository,
+        ParentPinRecoveryRepository,
+        FamilyDashboardStreamRepository {
+  _MemorizationPlusRepositoryCore(
     this._datasource,
     this._quranRepository,
     this._streakReader,
@@ -58,8 +100,10 @@ class MemorizationPlusRepositoryImpl
     Isar? isar,
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
     void Function()? onKidsPolicyChanged,
+    FamilyActivityInputsLoader? familyActivityInputs,
   }) : _metrics = metrics,
        _onKidsPolicyChanged = onKidsPolicyChanged,
+       _familyActivityInputs = familyActivityInputs,
        _cloudSyncQueue = cloudSyncQueue,
        _parentPinStore = parentPinStore,
        _isar = isar,
@@ -69,6 +113,8 @@ class MemorizationPlusRepositoryImpl
 
   /// Runs after any local kids-policy write (DI reloads the controller).
   final void Function()? _onKidsPolicyChanged;
+
+  final FamilyActivityInputsLoader? _familyActivityInputs;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -106,11 +152,34 @@ class MemorizationPlusRepositoryImpl
       );
   late final MemorizationCustomPlanService _customPlan =
       MemorizationCustomPlanService(_datasource, _prefs);
+  late final ParentPinRecoveryService _pinRecovery = ParentPinRecoveryService(
+    rpc: () {
+      if (!_gateway.isSupabaseReady) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
+        );
+      }
+      final client = _gateway.supabase;
+      if (client.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure(CubitMessageCodes.guardianSignInRequired),
+        );
+      }
+      return Right((function, params) => client.rpc(function, params: params));
+    },
+    deviceId: () => InstallDeviceId.read(_prefs),
+    setPin: (pin) => _kidsLocal.setParentPin(pin),
+  );
+  late final RemoteChildrenDashboardCache _dashboardCache =
+      RemoteChildrenDashboardCache(_prefs);
   late final MemorizationFamilyService _family = MemorizationFamilyService(
     _datasource,
     _profile,
     _kidsLocal,
     _kidsCloudSync,
+    _mappers,
+    dashboardCache: _dashboardCache,
+    owner: _owner,
   );
   late final MemorizationKidsCloudSyncService _kidsCloudSync =
       MemorizationKidsCloudSyncService(
@@ -120,6 +189,11 @@ class MemorizationPlusRepositoryImpl
         _mappers,
         owner: _owner,
         onKidsPolicyChanged: _onKidsPolicyChanged,
+        activityPublisher: switch (_familyActivityInputs) {
+          final loader? => FamilyActivityPublisher(_prefs, _owner, loader),
+          null => null,
+        },
+        dashboardCache: _dashboardCache,
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(
@@ -153,477 +227,6 @@ class MemorizationPlusRepositoryImpl
   final CloudSyncQueue? _cloudSyncQueue;
   final Isar? _isar;
   final RecordOwnerProvider _owner;
-
-  // ─── Identity profile ──────────────────────────────────────────────────────
-  @override
-  Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() =>
-      _profile.getMemorizationProfile();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> selectMemorizationPath(
-    MemorizationPath path,
-  ) => _profile.selectMemorizationPath(path);
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> configureChildAge(int age) =>
-      _profile.configureChildAge(age);
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian() =>
-      _profile.continueWithoutGuardian();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> reopenGuardianLinking() =>
-      _profile.reopenGuardianLinking();
-
-  @override
-  Future<Either<Failure, PairingSession>> createGuardianPairingSession() =>
-      _parentAccess.createGuardianPairingSession();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String codeOrQrData,
-  ) => _parentAccess.acceptGuardianPairingCode(codeOrQrData);
-
-  @override
-  Future<Either<Failure, PairingSession?>> refreshPairingSession() =>
-      _parentAccess.refreshPairingSession();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> unlinkGuardian() =>
-      _parentAccess.unlinkGuardian();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
-    bool value,
-  ) => _parentAccess.setParentGuardianMode(value);
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> refreshChildGuardianLink() =>
-      _parentAccess.refreshChildGuardianLink();
-
-  @override
-  Future<Either<Failure, MemorizationProfile>> resetMemorizationIdentity() =>
-      _profile.resetMemorizationIdentity();
-
-  @override
-  Future<Either<Failure, SmartMemorizationSettings>> getSmartSettings() =>
-      _profile.getSmartSettings();
-
-  @override
-  Future<Either<Failure, void>> saveSmartSettings(
-    SmartMemorizationSettings settings,
-  ) => _profile.saveSmartSettings(settings);
-
-  // ─── Track ──────────────────────────────────────────────────────────────────
-  @override
-  Either<Failure, MemorizationTrack?> getSelectedTrack() =>
-      _profile.getSelectedTrack();
-
-  @override
-  Future<Either<Failure, void>> saveSelectedTrack(MemorizationTrack track) =>
-      _profile.saveSelectedTrack(track);
-
-  // ─── Daily plan ─────────────────────────────────────────────────────────────
-  @override
-  Future<Either<Failure, DailyPlan>> generateDailyPlan({
-    required int surahId,
-    required int newAyahsPerDay,
-  }) => _dailyPlan.generateDailyPlan(
-    surahId: surahId,
-    newAyahsPerDay: newAyahsPerDay,
-  );
-
-  @override
-  Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() =>
-      _dailyPlan.getCachedDailyPlan();
-
-  @override
-  Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan) =>
-      _saveProductionMutation(_dailyPlan.saveDailyPlan(plan));
-
-  @override
-  Future<SyncConflict<DailyPlan>?> getDailyPlanConflict() =>
-      _productionSync.getDailyPlanConflict();
-
-  @override
-  Future<Either<Failure, void>> resolveDailyPlanConflict(
-    SyncConflictResolution resolution,
-  ) => _resolveProductionConflict(
-    _productionSync.resolveDailyPlanConflict(resolution),
-  );
-
-  @override
-  Future<Either<Failure, bool>> markDailyPlanAyahCompleted({
-    required int surahId,
-    required int ayahNumber,
-  }) => _dailyPlan.markDailyPlanAyahCompleted(
-    surahId: surahId,
-    ayahNumber: ayahNumber,
-  );
-
-  // ─── Review records ─────────────────────────────────────────────────────────
-  @override
-  Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
-    int surahId,
-    int ayahNumber, {
-    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async {
-    try {
-      final record = await _datasource.getReviewRecord(
-        surahId,
-        ayahNumber,
-        scope: scope,
-      );
-      return Right(record);
-    } catch (e) {
-      return Left(CacheFailure.from(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
-    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async {
-    try {
-      final records = await _datasource.getAllReviewRecords(scope: scope);
-      return Right(records);
-    } catch (e) {
-      return Left(CacheFailure.from(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> saveReviewRecord(
-    AyahReviewRecord record,
-  ) async {
-    try {
-      await _datasource.saveReviewRecord(
-        AyahReviewRecordModel.fromEntity(record),
-      );
-      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush);
-      // Delta sync: mark dirty locally; [resyncProductionDataToCloud] uploads.
-      _progressEvents.notify(ProgressChangedReason.reviewRecord);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure.from(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, int>> claimLocalReviewRecords() async {
-    try {
-      return Right(await _datasource.claimLocalReviewRecords());
-    } catch (e) {
-      return Left(CacheFailure.from(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, int>> countClaimableLocalReviewRecords() async {
-    try {
-      return Right(await _datasource.countClaimableLocalReviewRecords());
-    } catch (e) {
-      return Left(CacheFailure.from(e));
-    }
-  }
-
-  // ─── Kids progress ───────────────────────────────────────────────────────────
-
-  @override
-  Future<Either<Failure, KidsProgress>> getKidsProgress() =>
-      _kidsLocal.getKidsProgress();
-
-  @override
-  Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress) =>
-      _kidsLocal.saveKidsProgress(progress);
-
-  @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
-    required int surahId,
-  }) => _kidsLocal.getKidsJourney(surahId: surahId);
-
-  @override
-  Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() =>
-      _kidsLocal.getKidsSessionLogs();
-
-  @override
-  Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
-    String? sessionId,
-    required int surahId,
-    required int ayahNumber,
-    required int repeatsCompleted,
-    required int pointsEarned,
-    KidsMissionType missionType = KidsMissionType.newMemorization,
-    List<int> ayahNumbers = const [],
-    int durationSeconds = 0,
-    int attemptCount = 1,
-    int hintCount = 0,
-    PerformanceRating masteryRating = PerformanceRating.excellent,
-  }) => _kidsLocal.saveKidsSessionLog(
-    sessionId: sessionId,
-    surahId: surahId,
-    ayahNumber: ayahNumber,
-    repeatsCompleted: repeatsCompleted,
-    pointsEarned: pointsEarned,
-    missionType: missionType,
-    ayahNumbers: ayahNumbers,
-    durationSeconds: durationSeconds,
-    attemptCount: attemptCount,
-    hintCount: hintCount,
-    masteryRating: masteryRating,
-  );
-
-  @override
-  Future<Either<Failure, ParentDashboard>> getParentDashboard({
-    required int surahId,
-  }) => _kidsLocal.getParentDashboard(surahId: surahId);
-
-  @override
-  Future<Either<Failure, ParentSettings>> getParentSettings() =>
-      _kidsLocal.getParentSettings();
-
-  @override
-  Future<Either<Failure, void>> saveParentSettings(
-    ParentSettings settings,
-  ) async {
-    final previousNickname = (await _kidsLocal.getParentSettings()).fold(
-      (_) => null,
-      (previous) => previous.localChildNickname,
-    );
-    final localResult = await _kidsLocal.saveParentSettings(settings);
-    final failure = localResult.fold((failure) => failure, (_) => null);
-    if (failure != null) return Left(failure);
-
-    try {
-      // Only a real change on this device is published: resending an
-      // unchanged name on every identity push could overwrite a correction
-      // the guardian made in the meantime.
-      if (settings.localChildNickname != null &&
-          settings.localChildNickname != previousNickname) {
-        await _prefs.setBool(_kChildNicknameDirty, true);
-      }
-      const reminderKey = TaliaNotificationService.kidsReminderPreferenceKey;
-      await Future.wait([
-        _prefs.setBool(reminderKey, settings.reminderEnabled),
-        _prefs.setInt('${reminderKey}_hour', settings.reminderHour),
-        _prefs.setInt('${reminderKey}_minute', settings.reminderMinute),
-        _prefs.setBool(
-          KidsHifzFeatureFlags.enabledKey,
-          settings.kidsHifzV2Enabled,
-        ),
-      ]);
-      return const Right(null);
-    } catch (error) {
-      return Left(CacheFailure.from(error));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> verifyParentPin(String pin) =>
-      _kidsLocal.verifyParentPin(pin);
-
-  @override
-  Future<Either<Failure, void>> setParentPin(String pin) =>
-      _kidsLocal.setParentPin(pin);
-
-  @override
-  Future<Either<Failure, void>> resetParentAccess() =>
-      _kidsLocal.resetParentAccess();
-
-  @override
-  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title) =>
-      _kidsLocal.saveParentReward(title);
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() =>
-      _kidsLocal.getHomeMissions();
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> addLocalHomeMission(
-    String title,
-  ) => _kidsLocal.addLocalHomeMission(title);
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> reportHomeMission(
-    String id,
-  ) => _kidsLocal.reportHomeMission(
-    id,
-    markPendingSync: _gateway.hasSignedInCloudUser,
-  );
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeLocalHomeMission(
-    String id,
-  ) => _kidsLocal.acknowledgeLocalHomeMission(id);
-
-  @override
-  Future<Either<Failure, List<ParentReward>>> claimParentReward(String id) {
-    if (_gateway.hasSignedInCloudUser) {
-      return _kidsCloudSync.claimRemoteParentReward(id);
-    }
-    return _kidsLocal.claimParentReward(id);
-  }
-
-  @override
-  Future<Either<Failure, String>> createChildLinkToken() =>
-      _parentAccess.createChildLinkToken();
-
-  @override
-  Future<Either<Failure, void>> acceptChildLinkToken(String token) =>
-      _parentAccess.acceptChildLinkToken(token);
-
-  @override
-  Future<Either<Failure, void>> pullKidsProgressFromCloud() =>
-      _kidsCloudSync.pullKidsProgressFromCloud();
-
-  @override
-  Future<Either<Failure, void>> syncKidsProgressToCloud() =>
-      _kidsCloudSync.syncKidsProgressToCloud();
-
-  @override
-  Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren() =>
-      _kidsCloudSync.getRemoteChildren();
-
-  @override
-  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
-    required String childUserId,
-    required String title,
-  }) => _kidsCloudSync.saveRemoteParentReward(
-    childUserId: childUserId,
-    title: title,
-  );
-
-  @override
-  Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
-    String rewardId,
-  ) => _kidsCloudSync.unlockRemoteParentReward(rewardId);
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({
-    required String childUserId,
-    required String title,
-  }) => _kidsCloudSync.createRemoteHomeMission(
-    childUserId: childUserId,
-    title: title,
-  );
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> acknowledgeRemoteHomeMission(
-    String missionId,
-  ) => _kidsCloudSync.acknowledgeRemoteHomeMission(missionId);
-
-  @override
-  Future<Either<Failure, List<KidsHomeMission>>> getRemoteHomeMissions(
-    String childUserId,
-  ) => _kidsCloudSync.getRemoteHomeMissions(childUserId);
-
-  @override
-  Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
-    KidsChildPolicy policy,
-  ) => _kidsCloudSync.saveLocalChildPolicy(policy);
-
-  @override
-  Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
-    required String childUserId,
-    required KidsChildPolicy policy,
-  }) => _kidsCloudSync.saveRemoteChildPolicy(
-    childUserId: childUserId,
-    policy: policy,
-  );
-
-  @override
-  Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
-    bool completionAuthorized = false,
-    String? sessionId,
-    required int surahId,
-    required int ayahNumber,
-    required int repeatsCompleted,
-    KidsMissionType missionType = KidsMissionType.newMemorization,
-    List<int> ayahNumbers = const [],
-    int durationSeconds = 0,
-    int attemptCount = 1,
-    int hintCount = 0,
-    PerformanceRating masteryRating = PerformanceRating.excellent,
-  }) => _kidsLocal.awardKidsPoints(
-    completionAuthorized: completionAuthorized,
-    sessionId: sessionId,
-    surahId: surahId,
-    ayahNumber: ayahNumber,
-    repeatsCompleted: repeatsCompleted,
-    missionType: missionType,
-    ayahNumbers: ayahNumbers,
-    durationSeconds: durationSeconds,
-    attemptCount: attemptCount,
-    hintCount: hintCount,
-    masteryRating: masteryRating,
-  );
-
-  // ─── Custom memorization plan ──────────────────────────────────────────────
-
-  @override
-  Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() =>
-      _customPlan.getCustomPlan();
-
-  @override
-  Future<Either<Failure, void>> saveCustomPlan(CustomMemorizationPlan plan) =>
-      _saveProductionMutation(_customPlan.saveCustomPlan(plan));
-
-  @override
-  Future<Either<Failure, void>> deleteCustomPlan() =>
-      _saveProductionMutation(_customPlan.deleteCustomPlan());
-
-  @override
-  Future<SyncConflict<CustomMemorizationPlan>?> getCustomPlanConflict() =>
-      _productionSync.getCustomPlanConflict();
-
-  @override
-  Future<Either<Failure, void>> resolveCustomPlanConflict(
-    SyncConflictResolution resolution,
-  ) => _resolveProductionConflict(
-    _productionSync.resolveCustomPlanConflict(resolution),
-  );
-
-  // ─── Parent mode toggle ──────────────────────────────────────────────────
-  // T015: Read through MemorizationProfile so the value is always the single
-  // source of truth, not the raw legacy SharedPreferences flag.
-  @override
-  Either<Failure, bool> getIsParentMode() => _parentAccess.getIsParentMode();
-
-  /// Async variant that reads the authoritative MemorizationProfile.
-  /// Prefer this over [getIsParentMode] wherever async is acceptable.
-  Future<Either<Failure, bool>> getIsParentModeFromProfile() =>
-      _parentAccess.getIsParentModeFromProfile();
-
-  @override
-  Future<Either<Failure, void>> setIsParentMode(bool value) =>
-      _parentAccess.setIsParentMode(value);
-
-  // ─── Phase 7: Production sync (Parent Mode completion) ─────────────────────
-
-  @override
-  Future<Either<Failure, void>> pullProductionDataFromCloud() =>
-      _productionSync.pullProductionDataFromCloud();
-
-  @override
-  Future<Either<Failure, void>> pullReviewEvidenceFromCloud() =>
-      _productionSync.pullReviewEvidenceFromCloud();
-
-  @override
-  bool get isReviewEvidenceTransportEnabled =>
-      _productionSync.isReviewEvidenceTransportEnabled;
-
-  @override
-  Future<Either<Failure, void>> syncReviewEvidenceToCloud() =>
-      _productionSync.syncReviewEvidenceToCloud();
-
-  @override
-  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() =>
-      _productionSync.flushReviewEvidenceBeforeSignOut();
-
-  @override
-  Future<bool> hasPendingReviewEvidence() =>
-      _productionSync.hasPendingReviewEvidence();
 
   bool isReviewPullCursorStale() => _productionSync.isReviewPullCursorStale();
 
@@ -684,6 +287,10 @@ class MemorizationPlusRepositoryImpl
   Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() =>
       _family.getFamilyDashboard();
 
+  @override
+  Stream<Either<Failure, FamilyDashboard>> watchFamilyDashboard() =>
+      _family.watchFamilyDashboard();
+
   // --- Identity Cloud Sync --------------------------------------------------
 
   static const _kIdentityDirty = MemorizationProfileService.kIdentityCloudDirty;
@@ -740,6 +347,9 @@ class MemorizationPlusRepositoryImpl
       final current = await _profileStore.loadProfile();
       final cloudIsNewer =
           cloudUpdatedAt != null && cloudUpdatedAt.isAfter(current.updatedAt);
+      final resetPending =
+          !current.hasSelectedPath && _prefs.getBool(_kIdentityDirty) == true;
+      if (resetPending) return const Right(null);
 
       if (!current.hasSelectedPath || cloudIsNewer) {
         await _profileStore.saveProfile(

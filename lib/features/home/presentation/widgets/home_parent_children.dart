@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../memorization_plus/domain/entities/family_dashboard.dart';
+import '../../../memorization_plus/presentation/widgets/family_child_name.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
 
@@ -63,9 +64,10 @@ class _ChildRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = child.shownName(context.l10n);
     return Semantics(
       button: true,
-      label: child.displayName,
+      label: name,
       child: InkWell(
         onTap: () => context.push(AppRoutes.familyDashboard),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -82,7 +84,7 @@ class _ChildRow extends StatelessWidget {
                   color: skin.accent.withValues(alpha: 0.16),
                 ),
                 child: Text(
-                  _initials(child.displayName),
+                  _initials(name),
                   style: AppTypography.titleMedium.copyWith(
                     color: skin.textPrimary,
                     fontWeight: FontWeight.w800,
@@ -96,7 +98,7 @@ class _ChildRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      child.displayName,
+                      name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleMedium.copyWith(

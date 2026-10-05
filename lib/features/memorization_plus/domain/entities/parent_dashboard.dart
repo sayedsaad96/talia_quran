@@ -7,7 +7,9 @@ import 'kids_progress.dart';
 import 'kids_session_log.dart';
 import 'kids_session_policy.dart';
 
-enum ParentRewardStatus { locked, unlocked, claimed }
+/// Flow: locked → unlocked → requested (child) → claimed (guardian approves).
+/// Stored locally by index, so new values are only ever appended.
+enum ParentRewardStatus { locked, unlocked, claimed, requested }
 
 class ParentSettings extends Equatable {
   const ParentSettings({
@@ -142,6 +144,7 @@ class ParentReward extends Equatable {
     required this.status,
     required this.createdAt,
     this.unlockedAt,
+    this.requestedAt,
     this.claimedAt,
   });
 
@@ -150,12 +153,14 @@ class ParentReward extends Equatable {
   final ParentRewardStatus status;
   final DateTime createdAt;
   final DateTime? unlockedAt;
+  final DateTime? requestedAt;
   final DateTime? claimedAt;
 
   ParentReward copyWith({
     String? title,
     ParentRewardStatus? status,
     DateTime? unlockedAt,
+    DateTime? requestedAt,
     DateTime? claimedAt,
   }) => ParentReward(
     id: id,
@@ -163,6 +168,7 @@ class ParentReward extends Equatable {
     status: status ?? this.status,
     createdAt: createdAt,
     unlockedAt: unlockedAt ?? this.unlockedAt,
+    requestedAt: requestedAt ?? this.requestedAt,
     claimedAt: claimedAt ?? this.claimedAt,
   );
 
@@ -173,6 +179,7 @@ class ParentReward extends Equatable {
     status,
     createdAt,
     unlockedAt,
+    requestedAt,
     claimedAt,
   ];
 }

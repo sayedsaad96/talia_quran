@@ -425,23 +425,79 @@ class MemorizationKidsLocalService {
     }
   }
 
-  Future<Either<Failure, List<ParentReward>>> claimParentReward(
-    String id,
-  ) async {
+  Future<Either<Failure, List<ParentReward>>> getParentRewards() async {
+    try {
+      return Right(await _datasource.getParentRewards());
+    } catch (e) {
+      return Left(CacheFailure.from(e));
+    }
+  }
+
+  /// Guardian: opens a locked gift early.
+  Future<Either<Failure, List<ParentReward>>> unlockParentReward(String id) =>
+      _transitionParentReward(
+        id,
+        from: ParentRewardStatus.locked,
+        to: ParentRewardStatus.unlocked,
+        alreadyDone: const {
+          ParentRewardStatus.unlocked,
+          ParentRewardStatus.requested,
+          ParentRewardStatus.claimed,
+        },
+        stamp: (reward, now) => reward.copyWith(unlockedAt: now),
+      );
+
+  /// Child: asks to receive an unlocked gift.
+  Future<Either<Failure, List<ParentReward>>> requestParentReward(String id) =>
+      _transitionParentReward(
+        id,
+        from: ParentRewardStatus.unlocked,
+        to: ParentRewardStatus.requested,
+        alreadyDone: const {
+          ParentRewardStatus.requested,
+          ParentRewardStatus.claimed,
+        },
+        stamp: (reward, now) => reward.copyWith(requestedAt: now),
+      );
+
+  /// Guardian: confirms the gift was handed over.
+  Future<Either<Failure, List<ParentReward>>> approveParentReward(String id) =>
+      _transitionParentReward(
+        id,
+        from: ParentRewardStatus.requested,
+        to: ParentRewardStatus.claimed,
+        alreadyDone: const {ParentRewardStatus.claimed},
+        stamp: (reward, now) => reward.copyWith(claimedAt: now),
+      );
+
+  /// Mirrors the server RPCs: repeating a finished step is a no-op, any
+  /// other out-of-order step is refused.
+  Future<Either<Failure, List<ParentReward>>> _transitionParentReward(
+    String id, {
+    required ParentRewardStatus from,
+    required ParentRewardStatus to,
+    required Set<ParentRewardStatus> alreadyDone,
+    required ParentReward Function(ParentReward, DateTime) stamp,
+  }) async {
     try {
       final rewards = await _datasource.getParentRewards();
-      final next = rewards
-          .map(
-            (reward) => reward.id == id
-                ? ParentRewardModel.fromEntity(
-                    reward.copyWith(
-                      status: ParentRewardStatus.claimed,
-                      claimedAt: DateTime.now(),
-                    ),
-                  )
-                : reward,
-          )
-          .toList();
+      final index = rewards.indexWhere((reward) => reward.id == id);
+      if (index == -1) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardUnavailable),
+        );
+      }
+      final current = rewards[index];
+      if (alreadyDone.contains(current.status)) return Right(rewards);
+      if (current.status != from) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardUnavailable),
+        );
+      }
+      final next = [...rewards];
+      next[index] = ParentRewardModel.fromEntity(
+        stamp(current, DateTime.now().toUtc()).copyWith(status: to),
+      );
       await _datasource.saveParentRewards(next);
       return Right(next);
     } catch (e) {

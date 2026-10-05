@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
@@ -163,5 +165,168 @@ void main() {
     );
     await tester.pump();
     expect(tester.takeException(), isNull);
+  });
+
+  group('gifts', () {
+    ParentReward gift(String id, ParentRewardStatus status) => ParentReward(
+      id: id,
+      title: 'gift $id',
+      status: status,
+      createdAt: DateTime.utc(2026, 10, 1),
+    );
+
+    testWidgets('only an unlocked gift can be requested', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(800, 2000);
+      addTearDown(tester.view.reset);
+      final requested = <String>[];
+      await tester.pumpWidget(
+        _app(
+          KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: const [],
+            rewards: [
+              gift('a', ParentRewardStatus.locked),
+              gift('b', ParentRewardStatus.unlocked),
+              gift('c', ParentRewardStatus.requested),
+            ],
+            onRequestReward: requested.add,
+            onBack: () {},
+          ),
+          locale: 'en',
+        ),
+      );
+
+      expect(find.text('My gifts'), findsOneWidget);
+      expect(find.text('Request sent, waiting for your grown-up'), findsOne);
+      expect(find.byKey(const ValueKey('kids-gift-request-a')), findsNothing);
+      expect(find.byKey(const ValueKey('kids-gift-request-c')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('kids-gift-request-b')));
+
+      expect(requested, ['b']);
+      expect(find.byType(KidsTaliaCompanion), findsNothing);
+    });
+
+    testWidgets('gifts render at 320 px, Arabic, text scale 1.3', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 640);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _app(
+          KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: const [],
+            rewards: [gift('b', ParentRewardStatus.unlocked)],
+            onRequestReward: (_) {},
+            onBack: () {},
+          ),
+          scale: 1.3,
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('أريدها!'), findsOneWidget);
+    });
+  });
+
+  group('home missions', () {
+    KidsHomeMission mission(String id, KidsHomeMissionStatus status) =>
+        KidsHomeMission(
+          id: id,
+          title: 'mission $id',
+          status: status,
+          createdAt: DateTime.utc(2026, 10, 1),
+        );
+
+    testWidgets('lists every open mission; only a new one can be reported', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(800, 2000);
+      addTearDown(tester.view.reset);
+      final reported = <String>[];
+      await tester.pumpWidget(
+        _app(
+          KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: const [],
+            homeMissions: [
+              mission('a', KidsHomeMissionStatus.assigned),
+              mission('b', KidsHomeMissionStatus.assigned),
+              mission('c', KidsHomeMissionStatus.reported),
+            ],
+            onReportHomeMission: reported.add,
+            onBack: () {},
+          ),
+          locale: 'en',
+        ),
+      );
+
+      expect(find.text('Missions from your guardian'), findsOneWidget);
+      expect(find.text('New mission'), findsNWidgets(2));
+      expect(
+        find.text('You told your guardian. Waiting for them to see it'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('kids-home-mission-report-c')),
+        findsNothing,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('kids-home-mission-report-b')),
+      );
+
+      expect(reported, ['b']);
+      expect(find.byType(KidsTaliaCompanion), findsNothing);
+    });
+
+    testWidgets('a paused policy explains why missions are hidden', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: const [],
+            homeMissionsPaused: true,
+            onBack: () {},
+          ),
+          locale: 'en',
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('kids-home-missions-paused')),
+        findsOneWidget,
+      );
+      expect(find.byType(KidsTaliaCompanion), findsNothing);
+    });
+
+    testWidgets('missions render at 320 px, Arabic, text scale 1.3', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 640);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _app(
+          KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: const [],
+            homeMissions: [mission('a', KidsHomeMissionStatus.assigned)],
+            onReportHomeMission: (_) {},
+            onBack: () {},
+          ),
+          scale: 1.3,
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('أنجزتها!'), findsOneWidget);
+    });
   });
 }
