@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../theme/kids_theme.dart';
@@ -42,7 +43,7 @@ class KidsAyahCard extends StatelessWidget {
     final borderShadow = isCompleted
         ? const [
             BoxShadow(
-              color: Color(0x330D5C53),
+              color: AppColors.primaryGlow,
               blurRadius: 18,
               spreadRadius: 2,
               offset: Offset(0, 4),

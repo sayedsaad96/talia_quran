@@ -31,6 +31,9 @@ final class KidsWorldPalette {
   static const sunGlow = Color(0xFFFFF3C4);
   static const moon = Color(0xFFFDE68A);
 
+  /// Cloud fill; identical in both palettes.
+  static const cloud = Color(0xD8FFFFFF);
+
   final List<Color> skyStops;
   final List<Color> hills;
   final Color onScene;

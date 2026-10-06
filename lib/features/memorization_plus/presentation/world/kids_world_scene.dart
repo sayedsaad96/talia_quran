@@ -119,7 +119,7 @@ class _ScenePainter extends CustomPainter {
 
   final Paint _skyPaint = Paint();
   final Paint _sunPaint = Paint();
-  final Paint _cloudPaint = Paint()..color = const Color(0xD8FFFFFF);
+  final Paint _cloudPaint = Paint()..color = KidsWorldPalette.cloud;
   final Paint _starPaint = Paint()..style = PaintingStyle.fill;
   final Paint _moonPaint = Paint()..color = KidsWorldPalette.moon;
   final Paint _bitePaint = Paint();

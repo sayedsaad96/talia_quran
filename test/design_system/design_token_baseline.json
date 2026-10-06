@@ -104,17 +104,23 @@
   "lib/features/khatmah/presentation/widgets/khatmah_reader_session_bar.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/memorization_plus/presentation/pages/child_detail_page.dart": {
+  "lib/features/memorization_plus/presentation/pages/child_detail_sections.dart": {
     "hexColor": 1,
     "isDarkBranch": 1
   },
-  "lib/features/memorization_plus/presentation/pages/custom_plan_setup_page.dart": {
-    "isDarkBranch": 13
+  "lib/features/memorization_plus/presentation/pages/custom_plan_setup_form.dart": {
+    "isDarkBranch": 4
+  },
+  "lib/features/memorization_plus/presentation/pages/custom_plan_setup_selectors.dart": {
+    "isDarkBranch": 6
+  },
+  "lib/features/memorization_plus/presentation/pages/custom_plan_setup_shared.dart": {
+    "isDarkBranch": 3
   },
   "lib/features/memorization_plus/presentation/pages/daily_plan_page.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/memorization_plus/presentation/pages/family_dashboard_page.dart": {
+  "lib/features/memorization_plus/presentation/pages/family_dashboard_cards.dart": {
     "hexColor": 1,
     "isDarkBranch": 1
   },
