@@ -12,7 +12,7 @@ import flutter_local_notifications
 import flutter_secure_storage_darwin
 import flutter_timezone
 import gal
-import isar_flutter_libs
+import isar_community_flutter_libs
 import just_audio
 import mobile_scanner
 import package_info_plus

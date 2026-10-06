@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
@@ -34,30 +33,13 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
+import '../../../../helpers/isar_test_core.dart';
 
 import 'memorization_session_cubit_test.mocks.dart'
     show MockAudioPlayer, MockSpeechToText;
 
-bool _kidsResumeIsarCoreInitialized = false;
 
-Future<void> _initializeKidsResumeIsarCoreForTests() async {
-  if (_kidsResumeIsarCoreInitialized) return;
-  if (Platform.isWindows) {
-    final localAppData = Platform.environment['LOCALAPPDATA'];
-    if (localAppData != null) {
-      final dllPath =
-          '$localAppData\\Pub\\Cache\\hosted\\pub.dev\\'
-          'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
-      if (File(dllPath).existsSync()) {
-        await Isar.initializeIsarCore(libraries: {Abi.current(): dllPath});
-        _kidsResumeIsarCoreInitialized = true;
-        return;
-      }
-    }
-  }
-  await Isar.initializeIsarCore();
-  _kidsResumeIsarCoreInitialized = true;
-}
+Future<void> _initializeKidsResumeIsarCoreForTests() => initializeIsarCoreForTests();
 
 Future<V2SessionProgressAdapter> _openKidsResumeAdapter() async {
   await _initializeKidsResumeIsarCoreForTests();

@@ -1,9 +1,8 @@
-import 'dart:ffi' show Abi;
 import 'dart:io';
 import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
@@ -23,6 +22,7 @@ import 'package:talia_quran/features/prayer_companion/domain/repositories/prayer
 import 'package:talia_quran/features/prayer_companion/domain/services/prayer_companion_policy.dart';
 import 'package:talia_quran/features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import 'package:talia_quran/features/prayer_companion/notifications/prayer_companion_notification_intent.dart';
+import '../../helpers/isar_test_core.dart';
 
 class _MockNotificationScheduler extends Mock
     implements NotificationScheduler {}
@@ -35,25 +35,8 @@ class _StubPrayerTimesService implements PrayerTimesService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-bool _isarReady = false;
 
-Future<void> _prepareIsar() async {
-  if (_isarReady) return;
-  if (Platform.isWindows) {
-    final appData = Platform.environment['LOCALAPPDATA'];
-    final path = appData == null
-        ? null
-        : '$appData\\Pub\\Cache\\hosted\\pub.dev\\'
-              'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
-    if (path != null && File(path).existsSync()) {
-      await Isar.initializeIsarCore(libraries: {Abi.current(): path});
-      _isarReady = true;
-      return;
-    }
-  }
-  await Isar.initializeIsarCore();
-  _isarReady = true;
-}
+Future<void> _prepareIsar() => initializeIsarCoreForTests();
 
 void main() {
   const ownerId = 'owner-a';

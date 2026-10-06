@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/domain/entities/streak_entity.dart';

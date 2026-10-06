@@ -1,34 +1,17 @@
-import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
 import 'package:talia_quran/features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import 'package:talia_quran/features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import 'package:talia_quran/features/prayer_companion/domain/entities/prayer_companion.dart';
 import 'package:talia_quran/features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
+import '../../../helpers/isar_test_core.dart';
 
-bool _isarReady = false;
 
-Future<void> _prepareIsar() async {
-  if (_isarReady) return;
-  if (Platform.isWindows) {
-    final appData = Platform.environment['LOCALAPPDATA'];
-    final path = appData == null
-        ? null
-        : '$appData\\Pub\\Cache\\hosted\\pub.dev\\'
-              'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
-    if (path != null && File(path).existsSync()) {
-      await Isar.initializeIsarCore(libraries: {Abi.current(): path});
-      _isarReady = true;
-      return;
-    }
-  }
-  await Isar.initializeIsarCore();
-  _isarReady = true;
-}
+Future<void> _prepareIsar() => initializeIsarCoreForTests();
 
 void main() {
   group('PrayerCompanionLocalDatasource', () {

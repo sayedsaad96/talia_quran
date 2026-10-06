@@ -17,11 +17,7 @@ const ActivityEventIsarSchema = CollectionSchema(
   name: r'ActivityEventIsar',
   id: 424492633121375811,
   properties: {
-    r'endAyah': PropertySchema(
-      id: 0,
-      name: r'endAyah',
-      type: IsarType.long,
-    ),
+    r'endAyah': PropertySchema(id: 0, name: r'endAyah', type: IsarType.long),
     r'idempotencyKey': PropertySchema(
       id: 1,
       name: r'idempotencyKey',
@@ -47,12 +43,9 @@ const ActivityEventIsarSchema = CollectionSchema(
       name: r'startAyah',
       type: IsarType.long,
     ),
-    r'surahId': PropertySchema(
-      id: 6,
-      name: r'surahId',
-      type: IsarType.long,
-    )
+    r'surahId': PropertySchema(id: 6, name: r'surahId', type: IsarType.long),
   },
+
   estimateSize: _activityEventIsarEstimateSize,
   serialize: _activityEventIsarSerialize,
   deserialize: _activityEventIsarDeserialize,
@@ -69,7 +62,7 @@ const ActivityEventIsarSchema = CollectionSchema(
           name: r'occurredAt',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'idempotencyKey': IndexSchema(
@@ -82,16 +75,17 @@ const ActivityEventIsarSchema = CollectionSchema(
           name: r'idempotencyKey',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
+
   getId: _activityEventIsarGetId,
   getLinks: _activityEventIsarGetLinks,
   attach: _activityEventIsarAttach,
-  version: '3.1.0+1',
+  version: '3.3.2',
 );
 
 int _activityEventIsarEstimateSize(
@@ -168,12 +162,16 @@ Id _activityEventIsarGetId(ActivityEventIsar object) {
 }
 
 List<IsarLinkBase<dynamic>> _activityEventIsarGetLinks(
-    ActivityEventIsar object) {
+  ActivityEventIsar object,
+) {
   return [];
 }
 
 void _activityEventIsarAttach(
-    IsarCollection<dynamic> col, Id id, ActivityEventIsar object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  ActivityEventIsar object,
+) {
   object.id = id;
 }
 
@@ -195,13 +193,15 @@ extension ActivityEventIsarByIndex on IsarCollection<ActivityEventIsar> {
   }
 
   Future<List<ActivityEventIsar?>> getAllByIdempotencyKey(
-      List<String> idempotencyKeyValues) {
+    List<String> idempotencyKeyValues,
+  ) {
     final values = idempotencyKeyValues.map((e) => [e]).toList();
     return getAllByIndex(r'idempotencyKey', values);
   }
 
   List<ActivityEventIsar?> getAllByIdempotencyKeySync(
-      List<String> idempotencyKeyValues) {
+    List<String> idempotencyKeyValues,
+  ) {
     final values = idempotencyKeyValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'idempotencyKey', values);
   }
@@ -220,8 +220,10 @@ extension ActivityEventIsarByIndex on IsarCollection<ActivityEventIsar> {
     return putByIndex(r'idempotencyKey', object);
   }
 
-  Id putByIdempotencyKeySync(ActivityEventIsar object,
-      {bool saveLinks = true}) {
+  Id putByIdempotencyKeySync(
+    ActivityEventIsar object, {
+    bool saveLinks = true,
+  }) {
     return putByIndexSync(r'idempotencyKey', object, saveLinks: saveLinks);
   }
 
@@ -229,8 +231,10 @@ extension ActivityEventIsarByIndex on IsarCollection<ActivityEventIsar> {
     return putAllByIndex(r'idempotencyKey', objects);
   }
 
-  List<Id> putAllByIdempotencyKeySync(List<ActivityEventIsar> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByIdempotencyKeySync(
+    List<ActivityEventIsar> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'idempotencyKey', objects, saveLinks: saveLinks);
   }
 }
@@ -244,7 +248,7 @@ extension ActivityEventIsarQueryWhereSort
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhere>
-      anyOccurredAt() {
+  anyOccurredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'occurredAt'),
@@ -256,17 +260,14 @@ extension ActivityEventIsarQueryWhereSort
 extension ActivityEventIsarQueryWhere
     on QueryBuilder<ActivityEventIsar, ActivityEventIsar, QWhereClause> {
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idEqualTo(Id id) {
+  idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -289,7 +290,7 @@ extension ActivityEventIsarQueryWhere
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -298,7 +299,7 @@ extension ActivityEventIsarQueryWhere
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -307,156 +308,175 @@ extension ActivityEventIsarQueryWhere
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idBetween(
+  idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      occurredAtEqualTo(DateTime occurredAt) {
+  occurredAtEqualTo(DateTime occurredAt) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'occurredAt',
-        value: [occurredAt],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'occurredAt', value: [occurredAt]),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      occurredAtNotEqualTo(DateTime occurredAt) {
+  occurredAtNotEqualTo(DateTime occurredAt) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'occurredAt',
-              lower: [],
-              upper: [occurredAt],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'occurredAt',
-              lower: [occurredAt],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'occurredAt',
+                lower: [],
+                upper: [occurredAt],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'occurredAt',
+                lower: [occurredAt],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'occurredAt',
-              lower: [occurredAt],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'occurredAt',
-              lower: [],
-              upper: [occurredAt],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'occurredAt',
+                lower: [occurredAt],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'occurredAt',
+                lower: [],
+                upper: [occurredAt],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      occurredAtGreaterThan(
-    DateTime occurredAt, {
-    bool include = false,
-  }) {
+  occurredAtGreaterThan(DateTime occurredAt, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'occurredAt',
-        lower: [occurredAt],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'occurredAt',
+          lower: [occurredAt],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      occurredAtLessThan(
-    DateTime occurredAt, {
-    bool include = false,
-  }) {
+  occurredAtLessThan(DateTime occurredAt, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'occurredAt',
-        lower: [],
-        upper: [occurredAt],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'occurredAt',
+          lower: [],
+          upper: [occurredAt],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      occurredAtBetween(
+  occurredAtBetween(
     DateTime lowerOccurredAt,
     DateTime upperOccurredAt, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'occurredAt',
-        lower: [lowerOccurredAt],
-        includeLower: includeLower,
-        upper: [upperOccurredAt],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'occurredAt',
+          lower: [lowerOccurredAt],
+          includeLower: includeLower,
+          upper: [upperOccurredAt],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idempotencyKeyEqualTo(String idempotencyKey) {
+  idempotencyKeyEqualTo(String idempotencyKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'idempotencyKey',
-        value: [idempotencyKey],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'idempotencyKey',
+          value: [idempotencyKey],
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterWhereClause>
-      idempotencyKeyNotEqualTo(String idempotencyKey) {
+  idempotencyKeyNotEqualTo(String idempotencyKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'idempotencyKey',
-              lower: [],
-              upper: [idempotencyKey],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'idempotencyKey',
-              lower: [idempotencyKey],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'idempotencyKey',
+                lower: [],
+                upper: [idempotencyKey],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'idempotencyKey',
+                lower: [idempotencyKey],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'idempotencyKey',
-              lower: [idempotencyKey],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'idempotencyKey',
-              lower: [],
-              upper: [idempotencyKey],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'idempotencyKey',
+                lower: [idempotencyKey],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'idempotencyKey',
+                lower: [],
+                upper: [idempotencyKey],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -465,183 +485,184 @@ extension ActivityEventIsarQueryWhere
 extension ActivityEventIsarQueryFilter
     on QueryBuilder<ActivityEventIsar, ActivityEventIsar, QFilterCondition> {
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahIsNull() {
+  endAyahIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'endAyah',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'endAyah'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahIsNotNull() {
+  endAyahIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'endAyah',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'endAyah'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahEqualTo(int? value) {
+  endAyahEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'endAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'endAyah', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  endAyahGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'endAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'endAyah',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  endAyahLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'endAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'endAyah',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      endAyahBetween(
+  endAyahBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'endAyah',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'endAyah',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idEqualTo(Id value) {
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idBetween(
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  idempotencyKeyEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyLessThan(
+  idempotencyKeyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyBetween(
+  idempotencyKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
+  idempotencyKeyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -649,418 +670,415 @@ extension ActivityEventIsarQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'idempotencyKey',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'idempotencyKey',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  idempotencyKeyStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  idempotencyKeyEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyContains(String value, {bool caseSensitive = true}) {
+  idempotencyKeyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'idempotencyKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'idempotencyKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyMatches(String pattern, {bool caseSensitive = true}) {
+  idempotencyKeyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'idempotencyKey',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'idempotencyKey',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyIsEmpty() {
+  idempotencyKeyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'idempotencyKey',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'idempotencyKey', value: ''),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      idempotencyKeyIsNotEmpty() {
+  idempotencyKeyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'idempotencyKey',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'idempotencyKey', value: ''),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      kindIndexEqualTo(int value) {
+  kindIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'kindIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'kindIndex', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      kindIndexGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  kindIndexGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'kindIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'kindIndex',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      kindIndexLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  kindIndexLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'kindIndex',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'kindIndex',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      kindIndexBetween(
+  kindIndexBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'kindIndex',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'kindIndex',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      occurredAtEqualTo(DateTime value) {
+  occurredAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'occurredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'occurredAt', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      occurredAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  occurredAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'occurredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'occurredAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      occurredAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  occurredAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'occurredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'occurredAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      occurredAtBetween(
+  occurredAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'occurredAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'occurredAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberIsNull() {
+  pageNumberIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'pageNumber',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'pageNumber'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberIsNotNull() {
+  pageNumberIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'pageNumber',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'pageNumber'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberEqualTo(int? value) {
+  pageNumberEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pageNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'pageNumber', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  pageNumberGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'pageNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pageNumber',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  pageNumberLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'pageNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pageNumber',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      pageNumberBetween(
+  pageNumberBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'pageNumber',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pageNumber',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahIsNull() {
+  startAyahIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'startAyah',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'startAyah'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahIsNotNull() {
+  startAyahIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'startAyah',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'startAyah'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahEqualTo(int? value) {
+  startAyahEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'startAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'startAyah', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  startAyahGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'startAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'startAyah',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  startAyahLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'startAyah',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'startAyah',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      startAyahBetween(
+  startAyahBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'startAyah',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'startAyah',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdIsNull() {
+  surahIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'surahId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'surahId'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdIsNotNull() {
+  surahIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'surahId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'surahId'),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdEqualTo(int? value) {
+  surahIdEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'surahId', value: value),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  surahIdGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'surahId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  surahIdLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'surahId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
-      surahIdBetween(
+  surahIdBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'surahId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'surahId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -1074,98 +1092,98 @@ extension ActivityEventIsarQueryLinks
 extension ActivityEventIsarQuerySortBy
     on QueryBuilder<ActivityEventIsar, ActivityEventIsar, QSortBy> {
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByEndAyah() {
+  sortByEndAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endAyah', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByEndAyahDesc() {
+  sortByEndAyahDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endAyah', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByIdempotencyKey() {
+  sortByIdempotencyKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'idempotencyKey', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByIdempotencyKeyDesc() {
+  sortByIdempotencyKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'idempotencyKey', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByKindIndex() {
+  sortByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByKindIndexDesc() {
+  sortByKindIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByOccurredAt() {
+  sortByOccurredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurredAt', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByOccurredAtDesc() {
+  sortByOccurredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurredAt', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByPageNumber() {
+  sortByPageNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pageNumber', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByPageNumberDesc() {
+  sortByPageNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pageNumber', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByStartAyah() {
+  sortByStartAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startAyah', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortByStartAyahDesc() {
+  sortByStartAyahDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startAyah', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortBySurahId() {
+  sortBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      sortBySurahIdDesc() {
+  sortBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
@@ -1175,14 +1193,14 @@ extension ActivityEventIsarQuerySortBy
 extension ActivityEventIsarQuerySortThenBy
     on QueryBuilder<ActivityEventIsar, ActivityEventIsar, QSortThenBy> {
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByEndAyah() {
+  thenByEndAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endAyah', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByEndAyahDesc() {
+  thenByEndAyahDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endAyah', Sort.desc);
     });
@@ -1195,91 +1213,91 @@ extension ActivityEventIsarQuerySortThenBy
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByIdempotencyKey() {
+  thenByIdempotencyKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'idempotencyKey', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByIdempotencyKeyDesc() {
+  thenByIdempotencyKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'idempotencyKey', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByKindIndex() {
+  thenByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByKindIndexDesc() {
+  thenByKindIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByOccurredAt() {
+  thenByOccurredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurredAt', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByOccurredAtDesc() {
+  thenByOccurredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurredAt', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByPageNumber() {
+  thenByPageNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pageNumber', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByPageNumberDesc() {
+  thenByPageNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pageNumber', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByStartAyah() {
+  thenByStartAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startAyah', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenByStartAyahDesc() {
+  thenByStartAyahDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startAyah', Sort.desc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenBySurahId() {
+  thenBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
-      thenBySurahIdDesc() {
+  thenBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
@@ -1289,50 +1307,52 @@ extension ActivityEventIsarQuerySortThenBy
 extension ActivityEventIsarQueryWhereDistinct
     on QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct> {
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByEndAyah() {
+  distinctByEndAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'endAyah');
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByIdempotencyKey({bool caseSensitive = true}) {
+  distinctByIdempotencyKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'idempotencyKey',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'idempotencyKey',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByKindIndex() {
+  distinctByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'kindIndex');
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByOccurredAt() {
+  distinctByOccurredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'occurredAt');
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByPageNumber() {
+  distinctByPageNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pageNumber');
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctByStartAyah() {
+  distinctByStartAyah() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'startAyah');
     });
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
-      distinctBySurahId() {
+  distinctBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'surahId');
     });
@@ -1354,7 +1374,7 @@ extension ActivityEventIsarQueryProperty
   }
 
   QueryBuilder<ActivityEventIsar, String, QQueryOperations>
-      idempotencyKeyProperty() {
+  idempotencyKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'idempotencyKey');
     });
@@ -1367,7 +1387,7 @@ extension ActivityEventIsarQueryProperty
   }
 
   QueryBuilder<ActivityEventIsar, DateTime, QQueryOperations>
-      occurredAtProperty() {
+  occurredAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'occurredAt');
     });

@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../domain/entities/activity_event.dart';
 import '../../domain/repositories/activity_feed_repository.dart';

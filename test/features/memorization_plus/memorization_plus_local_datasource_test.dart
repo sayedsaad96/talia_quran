@@ -1,39 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import '../../helpers/isar_test_core.dart';
 
-bool _isarCoreInitialized = false;
 
-Future<void> _initializeIsarCoreForTests() async {
-  if (_isarCoreInitialized) return;
-
-  if (Platform.isWindows) {
-    final localAppData = Platform.environment['LOCALAPPDATA'];
-    if (localAppData != null) {
-      final dllPath =
-          '$localAppData\\Pub\\Cache\\hosted\\pub.dev\\'
-          'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
-      if (File(dllPath).existsSync()) {
-        await Isar.initializeIsarCore(libraries: {Abi.current(): dllPath});
-        _isarCoreInitialized = true;
-        return;
-      }
-    }
-  }
-
-  await Isar.initializeIsarCore();
-  _isarCoreInitialized = true;
-}
+Future<void> _initializeIsarCoreForTests() => initializeIsarCoreForTests();
 
 void main() {
   late SharedPreferences prefs;

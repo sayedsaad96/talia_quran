@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import '../../../features/memorization_plus/data/models/isar_v2_session.dart';

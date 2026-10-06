@@ -5,7 +5,7 @@
 // Complex objects (hintTracker, failureTracker) are serialized as
 // comma-separated strings to avoid Isar embedded-object complexity.
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/review_record_identity.dart';

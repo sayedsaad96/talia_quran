@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../../core/memorization/review_record_identity.dart';
 import '../models/isar_review_effect_outbox.dart';

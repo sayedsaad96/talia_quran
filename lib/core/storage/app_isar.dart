@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/home/data/models/activity_event_isar.dart';

@@ -1,34 +1,17 @@
 import 'dart:convert';
-import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/constants/app_constants.dart';
 import 'package:talia_quran/features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
 import 'package:talia_quran/features/hifz/data/models/ayah_progress_model.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
+import '../../helpers/isar_test_core.dart';
 
-bool _isarReady = false;
 
-Future<void> _prepareIsar() async {
-  if (_isarReady) return;
-  if (Platform.isWindows) {
-    final appData = Platform.environment['LOCALAPPDATA'];
-    final path = appData == null
-        ? null
-        : '$appData\\Pub\\Cache\\hosted\\pub.dev\\'
-            'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
-    if (path != null && File(path).existsSync()) {
-      await Isar.initializeIsarCore(libraries: {Abi.current(): path});
-      _isarReady = true;
-      return;
-    }
-  }
-  await Isar.initializeIsarCore();
-  _isarReady = true;
-}
+Future<void> _prepareIsar() => initializeIsarCoreForTests();
 
 void main() {
   test('preserves malformed legacy progress while migrating valid rows', () async {

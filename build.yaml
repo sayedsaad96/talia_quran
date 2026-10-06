@@ -1,7 +1,7 @@
 targets:
   $default:
     builders:
-      isar_generator:isar_generator:
+      isar_community_generator:isar_community_generator:
         generate_for:
           - lib/features/xp/data/models/xp_isar.dart
           - lib/features/hifz/data/models/isar_ayah_progress.dart

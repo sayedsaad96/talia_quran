@@ -51,8 +51,9 @@ const StreakIsarSchema = CollectionSchema(
       id: 6,
       name: r'longestStreak',
       type: IsarType.long,
-    )
+    ),
   },
+
   estimateSize: _streakIsarEstimateSize,
   serialize: _streakIsarSerialize,
   deserialize: _streakIsarDeserialize,
@@ -61,10 +62,11 @@ const StreakIsarSchema = CollectionSchema(
   indexes: {},
   links: {},
   embeddedSchemas: {},
+
   getId: _streakIsarGetId,
   getLinks: _streakIsarGetLinks,
   attach: _streakIsarAttach,
-  version: '3.1.0+1',
+  version: '3.3.2',
 );
 
 int _streakIsarEstimateSize(
@@ -160,10 +162,7 @@ extension StreakIsarQueryWhere
     on QueryBuilder<StreakIsar, StreakIsar, QWhereClause> {
   QueryBuilder<StreakIsar, StreakIsar, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
@@ -189,8 +188,10 @@ extension StreakIsarQueryWhere
     });
   }
 
-  QueryBuilder<StreakIsar, StreakIsar, QAfterWhereClause> idGreaterThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<StreakIsar, StreakIsar, QAfterWhereClause> idGreaterThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -198,8 +199,10 @@ extension StreakIsarQueryWhere
     });
   }
 
-  QueryBuilder<StreakIsar, StreakIsar, QAfterWhereClause> idLessThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<StreakIsar, StreakIsar, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -214,12 +217,14 @@ extension StreakIsarQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -227,152 +232,150 @@ extension StreakIsarQueryWhere
 extension StreakIsarQueryFilter
     on QueryBuilder<StreakIsar, StreakIsar, QFilterCondition> {
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      cloudDirtyIsNull() {
+  cloudDirtyIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'cloudDirty',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'cloudDirty'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      cloudDirtyIsNotNull() {
+  cloudDirtyIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'cloudDirty',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'cloudDirty'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition> cloudDirtyEqualTo(
-      bool? value) {
+    bool? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cloudDirty',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'cloudDirty', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      currentStreakEqualTo(int value) {
+  currentStreakEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'currentStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'currentStreak', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      currentStreakGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  currentStreakGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'currentStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'currentStreak',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      currentStreakLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  currentStreakLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'currentStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'currentStreak',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      currentStreakBetween(
+  currentStreakBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'currentStreak',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'currentStreak',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      freezesAvailableEqualTo(int value) {
+  freezesAvailableEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'freezesAvailable',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'freezesAvailable', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      freezesAvailableGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  freezesAvailableGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'freezesAvailable',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'freezesAvailable',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      freezesAvailableLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  freezesAvailableLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'freezesAvailable',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'freezesAvailable',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      freezesAvailableBetween(
+  freezesAvailableBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'freezesAvailable',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'freezesAvailable',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition> idEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -381,11 +384,13 @@ extension StreakIsarQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -394,11 +399,13 @@ extension StreakIsarQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -409,291 +416,289 @@ extension StreakIsarQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateIsNull() {
+  lastActivityDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastActivityDate',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastActivityDate'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateIsNotNull() {
+  lastActivityDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastActivityDate',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastActivityDate'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateEqualTo(DateTime? value) {
+  lastActivityDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastActivityDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastActivityDate', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastActivityDateGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastActivityDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastActivityDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastActivityDateLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastActivityDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastActivityDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastActivityDateBetween(
+  lastActivityDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastActivityDate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastActivityDate',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateIsNull() {
+  lastMercyDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastMercyDate',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastMercyDate'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateIsNotNull() {
+  lastMercyDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastMercyDate',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastMercyDate'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateEqualTo(DateTime? value) {
+  lastMercyDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastMercyDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastMercyDate', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastMercyDateGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastMercyDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastMercyDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastMercyDateLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastMercyDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastMercyDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastMercyDateBetween(
+  lastMercyDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastMercyDate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastMercyDate',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtIsNull() {
+  lastSyncedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastSyncedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastSyncedAt'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtIsNotNull() {
+  lastSyncedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastSyncedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastSyncedAt'),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtEqualTo(DateTime? value) {
+  lastSyncedAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastSyncedAt', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastSyncedAtGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastSyncedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastSyncedAtLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastSyncedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      lastSyncedAtBetween(
+  lastSyncedAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastSyncedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastSyncedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      longestStreakEqualTo(int value) {
+  longestStreakEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'longestStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'longestStreak', value: value),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      longestStreakGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  longestStreakGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'longestStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'longestStreak',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      longestStreakLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  longestStreakLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'longestStreak',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'longestStreak',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
-      longestStreakBetween(
+  longestStreakBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'longestStreak',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'longestStreak',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -737,7 +742,7 @@ extension StreakIsarQuerySortBy
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy>
-      sortByFreezesAvailableDesc() {
+  sortByFreezesAvailableDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'freezesAvailable', Sort.desc);
     });
@@ -750,7 +755,7 @@ extension StreakIsarQuerySortBy
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy>
-      sortByLastActivityDateDesc() {
+  sortByLastActivityDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActivityDate', Sort.desc);
     });
@@ -826,7 +831,7 @@ extension StreakIsarQuerySortThenBy
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy>
-      thenByFreezesAvailableDesc() {
+  thenByFreezesAvailableDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'freezesAvailable', Sort.desc);
     });
@@ -851,7 +856,7 @@ extension StreakIsarQuerySortThenBy
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy>
-      thenByLastActivityDateDesc() {
+  thenByLastActivityDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActivityDate', Sort.desc);
     });
@@ -966,14 +971,14 @@ extension StreakIsarQueryProperty
   }
 
   QueryBuilder<StreakIsar, DateTime?, QQueryOperations>
-      lastActivityDateProperty() {
+  lastActivityDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastActivityDate');
     });
   }
 
   QueryBuilder<StreakIsar, DateTime?, QQueryOperations>
-      lastMercyDateProperty() {
+  lastMercyDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastMercyDate');
     });

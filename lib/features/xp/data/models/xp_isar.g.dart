@@ -27,12 +27,9 @@ const XpIsarSchema = CollectionSchema(
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
-    r'totalXp': PropertySchema(
-      id: 2,
-      name: r'totalXp',
-      type: IsarType.long,
-    )
+    r'totalXp': PropertySchema(id: 2, name: r'totalXp', type: IsarType.long),
   },
+
   estimateSize: _xpIsarEstimateSize,
   serialize: _xpIsarSerialize,
   deserialize: _xpIsarDeserialize,
@@ -41,10 +38,11 @@ const XpIsarSchema = CollectionSchema(
   indexes: {},
   links: {},
   embeddedSchemas: {},
+
   getId: _xpIsarGetId,
   getLinks: _xpIsarGetLinks,
   attach: _xpIsarAttach,
-  version: '3.1.0+1',
+  version: '3.3.2',
 );
 
 int _xpIsarEstimateSize(
@@ -122,10 +120,7 @@ extension XpIsarQueryWhereSort on QueryBuilder<XpIsar, XpIsar, QWhere> {
 extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
   QueryBuilder<XpIsar, XpIsar, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
@@ -151,8 +146,10 @@ extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
     });
   }
 
-  QueryBuilder<XpIsar, XpIsar, QAfterWhereClause> idGreaterThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<XpIsar, XpIsar, QAfterWhereClause> idGreaterThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -160,8 +157,10 @@ extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
     });
   }
 
-  QueryBuilder<XpIsar, XpIsar, QAfterWhereClause> idLessThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<XpIsar, XpIsar, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -176,12 +175,14 @@ extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -189,36 +190,35 @@ extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
 extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'cloudDirty',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'cloudDirty'),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'cloudDirty',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'cloudDirty'),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyEqualTo(
-      bool? value) {
+    bool? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cloudDirty',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'cloudDirty', value: value),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -227,11 +227,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -240,11 +242,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -255,39 +259,41 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastSyncedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastSyncedAt'),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastSyncedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastSyncedAt'),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtEqualTo(
-      DateTime? value) {
+    DateTime? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastSyncedAt', value: value),
+      );
     });
   }
 
@@ -296,11 +302,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastSyncedAt',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -309,11 +317,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastSyncedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastSyncedAt',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -324,23 +334,25 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastSyncedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastSyncedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> totalXpEqualTo(
-      int value) {
+    int value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'totalXp',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'totalXp', value: value),
+      );
     });
   }
 
@@ -349,11 +361,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'totalXp',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'totalXp',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -362,11 +376,13 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'totalXp',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'totalXp',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -377,13 +393,15 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'totalXp',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'totalXp',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }

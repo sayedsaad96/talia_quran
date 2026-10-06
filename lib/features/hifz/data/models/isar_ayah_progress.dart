@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../domain/entities/hifz_entities.dart';
 import 'ayah_progress_model.dart';
 

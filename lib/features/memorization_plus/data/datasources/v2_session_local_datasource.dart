@@ -1,6 +1,6 @@
 // Thin Isar wrapper for audience- and account-scoped V2 session persistence.
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../domain/entities/kids_session_policy.dart';

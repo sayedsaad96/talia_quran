@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 part 'daily_activity_isar.g.dart';
 
 /// Stores a count of reading/memorization actions per calendar day.

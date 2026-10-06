@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../domain/repositories/heatmap_repository.dart';

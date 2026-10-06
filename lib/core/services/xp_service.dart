@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/xp/domain/entities/xp_gain_result.dart';
 import '../constants/xp_constants.dart';

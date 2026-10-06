@@ -1,6 +1,6 @@
 // Thin Isar wrapper for owner-scoped Companion confirmation persistence.
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../domain/entities/prayer_companion.dart';
 import '../models/prayer_companion_record_isar.dart';

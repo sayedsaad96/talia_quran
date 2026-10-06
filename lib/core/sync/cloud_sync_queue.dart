@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../identity/record_owner_provider.dart';
 import '../memorization/review_record_identity.dart';
