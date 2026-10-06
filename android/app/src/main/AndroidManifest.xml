@@ -23,7 +23,10 @@
         android:label="Talia Quran"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:roundIcon="@mipmap/launcher_icon">
+        android:roundIcon="@mipmap/launcher_icon"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name="com.talia.quran.MainActivity"
             android:exported="true"
