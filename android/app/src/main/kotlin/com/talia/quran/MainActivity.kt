@@ -4,7 +4,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import com.talia.quran.prayer.AdhanClipResolver
 import com.talia.quran.prayer.AdhanPreviewBridge
-import com.talia.quran.prayer.PrayerDeliveryChannelHandler
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -14,9 +13,6 @@ class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        // Prayer V2 delivery: AlarmManager-backed scheduling (stage 4).
-        // Dormant until Dart flips prayer_delivery_version to 2 (stage 7).
-        PrayerDeliveryChannelHandler.register(this, flutterEngine.dartExecutor.binaryMessenger)
         registerAdhanPreviewChannel(flutterEngine.dartExecutor.binaryMessenger)
     }
 

@@ -35,10 +35,6 @@ android {
         versionName = flutter.versionName
     }
 
-    sourceSets {
-        getByName("main").kotlin.directories += "../../packages/talia_prayer_delivery/android/src/main/kotlin"
-    }
-
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties.getProperty("keyAlias")

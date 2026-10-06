@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.talia.quran.prayer.R
 
 /** Shared Arabic display names for the canonical prayer keys. */
 object PrayerNames {
@@ -57,7 +58,7 @@ object PrayerNotificationFactory {
         }
         return builder
             .setContentTitle("حان الآن وقت صلاة $prayerName")
-            .setSmallIcon(context.applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_notification)
             .setAutoCancel(true)
             .setCategory(Notification.CATEGORY_ALARM)
             .setContentIntent(buildContentIntent(context, event))

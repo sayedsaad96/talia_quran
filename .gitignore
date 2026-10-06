@@ -54,6 +54,8 @@ app.*.map.json
 *.zip
 android/local_maven/
 test_builder.jar
+# Local path packages resolve through the app's pubspec.lock.
+packages/*/pubspec.lock
 # Widget Preview related
 .widget_preview/
 android/.kotlin/

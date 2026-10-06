@@ -1514,6 +1514,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.2"
+  talia_prayer_delivery:
+    dependency: "direct main"
+    description:
+      path: "packages/talia_prayer_delivery"
+      relative: true
+    source: path
+    version: "0.0.0"
   term_glyph:
     dependency: transitive
     description:

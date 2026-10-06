@@ -71,6 +71,8 @@ dependencies:
   package_info_plus: ^10.1.0
   hijri: ^3.0.0
   adhan: ^2.0.0+1
+  talia_prayer_delivery:
+    path: packages/talia_prayer_delivery
 
 
 dev_dependencies:

@@ -16,6 +16,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import com.talia.quran.prayer.R
 
 /**
  * Owns full Adhan audio playback (V2 §15). Responsibilities ONLY:
@@ -254,7 +255,7 @@ class AdhanPlaybackService : Service() {
         return builder
             .setContentTitle("صلاة ${PrayerNames.arabic(prayerKey)}")
             .setContentText("الأذان الآن")
-            .setSmallIcon(applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
             .setCategory(Notification.CATEGORY_TRANSPORT)
             .setContentIntent(contentIntent)

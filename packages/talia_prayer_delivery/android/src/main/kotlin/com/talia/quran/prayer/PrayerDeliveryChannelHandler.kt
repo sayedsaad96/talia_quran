@@ -16,10 +16,12 @@ import io.flutter.plugin.common.MethodChannel
 object PrayerDeliveryChannelHandler {
     private const val TAG = "PrayerV2"
 
-    fun register(context: Context, messenger: BinaryMessenger) {
-        MethodChannel(messenger, PrayerAlarmContract.CHANNEL_NAME)
-            .setMethodCallHandler { call, result ->
+    fun register(context: Context, messenger: BinaryMessenger): MethodChannel {
+        return MethodChannel(messenger, PrayerAlarmContract.CHANNEL_NAME)
+            .also { channel ->
+                channel.setMethodCallHandler { call, result ->
                 onMethodCall(context.applicationContext, call, result)
+            }
             }
     }
 
