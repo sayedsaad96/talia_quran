@@ -45,6 +45,36 @@ void main() {
       }
     });
 
+    test('keeps the canonical text and separates the basmalah at runtime', () {
+      final canonical = jsonDecode(jsonStr) as Map<String, dynamic>;
+      String raw(int surah) =>
+          ((canonical['$surah'] as List).first as Map)['text'] as String;
+      final result = QuranLocalDatasourceImpl.parseQuranData({
+        'jsonStr': jsonStr,
+        'surahs': [1, 2, 9, 95].map(surahModel).toList(),
+      });
+
+      final fatihah = result.ayahs[1]!.first;
+      expect(fatihah.text, raw(1));
+      expect(fatihah.leadingBasmalah, isNull);
+
+      final tawbah = result.ayahs[9]!.first;
+      expect(tawbah.text, raw(9));
+      expect(tawbah.leadingBasmalah, isNull);
+
+      for (final surah in [2, 95]) {
+        final ayah1 = result.ayahs[surah]!.first;
+        expect(ayah1.canonicalText, raw(surah), reason: 'surah $surah');
+        expect(ayah1.leadingBasmalah, isNotNull, reason: 'surah $surah');
+        expect(
+          raw(surah).startsWith(ayah1.leadingBasmalah!),
+          isTrue,
+          reason: 'surah $surah',
+        );
+        expect(raw(surah).endsWith(ayah1.text), isTrue, reason: 'surah $surah');
+      }
+    });
+
     test('preserves every input code point including BOM and whitespace', () {
       const sacredInput = '\uFEFF  قُلْ\nهُوَ  ';
       final fixture = <String, dynamic>{
@@ -89,7 +119,7 @@ void main() {
           for (var i = 0; i < rawAyahs.length; i++) {
             final expected = rawAyahs[i]['text']!.toString();
             expect(
-              parsed[i].text,
+              parsed[i].canonicalText,
               expected,
               reason: 'Surah $surahId ayah ${i + 1} mutated in parse',
             );

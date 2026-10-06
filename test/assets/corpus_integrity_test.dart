@@ -8,12 +8,13 @@ import 'package:talia_quran/core/utils/arabic_normalizer.dart';
 /// V1-M1 / V1-M2 release gates — Quran corpus integrity and content manifest.
 ///
 /// These tests read the real bundled assets and fail closed on any drift from
-/// the frozen manifest or any violation of the approved ayah-1 basmalah
-/// boundaries:
+/// the frozen manifest. `assets/data/quran.json` is the immutable canonical
+/// Tanzil text, kept verbatim:
 ///   - Al-Fatihah ayah 1 IS the basmalah (numbered ayah).
 ///   - At-Tawbah has no basmalah.
-///   - Every other surah's ayah 1 contains only the numbered ayah text;
-///     the basmalah is handled structurally, never embedded.
+///   - Every other surah's ayah 1 begins with the basmalah exactly as Tanzil
+///     ships it; the app separates it at runtime (QuranBasmalah) and never
+///     rewrites the file.
 void main() {
   group('Quran corpus integrity', () {
     late final Map<String, dynamic> quran;
@@ -187,20 +188,67 @@ void main() {
       );
     });
 
-    test('no surah other than Al-Fatihah embeds the basmalah in ayah 1 '
-        '(basmalah is structural, not part of the numbered ayah)', () {
+    test('every surah except Al-Fatihah and At-Tawbah keeps the Tanzil '
+        'basmalah at the start of ayah 1 (canonical text is not stripped)', () {
+      final reference = normalizedAyahText(
+        (quran['1'] as List)[0] as Map<String, dynamic>,
+      );
       for (var surahId = 2; surahId <= 114; surahId++) {
         if (surahId == 9) continue;
         final ayah1 =
             (quran[surahId.toString()] as List)[0] as Map<String, dynamic>;
         expect(
           normalizedAyahText(ayah1),
-          isNot(startsWith('بسم الله')),
+          startsWith('$reference '),
           reason:
-              'Surah $surahId ayah 1 still embeds the basmalah prefix: '
+              'Surah $surahId ayah 1 lost the canonical basmalah prefix: '
               '${ayah1['text']}',
         );
       }
+    });
+
+    test('canonical text digest matches the frozen manifest', () {
+      // Independent of JSON formatting: any change to a single letter or
+      // diacritic of any ayah changes this digest.
+      final buffer = StringBuffer();
+      for (var surahId = 1; surahId <= 114; surahId++) {
+        for (final ayah in (quran['$surahId'] as List)) {
+          final record = ayah as Map<String, dynamic>;
+          buffer.write('$surahId:${record['verse']}\t${record['text']}\n');
+        }
+      }
+      final manifest =
+          jsonDecode(
+                File('assets/data/content_manifest.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final quranEntry = (manifest['items'] as List)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((item) => item['path'] == 'assets/data/quran.json');
+      expect(
+        sha256.convert(utf8.encode(buffer.toString())).toString(),
+        quranEntry['canonicalTextSha256'],
+      );
+    });
+
+    test('no code in the repository writes to the canonical Quran file', () {
+      final writers = <String>[];
+      for (final root in ['lib', 'scripts', 'tool', 'tools']) {
+        final dir = Directory(root);
+        if (!dir.existsSync()) continue;
+        for (final file in dir.listSync(recursive: true).whereType<File>()) {
+          if (!file.path.endsWith('.dart') && !file.path.endsWith('.py')) {
+            continue;
+          }
+          final source = file.readAsStringSync();
+          if (source.contains('quran.json') &&
+              RegExp(r'writeAsString|writeAsBytes|open\([^)]*[\x27"]w')
+                  .hasMatch(source)) {
+            writers.add(file.path);
+          }
+        }
+      }
+      expect(writers, isEmpty, reason: 'quran.json is immutable');
     });
 
     test('runtime SHA-256 matches the frozen content manifest', () {

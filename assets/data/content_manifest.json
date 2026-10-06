@@ -6,7 +6,7 @@
   "reviewDate": "2026-08-31",
   "externalReviewerRequired": false,
   "approvalEvidence": "The project owner confirmed a complete review of the application's religious content and all user-facing features on 2026-08-31 and accepted them as correct without requiring an external signature.",
-  "notes": "quran.json ayah-1 basmalah prefixes for the 112 surahs other than Al-Fatihah and At-Tawbah were removed on 2026-08-24 by scripts/correct_quran_ayah1_basmalah.dart (structural boundary correction; the basmalah is rendered structurally by the Mushaf). Future religious-content changes require project-owner reconfirmation of the affected content, but do not create an external-sheikh signature requirement.",
+  "notes": "quran.json is the immutable canonical Tanzil text. On 2026-10-07, at the project owner's direction, the 112 ayah-1 basmalah prefixes removed on 2026-08-24 were restored by restoring the original verbatim import; every ayah text again matches the source exactly (canonicalTextSha256). The basmalah is separated at runtime only (lib/core/quran/quran_basmalah.dart); no tool or feature may modify the file. Future religious-content changes require project-owner reconfirmation of the affected content, but do not create an external-sheikh signature requirement.",
   "runtimeQuranRenderingCorpus": {
     "role": "quran_runtime_rendering_corpus",
     "package": "qcf_quran_plus",
@@ -30,8 +30,12 @@
       "sourceUrl": "https://api.alquran.cloud/v1/quran/quran-uthmani",
       "riwayah": "hafs_an_asim_uthmani_script",
       "licenseStatus": "openly_available_attribution_required_tanzil_terms",
-      "sha256": "050df81ce2cb4011f77410978850ff641589a4091489e9da0fdd31018dd26f31",
-      "importDate": "2025 (fetch script), boundary correction 2026-08-24",
+      "sha256": "09f09074b7341859d4770cc2b9d8768d6a7f7b00d0003123238e6e9949b3fa82",
+      "canonicalTextSha256": "873765d9f321b8419b14b3173313647d3b29af7e861ec7fd381af3fa1231573a",
+      "canonicalTextDigestFormat": "sha256 of UTF-8 text: for each of the 6236 ayahs in order, surah:ayah, a tab, the ayah text, a line feed",
+      "upstreamVerifiedDate": "2026-10-07",
+      "immutable": true,
+      "importDate": "2025 verbatim import; 2026-08-24 basmalah stripping reverted on 2026-10-07 (original import restored)",
       "reviewStatus": "approved",
       "reviewAuthority": "projectOwner",
       "reviewDate": "2026-08-31"

@@ -34,11 +34,26 @@ class Ayah extends Equatable {
     required this.numberInSurah,
     this.juz,
     this.page,
-  });
+    String? canonicalText,
+    this.leadingBasmalah,
+  }) : _canonicalText = canonicalText;
 
   final int number; // global ayah number
   final int surahId;
+
+  /// The numbered ayah text shown and recited. For ayah 1 of every surah
+  /// except Al-Fatihah and At-Tawbah, the runtime split removes the leading
+  /// basmalah the canonical Tanzil text carries (see `QuranBasmalah`).
   final String text;
+
+  final String? _canonicalText;
+
+  /// The verbatim record from the canonical `quran.json`, never altered.
+  String get canonicalText => _canonicalText ?? text;
+
+  /// The basmalah separated from [canonicalText] at runtime, verbatim.
+  final String? leadingBasmalah;
+
   final int numberInSurah;
   final int? juz;
   final int? page;

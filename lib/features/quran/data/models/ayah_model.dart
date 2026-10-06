@@ -8,6 +8,8 @@ class AyahModel extends Ayah {
     required super.numberInSurah,
     super.juz,
     super.page,
+    super.canonicalText,
+    super.leadingBasmalah,
   });
 
   factory AyahModel.fromJson(Map<String, dynamic> json) {

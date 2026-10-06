@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/quran/quran_basmalah.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../models/surah_model.dart';
 import '../models/ayah_model.dart';
@@ -125,6 +126,13 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     final cachedAyahs = <int, List<AyahModel>>{};
     final cachedByPage = <int, List<AyahModel>>{};
 
+    // The canonical text is used as-is; the leading basmalah of ayah 1 is
+    // separated at runtime against Al-Fatihah 1:1 from this same corpus.
+    final fatihah = data['${QuranBasmalah.fatihahSurahId}'];
+    final referenceBasmalah = fatihah is List && fatihah.isNotEmpty
+        ? ArabicNormalizer.normalize(fatihah.first['text'].toString())
+        : null;
+
     for (final surah in surahs) {
       final surahIdStr = surah.id.toString();
       final List<dynamic> verseList = data[surahIdStr] ?? [];
@@ -142,13 +150,22 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
             'structural metadata (text/global/page/juz)',
           );
         }
+        final numberInSurah = verseObj['verse'] as int;
+        final parts = QuranBasmalah.split(
+          surahId: surah.id,
+          ayahNumber: numberInSurah,
+          canonicalText: rawText,
+          normalizedReference: referenceBasmalah,
+        );
         final ayah = AyahModel(
           number: global,
           surahId: surah.id,
-          text: rawText,
-          numberInSurah: verseObj['verse'] as int,
+          text: parts.body,
+          numberInSurah: numberInSurah,
           juz: juz,
           page: page,
+          canonicalText: rawText,
+          leadingBasmalah: parts.basmalah,
         );
         parsedAyahs.add(ayah);
 
