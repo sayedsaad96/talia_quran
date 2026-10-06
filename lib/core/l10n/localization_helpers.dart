@@ -174,6 +174,7 @@ extension TaliaLocalizationHelpers on BuildContext {
     }
 
     return switch (message) {
+      CubitMessageCodes.authCloudUnavailable => l10n.authCloudUnavailable,
       CubitMessageCodes.hifzAudioPlaybackFailed => l10n.hifzAudioPlaybackFailed,
       CubitMessageCodes.hifzReviewSaveFailed => l10n.hifzReviewSaveFailed,
       CubitMessageCodes.hifzMemorizationSaveFailed =>

@@ -3203,4 +3203,5 @@
   ,"sourcesOpenSourceBody": "Full licenses of the libraries used in the app."
   ,"sourcesOpenLink": "Open {site}"
   ,"@sourcesOpenLink": {"placeholders": {"site": {"type": "String"}}}
+  ,"authCloudUnavailable": "Accounts aren't available in this version. You can keep using Talia as a guest."
 }

@@ -27,9 +27,10 @@ class AuthFailure extends Failure {
 }
 
 class AuthConfigurationFailure extends Failure {
+  /// A stable code, localized for the user by `localizedCubitMessage`;
+  /// build settings never reach the UI.
   const AuthConfigurationFailure([
-    super.message =
-        'تسجيل الدخول السحابي غير مهيأ في هذا الإصدار. شغّل التطبيق بإعدادات SUPABASE_URL و SUPABASE_ANON_KEY أو استخدمه كضيف.',
+    super.message = CubitMessageCodes.authCloudUnavailable,
   ]);
 }
 

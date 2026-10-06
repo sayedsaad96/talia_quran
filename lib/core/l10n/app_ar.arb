@@ -3241,4 +3241,5 @@
   ,"sourcesOpenSourceBody": "التراخيص الكاملة للمكتبات المستخدمة في التطبيق."
   ,"sourcesOpenLink": "فتح {site}"
   ,"@sourcesOpenLink": {"placeholders": {"site": {"type": "String"}}}
+  ,"authCloudUnavailable": "الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف."
 }

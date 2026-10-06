@@ -1,5 +1,6 @@
 /// Stable message codes emitted from cubits/repositories and resolved in UI.
 abstract final class CubitMessageCodes {
+  static const authCloudUnavailable = '@auth/cloud_unavailable';
   static const hifzAudioPlaybackFailed = '@hifz/audio_playback_failed';
   static const hifzReviewSaveFailed = '@hifz/review_save_failed';
   static const hifzMemorizationSaveFailed = '@hifz/memorization_save_failed';

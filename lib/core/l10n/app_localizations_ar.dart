@@ -7706,4 +7706,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String sourcesOpenLink(String site) {
     return 'فتح $site';
   }
+
+  @override
+  String get authCloudUnavailable =>
+      'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.';
 }

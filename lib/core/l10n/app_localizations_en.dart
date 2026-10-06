@@ -7703,4 +7703,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String sourcesOpenLink(String site) {
     return 'Open $site';
   }
+
+  @override
+  String get authCloudUnavailable =>
+      'Accounts aren\'t available in this version. You can keep using Talia as a guest.';
 }

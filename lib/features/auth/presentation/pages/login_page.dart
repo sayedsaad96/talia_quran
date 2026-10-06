@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
@@ -225,6 +226,8 @@ class _LoginPageState extends State<LoginPage> {
                 () => _feedback = _AuthFeedback(
                   message: code != null
                       ? _localizedAuthMessage(context, state.message)
+                      : state.message == CubitMessageCodes.authCloudUnavailable
+                      ? context.l10n.authCloudUnavailable
                       : context.l10n.authGenericError,
                   type: ErrorInfoBannerType.error,
                   showResend: code == AuthErrorCode.emailNotConfirmed,

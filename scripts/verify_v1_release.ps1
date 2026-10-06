@@ -1,6 +1,9 @@
 param(
   [string] $EvidenceDirectory,
-  [switch] $BuildAndroidRelease
+  [switch] $BuildAndroidRelease,
+  # Build a guest-only artifact without cloud accounts. Without this switch a
+  # release build requires TALIA_RELEASE_DART_DEFINES_FILE.
+  [switch] $OfflineBuild
 )
 
 Set-StrictMode -Version Latest
@@ -411,7 +414,11 @@ try {
     $defineFileItem = Get-Item -LiteralPath 'Env:TALIA_RELEASE_DART_DEFINES_FILE' -ErrorAction SilentlyContinue
     $buildArguments = @('build', 'appbundle', '--release', '--no-pub')
     if ($null -eq $defineFileItem -or [string]::IsNullOrWhiteSpace($defineFileItem.Value)) {
-      Add-Result 'Cloud production defines' 'NOT RUN' 'offline/guest artifact; TALIA_RELEASE_DART_DEFINES_FILE unavailable'
+      if (-not $OfflineBuild) {
+        Add-Result 'Cloud production defines' 'FAIL' 'TALIA_RELEASE_DART_DEFINES_FILE is not set; pass -OfflineBuild only for an intentional guest-only artifact'
+        throw 'Release build needs TALIA_RELEASE_DART_DEFINES_FILE (or -OfflineBuild for a guest-only artifact).'
+      }
+      Add-Result 'Cloud production defines' 'NOT RUN' 'offline/guest artifact requested with -OfflineBuild'
       $buildDisplay = 'flutter build appbundle --release --no-pub'
     } else {
       $defineFile = [System.IO.Path]::GetFullPath($defineFileItem.Value)

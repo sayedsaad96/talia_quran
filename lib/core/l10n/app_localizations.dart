@@ -13017,6 +13017,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فتح {site}'**
   String sourcesOpenLink(String site);
+
+  /// No description provided for @authCloudUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.'**
+  String get authCloudUnavailable;
 }
 
 class _AppLocalizationsDelegate
