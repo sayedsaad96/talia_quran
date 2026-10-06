@@ -239,7 +239,7 @@ void main() {
 
       expect(reloaded, isTrue);
       expect(find.bySemanticsLabel('العصر: تم التأكيد'), findsOneWidget);
-      expect(find.text('تم تأكيد 1 من 5'), findsOneWidget);
+      expect(find.text('تم تأكيد ١ من ٥'), findsOneWidget);
       expect(find.text('صليت'), findsNothing);
       expect(find.text('سأصلي الآن'), findsNothing);
     },
@@ -270,7 +270,7 @@ void main() {
 
       expect(reloaded, isFalse);
       expect(find.bySemanticsLabel('العصر: لم يتم التأكيد بعد'), findsOneWidget);
-      expect(find.text('تم تأكيد 0 من 5'), findsOneWidget);
+      expect(find.text('تم تأكيد ٠ من ٥'), findsOneWidget);
       expect(find.text('صليت'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);
     },

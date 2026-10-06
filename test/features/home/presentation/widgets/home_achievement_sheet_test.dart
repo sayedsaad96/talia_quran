@@ -99,7 +99,7 @@ void main() {
 
     expect(find.text('إنجازاتك ومستواك'), findsOneWidget);
     expect(find.text('طالب'), findsOneWidget);
-    expect(find.textContaining('200'), findsOneWidget);
+    expect(find.textContaining('٢٠٠'), findsOneWidget);
     expect(find.text('الصفحة الأولى'), findsOneWidget);
   });
 }
