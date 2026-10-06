@@ -330,8 +330,6 @@ class _VersePreview extends StatelessWidget {
         textAlign: TextAlign.center,
         style: qcf.QuranTextStyles.qcfStyle(
           pageNumber: pageNumber,
-          isTajweed: false,
-          isDark: context.isDark,
           fontSize: 23,
           color: textColor,
         ).copyWith(height: 2.0),
