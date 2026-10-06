@@ -126,6 +126,63 @@ class PrivacyPolicyTile extends StatelessWidget {
   }
 }
 
+class SourcesLicensesTile extends StatelessWidget {
+  const SourcesLicensesTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subtextColor = context.tokens.textSecondary;
+
+    return InkWell(
+      onTap: () => context.push(AppRoutes.sourcesLicenses),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.library_books_outlined, color: primary, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.sourcesLicensesTitle,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    context.l10n.sourcesLicensesSubtitle,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: subtextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SettingsTrailingChevron(color: subtextColor),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class AboutTile extends StatelessWidget {
   const AboutTile({super.key, required this.isDark});
   final bool isDark;

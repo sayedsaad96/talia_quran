@@ -7653,4 +7653,57 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountDeletionRetryAction => 'إعادة المحاولة';
+
+  @override
+  String get sourcesLicensesTitle => 'المصادر والتراخيص';
+
+  @override
+  String get sourcesLicensesSubtitle => 'مصدر نص القرآن والصوتيات والبرمجيات';
+
+  @override
+  String get sourcesQuranTextTitle => 'نص القرآن الكريم';
+
+  @override
+  String get sourcesQuranTextBody =>
+      'الرسم العثماني برواية حفص، من مشروع تنزيل عبر خدمة alquran.cloud.';
+
+  @override
+  String get sourcesMushafTitle => 'صفحات المصحف';
+
+  @override
+  String get sourcesMushafBody =>
+      'تُعرض خطوط صفحات المصحف (QCF) عبر مكتبة qcf_quran_plus بترخيص MIT.';
+
+  @override
+  String get sourcesRecitationTitle => 'التلاوات';
+
+  @override
+  String get sourcesRecitationBody =>
+      'تُبث تلاوات الآيات من موقع EveryAyah.com.';
+
+  @override
+  String get sourcesAdhanTitle => 'الأذان';
+
+  @override
+  String get sourcesAdhanBody =>
+      'تسجيلات المؤذنين القابلة للاختيار مصدرها أرشيف الإنترنت (Internet Archive)، وتحمل علامة الملكية العامة 1.0.';
+
+  @override
+  String get sourcesKhatmDuaTitle => 'دعاء ختم القرآن';
+
+  @override
+  String get sourcesKhatmDuaBody =>
+      'من ملحق مصحف مجمع الملك فهد لطباعة المصحف الشريف.';
+
+  @override
+  String get sourcesOpenSourceTitle => 'تراخيص البرمجيات مفتوحة المصدر';
+
+  @override
+  String get sourcesOpenSourceBody =>
+      'التراخيص الكاملة للمكتبات المستخدمة في التطبيق.';
+
+  @override
+  String sourcesOpenLink(String site) {
+    return 'فتح $site';
+  }
 }

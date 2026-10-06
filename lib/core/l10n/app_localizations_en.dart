@@ -7649,4 +7649,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeletionRetryAction => 'Retry';
+
+  @override
+  String get sourcesLicensesTitle => 'Sources & licenses';
+
+  @override
+  String get sourcesLicensesSubtitle =>
+      'Where the Quran text, audio and code come from';
+
+  @override
+  String get sourcesQuranTextTitle => 'Quran text';
+
+  @override
+  String get sourcesQuranTextBody =>
+      'Uthmani script, Hafs narration, from the Tanzil Project via alquran.cloud.';
+
+  @override
+  String get sourcesMushafTitle => 'Mushaf pages';
+
+  @override
+  String get sourcesMushafBody =>
+      'Mushaf page fonts (QCF) are rendered with the qcf_quran_plus package, MIT license.';
+
+  @override
+  String get sourcesRecitationTitle => 'Recitations';
+
+  @override
+  String get sourcesRecitationBody =>
+      'Ayah recitations are streamed from EveryAyah.com.';
+
+  @override
+  String get sourcesAdhanTitle => 'Adhan';
+
+  @override
+  String get sourcesAdhanBody =>
+      'The selectable muezzin recordings come from the Internet Archive and carry the Public Domain Mark 1.0.';
+
+  @override
+  String get sourcesKhatmDuaTitle => 'Khatm al-Quran dua';
+
+  @override
+  String get sourcesKhatmDuaBody =>
+      'From the appendix of the King Fahd Complex Mushaf.';
+
+  @override
+  String get sourcesOpenSourceTitle => 'Open-source licenses';
+
+  @override
+  String get sourcesOpenSourceBody =>
+      'Full licenses of the libraries used in the app.';
+
+  @override
+  String sourcesOpenLink(String site) {
+    return 'Open $site';
+  }
 }

@@ -12927,6 +12927,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إعادة المحاولة'**
   String get accountDeletionRetryAction;
+
+  /// No description provided for @sourcesLicensesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادر والتراخيص'**
+  String get sourcesLicensesTitle;
+
+  /// No description provided for @sourcesLicensesSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصدر نص القرآن والصوتيات والبرمجيات'**
+  String get sourcesLicensesSubtitle;
+
+  /// No description provided for @sourcesQuranTextTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نص القرآن الكريم'**
+  String get sourcesQuranTextTitle;
+
+  /// No description provided for @sourcesQuranTextBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرسم العثماني برواية حفص، من مشروع تنزيل عبر خدمة alquran.cloud.'**
+  String get sourcesQuranTextBody;
+
+  /// No description provided for @sourcesMushafTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحات المصحف'**
+  String get sourcesMushafTitle;
+
+  /// No description provided for @sourcesMushafBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُعرض خطوط صفحات المصحف (QCF) عبر مكتبة qcf_quran_plus بترخيص MIT.'**
+  String get sourcesMushafBody;
+
+  /// No description provided for @sourcesRecitationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التلاوات'**
+  String get sourcesRecitationTitle;
+
+  /// No description provided for @sourcesRecitationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُبث تلاوات الآيات من موقع EveryAyah.com.'**
+  String get sourcesRecitationBody;
+
+  /// No description provided for @sourcesAdhanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذان'**
+  String get sourcesAdhanTitle;
+
+  /// No description provided for @sourcesAdhanBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيلات المؤذنين القابلة للاختيار مصدرها أرشيف الإنترنت (Internet Archive)، وتحمل علامة الملكية العامة 1.0.'**
+  String get sourcesAdhanBody;
+
+  /// No description provided for @sourcesKhatmDuaTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء ختم القرآن'**
+  String get sourcesKhatmDuaTitle;
+
+  /// No description provided for @sourcesKhatmDuaBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'من ملحق مصحف مجمع الملك فهد لطباعة المصحف الشريف.'**
+  String get sourcesKhatmDuaBody;
+
+  /// No description provided for @sourcesOpenSourceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تراخيص البرمجيات مفتوحة المصدر'**
+  String get sourcesOpenSourceTitle;
+
+  /// No description provided for @sourcesOpenSourceBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'التراخيص الكاملة للمكتبات المستخدمة في التطبيق.'**
+  String get sourcesOpenSourceBody;
+
+  /// No description provided for @sourcesOpenLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح {site}'**
+  String sourcesOpenLink(String site);
 }
 
 class _AppLocalizationsDelegate

@@ -28,6 +28,8 @@ class AboutSettingsPage extends StatelessWidget {
           title: l10n.settingsSectionPrivacySecurity,
           children: [
             PrivacyPolicyTile(isDark: isDark),
+            SettingsDivider(isDark: isDark),
+            const SourcesLicensesTile(),
           ],
         ),
         SettingsGroup(
