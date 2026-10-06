@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_ar.dart';
 
@@ -156,10 +157,11 @@ enum SocialShareFormat {
 
 /// Rich, content-driven domain representation for Social Share Cards
 class SocialShareData {
-  /// Public landing page used by image and text shares. Keeping the campaign
-  /// destination beside the share data prevents the visual footer and the
-  /// native share caption from drifting apart.
-  static const String landingPageUrl = 'https://taliaapp.com';
+  /// Public landing page used by image and text shares: the app's Play
+  /// listing. Keeping the campaign destination beside the share data
+  /// prevents the visual footer and the native share caption from drifting
+  /// apart.
+  static const String landingPageUrl = AppConstants.androidStoreUrl;
 
   /// The only official character asset currently shipped with the app.
   /// Contextual pose assets must not be referenced until they exist on disk.

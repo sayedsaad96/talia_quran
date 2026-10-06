@@ -1123,7 +1123,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareAppText.
   ///
   /// In ar, this message translates to:
-  /// **'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://taliaapp.com'**
+  /// **'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://play.google.com/store/apps/details?id=com.talia.quran'**
   String get shareAppText;
 
   /// No description provided for @shareProgressText.

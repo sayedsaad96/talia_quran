@@ -552,7 +552,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareAppText =>
-      'Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://taliaapp.com';
+      'Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://play.google.com/store/apps/details?id=com.talia.quran';
 
   @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {

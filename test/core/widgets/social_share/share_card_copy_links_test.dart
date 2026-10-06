@@ -9,21 +9,24 @@ void main() {
   final en = SocialShareCopy.forLanguage('en');
 
   group('ShareCardLinks', () {
-    test('builds a campaign URL per category on the landing page', () {
+    test('builds a campaign URL per category on the Play listing', () {
       expect(
         ShareCardLinks.forCategory(SocialShareCategory.quranAyah),
-        'https://taliaapp.com/?utm_source=tc&utm_campaign=quranAyah',
+        'https://play.google.com/store/apps/details?id=com.talia.quran'
+        '&referrer=utm_source%3Dtc%26utm_campaign%3DquranAyah',
       );
     });
 
     test('never carries anything but the two campaign parameters', () {
       for (final c in SocialShareCategory.values) {
         final uri = Uri.parse(ShareCardLinks.forCategory(c));
-        expect(uri.host, 'taliaapp.com');
-        expect(uri.queryParameters.keys.toSet(), {
-          'utm_source',
-          'utm_campaign',
-        });
+        expect(uri.host, 'play.google.com');
+        expect(uri.queryParameters.keys.toSet(), {'id', 'referrer'});
+        expect(uri.queryParameters['id'], 'com.talia.quran');
+        expect(
+          Uri.splitQueryString(uri.queryParameters['referrer']!).keys.toSet(),
+          {'utm_source', 'utm_campaign'},
+        );
       }
     });
   });

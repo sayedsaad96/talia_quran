@@ -30,6 +30,7 @@ abstract class AppConstants {
   static const double fontSizeXLarge = 30.0;
 
   // App Links
+  static const String androidApplicationId = 'com.talia.quran';
   static const String androidStoreUrl =
-      'https://play.google.com/store/apps/details?id=com.sayed.talia_quran';
+      'https://play.google.com/store/apps/details?id=$androidApplicationId';
 }

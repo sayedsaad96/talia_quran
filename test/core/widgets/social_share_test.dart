@@ -203,7 +203,10 @@ void main() {
       expect(text, contains('إِنَّ هَٰذَا الْقُرْآنَ'));
       expect(text, contains('الآية رقم 9'));
       expect(text, contains('ابدأ رحلة حفظك مع تالية'));
-      expect(text, contains('https://taliaapp.com'));
+      expect(
+        text,
+        contains('https://play.google.com/store/apps/details?id=com.talia.quran'),
+      );
     });
 
     test('toPlainShareText accepts a localized footer', () {
