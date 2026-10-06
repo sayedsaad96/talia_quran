@@ -31,6 +31,21 @@ void main() {
     ]);
   });
 
+  test('treats tier as optional but rejects an unknown tier', () {
+    final source = jsonEncode({
+      'duas': [
+        _record(id: 'untiered')..['tier'] = null,
+        _record(id: 'bad-tier')..['tier'] = 'mandatory',
+        _record(id: 'tiered'),
+      ],
+    });
+
+    expect(extractApprovedAzkarTexts(source, category: 'duas'), [
+      'نص untiered',
+      'نص tiered',
+    ]);
+  });
+
   test('does not emit notification text for duplicate stable IDs', () {
     final source = jsonEncode({
       'evening': [

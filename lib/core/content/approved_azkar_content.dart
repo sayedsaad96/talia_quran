@@ -59,7 +59,10 @@ bool _isApprovedReleaseRecord(Map<String, dynamic> record) {
 
   final sourceType = record['sourceType'];
   if (sourceType is! String || !_sourceTypes.contains(sourceType)) return false;
-  if (!_tiers.contains(record['tier'])) return false;
+  // Tier is a priority label, not an authenticity claim: optional, but an
+  // unknown value still fails closed. The grade rule below stays strict.
+  final tier = record['tier'];
+  if (tier != null && !_tiers.contains(tier)) return false;
 
   final grade = record['authenticityGrade'];
   if (sourceType != 'quran' && !_grades.contains(grade)) return false;

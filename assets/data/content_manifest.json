@@ -66,7 +66,9 @@
       "importDate": "2026-08-30; 109 release records retained, with project-owner approval recorded on 2026-08-31; v2-candidate-1 context batch (7 records) promoted on 2026-09-25 with project-owner review",
       "reviewStatus": "approved",
       "reviewAuthority": "projectOwner",
-      "reviewDate": "2026-08-31"
+      "reviewDate": "2026-08-31",
+      "ownerReconfirmedDate": "2026-10-07",
+      "openProvenanceGaps": "Owner reconfirmed the content of all 116 records on 2026-10-07 during the release audit. Still open, and not filled from memory: sourceUrl on 85 records, authenticityGrade on every hadith-sourced record (they stay out of notifications until graded), tier on all records, and the license status. The unsourced English translation/transliteration fields are not rendered on share cards."
     },
     {
       "path": "assets/data/khatm_dua.json",
