@@ -308,7 +308,10 @@ class SocialShareData {
       title: categoryTitle,
       subtitle: zikr.reference.isNotEmpty ? zikr.reference : null,
       category: isDua ? SocialShareCategory.dua : SocialShareCategory.azkar,
-      translation: zikr.translation.isNotEmpty ? zikr.translation : null,
+      // The azkar dataset's English renderings have no recorded source and
+      // some are truncated; a translation of Quran or hadith meaning may only
+      // be published from an approved, attributed source (content policy).
+      translation: null,
       userName: userName,
       showCharacter: showCharacter,
       characterAssetPath: masterCharacterAsset,

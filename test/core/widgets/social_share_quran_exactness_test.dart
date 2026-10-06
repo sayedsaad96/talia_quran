@@ -70,4 +70,23 @@ void main() {
       expect(share.subtitle, citation);
     },
   );
+
+  test('dua share never carries the unsourced azkar translation', () {
+    const zikr = Zikr(
+      id: 'approved-dua-002',
+      text: 'سُبْحَانَ اللَّهِ',
+      transliteration: 'SubhanAllah',
+      translation: 'Glory be to Allah...',
+      totalCount: 33,
+      category: AzkarCategory.general,
+      reference: 'مسلم',
+      reviewStatus: ContentReviewStatus.approved,
+      datasetVersion: 'v1-reviewed-1',
+    );
+
+    final share = SocialShareData.dua(zikr: zikr, isDua: false);
+
+    expect(share.translation, isNull);
+    expect(share.toPlainShareText(), isNot(contains('Glory be to Allah')));
+  });
 }
