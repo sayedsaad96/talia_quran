@@ -185,6 +185,70 @@ function Assert-AndroidArtifactAssets([string] $Artifact) {
   Add-Result 'Android asset allowlist' 'PASS' 'approved assets present; candidate Azkar and .env absent'
 }
 
+# The adhan clips are looked up by name at runtime, so the release resource
+# shrinker drops them unless res/raw/keep.xml protects them.
+function Assert-AndroidAdhanClips([string] $Artifact) {
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $archive = [System.IO.Compression.ZipFile]::OpenRead($Artifact)
+  try {
+    $entries = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/') })
+  } finally {
+    $archive.Dispose()
+  }
+  $missing = @(
+    foreach ($clip in @('adhan', 'adhan_abdulbasit', 'adhan_afasy_fajr', 'adhan_makkah', 'adhan_qatami', 'adhan_suraihi')) {
+      if ($entries -notcontains "base/res/raw/$clip.mp3") { $clip }
+    }
+  )
+  if ($missing.Count -gt 0) {
+    Add-Result 'Android adhan clips' 'FAIL' "missing raw clips: $($missing -join ', ')"
+    throw "Built Android artifact is missing adhan clips: $($missing -join ', ')."
+  }
+  Add-Result 'Android adhan clips' 'PASS' 'all six res/raw adhan clips present'
+}
+
+# Google Play requires 16 KB page support: every 64-bit native library must
+# have ELF PT_LOAD segments aligned to at least 0x4000.
+function Assert-Android16KbAlignment([string] $Artifact) {
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $archive = [System.IO.Compression.ZipFile]::OpenRead($Artifact)
+  $failures = [System.Collections.Generic.List[string]]::new()
+  try {
+    $libraries = @($archive.Entries | Where-Object {
+        $_.FullName -match '^base/lib/(arm64-v8a|x86_64)/[^/]+\.so$'
+      })
+    foreach ($entry in $libraries) {
+      $stream = $entry.Open()
+      $buffer = New-Object System.IO.MemoryStream
+      try { $stream.CopyTo($buffer) } finally { $stream.Dispose() }
+      $bytes = $buffer.ToArray()
+      $programHeaderOffset = [BitConverter]::ToUInt64($bytes, 0x20)
+      $entrySize = [BitConverter]::ToUInt16($bytes, 0x36)
+      $entryCount = [BitConverter]::ToUInt16($bytes, 0x38)
+      for ($index = 0; $index -lt $entryCount; $index++) {
+        $offset = [int]($programHeaderOffset + $index * $entrySize)
+        if ([BitConverter]::ToUInt32($bytes, $offset) -ne 1) { continue }
+        $alignment = [BitConverter]::ToUInt64($bytes, $offset + 48)
+        if ($alignment -lt 0x4000) {
+          $failures.Add(('{0} (0x{1:x})' -f $entry.FullName, $alignment))
+          break
+        }
+      }
+    }
+  } finally {
+    $archive.Dispose()
+  }
+  if ($libraries.Count -eq 0) {
+    Add-Result 'Android 16 KB page alignment' 'FAIL' 'no 64-bit native libraries found'
+    throw 'Built Android artifact has no 64-bit native libraries.'
+  }
+  if ($failures.Count -gt 0) {
+    Add-Result 'Android 16 KB page alignment' 'FAIL' ($failures -join '; ')
+    throw "Native libraries are not 16 KB aligned: $($failures -join '; ')."
+  }
+  Add-Result 'Android 16 KB page alignment' 'PASS' "$($libraries.Count) 64-bit libraries aligned to >= 0x4000"
+}
+
 function Write-SourceHashes([AllowEmptyString()][string] $Artifact = '') {
   $paths = [System.Collections.Generic.List[string]]::new()
   foreach ($root in @('lib', 'supabase\migrations')) {
@@ -377,16 +441,20 @@ try {
       throw 'Android release appbundle was not produced.'
     }
     Assert-AndroidArtifactAssets $script:artifactPath
+    Assert-AndroidAdhanClips $script:artifactPath
+    Assert-Android16KbAlignment $script:artifactPath
     Write-SourceHashes $script:artifactPath
   } else {
     Add-Result 'Cloud production defines' 'NOT RUN' 'Release build not requested; development-stage verification only'
     Add-Result 'Android release appbundle' 'NOT RUN' 'Release build not requested; pass -BuildAndroidRelease only at release-candidate time'
     Add-Result 'Android asset allowlist' 'NOT RUN' 'requires the explicitly requested release artifact'
+    Add-Result 'Android adhan clips' 'NOT RUN' 'requires the explicitly requested release artifact'
+    Add-Result 'Android 16 KB page alignment' 'NOT RUN' 'requires the explicitly requested release artifact'
     Write-SourceHashes
   }
 
   $androidConfig = Get-Content -LiteralPath (Join-Path $repositoryRoot 'android\app\build.gradle.kts') -Raw
-  if ($androidConfig.Contains('applicationId = "com.talia.quran"') -or
+  if ($androidConfig.Contains('applicationId = "com.example.') -or
       $androidConfig.Contains('signingConfig = signingConfigs.getByName("debug")')) {
     Add-Result 'Store identity and signing' 'BLOCKED' 'default applicationId and/or debug release signing; store artifact NOT READY'
   } else {
