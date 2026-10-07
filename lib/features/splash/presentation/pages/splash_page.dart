@@ -29,7 +29,8 @@ class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
   bool _initError = false;
 
-  static const Duration _minDisplayDuration = Duration(milliseconds: 1500);
+  // Long enough for the entrance animations (tagline ends at ~950 ms).
+  static const Duration _minDisplayDuration = Duration(milliseconds: 1000);
 
   @override
   void initState() {
