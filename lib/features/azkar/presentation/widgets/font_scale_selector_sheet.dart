@@ -62,9 +62,9 @@ class FontScaleSelectorSheet extends StatelessWidget {
         context.tokens.textSecondary;
 
     final scales = [
-      (label: 'صغير', scale: 0.85, sampleSize: 18.0),
-      (label: 'متوسط', scale: 1.0, sampleSize: 22.0),
-      (label: 'كبير', scale: 1.25, sampleSize: 26.0),
+      (label: context.l10n.small, scale: 0.85, sampleSize: 18.0),
+      (label: context.l10n.medium, scale: 1.0, sampleSize: 22.0),
+      (label: context.l10n.large, scale: 1.25, sampleSize: 26.0),
     ];
 
     return Material(
@@ -103,7 +103,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'حجم خط الأذكار',
+                    context.l10n.azkarFontSizeTitle,
                     style: AppTypography.titleLarge.copyWith(
                       color: textColor,
                       fontFamily: 'Amiri',

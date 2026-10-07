@@ -7712,4 +7712,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String surahNamed(String name) {
     return 'Surah $name';
   }
+
+  @override
+  String get azkarFontSizeTitle => 'Azkar font size';
 }

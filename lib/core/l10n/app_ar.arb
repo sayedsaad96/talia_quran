@@ -3244,4 +3244,5 @@
   ,"authCloudUnavailable": "الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف."
   ,"surahNamed": "سورة {name}"
   ,"@surahNamed": {"placeholders": {"name": {"type": "String"}}}
+  ,"azkarFontSizeTitle": "حجم خط الأذكار"
 }

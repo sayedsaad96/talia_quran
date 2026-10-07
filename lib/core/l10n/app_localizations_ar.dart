@@ -7715,4 +7715,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String surahNamed(String name) {
     return 'سورة $name';
   }
+
+  @override
+  String get azkarFontSizeTitle => 'حجم خط الأذكار';
 }

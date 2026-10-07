@@ -3206,4 +3206,5 @@
   ,"authCloudUnavailable": "Accounts aren't available in this version. You can keep using Talia as a guest."
   ,"surahNamed": "Surah {name}"
   ,"@surahNamed": {"placeholders": {"name": {"type": "String"}}}
+  ,"azkarFontSizeTitle": "Azkar font size"
 }

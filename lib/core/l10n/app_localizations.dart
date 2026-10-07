@@ -13029,6 +13029,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'سورة {name}'**
   String surahNamed(String name);
+
+  /// No description provided for @azkarFontSizeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حجم خط الأذكار'**
+  String get azkarFontSizeTitle;
 }
 
 class _AppLocalizationsDelegate
