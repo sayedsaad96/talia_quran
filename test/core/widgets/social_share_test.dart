@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -294,6 +296,40 @@ void main() {
       await tester.pump();
 
       expect(find.text('en'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('image capture rasterizes the fixed portrait canvas', (
+      tester,
+    ) async {
+      late BuildContext context;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (buildContext) {
+              context = buildContext;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      final bytes = await tester.runAsync(
+        () => captureSocialShareCardImage(
+          context: context,
+          data: const SocialShareData(
+            content: 'My Quran progress',
+            category: SocialShareCategory.progress,
+          ),
+          format: SocialShareFormat.portrait,
+        ),
+      );
+      expect(bytes, isNotNull);
+      final header = ByteData.view(bytes!.buffer, 16, 8);
+
+      expect(header.getUint32(0), 1080);
+      expect(header.getUint32(4), 1350);
+      expect(bytes.length, greaterThan(1024));
       expect(tester.takeException(), isNull);
     });
 

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../constants/app_spacing.dart';
@@ -14,6 +13,7 @@ import '../../extensions/context_extensions.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import 'social_share_card.dart';
+import 'social_share_card_rasterizer.dart';
 import 'social_share_copy.dart';
 import '../../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
@@ -57,21 +57,20 @@ Future<Uint8List> captureSocialShareCardImage({
   SocialShareMood mood = SocialShareMood.auto,
   required SocialShareFormat format,
   bool hideUserName = false,
-  ScreenshotController? controller,
-}) {
+}) async {
   final size = format.exportLogicalSize;
-  final canvas = buildSocialShareCardCanvas(
-    data: data,
-    mood: mood,
-    format: format,
-    hideUserName: hideUserName,
-  );
-  return (controller ?? ScreenshotController()).captureFromWidget(
-    buildSocialShareCaptureTree(context: context, child: canvas),
+  return rasterizeSocialShareCard(
+    buildSocialShareCaptureTree(
+      context: context,
+      child: buildSocialShareCardCanvas(
+        data: data,
+        mood: mood,
+        format: format,
+        hideUserName: hideUserName,
+      ),
+    ),
     context: context,
-    delay: const Duration(milliseconds: 200),
-    pixelRatio: 3,
-    targetSize: size,
+    size: size,
   );
 }
 
@@ -119,7 +118,6 @@ class SocialShareSheet extends StatefulWidget {
 }
 
 class _SocialShareSheetState extends State<SocialShareSheet> {
-  final ScreenshotController _screenshotController = ScreenshotController();
   // Auto follows the content type (and audience); night/day force one look.
   SocialShareMood _selectedMood = SocialShareMood.auto;
   SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
@@ -203,7 +201,6 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
         mood: _selectedMood,
         format: _selectedFormat,
         hideUserName: !_showUserName,
-        controller: _screenshotController,
       );
     } catch (e) {
       debugPrint('Error capturing social card image: $e');
