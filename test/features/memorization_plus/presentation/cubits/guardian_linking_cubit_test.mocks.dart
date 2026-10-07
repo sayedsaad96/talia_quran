@@ -161,25 +161,6 @@ class MockMemorizationPlusRepository extends _i1.Mock
           as _i4.Future<_i2.Either<_i5.Failure, _i6.PairingSession>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>
-  acceptGuardianPairingCode(String? codeOrQrData) =>
-      (super.noSuchMethod(
-            Invocation.method(#acceptGuardianPairingCode, [codeOrQrData]),
-            returnValue:
-                _i4.Future<
-                  _i2.Either<_i5.Failure, _i6.MemorizationProfile>
-                >.value(
-                  _FakeEither_0<_i5.Failure, _i6.MemorizationProfile>(
-                    this,
-                    Invocation.method(#acceptGuardianPairingCode, [
-                      codeOrQrData,
-                    ]),
-                  ),
-                ),
-          )
-          as _i4.Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>);
-
-  @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.PairingSession?>>
   refreshPairingSession() =>
       (super.noSuchMethod(

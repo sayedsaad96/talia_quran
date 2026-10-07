@@ -13,9 +13,10 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/child_
 
 void main() {
   // `revoke_guardian_link` was checked on the hosted project on 2026-10-05
-  // (security definer, authenticated only, active links, child-caller
-  // branch). The guardian-side removal stays hidden; the child's own unlink
-  // is offered only through the PIN-gated kids settings tile.
+  // (security definer, authenticated only, active links, both caller
+  // branches). The child's own unlink is offered only through the PIN-gated
+  // kids settings tile; the guardian's removal (product decision 2026-10-07)
+  // only through the confirming button on a linked child's detail page.
   test(
     'presentation pages and widgets do not invoke guardian unlink directly',
     () {
@@ -46,8 +47,10 @@ void main() {
       final forbiddenInvocation = RegExp(
         r'\b(?:unlinkGuardian|removeChild)\s*\(',
       );
+      const allowed = {'remove_child_from_family_button.dart'};
       final violations = <String>[];
       for (final file in scannedFiles) {
+        if (allowed.contains(file.uri.pathSegments.last)) continue;
         final matches = forbiddenInvocation.allMatches(file.readAsStringSync());
         if (matches.isNotEmpty) {
           violations.add(
@@ -77,7 +80,7 @@ void main() {
     },
   );
 
-  testWidgets('remote child detail does not expose guardian-side unlink', (
+  testWidgets('only a linked child offers removal from the family', (
     tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -107,9 +110,26 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Remove child'), findsNothing);
-    expect(find.byTooltip('Remove child'), findsNothing);
-    expect(find.byIcon(Icons.link_off_rounded), findsNothing);
+    expect(find.byKey(const ValueKey('family-remove-child')), findsOneWidget);
+
+    await tester.pumpWidget(
+      _TestApp(
+        child: BlocProvider.value(
+          value: cubit,
+          child: const ChildDetailPage(
+            child: FamilyChildEntry(
+              childUserId: 'local-child',
+              displayName: 'This device',
+              isLocal: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The child on this device has no server link to end from here.
+    expect(find.byKey(const ValueKey('family-remove-child')), findsNothing);
   });
 }
 

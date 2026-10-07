@@ -29,7 +29,6 @@ import '../widgets/home_contextual_slot.dart';
 import '../widgets/home_first_run.dart';
 import '../widgets/home_hero_section.dart';
 import '../widgets/home_night_header.dart';
-import '../widgets/home_parent_children.dart';
 import '../widgets/home_start_khatmah_card.dart';
 import '../widgets/home_unified_progress.dart';
 import '../widgets/next_best_action_card.dart';
@@ -317,24 +316,6 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
-            if (widget.state.familyChildren.isNotEmpty)
-              SliverToBoxAdapter(
-                child: StaggeredFadeSlide(
-                  delay: const Duration(milliseconds: 160),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pagePadding,
-                      AppSpacing.md,
-                      AppSpacing.pagePadding,
-                      0,
-                    ),
-                    child: HomeParentChildren(
-                      children: widget.state.familyChildren,
-                      skin: widget.skin,
-                    ),
-                  ),
-                ),
-              ),
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 240),

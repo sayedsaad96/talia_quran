@@ -84,7 +84,76 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.createPairingCalls, 1);
-    expect(find.text('ABCDEF'), findsOneWidget);
+    // Shown in groups of four so it can be read out and typed reliably.
+    expect(find.text('ABCD-EF'), findsOneWidget);
+  });
+
+  testWidgets('a shown code never traps the child: "Link later" skips', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository();
+    getIt.registerFactory<GuardianLinkingCubit>(
+      () => GuardianLinkingCubit(repository),
+    );
+
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('guardian-check-now')), findsOneWidget);
+    final later = find.byKey(const ValueKey('guardian-link-later'));
+    await tester.scrollUntilVisible(later, 200, scrollable: _pageScroll);
+    await tester.tap(later);
+    await tester.pump();
+
+    expect(repository.continueWithoutGuardianCalls, 1);
+  });
+
+  testWidgets('"Check now" reads the link status at once', (tester) async {
+    final repository = _GuardianLinkingRepository();
+    getIt.registerFactory<GuardianLinkingCubit>(
+      () => GuardianLinkingCubit(repository),
+    );
+
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+    final before = repository.linkChecks;
+
+    final checkNow = find.byKey(const ValueKey('guardian-check-now'));
+    await tester.scrollUntilVisible(checkNow, 200, scrollable: _pageScroll);
+    await tester.ensureVisible(checkNow);
+    await tester.pumpAndSettle();
+    await tester.tap(checkNow);
+    await tester.pump();
+
+    expect(repository.linkChecks, before + 1);
+    // Leave the page so the poll timer is cancelled before the test ends.
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('a blocked pairing explains the reason in the UI language', (
@@ -185,11 +254,23 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 
 class _GuardianLinkingRepository implements MemorizationPlusRepository {
   int createPairingCalls = 0;
+  int continueWithoutGuardianCalls = 0;
+  int linkChecks = 0;
   Either<Failure, PairingSession>? createPairingResult;
 
   @override
   Future<Either<Failure, MemorizationProfile>>
-  refreshChildGuardianLink() async => Right(_childProfile());
+  refreshChildGuardianLink() async {
+    linkChecks++;
+    return Right(_childProfile());
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian() async {
+    continueWithoutGuardianCalls++;
+    // Stays pending so the test does not need the router to navigate.
+    return const Left(CacheFailure('kept on screen for the test'));
+  }
 
   @override
   Future<Either<Failure, PairingSession?>> refreshPairingSession() async =>
@@ -233,3 +314,8 @@ PairingSession _pairingSession() {
     isUsed: false,
   );
 }
+
+/// The page list itself (the code text has a scrollable of its own).
+final _pageScroll = find
+    .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
+    .first;

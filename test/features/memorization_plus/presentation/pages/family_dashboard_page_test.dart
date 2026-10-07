@@ -426,6 +426,23 @@ void main() {
       expect(find.textContaining('@guardian'), findsNothing);
     });
 
+    testWidgets('a typed code links with a visible step and a confirmation', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2');
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await submitManualCode(tester, 'A1B2-C3D4-E5F6');
+
+      expect(
+        find.byKey(const ValueKey('family-linking-progress')),
+        findsNothing,
+      );
+      expect(find.text('Child linked successfully'), findsOneWidget);
+      expect(usecases.parentModeChanges, [true]);
+    });
+
     testWidgets('a generic server failure is shown as readable text', (
       tester,
     ) async {
@@ -523,6 +540,34 @@ void main() {
       expect(find.byType(TextField), findsNWidgets(2));
       final pinField = tester.widget<TextField>(find.byType(TextField).first);
       expect(pinField.controller!.text, isEmpty);
+    });
+
+    testWidgets('on the guardian\'s phone the sheet offers only the PIN', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2')
+        ..dashboard = _dashboardWithChildren(const [
+          FamilyChildEntry(
+            childUserId: 'c1',
+            displayName: 'Maryam',
+            isLocal: false,
+          ),
+        ]);
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('family-change-pin')), findsOneWidget);
+      // These belong to a child on this device; a linked child's live on
+      // their detail page.
+      expect(find.text('Missions per day'), findsNothing);
+      expect(find.text('Daily reminder for the child'), findsNothing);
     });
 
     testWidgets('changing the PIN from settings needs confirmation', (
@@ -813,6 +858,8 @@ class _FakeUsecases {
     KidsChildPolicy(),
   );
 
+  final parentModeChanges = <bool>[];
+
   late final parentAccess = _FakeParentAccess(this);
   late final remoteLink = _FakeRemoteLink(this);
   late final familyDashboard = _FakeFamilyDashboard(this);
@@ -853,6 +900,14 @@ class _FakeParentAccess implements ParentAccessUsecase {
   @override
   Future<Either<Failure, List<ParentReward>>> saveReward(String title) async =>
       const Right([]);
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
+    bool value,
+  ) async {
+    _owner.parentModeChanges.add(value);
+    return const Left(CacheFailure('profile not needed by these tests'));
+  }
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveChildPolicy(

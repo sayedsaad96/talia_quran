@@ -51,11 +51,6 @@ mixin _MemorizationIdentityReads on _MemorizationPlusRepositoryCore {
       _parentAccess.createGuardianPairingSession();
 
   @override
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String codeOrQrData,
-  ) => _parentAccess.acceptGuardianPairingCode(codeOrQrData);
-
-  @override
   Future<Either<Failure, PairingSession?>> refreshPairingSession() =>
       _parentAccess.refreshPairingSession();
 

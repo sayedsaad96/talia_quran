@@ -18,6 +18,7 @@ import '../widgets/guardian_session_scope.dart';
 import '../widgets/home_missions_panel.dart';
 import '../widgets/kids_policy_controls.dart';
 import '../widgets/parent_support_tip.dart';
+import '../widgets/remove_child_from_family_button.dart';
 import 'family_dashboard_page.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
@@ -272,12 +273,18 @@ class _ChildDetailBody extends StatelessWidget {
             icon: const Icon(Icons.edit_rounded),
             label: Text(context.l10n.parentDashboardEditChild),
           )
-        else
+        else ...[
           OutlinedButton.icon(
             onPressed: () => _showEditIdentityDialog(context),
             icon: const Icon(Icons.edit_rounded),
             label: Text(context.l10n.childEditIdentity),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          RemoveChildFromFamilyButton(
+            childUserId: child.childUserId,
+            childName: child.shownName(context.l10n),
+          ),
+        ],
       ],
     );
   }

@@ -32,6 +32,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     this.rewards = const [],
     this.homeMissions = const [],
     this.homeMissionsPaused = false,
+    this.guardianLinked = false,
     this.rewardMessage,
     this.rewardMessageId = 0,
   });
@@ -48,6 +49,9 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
 
   /// The guardian turned home missions off; the list is replaced by a note.
   final bool homeMissionsPaused;
+
+  /// A guardian follows this child from their own device.
+  final bool guardianLinked;
 
   /// A cubit message code for a gift request that did not go through.
   final String? rewardMessage;
@@ -66,6 +70,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     rewards: rewards ?? this.rewards,
     homeMissions: homeMissions ?? this.homeMissions,
     homeMissionsPaused: homeMissionsPaused,
+    guardianLinked: guardianLinked,
     rewardMessage: rewardMessage,
     rewardMessageId: rewardMessageId ?? this.rewardMessageId,
   );
@@ -77,6 +82,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     rewards,
     homeMissions,
     homeMissionsPaused,
+    guardianLinked,
     rewardMessage,
     rewardMessageId,
   ];
@@ -118,6 +124,19 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
   final bool Function()? _homeMissionsEnabled;
   final _requesting = <String>{};
 
+  /// A failed read only hides the badge.
+  Future<bool> _isGuardianLinked() async {
+    try {
+      final result = await _memorizationRepository.getMemorizationProfile();
+      return result.fold<bool>(
+        (_) => false,
+        (profile) => profile.isGuardianLinked,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> load() async {
     emit(const KidsTreasuresLoading());
     try {
@@ -141,6 +160,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
       final missions = paused
           ? const <KidsHomeMission>[]
           : await _loadMissions();
+      final guardianLinked = await _isGuardianLinked();
       if (isClosed) return;
       emit(
         KidsTreasuresLoaded(
@@ -149,6 +169,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
           rewards: rewards,
           homeMissions: missions,
           homeMissionsPaused: paused,
+          guardianLinked: guardianLinked,
         ),
       );
     } catch (_) {

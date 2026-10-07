@@ -127,7 +127,6 @@ class HomeCubit extends Cubit<HomeState> {
     StreakRiskEvaluator streakRiskEvaluator = const StreakRiskEvaluator(),
     StreakService? streakService,
     AudioResumeStore? audioResumeStore,
-    GetFamilyDashboardUsecase? getFamilyDashboard,
     GetAyahOfDayUsecase? getAyahOfDay,
     PrayerTimesService? prayerTimes,
     PrayerCompanionPreferences? companionPreferences,
@@ -434,7 +433,6 @@ class HomeCubit extends Cubit<HomeState> {
         hijriLabel: extras.hijriLabel,
         gregorianLabel: extras.gregorianLabel,
         activeSlot: extras.activeSlot,
-        familyChildren: extras.familyChildren,
         prayerSnapshot: extras.prayerSnapshot,
         prayerCompanionSummary: extras.prayerCompanionSummary,
         weeklyActiveDays: extras.weeklyActiveDays,
@@ -471,7 +469,6 @@ class HomeCubit extends Cubit<HomeState> {
       String hijriLabel,
       String gregorianLabel,
       HomeSlotCandidate? activeSlot,
-      List<FamilyChildEntry> familyChildren,
       PrayerTimesSnapshot? prayerSnapshot,
       PrayerCompanionDaySummary? prayerCompanionSummary,
       int weeklyActiveDays,
@@ -522,9 +519,8 @@ class HomeCubit extends Cubit<HomeState> {
 
     final risk = await reads.streakRisk;
 
-    // Family data stays exclusively behind FamilyDashboardCubit's PIN gate.
-    // Home shows the parent-tools entry point but never fetches child details.
-    const children = <FamilyChildEntry>[];
+    // Family data stays behind the family dashboard: home shows only the
+    // parent-tools entry point and never reads child details.
 
     final prayer = await reads.prayer;
     final companionSummary = await companionSummaryFor(prayer);
@@ -607,7 +603,6 @@ class HomeCubit extends Cubit<HomeState> {
       hijriLabel: occasion.hijriLabel,
       gregorianLabel: occasion.gregorianLabel,
       activeSlot: slot,
-      familyChildren: children,
       prayerSnapshot: prayer,
       prayerCompanionSummary: companionSummary,
       weeklyActiveDays: weeklyDays,

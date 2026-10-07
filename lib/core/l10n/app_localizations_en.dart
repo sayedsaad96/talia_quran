@@ -317,9 +317,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialShortcutProgressDesc => 'Certificates & achievements';
 
   @override
-  String get splashTagline => 'Your Companion in the Journey of the Quran';
-
-  @override
   String get splashInitError => 'Couldn\'t finish loading. Please try again.';
 
   @override
@@ -1833,7 +1830,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsAndGuardian => 'Kids and Guardian';
 
   @override
-  String get parentDashboardTitle => 'Parent Dashboard';
+  String get parentDashboardTitle => 'Family Dashboard';
 
   @override
   String get parentDashboardSubtitle =>
@@ -1924,11 +1921,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianPairingStepOpenDashboard =>
-      'Go to Settings > Guardian Dashboard';
+      'Go to Settings → Kids & Guardian → Family Dashboard → “Link New Child”';
 
   @override
   String get guardianPairingStepScanOrEnterCode =>
       'Scan the QR code or enter the code manually';
+
+  @override
+  String get guardianLinkLater => 'Link later';
+
+  @override
+  String get guardianLinkLaterHint =>
+      'You can link any time from ⚙ in your journey.';
+
+  @override
+  String get guardianCheckNow => 'Scanned? Check now';
+
+  @override
+  String get guardianLinkedSuccess => 'Linked with your guardian ✓';
+
+  @override
+  String get parentDashboardNotLinkCode => 'This isn\'t a Talia link code';
+
+  @override
+  String get familyDashboardLinking => 'Linking the child…';
+
+  @override
+  String get familyPinOptionalHelp =>
+      'Optional on your phone: keeps others out of the Family Dashboard.';
+
+  @override
+  String get familyPinSkip => 'Continue without a lock';
+
+  @override
+  String get familyPinLockOn => 'Lock the dashboard with a PIN';
+
+  @override
+  String get familyPinLockRemove => 'Remove the dashboard lock';
+
+  @override
+  String get familyPinLockRemoveConfirm =>
+      'The Family Dashboard will open on this device without a PIN. You can lock it again any time.';
+
+  @override
+  String get kidsGuardianLinkedBadge => 'Your guardian follows your journey 💚';
 
   @override
   String get guardianRegenerateCode => 'Regenerate code';
@@ -1956,6 +1992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get splashSubtitle =>
       'Read, memorize, review, and grow with the Quran.';
+
+  @override
+  String get splashTagline => 'Your Companion in the Journey of the Quran';
 
   @override
   String get splashFeatureRead => 'Read';
@@ -3187,7 +3226,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t load the home missions right now.';
 
   @override
-  String get guardianSessionTileTitle => 'Guardian area';
+  String get guardianSessionTileTitle => 'Family Dashboard';
 
   @override
   String get guardianSessionTileSubtitle =>
@@ -3371,7 +3410,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardChildReminder => 'Child reminder';
 
   @override
-  String get parentDashboardDailyReminder => 'Daily reminder at 6:30 PM';
+  String get parentDashboardDailyReminder => 'Daily reminder for the child';
 
   @override
   String get parentDashboardReminderSubtitle =>
@@ -3437,18 +3476,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardEditChild => 'Edit Child Details';
-
-  @override
-  String get parentDashboardChildLinked => 'Child linked successfully';
-
-  @override
-  String get parentDashboardRewardAdded => 'Reward added';
-
-  @override
-  String get parentDashboardRemoteRewardAdded => 'Reward sent to child';
-
-  @override
-  String get parentDashboardReminderSaved => 'Reminder updated';
 
   @override
   String get parentDashboardChildRemoved => 'Child removed';
@@ -3936,6 +3963,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardUnlinking => 'Removing guardian link…';
+
+  @override
+  String get parentDashboardRewardAdded => 'Reward added';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'Reward sent to child';
+
+  @override
+  String get parentDashboardChildLinked => 'Child linked successfully';
+
+  @override
+  String get parentDashboardReminderSaved => 'Reminder updated';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -5441,7 +5480,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exploreQuranSubtitle => 'Read the Quran';
 
   @override
-  String get parentDashboardLinkHint => 'talia-kids-link:...';
+  String get parentDashboardLinkHint => 'e.g. A1B2-C3D4-E5F6';
 
   @override
   String get familyDashboardTitle => 'Family Dashboard';
@@ -6140,9 +6179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahEndPlanAction => 'End Khatmah';
 
   @override
-  String get khatmahStartNewKhatmah => 'Start a new khatmah';
-
-  @override
   String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
       'Choose your daily reading pace to complete the Quran with serenity.';
 
@@ -6460,6 +6496,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0 behind the finish date';
   }
+
+  @override
+  String get khatmahStartNewKhatmah => 'Start a new khatmah';
 
   @override
   String khatmahThroughWirdEnd(String page) {

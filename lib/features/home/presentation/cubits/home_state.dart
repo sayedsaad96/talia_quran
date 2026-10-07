@@ -46,7 +46,6 @@ class HomeLoaded extends HomeState {
     this.hijriLabel = '',
     this.gregorianLabel = '',
     this.activeSlot,
-    this.familyChildren = const [],
     this.prayerSnapshot,
     this.prayerCompanionSummary,
     this.weeklyActiveDays = 0,
@@ -88,7 +87,6 @@ class HomeLoaded extends HomeState {
     String? hijriLabel,
     String? gregorianLabel,
     HomeSlotCandidate? activeSlot,
-    List<FamilyChildEntry>? familyChildren,
     PrayerTimesSnapshot? prayerSnapshot,
     PrayerCompanionDaySummary? prayerCompanionSummary,
     int? weeklyActiveDays,
@@ -132,7 +130,6 @@ class HomeLoaded extends HomeState {
       hijriLabel: hijriLabel ?? this.hijriLabel,
       gregorianLabel: gregorianLabel ?? this.gregorianLabel,
       activeSlot: activeSlot ?? this.activeSlot,
-      familyChildren: familyChildren ?? this.familyChildren,
       prayerSnapshot: prayerSnapshot ?? this.prayerSnapshot,
       prayerCompanionSummary:
           prayerCompanionSummary ?? this.prayerCompanionSummary,
@@ -174,7 +171,6 @@ class HomeLoaded extends HomeState {
   final String hijriLabel;
   final String gregorianLabel;
   final HomeSlotCandidate? activeSlot;
-  final List<FamilyChildEntry> familyChildren;
   final PrayerTimesSnapshot? prayerSnapshot;
   final PrayerCompanionDaySummary? prayerCompanionSummary;
   final int weeklyActiveDays;
@@ -234,7 +230,6 @@ class HomeLoaded extends HomeState {
     hijriLabel,
     gregorianLabel,
     activeSlot,
-    familyChildren,
     prayerSnapshot,
     prayerCompanionSummary,
     weeklyActiveDays,

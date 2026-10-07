@@ -37,9 +37,9 @@ class SettingsState extends Equatable {
         memorizationProfile?.selectedPath == MemorizationPath.child;
   }
 
-  bool get shouldShowParentSection {
-    return isAdultPath && isParentMode;
-  }
+  /// Every adult reaches the family dashboard: the child's linking screen
+  /// sends the guardian there, and a successful link turns parent mode on.
+  bool get shouldShowParentSection => isAdultPath;
 
   SettingsState copyWith({
     String? selectedTrack,

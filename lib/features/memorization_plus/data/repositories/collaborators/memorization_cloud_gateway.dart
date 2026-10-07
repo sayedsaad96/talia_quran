@@ -69,16 +69,4 @@ class MemorizationCloudGateway {
     if (links.isEmpty) return null;
     return links.first['parent_user_id'] as String?;
   }
-
-  Future<String?> latestActiveChildIdForParent(String parentUserId) async {
-    final links = await supabase
-        .from('parent_child_links')
-        .select('child_user_id')
-        .eq('parent_user_id', parentUserId)
-        .eq('status', 'active')
-        .order('linked_at', ascending: false)
-        .limit(1);
-    if (links.isEmpty) return null;
-    return links.first['child_user_id'] as String?;
-  }
 }

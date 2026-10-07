@@ -1125,6 +1125,10 @@ Future<void> configureDependencies({bool background = false}) async {
       accountVerifier: const SupabaseAccountPasswordVerifier(),
       rewards: getIt<ParentRewardUsecase>(),
       guardianSessionActive: () => getIt<GuardianSessionController>().isActive,
+      // The PIN is optional on an adult's own phone, never on a child's.
+      pinOptional: () async =>
+          (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
+              .fold((_) => false, (profile) => !profile.isChild),
     ),
   );
   getIt.registerFactory<MemorizationSessionCubit>(
@@ -1164,7 +1168,6 @@ Future<void> configureDependencies({bool background = false}) async {
       streakRiskEvaluator: getIt<StreakRiskEvaluator>(),
       streakService: getIt<StreakService>(),
       audioResumeStore: getIt<AudioResumeStore>(),
-      getFamilyDashboard: getIt<GetFamilyDashboardUsecase>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       prayerTimes: getIt<PrayerTimesService>(),
       companionPreferences: getIt<PrayerCompanionPreferences>(),

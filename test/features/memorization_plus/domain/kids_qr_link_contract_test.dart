@@ -64,5 +64,20 @@ void main() {
         expect(viaManualEntry, 'ABC123');
       },
     );
+
+    test('display code groups the token in fours and stays a valid entry', () {
+      expect(KidsQrLinkContract.displayCode('a1b2c3d4e5f6'), 'A1B2-C3D4-E5F6');
+      expect(
+        KidsQrLinkContract.displayCode('A1B2-C3D4 E5F6'),
+        'A1B2-C3D4-E5F6',
+      );
+      expect(KidsQrLinkContract.displayCode('ABCDEF'), 'ABCD-EF');
+      expect(
+        MemorizationParentAccessService.normalizeLinkToken(
+          KidsQrLinkContract.displayCode('A1B2C3D4E5F6'),
+        ),
+        'A1B2C3D4E5F6',
+      );
+    });
   });
 }

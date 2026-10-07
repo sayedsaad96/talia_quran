@@ -47,6 +47,33 @@ class _FakeRepository implements MemorizationPlusRepository {
     KidsChildPolicy(version: 1),
   );
   int dashboardCalls = 0;
+  final acceptedTokens = <String>[];
+  Either<Failure, void> acceptResult = const Right(null);
+  Completer<void>? acceptGate;
+  final parentModeChanges = <bool>[];
+  Either<Failure, void> revokeResult = const Right(null);
+  final revoked = <String>[];
+
+  @override
+  Future<Either<Failure, void>> removeChild(String childUserId) async {
+    revoked.add(childUserId);
+    return revokeResult;
+  }
+
+  @override
+  Future<Either<Failure, void>> acceptChildLinkToken(String token) async {
+    acceptedTokens.add(token);
+    await acceptGate?.future;
+    return acceptResult;
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
+    bool value,
+  ) async {
+    parentModeChanges.add(value);
+    return const Left(CacheFailure('not needed by these tests'));
+  }
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveLocalChildPolicy(
@@ -202,6 +229,7 @@ FamilyDashboardCubit _buildCubit(
   AccountPasswordVerifier? verifier,
   ParentRewardUsecase? rewards,
   bool Function()? guardianSessionActive,
+  Future<bool> Function()? pinOptional,
 }) => FamilyDashboardCubit(
   ParentAccessUsecase(repository),
   ParentRemoteLinkUsecase(repository),
@@ -209,6 +237,7 @@ FamilyDashboardCubit _buildCubit(
   accountVerifier: verifier,
   rewards: rewards,
   guardianSessionActive: guardianSessionActive,
+  pinOptional: pinOptional,
 );
 
 Future<void> _unlockAndLoad(FamilyDashboardCubit cubit) async {
@@ -370,6 +399,168 @@ void main() {
       expect(cubit.state, isA<FamilyDashboardError>());
     },
   );
+
+  group('optional PIN on the guardian\'s phone', () {
+    Future<bool> optional() async => true;
+
+    test('without a PIN the dashboard opens directly', () async {
+      final repository = _FakeRepository(
+        settingsResult: const Right(ParentSettings()),
+      );
+      final cubit = _buildCubit(repository, pinOptional: optional);
+
+      await cubit.load();
+
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
+      await cubit.close();
+    });
+
+    test('the child device still asks for a PIN without the option', () async {
+      final repository = _FakeRepository(
+        settingsResult: const Right(ParentSettings()),
+      );
+      final cubit = _buildCubit(repository);
+
+      await cubit.load();
+
+      expect(cubit.state, const FamilyDashboardNeedsPin());
+      await cubit.close();
+    });
+
+    test('locking asks for a PIN that can be skipped', () async {
+      final repository = _FakeRepository(
+        settingsResult: const Right(ParentSettings()),
+      );
+      final cubit = _buildCubit(repository, pinOptional: optional);
+      await cubit.load();
+
+      await cubit.lockWithPin();
+      expect(cubit.state, const FamilyDashboardNeedsPin(canSkip: true));
+
+      await cubit.skipPin();
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
+      await cubit.close();
+    });
+
+    test('removing the lock clears the PIN and stays open', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository, pinOptional: optional);
+      await _unlockAndLoad(cubit);
+
+      await cubit.removePinLock();
+
+      expect(repository.resetCalls, 1);
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
+      await cubit.close();
+    });
+
+    test('changing the PIN offers a new one or no lock', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository, pinOptional: optional);
+      await _unlockAndLoad(cubit);
+
+      await cubit.resetAccess();
+
+      expect(cubit.state, const FamilyDashboardNeedsPin(canSkip: true));
+      await cubit.close();
+    });
+
+    test('without the option the lock cannot be removed or skipped', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      await cubit.removePinLock();
+      expect(repository.resetCalls, 0);
+
+      await cubit.resetAccess();
+      expect(cubit.state, const FamilyDashboardNeedsPin());
+      await cubit.skipPin();
+      expect(cubit.state, const FamilyDashboardNeedsPin());
+      await cubit.close();
+    });
+  });
+
+  group('removing a child', () {
+    test('success revokes the link and reports it', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      expect(await cubit.removeChild('c1'), isTrue);
+      await pumpEventQueue();
+
+      expect(repository.revoked, ['c1']);
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback,
+        const FamilyDashboardFeedback.childRemoved(),
+      );
+      await cubit.close();
+    });
+
+    test('a failure keeps the child and says why', () async {
+      final repository = _FakeRepository()
+        ..revokeResult = const Left(NetworkFailure());
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      expect(await cubit.removeChild('c1'), isFalse);
+      expect((cubit.state as FamilyDashboardLoaded).feedback?.isError, isTrue);
+      await cubit.close();
+    });
+  });
+
+  group('linking a child', () {
+    test('success turns parent mode on and reloads with feedback', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      await cubit.acceptRemoteToken('A1B2-C3D4-E5F6');
+
+      expect(repository.acceptedTokens, ['A1B2-C3D4-E5F6']);
+      expect(repository.parentModeChanges, [true]);
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback,
+        const FamilyDashboardFeedback.childLinked(),
+      );
+      await cubit.close();
+    });
+
+    test('a failure leaves parent mode alone and shows the reason', () async {
+      final repository = _FakeRepository()
+        ..acceptResult = const Left(
+          ServerFailure(CubitMessageCodes.guardianLinkCodeInvalid),
+        );
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      await cubit.acceptRemoteToken('A1B2C3D4E5F6');
+
+      expect(repository.parentModeChanges, isEmpty);
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback,
+        const FamilyDashboardFeedback.failure(
+          CubitMessageCodes.guardianLinkCodeInvalid,
+        ),
+      );
+      await cubit.close();
+    });
+
+    test('a second submit while linking is ignored', () async {
+      final repository = _FakeRepository()..acceptGate = Completer<void>();
+      final cubit = _buildCubit(repository);
+      await _unlockAndLoad(cubit);
+
+      final first = cubit.acceptRemoteToken('A1B2C3D4E5F6');
+      await cubit.acceptRemoteToken('A1B2C3D4E5F6');
+      repository.acceptGate!.complete();
+      await first;
+
+      expect(repository.acceptedTokens, hasLength(1));
+      await cubit.close();
+    });
+  });
 
   group('PIN reset is guarded', () {
     test('resetAccess from the locked screen does not clear the PIN', () async {

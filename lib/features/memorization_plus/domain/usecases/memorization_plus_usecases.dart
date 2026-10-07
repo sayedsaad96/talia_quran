@@ -435,10 +435,6 @@ class ParentRemoteLinkUsecase {
   Future<Either<Failure, void>> acceptChildLinkToken(String token) =>
       _repository.acceptChildLinkToken(token);
 
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String token,
-  ) => _repository.acceptGuardianPairingCode(token);
-
   Future<Either<Failure, void>> syncKidsProgressToCloud() =>
       _repository.syncKidsProgressToCloud();
 

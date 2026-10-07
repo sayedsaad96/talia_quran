@@ -14,9 +14,6 @@ abstract class MemorizationIdentityRepository {
   /// Re-opens guardian linking for an unlinked child who skipped it.
   Future<Either<Failure, MemorizationProfile>> reopenGuardianLinking();
   Future<Either<Failure, PairingSession>> createGuardianPairingSession();
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String codeOrQrData,
-  );
   Future<Either<Failure, PairingSession?>> refreshPairingSession();
   Future<Either<Failure, MemorizationProfile>> unlinkGuardian();
   Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(

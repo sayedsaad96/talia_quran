@@ -75,6 +75,7 @@ class _KidsTreasuresView extends StatelessWidget {
             :final rewards,
             :final homeMissions,
             :final homeMissionsPaused,
+            :final guardianLinked,
           ) =>
             KidsTreasuresContent(
               regions: regions,
@@ -82,6 +83,7 @@ class _KidsTreasuresView extends StatelessWidget {
               rewards: rewards,
               homeMissions: homeMissions,
               homeMissionsPaused: homeMissionsPaused,
+              guardianLinked: guardianLinked,
               onRequestReward: context.read<KidsTreasuresCubit>().requestReward,
               onReportHomeMission: context
                   .read<KidsTreasuresCubit>()
@@ -89,6 +91,52 @@ class _KidsTreasuresView extends StatelessWidget {
               onBack: () => _back(context),
             ),
         },
+      ),
+    );
+  }
+}
+
+/// Tells a linked child that their guardian follows the journey, so the
+/// gifts and missions below have a clear source.
+class _GuardianLinkedBadge extends StatelessWidget {
+  const _GuardianLinkedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = KidsWorldPalette.of(context);
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+        key: const ValueKey('kids-guardian-linked-badge'),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: palette.onScene.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.family_restroom_rounded,
+              size: 18,
+              color: palette.onScene,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                context.l10n.kidsGuardianLinkedBadge,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: palette.onScene,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -104,6 +152,7 @@ class KidsTreasuresContent extends StatelessWidget {
     this.rewards = const [],
     this.homeMissions = const [],
     this.homeMissionsPaused = false,
+    this.guardianLinked = false,
     this.onRequestReward,
     this.onReportHomeMission,
   });
@@ -114,6 +163,7 @@ class KidsTreasuresContent extends StatelessWidget {
   final List<ParentReward> rewards;
   final List<KidsHomeMission> homeMissions;
   final bool homeMissionsPaused;
+  final bool guardianLinked;
   final void Function(String rewardId)? onRequestReward;
   final void Function(String missionId)? onReportHomeMission;
 
@@ -143,6 +193,10 @@ class KidsTreasuresContent extends StatelessWidget {
                     AppSpacing.xl,
                   ),
                   children: [
+                    if (guardianLinked) ...[
+                      const _GuardianLinkedBadge(),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                     if (_isEmpty) ...[
                       KidsTaliaCompanion(
                         pose: KidsTaliaPose.encourage,

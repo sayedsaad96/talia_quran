@@ -96,13 +96,20 @@ class FamilyDashboardLoading extends FamilyDashboardState {
 
 /// Parent has not created a PIN yet.
 class FamilyDashboardNeedsPin extends FamilyDashboardState {
-  const FamilyDashboardNeedsPin({this.feedback, this.feedbackEventId = 0});
+  const FamilyDashboardNeedsPin({
+    this.feedback,
+    this.feedbackEventId = 0,
+    this.canSkip = false,
+  });
 
   final FamilyDashboardFeedback? feedback;
   final int feedbackEventId;
 
+  /// True on the guardian's own phone, where the lock is optional.
+  final bool canSkip;
+
   @override
-  List<Object?> get props => [feedback, feedbackEventId];
+  List<Object?> get props => [feedback, feedbackEventId, canSkip];
 }
 
 /// Parent has a PIN but it hasn't been entered yet.

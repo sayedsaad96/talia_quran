@@ -15,10 +15,18 @@ void main() {
       expect(state.shouldShowParentSection, isFalse);
     });
 
-    test('shows parent tools only for adult parent mode', () {
-      const state = SettingsState(selectedTrack: 'adults', isParentMode: true);
-
-      expect(state.shouldShowParentSection, isTrue);
+    test('shows parent tools to every adult, parent mode or not', () {
+      expect(
+        const SettingsState(selectedTrack: 'adults').shouldShowParentSection,
+        isTrue,
+      );
+      expect(
+        const SettingsState(
+          selectedTrack: 'adults',
+          isParentMode: true,
+        ).shouldShowParentSection,
+        isTrue,
+      );
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/utils/locale_number_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -99,8 +101,13 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                 return IconButton(
                   icon: const Icon(Icons.settings_rounded),
                   tooltip: context.l10n.settings,
-                  onPressed: () =>
-                      _showSettingsSheet(context, state.dashboard.settings),
+                  onPressed: () => _showSettingsSheet(
+                    context,
+                    state.dashboard.settings,
+                    hasLocalChild: state.dashboard.children.any(
+                      (child) => child.isLocal,
+                    ),
+                  ),
                 );
               }
               return const SizedBox.shrink();
@@ -151,6 +158,12 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               buttonText: context.l10n.parentDashboardSavePinButton,
               controller: _pinController,
               requiresConfirmation: true,
+              helpText: state.canSkip
+                  ? context.l10n.familyPinOptionalHelp
+                  : null,
+              onSkip: state.canSkip
+                  ? () => context.read<FamilyDashboardCubit>().skipPin()
+                  : null,
               onSubmit: (pin) =>
                   context.read<FamilyDashboardCubit>().setPin(pin),
             );
@@ -249,7 +262,38 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
     if (confirmed == true) await cubit.resetAccess();
   }
 
-  void _showSettingsSheet(BuildContext context, ParentSettings settings) {
+  /// [hasLocalChild] is true only on the child's own device (guardian
+  /// session). There the sheet holds that child's journey, policy and
+  /// reminder. On the guardian's phone those settings would change nothing
+  /// for any child, so only the PIN is offered; a linked child's settings
+  /// live on their detail page.
+  Future<void> _confirmRemoveLock(BuildContext context) async {
+    final cubit = context.read<FamilyDashboardCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.familyPinLockRemove),
+        content: Text(context.l10n.familyPinLockRemoveConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await cubit.removePinLock();
+  }
+
+  void _showSettingsSheet(
+    BuildContext context,
+    ParentSettings settings, {
+    required bool hasLocalChild,
+  }) {
     // The sheet builder's context sits above the BlocProvider.value below,
     // so the controls use the dashboard's cubit captured here.
     final dashboardCubit = context.read<FamilyDashboardCubit>();
@@ -271,69 +315,81 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.l10n.kidsJourneyBetaTitle,
-                  style: AppTypography.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                SwitchListTile(
-                  title: Text(context.l10n.kidsJourneyBetaTitle),
-                  subtitle: Text(context.l10n.kidsJourneyBetaDescription),
-                  value: settings.kidsHifzV2Enabled,
-                  onChanged: (value) async {
-                    await dashboardCubit.saveSettings(
-                      settings.copyWith(kidsHifzV2Enabled: value),
-                    );
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
-                ),
-                // The "guidance audio" switch stays intentionally absent
-                // until the kids session consumes the setting (K10 in
-                // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings
-                // keeps the stored value so nothing is lost meanwhile.
-                // Policy fields (incl. the session goal) save through the
-                // policy path: CAS when this device is linked, else local.
-                KidsPolicyControls(
-                  policy: KidsChildPolicy.fromSettings(settings),
-                  onChanged: (policy) async {
-                    await dashboardCubit.saveChildPolicy(policy);
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
-                ),
-                const Divider(),
-                Text(
-                  context.l10n.parentDashboardReminders,
-                  style: AppTypography.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SwitchListTile(
-                  title: Text(context.l10n.parentDashboardDailyReminder),
-                  subtitle: Text(
-                    settings.reminderEnabled
-                        ? context.digitText(
-                            '${settings.reminderHour}:${settings.reminderMinute.toString().padLeft(2, '0')}',
-                          )
-                        : context.l10n.parentDashboardNotSet,
+                if (hasLocalChild) ...[
+                  Text(
+                    context.l10n.kidsJourneyBetaTitle,
+                    style: AppTypography.titleMedium,
                   ),
-                  value: settings.reminderEnabled,
-                  onChanged: (val) async {
-                    final cubit = dashboardCubit;
-                    final l10n = sheetContext.l10n;
-                    if (val) {
-                      final time = await showLocaleTimePicker(
-                        context: sheetContext,
-                        initialTime: TimeOfDay(
-                          hour: settings.reminderHour,
-                          minute: settings.reminderMinute,
-                        ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SwitchListTile(
+                    title: Text(context.l10n.kidsJourneyBetaTitle),
+                    subtitle: Text(context.l10n.kidsJourneyBetaDescription),
+                    value: settings.kidsHifzV2Enabled,
+                    onChanged: (value) async {
+                      await dashboardCubit.saveSettings(
+                        settings.copyWith(kidsHifzV2Enabled: value),
                       );
-                      if (time != null && sheetContext.mounted) {
-                        await cubit.saveSettings(
-                          settings.copyWith(
-                            reminderEnabled: true,
-                            reminderHour: time.hour,
-                            reminderMinute: time.minute,
+                      if (sheetContext.mounted) Navigator.pop(sheetContext);
+                    },
+                  ),
+                  // The "guidance audio" switch stays intentionally absent
+                  // until the kids session consumes the setting (K10 in
+                  // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings
+                  // keeps the stored value so nothing is lost meanwhile.
+                  // Policy fields (incl. the session goal) save through the
+                  // policy path: CAS when this device is linked, else local.
+                  KidsPolicyControls(
+                    policy: KidsChildPolicy.fromSettings(settings),
+                    onChanged: (policy) async {
+                      await dashboardCubit.saveChildPolicy(policy);
+                      if (sheetContext.mounted) Navigator.pop(sheetContext);
+                    },
+                  ),
+                  const Divider(),
+                  Text(
+                    context.l10n.parentDashboardReminders,
+                    style: AppTypography.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  SwitchListTile(
+                    title: Text(context.l10n.parentDashboardDailyReminder),
+                    subtitle: Text(
+                      settings.reminderEnabled
+                          ? TimeOfDay(
+                              hour: settings.reminderHour,
+                              minute: settings.reminderMinute,
+                            ).format(context)
+                          : context.l10n.parentDashboardNotSet,
+                    ),
+                    value: settings.reminderEnabled,
+                    onChanged: (val) async {
+                      final cubit = dashboardCubit;
+                      final l10n = sheetContext.l10n;
+                      if (val) {
+                        final time = await showLocaleTimePicker(
+                          context: sheetContext,
+                          initialTime: TimeOfDay(
+                            hour: settings.reminderHour,
+                            minute: settings.reminderMinute,
                           ),
+                        );
+                        if (time != null && sheetContext.mounted) {
+                          await cubit.saveSettings(
+                            settings.copyWith(
+                              reminderEnabled: true,
+                              reminderHour: time.hour,
+                              reminderMinute: time.minute,
+                            ),
+                          );
+                          await getIt<NotificationScheduler>()
+                              .refreshNotifications(l10n);
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+                        }
+                      } else {
+                        await cubit.saveSettings(
+                          settings.copyWith(reminderEnabled: false),
                         );
                         await getIt<NotificationScheduler>()
                             .refreshNotifications(l10n);
@@ -341,30 +397,48 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                           Navigator.pop(sheetContext);
                         }
                       }
-                    } else {
-                      await cubit.saveSettings(
-                        settings.copyWith(reminderEnabled: false),
-                      );
-                      await getIt<NotificationScheduler>().refreshNotifications(
-                        l10n,
-                      );
-                      if (sheetContext.mounted) {
-                        Navigator.pop(sheetContext);
-                      }
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(sheetContext);
-                      _confirmChangePin(context);
                     },
-                    child: Text(context.l10n.parentDashboardChangePin),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                // On the guardian's phone the lock is optional.
+                if (!hasLocalChild && !settings.hasPin)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('family-lock-on'),
+                      icon: const Icon(Icons.lock_outline_rounded),
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        dashboardCubit.lockWithPin();
+                      },
+                      label: Text(context.l10n.familyPinLockOn),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      key: const ValueKey('family-change-pin'),
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        _confirmChangePin(context);
+                      },
+                      child: Text(context.l10n.parentDashboardChangePin),
+                    ),
+                  ),
+                if (!hasLocalChild && settings.hasPin)
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      key: const ValueKey('family-lock-remove'),
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        _confirmRemoveLock(context);
+                      },
+                      child: Text(context.l10n.familyPinLockRemove),
+                    ),
+                  ),
                 SizedBox(
                   height:
                       MediaQuery.paddingOf(sheetContext).bottom + AppSpacing.md,

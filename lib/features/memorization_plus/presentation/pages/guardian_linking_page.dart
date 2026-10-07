@@ -14,6 +14,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
@@ -43,13 +44,24 @@ class _GuardianLinkingView extends StatelessWidget {
     final authState = context.watch<AuthCubit>().state;
     final isGuest = authState is! AuthAuthenticated;
 
+    // Back never strands the child here: it means "link later", the same as
+    // the button, so the journey stays one step away.
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        final cubit = context.read<GuardianLinkingCubit>();
+        if (cubit.state is GuardianLinkingLoading) return;
+        unawaited(cubit.continueWithoutGuardian());
+      },
       child: Scaffold(
         backgroundColor: context.tokens.background,
         body: SafeArea(
           child: BlocConsumer<GuardianLinkingCubit, GuardianLinkingState>(
             listener: (context, state) {
+              if (state is GuardianLinkingLinked) {
+                context.showSnackBar(context.l10n.guardianLinkedSuccess);
+              }
               if (state is GuardianLinkingSkipped ||
                   state is GuardianLinkingLinked) {
                 unawaited(_goToKidsJourney(context));
@@ -70,7 +82,6 @@ class _GuardianLinkingView extends StatelessWidget {
                     Icons.family_restroom_rounded,
                     color: AppColors.primary,
                     size: 64,
-                    semanticLabel: 'Guardian linking',
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
@@ -123,14 +134,15 @@ class _GuardianLinkingView extends StatelessWidget {
                       ],
                       const SizedBox(height: AppSpacing.lg),
                     ],
-                    if (state is GuardianLinkingPending)
+                    if (state is GuardianLinkingPending) ...[
                       _PairingCard(
                         surface: surface,
                         code: state.session.pairingCode,
                         qrData: state.session.qrData,
                         expiresAt: state.session.expiresAt,
-                      )
-                    else if (state is GuardianLinkingExpired)
+                      ),
+                      const _LinkLaterAction(),
+                    ] else if (state is GuardianLinkingExpired) ...[
                       _StatusCard(
                         surface: surface,
                         title: context.l10n.guardianCodeExpired,
@@ -139,8 +151,9 @@ class _GuardianLinkingView extends StatelessWidget {
                         onPressed: () => context
                             .read<GuardianLinkingCubit>()
                             .createPairingSession(),
-                      )
-                    else if (state is GuardianLinkingUsed)
+                      ),
+                      const _LinkLaterAction(),
+                    ] else if (state is GuardianLinkingUsed) ...[
                       _StatusCard(
                         surface: surface,
                         title: context.l10n.guardianCodeAlreadyUsed,
@@ -149,8 +162,9 @@ class _GuardianLinkingView extends StatelessWidget {
                         onPressed: () => context
                             .read<GuardianLinkingCubit>()
                             .createPairingSession(),
-                      )
-                    else
+                      ),
+                      const _LinkLaterAction(),
+                    ] else
                       _ChoiceActions(surface: surface),
                   ],
                 ],
@@ -309,6 +323,40 @@ class _ChoiceActions extends StatelessWidget {
   }
 }
 
+/// The way out once a code exists: the guardian may not be at hand, and the
+/// journey must never wait on them.
+class _LinkLaterAction extends StatelessWidget {
+  const _LinkLaterAction();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OutlinedButton.icon(
+            key: const ValueKey('guardian-link-later'),
+            onPressed: () =>
+                context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
+            // Mirrors itself under RTL: "continue" points left in Arabic.
+            icon: const Icon(Icons.arrow_forward_rounded),
+            label: Text(context.l10n.guardianLinkLater),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.l10n.guardianLinkLaterHint,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PairingCard extends StatefulWidget {
   const _PairingCard({
     required this.surface,
@@ -327,18 +375,34 @@ class _PairingCard extends StatefulWidget {
 }
 
 class _PairingCardState extends State<_PairingCard> {
+  /// The guardian scans within seconds; the child's screen must follow just
+  /// as fast. At most ~150 light reads over the code's 10 minutes.
+  static const _pollInterval = Duration(seconds: 4);
+
   Timer? _timer;
   late Duration _remaining;
+  bool _checking = false;
 
   @override
   void initState() {
     super.initState();
     _remaining = _calculateRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _timer = Timer.periodic(_pollInterval, (_) {
       if (!mounted) return;
       setState(() => _remaining = _calculateRemaining());
-      context.read<GuardianLinkingCubit>().checkLinkStatus();
+      unawaited(_check());
     });
+  }
+
+  /// One status read at a time, so a slow network never stacks requests.
+  Future<void> _check() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    try {
+      await context.read<GuardianLinkingCubit>().checkLinkStatus();
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
   }
 
   @override
@@ -372,7 +436,7 @@ class _PairingCardState extends State<_PairingCard> {
           ),
           const SizedBox(height: AppSpacing.lg),
           SelectableText(
-            widget.code,
+            KidsQrLinkContract.displayCode(widget.code),
             textAlign: TextAlign.center,
             style: AppTypography.headlineMedium.copyWith(
               color: AppColors.primary,
@@ -405,6 +469,18 @@ class _PairingCardState extends State<_PairingCard> {
           const SizedBox(height: AppSpacing.lg),
           _PairingSteps(),
           const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            key: const ValueKey('guardian-check-now'),
+            onPressed: _checking ? null : () => unawaited(_check()),
+            icon: _checking
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.verified_rounded),
+            label: Text(context.l10n.guardianCheckNow),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().createPairingSession(),

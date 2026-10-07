@@ -280,6 +280,44 @@ void main() {
     },
   );
 
+  group("on the guardian's own device", () {
+    MemorizationFamilyService guardianDevice() => MemorizationFamilyService(
+      MemorizationPlusLocalDatasourceImpl(prefs),
+      _profile(isParentGuardian: true),
+      _MockKidsLocal(),
+      cloud,
+      _mappers,
+      dashboardCache: cache,
+      owner: const FixedRecordOwnerProvider(_guardian),
+    );
+
+    test('shows only the linked children, no empty local card', () async {
+      when(() => cloud.getRemoteChildren()).thenAnswer(
+        (_) async =>
+            Right(_mappers.parseRemoteChildrenDashboard([_childRow('c1')])),
+      );
+
+      final dashboard = (await guardianDevice().getFamilyDashboard()).getOrElse(
+        () => throw StateError('dashboard failed'),
+      );
+
+      expect(dashboard.children.map((c) => c.childUserId), ['c1']);
+      expect(dashboard.children.single.isLocal, isFalse);
+    });
+
+    test('with no linked child the family is empty', () async {
+      when(
+        () => cloud.getRemoteChildren(),
+      ).thenAnswer((_) async => const Right(<RemoteChildSummary>[]));
+
+      final dashboard = (await guardianDevice().getFamilyDashboard()).getOrElse(
+        () => throw StateError('dashboard failed'),
+      );
+
+      expect(dashboard.hasAnyChild, isFalse);
+    });
+  });
+
   group('RemoteChildrenDashboardCache', () {
     test('round-trips a payload per owner', () async {
       await cache.save(_guardian, [_childRow('c1')]);
@@ -302,7 +340,10 @@ void main() {
   });
 }
 
-_MockProfile _profile({MemorizationPath path = MemorizationPath.adult}) {
+_MockProfile _profile({
+  MemorizationPath path = MemorizationPath.adult,
+  bool isParentGuardian = false,
+}) {
   final profile = _MockProfile();
   final now = DateTime.utc(2026, 10, 1);
   when(() => profile.loadProfile()).thenAnswer(
@@ -311,7 +352,7 @@ _MockProfile _profile({MemorizationPath path = MemorizationPath.adult}) {
       selectedPath: path,
       guardianLinkStatus: GuardianLinkStatus.none,
       guardianOnboardingStatus: GuardianOnboardingStatus.completed,
-      isParentGuardian: false,
+      isParentGuardian: isParentGuardian,
       createdAt: now,
       updatedAt: now,
     ),

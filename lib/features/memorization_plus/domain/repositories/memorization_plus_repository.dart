@@ -27,10 +27,6 @@ abstract class MemorizationPlusRepository
   @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession();
   @override
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String codeOrQrData,
-  );
-  @override
   Future<Either<Failure, PairingSession?>> refreshPairingSession();
   @override
   Future<Either<Failure, MemorizationProfile>> unlinkGuardian();

@@ -108,15 +108,6 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
     );
   }
 
-  Future<void> acceptCode(String codeOrQrData) async {
-    emit(const GuardianLinkingLoading());
-    final result = await _repository.acceptGuardianPairingCode(codeOrQrData);
-    result.fold(
-      (failure) => emit(GuardianLinkingError(failure.message)),
-      (profile) => emit(GuardianLinkingLinked(profile: profile)),
-    );
-  }
-
   void _emitSession(
     PairingSession session,
     MemorizationProfile profile, {

@@ -10,6 +10,8 @@ class _PinGate extends StatefulWidget {
     required this.onSubmit,
     this.requiresConfirmation = false,
     this.onForgot,
+    this.helpText,
+    this.onSkip,
   });
 
   final String title;
@@ -18,6 +20,12 @@ class _PinGate extends StatefulWidget {
   final ValueChanged<String> onSubmit;
   final bool requiresConfirmation;
   final VoidCallback? onForgot;
+
+  /// Replaces the default "protects the dashboard" line.
+  final String? helpText;
+
+  /// Set when the lock is optional (the guardian's own phone).
+  final VoidCallback? onSkip;
 
   @override
   State<_PinGate> createState() => _PinGateState();
@@ -57,7 +65,7 @@ class _PinGateState extends State<_PinGate> {
             Text(widget.title, style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              context.l10n.parentDashboardPinHelp,
+              widget.helpText ?? context.l10n.parentDashboardPinHelp,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -105,6 +113,12 @@ class _PinGateState extends State<_PinGate> {
               TextButton(
                 onPressed: widget.onForgot,
                 child: Text(context.l10n.parentDashboardForgotPin),
+              ),
+            if (widget.onSkip != null)
+              TextButton(
+                key: const ValueKey('family-pin-skip'),
+                onPressed: widget.onSkip,
+                child: Text(context.l10n.familyPinSkip),
               ),
           ],
         ),
@@ -239,7 +253,7 @@ Future<void> _openScanner(BuildContext context) async {
     context,
   ).push<String>(MaterialPageRoute(builder: (_) => const _QrScannerPage()));
   if (token != null && context.mounted) {
-    await context.read<FamilyDashboardCubit>().acceptRemoteToken(token);
+    await _linkChild(context, token);
   }
 }
 
@@ -249,7 +263,42 @@ Future<void> _showManualTokenDialog(BuildContext context) async {
     builder: (_) => const _ManualTokenDialog(),
   );
   if (token != null && token.isNotEmpty && context.mounted) {
-    await context.read<FamilyDashboardCubit>().acceptRemoteToken(token);
+    await _linkChild(context, token);
+  }
+}
+
+/// Links with a visible "linking…" step, so the guardian is never left
+/// wondering whether the scan or the typed code was taken.
+Future<void> _linkChild(BuildContext context, String token) async {
+  final cubit = context.read<FamilyDashboardCubit>();
+  final navigator = Navigator.of(context, rootNavigator: true);
+  unawaited(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          key: const ValueKey('family-linking-progress'),
+          content: Row(
+            children: [
+              const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(dialogContext.l10n.familyDashboardLinking)),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+  try {
+    await cubit.acceptRemoteToken(token);
+  } finally {
+    if (navigator.mounted) navigator.pop();
   }
 }
 
@@ -283,6 +332,9 @@ class _ManualTokenDialogState extends State<_ManualTokenDialog> {
         child: TextField(
           controller: _controller,
           autofocus: true,
+          textCapitalization: TextCapitalization.characters,
+          autocorrect: false,
+          enableSuggestions: false,
           decoration: InputDecoration(
             hintText: context.l10n.parentDashboardLinkHint,
           ),
@@ -310,7 +362,13 @@ class _QrScannerPage extends StatefulWidget {
 }
 
 class _QrScannerPageState extends State<_QrScannerPage> {
-  final MobileScannerController _controller = MobileScannerController();
+  // One result per code: the scanner keeps reporting while the page closes,
+  // and a second pop would close the family dashboard too.
+  final MobileScannerController _controller = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+  );
+  bool _handled = false;
+  String? _lastRejected;
 
   @override
   void dispose() {
@@ -325,16 +383,26 @@ class _QrScannerPageState extends State<_QrScannerPage> {
       body: MobileScanner(
         controller: _controller,
         onDetect: (capture) {
-          final barcodes = capture.barcodes;
-          for (final barcode in barcodes) {
+          if (_handled) return;
+          for (final barcode in capture.barcodes) {
             final raw = barcode.rawValue;
             if (raw == null) continue;
             // Accept the shared kids-link contract payload (and the legacy
             // prefix) instead of a hard-coded literal that drifted from the
             // child-side generator and silently broke QR pairing.
-            if (!KidsQrLinkContract.isLinkPayload(raw)) continue;
+            if (!KidsQrLinkContract.isLinkPayload(raw)) {
+              if (raw != _lastRejected) {
+                _lastRejected = raw;
+                context.showSnackBar(
+                  context.l10n.parentDashboardNotLinkCode,
+                  isError: true,
+                );
+              }
+              continue;
+            }
+            _handled = true;
             Navigator.pop(context, KidsQrLinkContract.extractToken(raw));
-            break;
+            return;
           }
         },
       ),

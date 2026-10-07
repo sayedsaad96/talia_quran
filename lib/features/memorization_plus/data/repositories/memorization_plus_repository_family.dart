@@ -244,8 +244,13 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
       _kidsCloudSync.pullKidsProgressFromCloud();
 
   @override
-  Future<Either<Failure, void>> pullKidsInboundFromCloud() =>
-      _kidsCloudSync.pullKidsInboundFromCloud();
+  Future<Either<Failure, void>> pullKidsInboundFromCloud() async {
+    // The link decides what the pull mirrors (gifts only while linked), so it
+    // is read first. This also catches a guardian who scanned the code after
+    // the child chose "later". A failed read leaves the profile unchanged.
+    await _parentAccess.refreshChildGuardianLink();
+    return _kidsCloudSync.pullKidsInboundFromCloud();
+  }
 
   @override
   Future<Either<Failure, void>> syncKidsProgressToCloud() =>

@@ -73,6 +73,46 @@ void main() {
     expect(state.certificates.length, 1);
   });
 
+  test('a linked child sees that the guardian follows the journey', () async {
+    when(
+      () => memRepo.getKidsSessionLogs(),
+    ).thenAnswer((_) async => const Right([]));
+    when(() => quranRepo.getSurahs()).thenAnswer((_) async => const Right([]));
+    final now = DateTime.utc(2026, 10, 7);
+    when(() => memRepo.getMemorizationProfile()).thenAnswer(
+      (_) async => Right(
+        MemorizationProfile(
+          schemaVersion: 1,
+          selectedPath: MemorizationPath.child,
+          guardianLinkStatus: GuardianLinkStatus.linked,
+          guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+          isParentGuardian: false,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ),
+    );
+
+    final cubit = build(const []);
+    addTearDown(cubit.close);
+    await cubit.load();
+
+    expect((cubit.state as KidsTreasuresLoaded).guardianLinked, isTrue);
+  });
+
+  test('an unreadable profile only hides the guardian badge', () async {
+    when(
+      () => memRepo.getKidsSessionLogs(),
+    ).thenAnswer((_) async => const Right([]));
+    when(() => quranRepo.getSurahs()).thenAnswer((_) async => const Right([]));
+
+    final cubit = build(const []);
+    addTearDown(cubit.close);
+    await cubit.load();
+
+    expect((cubit.state as KidsTreasuresLoaded).guardianLinked, isFalse);
+  });
+
   test('a surahs-load failure emits KidsTreasuresError', () async {
     when(
       () => memRepo.getKidsSessionLogs(),

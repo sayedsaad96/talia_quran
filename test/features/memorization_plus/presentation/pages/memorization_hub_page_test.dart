@@ -63,7 +63,7 @@ void main() {
       expect(find.text('Review Session'), findsWidgets);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Plan Settings'), findsOneWidget);
-      expect(find.text('Parent Dashboard'), findsNothing);
+      expect(find.text('Family Dashboard'), findsNothing);
     },
   );
 
@@ -93,7 +93,7 @@ void main() {
     expect(find.text("Continue Today's Plan"), findsNothing);
     expect(find.text('Practice by Surah'), findsNothing);
     expect(find.text('Listening Quiz'), findsNothing);
-    expect(find.text('Parent Dashboard'), findsNothing);
+    expect(find.text('Family Dashboard'), findsNothing);
   });
 
   testWidgets('no path selected shows adult and kids setup choices', (
@@ -122,7 +122,7 @@ void main() {
     expect(find.text('Kids path'), findsOneWidget);
     expect(find.textContaining('smart review'), findsOneWidget);
     expect(find.textContaining('interactive memorization'), findsOneWidget);
-    expect(find.text('Parent Dashboard'), findsNothing);
+    expect(find.text('Family Dashboard'), findsNothing);
   });
 }
 

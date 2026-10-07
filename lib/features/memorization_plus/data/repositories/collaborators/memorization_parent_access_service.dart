@@ -85,62 +85,6 @@ class MemorizationParentAccessService {
     }
   }
 
-  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
-    String codeOrQrData,
-  ) async {
-    try {
-      final result = await acceptChildLinkToken(codeOrQrData);
-      return await result.fold((failure) async => Left(failure), (_) async {
-        final clientResult = _supabaseOrFailure;
-        final clientFailure = clientResult.fold(
-          (failure) => failure,
-          (_) => null,
-        );
-        if (clientFailure != null) return Left(clientFailure);
-        final client = clientResult.getOrElse(
-          () => throw StateError('unreachable'),
-        );
-
-        final userId = client.auth.currentUser?.id;
-        final profile = await _loadProfile();
-        final linkedChildId = !profile.isChild && userId != null
-            ? await _gateway.latestActiveChildIdForParent(userId)
-            : null;
-        final guardianId = profile.isChild && userId != null
-            ? await _gateway.activeGuardianIdForChild(userId)
-            : null;
-        final saved = await _saveProfile(
-          profile.isChild
-              ? profile.copyWith(
-                  guardianLinkStatus: GuardianLinkStatus.linked,
-                  guardianOnboardingStatus: GuardianOnboardingStatus.completed,
-                  guardianId: guardianId ?? userId,
-                )
-              : profile.copyWith(
-                  isParentGuardian: true,
-                  linkedChildId: linkedChildId,
-                ),
-        );
-        await _datasource.setIsParentMode(saved.isParentGuardian);
-        final session = await _datasource.getPairingSession();
-        if (session != null) {
-          await _datasource.savePairingSession(
-            PairingSessionModel.fromEntity(
-              session.copyWith(
-                status: PairingSessionStatus.completed,
-                isUsed: true,
-                guardianId: userId,
-              ),
-            ),
-          );
-        }
-        return Right(saved);
-      });
-    } catch (e) {
-      return Left(Failure.fromCloud(e));
-    }
-  }
-
   Future<Either<Failure, PairingSession?>> refreshPairingSession() async {
     try {
       final session = await _datasource.getPairingSession();
@@ -290,6 +234,9 @@ class MemorizationParentAccessService {
 
       if (!profile.isGuardianLinked) return Right(profile);
 
+      // The guardian ended the link from their side: same clean-up as the
+      // child's own unlink.
+      await _keepClaimedGiftsOnly();
       final saved = await _saveProfile(
         profile.copyWith(
           guardianLinkStatus: GuardianLinkStatus.none,

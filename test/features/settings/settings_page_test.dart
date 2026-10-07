@@ -194,10 +194,11 @@ void main() {
     await _tapVisibleText(tester, 'Kids & Guardian');
 
     expect(find.text('I am a parent/guardian'), findsOneWidget);
-    expect(find.text('Parent Dashboard'), findsNothing);
+    // The child's linking steps point every adult here, parent mode or not.
+    expect(find.text('Family Dashboard'), findsOneWidget);
   });
 
-  testWidgets('parent dashboard is visible only for adult parent mode', (
+  testWidgets('parent dashboard is visible for an adult in parent mode', (
     tester,
   ) async {
     await _pumpSettings(
@@ -208,7 +209,7 @@ void main() {
 
     await _tapVisibleText(tester, 'Kids & Guardian');
 
-    expect(find.text('Parent Dashboard'), findsOneWidget);
+    expect(find.text('Family Dashboard'), findsOneWidget);
     expect(
       find.text(
         'Sign in to manage your account and access guardian tools. Your local progress remains on this device.',
@@ -227,7 +228,7 @@ void main() {
     );
 
     await _tapVisibleText(tester, 'Kids & Guardian');
-    await _tapVisibleText(tester, 'Parent Dashboard');
+    await _tapVisibleText(tester, 'Family Dashboard');
 
     expect(find.text('login route'), findsOneWidget);
   });
@@ -241,7 +242,7 @@ void main() {
       isParentGuardian: true,
     );
 
-    expect(find.text('Parent Dashboard'), findsNothing);
+    expect(find.text('Family Dashboard'), findsNothing);
     expect(find.text('Kids & Guardian'), findsNothing);
   });
 

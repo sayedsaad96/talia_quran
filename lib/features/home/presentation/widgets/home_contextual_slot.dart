@@ -29,9 +29,6 @@ class HomeContextualSlot extends StatelessWidget {
       final auth = context.watch<AuthCubit>().state;
       if (auth is AuthAuthenticated) return const SizedBox.shrink();
     }
-    if (slot.kind == HomeSlotKind.parentTools && state.familyChildren.isNotEmpty) {
-      return const SizedBox.shrink();
-    }
 
     final title = switch (slot.kind) {
       HomeSlotKind.fridayKahf => context.l10n.homeSlotFridayTitle,

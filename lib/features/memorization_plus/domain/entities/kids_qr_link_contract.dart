@@ -36,6 +36,17 @@ final class KidsQrLinkContract {
     return normalized;
   }
 
+  /// The code as shown for reading aloud or typing: groups of four joined by
+  /// dashes (`A1B2-C3D4-E5F6`). The parent side drops the dashes again.
+  static String displayCode(String token) {
+    final compact = token.replaceAll(RegExp(r'[\s-]'), '').toUpperCase();
+    final groups = <String>[
+      for (var i = 0; i < compact.length; i += 4)
+        compact.substring(i, i + 4 > compact.length ? compact.length : i + 4),
+    ];
+    return groups.join('-');
+  }
+
   /// Pre-contract prefix kept for backwards compatibility only.
   static const String legacyQrPrefix = 'talia_link:';
 }

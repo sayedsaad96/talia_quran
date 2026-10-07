@@ -43,17 +43,6 @@ class _MockGetAyahOfDay extends Mock implements GetAyahOfDayUsecase {
   ) as Future<AyahOfDay?>;
 }
 
-class _MockGetFamilyDashboard extends Mock
-    implements GetFamilyDashboardUsecase {
-  @override
-  Future<Either<Failure, FamilyDashboard>> call() => super.noSuchMethod(
-    Invocation.method(#call, const []),
-    returnValue: Future<Either<Failure, FamilyDashboard>>.value(
-      const Left(CacheFailure('not configured')),
-    ),
-  ) as Future<Either<Failure, FamilyDashboard>>;
-}
-
 @GenerateMocks([
   GetProgressUsecase,
   GetQuranPageUsecase,
@@ -82,7 +71,6 @@ void main() {
 
   HomeCubit buildCubit({
     GetAyahOfDayUsecase? getAyahOfDay,
-    GetFamilyDashboardUsecase? getFamilyDashboard,
     GetRecentActivityUsecase? getRecentActivity,
   }) => HomeCubit.withExtras(
     mockGetProgress,
@@ -98,7 +86,6 @@ void main() {
     progressEvents,
     xpService,
     getAyahOfDay: getAyahOfDay,
-    getFamilyDashboard: getFamilyDashboard,
     getRecentActivity: getRecentActivity,
   );
 
@@ -773,21 +760,6 @@ void main() {
     xpService.pendingTotalXp!.complete(120);
 
     await expectLater(load, completes);
-  });
-
-  test('does not load family data outside the parent PIN gate', () async {
-    final family = _MockGetFamilyDashboard();
-    when(family.call()).thenAnswer(
-      (_) async => const Right(
-        FamilyDashboard(children: [], settings: ParentSettings()),
-      ),
-    );
-    await cubit.close();
-    cubit = buildCubit(getFamilyDashboard: family);
-
-    await cubit.load();
-
-    verifyNever(family.call());
   });
 
   test('uses the primary goal when selecting the daily ayah', () async {

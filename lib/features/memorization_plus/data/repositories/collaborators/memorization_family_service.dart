@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../../core/error/app_failure.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
@@ -16,9 +15,8 @@ import 'memorization_kids_cloud_sync_service.dart';
 import 'memorization_kids_local_service.dart';
 import 'memorization_profile_service.dart';
 
-/// Family dashboard assembly: combines the local child (same device, when
-/// configured as a parent-guardian device) with remote children from Supabase,
-/// de-duplicating the local child when it also appears remotely.
+/// Family dashboard assembly: the guardian's linked children from Supabase,
+/// or, on the child's own device (guardian session), that device's child.
 class MemorizationFamilyService {
   MemorizationFamilyService(
     this._datasource,
@@ -53,9 +51,8 @@ class MemorizationFamilyService {
       return;
     }
     final remote = base.remote;
-    final remoteChildren = remote.children
-        .where((r) => base.local?.childUserId != r.childUserId)
-        .toList();
+    // A child device reads no remote children, so the two never overlap.
+    final remoteChildren = remote.children;
     if (remote.status != FamilyRemoteStatus.live) {
       // A saved copy has no missions or policy: both are flagged so the
       // guardian sees "unavailable" instead of empty lists or defaults.
@@ -84,9 +81,11 @@ class MemorizationFamilyService {
   Future<_DashboardBase> _readBase() async {
     final settings = await _datasource.getParentSettings();
     final profile = await _profile.loadProfile();
-    // Shown on a parent-guardian device, and on the child's own device
-    // (reached only through a guardian session).
-    final local = profile.isParentGuardian || profile.isChild
+    // Only the child's own device has a local child (reached through a
+    // guardian session). An adult profile cannot use the kids track, so a
+    // "local child" on the guardian's phone would be an empty card whose
+    // missions and gifts never reach anyone (one child per device).
+    final local = profile.isChild
         ? await _readLocalChild(profile, settings)
         : null;
     // A child account has no linked children of its own.
@@ -118,22 +117,8 @@ class MemorizationFamilyService {
       surahId: activeSurahId,
     );
     final stages = journeyResult.getOrElse(() => const []);
-    final localChildId =
-        profile.linkedChildId ??
-        (profile.isChild ? 'local-child' : null) ??
-        () {
-          assert(() {
-            // In debug builds this surfaces as a visible warning rather than
-            // a silent fallback that could confuse cloud-sync operations.
-            debugPrint(
-              '[MemorizationFamilyService] WARNING: parent-guardian device has '
-              'no linkedChildId — using synthetic "local-child" id. '
-              'Cloud sync will use this device-local identity only.',
-            );
-            return true;
-          }());
-          return 'local-child';
-        }();
+    // The child device knows no server id for its own child.
+    const localChildId = 'local-child';
     final localDashboard = ParentDashboard(
       progress: progress,
       stages: stages,

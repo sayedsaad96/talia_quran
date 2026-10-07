@@ -686,12 +686,6 @@ abstract class AppLocalizations {
   /// **'الشهادات والإنجازات'**
   String get tutorialShortcutProgressDesc;
 
-  /// No description provided for @splashTagline.
-  ///
-  /// In ar, this message translates to:
-  /// **'رفيقك في رحاب القرآن'**
-  String get splashTagline;
-
   /// No description provided for @splashInitError.
   ///
   /// In ar, this message translates to:
@@ -3438,7 +3432,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardTitle.
   ///
   /// In ar, this message translates to:
-  /// **'لوحة ولي الأمر'**
+  /// **'لوحة العائلة'**
   String get parentDashboardTitle;
 
   /// No description provided for @parentDashboardSubtitle.
@@ -3588,7 +3582,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianPairingStepOpenDashboard.
   ///
   /// In ar, this message translates to:
-  /// **'اذهب إلى الإعدادات > لوحة ولي الأمر'**
+  /// **'اذهب إلى الإعدادات ← الأطفال وولي الأمر ← لوحة العائلة ← «ربط طفل جديد»'**
   String get guardianPairingStepOpenDashboard;
 
   /// No description provided for @guardianPairingStepScanOrEnterCode.
@@ -3596,6 +3590,78 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'امسح رمز QR أو أدخل الرمز يدوياً'**
   String get guardianPairingStepScanOrEnterCode;
+
+  /// No description provided for @guardianLinkLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأربط لاحقاً'**
+  String get guardianLinkLater;
+
+  /// No description provided for @guardianLinkLaterHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك الربط في أي وقت من ⚙ في رحلة الحفظ.'**
+  String get guardianLinkLaterHint;
+
+  /// No description provided for @guardianCheckNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمّ المسح؟ تحقّق الآن'**
+  String get guardianCheckNow;
+
+  /// No description provided for @guardianLinkedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الربط بولي الأمر ✓'**
+  String get guardianLinkedSuccess;
+
+  /// No description provided for @parentDashboardNotLinkCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا ليس رمز ربط من تالية'**
+  String get parentDashboardNotLinkCode;
+
+  /// No description provided for @familyDashboardLinking.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ ربط الطفل…'**
+  String get familyDashboardLinking;
+
+  /// No description provided for @familyPinOptionalHelp.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.'**
+  String get familyPinOptionalHelp;
+
+  /// No description provided for @familyPinSkip.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة بدون قفل'**
+  String get familyPinSkip;
+
+  /// No description provided for @familyPinLockOn.
+  ///
+  /// In ar, this message translates to:
+  /// **'قفل اللوحة برقم سري'**
+  String get familyPinLockOn;
+
+  /// No description provided for @familyPinLockRemove.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة قفل اللوحة'**
+  String get familyPinLockRemove;
+
+  /// No description provided for @familyPinLockRemoveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.'**
+  String get familyPinLockRemoveConfirm;
+
+  /// No description provided for @kidsGuardianLinkedBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'ولي أمرك يتابع رحلتك 💚'**
+  String get kidsGuardianLinkedBadge;
 
   /// No description provided for @guardianRegenerateCode.
   ///
@@ -3644,6 +3710,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اقرأ، احفظ، راجع، وانمُ مع القرآن.'**
   String get splashSubtitle;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفيقك في رحاب القرآن'**
+  String get splashTagline;
 
   /// No description provided for @splashFeatureRead.
   ///
@@ -5745,7 +5817,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianSessionTileTitle.
   ///
   /// In ar, this message translates to:
-  /// **'لوحة ولي الأمر'**
+  /// **'لوحة العائلة'**
   String get guardianSessionTileTitle;
 
   /// No description provided for @guardianSessionTileSubtitle.
@@ -6051,7 +6123,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardDailyReminder.
   ///
   /// In ar, this message translates to:
-  /// **'تذكير يومي الساعة ٦:٣٠ مساءً'**
+  /// **'تذكير يومي للطفل'**
   String get parentDashboardDailyReminder;
 
   /// No description provided for @parentDashboardReminderSubtitle.
@@ -6153,30 +6225,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعديل بيانات الطفل'**
   String get parentDashboardEditChild;
-
-  /// No description provided for @parentDashboardChildLinked.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم ربط الطفل بنجاح'**
-  String get parentDashboardChildLinked;
-
-  /// No description provided for @parentDashboardRewardAdded.
-  ///
-  /// In ar, this message translates to:
-  /// **'تمت إضافة المكافأة'**
-  String get parentDashboardRewardAdded;
-
-  /// No description provided for @parentDashboardRemoteRewardAdded.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم إرسال المكافأة للطفل'**
-  String get parentDashboardRemoteRewardAdded;
-
-  /// No description provided for @parentDashboardReminderSaved.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم تحديث التذكير'**
-  String get parentDashboardReminderSaved;
 
   /// No description provided for @parentDashboardChildRemoved.
   ///
@@ -6915,6 +6963,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'جارٍ إزالة ربط ولي الأمر…'**
   String get parentDashboardUnlinking;
+
+  /// No description provided for @parentDashboardRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة المكافأة'**
+  String get parentDashboardRewardAdded;
+
+  /// No description provided for @parentDashboardRemoteRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال المكافأة للطفل'**
+  String get parentDashboardRemoteRewardAdded;
+
+  /// No description provided for @parentDashboardChildLinked.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ربط الطفل بنجاح'**
+  String get parentDashboardChildLinked;
+
+  /// No description provided for @parentDashboardReminderSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث التذكير'**
+  String get parentDashboardReminderSaved;
 
   /// No description provided for @guardianLinkingSlowHint.
   ///
@@ -9391,7 +9463,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardLinkHint.
   ///
   /// In ar, this message translates to:
-  /// **'talia-kids-link:...'**
+  /// **'مثال: A1B2-C3D4-E5F6'**
   String get parentDashboardLinkHint;
 
   /// Family dashboard page title
@@ -10540,12 +10612,6 @@ abstract class AppLocalizations {
   /// **'إنهاء الختمة'**
   String get khatmahEndPlanAction;
 
-  /// No description provided for @khatmahStartNewKhatmah.
-  ///
-  /// In ar, this message translates to:
-  /// **'ابدأ ختمة جديدة'**
-  String get khatmahStartNewKhatmah;
-
   /// No description provided for @khatmahChooseYourDailyReadingPaceToCompleteThe.
   ///
   /// In ar, this message translates to:
@@ -11025,6 +11091,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'متأخر {count, plural, =1{صفحة واحدة} =2{صفحتين} few{{countText} صفحات} other{{countText} صفحة}} عن موعد الختام'**
   String khatmahPaceBehind(int count, String countText);
+
+  /// No description provided for @khatmahStartNewKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ ختمة جديدة'**
+  String get khatmahStartNewKhatmah;
 
   /// No description provided for @khatmahThroughWirdEnd.
   ///

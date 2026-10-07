@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -21,10 +23,25 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     AccountPasswordVerifier? accountVerifier,
     ParentRewardUsecase? rewards,
     bool Function()? guardianSessionActive,
+    Future<bool> Function()? pinOptional,
   }) : _accountVerifier = accountVerifier,
        _rewards = rewards,
        _guardianSessionActive = guardianSessionActive,
+       _pinOptional = pinOptional,
        super(const FamilyDashboardInitial());
+
+  /// True on the guardian's own (adult) phone: the dashboard opens without a
+  /// PIN unless the guardian chose to lock it. The child's device always
+  /// needs one. Missing means required, the safe side.
+  final Future<bool> Function()? _pinOptional;
+
+  Future<bool> _isPinOptional() async {
+    try {
+      return await _pinOptional?.call() ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// True when the guardian already entered the PIN for a session on the
   /// child's device, so the dashboard opens without asking again.
@@ -49,6 +66,10 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     final settingsResult = await _parentAccess.getSettings();
     final settings = settingsResult.getOrElse(() => const ParentSettings());
     if (!settings.hasPin) {
+      if (await _isPinOptional()) {
+        await refresh();
+        return;
+      }
       emit(const FamilyDashboardNeedsPin());
       return;
     }
@@ -61,10 +82,12 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
 
   Future<void> setPin(String pin) async {
     if (!_isValidPin(pin)) {
+      final current = state;
       emit(
         FamilyDashboardNeedsPin(
           feedback: const FamilyDashboardFeedback.pinInvalid(),
           feedbackEventId: _nextFeedbackEventId(),
+          canSkip: current is FamilyDashboardNeedsPin && current.canSkip,
         ),
       );
       return;
@@ -170,19 +193,29 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     );
   }
 
-  Future<void> removeChild(String childUserId) async {
+  /// Ends a linked child's link from the guardian's side. True when the
+  /// server took it; the child's device drops the link on its next refresh.
+  Future<bool> removeChild(String childUserId) async {
     final current = state;
-    if (current is! FamilyDashboardLoaded) return;
+    if (current is! FamilyDashboardLoaded) return false;
     final result = await _remoteLink.removeChild(childUserId);
-    await result.fold(
-      (failure) async => emit(
-        current.copyWith(
-          feedback: FamilyDashboardFeedback.failure(failure.message),
-          feedbackEventId: _nextFeedbackEventId(),
-        ),
-      ),
-      (_) async =>
+    if (isClosed) return result.isRight();
+    return result.fold(
+      (failure) {
+        emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
+        );
+        return false;
+      },
+      (_) {
+        unawaited(
           refresh(feedback: const FamilyDashboardFeedback.childRemoved()),
+        );
+        return true;
+      },
     );
   }
 
@@ -246,9 +279,33 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     );
   }
 
+  /// Change PIN: the old one is cleared and a new one is asked for (the
+  /// guardian's phone may also continue without one).
   Future<void> resetAccess() async {
     if (state is! FamilyDashboardLoaded) return;
     await _resetPinAndReload();
+  }
+
+  /// Guardian's phone only: asks for a PIN that will lock the dashboard.
+  Future<void> lockWithPin() async {
+    if (state is! FamilyDashboardLoaded || !await _isPinOptional()) return;
+    emit(const FamilyDashboardNeedsPin(canSkip: true));
+  }
+
+  /// Guardian's phone only: leaves PIN creation and opens the dashboard.
+  Future<void> skipPin() async {
+    final current = state;
+    if (current is! FamilyDashboardNeedsPin || !current.canSkip) return;
+    await refresh();
+  }
+
+  /// Guardian's phone only: removes the lock, from inside the unlocked
+  /// dashboard (holding the locked phone is not enough).
+  Future<void> removePinLock() async {
+    if (state is! FamilyDashboardLoaded || !await _isPinOptional()) return;
+    emit(const FamilyDashboardLoading());
+    await _parentAccess.reset();
+    await refresh();
   }
 
   /// Forgotten-PIN recovery: the guardian proves ownership of the signed-in
@@ -279,23 +336,45 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
   Future<void> _resetPinAndReload() async {
     emit(const FamilyDashboardLoading());
     await _parentAccess.reset();
-    await load();
+    final settings = (await _parentAccess.getSettings()).getOrElse(
+      () => const ParentSettings(),
+    );
+    // A reset that did not go through falls back to the normal gate.
+    if (settings.hasPin) {
+      await load();
+      return;
+    }
+    emit(FamilyDashboardNeedsPin(canSkip: await _isPinOptional()));
   }
 
+  bool _linking = false;
+
+  /// Links the child whose code the guardian scanned or typed. A second
+  /// submit while one is running is ignored. The first link turns parent
+  /// mode on, so the home and settings show the guardian tools without a
+  /// separate toggle.
   Future<void> acceptRemoteToken(String token) async {
     final current = state;
-    if (current is! FamilyDashboardLoaded) return;
-    final result = await _remoteLink.acceptChildLinkToken(token);
-    await result.fold(
-      (failure) async => emit(
-        current.copyWith(
-          feedback: FamilyDashboardFeedback.failure(failure.message),
-          feedbackEventId: _nextFeedbackEventId(),
+    if (current is! FamilyDashboardLoaded || _linking) return;
+    _linking = true;
+    try {
+      final result = await _remoteLink.acceptChildLinkToken(token);
+      if (isClosed) return;
+      await result.fold(
+        (failure) async => emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
         ),
-      ),
-      (_) async =>
-          refresh(feedback: const FamilyDashboardFeedback.childLinked()),
-    );
+        (_) async {
+          await _parentAccess.setParentGuardianMode(true);
+          await refresh(feedback: const FamilyDashboardFeedback.childLinked());
+        },
+      );
+    } finally {
+      _linking = false;
+    }
   }
 
   Future<void> addReward(String title, {String? childId}) async {

@@ -314,9 +314,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialShortcutProgressDesc => 'الشهادات والإنجازات';
 
   @override
-  String get splashTagline => 'رفيقك في رحاب القرآن';
-
-  @override
   String get splashInitError => 'تعذّر إكمال التحميل، يرجى المحاولة مرة أخرى';
 
   @override
@@ -1822,7 +1819,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsAndGuardian => 'الأطفال وولي الأمر';
 
   @override
-  String get parentDashboardTitle => 'لوحة ولي الأمر';
+  String get parentDashboardTitle => 'لوحة العائلة';
 
   @override
   String get parentDashboardSubtitle =>
@@ -1912,11 +1909,50 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianPairingStepOpenDashboard =>
-      'اذهب إلى الإعدادات > لوحة ولي الأمر';
+      'اذهب إلى الإعدادات ← الأطفال وولي الأمر ← لوحة العائلة ← «ربط طفل جديد»';
 
   @override
   String get guardianPairingStepScanOrEnterCode =>
       'امسح رمز QR أو أدخل الرمز يدوياً';
+
+  @override
+  String get guardianLinkLater => 'سأربط لاحقاً';
+
+  @override
+  String get guardianLinkLaterHint =>
+      'يمكنك الربط في أي وقت من ⚙ في رحلة الحفظ.';
+
+  @override
+  String get guardianCheckNow => 'تمّ المسح؟ تحقّق الآن';
+
+  @override
+  String get guardianLinkedSuccess => 'تم الربط بولي الأمر ✓';
+
+  @override
+  String get parentDashboardNotLinkCode => 'هذا ليس رمز ربط من تالية';
+
+  @override
+  String get familyDashboardLinking => 'جارٍ ربط الطفل…';
+
+  @override
+  String get familyPinOptionalHelp =>
+      'اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.';
+
+  @override
+  String get familyPinSkip => 'متابعة بدون قفل';
+
+  @override
+  String get familyPinLockOn => 'قفل اللوحة برقم سري';
+
+  @override
+  String get familyPinLockRemove => 'إزالة قفل اللوحة';
+
+  @override
+  String get familyPinLockRemoveConfirm =>
+      'ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.';
+
+  @override
+  String get kidsGuardianLinkedBadge => 'ولي أمرك يتابع رحلتك 💚';
 
   @override
   String get guardianRegenerateCode => 'تجديد الرمز';
@@ -1943,6 +1979,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get splashSubtitle => 'اقرأ، احفظ، راجع، وانمُ مع القرآن.';
+
+  @override
+  String get splashTagline => 'رفيقك في رحاب القرآن';
 
   @override
   String get splashFeatureRead => 'اقرأ';
@@ -3165,7 +3204,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionsUnavailable => 'تعذّر تحميل مهام البيت الآن.';
 
   @override
-  String get guardianSessionTileTitle => 'لوحة ولي الأمر';
+  String get guardianSessionTileTitle => 'لوحة العائلة';
 
   @override
   String get guardianSessionTileSubtitle =>
@@ -3350,7 +3389,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardChildReminder => 'تذكير الطفل';
 
   @override
-  String get parentDashboardDailyReminder => 'تذكير يومي الساعة ٦:٣٠ مساءً';
+  String get parentDashboardDailyReminder => 'تذكير يومي للطفل';
 
   @override
   String get parentDashboardReminderSubtitle =>
@@ -3417,18 +3456,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardEditChild => 'تعديل بيانات الطفل';
-
-  @override
-  String get parentDashboardChildLinked => 'تم ربط الطفل بنجاح';
-
-  @override
-  String get parentDashboardRewardAdded => 'تمت إضافة المكافأة';
-
-  @override
-  String get parentDashboardRemoteRewardAdded => 'تم إرسال المكافأة للطفل';
-
-  @override
-  String get parentDashboardReminderSaved => 'تم تحديث التذكير';
 
   @override
   String get parentDashboardChildRemoved => 'تمت إزالة الطفل';
@@ -3940,6 +3967,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardUnlinking => 'جارٍ إزالة ربط ولي الأمر…';
+
+  @override
+  String get parentDashboardRewardAdded => 'تمت إضافة المكافأة';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'تم إرسال المكافأة للطفل';
+
+  @override
+  String get parentDashboardChildLinked => 'تم ربط الطفل بنجاح';
+
+  @override
+  String get parentDashboardReminderSaved => 'تم تحديث التذكير';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -5416,7 +5455,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exploreQuranSubtitle => 'اقرأ القرآن';
 
   @override
-  String get parentDashboardLinkHint => 'talia-kids-link:...';
+  String get parentDashboardLinkHint => 'مثال: A1B2-C3D4-E5F6';
 
   @override
   String get familyDashboardTitle => 'لوحة العائلة';
@@ -6114,9 +6153,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahEndPlanAction => 'إنهاء الختمة';
 
   @override
-  String get khatmahStartNewKhatmah => 'ابدأ ختمة جديدة';
-
-  @override
   String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
       'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة';
 
@@ -6453,6 +6489,9 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return 'متأخر $_temp0 عن موعد الختام';
   }
+
+  @override
+  String get khatmahStartNewKhatmah => 'ابدأ ختمة جديدة';
 
   @override
   String khatmahThroughWirdEnd(String page) {
