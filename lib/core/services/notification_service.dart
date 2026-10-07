@@ -267,6 +267,8 @@ class TaliaNotificationService {
   static const String smartReminderPreferenceKey = 'notifications_smart';
   static const String lastKnownTimezonePreferenceKey =
       'notifications_last_known_timezone';
+  static const String exactAlarmPromptedPreferenceKey =
+      'notifications_exact_alarm_prompted';
 
   // ─── Notification IDs ───────────────────────────────────────────────────────
   static const int _dailyReviewId = 1001;

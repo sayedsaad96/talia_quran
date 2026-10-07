@@ -20,6 +20,8 @@
 //   the finish review, the verdict, and DESIGN.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +31,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/services/app_initializer.dart';
 import '../widgets/onboarding_palette.dart';
 import '../cubits/onboarding_cubit.dart';
 import '../widgets/experience_fork_view.dart';
@@ -101,6 +104,9 @@ class _OnboardingViewState extends State<_OnboardingView> {
       listener: (context, state) {
         if (state.status == OnboardingStatus.completed &&
             state.completedRoute != null) {
+          // Permission prompts were held back until the user had seen what
+          // the app is for.
+          unawaited(AppInitializer.requestDeferredPermissions(l10n));
           context.go(state.completedRoute!);
         }
       },

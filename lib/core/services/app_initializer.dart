@@ -25,6 +25,7 @@ import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
+import '../router/launch_destination.dart';
 
 /// Handles heavy app initialization that was previously blocking `runApp()`.
 ///
@@ -173,10 +174,30 @@ class AppInitializer {
   static Future<void> _initNotifications() async {
     final notificationService = getIt<TaliaNotificationService>();
     await notificationService.initialize();
+    // First launch: the prompts wait until onboarding has explained the app
+    // (see [requestDeferredPermissions]).
+    if (deferPermissionPrompts(getIt<SharedPreferences>())) return;
     // M05 FIX: Do not await requestPermissions().
     // Awaiting this on Android 13+ blocks the main isolate while the OS
     // permission dialog is active.
     unawaited(notificationService.requestPermissions());
+  }
+
+  /// True until onboarding completes: no permission dialog may cover the
+  /// first screens a new user sees.
+  @visibleForTesting
+  static bool deferPermissionPrompts(SharedPreferences prefs) =>
+      prefs.getBool(LaunchDestination.firstTimePreferenceKey) ?? true;
+
+  /// Asks for the notification and exact-alarm permissions that were held
+  /// back during a first launch. Called once onboarding completes.
+  static Future<void> requestDeferredPermissions(AppLocalizations l10n) async {
+    try {
+      await getIt<TaliaNotificationService>().requestPermissions();
+    } catch (error, stack) {
+      TaliaLogger.w('Deferred notification prompt failed', error, stack);
+    }
+    await _promptExactAlarmsOnce(l10n);
   }
 
   static Future<void> _scheduleFirstLaunchNotifications() async {
@@ -230,6 +251,34 @@ class AppInitializer {
     final notificationService = getIt<TaliaNotificationService>();
     await notificationService.cancelStreakAlert();
     await notificationService.clearBadge();
+    if (!deferPermissionPrompts(prefs)) {
+      unawaited(_promptExactAlarmsOnce(l10n));
+    }
+  }
+
+  /// A release install is a new application id, so Android 14+ does not keep
+  /// the exact-alarm grant the debug package already had. Ask once, then
+  /// rebuild the schedule if the user allows on-time delivery.
+  static Future<void> _promptExactAlarmsOnce(AppLocalizations l10n) async {
+    if (!Platform.isAndroid) return;
+    final prefs = getIt<SharedPreferences>();
+    const promptedKey =
+        TaliaNotificationService.exactAlarmPromptedPreferenceKey;
+    if (prefs.getBool(promptedKey) ?? false) return;
+
+    final service = getIt<TaliaNotificationService>();
+    try {
+      if (await service.canScheduleExactNotifications()) {
+        await prefs.setBool(promptedKey, true);
+        return;
+      }
+      final granted = await service.requestExactNotificationPermission();
+      await prefs.setBool(promptedKey, true);
+      if (!granted) return;
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
+    } catch (error, stack) {
+      TaliaLogger.w('Exact alarm prompt failed', error, stack);
+    }
   }
 
   static Future<void> _startBackgroundTasks() async {
