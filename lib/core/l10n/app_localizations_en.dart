@@ -7707,4 +7707,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authCloudUnavailable =>
       'Accounts aren\'t available in this version. You can keep using Talia as a guest.';
+
+  @override
+  String surahNamed(String name) {
+    return 'Surah $name';
+  }
 }

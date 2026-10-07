@@ -3242,4 +3242,6 @@
   ,"sourcesOpenLink": "فتح {site}"
   ,"@sourcesOpenLink": {"placeholders": {"site": {"type": "String"}}}
   ,"authCloudUnavailable": "الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف."
+  ,"surahNamed": "سورة {name}"
+  ,"@surahNamed": {"placeholders": {"name": {"type": "String"}}}
 }

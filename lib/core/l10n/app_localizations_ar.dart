@@ -7710,4 +7710,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get authCloudUnavailable =>
       'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.';
+
+  @override
+  String surahNamed(String name) {
+    return 'سورة $name';
+  }
 }

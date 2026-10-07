@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/kids_map_celebration_store.dart';
@@ -296,7 +297,11 @@ class _KidsGamifiedJourneyContentState
                                 isLast: index == widget.state.stages.length - 1,
                                 surahName:
                                     widget.state.surahName ??
-                                    '${context.l10n.surah} ${widget.state.surahId}',
+                                    context.l10n.surahNamed(
+                                      context.localizedSurahName(
+                                        widget.state.surahId,
+                                      ),
+                                    ),
                                 showSignpost: showSignpost,
                                 celebrate: _celebrate.contains(
                                   stage.stageNumber,

@@ -13023,6 +13023,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.'**
   String get authCloudUnavailable;
+
+  /// No description provided for @surahNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {name}'**
+  String surahNamed(String name);
 }
 
 class _AppLocalizationsDelegate
