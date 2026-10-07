@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../../cubits/settings_cubit.dart';
@@ -39,7 +40,9 @@ class QuranSettingsPage extends StatelessWidget {
                   SettingsDivider(isDark: isDark, indent: 0),
                   ResetMemorizationPathTile(
                     isDark: isDark,
-                    onReset: context.read<SettingsCubit>().resetMemorizationIdentity,
+                    onReset: context
+                        .read<SettingsCubit>()
+                        .resetMemorizationIdentity,
                   ),
                 ],
               ],
@@ -100,7 +103,7 @@ class _BackgroundPlaybackSettingTileState
         color: primary.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
-      child: Icon(Icons.headphones_rounded, color: primary, size: 22),
+      child: Icon(TaliaIcons.listen, color: primary, size: 22),
     );
   }
 

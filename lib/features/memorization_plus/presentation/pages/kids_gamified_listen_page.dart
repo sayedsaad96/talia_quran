@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -427,7 +428,7 @@ class _KidsMedallion extends StatelessWidget {
         border: Border.all(color: Colors.white, width: 3),
         boxShadow: KidsTheme.card25DShadow,
       ),
-      child: Icon(icon, color: Colors.white, size: 32),
+      child: TaliaIcon(icon, color: Colors.white, size: 32),
     );
   }
 }
@@ -475,7 +476,7 @@ class _CloseMatchFeedbackBanner extends StatelessWidget {
         child: Row(
           children: [
             const _KidsMedallion(
-              icon: Icons.emoji_events_rounded,
+              icon: TaliaKidsIcons.trophy,
               color: KidsTheme.goldStar,
             ),
             const SizedBox(width: AppSpacing.md),
@@ -552,7 +553,7 @@ class _KidsHiddenRecallCard extends StatelessWidget {
         child: Column(
           children: [
             const _KidsMedallion(
-              icon: Icons.visibility_off_rounded,
+              icon: TaliaKidsIcons.hide,
               color: KidsTheme.mintGlow,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -597,7 +598,7 @@ class _KidsReviewChallengeCard extends StatelessWidget {
       child: Column(
         children: [
           const _KidsMedallion(
-            icon: Icons.star_rounded,
+            icon: TaliaKidsIcons.starFilled,
             color: KidsTheme.goldStar,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -652,7 +653,7 @@ class _KidsRecallFromMemoryCard extends StatelessWidget {
       child: Column(
         children: [
           const _KidsMedallion(
-            icon: Icons.psychology_rounded,
+            icon: TaliaKidsIcons.hifz,
             color: KidsTheme.reviewPurple,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -763,9 +764,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
         Center(
           child: KidsRoundActionButton(
             key: const ValueKey('kids-gamified-play-audio'),
-            icon: state.isPlaying
-                ? Icons.stop_rounded
-                : Icons.play_arrow_rounded,
+            icon: state.isPlaying ? TaliaKidsIcons.stop : TaliaKidsIcons.play,
             label: context.l10n.kidsGamifiedListenAndRepeat,
             // No audio during a hidden recitation: it would be the answer.
             onPressed: state.isRecording || state.sessionState.phase.textHidden
@@ -805,7 +804,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
               ? Center(
                   key: const ValueKey('kids-gamified-record-recitation-idle'),
                   child: KidsRoundActionButton(
-                    icon: Icons.mic_rounded,
+                    icon: TaliaKidsIcons.mic,
                     label: context.l10n.kidsGamifiedRecordYourVoice,
                     tone: KidsButtonTone.green,
                     diameter: 100,
@@ -820,7 +819,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
               : KidsChunkyButton(
                   key: const ValueKey('kids-gamified-try-from-memory'),
                   onPressed: onTryFromMemory,
-                  icon: Icons.psychology_rounded,
+                  icon: TaliaKidsIcons.hifz,
                   label: context.l10n.kidsGamifiedTryFromMemory,
                   tone: KidsButtonTone.purple,
                 ),
@@ -830,7 +829,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
           KidsChunkyButton(
             key: const ValueKey('kids-gamified-first-word-hint'),
             onPressed: onRevealFirstWord,
-            icon: Icons.lightbulb_rounded,
+            icon: TaliaKidsIcons.idea,
             label: context.l10n.kidsGamifiedGiveMeTheStart,
             tone: KidsButtonTone.soft,
             height: 56,
@@ -841,7 +840,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
           KidsChunkyButton(
             key: const ValueKey('kids-gamified-remind-me'),
             onPressed: onRemindMe,
-            icon: Icons.visibility_rounded,
+            icon: TaliaKidsIcons.show,
             label: context.l10n.kidsGamifiedRemindMe,
             tone: KidsButtonTone.soft,
             height: 56,
@@ -867,7 +866,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                 KidsChunkyButton(
                   key: const ValueKey('kids-gamified-manual-complete'),
                   onPressed: onManualComplete,
-                  icon: Icons.verified_rounded,
+                  icon: TaliaKidsIcons.verified,
                   label: context.l10n.kidsManualCompleteAction,
                   tone: KidsButtonTone.green,
                   height: 56,
@@ -898,7 +897,7 @@ class _ListenFirstMicHint extends StatelessWidget {
     return KidsChunkyButton(
       key: const ValueKey('kids-gamified-listen-first-hint'),
       onPressed: onPlayPressed,
-      icon: Icons.headphones_rounded,
+      icon: TaliaKidsIcons.listen,
       label: context.l10n.kidsGamifiedListenFirst(
         remainingListens,
         context.numText(remainingListens),
@@ -1027,7 +1026,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
           KidsChunkyButton(
             key: const ValueKey('kids-gamified-stop-recording'),
             onPressed: widget.onDone,
-            icon: Icons.check_circle_rounded,
+            icon: TaliaKidsIcons.checkCircleFilled,
             label: context.l10n.kidsGamifiedDoneRecording,
             tone: KidsButtonTone.green,
             height: 56,

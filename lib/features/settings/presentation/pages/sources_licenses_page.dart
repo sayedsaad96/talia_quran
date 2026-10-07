@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../widgets/settings_group.dart';
 import '../widgets/settings_section.dart';
@@ -146,7 +147,7 @@ class _SourceEntry extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () =>
                     launchUrl(link, mode: LaunchMode.externalApplication),
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                icon: const Icon(TaliaIcons.externalLink, size: 16),
                 label: Text(context.l10n.sourcesOpenLink(link.host)),
                 style: TextButton.styleFrom(
                   foregroundColor: context.tokens.accent,

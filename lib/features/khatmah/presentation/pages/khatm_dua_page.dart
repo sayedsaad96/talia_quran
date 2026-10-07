@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_dedication.dart';
@@ -106,13 +107,13 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
               IconButton(
                 key: const Key('khatm_dua_decrease_font'),
                 tooltip: context.l10n.khatmahDecreaseFontSize,
-                icon: const Icon(Icons.text_decrease_rounded),
+                icon: const Icon(TaliaIcons.textDecrease),
                 onPressed: () => _cubit.decreaseFontSize(),
               ),
               IconButton(
                 key: const Key('khatm_dua_increase_font'),
                 tooltip: context.l10n.khatmahIncreaseFontSize,
-                icon: const Icon(Icons.text_increase_rounded),
+                icon: const Icon(TaliaIcons.textIncrease),
                 onPressed: () => _cubit.increaseFontSize(),
               ),
               BlocBuilder<KhatmDuaCubit, KhatmDuaState>(
@@ -142,9 +143,12 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                   return IconButton(
                     key: const Key('khatm_dua_copy_button'),
                     tooltip: context.l10n.khatmahCopyDuA,
-                    icon: const Icon(Icons.copy_rounded),
-                    onPressed: () =>
-                        _copyDua(state.data.arabicText, dedicationInsert, supplicationInsert),
+                    icon: const Icon(TaliaIcons.copy),
+                    onPressed: () => _copyDua(
+                      state.data.arabicText,
+                      dedicationInsert,
+                      supplicationInsert,
+                    ),
                   );
                 },
               ),
@@ -167,7 +171,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.error_outline_rounded,
+                      TaliaIcons.error,
                       size: 48,
                       color: Colors.redAccent,
                     ),
@@ -202,12 +206,12 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                 : null;
             final supplicationInsert =
                 (hasDedication && widget.dedication!.condition != null)
-                    ? data.getDedicationInsert(
-                        widget.dedication!.condition!,
-                        widget.dedication!.effectiveGender,
-                        widget.dedication!.recipientName,
-                      )
-                    : '';
+                ? data.getDedicationInsert(
+                    widget.dedication!.condition!,
+                    widget.dedication!.effectiveGender,
+                    widget.dedication!.recipientName,
+                  )
+                : '';
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
@@ -230,11 +234,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                       children: [
                         Row(
                           children: [
-                            Icon(
-                              Icons.menu_book_rounded,
-                              size: 20,
-                              color: gold,
-                            ),
+                            Icon(TaliaIcons.mushaf, size: 20, color: gold),
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(

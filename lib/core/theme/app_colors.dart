@@ -39,7 +39,9 @@ abstract class AppColors {
   static const Color lightTextHint = Color(0xFF756A5A);
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF0D201D); // Deep green-charcoal, clearly lifted off OLED black
+  static const Color darkBackground = Color(
+    0xFF0D201D,
+  ); // Deep green-charcoal, clearly lifted off OLED black
   static const Color darkSurface = Color(0xFF14302B);
   static const Color darkSurfaceVariant = Color(0xFF1D3E38);
   static const Color darkCard = Color(0xFF14302B);
@@ -94,6 +96,21 @@ abstract class AppColors {
   // ─── Kids Mode Colors ────────────────────────────────────────────────────────
   /// Vibrant playful green for Kids Mode UI elements
   static const Color kidsGreen = Color(0xFF27AE60);
+
+  /// Kids icon system (`TaliaFeatureDoor`): one door colour per place. Each
+  /// keeps a white glyph at >= 3:1 (WCAG non-text contrast).
+  static const Color kidsDoorTeal = Color(0xFF13866F);
+  static const Color kidsDoorSky = Color(0xFF2C82C9);
+  static const Color kidsDoorCoral = Color(0xFFE0533D);
+  static const Color kidsDoorViolet = Color(0xFF7A55DB);
+  static const Color kidsDoorSun = Color(0xFFC77A00);
+  static const Color kidsDoorLeaf = Color(0xFF1E8E4C);
+
+  /// Outline ink for kids doors.
+  static const Color kidsInk = Color(0xFF16332E);
+
+  /// Lit nuqta (sparkle) colour on kids icons.
+  static const Color kidsSparkle = Color(0xFFFFC233);
 
   // ─── Semantic Colors ─────────────────────────────────────────────────────────
   static const Color success = Color(0xFF2E7D5E);

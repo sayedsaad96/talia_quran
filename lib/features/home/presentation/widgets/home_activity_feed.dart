@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
@@ -18,7 +19,6 @@ import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
 import '../../../../core/router/open_location.dart';
-
 
 class HomeActivityFeed extends StatelessWidget {
   const HomeActivityFeed({
@@ -44,7 +44,7 @@ class HomeActivityFeed extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.history_rounded, size: 16, color: skin.gold),
+              Icon(TaliaIcons.history, size: 16, color: skin.gold),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -103,22 +103,22 @@ class _ActivityRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final (icon, color, kindLabel) = switch (event.kind) {
       ActivityEventKind.reading => (
-        Icons.menu_book_rounded,
+        TaliaIcons.mushaf,
         AppColors.accentBlue,
         context.l10n.homeActivityReading,
       ),
       ActivityEventKind.memorize => (
-        Icons.bookmark_rounded,
+        TaliaIcons.bookmarkFilled,
         AppColors.primaryLight,
         context.l10n.homeActivityMemorize,
       ),
       ActivityEventKind.review => (
-        Icons.replay_rounded,
+        TaliaIcons.replay,
         AppColors.gold,
         context.l10n.homeActivityReview,
       ),
       ActivityEventKind.khatmah => (
-        Icons.auto_stories_rounded,
+        TaliaIcons.reading,
         AppColors.success,
         context.l10n.homeActivityKhatmah,
       ),
@@ -206,7 +206,7 @@ class _ActivityRow extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.chevron_right_rounded,
+              TaliaIcons.chevronForward,
               size: 18,
               color: skin.textSecondary.withValues(alpha: 0.5),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
@@ -25,8 +26,8 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.mic_none_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.mic_rounded), findsOneWidget); // the button
+    // The recording card's idle mic and the record button; no header mic.
+    expect(find.byIcon(TaliaIcons.mic), findsNWidgets(2));
   });
 
   // Devices without a speech recognizer can never record: the main button

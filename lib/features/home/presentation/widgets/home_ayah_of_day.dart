@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
@@ -15,11 +16,7 @@ import '../theme/home_skin.dart';
 import 'spring_tap.dart';
 
 class HomeAyahOfDayCard extends StatelessWidget {
-  const HomeAyahOfDayCard({
-    super.key,
-    required this.ayah,
-    required this.skin,
-  });
+  const HomeAyahOfDayCard({super.key, required this.ayah, required this.skin});
 
   final AyahOfDay ayah;
   final HomeSkin skin;
@@ -88,7 +85,8 @@ class HomeAyahOfDayCard extends StatelessWidget {
               // Play/Pause button integrated with app-wide QuranAudioPlayerCubit
               BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
                 builder: (context, audioState) {
-                  final isThisAyah = audioState.currentSurahId == ayah.surahId &&
+                  final isThisAyah =
+                      audioState.currentSurahId == ayah.surahId &&
                       audioState.currentAyahNumber == ayah.ayahNumber;
                   final isPlaying = isThisAyah && audioState.isPlaying;
                   final isLoading = isThisAyah && audioState.isLoading;
@@ -112,8 +110,8 @@ class HomeAyahOfDayCard extends StatelessWidget {
 
                   return _GhostIcon(
                     icon: isPlaying
-                        ? Icons.pause_circle_outline_rounded
-                        : Icons.play_circle_outline_rounded,
+                        ? TaliaIcons.pauseCircle
+                        : TaliaIcons.playCircle,
                     skin: skin,
                     color: isPlaying ? skin.gold : null,
                     onTap: () async {
@@ -142,14 +140,14 @@ class HomeAyahOfDayCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.lg),
               // Read the full surah
               _GhostIcon(
-                icon: Icons.menu_book_outlined,
+                icon: TaliaIcons.mushaf,
                 skin: skin,
                 onTap: () => context.push('/quran/surah/${ayah.surahId}'),
               ),
               const SizedBox(width: AppSpacing.lg),
               // Share button
               _GhostIcon(
-                icon: Icons.share_outlined,
+                icon: TaliaIcons.share,
                 skin: skin,
                 onTap: () {
                   SocialShareSheet.show(
@@ -180,9 +178,7 @@ class HomeAyahOfDayCard extends StatelessWidget {
 
   String _formatCount(BuildContext context, int count) {
     final isArabic = context.isArabic;
-    return isArabic
-        ? MushafHizbHelper.toArabicNumber(count)
-        : count.toString();
+    return isArabic ? MushafHizbHelper.toArabicNumber(count) : count.toString();
   }
 
   String? _contextLabel(BuildContext context) {

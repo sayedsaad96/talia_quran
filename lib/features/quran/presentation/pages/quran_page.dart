@@ -1,3 +1,4 @@
+import '../../../../core/icons/talia_icons.dart';
 import '../widgets/surah_memorization_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -249,7 +250,7 @@ class _QuranViewState extends State<_QuranView>
               padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
               child: TextButton.icon(
                 onPressed: () => ReciterSelectorSheet.show(context),
-                icon: const Icon(Icons.record_voice_over_rounded, size: 18),
+                icon: const Icon(TaliaIcons.recite, size: 18),
                 label: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 132),
                   child: Text(
@@ -364,7 +365,7 @@ class _SearchBarState extends State<_SearchBar> {
               color: context.tokens.textHint,
             ),
             prefixIcon: Icon(
-              Icons.search_rounded,
+              TaliaIcons.search,
               color: context.tokens.textHint,
               size: 20,
             ),
@@ -372,7 +373,7 @@ class _SearchBarState extends State<_SearchBar> {
                 ? IconButton(
                     tooltip: context.l10n.clearSearch,
                     icon: Icon(
-                      Icons.close_rounded,
+                      TaliaIcons.close,
                       color: context.tokens.textHint,
                       size: 18,
                     ),
@@ -419,7 +420,7 @@ class _SurahListView extends StatelessWidget {
     if (visible.isEmpty) {
       return EmptyStateWidget(
         message: context.l10n.noData,
-        icon: Icons.search_off_rounded,
+        icon: TaliaIcons.searchOff,
       );
     }
     return ListView.separated(
@@ -571,10 +572,10 @@ class _SurahTile extends StatelessWidget {
                             )
                           : Icon(
                               isPlaying
-                                  ? Icons.pause_circle_filled_rounded
+                                  ? TaliaIcons.pauseCircleFilled
                                   : (isCurrentSurah
-                                        ? Icons.play_circle_fill_rounded
-                                        : Icons.play_circle_outline_rounded),
+                                        ? TaliaIcons.playCircleFilled
+                                        : TaliaIcons.playCircle),
                               size: 26,
                               color: isCurrentSurah
                                   ? primary
@@ -597,8 +598,8 @@ class _SurahTile extends StatelessWidget {
               ),
               Icon(
                 context.isArabic
-                    ? Icons.arrow_back_ios_new_rounded
-                    : Icons.arrow_forward_ios_rounded,
+                    ? TaliaIcons.chevronBack
+                    : TaliaIcons.chevronForward,
                 size: 14,
                 color: context.tokens.textHint,
               ),

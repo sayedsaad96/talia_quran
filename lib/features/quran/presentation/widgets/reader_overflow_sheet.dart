@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -130,14 +131,14 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
               ),
               _actionTile(
                 key: const Key('reader-open-navigation'),
-                icon: Icons.menu_book_rounded,
+                icon: TaliaIcons.mushaf,
                 title: context.l10n.readerGoToPage,
                 onTap: widget.onOpenNavigation,
               ),
               ValueListenableBuilder<QuranReciter>(
                 valueListenable: reciterService.currentReciter,
                 builder: (context, reciter, _) => _actionTile(
-                  icon: Icons.record_voice_over_rounded,
+                  icon: TaliaIcons.recite,
                   title: context.l10n.selectReciter,
                   subtitle: context.isArabic ? reciter.nameAr : reciter.nameEn,
                   onTap: () => ReciterSelectorSheet.show(context),
@@ -145,7 +146,7 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
               ),
               SwitchListTile(
                 key: const Key('reader-tajweed-toggle'),
-                secondary: _leadingIcon(Icons.palette_rounded, primary),
+                secondary: _leadingIcon(TaliaIcons.palette, primary),
                 title: Text(
                   context.l10n.readerTajweedColors,
                   style: AppTypography.titleSmall.copyWith(
@@ -169,7 +170,7 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
                 },
               ),
               _actionTile(
-                icon: Icons.fullscreen_rounded,
+                icon: TaliaIcons.fullscreen,
                 title: context.l10n.enterFocusMode,
                 onTap: widget.onEnterFocus,
               ),

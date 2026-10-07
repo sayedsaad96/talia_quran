@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -347,8 +348,8 @@ class _JourneyMapHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.explore_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.journey,
               color: KidsTheme.goldLight,
               size: 24,
             ),
@@ -443,8 +444,8 @@ class _RegionBanner extends StatelessWidget {
               ),
               if (progress.isComplete) ...[
                 const SizedBox(width: AppSpacing.sm),
-                const Icon(
-                  Icons.workspace_premium_rounded,
+                const TaliaIcon(
+                  TaliaKidsIcons.certificate,
                   color: KidsTheme.goldStar,
                   size: 32,
                 ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/continue_recitation.dart';
 import '../theme/home_skin.dart';
@@ -95,7 +96,7 @@ class HomeContinueCard extends StatelessWidget {
                         Row(
                           children: [
                             Icon(
-                              Icons.play_circle_fill_rounded,
+                              TaliaIcons.playCircleFilled,
                               size: 16,
                               color: skin.gold,
                             ),

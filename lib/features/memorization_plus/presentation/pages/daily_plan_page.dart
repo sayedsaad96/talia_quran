@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/pending_ayah_resolver.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -207,7 +208,7 @@ class _DailyPlanBody extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.self_improvement_rounded,
+                    TaliaIcons.azkar,
                     color: AppColors.primary,
                     size: 20,
                   ),
@@ -239,7 +240,7 @@ class _DailyPlanBody extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.hourglass_top_rounded,
+                    TaliaIcons.hourglass,
                     color: AppColors.warning,
                     size: 20,
                   ),
@@ -303,7 +304,7 @@ class _DailyPlanBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: onContinue,
-            icon: const Icon(Icons.play_arrow_rounded),
+            icon: const Icon(TaliaIcons.play),
             label: Text(
               PendingAyahResolver.firstPendingPlanTarget(plan)?.isNew == false
                   ? context.l10n.dailyPlanStartReview
@@ -398,9 +399,7 @@ class _PlanAyahTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: Icon(
-          isCompleted
-              ? Icons.check_circle_rounded
-              : Icons.radio_button_unchecked,
+          isCompleted ? TaliaIcons.checkCircleFilled : TaliaIcons.circle,
           color: isCompleted ? AppColors.success : AppColors.primary,
         ),
         title: Text(
@@ -488,9 +487,7 @@ class _EmptyPlanView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              hasPlan
-                  ? Icons.event_available_rounded
-                  : Icons.edit_calendar_rounded,
+              hasPlan ? TaliaIcons.calendarCheck : TaliaIcons.calendarEdit,
               size: 64,
               color: context.tokens.textSecondary,
             ),
@@ -517,7 +514,7 @@ class _EmptyPlanView extends StatelessWidget {
               FilledButton.icon(
                 key: const Key('daily_plan_create_plan_button'),
                 onPressed: onCreatePlan,
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(TaliaIcons.add),
                 label: Text(context.l10n.dailyPlanCreatePlanAction),
               ),
             ],

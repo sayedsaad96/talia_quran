@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_spacing.dart';
 import '../constants/surah_names.dart';
 import '../extensions/context_extensions.dart';
+import '../icons/talia_icons.dart';
 import '../theme/app_typography.dart';
 
 /// Splits [text] into its original words and the exact separators between
@@ -147,7 +148,7 @@ class MemorizationAyahDisplay extends StatelessWidget {
               ),
               child: Padding(
                 padding: EdgeInsets.all(2),
-                child: Icon(Icons.check_rounded, color: Colors.white, size: 12),
+                child: Icon(TaliaIcons.check, color: Colors.white, size: 12),
               ),
             ),
           ),

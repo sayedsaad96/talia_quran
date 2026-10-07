@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 import 'kids_chunky_button.dart';
@@ -197,7 +198,7 @@ class _RewardCard extends StatelessWidget {
               // lesser effort, so the pill only shows real stars (K23).
               if (starsEarned > 0)
                 _RewardPill(
-                  icon: Icons.star_rounded,
+                  icon: TaliaKidsIcons.starFilled,
                   label: context.l10n.kidsGamifiedEarnedStars(
                     starsEarned,
                     context.numText(starsEarned),
@@ -207,7 +208,7 @@ class _RewardCard extends StatelessWidget {
               // K11: real session points next to the stars, when any.
               if (pointsEarned > 0)
                 _RewardPill(
-                  icon: Icons.diamond_rounded,
+                  icon: TaliaKidsIcons.gem,
                   label: context.l10n.kidsGamifiedEarnedGems(
                     LocaleNumberFormatter.format(
                       (pointsEarned).toString(),
@@ -219,7 +220,7 @@ class _RewardCard extends StatelessWidget {
               // K11: level-up celebration pill on top of the session rewards.
               if (leveledUpTo != null)
                 _RewardPill(
-                  icon: Icons.military_tech_rounded,
+                  icon: TaliaKidsIcons.medal,
                   label: context.l10n.kidsLevelValue(
                     LocaleNumberFormatter.format(
                       (leveledUpTo!).toString(),
@@ -283,7 +284,7 @@ class _RewardActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final returnToMap = KidsChunkyButton(
       onPressed: onReturnToMap,
-      icon: Icons.map_rounded,
+      icon: TaliaKidsIcons.journey,
       label: context.l10n.kidsGamifiedReturnToMap,
       tone: KidsButtonTone.soft,
       height: AppSpacing.buttonHeight,
@@ -293,7 +294,7 @@ class _RewardActions extends StatelessWidget {
     final next = KidsChunkyButton(
       onPressed: onNext,
       // Mirrors itself under RTL: it points left in Arabic.
-      icon: Icons.arrow_forward_rounded,
+      icon: TaliaKidsIcons.arrowForward,
       label: context.l10n.kidsGamifiedStartMission,
       tone: KidsButtonTone.gold,
       height: AppSpacing.buttonHeight,
@@ -347,7 +348,7 @@ class _RewardPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 20),
+          TaliaIcon(icon, color: color, size: 20),
           const SizedBox(width: AppSpacing.xs),
           // Wraps under large text instead of running past the card (K29).
           Flexible(

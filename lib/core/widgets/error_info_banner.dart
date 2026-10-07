@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import '../constants/app_spacing.dart';
+import '../icons/talia_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -88,7 +89,7 @@ class ErrorInfoBanner extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: onDismissed,
-                icon: Icon(Icons.close_rounded, color: colors.foreground),
+                icon: Icon(TaliaIcons.close, color: colors.foreground),
               ),
             ],
           ],
@@ -127,28 +128,28 @@ class _BannerColors {
         border: AppColors.error.withValues(alpha: 0.35),
         foreground: AppColors.error,
         text: text,
-        icon: Icons.error_outline_rounded,
+        icon: TaliaIcons.error,
       ),
       ErrorInfoBannerType.warning => _BannerColors(
         background: AppColors.warning.withValues(alpha: isDark ? 0.16 : 0.1),
         border: AppColors.warning.withValues(alpha: 0.35),
         foreground: AppColors.warning,
         text: text,
-        icon: Icons.info_outline_rounded,
+        icon: TaliaIcons.info,
       ),
       ErrorInfoBannerType.success => _BannerColors(
         background: AppColors.success.withValues(alpha: isDark ? 0.16 : 0.09),
         border: AppColors.success.withValues(alpha: 0.35),
         foreground: AppColors.success,
         text: text,
-        icon: Icons.check_circle_outline_rounded,
+        icon: TaliaIcons.checkCircle,
       ),
       ErrorInfoBannerType.info => _BannerColors(
         background: AppColors.primary.withValues(alpha: isDark ? 0.16 : 0.08),
         border: AppColors.primary.withValues(alpha: 0.28),
         foreground: AppColors.primary,
         text: text,
-        icon: Icons.tips_and_updates_outlined,
+        icon: TaliaIcons.idea,
       ),
     };
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_constants.dart';
+import '../../icons/talia_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_ar.dart';
 
@@ -27,23 +28,23 @@ enum SocialShareCategory {
   IconData get icon {
     switch (this) {
       case SocialShareCategory.quranAyah:
-        return Icons.menu_book_rounded;
+        return TaliaIcons.mushaf;
       case SocialShareCategory.azkar:
-        return Icons.auto_awesome_rounded;
+        return TaliaIcons.azkar;
       case SocialShareCategory.dua:
-        return Icons.favorite_rounded;
+        return TaliaIcons.dua;
       case SocialShareCategory.achievement:
-        return Icons.emoji_events_rounded;
+        return TaliaIcons.trophy;
       case SocialShareCategory.memorization:
-        return Icons.psychology_rounded;
+        return TaliaIcons.hifz;
       case SocialShareCategory.streak:
-        return Icons.local_fire_department_rounded;
+        return TaliaIcons.flame;
       case SocialShareCategory.progress:
-        return Icons.insights_rounded;
+        return TaliaIcons.progress;
       case SocialShareCategory.certificate:
-        return Icons.verified_rounded;
+        return TaliaIcons.certificate;
       case SocialShareCategory.khatmah:
-        return Icons.auto_stories_rounded;
+        return TaliaIcons.reading;
     }
   }
 
@@ -133,11 +134,11 @@ enum SocialShareFormat {
   IconData get icon {
     switch (this) {
       case SocialShareFormat.portrait:
-        return Icons.crop_portrait_rounded;
+        return TaliaIcons.layoutPortrait;
       case SocialShareFormat.square:
-        return Icons.crop_square_rounded;
+        return TaliaIcons.layoutSquare;
       case SocialShareFormat.story:
-        return Icons.smartphone_rounded;
+        return TaliaIcons.phone;
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/widgets/qcf_hifz_verse_view.dart';
 
 // ─── Test Helpers ─────────────────────────────────────────────────────────────
@@ -381,7 +382,7 @@ void main() {
           ),
         );
         // Lock icon should be visible.
-        expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
+        expect(find.byIcon(TaliaIcons.lock), findsOneWidget);
         // Fallback text must NOT be revealed.
         expect(find.text(fallback), findsNothing);
       },
@@ -405,7 +406,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         // Memorized check icon should be present.
-        expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+        expect(find.byIcon(TaliaIcons.check), findsOneWidget);
       },
     );
 
@@ -423,7 +424,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      expect(find.byIcon(TaliaIcons.check), findsNothing);
     });
 
     // ── T020: No repository / Cubit / route access ─────────────────────────────

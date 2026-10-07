@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/router/app_router.dart';
@@ -112,7 +113,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.family_restroom_rounded), findsNothing);
+      expect(find.byIcon(TaliaIcons.family), findsNothing);
 
       final before = usecases.dashboardCalls;
       await tester.tap(find.byKey(const ValueKey('family-remote-retry')));
@@ -168,7 +169,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open the settings sheet.
-      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.settings));
       await tester.pumpAndSettle();
 
       expect(find.text('Guide voice'), findsNothing);
@@ -197,7 +198,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '1234');
       await tester.tap(find.text('Enter'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.settings));
       await tester.pumpAndSettle();
 
       expect(find.text('Reduce motion'), findsOneWidget);
@@ -225,7 +226,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '1234');
       await tester.tap(find.text('Enter'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.settings));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('kids-policy-reduce-motion')));
       await tester.pumpAndSettle();
@@ -560,7 +561,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, '1234');
       await tester.tap(find.text('Enter'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.settings_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.settings));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('family-change-pin')), findsOneWidget);
@@ -584,7 +585,7 @@ void main() {
       await tester.pumpAndSettle();
 
       Future<void> tapChangePin() async {
-        await tester.tap(find.byIcon(Icons.settings_rounded));
+        await tester.tap(find.byIcon(TaliaIcons.settings));
         await tester.pumpAndSettle();
         final button = find.widgetWithText(
           OutlinedButton,
@@ -649,7 +650,7 @@ void main() {
         await openChild(tester, 'Fatima');
         expect(find.byType(ChildDetailPage), findsOneWidget);
 
-        await tester.tap(find.byIcon(Icons.card_giftcard_rounded));
+        await tester.tap(find.byIcon(TaliaIcons.gift));
         await tester.pumpAndSettle();
         await submitDialogText(tester, 'Ice cream');
 
@@ -668,7 +669,7 @@ void main() {
       await tester.pumpWidget(_RouterTestApp(cubit: _buildCubit(usecases)));
       await openChild(tester, 'Talia');
 
-      final editButton = find.byIcon(Icons.edit_rounded);
+      final editButton = find.byIcon(TaliaIcons.edit);
       await tester.scrollUntilVisible(
         editButton,
         200,

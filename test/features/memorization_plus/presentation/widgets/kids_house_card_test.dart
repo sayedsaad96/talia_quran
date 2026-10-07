@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_house_card.dart';
@@ -186,7 +187,7 @@ void main() {
       expect(
         find.descendant(
           of: lockedCard,
-          matching: find.byIcon(Icons.lock_rounded),
+          matching: find.byIcon(TaliaKidsIcons.lock),
         ),
         findsWidgets,
       );

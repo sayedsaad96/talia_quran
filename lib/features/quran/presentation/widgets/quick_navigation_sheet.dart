@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
@@ -230,10 +231,7 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
                             hintStyle: AppTypography.bodySmall.copyWith(
                               color: hint,
                             ),
-                            prefixIcon: const Icon(
-                              Icons.search_rounded,
-                              size: 20,
-                            ),
+                            prefixIcon: const Icon(TaliaIcons.search, size: 20),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(
                                 AppSpacing.radiusMd,
@@ -314,7 +312,7 @@ class _LastReadTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.history_rounded, color: primary, size: 22),
+                Icon(TaliaIcons.history, color: primary, size: 22),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(

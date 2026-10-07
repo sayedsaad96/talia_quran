@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -23,7 +24,6 @@ import '../widgets/azkar_index_sheet.dart';
 import '../widgets/zikr_audio_state_builder.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
-
 
 /// A resumable recitation screen for the composed smart wird. Progress is
 /// persisted continuously so the user can leave and come back mid-session;
@@ -336,7 +336,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
             ? EmptyStateWidget(
                 key: const ValueKey('azkar-content-under-review'),
                 message: context.l10n.azkarContentUnderReview,
-                icon: Icons.pending_actions_rounded,
+                icon: TaliaIcons.pending,
               )
             : _allDone
             ? _SmartWirdDoneView(
@@ -404,7 +404,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
               IconButton(
                 tooltip: context.l10n.azkarIndex,
                 icon: Icon(
-                  Icons.format_list_bulleted_rounded,
+                  TaliaIcons.listBulleted,
                   color: context.tokens.textPrimary,
                 ),
                 onPressed: _openIndexSheet,
@@ -522,8 +522,8 @@ class _SmartWirdCard extends StatelessWidget {
                                   : context.l10n.azkarPlayRecitation,
                               icon: Icon(
                                 isAudioPlaying
-                                    ? Icons.pause_circle_rounded
-                                    : Icons.play_circle_rounded,
+                                    ? TaliaIcons.pauseCircleFilled
+                                    : TaliaIcons.playCircleFilled,
                                 size: 22,
                                 color: AppColors.primary,
                               ),
@@ -658,7 +658,7 @@ class _CounterDial extends StatelessWidget {
               alignment: Alignment.center,
               child: done
                   ? const Icon(
-                      Icons.check_circle_rounded,
+                      TaliaIcons.checkCircleFilled,
                       color: Colors.white,
                       size: 38,
                     )
@@ -713,7 +713,7 @@ class _SmartWirdDoneView extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.auto_awesome_rounded,
+                TaliaIcons.sparkle,
                 color: Colors.white,
                 size: 48,
               ),
@@ -751,7 +751,7 @@ class _SmartWirdDoneView extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onReset,
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: const Icon(TaliaIcons.refresh, size: 18),
                     label: Text(context.l10n.reset),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
@@ -764,7 +764,7 @@ class _SmartWirdDoneView extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onShare,
-                    icon: const Icon(Icons.ios_share_rounded, size: 18),
+                    icon: const Icon(TaliaIcons.shareUp, size: 18),
                     label: Text(context.l10n.azkarShareWird),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -785,7 +785,7 @@ class _SmartWirdDoneView extends StatelessWidget {
                   context.go('/');
                 }
               },
-              icon: const Icon(Icons.home_rounded, size: 18),
+              icon: const Icon(TaliaIcons.home, size: 18),
               label: Text(context.l10n.home),
             ),
           ],

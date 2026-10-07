@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import '../constants/surah_names.dart';
+import '../icons/talia_icons.dart';
 import '../utils/locale_number_formatter.dart';
 import '../router/app_router.dart';
 import 'journey_presentation_data.dart';
@@ -15,7 +15,7 @@ class ResumeSessionPresentationMapper {
       return JourneyPresentationData(
         title: input.l10n.resumeWhereYouLeft,
         subtitle: input.l10n.savedPreviousActivity,
-        icon: Icons.play_circle_fill_rounded,
+        icon: TaliaIcons.playCircleFilled,
         route: input.route,
       );
     }
@@ -41,7 +41,7 @@ class ResumeSessionPresentationMapper {
             : input.isArabic
             ? 'الصفحة ${LocaleNumberFormatter.format(page, input.l10n.localeName)}'
             : 'Page $page',
-        icon: Icons.menu_book_rounded,
+        icon: TaliaIcons.mushaf,
         route: input.route,
       );
     }
@@ -54,7 +54,7 @@ class ResumeSessionPresentationMapper {
       return JourneyPresentationData(
         title: input.isArabic ? 'تابع $surah' : 'Continue $surah',
         subtitle: input.l10n.lastSavedReading,
-        icon: Icons.menu_book_rounded,
+        icon: TaliaIcons.mushaf,
         route: input.route,
       );
     }
@@ -72,7 +72,7 @@ class ResumeSessionPresentationMapper {
             : input.isArabic
             ? 'خريطة $surah'
             : '$surah map',
-        icon: Icons.map_rounded,
+        icon: TaliaIcons.journey,
         route: input.route,
       );
     }
@@ -85,7 +85,7 @@ class ResumeSessionPresentationMapper {
       return JourneyPresentationData(
         title: input.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
         subtitle: input.isArabic ? 'خريطة $surah' : '$surah map',
-        icon: Icons.map_rounded,
+        icon: TaliaIcons.journey,
         route: input.route,
       );
     }
@@ -93,7 +93,7 @@ class ResumeSessionPresentationMapper {
     return JourneyPresentationData(
       title: input.l10n.resumeWhereYouLeft,
       subtitle: input.l10n.savedPreviousActivity,
-      icon: Icons.play_circle_fill_rounded,
+      icon: TaliaIcons.playCircleFilled,
       route: input.route,
     );
   }
@@ -116,7 +116,7 @@ class ResumeSessionPresentationMapper {
           : input.isArabic
           ? '$surah، الآية ${LocaleNumberFormatter.number(ayahNumber, input.l10n.localeName)}'
           : '$surah, ayah ${LocaleNumberFormatter.number(ayahNumber, input.l10n.localeName)}',
-      icon: Icons.flag_rounded,
+      icon: TaliaIcons.flag,
       route: input.route,
     );
   }

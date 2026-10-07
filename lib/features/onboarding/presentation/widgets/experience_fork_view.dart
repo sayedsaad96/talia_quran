@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/onboarding_cubit.dart';
@@ -147,7 +148,7 @@ class ExperienceForkView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(
-                Icons.cloud_off_rounded,
+                TaliaIcons.cloudOff,
                 size: 14,
                 color: AppColors.darkTextSecondary,
               ),
@@ -287,7 +288,11 @@ class _DestinationShrine extends StatelessWidget {
                         ),
                       ),
                       child: selected
-                          ? Icon(Icons.check, size: 15, color: onAccentColor)
+                          ? Icon(
+                              TaliaIcons.check,
+                              size: 15,
+                              color: onAccentColor,
+                            )
                           : null,
                     ),
                   ],
@@ -412,7 +417,7 @@ class _MushafWindow extends StatelessWidget {
                 ),
               ),
               const Icon(
-                Icons.auto_awesome_rounded,
+                TaliaIcons.sparkle,
                 size: 11,
                 color: AppColors.desertSand,
               ),
@@ -468,7 +473,7 @@ class _KidsNightWindow extends StatelessWidget {
             top: 14,
             start: 22,
             child: Icon(
-              Icons.star_rounded,
+              TaliaIcons.starFilled,
               size: 11,
               color: AppColors.goldLight.withValues(alpha: 0.9),
             ),
@@ -477,7 +482,7 @@ class _KidsNightWindow extends StatelessWidget {
             top: 30,
             start: 64,
             child: Icon(
-              Icons.star_rounded,
+              TaliaIcons.starFilled,
               size: 8,
               color: AppColors.darkTextPrimary.withValues(alpha: 0.7),
             ),
@@ -486,7 +491,7 @@ class _KidsNightWindow extends StatelessWidget {
             top: 18,
             start: 104,
             child: Icon(
-              Icons.star_rounded,
+              TaliaIcons.starFilled,
               size: 13,
               color: AppColors.goldLight,
             ),
@@ -495,7 +500,7 @@ class _KidsNightWindow extends StatelessWidget {
             top: 40,
             end: 86,
             child: Icon(
-              Icons.star_rounded,
+              TaliaIcons.starFilled,
               size: 8,
               color: AppColors.darkTextPrimary.withValues(alpha: 0.55),
             ),
@@ -528,7 +533,7 @@ class _KidsNightWindow extends StatelessWidget {
           const Align(
             alignment: AlignmentDirectional(-0.72, 0.15),
             child: Icon(
-              Icons.star_rounded,
+              TaliaIcons.starFilled,
               size: 15,
               color: AppColors.goldLight,
             ),
@@ -566,7 +571,7 @@ class _TonalSignInButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.login_rounded,
+                  TaliaIcons.login,
                   size: 18,
                   color: OnboardingPalette.nightTealText,
                 ),

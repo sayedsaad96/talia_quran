@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/widgets/social_share/share_card_backdrop.dart';
 import 'package:talia_quran/core/widgets/social_share/share_card_palette.dart';
 import 'package:talia_quran/core/widgets/social_share/share_medal.dart';
@@ -91,13 +92,13 @@ void main() {
           child: ShareMedal(
             size: 80,
             color: Colors.amber,
-            child: Icon(Icons.verified_rounded),
+            child: Icon(TaliaIcons.verified),
           ),
         ),
       ),
     );
     expect(find.byKey(const ValueKey('share-medal')), findsOneWidget);
-    expect(find.byIcon(Icons.verified_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.verified), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const ValueKey('share-medal'))),
       const Size(80, 80),

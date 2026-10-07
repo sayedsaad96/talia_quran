@@ -98,7 +98,7 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
             height: 220,
             child: EmptyStateWidget(
               message: context.l10n.emptyState,
-              icon: Icons.emoji_events_outlined,
+              icon: TaliaIcons.trophy,
             ),
           )
         else
@@ -182,7 +182,7 @@ class _AchievementTile extends StatelessWidget {
 
               // Progress bar or lock
               if (unlocked)
-                Icon(Icons.check_circle_rounded, size: 14, color: primary)
+                Icon(TaliaIcons.checkCircleFilled, size: 14, color: primary)
               else ...[
                 // Mini progress bar
                 SizedBox(
@@ -322,7 +322,7 @@ void _showAchievementDetailSheet(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.check_circle_rounded,
+                      TaliaIcons.checkCircleFilled,
                       color: AppColors.success,
                       size: 16,
                     ),
@@ -351,7 +351,7 @@ void _showAchievementDetailSheet(
                     Navigator.of(sheetContext).pop();
                     SocialShareSheet.show(context, data);
                   },
-                  icon: const Icon(Icons.share_rounded, size: 20),
+                  icon: const Icon(TaliaIcons.share, size: 20),
                   label: Text(context.l10n.shareAchievement),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -410,90 +410,90 @@ class _AchievementBadgeShape extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Map IDs to specific icons
-    IconData iconData = Icons.star_rounded;
+    IconData iconData = TaliaIcons.starFilled;
     switch (achievement.id) {
       // Reading
       case 'first_page':
-        iconData = Icons.menu_book_rounded;
+        iconData = TaliaIcons.mushaf;
         break;
       case 'ten_pages':
-        iconData = Icons.import_contacts_rounded;
+        iconData = TaliaIcons.mushaf;
         break;
       case 'fifty_pages':
-        iconData = Icons.auto_stories_rounded;
+        iconData = TaliaIcons.reading;
         break;
       case 'juz_read':
-        iconData = Icons.chrome_reader_mode_rounded;
+        iconData = TaliaIcons.readerMode;
         break;
       case 'five_juz_read':
-        iconData = Icons.library_books_rounded;
+        iconData = TaliaIcons.library;
         break;
       case 'half_quran_read':
-        iconData = Icons.emoji_events_rounded;
+        iconData = TaliaIcons.trophy;
         break;
       case 'full_quran_read':
-        iconData = Icons.diamond_rounded;
+        iconData = TaliaIcons.gem;
         break;
 
       // Memorization
       case 'first_ayah':
-        iconData = Icons.star_outline_rounded;
+        iconData = TaliaIcons.star;
         break;
       case 'ten_ayahs':
-        iconData = Icons.star_half_rounded;
+        iconData = TaliaIcons.starHalf;
         break;
       case 'fifty_ayahs':
-        iconData = Icons.star_rounded;
+        iconData = TaliaIcons.starFilled;
         break;
       case 'hundred_ayahs':
-        iconData = Icons.stars_rounded;
+        iconData = TaliaIcons.sparkle;
         break;
       case 'first_surah':
-        iconData = Icons.bookmark_added_rounded;
+        iconData = TaliaIcons.bookmarkCheck;
         break;
       case 'five_surahs':
-        iconData = Icons.collections_bookmark_rounded;
+        iconData = TaliaIcons.library;
         break;
       case 'ten_surahs':
-        iconData = Icons.workspace_premium_rounded;
+        iconData = TaliaIcons.certificate;
         break;
       case 'juz_amma':
-        iconData = Icons.mosque_rounded;
+        iconData = TaliaIcons.prayer;
         break;
       case 'one_juz_memorized':
-        iconData = Icons.verified_rounded;
+        iconData = TaliaIcons.verified;
         break;
       case 'five_juz_memorized':
-        iconData = Icons.military_tech_rounded;
+        iconData = TaliaIcons.medal;
         break;
       case 'ten_juz_memorized':
-        iconData = Icons.shield_rounded;
+        iconData = TaliaIcons.shield;
         break;
       case 'half_quran_memorized':
-        iconData = Icons.military_tech_rounded;
+        iconData = TaliaIcons.medal;
         break;
       case 'full_quran_memorized':
-        iconData = Icons.diamond_rounded;
+        iconData = TaliaIcons.gem;
         break;
 
       // Streak
       case 'three_day_streak':
-        iconData = Icons.local_fire_department_rounded;
+        iconData = TaliaIcons.flame;
         break;
       case 'week_streak':
-        iconData = Icons.whatshot_rounded;
+        iconData = TaliaIcons.flame;
         break;
       case 'two_week_streak':
-        iconData = Icons.bolt_rounded;
+        iconData = TaliaIcons.bolt;
         break;
       case 'month_streak':
-        iconData = Icons.offline_bolt_rounded;
+        iconData = TaliaIcons.bolt;
         break;
       case 'ninety_day_streak':
-        iconData = Icons.auto_awesome_rounded;
+        iconData = TaliaIcons.sparkle;
         break;
       case 'year_streak':
-        iconData = Icons.workspace_premium_rounded;
+        iconData = TaliaIcons.certificate;
         break;
     }
 

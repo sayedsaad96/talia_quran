@@ -60,7 +60,7 @@ class _PinGateState extends State<_PinGate> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_rounded, size: 54, color: AppColors.primary),
+            const Icon(TaliaIcons.lock, size: 54, color: AppColors.primary),
             const SizedBox(height: AppSpacing.md),
             Text(widget.title, style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
@@ -219,10 +219,7 @@ void _showAddChildOptions(BuildContext context) {
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(
-              leading: const Icon(
-                Icons.qr_code_scanner_rounded,
-                color: AppColors.primary,
-              ),
+              leading: const Icon(TaliaIcons.qrScan, color: AppColors.primary),
               title: Text(context.l10n.parentDashboardScanQr),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -231,7 +228,7 @@ void _showAddChildOptions(BuildContext context) {
             ),
             ListTile(
               leading: const Icon(
-                Icons.keyboard_rounded,
+                TaliaIcons.keyboard,
                 color: AppColors.primary,
               ),
               title: Text(context.l10n.parentDashboardEnterLinkingCode),

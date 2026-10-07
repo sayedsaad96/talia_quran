@@ -7,6 +7,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/quran_ayah_display_text.dart';
@@ -60,7 +61,7 @@ class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome_rounded, size: 18, color: skin.accent),
+              Icon(TaliaIcons.sparkle, size: 18, color: skin.accent),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.microReviewTitle,
@@ -152,7 +153,7 @@ class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
                   '&intent=review'
                   '&origin=review',
                 ),
-                icon: const Icon(Icons.record_voice_over_rounded, size: 18),
+                icon: const Icon(TaliaIcons.recite, size: 18),
                 label: Text(l10n.microReviewRecite),
               ),
             ],

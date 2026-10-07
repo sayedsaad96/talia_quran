@@ -1,3 +1,4 @@
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -286,7 +287,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: isEnabled ? onTapEdit : null,
-                    icon: const Icon(Icons.access_time_rounded, size: 16),
+                    icon: const Icon(TaliaIcons.clock, size: 16),
                     label: Text(
                       context.l10n.notificationEverydayAt(_formatTime(time)),
                       style: AppTypography.labelSmall.copyWith(
@@ -373,7 +374,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                       Row(
                         children: [
                           const Icon(
-                            Icons.warning_amber_rounded,
+                            TaliaIcons.warning,
                             color: AppColors.warning,
                             size: 22,
                           ),
@@ -401,7 +402,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                         height: 48,
                         child: OutlinedButton.icon(
                           onPressed: openAppSettings,
-                          icon: const Icon(Icons.settings_outlined, size: 18),
+                          icon: const Icon(TaliaIcons.settings, size: 18),
                           label: Text(
                             context.l10n.notificationOpenSystemSettings,
                             style: AppTypography.labelSmall.copyWith(
@@ -496,7 +497,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.dailyReview,
               onToggle: (v) =>
                   _cubit.toggleReminder(_reviewKey, v, l10n: context.l10n),
-              icon: Icons.auto_stories_rounded,
+              icon: TaliaIcons.reading,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -511,7 +512,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.streakAlert,
               onToggle: (v) =>
                   _cubit.toggleReminder(_streakKey, v, l10n: context.l10n),
-              icon: Icons.local_fire_department_rounded,
+              icon: TaliaIcons.flame,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -527,7 +528,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 v,
                 l10n: context.l10n,
               ),
-              icon: Icons.wb_sunny_rounded,
+              icon: TaliaIcons.sun,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -546,7 +547,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 v,
                 l10n: context.l10n,
               ),
-              icon: Icons.nightlight_round,
+              icon: TaliaIcons.moon,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -562,7 +563,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.dailyDua,
               onToggle: (v) =>
                   _cubit.toggleReminder(_dailyDuaKey, v, l10n: context.l10n),
-              icon: Icons.volunteer_activism_rounded,
+              icon: TaliaIcons.dua,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -577,7 +578,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.dailyAyah,
               onToggle: (v) =>
                   _cubit.toggleReminder(_dailyAyahKey, v, l10n: context.l10n),
-              icon: Icons.auto_awesome_rounded,
+              icon: TaliaIcons.mushaf,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -592,7 +593,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.fridayKahf,
               onToggle: (v) =>
                   _cubit.toggleReminder(_fridayKahfKey, v, l10n: context.l10n),
-              icon: Icons.menu_book_rounded,
+              icon: TaliaIcons.mushaf,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -605,7 +606,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.tahajjud,
               onToggle: (v) =>
                   _cubit.toggleReminder(_tahajjudKey, v, l10n: context.l10n),
-              icon: Icons.nights_stay_rounded,
+              icon: TaliaIcons.moon,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -623,7 +624,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 v,
                 l10n: context.l10n,
               ),
-              icon: Icons.insights_rounded,
+              icon: TaliaIcons.progress,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -639,7 +640,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               isEnabled: state.khatmahReminder,
               onToggle: (v) =>
                   _cubit.toggleReminder(_khatmahKey, v, l10n: context.l10n),
-              icon: Icons.bookmark_added_rounded,
+              icon: TaliaIcons.bookmarkCheck,
               primaryColor: primary,
               textColor: textColor,
               subtextColor: subtextColor,
@@ -668,11 +669,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                           color: primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          Icons.touch_app_rounded,
-                          color: primary,
-                          size: 21,
-                        ),
+                        child: Icon(TaliaIcons.tap, color: primary, size: 21),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -696,7 +693,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                           ],
                         ),
                       ),
-                      Icon(Icons.send_rounded, size: 18, color: primary),
+                      Icon(TaliaIcons.send, size: 18, color: primary),
                     ],
                   ),
                 ),
@@ -746,7 +743,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   const SizedBox(height: 16),
                   ListTile(
                     leading: const Icon(
-                      Icons.menu_book_rounded,
+                      TaliaIcons.mushaf,
                       color: AppColors.primary,
                     ),
                     title: Text(
@@ -780,7 +777,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   ),
                   ListTile(
                     leading: const Icon(
-                      Icons.local_fire_department_rounded,
+                      TaliaIcons.flame,
                       color: AppColors.gold,
                     ),
                     title: Text(

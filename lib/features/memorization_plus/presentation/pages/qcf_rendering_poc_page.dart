@@ -4,6 +4,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -114,7 +115,7 @@ class _QcfRenderingPocPageState extends State<QcfRenderingPocPage> {
         title: Text(context.l10n.qcfPocTitle),
         leading: IconButton(
           tooltip: context.l10n.goBack,
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(TaliaIcons.arrowBack),
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
       ),

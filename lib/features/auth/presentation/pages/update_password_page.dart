@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
 import '../../domain/entities/auth_error_code.dart';
@@ -48,7 +49,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
           title: Text(context.l10n.updatePasswordTitle),
           leading: IconButton(
             tooltip: context.l10n.close,
-            icon: const Icon(Icons.close_rounded),
+            icon: const Icon(TaliaIcons.close),
             onPressed: () => context.go('/login'),
           ),
         ),
@@ -102,7 +103,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                         children: [
                           const SizedBox(height: AppSpacing.xl),
                           Icon(
-                            Icons.lock_reset_rounded,
+                            TaliaIcons.lockReset,
                             size: 72,
                             color: cs.primary,
                           ),
@@ -135,14 +136,12 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: context.l10n.newPassword,
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
+                              prefixIcon: const Icon(TaliaIcons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
+                                      ? TaliaIcons.hide
+                                      : TaliaIcons.show,
                                 ),
                                 tooltip: _obscurePassword
                                     ? context.l10n.showPassword
@@ -168,14 +167,12 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                             obscureText: _obscureConfirmPassword,
                             decoration: InputDecoration(
                               labelText: context.l10n.confirmNewPassword,
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
+                              prefixIcon: const Icon(TaliaIcons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscureConfirmPassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
+                                      ? TaliaIcons.hide
+                                      : TaliaIcons.show,
                                 ),
                                 tooltip: _obscureConfirmPassword
                                     ? context.l10n.showPassword

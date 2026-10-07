@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/services/quran_warmup_service.dart';
@@ -70,8 +71,8 @@ class _ContinueReadingCardState extends State<ContinueReadingCard> {
         final subtitle = surah == null
             ? '${context.l10n.page} ${context.numText(page)}'
             : context.isArabic
-                ? '${surah.nameAr} • ${context.l10n.page} ${context.numText(page)}'
-                : '${surah.nameEn} • ${context.l10n.page} ${context.numText(page)}';
+            ? '${surah.nameAr} • ${context.l10n.page} ${context.numText(page)}'
+            : '${surah.nameEn} • ${context.l10n.page} ${context.numText(page)}';
         return _CardBody(
           page: page,
           subtitle: subtitle,
@@ -98,8 +99,7 @@ class _CardBody extends StatelessWidget {
     final isDark = context.isDark;
     final primary = context.tokens.accent;
     final surface = context.tokens.card;
-    final label =
-        '${context.l10n.continueReading} • $subtitle';
+    final label = '${context.l10n.continueReading} • $subtitle';
 
     return Semantics(
       button: true,
@@ -132,15 +132,9 @@ class _CardBody extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: primary.withValues(alpha: 0.30),
-                    ),
+                    border: Border.all(color: primary.withValues(alpha: 0.30)),
                   ),
-                  child: Icon(
-                    Icons.auto_stories_rounded,
-                    color: primary,
-                    size: 22,
-                  ),
+                  child: Icon(TaliaIcons.reading, color: primary, size: 22),
                 ),
                 const SizedBox(width: AppSpacing.sm + 4),
                 Expanded(
@@ -167,11 +161,7 @@ class _CardBody extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  context.forwardChevron,
-                  size: 18,
-                  color: primary,
-                ),
+                Icon(context.forwardChevron, size: 18, color: primary),
               ],
             ),
           ),

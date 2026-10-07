@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 import '../world/kids_world_palette.dart';
@@ -23,7 +24,11 @@ class KidsLoadingWidget extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 CircularProgressIndicator(color: KidsTheme.goldStar),
-                Icon(Icons.star_rounded, size: 24, color: KidsTheme.goldStar),
+                TaliaIcon(
+                  TaliaKidsIcons.starFilled,
+                  size: 24,
+                  color: KidsTheme.goldStar,
+                ),
               ],
             ),
           ),
@@ -66,7 +71,11 @@ class KidsErrorWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.home_rounded, size: 64, color: KidsTheme.goldStar),
+          const TaliaIcon(
+            TaliaKidsIcons.home,
+            size: 64,
+            color: KidsTheme.goldStar,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             message ?? context.l10n.kidsUnexpectedError,
@@ -79,7 +88,7 @@ class KidsErrorWidget extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           KidsChunkyButton(
             onPressed: onRetry,
-            icon: Icons.refresh_rounded,
+            icon: TaliaKidsIcons.refresh,
             label: actionLabel ?? context.l10n.tryAgain,
             tone: KidsButtonTone.gold,
             height: 56,

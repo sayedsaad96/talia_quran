@@ -6,13 +6,13 @@ mixin _CustomPlanSelectors on _CustomPlanSetupController {
       (
         PlanTargetUser.adult,
         context.l10n.customPlanAdult,
-        Icons.person_rounded,
+        TaliaIcons.person,
         AppColors.primary,
       ),
       (
         PlanTargetUser.child,
         context.l10n.customPlanChild,
-        Icons.child_care_rounded,
+        TaliaIcons.child,
         AppColors.primary,
       ),
     ];
@@ -71,19 +71,19 @@ mixin _CustomPlanSelectors on _CustomPlanSetupController {
       (
         MemorizationDifficulty.easy,
         context.l10n.customPlanDifficultyEasy,
-        Icons.sentiment_satisfied_rounded,
+        TaliaIcons.smile,
         AppColors.success,
       ),
       (
         MemorizationDifficulty.moderate,
         context.l10n.customPlanDifficultyModerate,
-        Icons.sentiment_neutral_rounded,
+        TaliaIcons.meh,
         Colors.amber,
       ),
       (
         MemorizationDifficulty.challenging,
         context.l10n.customPlanDifficultyChallenging,
-        Icons.sentiment_dissatisfied_rounded,
+        TaliaIcons.frown,
         AppColors.error,
       ),
     ];
@@ -156,7 +156,7 @@ mixin _CustomPlanSelectors on _CustomPlanSetupController {
             title: context.l10n.customPlanNearRevision,
             subtitle: context.l10n.customPlanNearRevisionSubtitle,
             value: _enableNearRevision,
-            icon: Icons.update_rounded,
+            icon: TaliaIcons.update,
             color: Colors.blueAccent,
             isDark: isDark,
             onChanged: (v) => setState(() => _enableNearRevision = v),
@@ -184,7 +184,7 @@ mixin _CustomPlanSelectors on _CustomPlanSetupController {
             title: context.l10n.customPlanFarRevision,
             subtitle: context.l10n.customPlanFarRevisionSubtitle,
             value: _enableFarRevision,
-            icon: Icons.history_rounded,
+            icon: TaliaIcons.history,
             color: Colors.deepPurple,
             isDark: isDark,
             onChanged: (v) => setState(() => _enableFarRevision = v),
@@ -357,7 +357,7 @@ mixin _CustomPlanSelectors on _CustomPlanSetupController {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.insights_rounded,
+              TaliaIcons.progress,
               color: Colors.deepPurple,
               size: 28,
             ),

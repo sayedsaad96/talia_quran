@@ -9,13 +9,13 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../widgets/certificate_widget.dart';
-
 
 class CertificatePage extends StatefulWidget {
   const CertificatePage({
@@ -237,10 +237,7 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
             const SizedBox(height: AppSpacing.lg),
             ListTile(
-              leading: const Icon(
-                Icons.image_rounded,
-                color: AppColors.primary,
-              ),
+              leading: const Icon(TaliaIcons.image, color: AppColors.primary),
               title: Text(
                 context.l10n.saveAsImage,
                 style: AppTypography.bodyLarge.copyWith(color: textColor),
@@ -252,10 +249,7 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
             Divider(color: dividerColor),
             ListTile(
-              leading: const Icon(
-                Icons.picture_as_pdf_rounded,
-                color: AppColors.error,
-              ),
+              leading: const Icon(TaliaIcons.pdf, color: AppColors.error),
               title: Text(
                 context.l10n.saveAsPdf,
                 style: AppTypography.bodyLarge.copyWith(color: textColor),
@@ -327,7 +321,7 @@ class _CertificatePageState extends State<CertificatePage> {
                 clipBehavior: Clip.antiAlias,
                 child: IconButton(
                   tooltip: context.l10n.close,
-                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  icon: const Icon(TaliaIcons.close, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -429,7 +423,7 @@ class _CertificatePageState extends State<CertificatePage> {
       children: [
         ElevatedButton.icon(
           onPressed: _share,
-          icon: const Icon(Icons.share_rounded, size: 18),
+          icon: const Icon(TaliaIcons.share, size: 18),
           label: Text(
             'مشاركة الشهادة',
             style: AppTypography.titleMedium.copyWith(
@@ -446,7 +440,7 @@ class _CertificatePageState extends State<CertificatePage> {
         const SizedBox(width: AppSpacing.sm),
         IconButton.filledTonal(
           onPressed: _shareToSocialMediaCard,
-          icon: const Icon(Icons.stars_rounded, size: 20),
+          icon: const Icon(TaliaIcons.sparkle, size: 20),
           tooltip: 'بطاقة سوشيال ميديا',
           style: IconButton.styleFrom(
             backgroundColor: Colors.white24,
@@ -457,7 +451,7 @@ class _CertificatePageState extends State<CertificatePage> {
         const SizedBox(width: AppSpacing.sm),
         IconButton.filledTonal(
           onPressed: _showSaveOptions,
-          icon: const Icon(Icons.download_rounded, size: 20),
+          icon: const Icon(TaliaIcons.download, size: 20),
           tooltip: 'حفظ الشهادة',
           style: IconButton.styleFrom(
             backgroundColor: Colors.white24,

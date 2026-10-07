@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
@@ -178,7 +179,7 @@ class _JuzCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Icon(Icons.menu_book_rounded, size: 21, color: primary),
+                    Icon(TaliaIcons.mushaf, size: 21, color: primary),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -205,11 +206,7 @@ class _JuzCard extends StatelessWidget {
                 const Spacer(),
                 Row(
                   children: [
-                    Icon(
-                      Icons.auto_stories_outlined,
-                      size: 15,
-                      color: secondaryText,
-                    ),
+                    Icon(TaliaIcons.reading, size: 15, color: secondaryText),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       pageLabel,

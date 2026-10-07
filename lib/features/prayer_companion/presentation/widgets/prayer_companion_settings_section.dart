@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/prayer_serenity_watcher.dart';
@@ -224,13 +225,13 @@ class _PrayerCompanionSettingsSectionState
         SettingsDivider(isDark: widget.isDark),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.lock_outline_rounded),
+          leading: const Icon(TaliaIcons.lock),
           title: Text(l10n.prayerCompanionLocalOnly),
         ),
         SettingsDivider(isDark: widget.isDark),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.delete_outline_rounded),
+          leading: const Icon(TaliaIcons.delete),
           title: Text(l10n.prayerCompanionClear),
           subtitle: Text(l10n.prayerCompanionClearSub),
           onTap: _confirmClear,

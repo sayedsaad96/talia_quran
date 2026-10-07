@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/router/app_router.dart';
@@ -143,7 +144,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
               const SizedBox(height: AppSpacing.itemGap),
               Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 18),
+                  const Icon(TaliaIcons.info, size: 18),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -282,7 +283,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           const SizedBox(height: AppSpacing.sm),
         if (dailyPlan?.isRequiredPlanCompleted != true)
           _HubActionCard.primary(
-            icon: hasPlan ? Icons.today_rounded : Icons.edit_calendar_rounded,
+            icon: hasPlan ? TaliaIcons.calendar : TaliaIcons.calendarEdit,
             title: hasPlan
                 ? context.l10n.homeContinueTodaysPlan
                 : context.l10n.dailyPlanCreatePlanAction,
@@ -294,7 +295,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.checklist_rounded,
+          icon: TaliaIcons.checklist,
           title: context.l10n.memorizationHubViewPlanTitle,
           description: hasPlan
               ? context.l10n.dailyPlanProgressCount(
@@ -313,7 +314,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.auto_stories_rounded,
+          icon: TaliaIcons.reading,
           title: context.l10n.memorizationHubPracticeBySurahTitle,
           description: context.l10n.memorizationHubPracticeBySurahDescription,
           route: AppRoutes.hifzPracticeSurah,
@@ -322,7 +323,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.hearing_rounded,
+          icon: TaliaIcons.listen,
           title: context.l10n.listeningReviewTitle,
           description: context.l10n.listeningReviewHubDescription,
           route: AppRoutes.listeningReview,
@@ -336,7 +337,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.mic_rounded,
+          icon: TaliaIcons.mic,
           title: context.l10n.reviewQuizTitle,
           description: context.l10n.memorizationHubReviewCardDescription,
           badge: dueReviewCount > 0
@@ -357,7 +358,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.settings_suggest_rounded,
+          icon: TaliaIcons.settingsSmart,
           title: context.l10n.memorizationHubPlanSettingsTitle,
           description: context.l10n.memorizationHubPlanSettingsDescription,
           route: AppRoutes.memorizationPlusCustomPlan,
@@ -375,7 +376,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
-          icon: Icons.flag_rounded,
+          icon: TaliaIcons.flag,
           title: context.l10n.homeCurrentMission,
           description: context.l10n.memorizationHubKidsMissionCardDescription,
           route: AppRoutes.memorizationPlusKidsHome,
@@ -389,7 +390,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
-          icon: Icons.map_rounded,
+          icon: TaliaIcons.journey,
           title: context.l10n.memorizationHubKidsJourneyTitle,
           description: context.l10n.memorizationHubKidsJourneyDescription,
           route: targets!.kidsJourneyLocation,
@@ -403,7 +404,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
-          icon: Icons.stars_rounded,
+          icon: TaliaIcons.sparkle,
           title: context.l10n.memorizationHubKidsRewardsTitle,
           description: context.l10n.memorizationHubKidsRewardsDescription,
           route: AppRoutes.progress,
@@ -430,7 +431,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       MemorizationPathChoiceCard(
         title: context.l10n.memorizationPathAdultsTitle,
         description: context.l10n.memorizationPathAdultsDesc,
-        icon: Icons.person_outline,
+        icon: TaliaIcons.person,
         accentColor: AppColors.primary,
         isLoading: isSelectingPath,
         onTap: () {
@@ -446,7 +447,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       MemorizationPathChoiceCard(
         title: context.l10n.memorizationPathKidsTitle,
         description: context.l10n.memorizationPathKidsDesc,
-        icon: Icons.child_care,
+        icon: TaliaIcons.child,
         accentColor: AppColors.primaryLight,
         isLoading: isSelectingPath,
         onTap: () {
@@ -676,8 +677,7 @@ class _HubActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent =
-        accentOverride ?? context.tokens.accent;
+    final accent = accentOverride ?? context.tokens.accent;
     final surface = context.tokens.card;
     final textPrimary = context.tokens.textPrimary;
     final textSecondary = context.tokens.textSecondary;
@@ -758,8 +758,8 @@ class _HubActionCard extends StatelessWidget {
             ),
             Icon(
               context.isArabic
-                  ? Icons.arrow_back_ios_new_rounded
-                  : Icons.arrow_forward_ios_rounded,
+                  ? TaliaIcons.chevronBack
+                  : TaliaIcons.chevronForward,
               color: accent,
               size: 15,
             ),
@@ -879,8 +879,8 @@ class _KidsHubActionCard extends StatelessWidget {
             ),
             Icon(
               context.isArabic
-                  ? Icons.arrow_back_ios_new_rounded
-                  : Icons.arrow_forward_ios_rounded,
+                  ? TaliaIcons.chevronBack
+                  : TaliaIcons.chevronForward,
               color: textPrimary.withValues(alpha: 0.4),
               size: 16,
             ),

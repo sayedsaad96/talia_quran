@@ -13,6 +13,15 @@ Future<void> main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
+      // Generic Talia icon glyphs are based on Lucide (ISC); list it with
+      // the other open-source licenses.
+      LicenseRegistry.addLicense(() async* {
+        final text = await rootBundle.loadString(
+          'assets/fonts/TaliaIcons/LICENSE-lucide.txt',
+        );
+        yield LicenseEntryWithLineBreaks(const ['Lucide icons'], text);
+      });
+
       // M01 FIX: Global error handler — show friendly UI in production instead of red screen
       FlutterError.onError = (details) {
         TaliaLogger.e(

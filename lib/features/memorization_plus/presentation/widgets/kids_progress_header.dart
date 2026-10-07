@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
@@ -91,7 +92,7 @@ class KidsProgressHeader extends StatelessWidget {
         : IconButton(
             tooltip: l10n.changeMemorizationPath,
             onPressed: onSettingsTap,
-            icon: const Icon(Icons.settings_suggest_rounded),
+            icon: const TaliaIcon(TaliaKidsIcons.settingsSmart),
             color: Colors.white,
             style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.16),
@@ -210,8 +211,8 @@ class _TreasuresChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.workspace_premium_rounded,
+                const TaliaIcon(
+                  TaliaKidsIcons.certificate,
                   color: KidsTheme.goldStar,
                   size: 20,
                 ),
@@ -381,8 +382,8 @@ class _StreakBadge extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.local_fire_department_rounded,
+          const TaliaIcon(
+            TaliaKidsIcons.flame,
             color: KidsTheme.goldStar,
             size: 18,
           ),
@@ -434,7 +435,11 @@ class _StarCounter extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 20),
+          const TaliaIcon(
+            TaliaKidsIcons.starFilled,
+            color: KidsTheme.goldStar,
+            size: 20,
+          ),
           const SizedBox(width: 4),
           Text(
             context.l10n.kidsGamifiedStarsCount(count, context.numText(count)),

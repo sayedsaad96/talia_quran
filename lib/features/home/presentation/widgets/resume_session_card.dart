@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/journey/resume_session_presentation_input.dart';
 import '../../../../core/journey/resume_session_presentation_mapper.dart';
 import '../../../../core/services/app_session_service.dart';
@@ -113,7 +114,10 @@ class ResumeSessionCard extends StatelessWidget {
                               unawaited(context.read<HomeCubit>().load());
                             }
                           },
-                          icon: Icon(Icons.close_rounded, color: skin.textOnHeroMuted),
+                          icon: Icon(
+                            TaliaIcons.close,
+                            color: skin.textOnHeroMuted,
+                          ),
                           tooltip: context.l10n.notNow,
                         ),
                       ],

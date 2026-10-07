@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -269,7 +270,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.cloud_off_rounded,
+                          TaliaIcons.cloudOff,
                           size: 56,
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -378,9 +379,7 @@ class _LoginPageState extends State<LoginPage> {
                               controller: _nameController,
                               decoration: InputDecoration(
                                 labelText: context.l10n.name,
-                                prefixIcon: const Icon(
-                                  Icons.person_outline_rounded,
-                                ),
+                                prefixIcon: const Icon(TaliaIcons.person),
                               ),
                               validator: (v) => (v == null || v.trim().isEmpty)
                                   ? context.l10n.enterName
@@ -395,7 +394,7 @@ class _LoginPageState extends State<LoginPage> {
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               labelText: context.l10n.email,
-                              prefixIcon: const Icon(Icons.email_outlined),
+                              prefixIcon: const Icon(TaliaIcons.email),
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
@@ -418,14 +417,12 @@ class _LoginPageState extends State<LoginPage> {
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: context.l10n.password,
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
+                              prefixIcon: const Icon(TaliaIcons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
+                                      ? TaliaIcons.hide
+                                      : TaliaIcons.show,
                                 ),
                                 tooltip: _obscurePassword
                                     ? context.l10n.showPassword

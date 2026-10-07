@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/quran_audio_player_cubit.dart';
@@ -65,9 +66,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
                         ),
                       )
                     : Icon(
-                        state.isPlaying
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
+                        state.isPlaying ? TaliaIcons.pause : TaliaIcons.play,
                         color: primary,
                         size: 24,
                       ),
@@ -87,8 +86,8 @@ class ReaderDockedAudioBar extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     context.isArabic
-                        ? Icons.skip_next_rounded
-                        : Icons.skip_previous_rounded,
+                        ? TaliaIcons.skipNext
+                        : TaliaIcons.skipPrevious,
                     size: 20,
                     color: primary,
                   ),
@@ -103,8 +102,8 @@ class ReaderDockedAudioBar extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     context.isArabic
-                        ? Icons.skip_previous_rounded
-                        : Icons.skip_next_rounded,
+                        ? TaliaIcons.skipPrevious
+                        : TaliaIcons.skipNext,
                     size: 20,
                     color: primary,
                   ),
@@ -151,7 +150,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
               ),
               IconButton(
                 icon: Icon(
-                  Icons.close_rounded,
+                  TaliaIcons.close,
                   size: 18,
                   color: context.tokens.textHint,
                 ),

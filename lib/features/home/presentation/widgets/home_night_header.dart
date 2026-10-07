@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -126,7 +127,7 @@ class _PrayerCitySetupPrompt extends StatelessWidget {
                   unawaited(context.read<HomeCubit>().load());
                 }
               },
-              icon: const Icon(Icons.location_on_outlined),
+              icon: const Icon(TaliaIcons.location),
               label: Text(context.l10n.prayerChooseCityAction),
               style: OutlinedButton.styleFrom(
                 foregroundColor: skin.textOnHero,
@@ -153,7 +154,7 @@ class _TopRow extends StatelessWidget {
         _HeaderIcon(
           skin: skin,
           tooltip: context.l10n.searchSurah,
-          icon: Icons.search_rounded,
+          icon: TaliaIcons.search,
           onTap: () => context.push(AppRoutes.quranSearch),
         ),
         const Spacer(),
@@ -166,13 +167,13 @@ class _TopRow extends StatelessWidget {
           fit: BoxFit.contain,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) =>
-              Icon(Icons.menu_book_rounded, color: skin.gold, size: 36),
+              Icon(TaliaIcons.mushaf, color: skin.gold, size: 36),
         ),
         const Spacer(),
         _HeaderIcon(
           skin: skin,
           tooltip: context.l10n.settings,
-          icon: Icons.settings_suggest_rounded,
+          icon: TaliaIcons.settingsSmart,
           onTap: () => context.push(AppRoutes.settings),
         ),
       ],
@@ -258,7 +259,7 @@ class _ConsolidatedBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.nights_stay_rounded, size: 14, color: skin.gold),
+            Icon(TaliaIcons.moon, size: 14, color: skin.gold),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -324,7 +325,7 @@ class HomePrayerChip extends StatelessWidget {
       ),
       child: _HeroChip(
         skin: skin,
-        icon: Icons.mosque_rounded,
+        icon: TaliaIcons.prayer,
         label: '$name  ${_formattedTime(context)}',
         onTap: () => showHomePrayerTimesSheet(
           context,

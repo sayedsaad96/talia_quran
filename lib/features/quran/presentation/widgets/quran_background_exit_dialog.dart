@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -23,7 +24,8 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
   final isDark = context.isDark;
   final titleColor = context.tokens.textPrimary;
   final subtitleColor = context.tokens.textSecondary;
-  final iconBgColor = (isDark ? AppColors.goldLight : AppColors.primary).withValues(alpha: 0.14);
+  final iconBgColor = (isDark ? AppColors.goldLight : AppColors.primary)
+      .withValues(alpha: 0.14);
   final primaryAccent = isDark ? AppColors.goldLight : AppColors.primary;
 
   final l10n = context.l10n;
@@ -69,11 +71,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                   color: iconBgColor,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: Icon(
-                  Icons.headphones_rounded,
-                  color: primaryAccent,
-                  size: 24,
-                ),
+                child: Icon(TaliaIcons.listen, color: primaryAccent, size: 24),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -109,7 +107,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                     dialogContext,
                     QuranBackgroundExitAction.continueInBackground,
                   ),
-                  icon: const Icon(Icons.play_circle_outline_rounded, size: 20),
+                  icon: const Icon(TaliaIcons.playCircle, size: 20),
                   label: Text(l10n.exitDialogContinueBackground),
                   style: FilledButton.styleFrom(
                     backgroundColor: primaryAccent,
@@ -126,7 +124,7 @@ Future<QuranBackgroundExitAction?> showQuranBackgroundExitDialog({
                     dialogContext,
                     QuranBackgroundExitAction.stopAndExit,
                   ),
-                  icon: const Icon(Icons.stop_circle_outlined, size: 20),
+                  icon: const Icon(TaliaIcons.stopCircle, size: 20),
                   label: Text(l10n.exitDialogStopAndExit),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,

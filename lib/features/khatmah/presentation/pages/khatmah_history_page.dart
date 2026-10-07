@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/fallback_pop_scope.dart';
@@ -64,17 +65,17 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
             ),
             KhatmahHistoryEmpty() => _HistoryMessage(
               key: const Key('khatmah_history_empty'),
-              icon: Icons.history_rounded,
+              icon: TaliaIcons.history,
               message: context.l10n.khatmahHistoryEmpty,
             ),
             KhatmahHistoryFailure() => _HistoryMessage(
               key: const Key('khatmah_history_failure'),
-              icon: Icons.error_outline_rounded,
+              icon: TaliaIcons.error,
               message: context.l10n.khatmahHistoryLoadError,
               action: FilledButton.icon(
                 key: const Key('khatmah_history_retry'),
                 onPressed: _cubit.load,
-                icon: const Icon(Icons.refresh_rounded),
+                icon: const Icon(TaliaIcons.refresh),
                 label: Text(context.l10n.khatmahRetry),
               ),
             ),
@@ -82,7 +83,7 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
               validEntries.isEmpty
                   ? _HistoryMessage(
                       key: const Key('khatmah_history_corrupt'),
-                      icon: Icons.warning_amber_rounded,
+                      icon: TaliaIcons.warning,
                       message: context.l10n.khatmahHistoryCorrupt,
                       action: _HistoryRetryButton(onPressed: _cubit.load),
                     )
@@ -110,7 +111,7 @@ class _HistoryRetryButton extends StatelessWidget {
   Widget build(BuildContext context) => FilledButton.icon(
     key: const Key('khatmah_history_retry'),
     onPressed: onPressed,
-    icon: const Icon(Icons.refresh_rounded),
+    icon: const Icon(TaliaIcons.refresh),
     label: Text(context.l10n.khatmahRetry),
   );
 }
@@ -181,7 +182,7 @@ class _HistoryStatsCard extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.insights_rounded,
+              TaliaIcons.progress,
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -284,7 +285,7 @@ class _HistoryCard extends StatelessWidget {
                   AppRoutes.certificate,
                   extra: <String, dynamic>{'award': award},
                 ),
-                icon: const Icon(Icons.workspace_premium_rounded),
+                icon: const Icon(TaliaIcons.certificate),
                 label: Text(context.l10n.khatmahReopenCertificate),
               ),
             ),

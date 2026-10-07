@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../khatmah_localizations.dart';
-
 
 class KhatmahHeroCard extends StatefulWidget {
   const KhatmahHeroCard({
@@ -112,7 +112,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
-                Icon(Icons.menu_book_rounded, color: primary, size: 24),
+                Icon(TaliaIcons.mushaf, color: primary, size: 24),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
@@ -155,7 +155,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
             children: [
               Row(
                 children: [
-                  Icon(Icons.menu_book_rounded, color: primary, size: 20),
+                  Icon(TaliaIcons.mushaf, color: primary, size: 20),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(

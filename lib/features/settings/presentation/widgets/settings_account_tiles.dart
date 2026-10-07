@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -53,7 +54,7 @@ class ProfileSettingTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.person_outline_rounded,
+                    TaliaIcons.person,
                     color: context.tokens.accent,
                     size: 24,
                   ),
@@ -91,11 +92,7 @@ class ProfileSettingTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
-                  Icons.edit_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
+                const Icon(TaliaIcons.edit, size: 18, color: AppColors.primary),
               ],
             ),
           ),
@@ -420,7 +417,7 @@ class _AccountSectionState extends State<AccountSection> {
                   children: [
                     AccountAvatar(
                       isDark: widget.isDark,
-                      icon: Icons.person_rounded,
+                      icon: TaliaIcons.person,
                       label: _accountInitials(user),
                       isSignedIn: true,
                     ),
@@ -468,7 +465,7 @@ class _AccountSectionState extends State<AccountSection> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(
-                                    Icons.verified_user_rounded,
+                                    TaliaIcons.shieldCheck,
                                     size: 13,
                                     color: AppColors.primary,
                                   ),
@@ -516,7 +513,7 @@ class _AccountSectionState extends State<AccountSection> {
                           ),
                         ),
                         child: Icon(
-                          Icons.cloud_upload_outlined,
+                          TaliaIcons.cloudUpload,
                           color: primary,
                           size: 18,
                         ),
@@ -557,7 +554,7 @@ class _AccountSectionState extends State<AccountSection> {
                           ),
                         ),
                         child: const Icon(
-                          Icons.logout_rounded,
+                          TaliaIcons.logout,
                           color: AppColors.error,
                           size: 18,
                         ),
@@ -593,10 +590,7 @@ class _AccountSectionState extends State<AccountSection> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AccountAvatar(
-                    isDark: widget.isDark,
-                    icon: Icons.person_outline_rounded,
-                  ),
+                  AccountAvatar(isDark: widget.isDark, icon: TaliaIcons.person),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
@@ -627,7 +621,7 @@ class _AccountSectionState extends State<AccountSection> {
                 alignment: AlignmentDirectional.centerStart,
                 child: FilledButton.icon(
                   onPressed: () => context.push(AppRoutes.login),
-                  icon: const Icon(Icons.login_rounded, size: 18),
+                  icon: const Icon(TaliaIcons.login, size: 18),
                   label: Text(context.l10n.settingsSignInCreateAccount),
                   style: FilledButton.styleFrom(
                     backgroundColor: primary,
@@ -778,7 +772,7 @@ class DeleteAccountTile extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.delete_forever_rounded,
+                TaliaIcons.deleteForever,
                 color: AppColors.error,
                 size: 22,
               ),

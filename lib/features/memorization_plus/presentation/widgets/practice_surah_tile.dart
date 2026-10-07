@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
@@ -121,8 +122,8 @@ class _PracticeSurahTileState extends State<PracticeSurahTile> {
             else
               Icon(
                 context.isArabic
-                    ? Icons.arrow_back_ios_new_rounded
-                    : Icons.arrow_forward_ios_rounded,
+                    ? TaliaIcons.chevronBack
+                    : TaliaIcons.chevronForward,
                 size: 14,
                 color: context.tokens.textHint,
               ),

@@ -4,13 +4,13 @@ import 'dart:async';
 // V2 session orchestrator — owns the BlocProvider and the phase router.
 // All phase UI widgets live in the v2/ subdirectory.
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
@@ -276,7 +276,7 @@ class _V2SessionViewState extends State<_V2SessionView> {
                       tooltip: MaterialLocalizations.of(
                         context,
                       ).closeButtonTooltip,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(TaliaIcons.close),
                       onPressed: () {
                         if (allowPop) {
                           _leave();

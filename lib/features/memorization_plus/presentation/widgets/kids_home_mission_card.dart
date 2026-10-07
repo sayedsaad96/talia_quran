@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../theme/kids_theme.dart';
@@ -31,8 +32,8 @@ class KidsHomeMissionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isNew ? Icons.home_rounded : Icons.hourglass_top_rounded,
+          TaliaIcon(
+            isNew ? TaliaKidsIcons.home : TaliaKidsIcons.hourglass,
             color: KidsTheme.houseBrown,
             size: 32,
           ),

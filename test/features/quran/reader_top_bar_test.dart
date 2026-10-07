@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter.dart';
@@ -90,7 +91,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('آل عمران'), findsOneWidget);
-    expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.more), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -102,7 +103,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(TaliaIcons.more));
     await tester.pump();
     expect(menuCount, 1);
 
@@ -127,12 +128,10 @@ void main() {
     await tester.pumpWidget(topBar());
     await tester.pump();
 
-    expect(find.byIcon(Icons.pause_circle_filled_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.pauseCircleFilled), findsOneWidget);
   });
 
-  testWidgets('ReaderFooter page pill opens navigation on tap', (
-    tester,
-  ) async {
+  testWidgets('ReaderFooter page pill opens navigation on tap', (tester) async {
     var tapped = 0;
     await tester.pumpWidget(
       MaterialApp(
@@ -159,9 +158,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ReaderDockedAudioBar renders nothing when idle', (
-    tester,
-  ) async {
+  testWidgets('ReaderDockedAudioBar renders nothing when idle', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -174,7 +171,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+    expect(find.byIcon(TaliaIcons.play), findsNothing);
   });
 
   testWidgets('ReaderDockedAudioBar renders controls when playing', (
@@ -205,8 +202,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.pause), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.close), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

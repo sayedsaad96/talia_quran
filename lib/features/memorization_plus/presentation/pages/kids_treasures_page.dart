@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -119,11 +121,7 @@ class _GuardianLinkedBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.family_restroom_rounded,
-              size: 18,
-              color: palette.onScene,
-            ),
+            TaliaIcon(TaliaKidsIcons.family, size: 18, color: palette.onScene),
             const SizedBox(width: AppSpacing.sm),
             Flexible(
               child: Text(
@@ -276,11 +274,19 @@ class KidsTreasuresContent extends StatelessWidget {
 }
 
 IconData _regionIcon(KidsRegionId id) => switch (id) {
-  KidsRegionId.beginning => Icons.flag_rounded,
-  KidsRegionId.palmOasis => Icons.park_rounded,
-  KidsRegionId.flowerValley => Icons.local_florist_rounded,
-  KidsRegionId.starMountain => Icons.landscape_rounded,
-  KidsRegionId.pearlSea => Icons.water_rounded,
+  KidsRegionId.beginning => TaliaKidsIcons.flag,
+  KidsRegionId.palmOasis => TaliaKidsIcons.tree,
+  KidsRegionId.flowerValley => TaliaKidsIcons.flower,
+  KidsRegionId.starMountain => TaliaKidsIcons.mountain,
+  KidsRegionId.pearlSea => TaliaKidsIcons.water,
+};
+
+Color _regionDoorColor(KidsRegionId id) => switch (id) {
+  KidsRegionId.beginning => AppColors.kidsDoorCoral,
+  KidsRegionId.palmOasis => AppColors.kidsDoorLeaf,
+  KidsRegionId.flowerValley => AppColors.kidsDoorViolet,
+  KidsRegionId.starMountain => AppColors.kidsDoorSun,
+  KidsRegionId.pearlSea => AppColors.kidsDoorSky,
 };
 
 BoxDecoration _creamCard() => BoxDecoration(
@@ -308,7 +314,11 @@ class _RegionCard extends StatelessWidget {
       decoration: _creamCard(),
       child: Row(
         children: [
-          Icon(_regionIcon(id), color: KidsTheme.houseBrown, size: 32),
+          TaliaFeatureDoor(
+            icon: _regionIcon(id),
+            color: _regionDoorColor(id),
+            size: 40,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -352,8 +362,8 @@ class _RegionCard extends StatelessWidget {
           ),
           if (progress.isComplete) ...[
             const SizedBox(width: AppSpacing.sm),
-            const Icon(
-              Icons.workspace_premium_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.certificate,
               color: KidsTheme.goldStar,
               size: 36,
             ),
@@ -380,8 +390,8 @@ class _CertificateCard extends StatelessWidget {
       decoration: _creamCard(),
       child: Row(
         children: [
-          const Icon(
-            Icons.workspace_premium_rounded,
+          const TaliaIcon(
+            TaliaKidsIcons.certificate,
             color: KidsTheme.goldStar,
             size: 32,
           ),

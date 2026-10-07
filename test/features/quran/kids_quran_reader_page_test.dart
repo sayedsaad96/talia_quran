@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
@@ -121,8 +122,8 @@ void main() {
 
     // arrow_back mirrors itself under RTL; a hand-picked "forward" arrow
     // pointed English readers the wrong way.
-    expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_forward_rounded), findsNothing);
+    expect(find.byIcon(TaliaKidsIcons.arrowBack), findsOneWidget);
+    expect(find.byIcon(TaliaKidsIcons.arrowForward), findsNothing);
   });
 
   group('read and listen (K26)', () {
@@ -411,19 +412,11 @@ void main() {
       expect(kidsReaderPageIsLoaded(loaded, 12), isFalse);
       expect(kidsReaderPageIsLoaded(QuranPageLoading(), 13), isFalse);
       expect(
-        kidsReaderCanConfirmPage(
-          loaded,
-          currentPageNumber: 12,
-          pageNumber: 12,
-        ),
+        kidsReaderCanConfirmPage(loaded, currentPageNumber: 12, pageNumber: 12),
         isFalse,
       );
       expect(
-        kidsReaderCanConfirmPage(
-          loaded,
-          currentPageNumber: 13,
-          pageNumber: 13,
-        ),
+        kidsReaderCanConfirmPage(loaded, currentPageNumber: 13, pageNumber: 13),
         isTrue,
       );
 
@@ -468,9 +461,7 @@ void main() {
       addTearDown(tester.view.reset);
       await setUpConfirmation();
 
-      await tester.pumpWidget(
-        host(locale: const Locale('ar'), textScale: 1.3),
-      );
+      await tester.pumpWidget(host(locale: const Locale('ar'), textScale: 1.3));
       expect(find.text('قرأت هذه الصفحة'), findsOneWidget);
       await tester.tap(find.byKey(confirmKey));
       await tester.pump();
@@ -562,9 +553,9 @@ class _TestApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, app) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(textScale),
-        ),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
         child: app!,
       ),
       home: child,

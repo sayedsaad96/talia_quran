@@ -52,6 +52,11 @@ void main() {
       'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
       'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
     ]);
+    // Talia icon system (the app's only icon fonts).
+    await _loadFont('TaliaIcons', ['assets/fonts/TaliaIcons/TaliaIcons.ttf']);
+    await _loadFont('TaliaIconsKids', [
+      'assets/fonts/TaliaIcons/TaliaIconsKids.ttf',
+    ]);
     try {
       await _loadFont('MaterialIcons', ['fonts/MaterialIcons-Regular.otf']);
     } catch (_) {
@@ -117,7 +122,12 @@ void main() {
         ),
         recentActivity: [
           ActivityEvent(
-            occurredAt: DateTime(2026, 9, 30, 12).subtract(const Duration(hours: 2)),
+            occurredAt: DateTime(
+              2026,
+              9,
+              30,
+              12,
+            ).subtract(const Duration(hours: 2)),
             kind: ActivityEventKind.reading,
             idempotencyKey: 'reading|1',
             surahId: 2,
@@ -126,7 +136,12 @@ void main() {
             pageNumber: 2,
           ),
           ActivityEvent(
-            occurredAt: DateTime(2026, 9, 30, 12).subtract(const Duration(days: 1)),
+            occurredAt: DateTime(
+              2026,
+              9,
+              30,
+              12,
+            ).subtract(const Duration(days: 1)),
             kind: ActivityEventKind.review,
             idempotencyKey: 'review|1',
             surahId: 36,

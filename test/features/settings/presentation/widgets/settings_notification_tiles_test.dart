@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/settings_notification_tiles.dart';
 
@@ -101,38 +102,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'tapping the daily review time button opens the time picker',
-    (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          locale: Locale('en'),
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: NotificationSettingTile(isDark: false),
-            ),
+  testWidgets('tapping the daily review time button opens the time picker', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: NotificationSettingTile(isDark: false),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // The Daily Review tile is the first time-editor tile; its edit
-      // affordance is the first clock-icon OutlinedButton in the list.
-      final editButton = find.byIcon(Icons.access_time_rounded).first;
-      await tester.ensureVisible(editButton);
-      await tester.tap(editButton);
-      await tester.pumpAndSettle();
+    // The Daily Review tile is the first time-editor tile; its edit
+    // affordance is the first clock-icon OutlinedButton in the list.
+    final editButton = find.byIcon(TaliaIcons.clock).first;
+    await tester.ensureVisible(editButton);
+    await tester.tap(editButton);
+    await tester.pumpAndSettle();
 
-      // The Material TimePicker dialog opened at the 8:00 PM default.
-      expect(find.byType(TimePickerDialog), findsOneWidget);
-      expect(find.text('PM'), findsWidgets);
-    },
-  );
+    // The Material TimePicker dialog opened at the 8:00 PM default.
+    expect(find.byType(TimePickerDialog), findsOneWidget);
+    expect(find.text('PM'), findsWidgets);
+  });
 }

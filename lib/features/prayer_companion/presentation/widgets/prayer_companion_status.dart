@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../home/presentation/theme/home_skin.dart';
 import '../../domain/entities/prayer_companion.dart';
@@ -36,27 +37,27 @@ class PrayerCompanionStatusWidget extends StatelessWidget {
     final (label, icon) = switch (status) {
       PrayerCompanionStatus.confirmed => (
         l10n.prayerCompanionStatusConfirmed,
-        Icons.check_circle_rounded,
+        TaliaIcons.checkCircleFilled,
       ),
       PrayerCompanionStatus.prayNow => (
         l10n.prayerCompanionStatusPrayNow,
-        Icons.play_circle_outline_rounded,
+        TaliaIcons.playCircle,
       ),
       PrayerCompanionStatus.remindLater => (
         l10n.prayerCompanionStatusRemindLater,
-        Icons.notifications_active_outlined,
+        TaliaIcons.bell,
       ),
       PrayerCompanionStatus.notYet => (
         l10n.prayerCompanionStatusNotYet,
-        Icons.hourglass_empty_rounded,
+        TaliaIcons.hourglass,
       ),
       PrayerCompanionStatus.unconfirmed when isPast => (
         l10n.prayerCompanionStatusUnconfirmedPast,
-        Icons.circle_outlined,
+        TaliaIcons.circle,
       ),
       PrayerCompanionStatus.unconfirmed => (
         l10n.prayerCompanionStatusUpcoming,
-        Icons.schedule_rounded,
+        TaliaIcons.clock,
       ),
     };
     final color = status == PrayerCompanionStatus.confirmed

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../icons/talia_icons.dart';
 import 'share_card_palette.dart';
 import 'social_share_copy.dart';
 import 'talia_share_tokens.dart';
@@ -113,7 +114,7 @@ class _ShareLogo extends StatelessWidget {
             key: const ValueKey('share-logo'),
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) =>
-                Icon(Icons.auto_awesome_rounded, color: fallbackColor),
+                Icon(TaliaIcons.sparkle, color: fallbackColor),
           ),
         ),
       ),

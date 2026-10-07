@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
@@ -150,7 +151,7 @@ class _EmptyBookmarks extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.bookmark_outline_rounded,
+                TaliaIcons.bookmark,
                 size: 56,
                 color: primary.withValues(alpha: 0.7),
               ),
@@ -211,7 +212,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Row(
               children: [
-                Icon(Icons.menu_book_rounded, size: 18, color: primary),
+                Icon(TaliaIcons.mushaf, size: 18, color: primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -247,7 +248,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
                   color: AppColors.error,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: const Icon(Icons.delete_rounded, color: Colors.white),
+                child: const Icon(TaliaIcons.delete, color: Colors.white),
               ),
               confirmDismiss: (_) async {
                 return await showDialog<bool>(
@@ -326,7 +327,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                           icon: Icon(
-                            Icons.share_rounded,
+                            TaliaIcons.share,
                             size: 18,
                             color: primary.withValues(alpha: 0.7),
                           ),
@@ -340,7 +341,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
                           },
                         ),
                         Icon(
-                          Icons.chevron_right_rounded,
+                          TaliaIcons.chevronForward,
                           size: 20,
                           color: subtextColor,
                         ),

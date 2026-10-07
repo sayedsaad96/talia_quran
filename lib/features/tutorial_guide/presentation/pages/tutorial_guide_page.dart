@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
@@ -157,7 +158,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
               right: -30,
               top: -20,
               child: Icon(
-                Icons.menu_book_rounded,
+                TaliaIcons.mushaf,
                 size: 180,
                 color: Colors.white.withValues(alpha: 0.06),
               ),
@@ -178,7 +179,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                   Row(
                     children: [
                       _AppBarBadge(
-                        icon: Icons.topic_rounded,
+                        icon: TaliaIcons.topic,
                         label: l10n.tutorialGuideTopicsCount(
                           LocaleNumberFormatter.format(
                             (_allSections.length).toString(),
@@ -188,7 +189,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       _AppBarBadge(
-                        icon: Icons.auto_awesome_rounded,
+                        icon: TaliaIcons.sparkle,
                         label: l10n.tutorialGuideTipsCount(
                           LocaleNumberFormatter.format(
                             (tipCount).toString(),
@@ -264,12 +265,12 @@ class _SearchField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: context.l10n.tutorialGuideSearchHint,
         hintStyle: AppTypography.bodyMedium.copyWith(color: tokens.textHint),
-        prefixIcon: Icon(Icons.search_rounded, color: primary, size: 20),
+        prefixIcon: Icon(TaliaIcons.search, color: primary, size: 20),
         suffixIcon: controller.text.isEmpty
             ? null
             : IconButton(
                 tooltip: context.l10n.clearSearch,
-                icon: const Icon(Icons.close_rounded, size: 18),
+                icon: const Icon(TaliaIcons.close, size: 18),
                 onPressed: onClear,
               ),
         filled: true,
@@ -356,7 +357,7 @@ class _EmptyGuideSearch extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded, color: tokens.accent, size: 44),
+          Icon(TaliaIcons.searchOff, color: tokens.accent, size: 44),
           const SizedBox(height: AppSpacing.sm),
           Text(
             context.l10n.tutorialGuideNoResults,

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
@@ -61,9 +62,7 @@ class ReaderTopBar extends StatelessWidget {
             },
             tooltip: context.l10n.closeReader,
             icon: Icon(
-              context.isArabic
-                  ? Icons.arrow_back_rounded
-                  : Icons.arrow_forward_rounded,
+              context.isArabic ? TaliaIcons.arrowBack : TaliaIcons.arrowForward,
             ),
             color: primary,
             style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
@@ -125,10 +124,10 @@ class ReaderTopBar extends StatelessWidget {
                       )
                     : Icon(
                         isPlaying
-                            ? Icons.pause_circle_filled_rounded
+                            ? TaliaIcons.pauseCircleFilled
                             : (isPlayingThisPage
-                                  ? Icons.play_circle_fill_rounded
-                                  : Icons.play_circle_outline_rounded),
+                                  ? TaliaIcons.playCircleFilled
+                                  : TaliaIcons.playCircle),
                       ),
                 color: primary,
                 style: IconButton.styleFrom(
@@ -146,7 +145,7 @@ class ReaderTopBar extends StatelessWidget {
               onOpenMenu();
             },
             tooltip: context.l10n.moreOptions,
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(TaliaIcons.more),
             color: primary,
             style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
           ),

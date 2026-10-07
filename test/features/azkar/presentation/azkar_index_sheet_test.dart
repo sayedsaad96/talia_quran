@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/azkar/presentation/widgets/azkar_index_sheet.dart';
@@ -85,7 +86,7 @@ void main() {
 
     expect(find.text('الذكر الأول'), findsOneWidget);
     expect(find.text('الذكر الثاني'), findsOneWidget);
-    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.checkCircleFilled), findsOneWidget);
 
     await tester.tap(find.text('الذكر الثاني'));
     await tester.pumpAndSettle();

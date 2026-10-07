@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
+import '../icons/talia_icons.dart';
 import '../theme/app_colors.dart';
 import '../utils/quran_ayah_display_text.dart';
 
@@ -332,7 +333,7 @@ class _LockedIndicator extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.lock_rounded, color: color, size: 20),
+        Icon(TaliaIcons.lock, color: color, size: 20),
         const SizedBox(width: 8),
         Text(
           'مقفل',
@@ -370,11 +371,7 @@ class _MemorisedWrapper extends StatelessWidget {
               color: AppColors.success,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: Colors.white,
-              size: 12,
-            ),
+            child: const Icon(TaliaIcons.check, color: Colors.white, size: 12),
           ),
         ),
       ],

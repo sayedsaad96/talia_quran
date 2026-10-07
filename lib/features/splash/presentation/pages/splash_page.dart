@@ -7,6 +7,7 @@ import '../../../../app.dart' show appInitializedNotifier;
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_initializer.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -215,7 +216,9 @@ class _SplashPageState extends State<SplashPage> {
                           vertical: AppSpacing.sm,
                         ),
                         decoration: BoxDecoration(
-                          color: SplashPalette.errorSurface.withValues(alpha: 0.92),
+                          color: SplashPalette.errorSurface.withValues(
+                            alpha: 0.92,
+                          ),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),
@@ -238,7 +241,7 @@ class _SplashPageState extends State<SplashPage> {
                                 setState(() => _initError = false);
                                 _runInitialization();
                               },
-                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              icon: const Icon(TaliaIcons.refresh, size: 18),
                               label: Text(context.l10n.retryLabel),
                               style: TextButton.styleFrom(
                                 foregroundColor: primary,

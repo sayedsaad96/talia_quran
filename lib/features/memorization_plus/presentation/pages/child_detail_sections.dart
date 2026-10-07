@@ -194,7 +194,7 @@ class _LearningSupportCard extends StatelessWidget {
         runSpacing: AppSpacing.sm,
         children: [
           _SupportMetric(
-            icon: Icons.calendar_today_rounded,
+            icon: TaliaIcons.calendar,
             label: context.l10n.parentCommitmentDays(
               LocaleNumberFormatter.format(
                 (dashboard.commitmentDays).toString(),
@@ -203,7 +203,7 @@ class _LearningSupportCard extends StatelessWidget {
             ),
           ),
           _SupportMetric(
-            icon: Icons.replay_rounded,
+            icon: TaliaIcons.replay,
             label: context.l10n.parentDueReviews(
               LocaleNumberFormatter.format(
                 (dashboard.dueReviewCount).toString(),
@@ -212,7 +212,7 @@ class _LearningSupportCard extends StatelessWidget {
             ),
           ),
           _SupportMetric(
-            icon: Icons.volunteer_activism_rounded,
+            icon: TaliaIcons.dua,
             label: context.l10n.parentNeedsSupport(
               LocaleNumberFormatter.format(
                 (dashboard.ayahsNeedingSupport).toString(),
@@ -221,7 +221,7 @@ class _LearningSupportCard extends StatelessWidget {
             ),
           ),
           _SupportMetric(
-            icon: Icons.timer_outlined,
+            icon: TaliaIcons.timer,
             label: context.l10n.parentAverageDuration(
               LocaleNumberFormatter.format(
                 (averageMinutes).toString(),
@@ -230,7 +230,7 @@ class _LearningSupportCard extends StatelessWidget {
             ),
           ),
           _SupportMetric(
-            icon: Icons.lightbulb_outline_rounded,
+            icon: TaliaIcons.idea,
             label: context.l10n.parentHintUses(
               LocaleNumberFormatter.format(
                 (dashboard.totalHintUses).toString(),
@@ -347,7 +347,7 @@ class _RecentSessionsCard extends StatelessWidget {
                   child: Row(
                     children: [
                       const Icon(
-                        Icons.check_circle_outline_rounded,
+                        TaliaIcons.checkCircle,
                         size: 16,
                         color: AppColors.primary,
                       ),

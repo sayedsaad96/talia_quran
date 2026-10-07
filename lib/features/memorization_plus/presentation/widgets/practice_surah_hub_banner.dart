@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -39,7 +40,7 @@ class PracticeSurahHubBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.psychology_rounded, color: Colors.white, size: 22),
+            const Icon(TaliaIcons.hifz, color: Colors.white, size: 22),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -63,8 +64,8 @@ class PracticeSurahHubBanner extends StatelessWidget {
             ),
             Icon(
               context.isArabic
-                  ? Icons.arrow_back_ios_new_rounded
-                  : Icons.arrow_forward_ios_rounded,
+                  ? TaliaIcons.chevronBack
+                  : TaliaIcons.chevronForward,
               color: Colors.white54,
               size: 14,
             ),

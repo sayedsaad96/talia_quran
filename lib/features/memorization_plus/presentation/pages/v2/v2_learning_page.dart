@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../cubits/memorization_session_cubit.dart';
 import 'v2_session_widgets.dart';
 
@@ -19,11 +20,11 @@ class V2LearningPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return V2PhaseScaffold(
       session: state.sessionState,
-      icon: Icons.menu_book_rounded,
+      icon: TaliaIcons.mushaf,
       title: context.l10n.v2LearningTitle,
       subtitle: context.l10n.v2LearningSubtitle,
       primaryActionLabel: context.l10n.v2StartMemorizing,
-      primaryActionIcon: Icons.psychology_rounded,
+      primaryActionIcon: TaliaIcons.hifz,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().advanceToMemorizing(),
       children: [

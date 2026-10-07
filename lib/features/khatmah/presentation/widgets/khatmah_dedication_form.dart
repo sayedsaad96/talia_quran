@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../khatmah_localizations.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -90,7 +91,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
         children: [
           Row(
             children: [
-              Icon(Icons.volunteer_activism_rounded, color: primary, size: 22),
+              Icon(TaliaIcons.dua, color: primary, size: 22),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -128,7 +129,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
               decoration: InputDecoration(
                 labelText: context.l10n.khatmahRecipientName,
                 hintText: context.l10n.khatmahEGMyBelovedMother,
-                prefixIcon: const Icon(Icons.person_outline_rounded),
+                prefixIcon: const Icon(TaliaIcons.person),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -172,7 +173,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
               initialValue: _relationship,
               decoration: InputDecoration(
                 labelText: context.l10n.khatmahRelationship,
-                prefixIcon: const Icon(Icons.group_outlined),
+                prefixIcon: const Icon(TaliaIcons.people),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -255,7 +256,7 @@ class _KhatmahDedicationFormState extends State<KhatmahDedicationForm> {
               decoration: InputDecoration(
                 labelText: context.l10n.khatmahSpecialNoteDuAOptional,
                 hintText: context.l10n.khatmahWriteYourOwnNote,
-                prefixIcon: const Icon(Icons.note_alt_outlined),
+                prefixIcon: const Icon(TaliaIcons.note),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),

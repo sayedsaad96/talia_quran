@@ -28,7 +28,7 @@ class _PresetSelector extends StatelessWidget {
       (
         context.l10n.customPlanPresetLight,
         context.l10n.customPlanPresetLightDesc,
-        Icons.spa_rounded,
+        TaliaIcons.azkar,
         AppColors.success,
         context.l10n.customPlanPresetLightName,
         () => onSelect(
@@ -42,7 +42,7 @@ class _PresetSelector extends StatelessWidget {
       (
         context.l10n.customPlanPresetBalanced,
         context.l10n.customPlanPresetBalancedDesc,
-        Icons.balance_rounded,
+        TaliaIcons.balance,
         AppColors.primary,
         context.l10n.customPlanPresetBalancedName,
         () => onSelect(
@@ -56,7 +56,7 @@ class _PresetSelector extends StatelessWidget {
       (
         context.l10n.customPlanPresetIntensive,
         context.l10n.customPlanPresetIntensiveDesc,
-        Icons.local_fire_department_rounded,
+        TaliaIcons.flame,
         Colors.deepOrange,
         context.l10n.customPlanPresetIntensiveName,
         () => onSelect(
@@ -70,7 +70,7 @@ class _PresetSelector extends StatelessWidget {
       (
         context.l10n.customPlanPresetJuzAmma,
         context.l10n.customPlanPresetJuzAmmaDesc,
-        Icons.auto_stories_rounded,
+        TaliaIcons.reading,
         Colors.purple,
         context.l10n.customPlanPresetJuzAmmaName,
         () => onSelect(
@@ -89,7 +89,7 @@ class _PresetSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionTitle(
-          icon: Icons.bolt_rounded,
+          icon: TaliaIcons.bolt,
           title: context.l10n.customPlanQuickPresetTitle,
           isDark: isDark,
         ),
@@ -133,7 +133,7 @@ class _PresetSelector extends StatelessWidget {
                       ),
                     ),
                     if (preset.$5 == activeName)
-                      Icon(Icons.check_circle_rounded, color: preset.$4),
+                      Icon(TaliaIcons.checkCircleFilled, color: preset.$4),
                   ],
                 ),
               ),
@@ -367,13 +367,13 @@ class _DeletePlanDialogState extends State<_DeletePlanDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ChecklistLine(
-              icon: Icons.check_circle_rounded,
+              icon: TaliaIcons.checkCircleFilled,
               color: AppColors.primary,
               text: widget.keepsText,
             ),
             const SizedBox(height: 10),
             _ChecklistLine(
-              icon: Icons.warning_amber_rounded,
+              icon: TaliaIcons.warning,
               color: AppColors.warning,
               text: widget.removesText,
             ),

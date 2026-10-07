@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
@@ -408,8 +409,8 @@ class _DestinationLandmark extends StatelessWidget {
             child: CircleAvatar(
               radius: 18,
               backgroundColor: Color(0xCC1F2937),
-              child: Icon(
-                Icons.lock_rounded,
+              child: TaliaIcon(
+                TaliaKidsIcons.lock,
                 color: Color(0xFFE5C07B),
                 size: 20,
               ),
@@ -483,8 +484,8 @@ class _JourneyStarsRow extends StatelessWidget {
         final isFilled = !isLocked && index < earnedStars;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Icon(
-            isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
+          child: TaliaIcon(
+            isFilled ? TaliaKidsIcons.starFilled : TaliaKidsIcons.star,
             size: 20,
             color: isFilled
                 ? KidsTheme.goldStar
@@ -518,8 +519,8 @@ class _DestinationActionFooter extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.play_arrow_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.play,
               size: 16,
               color: KidsTheme.goldStar,
             ),
@@ -552,8 +553,8 @@ class _DestinationActionFooter extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.refresh_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.refresh,
               size: 16,
               color: KidsTheme.reviewLilac,
             ),
@@ -586,8 +587,8 @@ class _DestinationActionFooter extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.check_circle_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.checkCircleFilled,
               size: 16,
               color: Color(0xFF059669),
             ),
@@ -620,7 +621,7 @@ class _DestinationActionFooter extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_rounded, size: 14, color: Colors.white70),
+          const TaliaIcon(TaliaKidsIcons.lock, size: 14, color: Colors.white70),
           const SizedBox(width: 4),
           Flexible(
             child: Text(

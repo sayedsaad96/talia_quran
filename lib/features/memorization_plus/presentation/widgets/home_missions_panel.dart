@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -59,7 +60,7 @@ class HomeMissionsPanel extends StatelessWidget {
               TextButton.icon(
                 key: const ValueKey('child-detail-add-home-mission'),
                 onPressed: () => _showAddDialog(context),
-                icon: const Icon(Icons.add_task_rounded),
+                icon: const Icon(TaliaIcons.addTask),
                 label: Text(l10n.childDetailAddHomeMission),
               ),
             ],

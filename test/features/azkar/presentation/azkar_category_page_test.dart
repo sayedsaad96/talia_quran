@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
@@ -170,7 +171,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap font size icon button
-      await tester.tap(find.byIcon(Icons.format_size_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.textSize));
       await tester.pumpAndSettle();
 
       // Font scale bottom sheet is open
@@ -199,8 +200,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.format_list_bulleted_rounded), findsNothing);
-    expect(find.byIcon(Icons.autorenew_rounded), findsNothing);
+    expect(find.byIcon(TaliaIcons.listBulleted), findsNothing);
+    expect(find.byIcon(TaliaIcons.refresh), findsNothing);
 
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
@@ -242,7 +243,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.format_list_bulleted_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.listBulleted), findsOneWidget);
     expect(find.byType(PopupMenuButton<String>), findsNothing);
   });
 
@@ -307,7 +308,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.copy_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.copy));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -327,14 +328,14 @@ void main() {
       await tester.tap(find.text('الذكر الأول المعتمد'));
       await tester.pump();
       expect(find.text('١'), findsOneWidget);
-      expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
+      expect(find.byIcon(TaliaIcons.undo), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.undo_rounded));
+      await tester.tap(find.byIcon(TaliaIcons.undo));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('٠'), findsOneWidget);
-      expect(find.byIcon(Icons.undo_rounded), findsNothing);
+      expect(find.byIcon(TaliaIcons.undo), findsNothing);
     });
   });
 }
@@ -349,7 +350,5 @@ class _FakeRepo implements AzkarRepository {
 
   @override
   Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async =>
-      Right({
-        for (final category in AzkarCategory.values) category: items,
-      });
+      Right({for (final category in AzkarCategory.values) category: items});
 }

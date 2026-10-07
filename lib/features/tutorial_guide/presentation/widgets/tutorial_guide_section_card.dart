@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -131,26 +132,26 @@ class TutorialGuideSectionCard extends StatelessWidget {
               _GuideBlock(
                 title: context.l10n.tutorialWhatItDoesTitle,
                 body: section.whatItDoes,
-                icon: Icons.info_outline_rounded,
+                icon: TaliaIcons.info,
                 color: primary,
               ),
               _GuideBlock(
                 title: context.l10n.tutorialHowToOpenTitle,
                 body: section.howToOpen,
-                icon: Icons.touch_app_rounded,
+                icon: TaliaIcons.tap,
                 color: AppColors.info,
               ),
               _GuideStepListBlock(
                 title: context.l10n.tutorialStepsTitle,
                 items: section.steps,
-                icon: Icons.format_list_numbered_rtl_rounded,
+                icon: TaliaIcons.listNumbered,
                 color: AppColors.success,
               ),
               if (section.tips.isNotEmpty)
                 _GuidePillListBlock(
                   title: context.l10n.tutorialTipsTitle,
                   items: section.tips,
-                  icon: Icons.lightbulb_outline_rounded,
+                  icon: TaliaIcons.idea,
                   color: primary,
                   backgroundColor: primary.withValues(alpha: 0.08),
                 ),
@@ -158,14 +159,14 @@ class TutorialGuideSectionCard extends StatelessWidget {
                 _GuidePillListBlock(
                   title: context.l10n.tutorialNotesTitle,
                   items: section.notes,
-                  icon: Icons.warning_amber_rounded,
+                  icon: TaliaIcons.warning,
                   color: AppColors.warning,
                   backgroundColor: AppColors.warning.withValues(alpha: 0.08),
                 ),
               _GuideBlock(
                 title: context.l10n.tutorialWhenUsefulTitle,
                 body: section.whenUseful,
-                icon: Icons.check_circle_outline_rounded,
+                icon: TaliaIcons.checkCircle,
                 color: primary,
               ),
             ],
@@ -327,7 +328,7 @@ class _GuidePillListBlock extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.star_rounded, size: 14, color: color),
+                    Icon(TaliaIcons.starFilled, size: 14, color: color),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(

@@ -4,6 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -34,7 +35,7 @@ class HomeResumeChips extends StatelessWidget {
             button: true,
             label: label,
             child: InputChip(
-              avatar: const Icon(Icons.headphones_rounded, size: 18),
+              avatar: const Icon(TaliaIcons.listen, size: 18),
               label: Text(
                 label,
                 style: AppTypography.labelMedium,

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
@@ -209,8 +210,8 @@ void main() {
 
     // arrow_forward mirrors itself under RTL (points left); a hand-picked
     // arrow_back pointed the child backwards.
-    expect(find.byIcon(Icons.arrow_forward_rounded), findsWidgets);
-    expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+    expect(find.byIcon(TaliaIcons.arrowForward), findsWidgets);
+    expect(find.byIcon(TaliaIcons.arrowBack), findsNothing);
   });
 }
 

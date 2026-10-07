@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -89,7 +90,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
           if (_inGuardianSession())
             TextButton.icon(
               key: const ValueKey('guardian-session-back-to-child'),
-              icon: const Icon(Icons.child_care_rounded),
+              icon: const Icon(TaliaIcons.child),
               label: Text(context.l10n.guardianSessionBackToChild),
               onPressed: () => context.canPop()
                   ? context.pop()
@@ -99,7 +100,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
             builder: (context, state) {
               if (state is FamilyDashboardLoaded) {
                 return IconButton(
-                  icon: const Icon(Icons.settings_rounded),
+                  icon: const Icon(TaliaIcons.settings),
                   tooltip: context.l10n.settings,
                   onPressed: () => _showSettingsSheet(
                     context,
@@ -407,7 +408,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       key: const ValueKey('family-lock-on'),
-                      icon: const Icon(Icons.lock_outline_rounded),
+                      icon: const Icon(TaliaIcons.lock),
                       onPressed: () {
                         Navigator.pop(sheetContext);
                         dashboardCubit.lockWithPin();

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../cubits/memorization_session_cubit.dart';
 import 'v2_session_widgets.dart';
 
@@ -19,11 +20,11 @@ class V2RemediationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return V2PhaseScaffold(
       session: state.sessionState,
-      icon: Icons.healing_rounded,
+      icon: TaliaIcons.heal,
       title: context.l10n.v2RemediationTitle,
       subtitle: context.l10n.v2RemediationSubtitle,
       primaryActionLabel: context.l10n.v2TryAgain,
-      primaryActionIcon: Icons.replay_rounded,
+      primaryActionIcon: TaliaIcons.replay,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().completeRemediation(),
       children: [

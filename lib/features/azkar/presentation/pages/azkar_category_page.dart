@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../xp/domain/entities/xp_gain_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -155,7 +156,7 @@ class _AzkarUnderReviewScreen extends StatelessWidget {
             child: EmptyStateWidget(
               key: const ValueKey('azkar-content-under-review'),
               message: context.l10n.azkarContentUnderReview,
-              icon: Icons.pending_actions_rounded,
+              icon: TaliaIcons.pending,
             ),
           ),
         ],
@@ -404,7 +405,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                       ),
                       IconButton(
                         tooltip: context.l10n.fontSize,
-                        icon: const Icon(Icons.format_size_rounded),
+                        icon: const Icon(TaliaIcons.textSize),
                         constraints: iconConstraints,
                         visualDensity: isSmall ? VisualDensity.compact : null,
                         color: context.tokens.textPrimary,
@@ -423,7 +424,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                                   context,
                                 ).showMenuTooltip,
                                 icon: Icon(
-                                  Icons.more_vert_rounded,
+                                  TaliaIcons.more,
                                   color: context.tokens.textPrimary,
                                 ),
                                 onSelected: (value) {
@@ -459,8 +460,8 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                                 : context.l10n.azkarAutoAdvanceOff,
                             icon: Icon(
                               autoAdvance
-                                  ? Icons.autorenew_rounded
-                                  : Icons.pause_circle_outline_rounded,
+                                  ? TaliaIcons.refresh
+                                  : TaliaIcons.pauseCircle,
                               color: autoAdvance
                                   ? AppColors.primary
                                   : context.tokens.textHint,
@@ -473,7 +474,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         ),
                         IconButton(
                           tooltip: context.l10n.azkarIndex,
-                          icon: const Icon(Icons.format_list_bulleted_rounded),
+                          icon: const Icon(TaliaIcons.listBulleted),
                           color: context.tokens.textPrimary,
                           onPressed: () => _openIndexSheet(context),
                         ),
@@ -619,8 +620,8 @@ class _ZikrReaderPage extends StatelessWidget {
                                   : context.l10n.azkarPlayRecitation,
                               icon: Icon(
                                 isAudioPlaying
-                                    ? Icons.pause_circle_rounded
-                                    : Icons.play_circle_rounded,
+                                    ? TaliaIcons.pauseCircleFilled
+                                    : TaliaIcons.playCircleFilled,
                                 size: 22,
                                 color: AppColors.primary,
                               ),
@@ -629,7 +630,7 @@ class _ZikrReaderPage extends StatelessWidget {
                           IconButton(
                             tooltip: context.l10n.copy,
                             icon: Icon(
-                              Icons.copy_rounded,
+                              TaliaIcons.copy,
                               size: 20,
                               color: secondaryColor,
                             ),
@@ -638,7 +639,7 @@ class _ZikrReaderPage extends StatelessWidget {
                           IconButton(
                             tooltip: context.l10n.share,
                             icon: Icon(
-                              Icons.share_rounded,
+                              TaliaIcons.share,
                               size: 20,
                               color: secondaryColor,
                             ),
@@ -674,16 +675,20 @@ class _ZikrReaderPage extends StatelessWidget {
                                   vertical: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: (isDark
-                                          ? Colors.white
-                                          : AppColors.primary)
-                                      .withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                  color:
+                                      (isDark
+                                              ? Colors.white
+                                              : AppColors.primary)
+                                          .withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
                                   border: Border.all(
-                                    color: (isDark
-                                            ? Colors.white
-                                            : AppColors.primary)
-                                        .withValues(alpha: 0.12),
+                                    color:
+                                        (isDark
+                                                ? Colors.white
+                                                : AppColors.primary)
+                                            .withValues(alpha: 0.12),
                                   ),
                                 ),
                                 child: Column(
@@ -694,7 +699,7 @@ class _ZikrReaderPage extends StatelessWidget {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.menu_book_rounded,
+                                          TaliaIcons.mushaf,
                                           size: 14,
                                           color: isDark
                                               ? AppColors.goldLight
@@ -703,15 +708,17 @@ class _ZikrReaderPage extends StatelessWidget {
                                         const SizedBox(width: 6),
                                         Text(
                                           session.zikr.virtue.isNotEmpty
-                                              ? context.l10n.azkarVirtueAndSource
+                                              ? context
+                                                    .l10n
+                                                    .azkarVirtueAndSource
                                               : context.l10n.azkarSource,
                                           style: AppTypography.labelSmall
                                               .copyWith(
-                                            color: isDark
-                                                ? AppColors.goldLight
-                                                : AppColors.goldDark,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                                color: isDark
+                                                    ? AppColors.goldLight
+                                                    : AppColors.goldDark,
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -721,24 +728,27 @@ class _ZikrReaderPage extends StatelessWidget {
                                         session.zikr.virtue,
                                         style: AppTypography.titleMedium
                                             .copyWith(
-                                          color: secondaryColor,
-                                          fontFamily: 'Amiri',
-                                          fontSize: 15,
-                                          height: 1.5,
-                                        ),
+                                              color: secondaryColor,
+                                              fontFamily: 'Amiri',
+                                              fontSize: 15,
+                                              height: 1.5,
+                                            ),
                                         textAlign: TextAlign.center,
                                       ),
-                                      if (session.zikr.reference.isNotEmpty) ...[
+                                      if (session
+                                          .zikr
+                                          .reference
+                                          .isNotEmpty) ...[
                                         const SizedBox(height: 6),
                                         Text(
                                           session.zikr.reference,
                                           style: AppTypography.labelSmall
                                               .copyWith(
-                                            color: secondaryColor
-                                                .withValues(alpha: 0.85),
-                                            fontFamily: 'Amiri',
-                                            height: 1.4,
-                                          ),
+                                                color: secondaryColor
+                                                    .withValues(alpha: 0.85),
+                                                fontFamily: 'Amiri',
+                                                height: 1.4,
+                                              ),
                                           textAlign: TextAlign.center,
                                         ),
                                       ],
@@ -747,11 +757,11 @@ class _ZikrReaderPage extends StatelessWidget {
                                         session.zikr.reference,
                                         style: AppTypography.titleMedium
                                             .copyWith(
-                                          color: secondaryColor,
-                                          fontFamily: 'Amiri',
-                                          fontSize: 15,
-                                          height: 1.5,
-                                        ),
+                                              color: secondaryColor,
+                                              fontFamily: 'Amiri',
+                                              fontSize: 15,
+                                              height: 1.5,
+                                            ),
                                         textAlign: TextAlign.center,
                                       ),
                                   ],
@@ -863,7 +873,7 @@ class _ZikrReaderPage extends StatelessWidget {
                       children: [
                         if (session.isDone)
                           const Icon(
-                            Icons.check_circle_rounded,
+                            TaliaIcons.checkCircleFilled,
                             color: Colors.white,
                             size: 40,
                           )
@@ -917,10 +927,12 @@ class _ZikrReaderPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusXl,
+                          ),
                         ),
                       ),
-                      icon: const Icon(Icons.undo_rounded, size: 20),
+                      icon: const Icon(TaliaIcons.undo, size: 20),
                       label: Text(context.l10n.undo),
                     )
                   : Text(
@@ -1030,7 +1042,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                     ],
                   ),
                   child: const Icon(
-                    Icons.check_rounded,
+                    TaliaIcons.check,
                     color: Colors.white,
                     size: 56,
                   ),
@@ -1073,7 +1085,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: widget.onReset,
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        icon: const Icon(TaliaIcons.refresh, size: 18),
                         label: Text(context.l10n.reset),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.primary,
@@ -1091,7 +1103,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _shareWird,
-                        icon: const Icon(Icons.ios_share_rounded, size: 18),
+                        icon: const Icon(TaliaIcons.shareUp, size: 18),
                         label: Text(context.l10n.azkarShareWird),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -1115,7 +1127,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
               TextButton.icon(
                 key: const ValueKey('azkar-completion-undo'),
                 onPressed: widget.onUndo,
-                icon: const Icon(Icons.undo_rounded, size: 18),
+                icon: const Icon(TaliaIcons.undo, size: 18),
                 label: Text(context.l10n.undo),
                 style: TextButton.styleFrom(
                   foregroundColor: context.tokens.textSecondary,

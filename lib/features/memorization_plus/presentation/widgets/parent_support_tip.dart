@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// K35 — turns "ayahs needing support" from a bare number into one short,
@@ -24,7 +25,7 @@ class ParentSupportTip extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.tips_and_updates_rounded, color: accent, size: 20),
+          Icon(TaliaIcons.idea, color: accent, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

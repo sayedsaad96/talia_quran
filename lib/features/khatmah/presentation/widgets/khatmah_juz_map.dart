@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_plan.dart';
 
@@ -93,7 +94,7 @@ class _JuzCell extends StatelessWidget {
           ),
           child: done
               ? Icon(
-                  Icons.check_rounded,
+                  TaliaIcons.check,
                   size: 16,
                   color: context.tokens.textPrimary,
                 )

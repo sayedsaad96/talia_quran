@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
@@ -43,7 +44,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.local_fire_department_rounded,
+                      TaliaIcons.flame,
                       size: 15,
                       color: AppColors.streakOrange,
                     ),
@@ -134,7 +135,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
-                              Icons.local_fire_department_rounded,
+                              TaliaIcons.flame,
                               size: 17,
                               color: AppColors.streakOrange,
                             ),
@@ -208,10 +209,10 @@ class OnboardingHabitBentoView extends StatelessWidget {
                             ),
                             child: Icon(
                               isDone
-                                  ? Icons.check_rounded
+                                  ? TaliaIcons.check
                                   : (isToday
-                                        ? Icons.local_fire_department_rounded
-                                        : Icons.circle),
+                                        ? TaliaIcons.flame
+                                        : TaliaIcons.circleFilled),
                               size: isDone ? 17 : (isToday ? 18 : 6),
                               color: isDone
                                   ? AppColors.streakOrange
@@ -260,7 +261,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.cloud_off_rounded,
+                          TaliaIcons.cloudOff,
                           size: 14,
                           color: OnboardingPalette.emeraldText,
                         ),
@@ -320,7 +321,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
-                                  Icons.child_care_rounded,
+                                  TaliaIcons.child,
                                   size: 15,
                                   color: AppColors.goldLight,
                                 ),
@@ -356,7 +357,7 @@ class OnboardingHabitBentoView extends StatelessWidget {
                               (_) => const Padding(
                                 padding: EdgeInsetsDirectional.only(end: 3),
                                 child: Icon(
-                                  Icons.star_rounded,
+                                  TaliaIcons.starFilled,
                                   size: 15,
                                   color: AppColors.goldLight,
                                 ),

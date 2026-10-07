@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -82,7 +83,7 @@ class HomeAchievementSheet extends StatelessWidget {
                       ),
                     ),
                     child: Icon(
-                      Icons.emoji_events_rounded,
+                      TaliaIcons.trophy,
                       color: themeSkin.gold,
                       size: 24,
                     ),
@@ -110,7 +111,7 @@ class HomeAchievementSheet extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(
-                      Icons.close_rounded,
+                      TaliaIcons.close,
                       color: themeSkin.textSecondary,
                     ),
                     onPressed: () => Navigator.of(context).pop(),
@@ -271,8 +272,8 @@ class HomeAchievementSheet extends StatelessWidget {
                                       ),
                                 child: Icon(
                                   achievement.isUnlocked
-                                      ? Icons.military_tech_rounded
-                                      : Icons.lock_outline_rounded,
+                                      ? TaliaIcons.medal
+                                      : TaliaIcons.lock,
                                   color: achievement.isUnlocked
                                       ? themeSkin.gold
                                       : themeSkin.textSecondary,
@@ -306,7 +307,7 @@ class HomeAchievementSheet extends StatelessWidget {
                               ),
                               if (achievement.isUnlocked)
                                 const Icon(
-                                  Icons.check_circle_rounded,
+                                  TaliaIcons.checkCircleFilled,
                                   color: AppColors.success,
                                   size: 18,
                                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -41,11 +42,10 @@ class _SettingsSectionState extends State<SettingsSection> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final surface = context.tokens.card;
-    final border = context.tokens.divider
-        .withValues(alpha: isDark ? 0.55 : 0.8);
-    final accent =
-        widget.accentColor ??
-        context.tokens.accent;
+    final border = context.tokens.divider.withValues(
+      alpha: isDark ? 0.55 : 0.8,
+    );
+    final accent = widget.accentColor ?? context.tokens.accent;
     final textColor = context.tokens.textPrimary;
     final subtextColor = context.tokens.textSecondary;
 
@@ -86,7 +86,7 @@ class _SettingsSectionState extends State<SettingsSection> {
                           ),
                         ),
                         child: Icon(
-                          widget.icon ?? Icons.tune_rounded,
+                          widget.icon ?? TaliaIcons.tune,
                           size: 21,
                           color: accent,
                         ),
@@ -121,7 +121,7 @@ class _SettingsSectionState extends State<SettingsSection> {
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOutCubic,
                           child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            TaliaIcons.chevronDown,
                             color: subtextColor,
                           ),
                         ),
@@ -198,8 +198,7 @@ class SettingsDivider extends StatelessWidget {
     return Divider(
       height: 0.5,
       thickness: 0.5,
-      color: context.tokens.divider
-          .withValues(alpha: 0.6),
+      color: context.tokens.divider.withValues(alpha: 0.6),
       indent: indent,
     );
   }
@@ -214,8 +213,8 @@ class SettingsTrailingChevron extends StatelessWidget {
   Widget build(BuildContext context) {
     return Icon(
       Directionality.of(context) == TextDirection.rtl
-          ? Icons.arrow_back_ios_rounded
-          : Icons.arrow_forward_ios_rounded,
+          ? TaliaIcons.chevronBack
+          : TaliaIcons.chevronForward,
       size: 14,
       color: color,
     );

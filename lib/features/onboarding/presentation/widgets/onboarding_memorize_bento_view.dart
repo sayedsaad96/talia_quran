@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
@@ -43,7 +44,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.psychology_rounded,
+                      TaliaIcons.hifz,
                       size: 15,
                       color: AppColors.goldLight,
                     ),
@@ -132,7 +133,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
-                              Icons.verified_rounded,
+                              TaliaIcons.verified,
                               size: 16,
                               color: AppColors.goldLight,
                             ),
@@ -264,7 +265,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.visibility_off_rounded,
+                                TaliaIcons.hide,
                                 size: 16,
                                 color: OnboardingPalette.nightTealText,
                               ),
@@ -359,7 +360,7 @@ class OnboardingMemorizeBentoView extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.update_rounded,
+                                TaliaIcons.update,
                                 size: 16,
                                 color: AppColors.goldLight,
                               ),

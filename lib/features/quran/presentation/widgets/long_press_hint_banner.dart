@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// One-time long-press hint banner of the adult Mushaf reader.
@@ -34,7 +35,7 @@ class LongPressHintBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.touch_app_rounded, color: accent, size: 18),
+            Icon(TaliaIcons.tap, color: accent, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -50,7 +51,7 @@ class LongPressHintBanner extends StatelessWidget {
             ),
             IconButton(
               onPressed: onDismiss,
-              icon: Icon(Icons.close_rounded, color: accent, size: 18),
+              icon: Icon(TaliaIcons.close, color: accent, size: 18),
               visualDensity: VisualDensity.compact,
               tooltip: context.l10n.close,
             ),

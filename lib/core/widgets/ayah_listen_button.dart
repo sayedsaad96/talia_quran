@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../icons/talia_icons.dart';
 import '../services/audio_cache_service.dart';
 import '../services/audio_lifecycle_manager.dart';
 import '../extensions/context_extensions.dart';
@@ -187,10 +188,10 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                         )
                       : Icon(
                           _error != null
-                              ? Icons.wifi_off_rounded
+                              ? TaliaIcons.wifiOff
                               : _isPlaying
-                              ? Icons.pause_rounded
-                              : Icons.headphones_rounded,
+                              ? TaliaIcons.pause
+                              : TaliaIcons.listen,
                           color: buttonColor,
                           size: iconSize,
                         ),

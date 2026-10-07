@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../icons/talia_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../constants/app_spacing.dart';
@@ -149,7 +150,7 @@ class EmptyStateWidget extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                icon ?? Icons.inbox_rounded,
+                icon ?? TaliaIcons.inbox,
                 size: 36,
                 color: context.colorScheme.primary.withValues(alpha: 0.5),
               ),
@@ -212,7 +213,7 @@ class ErrorStateWidget extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.error_outline_rounded,
+                TaliaIcons.error,
                 size: 36,
                 color: context.colorScheme.error.withValues(alpha: 0.7),
               ),
@@ -232,7 +233,7 @@ class ErrorStateWidget extends StatelessWidget {
                 onPressed: onRetry,
                 variant: AppButtonVariant.secondary,
                 size: AppButtonSize.medium,
-                icon: Icons.refresh_rounded,
+                icon: TaliaIcons.refresh,
               ),
             ],
           ],
@@ -256,11 +257,7 @@ class EmptyJourneyWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.menu_book_rounded,
-              size: 64,
-              color: AppColors.primary,
-            ),
+            const Icon(TaliaIcons.mushaf, size: 64, color: AppColors.primary),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.l10n.startYourJourneyWithQuran,

@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../constants/app_spacing.dart';
 import '../../di/injection.dart';
 import '../../extensions/context_extensions.dart';
+import '../../icons/talia_icons.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import 'social_share_card.dart';
@@ -361,7 +362,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       child: Row(
                         children: [
                           const Icon(
-                            Icons.share_outlined,
+                            TaliaIcons.share,
                             color: AppColors.primary,
                             size: 22,
                           ),
@@ -386,7 +387,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       tooltip: MaterialLocalizations.of(
                         context,
                       ).closeButtonTooltip,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(TaliaIcons.close),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -570,7 +571,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.send_rounded, size: 18),
+                              : const Icon(TaliaIcons.send, size: 18),
                           label: Text(
                             _isExporting ? copy.preparing : copy.shareAsImage,
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -593,7 +594,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                     // Save to Gallery
                     IconButton.filledTonal(
                       onPressed: _isExporting ? null : _saveToGallery,
-                      icon: const Icon(Icons.download_rounded, size: 20),
+                      icon: const Icon(TaliaIcons.download, size: 20),
                       tooltip: copy.saveToGalleryTooltip,
                       style: IconButton.styleFrom(
                         backgroundColor: context.tokens.surfaceVariant,
@@ -610,7 +611,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                     // Share as Text
                     IconButton.filledTonal(
                       onPressed: _isExporting ? null : _shareAsText,
-                      icon: const Icon(Icons.short_text_rounded, size: 20),
+                      icon: const Icon(TaliaIcons.shortText, size: 20),
                       tooltip: copy.shareAsTextTooltip,
                       style: IconButton.styleFrom(
                         backgroundColor: context.tokens.surfaceVariant,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 
 import 'package:flutter/material.dart';
@@ -160,7 +161,7 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
     final adultsCard = MemorizationPathChoiceCard(
       title: context.l10n.memorizationPathAdultsTitle,
       description: context.l10n.memorizationPathAdultsDesc,
-      icon: Icons.person_outline,
+      icon: TaliaIcons.person,
       accentColor: AppColors.primary,
       isLoading: isLoading,
       onTap: () {
@@ -175,7 +176,7 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
     final kidsCard = MemorizationPathChoiceCard(
       title: context.l10n.memorizationPathKidsTitle,
       description: context.l10n.memorizationPathKidsDesc,
-      icon: Icons.child_care,
+      icon: TaliaIcons.child,
       accentColor: AppColors.primaryLight,
       isLoading: isLoading,
       onTap: () => _showChildSetup(context),
@@ -242,7 +243,7 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 18),
+                  const Icon(TaliaIcons.info, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

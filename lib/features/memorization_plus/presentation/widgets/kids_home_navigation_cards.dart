@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -23,19 +25,22 @@ class KidsHomeNavigationCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final mushaf = _KidsHomeNavigationCard(
       key: const ValueKey('kids-home-action-mushaf'),
-      icon: Icons.menu_book_rounded,
+      icon: TaliaKidsIcons.mushaf,
+      doorColor: AppColors.kidsDoorSky,
       label: context.l10n.kidsGamifiedMushaf,
       onTap: onMushafTap,
     );
     final journey = _KidsHomeNavigationCard(
       key: const ValueKey('kids-home-action-journey'),
-      icon: Icons.map_rounded,
+      icon: TaliaKidsIcons.journey,
+      doorColor: AppColors.kidsDoorTeal,
       label: context.l10n.kidsGamifiedJourney,
       onTap: onJourneyTap,
     );
     final missions = _KidsHomeNavigationCard(
       key: const ValueKey('kids-home-action-missions'),
-      icon: Icons.flag_rounded,
+      icon: TaliaKidsIcons.flag,
+      doorColor: AppColors.kidsDoorCoral,
       label: context.l10n.kidsGamifiedMissions,
       onTap: onMissionTap,
     );
@@ -69,11 +74,13 @@ class _KidsHomeNavigationCard extends StatelessWidget {
   const _KidsHomeNavigationCard({
     super.key,
     required this.icon,
+    required this.doorColor,
     required this.label,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color doorColor;
   final String label;
   final VoidCallback onTap;
   @override
@@ -97,7 +104,17 @@ class _KidsHomeNavigationCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: KidsTheme.forestGreen, size: 28),
+                // Scales down on narrow / large-text grids instead of
+                // overflowing the square card.
+                Flexible(
+                  child: FittedBox(
+                    child: TaliaFeatureDoor(
+                      icon: icon,
+                      color: doorColor,
+                      size: 40,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   label,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/digit_material_localizations.dart';
 import 'package:talia_quran/core/widgets/locale_time_picker.dart';
 
@@ -36,7 +37,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(find.text('٠٩'), findsWidgets);
-      await tester.tap(find.byIcon(Icons.keyboard));
+      await tester.tap(find.byIcon(TaliaIcons.keyboard));
       await tester.pumpAndSettle();
       final fields = find.byType(TextFormField);
       await tester.enterText(fields.at(0), '٢');

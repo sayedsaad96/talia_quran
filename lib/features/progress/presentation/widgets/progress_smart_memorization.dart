@@ -35,7 +35,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.star_rounded,
+                  TaliaIcons.starFilled,
                   color: AppColors.gold,
                   size: 24,
                 ),
@@ -59,7 +59,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 child: _StatBox(
                   label: context.l10n.points,
                   value: context.numText(progress.kidsPoints),
-                  icon: Icons.military_tech_rounded,
+                  icon: TaliaIcons.medal,
                   color: AppColors.primary,
                   isDark: isDark,
                 ),
@@ -69,7 +69,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 child: _StatBox(
                   label: context.l10n.stars,
                   value: context.numText(progress.kidsStars),
-                  icon: Icons.star_rounded,
+                  icon: TaliaIcons.starFilled,
                   color: AppColors.gold,
                   isDark: isDark,
                 ),

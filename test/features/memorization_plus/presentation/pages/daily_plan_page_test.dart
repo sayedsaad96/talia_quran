@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/router/app_router.dart';
@@ -111,8 +112,8 @@ void main() {
 
     expect(find.text("Today's Plan"), findsOneWidget);
     expect(find.textContaining('1 completed'), findsOneWidget);
-    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.checkCircleFilled), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.circle), findsOneWidget);
   });
 
   testWidgets('without an active plan it invites creating one (M-U2)', (

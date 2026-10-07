@@ -1,7 +1,7 @@
 import 'dart:async';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -109,7 +109,7 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
             OutlinedButton.icon(
               key: const Key('v2_closing_dua_button'),
               onPressed: () => showClosingDuaSheet(context),
-              icon: const Icon(Icons.volunteer_activism_rounded),
+              icon: const Icon(TaliaIcons.dua),
               label: Text(l10n.closingDuaButton),
             ),
             if (!finalState.isReview) ...[
@@ -129,7 +129,7 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
                   );
                   SocialShareSheet.show(context, data);
                 },
-                icon: const Icon(Icons.share_rounded),
+                icon: const Icon(TaliaIcons.share),
                 label: Text(context.l10n.shareMemorizationMilestone),
               ),
             ],
@@ -141,7 +141,7 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
                 // the learner started, not to a completed screen.
                 onPressed: () => context.pushReplacement(next.route),
                 style: FilledButton.styleFrom(backgroundColor: primary),
-                icon: const Icon(Icons.skip_next_rounded),
+                icon: const Icon(TaliaIcons.skipNext),
                 label: Text(
                   l10n.v2NextPlanItem(
                     LocaleNumberFormatter.format(
@@ -154,14 +154,14 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(
                 onPressed: () => context.go(AppRoutes.memorizationHub),
-                icon: const Icon(Icons.hub_rounded),
+                icon: const Icon(TaliaIcons.hub),
                 label: Text(context.l10n.v2MemorizationHub),
               ),
             ] else
               FilledButton.icon(
                 onPressed: () => context.go(AppRoutes.memorizationHub),
                 style: FilledButton.styleFrom(backgroundColor: primary),
-                icon: const Icon(Icons.hub_rounded),
+                icon: const Icon(TaliaIcons.hub),
                 label: Text(context.l10n.v2MemorizationHub),
               ),
           ],

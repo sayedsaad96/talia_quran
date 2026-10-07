@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/prayer_time_formatter.dart';
@@ -166,12 +167,12 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
     final l10n = context.l10n;
 
     final raw = [
-      ('fajr', l10n.prayerFajr, Icons.wb_twilight_rounded, s.fajr),
-      ('sunrise', l10n.prayerSunrise, Icons.wb_sunny_outlined, s.sunrise),
-      ('dhuhr', l10n.prayerDhuhr, Icons.wb_sunny_rounded, s.dhuhr),
-      ('asr', l10n.prayerAsr, Icons.wb_cloudy_rounded, s.asr),
-      ('maghrib', l10n.prayerMaghrib, Icons.nights_stay_outlined, s.maghrib),
-      ('isha', l10n.prayerIsha, Icons.nights_stay_rounded, s.isha),
+      ('fajr', l10n.prayerFajr, TaliaIcons.sunrise, s.fajr),
+      ('sunrise', l10n.prayerSunrise, TaliaIcons.sun, s.sunrise),
+      ('dhuhr', l10n.prayerDhuhr, TaliaIcons.sun, s.dhuhr),
+      ('asr', l10n.prayerAsr, TaliaIcons.cloudSun, s.asr),
+      ('maghrib', l10n.prayerMaghrib, TaliaIcons.moon, s.maghrib),
+      ('isha', l10n.prayerIsha, TaliaIcons.moon, s.isha),
     ];
 
     return raw.map((r) {
@@ -289,7 +290,7 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Icon(
-                      Icons.location_on_rounded,
+                      TaliaIcons.location,
                       size: 12,
                       color: skin.textOnHeroMuted,
                     ),

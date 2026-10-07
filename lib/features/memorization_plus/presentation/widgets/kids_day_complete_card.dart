@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -27,8 +28,8 @@ class KidsDayCompleteCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.nights_stay_rounded,
+          const TaliaIcon(
+            TaliaKidsIcons.moon,
             color: KidsTheme.goldStar,
             size: 64,
           ),

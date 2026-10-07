@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -80,19 +81,19 @@ class _RewardRow extends StatelessWidget {
     final l10n = context.l10n;
     final (icon, label) = switch (reward.status) {
       ParentRewardStatus.locked => (
-        Icons.lock_rounded,
+        TaliaIcons.lock,
         l10n.parentDashboardRewardLocked,
       ),
       ParentRewardStatus.unlocked => (
-        Icons.card_giftcard_rounded,
+        TaliaIcons.gift,
         l10n.parentRewardStatusWaitingForChild,
       ),
       ParentRewardStatus.requested => (
-        Icons.notifications_active_rounded,
+        TaliaIcons.bell,
         l10n.parentRewardStatusRequested,
       ),
       ParentRewardStatus.claimed => (
-        Icons.star_rounded,
+        TaliaIcons.starFilled,
         l10n.parentDashboardRewardClaimed,
       ),
     };

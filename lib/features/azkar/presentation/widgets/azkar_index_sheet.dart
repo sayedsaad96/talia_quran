@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/azkar_entities.dart';
-
 
 /// Row title for the index: the opening of the zikr text, so rows are
 /// distinguishable even when many share the same source. The cut is made on a
@@ -139,7 +139,7 @@ class _AzkarIndexSheetState extends State<_AzkarIndexSheet> {
                       ),
                       leading: entry.done
                           ? const Icon(
-                              Icons.check_circle,
+                              TaliaIcons.checkCircleFilled,
                               color: AppColors.success,
                             )
                           : CircleAvatar(

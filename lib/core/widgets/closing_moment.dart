@@ -10,6 +10,7 @@ import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../constants/app_spacing.dart';
 import '../di/injection.dart';
 import '../extensions/context_extensions.dart';
+import '../icons/talia_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'memorization_ayah_display.dart';
@@ -90,7 +91,7 @@ class ClosingMomentAyahCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.nightlight_round, color: AppColors.gold, size: 28),
+          const Icon(TaliaIcons.moon, color: AppColors.gold, size: 28),
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.closingMomentLabel,
@@ -160,11 +161,7 @@ Future<void> showClosingDuaSheet(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.volunteer_activism_rounded,
-                color: AppColors.gold,
-                size: 32,
-              ),
+              const Icon(TaliaIcons.dua, color: AppColors.gold, size: 32),
               const SizedBox(height: AppSpacing.md),
               Text(
                 sheetL10n.closingDua,

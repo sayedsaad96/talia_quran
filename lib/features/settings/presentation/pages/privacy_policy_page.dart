@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -132,7 +133,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                                         right: isAr ? 8.0 : 0,
                                       ),
                                       child: Icon(
-                                        Icons.circle,
+                                        TaliaIcons.circleFilled,
                                         size: 6,
                                         color: primary,
                                       ),
@@ -166,7 +167,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                     child: OutlinedButton.icon(
                       key: const ValueKey('privacy-manual-option-action'),
                       onPressed: () => context.go(AppRoutes.memorizationHub),
-                      icon: const Icon(Icons.fact_check_outlined),
+                      icon: const Icon(TaliaIcons.factCheck),
                       label: Text(
                         manualOptionAction,
                         textAlign: TextAlign.center,

@@ -80,7 +80,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Plan Name ──
                   _SectionTitle(
-                    icon: Icons.edit_rounded,
+                    icon: TaliaIcons.edit,
                     title: context.l10n.customPlanName,
                     isDark: isDark,
                   ),
@@ -101,7 +101,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Target User (Child/Adult) ──
                   _SectionTitle(
-                    icon: Icons.people_alt_rounded,
+                    icon: TaliaIcons.people,
                     title: context.l10n.customPlanTargetUserTitle,
                     isDark: isDark,
                   ),
@@ -129,7 +129,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.info_outline_rounded,
+                              TaliaIcons.info,
                               color: AppColors.primary,
                               size: 18,
                             ),
@@ -152,7 +152,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Surah Range ──
                   _SectionTitle(
-                    icon: Icons.menu_book_rounded,
+                    icon: TaliaIcons.mushaf,
                     title: context.l10n.customPlanSurahRange,
                     isDark: isDark,
                   ),
@@ -163,7 +163,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Daily Load ──
                   _SectionTitle(
-                    icon: Icons.today_rounded,
+                    icon: TaliaIcons.calendar,
                     title: context.l10n.customPlanDailyLoad,
                     isDark: isDark,
                   ),
@@ -174,7 +174,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                     min: 1,
                     max: 10,
                     suffix: context.l10n.customPlanAyahUnit,
-                    icon: Icons.auto_stories_rounded,
+                    icon: TaliaIcons.reading,
                     color: Colors.amber,
                     isDark: isDark,
                     onChanged: (v) =>
@@ -185,7 +185,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Schedule ──
                   _SectionTitle(
-                    icon: Icons.calendar_month_rounded,
+                    icon: TaliaIcons.calendarRange,
                     title: context.l10n.customPlanSchedule,
                     isDark: isDark,
                   ),
@@ -196,7 +196,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                     min: 1,
                     max: 7,
                     suffix: context.l10n.customPlanDayUnit,
-                    icon: Icons.date_range_rounded,
+                    icon: TaliaIcons.calendarRange,
                     color: Colors.blueAccent,
                     isDark: isDark,
                     onChanged: (v) =>
@@ -209,7 +209,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                     min: 10,
                     max: 120,
                     suffix: context.l10n.customPlanMinuteUnit,
-                    icon: Icons.timer_rounded,
+                    icon: TaliaIcons.timer,
                     color: Colors.teal,
                     isDark: isDark,
                     onChanged: (v) =>
@@ -242,7 +242,7 @@ class _CustomPlanFormBody extends StatelessWidget {
 
                   // ── Difficulty ──
                   _SectionTitle(
-                    icon: Icons.tune_rounded,
+                    icon: TaliaIcons.tune,
                     title: context.l10n.customPlanDifficulty,
                     isDark: isDark,
                   ),
@@ -255,7 +255,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                   ExpansionTile(
                     tilePadding: EdgeInsets.zero,
                     title: _SectionTitle(
-                      icon: Icons.replay_rounded,
+                      icon: TaliaIcons.replay,
                       title: context.l10n.customPlanAdvanced,
                       isDark: isDark,
                     ),
@@ -308,7 +308,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.save_rounded),
+                          const Icon(TaliaIcons.save),
                           const SizedBox(width: 12),
                           Text(
                             context.l10n.customPlanSaveAndStart,
@@ -329,7 +329,7 @@ class _CustomPlanFormBody extends StatelessWidget {
                       onPressed: () =>
                           host._showDeletePlanConfirmation(context),
                       icon: const Icon(
-                        Icons.delete_outline_rounded,
+                        TaliaIcons.delete,
                         color: AppColors.error,
                       ),
                       label: Text(

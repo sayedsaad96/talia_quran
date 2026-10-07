@@ -11,6 +11,7 @@ import '../../features/quran/presentation/widgets/quran_mini_player_bar.dart';
 import '../constants/app_spacing.dart';
 import '../constants/surah_names.dart';
 import '../extensions/context_extensions.dart';
+import '../icons/talia_icons.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -24,28 +25,28 @@ class AppShell extends StatelessWidget {
 
   static const _tabs = [
     _TabItem(
-      icon: Icons.home_outlined,
-      selectedIcon: Icons.home_rounded,
+      icon: TaliaIcons.home,
+      selectedIcon: TaliaIcons.home,
       route: AppRoutes.home,
     ),
     _TabItem(
-      icon: Icons.menu_book_outlined,
-      selectedIcon: Icons.menu_book_rounded,
+      icon: TaliaIcons.mushaf,
+      selectedIcon: TaliaIcons.mushaf,
       route: AppRoutes.quran,
     ),
     _TabItem(
-      icon: Icons.psychology_outlined,
-      selectedIcon: Icons.psychology_rounded,
+      icon: TaliaIcons.hifz,
+      selectedIcon: TaliaIcons.hifz,
       route: AppRoutes.memorizationHub,
     ),
     _TabItem(
-      icon: Icons.auto_awesome_outlined,
-      selectedIcon: Icons.auto_awesome_rounded,
+      icon: TaliaIcons.azkar,
+      selectedIcon: TaliaIcons.azkar,
       route: AppRoutes.azkar,
     ),
     _TabItem(
-      icon: Icons.emoji_events_outlined,
-      selectedIcon: Icons.emoji_events_rounded,
+      icon: TaliaIcons.progress,
+      selectedIcon: TaliaIcons.progress,
       route: AppRoutes.progress,
     ),
   ];
@@ -209,8 +210,8 @@ class _TaliaNavRail extends StatelessWidget {
       destinations: List.generate(
         tabs.length,
         (i) => NavigationRailDestination(
-          icon: Icon(tabs[i].icon),
-          selectedIcon: Icon(tabs[i].selectedIcon),
+          icon: TaliaIcon(tabs[i].icon, active: false),
+          selectedIcon: TaliaIcon(tabs[i].selectedIcon),
           label: Text(labels[i]),
         ),
       ),
@@ -374,10 +375,11 @@ class _TaliaNavItem extends StatelessWidget {
                   scale: isSelected ? 1.08 : 1.0,
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutBack,
-                  child: Icon(
+                  child: TaliaIcon(
                     isSelected ? tab.selectedIcon : tab.icon,
                     color: isSelected ? activeColor : inactiveColor,
                     size: 22,
+                    active: isSelected,
                   ),
                 ),
               ),

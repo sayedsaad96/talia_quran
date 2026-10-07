@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/pure_black_cubit.dart';
@@ -55,7 +56,7 @@ class ThemeSettingTile extends StatelessWidget {
                 children: [
                   option(
                     label: l10n.lightMode,
-                    icon: Icons.light_mode_rounded,
+                    icon: TaliaIcons.sun,
                     selected: themeMode == ThemeMode.light,
                     onTap: () => unawaited(
                       context.read<ThemeCubit>().setTheme(ThemeMode.light),
@@ -64,21 +65,21 @@ class ThemeSettingTile extends StatelessWidget {
                   gap,
                   option(
                     label: l10n.darkMode,
-                    icon: Icons.dark_mode_rounded,
+                    icon: TaliaIcons.moon,
                     selected: themeMode == ThemeMode.dark && !pureBlack,
                     onTap: () => unawaited(_selectDark(context, oled: false)),
                   ),
                   gap,
                   option(
                     label: l10n.pureBlackTheme,
-                    icon: Icons.contrast_rounded,
+                    icon: TaliaIcons.contrast,
                     selected: themeMode == ThemeMode.dark && pureBlack,
                     onTap: () => unawaited(_selectDark(context, oled: true)),
                   ),
                   gap,
                   option(
                     label: l10n.systemDefault,
-                    icon: Icons.brightness_auto_rounded,
+                    icon: TaliaIcons.themeAuto,
                     selected: themeMode == ThemeMode.system,
                     onTap: () => unawaited(
                       context.read<ThemeCubit>().setTheme(ThemeMode.system),
@@ -335,7 +336,7 @@ class LocaleOption extends StatelessWidget {
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check_circle_rounded, color: color, size: 18),
+                Icon(TaliaIcons.checkCircleFilled, color: color, size: 18),
             ],
           ),
         ),

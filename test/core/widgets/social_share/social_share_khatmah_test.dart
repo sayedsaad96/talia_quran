@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations_ar.dart';
 import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
@@ -27,7 +27,7 @@ void main() {
     });
 
     test('returns auto_stories_rounded icon', () {
-      expect(SocialShareCategory.khatmah.icon, Icons.auto_stories_rounded);
+      expect(SocialShareCategory.khatmah.icon, TaliaIcons.reading);
     });
 
     test('supports Arabic & English titles / labels', () {

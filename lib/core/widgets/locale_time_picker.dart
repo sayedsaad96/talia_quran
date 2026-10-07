@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../icons/talia_icons.dart';
 import '../utils/locale_number_formatter.dart';
 import '../utils/locale_numeric_input_formatter.dart';
 
@@ -20,7 +21,7 @@ Future<TimeOfDay?> showLocaleTimePicker({
       children: [
         child!,
         TextButton.icon(
-          icon: const Icon(Icons.keyboard),
+          icon: const Icon(TaliaIcons.keyboard),
           label: Text(
             MaterialLocalizations.of(dialogContext).inputTimeModeButtonLabel,
           ),

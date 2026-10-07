@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import 'certificate_palette.dart';
@@ -300,7 +301,7 @@ class CertificateWidget extends StatelessWidget {
                                 cacheWidth: 100,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, _, _) => Icon(
-                                  Icons.menu_book_rounded,
+                                  TaliaIcons.mushaf,
                                   color: theme.accentGold,
                                   size: 70,
                                 ),
@@ -553,11 +554,7 @@ class _RoyalRibbonBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.workspace_premium_rounded,
-            size: 16,
-            color: Colors.white,
-          ),
+          const Icon(TaliaIcons.certificate, size: 16, color: Colors.white),
           const SizedBox(width: 4),
           Text(
             'وسام ختم القرآن',
@@ -632,11 +629,7 @@ class _AppSeal extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.menu_book_rounded,
-                color: theme.sealGold,
-                size: size * 0.16,
-              ),
+              Icon(TaliaIcons.mushaf, color: theme.sealGold, size: size * 0.16),
               const SizedBox(height: 2),
               Text(
                 'تالية القرآن',

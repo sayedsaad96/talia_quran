@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
@@ -169,11 +170,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                   IconButton(
                     key: const ValueKey('free-tasbeeh-reset-button'),
                     tooltip: context.l10n.azkarTasbeehResetTooltip,
-                    icon: Icon(
-                      Icons.refresh_rounded,
-                      color: hintColor,
-                      size: 22,
-                    ),
+                    icon: Icon(TaliaIcons.refresh, color: hintColor, size: 22),
                     onPressed: _resetCounter,
                   ),
                   Text(

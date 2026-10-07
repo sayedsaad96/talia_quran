@@ -1,12 +1,12 @@
 import 'dart:async';
 // lib/features/memorization_plus/presentation/pages/v2/v2_memorizing_page.dart
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/memorization/v2/hint_usage.dart';
 import '../../cubits/memorization_session_cubit.dart';
 import 'v2_session_widgets.dart';
@@ -52,11 +52,11 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
 
     return V2PhaseScaffold(
       session: session,
-      icon: Icons.psychology_rounded,
+      icon: TaliaIcons.hifz,
       title: context.l10n.v2MemorizingTitle,
       subtitle: context.l10n.v2MemorizingSubtitle,
       primaryActionLabel: context.l10n.v2ReadyToRecite,
-      primaryActionIcon: Icons.mic_rounded,
+      primaryActionIcon: TaliaIcons.mic,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().advanceToReciting(),
       children: [
@@ -86,19 +86,19 @@ class _V2MemorizingPageState extends State<V2MemorizingPage> {
           children: [
             V2HintButton(
               label: context.l10n.v2FirstWordHint,
-              icon: Icons.short_text_rounded,
+              icon: TaliaIcons.shortText,
               onPressed: () => _useHint(V2HintLevel.firstWord),
             ),
             V2HintButton(
               key: const Key('v2-first-letters-hint'),
               label: context.l10n.v2FirstLettersHint,
-              icon: Icons.text_fields_rounded,
+              icon: TaliaIcons.textSize,
               onPressed: () =>
                   _useHint(V2HintLevel.firstWord, firstLetters: true),
             ),
             V2HintButton(
               label: context.l10n.v2ShowAyahHint,
-              icon: Icons.visibility_rounded,
+              icon: TaliaIcons.show,
               onPressed: () => _useHint(V2HintLevel.fullAyah),
             ),
           ],

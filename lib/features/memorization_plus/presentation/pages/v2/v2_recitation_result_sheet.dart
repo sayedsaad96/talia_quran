@@ -1,3 +1,4 @@
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_recitation_result_sheet.dart
 //
@@ -112,8 +113,8 @@ class _ResultHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = result.passed
-        ? Icons.check_circle_rounded
-        : Icons.error_outline_rounded;
+        ? TaliaIcons.checkCircleFilled
+        : TaliaIcons.error;
     final title = result.passed
         ? (result.similarityScore != null && result.similarityScore! >= 0.999
               ? context.l10n.v2ResultExcellent
@@ -274,7 +275,7 @@ class _ResultActions extends StatelessWidget {
         style: FilledButton.styleFrom(backgroundColor: accent),
         onPressed: () =>
             Navigator.of(context).pop(V2RecitationResultAction.dismiss),
-        icon: const Icon(Icons.arrow_forward_rounded),
+        icon: const Icon(TaliaIcons.arrowForward),
         label: Text(context.l10n.v2ResultContinue),
       );
     }
@@ -287,7 +288,7 @@ class _ResultActions extends StatelessWidget {
           style: FilledButton.styleFrom(backgroundColor: accent),
           onPressed: () =>
               Navigator.of(context).pop(V2RecitationResultAction.retryNow),
-          icon: const Icon(Icons.mic_rounded),
+          icon: const Icon(TaliaIcons.mic),
           label: Text(context.l10n.v2ResultRetryNow),
         ),
         // A near miss keeps the learner in recitation — no remediation step.
@@ -297,7 +298,7 @@ class _ResultActions extends StatelessWidget {
             key: const Key('v2-result-review-ayah'),
             onPressed: () =>
                 Navigator.of(context).pop(V2RecitationResultAction.reviewAyah),
-            icon: const Icon(Icons.menu_book_rounded),
+            icon: const Icon(TaliaIcons.mushaf),
             label: Text(context.l10n.v2ResultReviewAyah),
           ),
         ],

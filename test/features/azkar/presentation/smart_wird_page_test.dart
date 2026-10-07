@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/azkar/data/datasources/smart_wird_progress_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
@@ -29,13 +30,13 @@ class _StubRepo implements AzkarRepository {
 }
 
 Zikr _zikr(String id, AzkarCategory category) => Zikr(
-      id: id,
-      text: 'نص تجريبي $id',
-      transliteration: '',
-      translation: '',
-      totalCount: 2,
-      category: category,
-    );
+  id: id,
+  text: 'نص تجريبي $id',
+  transliteration: '',
+  translation: '',
+  totalCount: 2,
+  category: category,
+);
 
 void main() {
   late SharedPreferences prefs;
@@ -78,8 +79,9 @@ void main() {
     );
   }
 
-  testWidgets('session composes from corpus and completes with reset option',
-      (tester) async {
+  testWidgets('session composes from corpus and completes with reset option', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildApp(SmartWirdPage(currentTime: DateTime(2026, 9, 25, 9))),
     );
@@ -105,8 +107,9 @@ void main() {
     expect(find.text('اكتمل الورد الذكي'), findsOneWidget);
   });
 
-  testWidgets('progress persists for resume across widget rebuilds',
-      (tester) async {
+  testWidgets('progress persists for resume across widget rebuilds', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildApp(SmartWirdPage(currentTime: DateTime(2026, 9, 25, 9))),
     );
@@ -125,8 +128,9 @@ void main() {
     expect(saved!.counts, isNotEmpty);
   });
 
-  testWidgets('resume restores counts and jumps to first unfinished card',
-      (tester) async {
+  testWidgets('resume restores counts and jumps to first unfinished card', (
+    tester,
+  ) async {
     // Pre-seed a partial session under the same injected clock key the page
     // will read (2026-9-25).
     final store = SmartWirdProgressStore(prefs);
@@ -222,7 +226,7 @@ void main() {
     // Card 1 (m-1) is showing; card 2 (g-1) has not been built yet.
     expect(find.text('نص تجريبي g-1'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
+    await tester.tap(find.byIcon(TaliaIcons.listBulleted));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(

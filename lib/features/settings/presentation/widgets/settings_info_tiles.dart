@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -38,7 +39,7 @@ class TutorialGuideTile extends StatelessWidget {
                 color: primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.menu_book_rounded, color: primary, size: 22),
+              child: Icon(TaliaIcons.mushaf, color: primary, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -95,7 +96,11 @@ class PrivacyPolicyTile extends StatelessWidget {
                 color: AppColors.info.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.privacy_tip_outlined, color: AppColors.info, size: 22),
+              child: const Icon(
+                TaliaIcons.shield,
+                color: AppColors.info,
+                size: 22,
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -152,7 +157,7 @@ class SourcesLicensesTile extends StatelessWidget {
                 color: primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.library_books_outlined, color: primary, size: 22),
+              child: Icon(TaliaIcons.library, color: primary, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -213,7 +218,9 @@ class AboutTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Center(
                       child: Image.asset(
@@ -240,10 +247,15 @@ class AboutTile extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusFull,
+                                ),
                               ),
                               child: Text(
                                 'v$version ($buildNumber)',
@@ -289,9 +301,7 @@ class ShareAppTile extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        SharePlus.instance.share(
-          ShareParams(text: context.l10n.shareAppText),
-        );
+        SharePlus.instance.share(ShareParams(text: context.l10n.shareAppText));
       },
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Padding(
@@ -308,7 +318,7 @@ class ShareAppTile extends StatelessWidget {
                 color: primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.share_rounded, color: primary, size: 22),
+              child: Icon(TaliaIcons.share, color: primary, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -333,7 +343,7 @@ class ShareAppTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.open_in_new_rounded, size: 18, color: subtextColor),
+            Icon(TaliaIcons.externalLink, size: 18, color: subtextColor),
           ],
         ),
       ),

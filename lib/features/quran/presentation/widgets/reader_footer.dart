@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Bottom bar of the adult Mushaf reader (presentation only).
@@ -96,7 +97,7 @@ class ReaderFooter extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle_rounded, color: accent, size: 16),
+                    Icon(TaliaIcons.checkCircleFilled, color: accent, size: 16),
                     const SizedBox(width: AppSpacing.xs),
                     Flexible(
                       child: Text(

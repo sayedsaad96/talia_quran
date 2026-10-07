@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
@@ -61,10 +62,7 @@ class SettingsHubBody extends StatelessWidget {
             return Column(
               children: [
                 SettingsDivider(isDark: isDark),
-                DeleteAccountTile(
-                  isDark: isDark,
-                  email: authState.user.email,
-                ),
+                DeleteAccountTile(isDark: isDark, email: authState.user.email),
               ],
             );
           },
@@ -81,14 +79,14 @@ class SettingsHubBody extends StatelessWidget {
       children: [
         SettingsInlineHeader(
           isDark: isDark,
-          icon: Icons.translate_rounded,
+          icon: TaliaIcons.translate,
           title: l10n.language,
         ),
         LocaleSettingTile(isDark: isDark),
         SettingsDivider(isDark: isDark),
         SettingsInlineHeader(
           isDark: isDark,
-          icon: Icons.palette_rounded,
+          icon: TaliaIcons.palette,
           title: l10n.theme,
         ),
         ThemeSettingTile(isDark: isDark),
@@ -103,7 +101,7 @@ class SettingsHubBody extends StatelessWidget {
       children: [
         _destination(
           context,
-          icon: Icons.auto_stories_rounded,
+          icon: TaliaIcons.reading,
           title: l10n.settingsSectionQuranMemorization,
           subtitle: _pathSubtitle(context),
           page: BlocProvider.value(
@@ -114,7 +112,7 @@ class SettingsHubBody extends StatelessWidget {
         SettingsDivider(isDark: isDark),
         _destination(
           context,
-          icon: Icons.schedule_rounded,
+          icon: TaliaIcons.clock,
           title: l10n.homePrayerTimes,
           subtitle: l10n.prayerCompanionSettingsTitle,
           page: const PrayerSettingsPage(),
@@ -130,7 +128,7 @@ class SettingsHubBody extends StatelessWidget {
       children: [
         _destination(
           context,
-          icon: Icons.notifications_active_rounded,
+          icon: TaliaIcons.bell,
           title: l10n.notifications,
           subtitle: l10n.settingsHubReminders,
           page: const NotificationSettingsPage(),
@@ -144,7 +142,7 @@ class SettingsHubBody extends StatelessWidget {
       children: [
         _destination(
           context,
-          icon: Icons.family_restroom_rounded,
+          icon: TaliaIcons.family,
           title: context.l10n.settingsSectionKidsGuardian,
           page: BlocProvider.value(
             value: context.read<SettingsCubit>(),
@@ -162,7 +160,7 @@ class SettingsHubBody extends StatelessWidget {
       children: [
         _destination(
           context,
-          icon: Icons.info_outline_rounded,
+          icon: TaliaIcons.info,
           title: l10n.settingsSectionAboutTalia,
           subtitle:
               '${l10n.settingsSectionHelpTutorial}${context.listSeparator}${l10n.settingsSectionPrivacySecurity}',

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 
@@ -48,7 +49,7 @@ class FamilyRemoteStatusBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.cloud_off_rounded, color: scheme.onErrorContainer),
+            Icon(TaliaIcons.cloudOff, color: scheme.onErrorContainer),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -170,9 +171,9 @@ class _LoopProgressStar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final star = Icon(
+    final star = TaliaIcon(
       key: ValueKey('kids-loop-star-$index'),
-      isReached ? Icons.star_rounded : Icons.star_outline_rounded,
+      isReached ? TaliaKidsIcons.starFilled : TaliaKidsIcons.star,
       size: 38,
       color: isReached
           ? KidsTheme.goldStar

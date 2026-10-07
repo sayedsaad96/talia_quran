@@ -29,6 +29,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/app_initializer.dart';
@@ -224,7 +225,7 @@ class _JourneyTopBar extends StatelessWidget {
                       onPressed: onBack,
                       tooltip: context.l10n.previous,
                       icon: const Icon(
-                        Icons.arrow_back_rounded,
+                        TaliaIcons.arrowBack,
                         size: 20,
                         color: subTextColor,
                       ),

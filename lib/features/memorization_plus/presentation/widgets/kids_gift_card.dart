@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
@@ -20,17 +22,17 @@ class KidsGiftCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final (icon, status) = switch (reward.status) {
-      ParentRewardStatus.locked => (Icons.lock_rounded, l10n.kidsGiftLocked),
+      ParentRewardStatus.locked => (TaliaKidsIcons.lock, l10n.kidsGiftLocked),
       ParentRewardStatus.unlocked => (
-        Icons.card_giftcard_rounded,
+        TaliaKidsIcons.gift,
         l10n.kidsGiftUnlocked,
       ),
       ParentRewardStatus.requested => (
-        Icons.hourglass_top_rounded,
+        TaliaKidsIcons.hourglass,
         l10n.kidsGiftRequested,
       ),
       ParentRewardStatus.claimed => (
-        Icons.celebration_rounded,
+        TaliaKidsIcons.celebrate,
         l10n.kidsGiftClaimed,
       ),
     };
@@ -47,7 +49,7 @@ class KidsGiftCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: KidsTheme.houseBrown, size: 32),
+          TaliaFeatureDoor(icon: icon, color: AppColors.kidsDoorSun, size: 40),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

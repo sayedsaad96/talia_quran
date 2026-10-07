@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/prayer_time_formatter.dart';
@@ -185,37 +186,37 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
         key: 'fajr',
         name: l10n.prayerFajr,
         time: widget.snapshot.fajr,
-        icon: Icons.wb_twilight_rounded,
+        icon: TaliaIcons.sunrise,
       ),
       _PrayerData(
         key: 'sunrise',
         name: l10n.prayerSunrise,
         time: widget.snapshot.sunrise,
-        icon: Icons.wb_sunny_outlined,
+        icon: TaliaIcons.sun,
       ),
       _PrayerData(
         key: 'dhuhr',
         name: l10n.prayerDhuhr,
         time: widget.snapshot.dhuhr,
-        icon: Icons.wb_sunny_rounded,
+        icon: TaliaIcons.sun,
       ),
       _PrayerData(
         key: 'asr',
         name: l10n.prayerAsr,
         time: widget.snapshot.asr,
-        icon: Icons.wb_cloudy_rounded,
+        icon: TaliaIcons.cloudSun,
       ),
       _PrayerData(
         key: 'maghrib',
         name: l10n.prayerMaghrib,
         time: widget.snapshot.maghrib,
-        icon: Icons.nights_stay_outlined,
+        icon: TaliaIcons.moon,
       ),
       _PrayerData(
         key: 'isha',
         name: l10n.prayerIsha,
         time: widget.snapshot.isha,
-        icon: Icons.nights_stay_rounded,
+        icon: TaliaIcons.moon,
       ),
     ];
 
@@ -274,7 +275,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                       ),
                     ),
                     child: Icon(
-                      Icons.mosque_rounded,
+                      TaliaIcons.prayer,
                       color: themeSkin.gold,
                       size: 24,
                     ),
@@ -377,7 +378,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                   ),
                   IconButton(
                     icon: Icon(
-                      Icons.close_rounded,
+                      TaliaIcons.close,
                       color: themeSkin.textSecondary,
                     ),
                     onPressed: () => Navigator.of(context).pop(),
@@ -602,7 +603,7 @@ class _PrayerCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.schedule_rounded,
+                                TaliaIcons.clock,
                                 size: 11,
                                 color: skin.gold,
                               ),
@@ -641,7 +642,7 @@ class _PrayerCard extends StatelessWidget {
                       // Companion confirms (companionStatus below).
                       const SizedBox(width: AppSpacing.xs),
                       Icon(
-                        Icons.history_rounded,
+                        TaliaIcons.history,
                         size: 16,
                         color: skin.textSecondary.withValues(alpha: 0.7),
                       ),

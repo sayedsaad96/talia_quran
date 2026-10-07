@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -26,7 +27,7 @@ class GuardianUnlinkTile extends StatelessWidget {
           color: AppColors.error.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.link_off_rounded, color: AppColors.error),
+        child: const Icon(TaliaIcons.linkOff, color: AppColors.error),
       ),
       title: Text(
         context.l10n.guardianUnlinkTileTitle,

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -59,7 +60,7 @@ class MemorizationPathSummaryTile extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.route_rounded,
+              TaliaIcons.journey,
               color: hasPath ? primary : AppColors.error,
             ),
           ),
@@ -141,10 +142,7 @@ class ResetMemorizationPathTile extends StatelessWidget {
                 color: AppColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.restart_alt_rounded,
-                color: AppColors.warning,
-              ),
+              child: const Icon(TaliaIcons.replay, color: AppColors.warning),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -210,13 +208,13 @@ class _ResetMemorizationPathDialogState
             Text(context.l10n.resetMemorizationIdentityWarning),
             const SizedBox(height: AppSpacing.md),
             SettingsChecklistLine(
-              icon: Icons.check_circle_rounded,
+              icon: TaliaIcons.checkCircleFilled,
               color: AppColors.primary,
               text: context.l10n.settingsResetPathKeeps,
             ),
             const SizedBox(height: AppSpacing.sm),
             SettingsChecklistLine(
-              icon: Icons.warning_amber_rounded,
+              icon: TaliaIcons.warning,
               color: AppColors.warning,
               text: context.l10n.settingsResetPathChanges,
             ),
@@ -342,7 +340,7 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
         children: [
           Row(
             children: [
-              Icon(Icons.mic_rounded, color: primary),
+              Icon(TaliaIcons.mic, color: primary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -434,7 +432,7 @@ class AccuracyOptionCard extends StatelessWidget {
                 ),
                 child: isSelected
                     ? const Icon(
-                        Icons.check_rounded,
+                        TaliaIcons.check,
                         color: Colors.white,
                         size: 14,
                       )

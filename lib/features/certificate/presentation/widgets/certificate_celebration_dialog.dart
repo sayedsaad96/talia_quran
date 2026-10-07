@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -166,7 +167,7 @@ class _CertificateCelebrationDialogState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.workspace_premium_rounded,
+                      TaliaIcons.certificate,
                       color: AppColors.gold,
                       size: 64,
                     ),
@@ -252,11 +253,11 @@ class _AwardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = switch (award.type) {
-      CertificateType.juz => Icons.menu_book_rounded,
-      CertificateType.surah => Icons.verified_rounded,
-      CertificateType.halfQuran => Icons.auto_stories_rounded,
-      CertificateType.fullQuran => Icons.workspace_premium_rounded,
-      CertificateType.khatmahReading => Icons.auto_stories_rounded,
+      CertificateType.juz => TaliaIcons.mushaf,
+      CertificateType.surah => TaliaIcons.verified,
+      CertificateType.halfQuran => TaliaIcons.reading,
+      CertificateType.fullQuran => TaliaIcons.certificate,
+      CertificateType.khatmahReading => TaliaIcons.reading,
     };
 
     return Container(

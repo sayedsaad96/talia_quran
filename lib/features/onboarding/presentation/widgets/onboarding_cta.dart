@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -81,7 +82,7 @@ class OnboardingPrimaryCta extends StatelessWidget {
                     if (trailingArrow) ...[
                       const SizedBox(width: AppSpacing.sm),
                       const Icon(
-                        Icons.arrow_forward_rounded,
+                        TaliaIcons.arrowForward,
                         color: Colors.white,
                         size: 20,
                       ),

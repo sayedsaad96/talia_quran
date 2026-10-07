@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/usecases/search_quran_usecase.dart';
 
@@ -65,9 +66,7 @@ class _QuranSearchPageState extends State<QuranSearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.tokens.background,
-      appBar: AppBar(
-        title: Text(context.l10n.homeSearchTitle),
-      ),
+      appBar: AppBar(title: Text(context.l10n.homeSearchTitle)),
       body: Column(
         children: [
           Padding(
@@ -78,7 +77,7 @@ class _QuranSearchPageState extends State<QuranSearchPage> {
               onChanged: _onChanged,
               decoration: InputDecoration(
                 hintText: context.l10n.searchSurah,
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Icon(TaliaIcons.search),
               ),
             ),
           ),
@@ -104,14 +103,14 @@ class _QuranSearchPageState extends State<QuranSearchPage> {
       children: [
         for (final surah in _result.surahs)
           ListTile(
-            leading: const Icon(Icons.menu_book_rounded),
+            leading: const Icon(TaliaIcons.mushaf),
             title: Text(context.isArabic ? surah.nameAr : surah.nameEn),
             subtitle: Text(context.l10n.surah),
             onTap: () => context.push('/quran/surah/${surah.id}'),
           ),
         for (final ayah in _result.ayahs.take(40))
           ListTile(
-            leading: const Icon(Icons.format_quote_rounded),
+            leading: const Icon(TaliaIcons.quote),
             title: Text(
               ayah.text,
               maxLines: 2,

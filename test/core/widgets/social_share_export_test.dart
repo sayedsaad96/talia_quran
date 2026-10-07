@@ -700,6 +700,9 @@ Future<void> _loadRealFonts() async {
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
   ]);
+  // Talia icon system (the app's only icon fonts).
+  await load('TaliaIcons', ['assets/fonts/TaliaIcons/TaliaIcons.ttf']);
+  await load('TaliaIconsKids', ['assets/fonts/TaliaIcons/TaliaIconsKids.ttf']);
   await load('Reem_Kufi', ['assets/fonts/Reem_Kufi/ReemKufi-Variable.ttf']);
 
   // Icon glyphs (badge icons, medallion icons, footer glyphs) come from the

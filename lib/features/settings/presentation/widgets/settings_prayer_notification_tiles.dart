@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/adhan_preview_service.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/notification_service.dart';
@@ -246,7 +247,7 @@ class _PrayerNotificationSettingsSectionState
                   color: primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.mosque_rounded, color: primary, size: 22),
+                child: Icon(TaliaIcons.prayer, color: primary, size: 22),
               ),
               title: Text(
                 context.l10n.notificationSettingsPrayerTimes,
@@ -285,7 +286,7 @@ class _PrayerNotificationSettingsSectionState
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: widget.onConfigurePrayerTimes,
-                    icon: const Icon(Icons.schedule_rounded, size: 18),
+                    icon: const Icon(TaliaIcons.clock, size: 18),
                     label: Text(context.l10n.notificationConfigurePrayerTimes),
                   ),
                 ),
@@ -443,7 +444,7 @@ class _PrayerNotificationSettingsSectionState
                             ),
                           );
                         },
-                        icon: const Icon(Icons.alarm_rounded, size: 16),
+                        icon: const Icon(TaliaIcons.alarm, size: 16),
                         label: Text(
                           context.l10n.notificationExactAlarmRequest,
                           style: AppTypography.labelSmall.copyWith(
@@ -497,7 +498,7 @@ class _PrayerNotificationSettingsSectionState
           ListTile(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            leading: Icon(Icons.graphic_eq_rounded, color: primary, size: 22),
+            leading: Icon(TaliaIcons.waveform, color: primary, size: 22),
             title: Text(
               l10n.muezzinPickerTitle,
               style: AppTypography.bodyMedium.copyWith(
@@ -512,7 +513,7 @@ class _PrayerNotificationSettingsSectionState
               overflow: TextOverflow.ellipsis,
             ),
             trailing: Icon(
-              Icons.chevron_right_rounded,
+              TaliaIcons.chevronForward,
               color: subtextColor,
               size: 22,
             ),
@@ -550,7 +551,7 @@ class _NotificationPermissionWarning extends StatelessWidget {
           Row(
             children: [
               const Icon(
-                Icons.warning_amber_rounded,
+                TaliaIcons.warning,
                 color: AppColors.warning,
                 size: 22,
               ),
@@ -574,7 +575,7 @@ class _NotificationPermissionWarning extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: openAppSettings,
-            icon: const Icon(Icons.settings_outlined, size: 18),
+            icon: const Icon(TaliaIcons.settings, size: 18),
             label: Text(context.l10n.notificationOpenSystemSettings),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.warning,
@@ -818,7 +819,7 @@ class _MuezzinPickerSheetState extends State<_MuezzinPickerSheet> {
             ),
       trailing: IconButton(
         icon: Icon(
-          previewing ? Icons.stop_circle_rounded : Icons.play_circle_rounded,
+          previewing ? TaliaIcons.stopCircleFilled : TaliaIcons.playCircleFilled,
           color: widget.primary,
         ),
         tooltip: previewing

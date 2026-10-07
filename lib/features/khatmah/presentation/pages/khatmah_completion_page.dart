@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../khatmah_localizations.dart';
 import '../khatmah_setup_prefill.dart';
@@ -206,7 +207,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     ),
                     child: Center(
                       child: Icon(
-                        Icons.workspace_premium_rounded,
+                        TaliaIcons.certificate,
                         size: 52,
                         color: gold,
                       ),
@@ -263,7 +264,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                           value: context.numText(
                             KhatmahSchedulingEngine.totalPages,
                           ),
-                          icon: Icons.auto_stories_rounded,
+                          icon: TaliaIcons.reading,
                           color: gold,
                         ),
 
@@ -273,14 +274,14 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                             daysTaken,
                             daysTakenStr,
                           ),
-                          icon: Icons.calendar_today_rounded,
+                          icon: TaliaIcons.calendar,
                           color: AppColors.primaryLight,
                         ),
 
                         _StatItem(
                           label: context.l10n.khatmahCompleted,
                           value: completedDateStr,
-                          icon: Icons.check_circle_outline_rounded,
+                          icon: TaliaIcons.checkCircle,
                           color: Colors.green,
                         ),
                       ],
@@ -381,7 +382,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                           },
                         );
                       },
-                      icon: const Icon(Icons.workspace_premium_outlined),
+                      icon: const Icon(TaliaIcons.certificate),
                       label: Text(context.l10n.myCertificates),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -409,7 +410,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.menu_book_rounded),
+                    icon: const Icon(TaliaIcons.mushaf),
                     label: Text(
                       context.l10n.khatmahReadDuAKhatmAlQuran,
                       style: AppTypography.labelLarge.copyWith(
@@ -435,7 +436,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.share_rounded),
+                    icon: const Icon(TaliaIcons.share),
                     label: Text(
                       context.l10n.khatmahShareAchievement,
                       style: AppTypography.labelLarge.copyWith(
@@ -459,7 +460,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.replay_rounded),
+                    icon: const Icon(TaliaIcons.replay),
                     label: Text(context.l10n.khatmahStartNewKhatmah),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -478,7 +479,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.repeat_rounded),
+                    icon: const Icon(TaliaIcons.repeat),
                     label: Text(context.l10n.khatmahRepeatSameSettings),
                   ),
 
@@ -497,7 +498,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     style: TextButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    icon: const Icon(Icons.home_rounded),
+                    icon: const Icon(TaliaIcons.home),
                     label: Text(
                       context.l10n.khatmahBackToHome,
                       style: AppTypography.labelMedium.copyWith(

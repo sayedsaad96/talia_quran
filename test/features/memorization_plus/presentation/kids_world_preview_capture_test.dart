@@ -104,6 +104,11 @@ void main() {
       'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
       'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
     ]);
+    // Talia icon system (the app's only icon fonts).
+    await _loadFont('TaliaIcons', ['assets/fonts/TaliaIcons/TaliaIcons.ttf']);
+    await _loadFont('TaliaIconsKids', [
+      'assets/fonts/TaliaIcons/TaliaIconsKids.ttf',
+    ]);
     try {
       await _loadFont('MaterialIcons', ['fonts/MaterialIcons-Regular.otf']);
     } catch (_) {

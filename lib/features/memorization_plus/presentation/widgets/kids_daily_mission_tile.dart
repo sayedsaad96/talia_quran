@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/services/kids_daily_missions.dart';
 import '../theme/kids_theme.dart';
@@ -35,9 +36,9 @@ class KidsDailyMissionTile extends StatelessWidget {
       _ => l10n.kidsDailyMissionsTitle,
     };
     final icon = switch (mission.kind) {
-      KidsDailyMissionKind.reading => Icons.menu_book_rounded,
-      KidsDailyMissionKind.home => Icons.home_rounded,
-      _ => Icons.flag_rounded,
+      KidsDailyMissionKind.reading => TaliaKidsIcons.mushaf,
+      KidsDailyMissionKind.home => TaliaKidsIcons.home,
+      _ => TaliaKidsIcons.flag,
     };
     if (mission.kind == KidsDailyMissionKind.home) {
       return _buildHome(context, title, icon);
@@ -65,7 +66,7 @@ class KidsDailyMissionTile extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  TaliaIcon(
                     icon,
                     color: _done
                         ? KidsTheme.successGreen
@@ -103,8 +104,8 @@ class KidsDailyMissionTile extends StatelessWidget {
                       ),
                     )
                   else
-                    const Icon(
-                      Icons.chevron_right_rounded,
+                    const TaliaIcon(
+                      TaliaKidsIcons.chevronForward,
                       color: KidsTheme.houseBrown,
                     ),
                 ],
@@ -139,7 +140,7 @@ class KidsDailyMissionTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
+                  TaliaIcon(
                     icon,
                     color: _done
                         ? KidsTheme.successGreen
@@ -188,7 +189,7 @@ class KidsDailyMissionTile extends StatelessWidget {
                 KidsChunkyButton(
                   key: const ValueKey('kids-home-mission-report'),
                   label: l10n.kidsHomeMissionReportAction,
-                  icon: Icons.check_rounded,
+                  icon: TaliaKidsIcons.check,
                   height: 56,
                   onPressed: onReport,
                 ),

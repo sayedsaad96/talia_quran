@@ -2,6 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
@@ -62,8 +63,8 @@ void main() {
 
       // The forward arrow mirrors itself under RTL; a hand-picked "back"
       // arrow would point the child backwards.
-      expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.byIcon(TaliaKidsIcons.arrowForward), findsOneWidget);
+      expect(find.byIcon(TaliaKidsIcons.arrowBack), findsNothing);
     });
 
     testWidgets('a review without stars never shows "+0 stars" (K23)', (

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
@@ -133,7 +134,7 @@ class KidsMissionCard extends StatelessWidget {
 
     final continueButton = KidsChunkyButton(
       onPressed: onContinue,
-      icon: Icons.play_arrow_rounded,
+      icon: TaliaKidsIcons.play,
       label: context.l10n.kidsGamifiedContinueNow,
       maxLines: 1,
     );

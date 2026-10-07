@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/constants/xp_constants.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 import 'package:talia_quran/core/router/app_router.dart';
@@ -64,8 +65,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.search_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.settings_suggest_rounded), findsOneWidget);
+      expect(find.byIcon(TaliaIcons.search), findsOneWidget);
+      expect(find.byIcon(TaliaIcons.settingsSmart), findsOneWidget);
       expect(find.text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'), findsNothing);
     });
 

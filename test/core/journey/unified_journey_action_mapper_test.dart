@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/journey/unified_journey_action_mapper.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -39,7 +40,7 @@ void main() {
       ),
     );
     expect(reading.title, captured.l10n.dailyWirdTitle);
-    expect(reading.icon, Icons.menu_book_rounded);
+    expect(reading.icon, TaliaIcons.mushaf);
 
     final backlog = mapper.map(
       captured,
@@ -53,7 +54,7 @@ void main() {
       ),
     );
     expect(backlog.title, captured.l10n.reviewBacklogTitle);
-    expect(backlog.icon, Icons.history_rounded);
+    expect(backlog.icon, TaliaIcons.history);
 
     final coach = mapper.map(
       captured,
@@ -75,7 +76,7 @@ void main() {
       ),
     );
     expect(coach.title, captured.l10n.journeyMemorizeNewAyahsTitle);
-    expect(coach.icon, Icons.auto_awesome_rounded);
+    expect(coach.icon, TaliaIcons.sparkle);
   });
 }
 

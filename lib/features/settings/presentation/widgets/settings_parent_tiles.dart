@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -43,10 +44,7 @@ class ParentDashboardTile extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.family_restroom_rounded,
-                color: AppColors.primary,
-              ),
+              child: const Icon(TaliaIcons.family, color: AppColors.primary),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -69,9 +67,7 @@ class ParentDashboardTile extends StatelessWidget {
                 ],
               ),
             ),
-            SettingsTrailingChevron(
-              color: context.tokens.textSecondary,
-            ),
+            SettingsTrailingChevron(color: context.tokens.textSecondary),
           ],
         ),
       ),
@@ -119,10 +115,7 @@ class ParentModeToggle extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.family_restroom_rounded,
-              color: context.tokens.accent,
-            ),
+            child: Icon(TaliaIcons.family, color: context.tokens.accent),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter.dart';
@@ -39,64 +40,67 @@ void main() {
     expect(find.text('الفاتحة'), findsNothing);
   });
 
-  testWidgets('renders Mushaf badge, equalizer, surah name, reciter, and controls when active', (tester) async {
-    const activeState = QuranAudioPlayerState(
-      status: PlaybackStatus.playing,
-      currentSurahId: 1,
-      currentAyahNumber: 1,
-      reciter: QuranReciter.alafasy,
-      scope: PlayScope.surah,
-      hasNext: true,
-      hasPrevious: false,
-      currentAyah: Ayah(
-        number: 1,
-        surahId: 1,
-        text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-        numberInSurah: 1,
-      ),
-    );
+  testWidgets(
+    'renders Mushaf badge, equalizer, surah name, reciter, and controls when active',
+    (tester) async {
+      const activeState = QuranAudioPlayerState(
+        status: PlaybackStatus.playing,
+        currentSurahId: 1,
+        currentAyahNumber: 1,
+        reciter: QuranReciter.alafasy,
+        scope: PlayScope.surah,
+        hasNext: true,
+        hasPrevious: false,
+        currentAyah: Ayah(
+          number: 1,
+          surahId: 1,
+          text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+          numberInSurah: 1,
+        ),
+      );
 
-    when(() => mockCubit.state).thenReturn(activeState);
-    when(() => mockCubit.stream).thenAnswer((_) => const Stream.empty());
+      when(() => mockCubit.state).thenReturn(activeState);
+      when(() => mockCubit.stream).thenAnswer((_) => const Stream.empty());
 
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ar'),
-        supportedLocales: const [Locale('ar'), Locale('en')],
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: Scaffold(
-          body: BlocProvider<QuranAudioPlayerCubit>.value(
-            value: mockCubit,
-            child: const QuranMiniPlayerBar(),
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ar'),
+          supportedLocales: const [Locale('ar'), Locale('en')],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: Scaffold(
+            body: BlocProvider<QuranAudioPlayerCubit>.value(
+              value: mockCubit,
+              child: const QuranMiniPlayerBar(),
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    // Verify Mushaf badge icon is rendered
-    expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
+      // Verify Mushaf badge icon is rendered
+      expect(find.byIcon(TaliaIcons.mushaf), findsOneWidget);
 
-    // Verify Surah Name
-    expect(find.text('الفاتحة'), findsOneWidget);
+      // Verify Surah Name
+      expect(find.text('الفاتحة'), findsOneWidget);
 
-    // Verify Ayah pill
-    expect(find.text('آية ١'), findsOneWidget);
+      // Verify Ayah pill
+      expect(find.text('آية ١'), findsOneWidget);
 
-    // Verify Reciter name
-    expect(find.text('مشاري راشد العفاسي'), findsOneWidget);
+      // Verify Reciter name
+      expect(find.text('مشاري راشد العفاسي'), findsOneWidget);
 
-    // Verify Animated Equalizer is present
-    expect(find.byType(QuranAudioEqualizer), findsOneWidget);
+      // Verify Animated Equalizer is present
+      expect(find.byType(QuranAudioEqualizer), findsOneWidget);
 
-    // Verify Play/Pause button (pause icon since isPlaying)
-    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      // Verify Play/Pause button (pause icon since isPlaying)
+      expect(find.byIcon(TaliaIcons.pause), findsOneWidget);
 
-    // Verify Close button
-    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
-  });
+      // Verify Close button
+      expect(find.byIcon(TaliaIcons.close), findsOneWidget);
+    },
+  );
 }

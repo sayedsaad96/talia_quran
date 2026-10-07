@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'onboarding_cta.dart';
@@ -43,7 +44,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.auto_stories_rounded,
+                      TaliaIcons.reading,
                       size: 15,
                       color: AppColors.primaryLight,
                     ),
@@ -226,7 +227,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.headphones_rounded,
+                                TaliaIcons.listen,
                                 size: 17,
                                 color: OnboardingPalette.nightTealText,
                               ),
@@ -311,7 +312,7 @@ class OnboardingMushafBentoView extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.menu_book_rounded,
+                                TaliaIcons.mushaf,
                                 size: 17,
                                 color: AppColors.goldLight,
                               ),

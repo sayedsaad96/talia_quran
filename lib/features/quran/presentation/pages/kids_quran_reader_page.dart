@@ -8,6 +8,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
@@ -349,8 +350,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
                     audio.currentPageNumber == pageNumber,
                 onTogglePageAudio: () =>
                     unawaited(_audioController.togglePage(pageNumber)),
-                confirmation:
-                    kidsReaderPageIsLoaded(state, _currentPageNumber)
+                confirmation: kidsReaderPageIsLoaded(state, _currentPageNumber)
                     ? _confirmation
                     : null,
                 isAudioPlaying: audio.isPlaying,
@@ -502,7 +502,7 @@ class _KidsQuranHeader extends StatelessWidget {
             onPressed: onBack,
             tooltip: context.l10n.kidsQuranBackToHome,
             // Mirrors itself under RTL: it points right in Arabic.
-            icon: Icon(Icons.arrow_back_rounded, color: accent),
+            icon: TaliaIcon(TaliaKidsIcons.arrowBack, color: accent),
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
@@ -511,7 +511,7 @@ class _KidsQuranHeader extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.auto_stories_rounded, color: accent, size: 18),
+                    TaliaIcon(TaliaKidsIcons.reading, color: accent, size: 18),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
@@ -592,7 +592,11 @@ class _KidsReaderConfirmBar extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle_rounded, color: accent, size: 18),
+                      TaliaIcon(
+                        TaliaKidsIcons.checkCircleFilled,
+                        color: accent,
+                        size: 18,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
                       Flexible(
                         child: Text(
@@ -612,7 +616,7 @@ class _KidsReaderConfirmBar extends StatelessWidget {
           child = KidsChunkyButton(
             key: const ValueKey('kids-reader-confirm-page'),
             label: l10n.kidsReaderConfirmPage,
-            icon: Icons.check_rounded,
+            icon: TaliaKidsIcons.check,
             tone: KidsButtonTone.green,
             height: 52,
             onPressed: () => unawaited(confirmation.confirm(pageNumber)),
@@ -667,7 +671,7 @@ class _KidsQuranFooter extends StatelessWidget {
             children: [
               // K26: the long press is the way to hear one ayah, so the tip
               // stays on screen instead of hiding in a first-run coach mark.
-              Icon(Icons.touch_app_rounded, color: accent, size: 18),
+              TaliaIcon(TaliaKidsIcons.tap, color: accent, size: 18),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
@@ -706,8 +710,8 @@ class _KidsQuranFooter extends StatelessWidget {
             FilledButton.icon(
               key: const ValueKey('kids-quran-page-audio'),
               onPressed: onToggle,
-              icon: Icon(
-                isPagePlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              icon: TaliaIcon(
+                isPagePlaying ? TaliaKidsIcons.pause : TaliaKidsIcons.play,
               ),
               label: Text(
                 isPagePlaying

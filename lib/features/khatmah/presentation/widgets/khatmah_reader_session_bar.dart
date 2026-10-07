@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/khatmah_cubit.dart';
@@ -46,7 +47,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           return _statusBar(
             context,
             context.l10n.khatmahIsPaused,
-            Icons.pause_circle_outline_rounded,
+            TaliaIcons.pauseCircle,
             onRetry: () => resolvedCubit!.resume(),
             actionLabel: context.l10n.khatmahResume,
             actionKey: const Key('khatmah_session_bar_resume_button'),
@@ -56,7 +57,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           return _statusBar(
             context,
             context.l10n.khatmahProgressNotSaved,
-            Icons.error_outline_rounded,
+            TaliaIcons.error,
             onRetry: resolvedCubit!.retryLastProgress,
           );
         }
@@ -123,7 +124,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.auto_stories_rounded, size: 16, color: gold),
+              Icon(TaliaIcons.reading, size: 16, color: gold),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
@@ -184,7 +185,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                           fallbackLocation: AppRoutes.khatmahDashboard,
                         );
                       },
-                  icon: Icon(Icons.exit_to_app_rounded, size: 14, color: gold),
+                  icon: Icon(TaliaIcons.logout, size: 14, color: gold),
                   label: Text(
                     context.l10n.khatmahSaveExit,
                     style: AppTypography.labelSmall.copyWith(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../cubits/family_dashboard_cubit.dart';
 
@@ -71,7 +72,7 @@ class _RemoveChildFromFamilyButtonState
               dimension: 18,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : const Icon(Icons.link_off_rounded),
+          : const Icon(TaliaIcons.linkOff),
       label: Text(context.l10n.parentDashboardRemoveChild),
     );
   }

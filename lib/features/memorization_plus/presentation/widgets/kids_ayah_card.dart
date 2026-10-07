@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/memorization_ayah_display.dart';
@@ -88,8 +89,8 @@ class KidsAyahCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.star_rounded,
+                        const TaliaIcon(
+                          TaliaKidsIcons.starFilled,
                           color: Colors.white,
                           size: 18,
                         ),
@@ -106,8 +107,8 @@ class KidsAyahCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Icon(
-                    Icons.auto_stories_rounded,
+                  TaliaIcon(
+                    TaliaKidsIcons.reading,
                     color: KidsTheme.houseBrown.withValues(alpha: 0.42),
                     size: 28,
                   ),
@@ -166,8 +167,8 @@ class _AudioStatusMessage extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
-            const Icon(
-              Icons.volume_off_rounded,
+            const TaliaIcon(
+              TaliaKidsIcons.volumeOff,
               color: KidsTheme.houseBrown,
               size: 20,
             ),

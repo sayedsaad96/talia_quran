@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../icons/talia_icons.dart';
 import '../share_card_content.dart';
 import '../share_card_palette.dart';
 import '../share_medal.dart';
@@ -98,7 +99,7 @@ class AwardHero extends StatelessWidget {
                   fontFamilyFallback: TaliaShareTypography.emojiFallback,
                 ),
               )
-            : Icon(Icons.emoji_events_rounded, color: palette.textAccent),
+            : Icon(TaliaIcons.trophy, color: palette.textAccent),
       ),
       if (title != null) _title(title),
       if (description != null)
@@ -110,7 +111,7 @@ class AwardHero extends StatelessWidget {
   List<Widget> _certificate(SocialShareCopy copy) {
     final code = _nonEmpty(data.verificationCode);
     return [
-      _medal(Icon(Icons.verified_rounded, color: palette.textAccent)),
+      _medal(Icon(TaliaIcons.verified, color: palette.textAccent)),
       _title(data.content),
       if (code != null) _line(copy.verificationCode(code), palette.textAccent),
     ];

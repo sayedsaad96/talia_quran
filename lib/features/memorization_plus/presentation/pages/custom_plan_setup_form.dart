@@ -29,7 +29,7 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
           _buildDropdownRow(
             label: context.l10n.customPlanFromSurah,
             value: _startSurahId,
-            icon: Icons.first_page_rounded,
+            icon: TaliaIcons.firstPage,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
@@ -47,7 +47,7 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
           _buildDropdownRow(
             label: context.l10n.customPlanToSurah,
             value: _endSurahId,
-            icon: Icons.last_page_rounded,
+            icon: TaliaIcons.lastPage,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
@@ -69,8 +69,8 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
               children: [
                 Icon(
                   directionForward
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
+                      ? TaliaIcons.progress
+                      : TaliaIcons.trendingDown,
                   color: primary,
                   size: 18,
                 ),
@@ -97,7 +97,7 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
           Row(
             children: [
               Icon(
-                Icons.format_list_numbered_rounded,
+                TaliaIcons.listNumbered,
                 color: context.tokens.textSecondary,
                 size: 20,
               ),

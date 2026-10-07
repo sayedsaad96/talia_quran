@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/router/app_router.dart';
@@ -68,10 +69,7 @@ Future<void> showMemorizationPathSettingsSheet(
                   color: AppColors.warning.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.restart_alt_rounded,
-                  color: AppColors.warning,
-                ),
+                child: const Icon(TaliaIcons.replay, color: AppColors.warning),
               ),
               title: Text(
                 ctx.l10n.resetMemorizationPathTileTitle,
@@ -182,7 +180,7 @@ Future<void> showMemorizationPathSettingsSheet(
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.admin_panel_settings_rounded,
+                    TaliaIcons.guardian,
                     color: AppColors.primary,
                   ),
                 ),
@@ -214,7 +212,7 @@ Future<void> showMemorizationPathSettingsSheet(
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.family_restroom_rounded,
+                    TaliaIcons.family,
                     color: AppColors.primary,
                   ),
                 ),

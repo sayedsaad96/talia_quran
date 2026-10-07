@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -79,7 +80,7 @@ class _GuardianLinkingView extends StatelessWidget {
                 children: [
                   const SizedBox(height: AppSpacing.xl),
                   const Icon(
-                    Icons.family_restroom_rounded,
+                    TaliaIcons.family,
                     color: AppColors.primary,
                     size: 64,
                   ),
@@ -128,7 +129,7 @@ class _GuardianLinkingView extends StatelessWidget {
                         OutlinedButton.icon(
                           onPressed: () =>
                               context.read<GuardianLinkingCubit>().load(),
-                          icon: const Icon(Icons.refresh_rounded),
+                          icon: const Icon(TaliaIcons.refresh),
                           label: Text(context.l10n.tryAgain),
                         ),
                       ],
@@ -238,7 +239,7 @@ class _GuardianLinkingLoadingState extends State<_GuardianLinkingLoading> {
                   .read<GuardianLinkingCubit>()
                   .continueWithoutGuardian(),
               // Mirrors itself under RTL: "continue" points left in Arabic.
-              icon: const Icon(Icons.arrow_forward_rounded),
+              icon: const Icon(TaliaIcons.arrowForward),
               label: Text(context.l10n.continueWithoutGuardian),
             ),
           ],
@@ -272,14 +273,14 @@ class _GuestGuardianLinkingCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: () => context.go(AppRoutes.login),
-            icon: const Icon(Icons.login_rounded),
+            icon: const Icon(TaliaIcons.login),
             label: Text(context.l10n.guardianSignInAction),
           ),
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.memorizationPlusKidsHome),
             // Mirrors itself under RTL: "continue" points left in Arabic.
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const Icon(TaliaIcons.arrowForward),
             label: Text(context.l10n.guardianGuestContinueKids),
           ),
         ],
@@ -306,7 +307,7 @@ class _ChoiceActions extends StatelessWidget {
           FilledButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().createPairingSession(),
-            icon: const Icon(Icons.qr_code_rounded),
+            icon: const Icon(TaliaIcons.qrCode),
             label: Text(context.l10n.linkGuardianNow),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -314,7 +315,7 @@ class _ChoiceActions extends StatelessWidget {
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
             // Mirrors itself under RTL: "continue" points left in Arabic.
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const Icon(TaliaIcons.arrowForward),
             label: Text(context.l10n.continueWithoutGuardian),
           ),
         ],
@@ -340,7 +341,7 @@ class _LinkLaterAction extends StatelessWidget {
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
             // Mirrors itself under RTL: "continue" points left in Arabic.
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const Icon(TaliaIcons.arrowForward),
             label: Text(context.l10n.guardianLinkLater),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -477,14 +478,14 @@ class _PairingCardState extends State<_PairingCard> {
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.verified_rounded),
+                : const Icon(TaliaIcons.verified),
             label: Text(context.l10n.guardianCheckNow),
           ),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().createPairingSession(),
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(TaliaIcons.refresh),
             label: Text(context.l10n.guardianRegenerateCode),
           ),
         ],
@@ -568,7 +569,7 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: onPressed,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(TaliaIcons.refresh),
             label: Text(actionLabel),
           ),
         ],

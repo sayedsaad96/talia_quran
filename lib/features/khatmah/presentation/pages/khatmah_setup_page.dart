@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -336,7 +337,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                           Row(
                             children: [
                               Icon(
-                                Icons.auto_stories_rounded,
+                                TaliaIcons.reading,
                                 color: primary,
                                 size: 20,
                               ),
@@ -403,7 +404,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               labelText:
                                   context.l10n.khatmahOrCustomPagesPerDay,
                               hintText: context.l10n.khatmahEG5,
-                              prefixIcon: const Icon(Icons.edit_outlined),
+                              prefixIcon: const Icon(TaliaIcons.edit),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
                                   AppSpacing.radiusMd,
@@ -458,9 +459,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               labelText: context.l10n.khatmahStartFromPage,
                               helperText: context.l10n.khatmahStartFromPageHint,
                               helperMaxLines: 2,
-                              prefixIcon: const Icon(
-                                Icons.bookmark_outline_rounded,
-                              ),
+                              prefixIcon: const Icon(TaliaIcons.bookmark),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
                                   AppSpacing.radiusMd,
@@ -578,7 +577,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.check_circle_outline_rounded),
+                          : const Icon(TaliaIcons.checkCircle),
                       label: Text(
                         context.l10n.khatmahStartKhatmah,
                         style: AppTypography.titleLarge.copyWith(

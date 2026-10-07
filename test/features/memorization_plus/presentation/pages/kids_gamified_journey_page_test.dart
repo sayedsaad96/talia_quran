@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -275,7 +276,7 @@ void main() {
         find.descendant(of: banner, matching: find.textContaining('١ من ٦')),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
+      expect(find.byIcon(TaliaKidsIcons.certificate), findsNothing);
     });
 
     testWidgets('no region banner without a current region', (tester) async {
@@ -325,7 +326,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('kids-journey-region-banner')),
-          matching: find.byIcon(Icons.workspace_premium_rounded),
+          matching: find.byIcon(TaliaKidsIcons.certificate),
         ),
         findsOneWidget,
       );

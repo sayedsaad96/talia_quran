@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
 import '../../cubits/memorization_session_cubit.dart';
 import 'v2_recitation_page.dart';
 import 'v2_session_widgets.dart';
@@ -22,11 +23,11 @@ class V2BlockReviewPendingPage extends StatelessWidget {
     final end = session.blockAyahs.last.numberInSurah;
     return V2PhaseScaffold(
       session: session,
-      icon: Icons.fact_check_rounded,
+      icon: TaliaIcons.factCheck,
       title: context.l10n.v2BlockReviewPendingTitle,
       subtitle: context.l10n.v2BlockReviewPendingSubtitle,
       primaryActionLabel: context.l10n.v2StartBlockReview,
-      primaryActionIcon: Icons.play_arrow_rounded,
+      primaryActionIcon: TaliaIcons.play,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().startBlockReview(),
       children: [
@@ -87,10 +88,10 @@ class V2BlockReviewPage extends StatelessWidget {
           ? context.l10n.v2StopRecording
           : context.l10n.v2StartRecording,
       primaryActionIcon: speechUnavailable
-          ? Icons.record_voice_over_rounded
+          ? TaliaIcons.recite
           : isRecording
-          ? Icons.stop_rounded
-          : Icons.mic_rounded,
+          ? TaliaIcons.stop
+          : TaliaIcons.mic,
       primaryActionEnabled: !isEvaluating,
       onPrimaryAction: speechUnavailable ? selfGrade : record,
       children: [
@@ -109,9 +110,7 @@ class V2BlockReviewPage extends StatelessWidget {
               ? null
               : (speechUnavailable ? record : selfGrade),
           icon: Icon(
-            speechUnavailable
-                ? Icons.mic_rounded
-                : Icons.record_voice_over_rounded,
+            speechUnavailable ? TaliaIcons.mic : TaliaIcons.recite,
             size: 18,
           ),
           label: Text(

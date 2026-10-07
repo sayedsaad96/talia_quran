@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
@@ -179,7 +180,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('تم التأكيد'), findsOneWidget);
-    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaIcons.checkCircleFilled), findsOneWidget);
     expect(find.bySemanticsLabel('الفجر: تم التأكيد'), findsOneWidget);
     semantics.dispose();
   });
@@ -211,39 +212,38 @@ void main() {
     expect(find.text('1 of 5 confirmed'), findsOneWidget);
   });
 
-  testWidgets(
-    'successful action updates the open sheet and triggers reload',
-    (tester) async {
-      var reloaded = false;
-      await tester.pumpWidget(
-        sheetHarness(
-          summary: PrayerCompanionDaySummary(
-            statusByPrayer: const {
-              PrayerKey.asr: PrayerCompanionStatus.unconfirmed,
-            },
-            confirmedCount: 0,
-            actionableOccurrence: asrOccurrence,
-          ),
-          onCompanionChanged: () => reloaded = true,
+  testWidgets('successful action updates the open sheet and triggers reload', (
+    tester,
+  ) async {
+    var reloaded = false;
+    await tester.pumpWidget(
+      sheetHarness(
+        summary: PrayerCompanionDaySummary(
+          statusByPrayer: const {
+            PrayerKey.asr: PrayerCompanionStatus.unconfirmed,
+          },
+          confirmedCount: 0,
+          actionableOccurrence: asrOccurrence,
         ),
-      );
-      await tester.pumpAndSettle();
+        onCompanionChanged: () => reloaded = true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('صليت'), findsOneWidget);
-      expect(find.text('سأصلي الآن'), findsOneWidget);
-      expect(find.text('ذكرني لاحقاً'), findsOneWidget);
-      expect(find.text('ليس بعد'), findsOneWidget);
+    expect(find.text('صليت'), findsOneWidget);
+    expect(find.text('سأصلي الآن'), findsOneWidget);
+    expect(find.text('ذكرني لاحقاً'), findsOneWidget);
+    expect(find.text('ليس بعد'), findsOneWidget);
 
-      await tester.tap(find.text('صليت'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('صليت'));
+    await tester.pumpAndSettle();
 
-      expect(reloaded, isTrue);
-      expect(find.bySemanticsLabel('العصر: تم التأكيد'), findsOneWidget);
-      expect(find.text('تم تأكيد ١ من ٥'), findsOneWidget);
-      expect(find.text('صليت'), findsNothing);
-      expect(find.text('سأصلي الآن'), findsNothing);
-    },
-  );
+    expect(reloaded, isTrue);
+    expect(find.bySemanticsLabel('العصر: تم التأكيد'), findsOneWidget);
+    expect(find.text('تم تأكيد ١ من ٥'), findsOneWidget);
+    expect(find.text('صليت'), findsNothing);
+    expect(find.text('سأصلي الآن'), findsNothing);
+  });
 
   testWidgets(
     'failed action keeps the sheet state and does not trigger reload',
@@ -269,7 +269,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
 
       expect(reloaded, isFalse);
-      expect(find.bySemanticsLabel('العصر: لم يتم التأكيد بعد'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('العصر: لم يتم التأكيد بعد'),
+        findsOneWidget,
+      );
       expect(find.text('تم تأكيد ٠ من ٥'), findsOneWidget);
       expect(find.text('صليت'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);

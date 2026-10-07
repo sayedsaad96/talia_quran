@@ -1,3 +1,4 @@
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_session_widgets.dart
 //
@@ -232,11 +233,7 @@ class V2HintCard extends StatelessWidget {
         .first;
     return switch (hintLevel) {
       V2HintLevel.none => V2PhaseCard(
-        child: Icon(
-          Icons.visibility_off_rounded,
-          size: 42,
-          color: context.tokens.textHint,
-        ),
+        child: Icon(TaliaIcons.hide, size: 42, color: context.tokens.textHint),
         footer: Text(
           context.l10n.v2TryWithoutHint,
           textAlign: TextAlign.center,
@@ -301,7 +298,7 @@ class V2HiddenTextCard extends StatelessWidget {
     final primary = context.tokens.accent;
     return V2PhaseCard(
       child: Icon(
-        isRecording ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
+        isRecording ? TaliaIcons.waveform : TaliaIcons.mic,
         size: 64,
         color: primary,
       ),
@@ -330,11 +327,7 @@ class V2FailureSummary extends StatelessWidget {
       session.currentAyah.numberInSurah,
     );
     return V2PhaseCard(
-      child: const Icon(
-        Icons.refresh_rounded,
-        size: 42,
-        color: AppColors.warning,
-      ),
+      child: const Icon(TaliaIcons.refresh, size: 42, color: AppColors.warning),
       footer: Text(
         context.l10n.v2RemediationAttempts(
           LocaleNumberFormatter.format(
@@ -365,11 +358,7 @@ class V2BlockReviewSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return V2PhaseCard(
-      child: Icon(
-        Icons.checklist_rtl_rounded,
-        size: 48,
-        color: context.tokens.accent,
-      ),
+      child: Icon(TaliaIcons.checklist, size: 48, color: context.tokens.accent),
       footer: Column(
         children: [
           Text(
@@ -427,9 +416,7 @@ class V2BlockReviewHiddenCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            isRecording
-                ? Icons.graphic_eq_rounded
-                : Icons.visibility_off_rounded,
+            isRecording ? TaliaIcons.waveform : TaliaIcons.hide,
             size: 64,
             color: primary,
           ),
@@ -523,9 +510,7 @@ class V2AudioAction extends StatelessWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: onPressed,
-            icon: Icon(
-              isPlaying ? Icons.volume_up_rounded : Icons.play_arrow_rounded,
-            ),
+            icon: Icon(isPlaying ? TaliaIcons.volume : TaliaIcons.play),
             label: Text(
               isPlaying ? context.l10n.v2Playing : context.l10n.v2ListenToAyah,
             ),
@@ -554,8 +539,8 @@ class V2AudioAction extends StatelessWidget {
               }),
               child: Icon(
                 loopMode == V2AudioLoopMode.off
-                    ? Icons.repeat_rounded
-                    : Icons.repeat_on_rounded,
+                    ? TaliaIcons.repeat
+                    : TaliaIcons.repeat,
               ),
             ),
           ),
@@ -632,9 +617,7 @@ class V2MaskedWordsCard extends StatelessWidget {
               key: const Key('v2-masked-words-toggle'),
               onPressed: onToggle,
               icon: Icon(
-                revealed
-                    ? Icons.visibility_off_rounded
-                    : Icons.visibility_rounded,
+                revealed ? TaliaIcons.hide : TaliaIcons.show,
                 size: 16,
               ),
               label: Text(
@@ -680,7 +663,7 @@ class V2SummaryRow extends StatelessWidget {
           child: V2SummaryTile(
             label: context.l10n.v2Passed,
             value: '${context.numText(passed)}/${context.numText(total)}',
-            icon: Icons.check_circle_rounded,
+            icon: TaliaIcons.checkCircleFilled,
             color: AppColors.success,
           ),
         ),
@@ -689,7 +672,7 @@ class V2SummaryRow extends StatelessWidget {
           child: V2SummaryTile(
             label: context.l10n.v2Retries,
             value: context.numText(failures),
-            icon: Icons.replay_rounded,
+            icon: TaliaIcons.replay,
             color: AppColors.warning,
           ),
         ),

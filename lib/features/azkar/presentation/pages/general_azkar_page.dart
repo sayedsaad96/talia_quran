@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
@@ -113,7 +114,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             child: EmptyStateWidget(
               key: const ValueKey('azkar-content-under-review'),
               message: context.l10n.azkarContentUnderReview,
-              icon: Icons.pending_actions_rounded,
+              icon: TaliaIcons.pending,
             ),
           ),
         ],
@@ -216,14 +217,11 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
           hintStyle: AppTypography.bodyMedium.copyWith(
             color: context.tokens.textHint,
           ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: context.tokens.textHint,
-          ),
+          prefixIcon: Icon(TaliaIcons.search, color: context.tokens.textHint),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   key: const ValueKey('search-suffix-clear'),
-                  icon: const Icon(Icons.clear_rounded, size: 20),
+                  icon: const Icon(TaliaIcons.close, size: 20),
                   color: context.tokens.textHint,
                   onPressed: () {
                     _searchController.clear();
@@ -283,9 +281,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  selected
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
+                  selected ? TaliaIcons.bookmarkFilled : TaliaIcons.bookmark,
                   size: 16,
                   color: selected
                       ? Colors.white
@@ -330,7 +326,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.bookmark_border_rounded,
+                  TaliaIcons.bookmark,
                   size: 56,
                   color: context.tokens.textHint,
                 ),
@@ -366,7 +362,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.search_off_rounded,
+                TaliaIcons.searchOff,
                 size: 56,
                 color: context.tokens.textHint,
               ),
@@ -393,7 +389,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   _searchController.clear();
                   setState(() => _searchQuery = '');
                 },
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: const Icon(TaliaIcons.refresh, size: 18),
                 label: Text(context.l10n.azkarSearchClear),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
@@ -425,7 +421,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       actions: [
         IconButton(
           tooltip: context.l10n.fontSize,
-          icon: const Icon(Icons.format_size_rounded),
+          icon: const Icon(TaliaIcons.textSize),
           color: Colors.white,
           onPressed: () => FontScaleSelectorSheet.show(
             context,
@@ -531,7 +527,7 @@ class _ZikrCard extends StatelessWidget {
             left: -10,
             top: -10,
             child: Icon(
-              Icons.format_quote_rounded,
+              TaliaIcons.quote,
               size: 80,
               color: primary.withValues(alpha: 0.05),
             ),
@@ -588,8 +584,8 @@ class _ZikrCard extends StatelessWidget {
                               : context.l10n.azkarFavoriteAdd,
                           icon: Icon(
                             isFav
-                                ? Icons.bookmark_rounded
-                                : Icons.bookmark_border_rounded,
+                                ? TaliaIcons.bookmarkFilled
+                                : TaliaIcons.bookmark,
                             color: isFav
                                 ? (isDark
                                       ? AppColors.goldLight
@@ -607,7 +603,7 @@ class _ZikrCard extends StatelessWidget {
                     IconButton(
                       tooltip: context.l10n.copy,
                       icon: Icon(
-                        Icons.copy_rounded,
+                        TaliaIcons.copy,
                         color: textSecondary.withValues(alpha: 0.7),
                         size: 20,
                       ),
@@ -628,7 +624,7 @@ class _ZikrCard extends StatelessWidget {
                     ),
                     IconButton(
                       tooltip: context.l10n.share,
-                      icon: Icon(Icons.share_rounded, color: primary, size: 20),
+                      icon: Icon(TaliaIcons.share, color: primary, size: 20),
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         final data = libraryShareData(zikr, category);

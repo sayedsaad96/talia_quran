@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -41,16 +42,10 @@ class KidsJourneySignpost extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFD4A373),
-                  Color(0xFFA97142),
-                ],
+                colors: [Color(0xFFD4A373), Color(0xFFA97142)],
               ),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(
-                color: const Color(0xFF7F4F24),
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFF7F4F24), width: 2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x33000000),
@@ -63,8 +58,8 @@ class KidsJourneySignpost extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
+                const TaliaIcon(
+                  TaliaKidsIcons.sparkle,
                   color: KidsTheme.pathStone,
                   size: 16,
                 ),
@@ -89,8 +84,8 @@ class KidsJourneySignpost extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                const Icon(
-                  Icons.auto_awesome_rounded,
+                const TaliaIcon(
+                  TaliaKidsIcons.sparkle,
                   color: KidsTheme.pathStone,
                   size: 16,
                 ),
@@ -105,9 +100,7 @@ class KidsJourneySignpost extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [Color(0xFF8B5A2B), Color(0xFF5C3A1E)],
               ),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(2),
-              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(2)),
             ),
           ),
         ],

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -96,7 +97,7 @@ class ChildDetailPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.card_giftcard_rounded),
+            icon: const Icon(TaliaIcons.gift),
             tooltip: context.l10n.childDetailAddReward,
             onPressed: () => _showAddRewardDialog(context, child),
           ),
@@ -270,13 +271,13 @@ class _ChildDetailBody extends StatelessWidget {
         if (child.isLocal)
           OutlinedButton.icon(
             onPressed: () => _showChangeNicknameDialog(context),
-            icon: const Icon(Icons.edit_rounded),
+            icon: const Icon(TaliaIcons.edit),
             label: Text(context.l10n.parentDashboardEditChild),
           )
         else ...[
           OutlinedButton.icon(
             onPressed: () => _showEditIdentityDialog(context),
-            icon: const Icon(Icons.edit_rounded),
+            icon: const Icon(TaliaIcons.edit),
             label: Text(context.l10n.childEditIdentity),
           ),
           const SizedBox(height: AppSpacing.lg),

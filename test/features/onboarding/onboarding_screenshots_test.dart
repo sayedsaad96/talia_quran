@@ -108,9 +108,7 @@ void main() {
   }
 }
 
-const _shotAssets = [
-  'assets/images/character/Talia_Master_Character.png',
-];
+const _shotAssets = ['assets/images/character/Talia_Master_Character.png'];
 
 String _kidsJourneyLabel(Locale locale) => locale.languageCode == 'ar'
     ? 'مسار البراعم والأطفال'
@@ -144,6 +142,9 @@ Future<void> _loadRealFonts() async {
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
   ]);
+  // Talia icon system (the app's only icon fonts).
+  await load('TaliaIcons', ['assets/fonts/TaliaIcons/TaliaIcons.ttf']);
+  await load('TaliaIconsKids', ['assets/fonts/TaliaIcons/TaliaIconsKids.ttf']);
 
   for (final path in const [
     'D:/dev/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../domain/entities/home_contextual_slot.dart';
@@ -111,7 +112,7 @@ class HomeContextualSlot extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               color: skin.textSecondary,
               onPressed: () => context.read<HomeCubit>().snoozeSlot(slot.kind),
-              icon: const Icon(Icons.close_rounded, size: 18),
+              icon: const Icon(TaliaIcons.close, size: 18),
             ),
           ],
         ),

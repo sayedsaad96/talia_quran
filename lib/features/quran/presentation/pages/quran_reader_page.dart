@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -448,7 +449,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                   OutlinedButton.icon(
                     key: const Key('khatmah_wird_closing_dua_button'),
                     onPressed: () => showClosingDuaSheet(dialogContext),
-                    icon: const Icon(Icons.volunteer_activism_rounded),
+                    icon: const Icon(TaliaIcons.dua),
                     label: Text(dialogL10n.closingDuaButton),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -844,8 +845,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                               return Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      horizontal:
-                                                          AppSpacing.md,
+                                                      horizontal: AppSpacing.md,
                                                     ),
                                                 child: LongPressHintBanner(
                                                   accent: accent,
@@ -904,7 +904,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                   HapticFeedback.selectionClick();
                                   _isFocusModeNotifier.value = false;
                                 },
-                                icon: const Icon(Icons.fullscreen_exit_rounded),
+                                icon: const Icon(TaliaIcons.fullscreenExit),
                                 style: IconButton.styleFrom(
                                   foregroundColor: accent,
                                   backgroundColor: bg.withValues(alpha: 0.92),
@@ -917,7 +917,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                             );
                           },
                         ),
-
                       ],
                     ),
                   ),

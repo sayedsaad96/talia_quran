@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
@@ -57,7 +58,6 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
       await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
     }
   }
-
 
   void _startLearning() {
     widget.onInteraction();
@@ -153,11 +153,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.record_voice_over_rounded,
-                              size: 14,
-                              color: primary,
-                            ),
+                            Icon(TaliaIcons.recite, size: 14, color: primary),
                             const SizedBox(width: 4),
                             Text(
                               context.isArabic
@@ -170,7 +166,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.swap_horiz_rounded,
+                              TaliaIcons.swapHorizontal,
                               size: 14,
                               color: primary,
                             ),
@@ -188,7 +184,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                 runSpacing: AppSpacing.md,
                 children: [
                   AyahOptionButton(
-                    icon: Icons.school_rounded,
+                    icon: TaliaIcons.school,
                     label: context.l10n.startMemorizing,
                     color: primary,
                     onTap: _startLearning,
@@ -210,10 +206,10 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
 
                       return AyahOptionButton(
                         icon: isBufferingThisAyah
-                            ? Icons.hourglass_top_rounded
+                            ? TaliaIcons.hourglass
                             : (isPlayingThisAyah
-                                  ? Icons.pause_circle_filled
-                                  : Icons.play_circle_fill_rounded),
+                                  ? TaliaIcons.pauseCircleFilled
+                                  : TaliaIcons.playCircleFilled),
                         label: isPlayingThisAyah
                             ? context.l10n.pause
                             : context.l10n.play,
@@ -223,7 +219,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     },
                   ),
                   AyahOptionButton(
-                    icon: Icons.copy_rounded,
+                    icon: TaliaIcons.copy,
                     label: context.l10n.copy,
                     color: primary,
                     onTap: () async {
@@ -239,7 +235,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     },
                   ),
                   AyahOptionButton(
-                    icon: Icons.bookmark_rounded,
+                    icon: TaliaIcons.bookmarkFilled,
                     label: context.l10n.bookmark,
                     color: primary,
                     onTap: () async {
@@ -275,7 +271,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     },
                   ),
                   AyahOptionButton(
-                    icon: Icons.share_rounded,
+                    icon: TaliaIcons.share,
                     label: context.l10n.share,
                     color: primary,
                     onTap: () {

@@ -2,6 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_journey_complete_card.dart';
 
@@ -30,7 +31,7 @@ void main() {
 
     // A finished journey is the strongest milestone in the kids loop — the
     // trophy and confetti replace the previous generic empty state.
-    expect(find.byIcon(Icons.emoji_events_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaKidsIcons.trophy), findsOneWidget);
     expect(find.byType(ConfettiWidget), findsOneWidget);
     // The path opens with Al-Fatiha, so the milestone names both (K27).
     expect(

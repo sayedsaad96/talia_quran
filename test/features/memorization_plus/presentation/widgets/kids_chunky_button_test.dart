@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_chunky_button.dart';
 
 void main() {
@@ -19,7 +20,7 @@ void main() {
         host(
           KidsChunkyButton(
             label: 'Start',
-            icon: Icons.play_arrow_rounded,
+            icon: TaliaIcons.play,
             onPressed: () => taps++,
           ),
         ),
@@ -29,7 +30,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(taps, 1);
-      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+      expect(find.byIcon(TaliaIcons.play), findsOneWidget);
     });
 
     testWidgets('a disabled button stays visible and ignores taps', (
@@ -77,7 +78,7 @@ void main() {
         host(
           KidsChunkyButton(
             label: 'استمع إلى الآية مرتين قبل أن تسجّل صوتك، ثم حاول من جديد',
-            icon: Icons.headphones_rounded,
+            icon: TaliaIcons.listen,
             maxLines: 3,
             onPressed: () {},
           ),
@@ -93,7 +94,7 @@ void main() {
       await tester.pumpWidget(
         host(
           KidsRoundActionButton(
-            icon: Icons.play_arrow_rounded,
+            icon: TaliaIcons.play,
             label: 'Listen',
             onPressed: () {},
           ),
@@ -104,7 +105,7 @@ void main() {
       await tester.pumpWidget(
         host(
           KidsRoundActionButton(
-            icon: Icons.stop_rounded,
+            icon: TaliaIcons.stop,
             label: 'Listen',
             onPressed: () {},
             active: true,
@@ -120,7 +121,7 @@ void main() {
       await tester.pumpWidget(
         host(
           KidsRoundActionButton(
-            icon: Icons.mic_rounded,
+            icon: TaliaIcons.mic,
             label: 'Record',
             onPressed: () {},
             active: true,
@@ -138,7 +139,7 @@ void main() {
       await tester.pumpWidget(
         host(
           KidsRoundActionButton(
-            icon: Icons.mic_rounded,
+            icon: TaliaIcons.mic,
             label: 'Record',
             onPressed: () => taps++,
           ),

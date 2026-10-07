@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/listening/listening_question.dart';
 import '../../../../core/memorization/listening/listening_round_result.dart';
 import '../../../../core/router/app_router.dart';
@@ -67,7 +68,7 @@ class ListeningNotEnoughView extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Centered(
     children: [
-      const Icon(Icons.hearing_rounded, size: 48),
+      const Icon(TaliaIcons.listen, size: 48),
       const SizedBox(height: AppSpacing.md),
       Text(
         context.l10n.listeningReviewNotEnoughTitle,
@@ -84,7 +85,7 @@ class ListeningNotEnoughView extends StatelessWidget {
       FilledButton.icon(
         key: const Key('listening_review_start_memorizing'),
         onPressed: () => context.openLocation(AppRoutes.hifzPracticeSurah),
-        icon: const Icon(Icons.auto_stories_rounded),
+        icon: const Icon(TaliaIcons.reading),
         label: Text(context.l10n.listeningReviewStartMemorizing),
       ),
     ],
@@ -114,7 +115,7 @@ class ListeningStartView extends StatelessWidget {
         );
     return _Centered(
       children: [
-        const Icon(Icons.hearing_rounded, size: 48),
+        const Icon(TaliaIcons.listen, size: 48),
         const SizedBox(height: AppSpacing.md),
         Text(
           l10n.listeningReviewStartPrompt,
@@ -139,17 +140,17 @@ class ListeningStartView extends StatelessWidget {
         ],
         const SizedBox(height: AppSpacing.lg),
         mode(
-          Icons.menu_book_rounded,
+          TaliaIcons.mushaf,
           l10n.listeningReviewModeWhichSurah,
           ListeningQuizMode.whichSurah,
         ),
         mode(
-          Icons.link_rounded,
+          TaliaIcons.link,
           l10n.listeningReviewModeNextAyah,
           ListeningQuizMode.nextAyah,
         ),
         mode(
-          Icons.shuffle_rounded,
+          TaliaIcons.shuffle,
           l10n.listeningReviewModeMixed,
           ListeningQuizMode.mixed,
         ),
@@ -201,9 +202,7 @@ class ListeningQuestionView extends StatelessWidget {
           onPressed: round.isPlaying || round.playsLeft <= 0 || round.isAnswered
               ? null
               : cubit.replay,
-          icon: Icon(
-            round.isPlaying ? Icons.graphic_eq_rounded : Icons.replay_rounded,
-          ),
+          icon: Icon(round.isPlaying ? TaliaIcons.waveform : TaliaIcons.replay),
           label: Text(
             l10n.listeningReviewReplay(
               LocaleNumberFormatter.format(
@@ -322,9 +321,7 @@ class _NextAyahControls extends StatelessWidget {
           onPressed: round.isRecording
               ? cubit.stopRecording
               : cubit.startRecording,
-          icon: Icon(
-            round.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-          ),
+          icon: Icon(round.isRecording ? TaliaIcons.stop : TaliaIcons.mic),
           label: Text(
             round.isRecording
                 ? l10n.listeningReviewStopRecord
@@ -486,7 +483,7 @@ class ListeningResultView extends StatelessWidget {
         else
           for (final ref in weak)
             ListTile(
-              leading: const Icon(Icons.link_off_rounded),
+              leading: const Icon(TaliaIcons.linkOff),
               title: Text(
                 l10n.listeningReviewAyahRef(
                   _surahName(context, ref.surahId),
@@ -496,7 +493,7 @@ class ListeningResultView extends StatelessWidget {
                   ),
                 ),
               ),
-              trailing: const Icon(Icons.chevron_left_rounded),
+              trailing: const Icon(TaliaIcons.chevronBack),
               onTap: () => context.push(
                 MemorizationNavigationResolver.reviewAyahLocation(
                   ref.surahId,

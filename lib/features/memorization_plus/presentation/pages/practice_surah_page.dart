@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -93,7 +94,7 @@ class _PracticeSurahViewState extends State<_PracticeSurahView> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyStateWidget(
-                      icon: Icons.route_rounded,
+                      icon: TaliaIcons.journey,
                       message: context.l10n.chooseMemorizationPath,
                       actionLabel: context.l10n.changeMemorizationPath,
                       onAction: () => showMemorizationPathSettingsSheet(
@@ -126,7 +127,7 @@ class _PracticeSurahViewState extends State<_PracticeSurahView> {
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: context.l10n.searchSurah,
-                          prefixIcon: const Icon(Icons.search_rounded),
+                          prefixIcon: const Icon(TaliaIcons.search),
                           isDense: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(
@@ -240,7 +241,7 @@ class _PracticeSurahAppBar extends StatelessWidget {
                       if (loaded?.selectedPath != null)
                         IconButton(
                           icon: const Icon(
-                            Icons.settings_suggest_rounded,
+                            TaliaIcons.settingsSmart,
                             color: Colors.white,
                           ),
                           tooltip: context.l10n.changeMemorizationPath,

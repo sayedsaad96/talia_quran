@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -57,11 +58,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                     color: primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.record_voice_over_rounded,
-                    color: primary,
-                    size: 20,
-                  ),
+                  child: Icon(TaliaIcons.recite, color: primary, size: 20),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -123,9 +120,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              isSelected
-                                  ? Icons.check_rounded
-                                  : Icons.mic_rounded,
+                              isSelected ? TaliaIcons.check : TaliaIcons.mic,
                               color: isSelected ? Colors.white : primary,
                               size: 18,
                             ),
@@ -149,7 +144,9 @@ class ReciterSelectorSheet extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: primary.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
                                   ),
                                   child: Text(
                                     context.l10n.reciterActiveChip,

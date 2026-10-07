@@ -72,7 +72,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
               child: Column(
                 children: [
                   Icon(
-                    Icons.workspace_premium_rounded,
+                    TaliaIcons.certificate,
                     size: 48,
                     color: AppColors.gold.withValues(alpha: 0.3),
                   ),
@@ -169,9 +169,7 @@ class _CertificateCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isJuz
-                    ? Icons.workspace_premium_rounded
-                    : Icons.verified_rounded,
+                isJuz ? TaliaIcons.certificate : TaliaIcons.verified,
                 color: color,
                 size: 32,
               ),

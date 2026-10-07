@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../icons/talia_icons.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/talia_tokens.dart';
 import '../utils/locale_number_formatter.dart';
-
 
 extension BuildContextX on BuildContext {
   // ─── Theme ───────────────────────────────────────────────────────────────────
@@ -30,9 +30,8 @@ extension BuildContextX on BuildContext {
   /// so Arabic uses its own comma.
   String get listSeparator => isArabic ? '، ' : ' · ';
 
-  IconData get forwardChevron => isArabic
-      ? Icons.arrow_back_ios_new_rounded
-      : Icons.arrow_forward_ios_rounded;
+  IconData get forwardChevron =>
+      isArabic ? TaliaIcons.chevronBack : TaliaIcons.chevronForward;
 
   /// [number] in the locale's digits: Eastern Arabic (٠١٢…) in Arabic, the
   /// convention already used on the Mushaf, khatmah and Home (N7), Western

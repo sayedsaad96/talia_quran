@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class MemorizationPathChoiceCard extends StatelessWidget {
@@ -89,8 +90,8 @@ class MemorizationPathChoiceCard extends StatelessWidget {
                 else
                   Icon(
                     context.isArabic
-                        ? Icons.arrow_back_ios_new_rounded
-                        : Icons.arrow_forward_ios_rounded,
+                        ? TaliaIcons.chevronBack
+                        : TaliaIcons.chevronForward,
                     color: secondaryTextColor,
                     size: 18,
                   ),

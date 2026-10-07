@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_store.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
@@ -129,7 +130,7 @@ void main() {
       _localizedApp(const AzkarCategoryPage(category: 'morning')),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.copy_rounded));
+    await tester.tap(find.byIcon(TaliaIcons.copy));
     await tester.pump();
 
     expect(copiedTexts, [

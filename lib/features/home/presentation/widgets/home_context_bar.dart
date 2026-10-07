@@ -1,3 +1,4 @@
+import '../../../../core/icons/talia_icons.dart';
 import 'home_achievement_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,10 +35,10 @@ class HomeContextBar extends StatelessWidget {
   }
 
   IconData _greetingIcon() => switch (state.greeting) {
-    'morning' => Icons.wb_sunny_rounded,
-    'afternoon' => Icons.wb_cloudy_rounded,
-    'evening' => Icons.wb_twilight_rounded,
-    _ => Icons.nightlight_round,
+    'morning' => TaliaIcons.sun,
+    'afternoon' => TaliaIcons.cloudSun,
+    'evening' => TaliaIcons.sunrise,
+    _ => TaliaIcons.moon,
   };
 
   String _greetingText(BuildContext context) => switch (state.greeting) {
@@ -100,7 +101,7 @@ class HomeContextBar extends StatelessWidget {
                     IconButton(
                       tooltip: context.l10n.searchSurah,
                       onPressed: () => context.push(AppRoutes.quranSearch),
-                      icon: const Icon(Icons.search_rounded),
+                      icon: const Icon(TaliaIcons.search),
                       color: Colors.white.withValues(alpha: 0.82),
                       style: IconButton.styleFrom(
                         minimumSize: const Size(48, 48),
@@ -109,7 +110,7 @@ class HomeContextBar extends StatelessWidget {
                     IconButton(
                       tooltip: context.l10n.settings,
                       onPressed: () => context.push(AppRoutes.settings),
-                      icon: const Icon(Icons.settings_suggest_rounded),
+                      icon: const Icon(TaliaIcons.settingsSmart),
                       color: Colors.white.withValues(alpha: 0.82),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white.withValues(alpha: 0.12),
@@ -166,9 +167,7 @@ class _OccasionChip extends StatelessWidget {
             : null,
         label: Text(label),
         avatar: Icon(
-          occasion == HomeOccasion.friday
-              ? Icons.menu_book_rounded
-              : Icons.nights_stay_rounded,
+          occasion == HomeOccasion.friday ? TaliaIcons.mushaf : TaliaIcons.moon,
           size: 18,
         ),
       ),
@@ -283,11 +282,7 @@ class HomeAchievementChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.workspace_premium_rounded,
-                size: 15,
-                color: foreground,
-              ),
+              Icon(TaliaIcons.certificate, size: 15, color: foreground),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -353,7 +348,7 @@ class _PrayerCapsule extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.mosque_rounded, size: 16, color: Colors.white),
+            const Icon(TaliaIcons.prayer, size: 16, color: Colors.white),
             const SizedBox(width: 6),
             Text(
               '$name  ${_formattedTime(context)}',

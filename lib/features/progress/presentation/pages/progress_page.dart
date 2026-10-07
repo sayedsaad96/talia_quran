@@ -6,6 +6,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -153,7 +154,7 @@ class _ProgressHeader extends StatelessWidget {
                   child: Opacity(
                     opacity: 1 - t,
                     child: Icon(
-                      Icons.insights_rounded,
+                      TaliaIcons.progress,
                       size: 150,
                       color: Colors.white.withValues(alpha: 0.08),
                     ),
@@ -230,7 +231,7 @@ class _ShareProgressMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<SocialShareCategory>(
-      icon: const Icon(Icons.share_rounded, color: Colors.white),
+      icon: const Icon(TaliaIcons.share, color: Colors.white),
       tooltip: context.l10n.shareProgress,
       onSelected: (type) {
         final name = _profileDisplayName(context);
@@ -369,7 +370,7 @@ class _ProgressContentState extends State<_ProgressContent>
                         label: context.l10n.pagesRead,
                         value: p.readPagesCount,
                         unit: context.l10n.pages,
-                        icon: Icons.auto_stories_rounded,
+                        icon: TaliaIcons.reading,
                         isDark: isDark,
                         color: AppColors.gold,
                         onTap: () => context.go(AppRoutes.quran),
@@ -388,7 +389,7 @@ class _ProgressContentState extends State<_ProgressContent>
                         label: context.l10n.progressDueReviewsLabel,
                         value: p.reviewAyahs,
                         unit: context.l10n.ayahs,
-                        icon: Icons.history_rounded,
+                        icon: TaliaIcons.history,
                         isDark: isDark,
                         color: p.overdueReviews > 0
                             ? AppColors.warning
@@ -402,7 +403,7 @@ class _ProgressContentState extends State<_ProgressContent>
                         label: context.l10n.xpLabel,
                         value: widget.totalXp,
                         unit: context.l10n.points,
-                        icon: Icons.bolt_rounded,
+                        icon: TaliaIcons.bolt,
                         isDark: isDark,
                         color: AppColors.primary,
                         levelProgress: widget.xpLevelProgress,
@@ -432,7 +433,7 @@ class _ProgressContentState extends State<_ProgressContent>
               const SizedBox(height: AppSpacing.md),
               _DetailedProgressCard(
                 isDark: isDark,
-                icon: Icons.menu_book_rounded,
+                icon: TaliaIcons.mushaf,
                 iconColor: AppColors.info,
                 title: context.l10n.reading,
                 percentage: p.quranPercentage,
@@ -470,7 +471,7 @@ class _ProgressContentState extends State<_ProgressContent>
                 // ─── Kids Memorization Stats ─────────────────────
                 _DetailedProgressCard(
                   isDark: isDark,
-                  icon: Icons.star_rounded,
+                  icon: TaliaIcons.starFilled,
                   iconColor: AppColors.gold,
                   title: context.l10n.memorization,
                   percentage: p.memorizedAyahsPercentage,
@@ -543,7 +544,7 @@ class _ProgressContentState extends State<_ProgressContent>
                 ],
                 _DetailedProgressCard(
                   isDark: isDark,
-                  icon: Icons.psychology_rounded,
+                  icon: TaliaIcons.hifz,
                   iconColor: AppColors.primary,
                   title: context.l10n.memorization,
                   percentage: p.memorizedAyahsPercentage,

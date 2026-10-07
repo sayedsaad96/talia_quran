@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -22,8 +23,8 @@ class KidsWelcomeBackCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.waving_hand_rounded,
+          const TaliaIcon(
+            TaliaKidsIcons.wave,
             color: KidsTheme.goldStar,
             size: 32,
           ),

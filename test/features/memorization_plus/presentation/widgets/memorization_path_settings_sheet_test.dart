@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
@@ -80,7 +81,7 @@ Widget _buildApp(
 }
 
 final _resetTile = find.ancestor(
-  of: find.byIcon(Icons.restart_alt_rounded),
+  of: find.byIcon(TaliaIcons.replay),
   matching: find.byType(ListTile),
 );
 final _linkTile = find.widgetWithText(ListTile, 'Link guardian');

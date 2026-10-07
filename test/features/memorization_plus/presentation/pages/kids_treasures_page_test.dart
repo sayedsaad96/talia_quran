@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
@@ -74,11 +75,11 @@ void main() {
 
   testWidgets('a complete region shows the gold badge', (tester) async {
     await tester.pumpWidget(_app(_content(memorized: {1}), locale: 'en'));
-    expect(find.byIcon(Icons.workspace_premium_rounded), findsOneWidget);
+    expect(find.byIcon(TaliaKidsIcons.certificate), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('kids-region-beginning')),
-        matching: find.byIcon(Icons.workspace_premium_rounded),
+        matching: find.byIcon(TaliaKidsIcons.certificate),
       ),
       findsOneWidget,
     );

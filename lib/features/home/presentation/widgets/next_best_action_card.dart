@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -49,7 +50,7 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       return (
         context.l10n.homeCurrentMission,
         context.l10n.homeStartKidsMission,
-        Icons.star_rounded,
+        TaliaIcons.starFilled,
         AppRoutes.memorizationHub,
       );
     }
@@ -57,7 +58,7 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       return (
         context.l10n.homeContinueTodaysPlan,
         context.l10n.planReadySmallStep,
-        Icons.psychology_alt_rounded,
+        TaliaIcons.hifz,
         AppRoutes.memorizationHub,
       );
     }
@@ -65,7 +66,7 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       return (
         context.l10n.readTodaysPortion,
         context.l10n.onePageMakesProgress,
-        Icons.menu_book_rounded,
+        TaliaIcons.mushaf,
         '/quran/page/${widget.state.dailyWirdPageDetail!.pageNumber}',
       );
     }
@@ -73,7 +74,7 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       return (
         context.l10n.timeForDhikr,
         context.l10n.startShortAzkarNow,
-        Icons.volunteer_activism_rounded,
+        TaliaIcons.dua,
         '/azkar',
       );
     }
@@ -81,14 +82,14 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       return (
         context.l10n.homeCurrentMission,
         context.l10n.homeChooseKidsPath,
-        Icons.auto_stories_rounded,
+        TaliaIcons.reading,
         AppRoutes.memorizationHub,
       );
     }
     return (
       context.l10n.homeTodaysPlan,
       context.l10n.chooseReadingOrMemorization,
-      Icons.auto_awesome_rounded,
+      TaliaIcons.sparkle,
       AppRoutes.memorizationHub,
     );
   }
@@ -104,13 +105,13 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
       SmartCoachRecommendationKind.reviewDueNear => (
         context.l10n.journeyReviewBeforeNewTitle,
         context.l10n.journeyReviewBeforeNewDesc('$surahLabel$ayahLabel'),
-        Icons.history_rounded,
+        TaliaIcons.history,
         coach.route,
       ),
       SmartCoachRecommendationKind.reviewDueFar => (
         context.l10n.journeyLongTermReviewTitle,
         context.l10n.journeyLongTermReviewDesc('$surahLabel$ayahLabel'),
-        Icons.schedule_rounded,
+        TaliaIcons.clock,
         coach.route,
       ),
       SmartCoachRecommendationKind.memorizedReviewDue => (
@@ -118,13 +119,13 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
         context.l10n.smartCoachMemorizedReviewDueSubtitle(
           _coachSurahName(context, coach.surahId),
         ),
-        Icons.verified_rounded,
+        TaliaIcons.verified,
         coach.route,
       ),
       SmartCoachRecommendationKind.reviewWeakAyah => (
         context.l10n.journeyReviewDifficultAyahTitle,
         context.l10n.journeyReviewDifficultAyahDesc('$surahLabel$ayahLabel'),
-        Icons.healing_rounded,
+        TaliaIcons.heal,
         coach.route,
       ),
       SmartCoachRecommendationKind.continueDailyPlan => (
@@ -139,25 +140,25 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
             context.l10n.localeName,
           ),
         ),
-        Icons.today_rounded,
+        TaliaIcons.calendar,
         coach.route,
       ),
       SmartCoachRecommendationKind.memorizeNewAyahs => (
         context.l10n.journeyMemorizeNewAyahsTitle,
         context.l10n.journeyMemorizeNewAyahsDesc('$surahLabel$ayahLabel'),
-        Icons.auto_awesome_rounded,
+        TaliaIcons.sparkle,
         coach.route,
       ),
       SmartCoachRecommendationKind.kidsCurrentMission => (
         context.l10n.journeyCurrentMissionTitle,
         context.l10n.journeyCurrentMissionDesc,
-        Icons.star_rounded,
+        TaliaIcons.starFilled,
         coach.route,
       ),
       SmartCoachRecommendationKind.continueV2Session => (
         context.l10n.journeyContinueSessionTitle,
         context.l10n.journeyContinueSessionDesc(surahLabel),
-        Icons.play_circle_fill_rounded,
+        TaliaIcons.playCircleFilled,
         coach.route,
       ),
     };

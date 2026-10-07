@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../core/icons/talia_icons.dart';
 import 'tutorial_guide_definition.dart';
 import 'widgets/tutorial_guide_section_card.dart';
 
@@ -19,7 +19,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS1Title,
           category: l10n.tutorialS1Cat,
-          icon: Icons.rocket_launch_rounded,
+          icon: TaliaIcons.rocket,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS1Does,
           howToOpen: l10n.tutorialS1Open,
@@ -36,7 +36,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS2Title,
           category: l10n.tutorialS2Cat,
-          icon: Icons.home_rounded,
+          icon: TaliaIcons.home,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS2Does,
           howToOpen: l10n.tutorialS2Open,
@@ -54,7 +54,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS3Title,
           category: l10n.tutorialS3Cat,
-          icon: Icons.menu_book_rounded,
+          icon: TaliaIcons.mushaf,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS3Does,
           howToOpen: l10n.tutorialS3Open,
@@ -73,7 +73,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS4Title,
           category: l10n.tutorialS4Cat,
-          icon: Icons.bookmark_rounded,
+          icon: TaliaIcons.bookmarkFilled,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS4Does,
           howToOpen: l10n.tutorialS4Open,
@@ -91,7 +91,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS5Title,
           category: l10n.tutorialS5Cat,
-          icon: Icons.auto_stories_rounded,
+          icon: TaliaIcons.reading,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS5Does,
           howToOpen: l10n.tutorialS5Open,
@@ -109,7 +109,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS6Title,
           category: l10n.tutorialS6Cat,
-          icon: Icons.spa_rounded,
+          icon: TaliaIcons.azkar,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS6Does,
           howToOpen: l10n.tutorialS6Open,
@@ -128,7 +128,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS7Title,
           category: l10n.tutorialS7Cat,
-          icon: Icons.psychology_rounded,
+          icon: TaliaIcons.hifz,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS7Does,
           howToOpen: l10n.tutorialS7Open,
@@ -147,7 +147,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS8Title,
           category: l10n.tutorialS8Cat,
-          icon: Icons.dashboard_customize_rounded,
+          icon: TaliaIcons.dashboard,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS8Does,
           howToOpen: l10n.tutorialS8Open,
@@ -166,7 +166,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS9Title,
           category: l10n.tutorialS9Cat,
-          icon: Icons.family_restroom_rounded,
+          icon: TaliaIcons.family,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS9Does,
           howToOpen: l10n.tutorialS9Open,
@@ -184,7 +184,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS10Title,
           category: l10n.tutorialS10Cat,
-          icon: Icons.bar_chart_rounded,
+          icon: TaliaIcons.chart,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS10Does,
           howToOpen: l10n.tutorialS10Open,
@@ -203,7 +203,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS11Title,
           category: l10n.tutorialS11Cat,
-          icon: Icons.settings_rounded,
+          icon: TaliaIcons.settings,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS11Does,
           howToOpen: l10n.tutorialS11Open,
@@ -223,7 +223,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS12Title,
           category: l10n.tutorialS12Cat,
-          icon: Icons.storage_rounded,
+          icon: TaliaIcons.storage,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS12Does,
           howToOpen: l10n.tutorialS12Open,
@@ -240,7 +240,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS13Title,
           category: l10n.tutorialS13Cat,
-          icon: Icons.auto_stories_rounded,
+          icon: TaliaIcons.reading,
           accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS13Does,
           howToOpen: l10n.tutorialS13Open,
@@ -258,7 +258,7 @@ class TutorialGuideMapper {
         return TutorialGuideSection(
           title: l10n.tutorialS14Title,
           category: l10n.tutorialS14Cat,
-          icon: Icons.schedule_rounded,
+          icon: TaliaIcons.clock,
           accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS14Does,
           howToOpen: l10n.tutorialS14Open,

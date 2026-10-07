@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/today_checklist.dart';
@@ -113,8 +114,8 @@ class _TodayRow extends StatelessWidget {
             children: [
               Icon(
                 task.isComplete
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
+                    ? TaliaIcons.checkCircleFilled
+                    : TaliaIcons.circle,
                 color: task.isComplete ? AppColors.success : AppColors.primary,
               ),
               const SizedBox(width: AppSpacing.sm),

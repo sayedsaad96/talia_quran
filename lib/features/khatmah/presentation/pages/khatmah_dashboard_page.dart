@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -21,7 +22,6 @@ import '../khatmah_localizations.dart';
 import '../widgets/khatmah_dedication_form.dart';
 import '../widgets/khatmah_juz_map.dart';
 import '../widgets/khatmah_progress_gauge.dart';
-
 
 class KhatmahDashboardPage extends StatefulWidget {
   const KhatmahDashboardPage({super.key, this.cubit});
@@ -46,7 +46,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
       key: const Key('khatmah_dashboard_history_button'),
       tooltip: context.l10n.khatmahRecentCompletions,
       onPressed: () => context.push(AppRoutes.khatmahHistory),
-      icon: const Icon(Icons.history_rounded),
+      icon: const Icon(TaliaIcons.history),
     ),
   ];
 
@@ -341,7 +341,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline_rounded, color: errorColor),
+          Icon(TaliaIcons.error, color: errorColor),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -387,7 +387,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.favorite_rounded, size: 14, color: AppColors.gold),
+          const Icon(TaliaIcons.heartFilled, size: 14, color: AppColors.gold),
           const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
@@ -443,7 +443,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.error_outline_rounded,
+                          TaliaIcons.error,
                           key: const Key('khatmah_dashboard_load_failure'),
                           size: 64,
                           color: Theme.of(context).colorScheme.error,
@@ -468,7 +468,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                             'khatmah_dashboard_load_failure_retry_button',
                           ),
                           onPressed: _cubit.load,
-                          icon: const Icon(Icons.refresh_rounded),
+                          icon: const Icon(TaliaIcons.refresh),
                           label: Text(context.l10n.khatmahReload),
                         ),
                       ],
@@ -493,7 +493,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.menu_book_outlined,
+                          TaliaIcons.mushaf,
                           size: 64,
                           color: primary.withValues(alpha: 0.6),
                         ),
@@ -518,7 +518,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                           style: FilledButton.styleFrom(
                             backgroundColor: primary,
                           ),
-                          icon: const Icon(Icons.add_rounded),
+                          icon: const Icon(TaliaIcons.add),
                           label: Text(l10n.khatmahStartAction),
                         ),
                       ],
@@ -607,7 +607,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                         onTap: () => unawaited(_showEditDedicationSheet(plan)),
                         child: Row(
                           children: [
-                            const Icon(Icons.volunteer_activism_outlined),
+                            const Icon(TaliaIcons.dua),
                             const SizedBox(width: AppSpacing.sm),
                             Text(context.l10n.khatmahEditDedication),
                           ],
@@ -619,7 +619,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                         child: Row(
                           children: [
                             Icon(
-                              Icons.delete_outline_rounded,
+                              TaliaIcons.delete,
                               color: Theme.of(context).colorScheme.error,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -721,7 +721,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                             Row(
                               children: [
                                 Icon(
-                                  Icons.auto_stories_rounded,
+                                  TaliaIcons.reading,
                                   color: primary,
                                   size: 22,
                                 ),
@@ -790,8 +790,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                     )
                                   : Icon(
                                       isPaused
-                                          ? Icons.play_arrow_rounded
-                                          : Icons.menu_book_rounded,
+                                          ? TaliaIcons.play
+                                          : TaliaIcons.mushaf,
                                     ),
                               label: Text(
                                 isResuming
@@ -901,7 +901,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                   ),
                                 ),
                               ),
-                              icon: const Icon(Icons.update_rounded, size: 18),
+                              icon: const Icon(TaliaIcons.update, size: 18),
                               label: Text(
                                 context.l10n.khatmahCalmAdjust,
                                 style: AppTypography.labelMedium,
@@ -935,7 +935,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                   ),
                                 ),
                                 icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
+                                  TaliaIcons.addCircle,
                                   size: 18,
                                 ),
                                 label: Text(
@@ -971,8 +971,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                         ),
                         icon: Icon(
                           plan.status == KhatmahStatus.active
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
+                              ? TaliaIcons.pause
+                              : TaliaIcons.play,
                           size: 18,
                         ),
                         label: Text(
@@ -1073,7 +1073,7 @@ class _PhysicalMushafLoggerDialogState
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.menu_book_rounded, color: AppColors.gold),
+          const Icon(TaliaIcons.mushaf, color: AppColors.gold),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -1110,7 +1110,7 @@ class _PhysicalMushafLoggerDialogState
                 hintText: context.l10n.khatmahEG(
                   number(widget.plan.nextUnreadPage),
                 ),
-                prefixIcon: const Icon(Icons.bookmark_outline_rounded),
+                prefixIcon: const Icon(TaliaIcons.bookmark),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
@@ -1120,7 +1120,7 @@ class _PhysicalMushafLoggerDialogState
               const SizedBox(height: AppSpacing.sm),
               ActionChip(
                 key: const Key('khatmah_mushaf_wird_end_chip'),
-                avatar: const Icon(Icons.flag_rounded, size: 18),
+                avatar: const Icon(TaliaIcons.flag, size: 18),
                 label: Text(
                   context.l10n.khatmahThroughWirdEnd(number(wirdEnd)),
                 ),
@@ -1207,10 +1207,10 @@ class _PaceLine extends StatelessWidget {
         children: [
           Icon(
             isAhead
-                ? Icons.trending_up_rounded
+                ? TaliaIcons.progress
                 : onTrack
-                ? Icons.check_circle_outline_rounded
-                : Icons.schedule_rounded,
+                ? TaliaIcons.checkCircle
+                : TaliaIcons.clock,
             size: 16,
             color: color,
           ),
@@ -1236,7 +1236,7 @@ class _PaceLine extends StatelessWidget {
         TextButton.icon(
           key: const Key('khatmah_dashboard_redistribute_button'),
           onPressed: onRedistribute,
-          icon: const Icon(Icons.balance_rounded, size: 18),
+          icon: const Icon(TaliaIcons.balance, size: 18),
           label: Text(context.l10n.khatmahRedistributeAction),
         ),
       ],

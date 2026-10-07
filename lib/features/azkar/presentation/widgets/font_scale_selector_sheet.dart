@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
@@ -54,12 +55,9 @@ class FontScaleSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor =
-        context.tokens.surface;
-    final textColor =
-        context.tokens.textPrimary;
-    final hintColor =
-        context.tokens.textSecondary;
+    final surfaceColor = context.tokens.surface;
+    final textColor = context.tokens.textPrimary;
+    final hintColor = context.tokens.textSecondary;
 
     final scales = [
       (label: context.l10n.small, scale: 0.85, sampleSize: 18.0),
@@ -85,8 +83,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: context.tokens.textHint
-                      .withValues(alpha: 0.4),
+                  color: context.tokens.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
               ),
@@ -97,7 +94,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.format_size_rounded,
+                    TaliaIcons.textSize,
                     color: AppColors.primary,
                     size: 22,
                   ),
@@ -124,9 +121,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: context.tokens.card,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(
-                    color: context.tokens.divider,
-                  ),
+                  border: Border.all(color: context.tokens.divider),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -152,7 +147,9 @@ class FontScaleSelectorSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: InkWell(
                         onTap: () => onScaleSelected(item.scale),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -160,7 +157,9 @@ class FontScaleSelectorSheet extends StatelessWidget {
                             color: isSelected
                                 ? AppColors.primary
                                 : context.tokens.surfaceVariant,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary

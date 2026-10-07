@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -15,7 +16,8 @@ class KidsJourneyCompleteCard extends StatefulWidget {
   const KidsJourneyCompleteCard({super.key});
 
   @override
-  State<KidsJourneyCompleteCard> createState() => _KidsJourneyCompleteCardState();
+  State<KidsJourneyCompleteCard> createState() =>
+      _KidsJourneyCompleteCardState();
 }
 
 class _KidsJourneyCompleteCardState extends State<KidsJourneyCompleteCard> {
@@ -63,8 +65,8 @@ class _KidsJourneyCompleteCardState extends State<KidsJourneyCompleteCard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.emoji_events_rounded,
+              const TaliaIcon(
+                TaliaKidsIcons.trophy,
                 color: KidsTheme.goldStar,
                 size: 72,
               ),

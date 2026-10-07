@@ -56,11 +56,7 @@ class _StreakCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
-              Icons.local_fire_department_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
+            const Icon(TaliaIcons.flame, color: Colors.white, size: 28),
             const SizedBox(height: AppSpacing.sm),
             _AnimatedCount(
               value: streakDays,
@@ -147,8 +143,8 @@ class _StatCard extends StatelessWidget {
                     if (onTap != null)
                       Icon(
                         Directionality.of(context) == TextDirection.rtl
-                            ? Icons.chevron_left_rounded
-                            : Icons.chevron_right_rounded,
+                            ? TaliaIcons.chevronBack
+                            : TaliaIcons.chevronForward,
                         size: 20,
                         color: context.tokens.textHint,
                       ),
@@ -225,11 +221,7 @@ class _NextMilestoneCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.emoji_events_rounded,
-              color: AppColors.gold,
-              size: 28,
-            ),
+            const Icon(TaliaIcons.trophy, color: AppColors.gold, size: 28),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
@@ -386,7 +378,7 @@ class _DueReviewsBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.notifications_active_rounded, color: color, size: 22),
+              Icon(TaliaIcons.bell, color: color, size: 22),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -410,7 +402,7 @@ class _DueReviewsBanner extends StatelessWidget {
             alignment: AlignmentDirectional.centerEnd,
             child: FilledButton.icon(
               onPressed: onStart,
-              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              icon: const Icon(TaliaIcons.play, size: 18),
               label: Text(context.l10n.progressStartReview),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,

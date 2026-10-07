@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/repositories/parent_pin_recovery_repository.dart';
@@ -80,7 +81,7 @@ class ChildPinRecoveryView extends StatelessWidget {
                     : () => context.read<PinRecoveryApprovalCubit>().approve(
                         state.requests.first.id,
                       ),
-                icon: const Icon(Icons.key_rounded),
+                icon: const Icon(TaliaIcons.key),
                 label: Text(context.l10n.pinRecoveryApproveAction),
               ),
             ],

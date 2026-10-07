@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -57,7 +58,9 @@ class HomeUnifiedProgress extends StatelessWidget {
               _JourneyRingCompact(state: state, skin: skin),
               const SizedBox(width: AppSpacing.md),
               // Weekly activity dots
-              Expanded(child: _WeeklyDots(state: state, skin: skin)),
+              Expanded(
+                child: _WeeklyDots(state: state, skin: skin),
+              ),
             ],
           ),
         ],
@@ -74,12 +77,17 @@ class _StreakSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<StreakCubit, StreakState>(
       builder: (context, streakState) {
-        final days = streakState is StreakLoaded ? streakState.streak.currentStreak : 0;
+        final days = streakState is StreakLoaded
+            ? streakState.streak.currentStreak
+            : 0;
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.local_fire_department_rounded,
-                size: 22, color: AppColors.streakOrange),
+            const Icon(
+              TaliaIcons.flame,
+              size: 22,
+              color: AppColors.streakOrange,
+            ),
             const SizedBox(width: 6),
             Text(
               context.numText(days),
@@ -112,7 +120,7 @@ class _XpSection extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.star_rounded, size: 18, color: skin.gold),
+        Icon(TaliaIcons.starFilled, size: 18, color: skin.gold),
         const SizedBox(width: 4),
         Text(
           '${context.numText(totalXp)} ${context.l10n.xpLabel}',
@@ -145,26 +153,26 @@ class _JourneyRingCompact extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-      width: 56,
-      height: 56,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: memPct,
-            strokeWidth: 5,
-            color: skin.accent,
-            backgroundColor: skin.progressTrack,
+          width: 56,
+          height: 56,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CircularProgressIndicator(
+                value: memPct,
+                strokeWidth: 5,
+                color: skin.accent,
+                backgroundColor: skin.progressTrack,
+              ),
+              Text(
+                percent,
+                style: AppTypography.labelSmall.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: skin.gold,
+                ),
+              ),
+            ],
           ),
-          Text(
-            percent,
-            style: AppTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.w800,
-              color: skin.gold,
-            ),
-          ),
-        ],
-      ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -192,7 +200,8 @@ class _WeeklyDots extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(7, (i) {
         final day = today.subtract(Duration(days: 6 - i));
-        final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+        final key =
+            '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
         final count = state.activityCountsByDay[key] ?? 0;
         final active = count > 0;
         return Column(

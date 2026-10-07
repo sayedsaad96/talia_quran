@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/surah_memorization_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -21,7 +22,7 @@ class SurahMemorizationBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          memorized ? Icons.verified_rounded : Icons.psychology_rounded,
+          memorized ? TaliaIcons.verified : TaliaIcons.hifz,
           size: 14,
           color: color,
         ),

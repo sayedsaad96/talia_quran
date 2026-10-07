@@ -1,3 +1,4 @@
+import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_recitation_page.dart
 
@@ -58,10 +59,10 @@ class V2RecitationPage extends StatelessWidget {
           ? context.l10n.v2StopRecording
           : context.l10n.v2StartRecording,
       primaryActionIcon: speechUnavailable
-          ? Icons.record_voice_over_rounded
+          ? TaliaIcons.recite
           : isRecording
-          ? Icons.stop_rounded
-          : Icons.mic_rounded,
+          ? TaliaIcons.stop
+          : TaliaIcons.mic,
       primaryActionEnabled: !isEvaluating,
       onPrimaryAction: speechUnavailable ? selfGrade : record,
       children: [
@@ -80,9 +81,7 @@ class V2RecitationPage extends StatelessWidget {
               ? null
               : (speechUnavailable ? record : selfGrade),
           icon: Icon(
-            speechUnavailable
-                ? Icons.mic_rounded
-                : Icons.record_voice_over_rounded,
+            speechUnavailable ? TaliaIcons.mic : TaliaIcons.recite,
             size: 18,
           ),
           label: Text(
@@ -219,7 +218,7 @@ class _SelfGradeSheetState extends State<_SelfGradeSheet> {
             child: OutlinedButton.icon(
               key: const ValueKey('v2-self-grade-reveal'),
               onPressed: () => setState(() => _revealed = true),
-              icon: const Icon(Icons.visibility_rounded),
+              icon: const Icon(TaliaIcons.show),
               label: Text(
                 _isBlock
                     ? l10n.v2BlockRevealAction
@@ -231,14 +230,14 @@ class _SelfGradeSheetState extends State<_SelfGradeSheet> {
       ],
       option(
         grade: V2SelfGrade.mastered,
-        icon: Icons.check_circle_rounded,
+        icon: TaliaIcons.checkCircleFilled,
         color: AppColors.success,
         title: _isBlock ? l10n.v2BlockGradeMastered : l10n.v2SelfGradeMastered,
         hint: _isBlock ? null : l10n.v2SelfGradeMasteredHint,
       ),
       option(
         grade: V2SelfGrade.hesitated,
-        icon: Icons.adjust_rounded,
+        icon: TaliaIcons.target,
         color: AppColors.warning,
         title: _isBlock
             ? l10n.v2BlockGradeHesitated
@@ -247,7 +246,7 @@ class _SelfGradeSheetState extends State<_SelfGradeSheet> {
       ),
       option(
         grade: V2SelfGrade.forgot,
-        icon: Icons.replay_rounded,
+        icon: TaliaIcons.replay,
         color: AppColors.error,
         title: _isBlock ? l10n.v2BlockGradeForgot : l10n.v2SelfGradeForgot,
         hint: l10n.v2SelfGradeForgotHint,
@@ -261,7 +260,7 @@ class _SelfGradeSheetState extends State<_SelfGradeSheet> {
       for (final ayah in widget.ayahs)
         ListTile(
           key: ValueKey('v2-stumbled-ayah-${ayah.numberInSurah}'),
-          leading: const Icon(Icons.flag_rounded),
+          leading: const Icon(TaliaIcons.flag),
           title: Text(
             context.l10n.v2StumbledAyahOption(
               LocaleNumberFormatter.format(

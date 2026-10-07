@@ -36,11 +36,7 @@ class _FamilySummaryBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.family_restroom_rounded,
-            color: Colors.white,
-            size: 40,
-          ),
+          const Icon(TaliaIcons.family, color: Colors.white, size: 40),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -304,7 +300,7 @@ class _AddChildCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.add_rounded,
+                TaliaIcons.add,
                 color: AppColors.primary,
                 size: 28,
               ),
@@ -338,11 +334,7 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.family_restroom_rounded,
-              size: 80,
-              color: AppColors.primary,
-            ),
+            const Icon(TaliaIcons.family, size: 80, color: AppColors.primary),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.l10n.familyDashboardNoChildren,
@@ -358,7 +350,7 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
             FilledButton.icon(
               onPressed: () => _showAddChildOptions(context),
-              icon: const Icon(Icons.qr_code_scanner_rounded),
+              icon: const Icon(TaliaIcons.qrScan),
               label: Text(context.l10n.familyDashboardAddChild),
             ),
           ],

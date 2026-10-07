@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -123,7 +124,7 @@ class _AzkarHubView extends StatelessWidget {
         EmptyStateWidget(
           key: const ValueKey('azkar-content-under-review'),
           message: context.l10n.azkarContentUnderReview,
-          icon: Icons.pending_actions_rounded,
+          icon: TaliaIcons.pending,
         ),
       ];
     }
@@ -158,7 +159,7 @@ class _AzkarHubView extends StatelessWidget {
                     : context.l10n.azkarEveningHeroSubtitle),
           countText: context.l10n.zikrCount(context.numText(heroCount)),
           isDone: isAllDone,
-          icon: isMorningHero ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+          icon: isMorningHero ? TaliaIcons.sun : TaliaIcons.moon,
           gradientColors: isMorningHero
               ? const [Color(0xFFE5A642), Color(0xFFC27D16)]
               : const [AppColors.primary, AppColors.primaryDark],
@@ -178,7 +179,7 @@ class _AzkarHubView extends StatelessWidget {
         _BentoGridCard(
           title: context.l10n.morningAzkar,
           subtitle: context.l10n.zikrCount(context.numText(morningCount)),
-          icon: Icons.wb_sunny_rounded,
+          icon: TaliaIcons.sun,
           accentColor: const Color(0xFFE5A642),
           route: 'morning',
           isDark: isDark,
@@ -191,7 +192,7 @@ class _AzkarHubView extends StatelessWidget {
         _BentoGridCard(
           title: context.l10n.eveningAzkar,
           subtitle: context.l10n.zikrCount(context.numText(eveningCount)),
-          icon: Icons.nightlight_round,
+          icon: TaliaIcons.moon,
           accentColor: AppColors.primaryLight,
           route: 'evening',
           isDark: isDark,
@@ -205,7 +206,7 @@ class _AzkarHubView extends StatelessWidget {
         _BentoGridCard(
           title: context.l10n.duas,
           subtitle: context.l10n.duaCount(context.numText(duaCount)),
-          icon: Icons.menu_book_rounded,
+          icon: TaliaIcons.dua,
           accentColor: const Color(0xFF6B46C1),
           route: 'duas',
           isDark: isDark,
@@ -219,7 +220,7 @@ class _AzkarHubView extends StatelessWidget {
         _BentoGridCard(
           title: context.l10n.generalAzkar,
           subtitle: context.l10n.azkarCount(context.numText(generalCount)),
-          icon: Icons.spa_rounded,
+          icon: TaliaIcons.azkar,
           accentColor: AppColors.ambientTeal,
           route: 'general',
           isDark: isDark,
@@ -241,7 +242,7 @@ class _AzkarHubView extends StatelessWidget {
         key: const ValueKey('azkar-card-smart-wird'),
         title: context.l10n.azkarSmartWird,
         subtitle: smartWirdSubtitle,
-        icon: Icons.auto_awesome_rounded,
+        icon: TaliaIcons.sparkle,
         accentColor: AppColors.success,
         route: 'smart',
         isDark: isDark,
@@ -254,7 +255,7 @@ class _AzkarHubView extends StatelessWidget {
         key: const ValueKey('azkar-card-tasbeeh'),
         title: context.l10n.azkarFreeTasbeeh,
         subtitle: context.l10n.azkarFreeTasbeehSubtitle,
-        icon: Icons.touch_app_rounded,
+        icon: TaliaIcons.tap,
         accentColor: AppColors.goldDark,
         onTap: () async {
           await FreeTasbeehSheet.show(context, isDark: isDark);
@@ -326,7 +327,7 @@ class _AzkarHubView extends StatelessWidget {
                 end: -30,
                 top: -15,
                 child: Icon(
-                  Icons.mosque_rounded,
+                  TaliaIcons.prayer,
                   size: 180,
                   color: Colors.white.withValues(alpha: 0.1),
                 ),
@@ -510,8 +511,8 @@ class _ContextualHeroCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Icon(
                               Directionality.of(context) == TextDirection.rtl
-                                  ? Icons.arrow_back_rounded
-                                  : Icons.arrow_forward_rounded,
+                                  ? TaliaIcons.arrowBack
+                                  : TaliaIcons.arrowForward,
                               size: 16,
                               color: Colors.white,
                             ),
@@ -592,8 +593,8 @@ class _BentoGridCard extends StatelessWidget {
                 ),
                 Icon(
                   Directionality.of(context) == TextDirection.rtl
-                      ? Icons.arrow_back_ios_new_rounded
-                      : Icons.arrow_forward_ios_rounded,
+                      ? TaliaIcons.chevronBack
+                      : TaliaIcons.chevronForward,
                   size: 14,
                   color: subColor.withValues(alpha: 0.6),
                 ),

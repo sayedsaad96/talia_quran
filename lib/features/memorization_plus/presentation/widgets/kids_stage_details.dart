@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
@@ -25,7 +26,7 @@ class KidsStageDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final startButton = KidsChunkyButton(
       onPressed: onStartMission,
-      icon: Icons.play_arrow_rounded,
+      icon: TaliaKidsIcons.play,
       label: context.l10n.kidsGamifiedStartMission,
       height: 68,
     );
@@ -36,21 +37,21 @@ class KidsStageDetails extends StatelessWidget {
         _RibbonHeader(stage: stage, surahName: surahName),
         const SizedBox(height: AppSpacing.lg),
         _MissionStep(
-          icon: Icons.headphones_rounded,
+          icon: TaliaKidsIcons.listen,
           title: context.l10n.kidsGamifiedListenStep,
           subtitle: context.l10n.kidsGamifiedListenStepSubtitle,
           color: KidsTheme.forestGreen,
         ),
         const SizedBox(height: AppSpacing.sm),
         _MissionStep(
-          icon: Icons.record_voice_over_rounded,
+          icon: TaliaKidsIcons.recite,
           title: context.l10n.kidsGamifiedRepeatStep,
           subtitle: context.l10n.kidsGamifiedRepeatStepSubtitle,
           color: KidsTheme.goldWarm,
         ),
         const SizedBox(height: AppSpacing.sm),
         _MissionStep(
-          icon: Icons.psychology_alt_rounded,
+          icon: TaliaKidsIcons.hifz,
           title: context.l10n.kidsGamifiedTestStep,
           subtitle: context.l10n.kidsGamifiedTestStepSubtitle,
           color: KidsTheme.reviewPurple,
@@ -145,7 +146,7 @@ class _MissionStep extends StatelessWidget {
               color: color.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(icon, color: color),
+            child: TaliaIcon(icon, color: color),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

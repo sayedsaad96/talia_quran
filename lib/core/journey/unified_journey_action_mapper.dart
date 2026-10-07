@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/surah_names.dart';
 import '../extensions/context_extensions.dart';
+import '../icons/talia_icons.dart';
 import '../memorization/smart_coach_recommendation.dart';
 import '../../features/memorization_plus/domain/entities/memorization_recommendation.dart';
 import 'unified_journey_action.dart';
@@ -135,12 +136,12 @@ class UnifiedJourneyActionMapper {
 
   IconData _getIconForIntent(JourneyIntent intent) {
     return switch (intent) {
-      JourneyIntent.resume => Icons.play_circle_fill_rounded,
-      JourneyIntent.review => Icons.history_rounded,
-      JourneyIntent.memorize => Icons.auto_awesome_rounded,
-      JourneyIntent.reading => Icons.menu_book_rounded,
-      JourneyIntent.azkar => Icons.volunteer_activism_rounded,
-      JourneyIntent.explore => Icons.explore_rounded,
+      JourneyIntent.resume => TaliaIcons.playCircleFilled,
+      JourneyIntent.review => TaliaIcons.history,
+      JourneyIntent.memorize => TaliaIcons.hifz,
+      JourneyIntent.reading => TaliaIcons.mushaf,
+      JourneyIntent.azkar => TaliaIcons.azkar,
+      JourneyIntent.explore => TaliaIcons.journey,
     };
   }
 
@@ -179,22 +180,22 @@ class UnifiedJourneyActionMapper {
       SmartCoachRecommendationKind.reviewDueNear => (
         context.l10n.journeyReviewBeforeNewTitle,
         context.l10n.journeyReviewBeforeNewDesc('$surahLabel$ayahLabel'),
-        Icons.history_rounded,
+        TaliaIcons.history,
       ),
       SmartCoachRecommendationKind.reviewDueFar => (
         context.l10n.journeyLongTermReviewTitle,
         context.l10n.journeyLongTermReviewDesc('$surahLabel$ayahLabel'),
-        Icons.schedule_rounded,
+        TaliaIcons.clock,
       ),
       SmartCoachRecommendationKind.memorizedReviewDue => (
         context.l10n.smartCoachMemorizedReviewDueTitle,
         context.l10n.smartCoachMemorizedReviewDueSubtitle(surahName),
-        Icons.verified_rounded,
+        TaliaIcons.verified,
       ),
       SmartCoachRecommendationKind.reviewWeakAyah => (
         context.l10n.journeyReviewDifficultAyahTitle,
         context.l10n.journeyReviewDifficultAyahDesc('$surahLabel$ayahLabel'),
-        Icons.healing_rounded,
+        TaliaIcons.heal,
       ),
       SmartCoachRecommendationKind.continueDailyPlan => (
         context.l10n.journeyContinueDailyPlanTitle,
@@ -208,22 +209,22 @@ class UnifiedJourneyActionMapper {
             context.l10n.localeName,
           ),
         ),
-        Icons.today_rounded,
+        TaliaIcons.calendar,
       ),
       SmartCoachRecommendationKind.memorizeNewAyahs => (
         context.l10n.journeyMemorizeNewAyahsTitle,
         context.l10n.journeyMemorizeNewAyahsDesc('$surahLabel$ayahLabel'),
-        Icons.auto_awesome_rounded,
+        TaliaIcons.sparkle,
       ),
       SmartCoachRecommendationKind.kidsCurrentMission => (
         context.l10n.journeyCurrentMissionTitle,
         context.l10n.journeyCurrentMissionDesc,
-        Icons.star_rounded,
+        TaliaIcons.starFilled,
       ),
       SmartCoachRecommendationKind.continueV2Session => (
         context.l10n.journeyContinueSessionTitle,
         context.l10n.journeyContinueSessionDesc(surahLabel),
-        Icons.play_circle_fill_rounded,
+        TaliaIcons.playCircleFilled,
       ),
     };
     return JourneyPresentationData(
