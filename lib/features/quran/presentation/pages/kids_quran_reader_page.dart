@@ -447,20 +447,14 @@ class KidsQuranReaderContent extends StatelessWidget {
                               onAyahLongPress!(surahId, ayahNumber),
                   ),
             ),
-            if (confirmation != null)
-              _KidsReaderConfirmBar(
-                confirmation: confirmation!,
-                pageNumber: pageNumber,
-                isAudioPlaying: isAudioPlaying,
-                accent: accent,
-                bg: bg,
-              ),
             _KidsQuranFooter(
               pageNumber: pageNumber,
               accent: accent,
               bg: bg,
               isPagePlaying: isPagePlaying,
               onTogglePageAudio: onTogglePageAudio,
+              confirmation: confirmation,
+              isAudioPlaying: isAudioPlaying,
             ),
           ],
         ),
@@ -548,95 +542,9 @@ class _KidsQuranHeader extends StatelessWidget {
   }
 }
 
-class _KidsReaderConfirmBar extends StatelessWidget {
-  const _KidsReaderConfirmBar({
-    required this.confirmation,
-    required this.pageNumber,
-    required this.isAudioPlaying,
-    required this.accent,
-    required this.bg,
-  });
-
-  final KidsReaderConfirmation confirmation;
-  final int pageNumber;
-  final bool isAudioPlaying;
-  final Color accent;
-  final Color bg;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: confirmation,
-      builder: (context, _) {
-        final l10n = context.l10n;
-        final Widget child;
-        if (confirmation.isConfirmed(pageNumber)) {
-          child = confirmation.showToast
-              ? KidsTaliaCompanion(
-                  pose: KidsTaliaPose.happy,
-                  message: l10n.kidsReaderPageConfirmed,
-                  animate: false,
-                  height: 72,
-                )
-              : Container(
-                  key: const ValueKey('kids-reader-page-confirmed'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    border: Border.all(color: accent.withValues(alpha: 0.45)),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TaliaIcon(
-                        TaliaKidsIcons.checkCircleFilled,
-                        color: accent,
-                        size: 18,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Flexible(
-                        child: Text(
-                          l10n.kidsReaderPageConfirmed,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: accent,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-        } else if (isAudioPlaying) {
-          return const SizedBox.shrink();
-        } else {
-          child = KidsChunkyButton(
-            key: const ValueKey('kids-reader-confirm-page'),
-            label: l10n.kidsReaderConfirmPage,
-            icon: TaliaKidsIcons.check,
-            tone: KidsButtonTone.green,
-            height: 52,
-            onPressed: () => unawaited(confirmation.confirm(pageNumber)),
-          );
-        }
-        return Container(
-          color: bg,
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.xs,
-            AppSpacing.md,
-            0,
-          ),
-          child: Center(child: child),
-        );
-      },
-    );
-  }
-}
-
+/// One compact control area under the Mushaf, so the page keeps most of the
+/// screen: the long-press tip with the page number, then «قرأت هذه الصفحة»
+/// and «استمع للصفحة» side by side.
 class _KidsQuranFooter extends StatelessWidget {
   const _KidsQuranFooter({
     required this.pageNumber,
@@ -644,17 +552,74 @@ class _KidsQuranFooter extends StatelessWidget {
     required this.bg,
     this.isPagePlaying = false,
     this.onTogglePageAudio,
+    this.confirmation,
+    this.isAudioPlaying = false,
   });
+
+  /// Shared by both buttons so the row stays one even height.
+  static const double buttonHeight = 48;
 
   final int pageNumber;
   final Color accent;
   final Color bg;
   final bool isPagePlaying;
   final VoidCallback? onTogglePageAudio;
+  final KidsReaderConfirmation? confirmation;
+  final bool isAudioPlaying;
 
   @override
   Widget build(BuildContext context) {
+    final confirmation = this.confirmation;
+    if (confirmation == null) {
+      return _layout(context, confirmSlot: null, showToast: false);
+    }
+    return ListenableBuilder(
+      listenable: confirmation,
+      builder: (context, _) {
+        final confirmed = confirmation.isConfirmed(pageNumber);
+        final showToast = confirmed && confirmation.showToast;
+        final Widget? confirmSlot;
+        if (confirmed) {
+          // While Talia congratulates above, listening gets the whole row.
+          confirmSlot = showToast ? null : _confirmedChip(context);
+        } else if (isAudioPlaying) {
+          // Playback never earns the confirm button.
+          confirmSlot = null;
+        } else {
+          confirmSlot = KidsChunkyButton(
+            key: const ValueKey('kids-reader-confirm-page'),
+            label: context.l10n.kidsReaderConfirmPage,
+            icon: TaliaKidsIcons.check,
+            tone: KidsButtonTone.green,
+            height: buttonHeight,
+            compact: true,
+            onPressed: () => unawaited(confirmation.confirm(pageNumber)),
+          );
+        }
+        return _layout(context, confirmSlot: confirmSlot, showToast: showToast);
+      },
+    );
+  }
+
+  Widget _layout(
+    BuildContext context, {
+    required Widget? confirmSlot,
+    required bool showToast,
+  }) {
     final onToggle = onTogglePageAudio;
+    final listen = onToggle == null
+        ? null
+        : KidsChunkyButton(
+            key: const ValueKey('kids-quran-page-audio'),
+            label: isPagePlaying
+                ? context.l10n.kidsQuranPausePage
+                : context.l10n.kidsQuranListenPage,
+            icon: isPagePlaying ? TaliaKidsIcons.pause : TaliaKidsIcons.play,
+            tone: KidsButtonTone.gold,
+            height: buttonHeight,
+            compact: true,
+            onPressed: onToggle,
+          );
     return Container(
       color: bg,
       padding: const EdgeInsets.fromLTRB(
@@ -667,67 +632,106 @@ class _KidsQuranFooter extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              // K26: the long press is the way to hear one ayah, so the tip
-              // stays on screen instead of hiding in a first-run coach mark.
-              TaliaIcon(TaliaKidsIcons.tap, color: accent, size: 18),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Text(
-                  context.l10n.kidsQuranLongPressHint,
-                  style: AppTypography.labelSmall.copyWith(color: accent),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.1),
-                  border: Border.all(color: accent.withValues(alpha: 0.45)),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  context.l10n.kidsQuranPageLabel(
-                    LocaleNumberFormatter.format(
-                      (pageNumber).toString(),
-                      context.l10n.localeName,
-                    ),
-                  ),
-                  style: AppTypography.labelSmall.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (onToggle != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            FilledButton.icon(
-              key: const ValueKey('kids-quran-page-audio'),
-              onPressed: onToggle,
-              icon: TaliaIcon(
-                isPagePlaying ? TaliaKidsIcons.pause : TaliaKidsIcons.play,
-              ),
-              label: Text(
-                isPagePlaying
-                    ? context.l10n.kidsQuranPausePage
-                    : context.l10n.kidsQuranListenPage,
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: bg,
-                minimumSize: const Size.fromHeight(52),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: KidsTheme.buttonRadius,
+          if (showToast)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Center(
+                child: KidsTaliaCompanion(
+                  pose: KidsTaliaPose.happy,
+                  message: context.l10n.kidsReaderPageConfirmed,
+                  animate: false,
+                  height: 64,
                 ),
               ),
             ),
+          _hintRow(context),
+          if (confirmSlot != null || listen != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                if (confirmSlot != null)
+                  Expanded(child: Center(child: confirmSlot)),
+                if (confirmSlot != null && listen != null)
+                  const SizedBox(width: AppSpacing.sm),
+                if (listen != null) Expanded(child: listen),
+              ],
+            ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _hintRow(BuildContext context) {
+    return Row(
+      children: [
+        // K26: the long press is the way to hear one ayah, so the tip stays
+        // on screen instead of hiding in a first-run coach mark.
+        TaliaIcon(TaliaKidsIcons.tap, color: accent, size: 16),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Text(
+            context.l10n.kidsQuranLongPressHint,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.labelSmall.copyWith(color: accent),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.1),
+            border: Border.all(color: accent.withValues(alpha: 0.45)),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          ),
+          child: Text(
+            context.l10n.kidsQuranPageLabel(
+              LocaleNumberFormatter.format(
+                pageNumber.toString(),
+                context.l10n.localeName,
+              ),
+            ),
+            style: AppTypography.labelSmall.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _confirmedChip(BuildContext context) {
+    return Container(
+      key: const ValueKey('kids-reader-page-confirmed'),
+      constraints: const BoxConstraints(minHeight: buttonHeight),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.1),
+        border: Border.all(color: accent.withValues(alpha: 0.45)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TaliaIcon(TaliaKidsIcons.checkCircleFilled, color: accent, size: 18),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              context.l10n.kidsReaderPageConfirmed,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.labelSmall.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ],
       ),
     );

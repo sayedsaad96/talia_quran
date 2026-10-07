@@ -65,6 +65,7 @@ class KidsChunkyButton extends StatefulWidget {
     this.tone = KidsButtonTone.green,
     this.height = 64,
     this.maxLines = 2,
+    this.compact = false,
   });
 
   final String label;
@@ -73,6 +74,9 @@ class KidsChunkyButton extends StatefulWidget {
   final KidsButtonTone tone;
   final double height;
   final int maxLines;
+
+  /// Smaller icon, padding and type, so two buttons fit side by side.
+  final bool compact;
 
   static const double depth = 6;
 
@@ -105,9 +109,9 @@ class _KidsChunkyButtonState extends State<KidsChunkyButton> {
 
     final face = Container(
       constraints: BoxConstraints(minHeight: widget.height),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.compact ? AppSpacing.sm : AppSpacing.md,
+        vertical: widget.compact ? AppSpacing.xs : AppSpacing.sm,
       ),
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -126,15 +130,19 @@ class _KidsChunkyButtonState extends State<KidsChunkyButton> {
         children: [
           if (widget.icon != null) ...[
             Container(
-              width: 38,
-              height: 38,
+              width: widget.compact ? 30 : 38,
+              height: widget.compact ? 30 : 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.28),
               ),
-              child: Icon(widget.icon, color: colors.foreground, size: 24),
+              child: Icon(
+                widget.icon,
+                color: colors.foreground,
+                size: widget.compact ? 19 : 24,
+              ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: widget.compact ? AppSpacing.xs : AppSpacing.sm),
           ],
           Flexible(
             child: Text(
@@ -142,11 +150,15 @@ class _KidsChunkyButtonState extends State<KidsChunkyButton> {
               textAlign: TextAlign.center,
               maxLines: widget.maxLines,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.titleMedium.copyWith(
-                color: colors.foreground,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0,
-              ),
+              style:
+                  (widget.compact
+                          ? AppTypography.titleSmall
+                          : AppTypography.titleMedium)
+                      .copyWith(
+                        color: colors.foreground,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                      ),
             ),
           ),
         ],

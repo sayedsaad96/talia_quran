@@ -325,6 +325,38 @@ void main() {
       ),
     );
 
+    testWidgets('confirm and listen share one row on a 320px Arabic screen', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 640);
+      addTearDown(tester.view.reset);
+      await setUpConfirmation();
+
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsQuranReaderContent(
+            pageNumber: 12,
+            onBack: () {},
+            reader: const SizedBox(),
+            confirmation: confirmation,
+            onTogglePageAudio: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      final confirm = tester.getRect(find.byKey(confirmKey));
+      final listen = tester.getRect(
+        find.byKey(const ValueKey('kids-quran-page-audio')),
+      );
+      // Side by side: same row, no overlap, so the Mushaf keeps the height.
+      expect(confirm.center.dy, closeTo(listen.center.dy, 1));
+      expect(confirm.overlaps(listen.deflate(1)), isFalse);
+    });
+
     testWidgets('confirm button records the page once', (tester) async {
       await setUpConfirmation();
       await tester.pumpWidget(host());
