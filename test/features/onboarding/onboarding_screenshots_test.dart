@@ -109,7 +109,6 @@ void main() {
 }
 
 const _shotAssets = [
-  'assets/images/onboarding/splash_new.png',
   'assets/images/character/Talia_Master_Character.png',
 ];
 

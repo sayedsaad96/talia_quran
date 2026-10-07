@@ -141,8 +141,6 @@ flutter:
     - assets/fonts/
     # Runtime image assets. Keep this list explicit so generator input and
     # legacy artwork do not become part of the release bundle accidentally.
-    - assets/images/certificate.png
-    - assets/images/launcher_icon_ios.png
     - assets/images/logo_new_padded.png
     - assets/images/logo_new.png
     - assets/images/logo.png
@@ -155,11 +153,8 @@ flutter:
     - assets/images/kids/house_current.png
     - assets/images/kids/house_locked.png
     - assets/images/kids/house_review.png
-    - assets/images/kids/kid_avatar.png
-    - assets/images/kids/path_decoration.png
     - assets/images/kids/ribbon_banner.png
     - assets/images/kids/star_reward.png
-    - assets/images/onboarding/splash_new.png
     - assets/images/talia/talia_avatar.png
     - assets/images/talia/talia_celebrate.png
     - assets/images/talia/talia_encourage.png
