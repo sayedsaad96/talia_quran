@@ -17,9 +17,16 @@ class HomeOccasionContext {
 }
 
 class HomeOccasionService {
-  const HomeOccasionService({DateTime Function()? now}) : _now = now ?? DateTime.now;
+  const HomeOccasionService({
+    DateTime Function()? now,
+    int Function()? hijriOffsetDays,
+  }) : _now = now ?? DateTime.now,
+       _hijriOffsetDays = hijriOffsetDays;
 
   final DateTime Function() _now;
+
+  /// The user's Hijri date adjustment (`HijriDateAdjustment.days`).
+  final int Function()? _hijriOffsetDays;
 
   HomeOccasionContext current({required bool isArabic}) {
     final now = _now();
@@ -30,7 +37,9 @@ class HomeOccasionService {
         : HomeOccasion.none;
     try {
       HijriCalendar.setLocal(isArabic ? 'ar' : 'en');
-      final hijri = HijriCalendar.fromDate(now);
+      final hijri = HijriCalendar.fromDate(
+        now.add(Duration(days: _hijriOffsetDays?.call() ?? 0)),
+      );
       hijriLabel = hijri.toFormat('dd MMMM yyyy');
       occasion = _occasion(now, hijri);
     } catch (_) {}

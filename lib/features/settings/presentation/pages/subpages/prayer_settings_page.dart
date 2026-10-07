@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
 import '../../widgets/settings_group.dart';
+import '../../widgets/settings_hijri_adjustment_tile.dart';
 import '../../widgets/settings_prayer_notification_tiles.dart';
 import '../../widgets/settings_prayer_tiles.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
@@ -64,6 +65,10 @@ class _PrayerSettingsPageState extends State<PrayerSettingsPage> {
               onConfigurePrayerTimes: () => _scrollToPrayerTimes(context),
             ),
           ],
+        ),
+        SettingsGroup(
+          title: context.l10n.hijriAdjustmentTitle,
+          children: const [HijriAdjustmentTile()],
         ),
         SettingsGroup(
           title: context.l10n.prayerCompanionSettingsTitle,

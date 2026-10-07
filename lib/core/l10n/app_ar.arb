@@ -3245,4 +3245,8 @@
   ,"surahNamed": "سورة {name}"
   ,"@surahNamed": {"placeholders": {"name": {"type": "String"}}}
   ,"azkarFontSizeTitle": "حجم خط الأذكار"
+  ,"hijriAdjustmentTitle": "التاريخ الهجري"
+  ,"hijriAdjustmentSubtitle": "عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر."
+  ,"hijriAdjustmentToday": "اليوم: {date}"
+  ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
 }

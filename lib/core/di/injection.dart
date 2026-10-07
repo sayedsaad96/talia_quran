@@ -184,6 +184,8 @@ import '../../features/khatmah/presentation/cubits/khatmah_history_cubit.dart';
 import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
 import '../../features/khatmah/domain/usecases/get_khatm_dua_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatm_dua_cubit.dart';
+import '../services/hijri_date_adjustment.dart';
+import '../../features/home/domain/services/daily_ayah_context_resolver.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -515,8 +517,13 @@ Future<void> configureDependencies({bool background = false}) async {
       },
     ),
   );
+  getIt.registerLazySingleton<HijriDateAdjustment>(
+    () => HijriDateAdjustment(getIt<SharedPreferences>()),
+  );
   getIt.registerLazySingleton<HomeOccasionService>(
-    () => const HomeOccasionService(),
+    () => HomeOccasionService(
+      hijriOffsetDays: () => getIt<HijriDateAdjustment>().days,
+    ),
   );
   getIt.registerLazySingleton<ProgressMetricsService>(
     () => const ProgressMetricsService(),
@@ -782,7 +789,12 @@ Future<void> configureDependencies({bool background = false}) async {
     () => SearchQuranUsecase(getIt<QuranRepository>()),
   );
   getIt.registerLazySingleton<GetAyahOfDayUsecase>(
-    () => GetAyahOfDayUsecase(getIt<QuranRepository>()),
+    () => GetAyahOfDayUsecase(
+      getIt<QuranRepository>(),
+      contextResolver: DailyAyahContextResolver(
+        hijriOffsetDays: () => getIt<HijriDateAdjustment>().days,
+      ),
+    ),
   );
   getIt.registerLazySingleton<GetTodayChecklistUsecase>(
     () => const GetTodayChecklistUsecase(),

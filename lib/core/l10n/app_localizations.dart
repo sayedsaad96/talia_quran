@@ -13035,6 +13035,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حجم خط الأذكار'**
   String get azkarFontSizeTitle;
+
+  /// No description provided for @hijriAdjustmentTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ الهجري'**
+  String get hijriAdjustmentTitle;
+
+  /// No description provided for @hijriAdjustmentSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر.'**
+  String get hijriAdjustmentSubtitle;
+
+  /// No description provided for @hijriAdjustmentToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم: {date}'**
+  String hijriAdjustmentToday(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -7718,4 +7718,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get azkarFontSizeTitle => 'حجم خط الأذكار';
+
+  @override
+  String get hijriAdjustmentTitle => 'التاريخ الهجري';
+
+  @override
+  String get hijriAdjustmentSubtitle =>
+      'عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر.';
+
+  @override
+  String hijriAdjustmentToday(String date) {
+    return 'اليوم: $date';
+  }
 }

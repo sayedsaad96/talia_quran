@@ -3207,4 +3207,8 @@
   ,"surahNamed": "Surah {name}"
   ,"@surahNamed": {"placeholders": {"name": {"type": "String"}}}
   ,"azkarFontSizeTitle": "Azkar font size"
+  ,"hijriAdjustmentTitle": "Hijri date"
+  ,"hijriAdjustmentSubtitle": "Shift the Hijri date to match your country's announcement of the new month."
+  ,"hijriAdjustmentToday": "Today: {date}"
+  ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
 }

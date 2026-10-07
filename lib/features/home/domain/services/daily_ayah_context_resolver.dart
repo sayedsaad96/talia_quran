@@ -16,7 +16,10 @@ typedef DailyAyahHijriDateFor = DailyAyahHijriDate? Function(DateTime date);
 /// Hijri dates are used only to choose a theme; the local Gregorian day still
 /// controls deterministic rotation within that theme.
 class DailyAyahContextResolver {
-  const DailyAyahContextResolver({this.hijriDateFor});
+  const DailyAyahContextResolver({this.hijriDateFor, this.hijriOffsetDays});
+
+  /// The user's Hijri date adjustment (`HijriDateAdjustment.days`).
+  final int Function()? hijriOffsetDays;
 
   final DailyAyahHijriDateFor? hijriDateFor;
 
@@ -32,9 +35,10 @@ class DailyAyahContextResolver {
   }
 
   DailyAyahHijriDate? _hijriDateFor(DateTime date) {
-    if (hijriDateFor != null) return hijriDateFor!(date);
+    final adjusted = date.add(Duration(days: hijriOffsetDays?.call() ?? 0));
+    if (hijriDateFor != null) return hijriDateFor!(adjusted);
     try {
-      final hijri = HijriCalendar.fromDate(date);
+      final hijri = HijriCalendar.fromDate(adjusted);
       return DailyAyahHijriDate(month: hijri.hMonth, day: hijri.hDay);
     } catch (_) {
       return null;
