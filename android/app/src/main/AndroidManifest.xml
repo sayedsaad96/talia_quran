@@ -20,7 +20,7 @@
         android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
-        android:label="Talia Quran"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:roundIcon="@mipmap/launcher_icon"

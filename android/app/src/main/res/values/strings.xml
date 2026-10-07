@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher label; matches the in-app appName (l10n). -->
+    <string name="app_name">Talia</string>
+</resources>

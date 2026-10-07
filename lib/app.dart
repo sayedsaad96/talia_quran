@@ -171,7 +171,8 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                 builder: (context, themeMode) {
                   final pureBlack = context.watch<PureBlackCubit>().state;
                   return MaterialApp.router(
-                    title: 'تالية',
+                    onGenerateTitle: (context) =>
+                        AppLocalizations.of(context).appName,
                     debugShowCheckedModeBanner: false,
                     scaffoldMessengerKey: rootScaffoldMessengerKey,
                     themeMode: themeMode,
