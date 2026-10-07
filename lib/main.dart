@@ -39,8 +39,10 @@ Future<void> main() async {
           child: Center(
             child: Padding(
               padding: EdgeInsets.all(24),
+              // Localizations may be unavailable here: show both languages.
               child: Text(
-                'حدث خطأ غير متوقع.\nيرجى إعادة تشغيل التطبيق.',
+                'حدث خطأ غير متوقع.\nيرجى إعادة تشغيل التطبيق.\n\n'
+                'Something went wrong.\nPlease restart the app.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
@@ -49,17 +51,21 @@ Future<void> main() async {
         );
       }
 
-      try {
-        await _bootstrapAndRun();
-      } catch (error, stack) {
-        TaliaLogger.e('App bootstrap failed', error, stack);
-        runApp(const _StartupFailureApp());
-      }
+      await _bootstrapWithRetry();
     },
     (error, stack) {
       TaliaLogger.e('Uncaught async error', error, stack);
     },
   );
+}
+
+Future<void> _bootstrapWithRetry() async {
+  try {
+    await _bootstrapAndRun();
+  } catch (error, stack) {
+    TaliaLogger.e('App bootstrap failed', error, stack);
+    runApp(const _StartupFailureApp(onRetry: _bootstrapWithRetry));
+  }
 }
 
 Future<void> _bootstrapAndRun() async {
@@ -84,23 +90,38 @@ Future<void> _bootstrapAndRun() async {
   runApp(const TaliaApp());
 }
 
+/// Shown when bootstrap fails, before localizations exist: both languages,
+/// and a retry that runs the bootstrap again.
 class _StartupFailureApp extends StatelessWidget {
-  const _StartupFailureApp();
+  const _StartupFailureApp({required this.onRetry});
+
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
           body: Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'تعذر تشغيل تالية حالياً.\nتأكد من إعدادات التطبيق ثم أعد المحاولة.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'تعذر تشغيل تالية حالياً.\nأعد المحاولة.\n\n'
+                    'Talia could not start.\nPlease try again.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: onRetry,
+                    child: const Text('إعادة المحاولة / Retry'),
+                  ),
+                ],
               ),
             ),
           ),
