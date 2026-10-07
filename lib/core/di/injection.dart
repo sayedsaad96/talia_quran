@@ -328,7 +328,6 @@ Future<void> configureDependencies({bool background = false}) async {
     () => QuranWarmupService(
       datasource: getIt<QuranLocalDatasource>(),
       sessionService: getIt<AppSessionService>(),
-      prefs: getIt<SharedPreferences>(),
     ),
   );
   getIt.registerLazySingleton<SettingsRepository>(

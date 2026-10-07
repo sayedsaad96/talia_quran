@@ -212,12 +212,15 @@ class _QcfContent extends StatelessWidget {
         color: textColor,
       ).copyWith(height: 2.0);
 
-      return Directionality(
-        textDirection: TextDirection.rtl,
-        child: Text.rich(
-          TextSpan(children: spans),
-          textAlign: textAlign,
-          style: qcfStyle,
+      return _QcfPageFont(
+        pageNumber: pageNumber,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text.rich(
+            TextSpan(children: spans),
+            textAlign: textAlign,
+            style: qcfStyle,
+          ),
         ),
       );
     } catch (_) {
@@ -230,6 +233,48 @@ class _QcfContent extends StatelessWidget {
       );
     }
   }
+}
+
+/// Registers the Mushaf page font this verse is styled with. Fonts load on
+/// demand (not all 604 at startup); until this one is ready the same text
+/// shows in the platform Arabic font, then repaints in the page font.
+class _QcfPageFont extends StatefulWidget {
+  const _QcfPageFont({required this.pageNumber, required this.child});
+
+  final int pageNumber;
+  final Widget child;
+
+  @override
+  State<_QcfPageFont> createState() => _QcfPageFontState();
+}
+
+class _QcfPageFontState extends State<_QcfPageFont> {
+  @override
+  void initState() {
+    super.initState();
+    _ensureLoaded();
+  }
+
+  @override
+  void didUpdateWidget(covariant _QcfPageFont oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.pageNumber != widget.pageNumber) _ensureLoaded();
+  }
+
+  void _ensureLoaded() {
+    final page = widget.pageNumber;
+    if (qcf.QcfFontLoader.isFontLoaded(page)) return;
+    qcf.QcfFontLoader.ensureFontLoaded(page).then(
+      (_) {
+        if (mounted && widget.pageNumber == page) setState(() {});
+      },
+      // The text stays readable in the platform font.
+      onError: (Object _) {},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // ─── Fallback Text ────────────────────────────────────────────────────────────

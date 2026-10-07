@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/services/get_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/utils/talia_logger.dart';
@@ -11,27 +10,22 @@ import '../datasources/quran_local_datasource.dart';
 /// Warms up the Quran rendering pipeline in the background after launch so
 /// any surah/page opens instantly, without the shimmer skeleton.
 ///
-/// Mushaf pages are drawn with a dedicated QCF font per page (604 fonts).
-/// Font registration in the Flutter engine is session-scoped, so every
-/// launch must re-register each page's font before that page can render.
+/// Mushaf pages are drawn with a dedicated QCF font per page (604 fonts,
+/// about 156 MB once decompressed). Fonts are registered on demand, never
+/// all at startup: the readers prefetch pages around the current one
+/// (`QcfFontLoader.preloadPages`), `QuranPageFontGuard` loads a page before
+/// it renders, and `QcfHifzVerseView` loads the page of each verse.
 /// [warmUp]:
 /// 1. Registers fonts for the pages the user is most likely to open first
 ///    (last-read location ± surrounding pages, Al-Fatihah, Al-Baqarah).
 /// 2. Parses the page layout data and quran.json once, so the reader cubits
 ///    find everything cached when the reader opens.
-/// 3. Registers all remaining fonts via [qcf.QcfFontLoader.setupFontsAtStartup].
-///    The first launch also extracts every font to disk; later launches only
-///    re-read the extracted files (batched).
 class QuranWarmupService {
   QuranWarmupService({
     required QuranLocalDatasource datasource,
     required AppSessionService sessionService,
-    required SharedPreferences prefs,
   }) : _datasource = datasource,
-       _sessionService = sessionService,
-       _prefs = prefs;
-
-  static const _warmedFlagKey = 'quran_fonts_warmed_v1';
+       _sessionService = sessionService;
 
   /// Lets the home screen render its first frames before warm-up work starts.
   static const _initialDelay = Duration(seconds: 5);
@@ -40,7 +34,6 @@ class QuranWarmupService {
 
   final QuranLocalDatasource _datasource;
   final AppSessionService _sessionService;
-  final SharedPreferences _prefs;
 
   bool _started = false;
 
@@ -65,25 +58,6 @@ class QuranWarmupService {
       await _datasource.ensureLoaded();
     } catch (error, stack) {
       TaliaLogger.e('Quran warm-up: data warm-up failed', error, stack);
-    }
-
-    // Yield to the event loop so any pending UI frames render smoothly
-    // before the bulk font registration begins.
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-
-    try {
-      await qcf.QcfFontLoader.setupFontsAtStartup(
-        onProgress: (progress) {
-          if (progress >= 1.0) {
-            TaliaLogger.d('QURAN WARMUP: all fonts registered');
-          }
-        },
-      );
-      await _prefs.setBool(_warmedFlagKey, true);
-    } catch (error, stack) {
-      TaliaLogger.e('Quran warm-up: font registration failed', error, stack);
-      // Allow a retry within the same session if something re-triggers us.
-      _started = false;
     }
   }
 
