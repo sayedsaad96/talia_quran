@@ -361,7 +361,7 @@ class MemorizationKidsLocalService {
       final ownerId = _owner.currentOwnerId;
       await _parentPinStore.writeVerifier(
         ownerId,
-        ParentPinVerifier.create(pin),
+        await ParentPinVerifier.createInBackground(pin),
       );
       await _clearPinThrottle(ownerId);
       await _datasource.saveParentSettings(
@@ -878,7 +878,7 @@ class MemorizationKidsLocalService {
     String pin,
     String verifier,
   ) async {
-    if (ParentPinVerifier.verify(pin, verifier)) {
+    if (await ParentPinVerifier.verifyInBackground(pin, verifier)) {
       await _clearPinThrottle(ownerId);
       return const Right(true);
     }
@@ -895,7 +895,10 @@ class MemorizationKidsLocalService {
     String pin,
     ParentSettings settings,
   ) async {
-    await _parentPinStore.writeVerifier(ownerId, ParentPinVerifier.create(pin));
+    await _parentPinStore.writeVerifier(
+      ownerId,
+      await ParentPinVerifier.createInBackground(pin),
+    );
     await _clearPinThrottle(ownerId);
     await _datasource.saveParentSettings(
       ParentSettingsModel.fromEntity(

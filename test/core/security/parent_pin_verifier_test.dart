@@ -10,4 +10,15 @@ void main() {
     expect(ParentPinVerifier.verify('1234', verifier), isTrue);
     expect(ParentPinVerifier.verify('0000', verifier), isFalse);
   });
+
+  test('background variants match the synchronous derivation', () async {
+    final verifier = await ParentPinVerifier.createInBackground('2468');
+
+    expect(ParentPinVerifier.verify('2468', verifier), isTrue);
+    expect(await ParentPinVerifier.verifyInBackground('2468', verifier), isTrue);
+    expect(
+      await ParentPinVerifier.verifyInBackground('1357', verifier),
+      isFalse,
+    );
+  });
 }

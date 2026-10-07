@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
@@ -14,6 +15,15 @@ abstract final class ParentPinVerifier {
     final hash = _derive(pin, pinSalt);
     return 'pbkdf2-sha256\$$iterations\$${base64UrlEncode(pinSalt)}\$${base64UrlEncode(hash)}';
   }
+
+  /// [create] on a background isolate: 120,000 HMAC rounds take long enough
+  /// to freeze the UI on low-end phones.
+  static Future<String> createInBackground(String pin) =>
+      Isolate.run(() => create(pin));
+
+  /// [verify] on a background isolate (see [createInBackground]).
+  static Future<bool> verifyInBackground(String pin, String verifier) =>
+      Isolate.run(() => verify(pin, verifier));
 
   static bool verify(String pin, String verifier) {
     _validatePin(pin);
