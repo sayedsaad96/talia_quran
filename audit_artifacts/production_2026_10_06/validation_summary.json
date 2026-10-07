@@ -1,0 +1,17 @@
+{
+  "head": "718228d0ee00dcb0ef2d2382ec6e3b1679af77b5",
+  "snapshotFiles": 1394,
+  "finalChangedPaths": [
+    {
+      "path": "pubspec.lock",
+      "status": "changed"
+    }
+  ],
+  "analysis": "PASS: no issues, 242.6 sec",
+  "fullTests": "Incomplete: 3037 pass, 23 fail, stopped stalled runner exit -1",
+  "remainingTests": "Completed: 1013 pass, 2 fail, exit 1",
+  "releaseBuild": "exit1: Gradle loopback/UnixDomainSockets",
+  "currentDeviceRuntime": "BLOCKED: no fresh APK installed; old screenshots excluded",
+  "finalVerdict": "NOT READY FOR PRODUCTION",
+  "score": 45
+}

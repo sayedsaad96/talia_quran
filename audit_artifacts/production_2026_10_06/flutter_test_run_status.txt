@@ -1,0 +1,1 @@
+Stalled after 12:18 +3037 -23; no tester process or CPU/log progress for several minutes. Owned runner/compiler processes stopped. No final suite exit: incomplete, not PASS.

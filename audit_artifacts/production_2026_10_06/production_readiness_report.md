@@ -7,11 +7,11 @@
 ## 1. الملخص التنفيذي
 التطبيق يمتلك بنية منظمة، تغطية آلية واسعة، تخزينًا محليًا ومزامنة، وعناية واضحة بالعربية. نجح التحليل الساكن، لكن ذلك لا يكفي للنشر. توجد اختلافات مثبتة في مرجع بيانات المصحف واعتماد حزمة QCF، وتعارض يحتاج حسمًا في نسبة ذكرين، ومخاطر في استعادة PIN وعزل الحسابات والوصول.
 
-التدقيق يستهدف **آخر ملفات العمل الحالية، بما فيها التعديلات المحلية والملفات الجديدة**، وليس commit وحده. الأساس Git HEAD: `718228d0ee00dcb0ef2d2382ec6e3b1679af77b5`. حُفظت بصمات SHA-256 لـ1,394 ملفًا في [source_snapshot.json](source_snapshot.json)، وأظهر فحص لاحق صفر تغييرات/حذف في الملفات المسجلة.
+التدقيق يستهدف **آخر ملفات العمل الحالية، بما فيها التعديلات المحلية والملفات الجديدة**، وليس commit وحده. الأساس Git HEAD: `718228d0ee00dcb0ef2d2382ec6e3b1679af77b5`. حُفظت بصمات SHA-256 لـ1,394 ملفًا في [source_snapshot.json](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/source_snapshot.json). المقارنة المبكرة لم تجد تغييرات؛ المقارنة اللاحقة وجدت تغيّرًا وحيدًا في pubspec.lock: sqflite 2.4.4→2.4.4+1 وsqflite_common 2.5.13→2.5.13+1 وبصمتيهما، مع بقاء1,393 ملفًا آخر دون تغيير. مصدر التغيير غير محسوم؛ استُخدم --no-pub ولم يُنفّذ تعديل اعتماديات مقصود. حُفظ الفرق في [lock_drift.patch](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/lock_drift.patch) ولم يُستبدل تلقائيًا حتى لا يُمحى عمل متزامن. QCF بقي0.1.0. يلزم قفل snapshot نهائي مستقر وإعادة بوابات الإصدار قبل النشر.
 
 الصور الموجودة في هذا المجلد التُقطت من تثبيت debug أقدم، ثم استُبعدت صراحةً بعد طلب المستخدم التحقق من آخر نسخة. **لم ينتج APK جديد، ولم تثبت مطابقة ملف مثبّت لبناء من الملفات الحالية؛ لا توجد رحلة تشغيلية معتمدة على آخر نسخة.** تعذر البناء بخطأ بيئة Gradle/Java، وليس لدينا دليل أنه عيب في التطبيق.
 
-لم يُنفّذ أي إصلاح أو تعديل مقصود في المصدر أو الإعدادات أو المحتوى أو الخادم. أُضيفت فقط ملفات أدلة هذا التدقيق؛ قد تولد أدوات البناء/الاختبارات ملفات cache وصور فروق تلقائيًا.
+لم يُنفّذ أي إصلاح أو تعديل مقصود في المصدر أو الإعدادات أو المحتوى أو الخادم. أُضيفت ملفات أدلة هذا التدقيق، وولّدت الاختبارات cache وصور فروق. تغيّر lock الموصوف أعلاه استثناء مرصود يمنع الادعاء بأن كل ملفات المشروع بقيت مطابقة حرفيًا طوال التنفيذ.
 
 ## 2. درجة الجاهزية /100
 **45/100 — تقدير تحفظي مؤقت، وليس قياسًا إحصائيًا أو نسبة نجاح اختبارات.**
@@ -20,16 +20,16 @@
 
 ## 3. موانع النشر — P0 Release Blocker
 ### R01: اختلاف 58 تعيينًا للصفحة/الجزء بين مصدرَي المصحف — مثبت
-**المكونات:** `assets/data/quran.json`، `lib/features/quran/data/datasources/quran_local_datasource.dart:99`، `lib/features/quran/presentation/widgets/app_quran_page_view.dart:225`، `lib/features/quran/presentation/pages/quran_reader_page.dart:512`.
+**المكونات:** [assets/data/quran.json](D:/Flutter/talia_quran/assets/data/quran.json)، [lib/features/quran/data/datasources/quran_local_datasource.dart:99](D:/Flutter/talia_quran/lib/features/quran/data/datasources/quran_local_datasource.dart:99)، [lib/features/quran/presentation/widgets/app_quran_page_view.dart:225](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/app_quran_page_view.dart:225)، [lib/features/quran/presentation/pages/quran_reader_page.dart:512](D:/Flutter/talia_quran/lib/features/quran/presentation/pages/quran_reader_page.dart:512).
 
-قورنت 6,236 آية بين JSON وQCF 0.1.0: صفر اختلافات في معرّفات السورة/الآية/global، و58 اختلافًا في page/juz. أمثلة: 3:92 جزء 4 في QCF مقابل 3 في JSON؛ 5:77 صفحة 120 مقابل 121؛ 84:25 صفحة 590 مقابل 589. القائمة الكاملة في [quran_mapping_disagreements.json](quran_mapping_disagreements.json).
+قورنت 6,236 آية بين JSON وQCF 0.1.0: صفر اختلافات في معرّفات السورة/الآية/global، و58 اختلافًا في page/juz. أمثلة: 3:92 جزء 4 في QCF مقابل 3 في JSON؛ 5:77 صفحة 120 مقابل 121؛ 84:25 صفحة 590 مقابل 589. القائمة الكاملة في [quran_mapping_disagreements.json](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/quran_mapping_disagreements.json).
 
 **الرحلة/الأثر:** العارض يرسم صفحة QCF، بينما تفاصيل الصفحة والبحث وربط العلامات/القراءة تستند إلى JSON؛ عند الحدود قد لا يجد الإجراء الآية المعروضة أو يربطها ببيانات صفحة أخرى.  
 **إعادة التحقق:** قارن حقول `sora,aya_no,id,page,jozz` في بيانات QCF مع `chapter,verse,global,page,juz` في JSON، ثم افتح الحدود المذكورة واختبر قائمة الآية/العلامة/التقدم.  
 **الحسم:** هذه الفروق موجودة أيضًا في metadata للحزمة 0.0.8؛ لا تُنسب كلها إلى الترقية. أي الجانبين صحيح **غير محسوم**. تعذر تنزيل الإصدار المرجعي الدقيق أثناء المراجعة. يلزم مقارنة حتمية بكامل [إصدار مجمع الملك فهد المعتمد](https://qurancomplex.gov.sa/en/techquran/dev/)، وتوثيق الرواية/الطبعة وبصمة المصدر ثم خطة توافق للبيانات المحفوظة. لا تُصحّح الخرائط بالتخمين.
 
 ### R02: حزمة العرض الحالية تختلف عن الحزمة المعتمدة — مثبت واختبار فاشل
-**المكونات:** `assets/data/content_manifest.json:10`، `pubspec.lock:1200`، `test/assets/corpus_integrity_test.dart:370`، `test/core/widgets/qcf_hifz_verse_view_test.dart:314`.
+**المكونات:** [assets/data/content_manifest.json:10](D:/Flutter/talia_quran/assets/data/content_manifest.json:10)، [pubspec.lock:1200](D:/Flutter/talia_quran/pubspec.lock:1200)، [test/assets/corpus_integrity_test.dart:370](D:/Flutter/talia_quran/test/assets/corpus_integrity_test.dart:370)، [test/core/widgets/qcf_hifz_verse_view_test.dart:314](D:/Flutter/talia_quran/test/core/widgets/qcf_hifz_verse_view_test.dart:314).
 
 البيان يعتمد QCF **0.0.8** وبصمة `a1a3…`، بينما lock/package_config يستخدمان **0.1.0** وبصمة `f659…`. المقارنة المحلية أظهرت تغير بيانات 264 سجل آية؛ من أمثلتها علامات سجدة مكررة في بيانات 7:206 و84:21. فشل اختبار الهوية، وفشل fixture عند 9:1 بسبب اختلاف علامة افتتاحية `۞`.
 
@@ -37,7 +37,7 @@
 **الإصلاح:** تثبيت النسخة المعتمدة أو اعتماد النسخة الجديدة بعد مقارنة نص/حدود/كلمات/علامات/خطوط كاملة؛ لا يكفي تغيير رقم البيان أو توقعات الاختبار حتى تنجح. موافقة مالك المشروع على corpus الأصلي محفوظة؛ لا تمتد تلقائيًا إلى البيانات المتغيرة.
 
 ### R03: نسبة ذكرين إلى حديث بسبع مرات تحتاج حسم تعارض المصدر — خطر موثق
-**المكونات:** `assets/data/azkar_release.json:2` العنصر m12؛ السطر 3 العنصر e13.
+**المكونات:** [assets/data/azkar_release.json:2](D:/Flutter/talia_quran/assets/data/azkar_release.json:2) العنصر m12؛ السطر 3 العنصر e13.
 
 كلاهما يصف «حسبي الله لا إله إلا هو…» سبع مرات صباحًا/مساءً بوصفه hadith مع عزو عام إلى سنن أبي داود، دون رابط سجل/درجة. [مراجعة الدرر السنية لهذا العنصر](https://dorar.net/azkar/adhkar/343) تذكر إشكال الرواية المرفوعة واختلاف الموقوف ونسبته.
 
@@ -47,40 +47,40 @@
 ## 4. المشكلات الحرجة — P1 Critical
 | الرمز | الدليل/الموقع | السيناريو والأثر | المطلوب |
 |---|---|---|---|
-| R04 | `family_activity_publisher.dart:74–111`؛ `memorization_kids_cloud_sync_service.dart:309` | الناشر يلتقط صاحب البيانات، ينتظر المدخلات/device ID، يرسل RPC ثم يفحص الهوية. تبدل جلسة A إلى B أثناء الانتظار يمكن أن ينشر ملخص A باسم B. الخطر مصدرّي ولم يُعَد إنتاجه بحسابين. | ربط العمل بالمالك المتوقع، فحص المالك وجلسة العميل قبل الإرسال، إلغاء العمل عند تغير الهوية، واختبار توقف المدخلات ثم تبديل الحساب. |
-| R05 | `quran_page_font_guard.dart:52–66` | فشل تحميل خط QCF يُعامل كنجاح؛ العارض الداخلي 0.1.0 لا يضيف فحص تحميل ثانٍ، فيتعرض المستخدم لرموز غير مقروءة بلا خطأ/إعادة محاولة. | حالة فشل مترجمة قابلة لإعادة المحاولة؛ لا تعرض glyphs حتى يثبت تحميل الخط؛ fallback معتمد ومقروء عند الحاجة. |
-| R06 | `app_quran_page_view.dart:213`؛ عارض QCF `QuranLine` | محتوى المصحف يُرسم glyph RichText بلا بديل دلالي عربي للآيات؛ قارئ الشاشة يتعامل مع رموز الخط بدل الآية/حدودها. مراجعة المصدر مؤكدة؛ اختبار TalkBack الحالي غير مكتمل. | شجرة semantics للآيات بنص عربي معتمد أو وضع قراءة قابل للوصول، ثم TalkBack/VoiceOver فعلي. |
-| R07 | `content_manifest.json:59`؛ `azkar_release.json` | ترخيص corpus الأذكار مسجل unknown؛ 85 من116 عنصرًا بلا رابط مصدر فردي. موافقة النص الأصلية لا تثبت حق إعادة النشر. | أدلة حقوق/نسبة ومراجع العناصر؛ لا تصف كل العناصر بأنها خاطئة. |
-| R08 | `lib/core/services/quran_audio_service.dart:10`؛ `quran_reciter.dart:1` | حقوق ملفات التلاوة ومطابقة مقاطع الآيات لستة قراء غير مثبتة بإصدار/بصمات/اختبار segmentation في حزمة الاعتماد. | سجلات مصدر/حقوق والتحقق من حدود المقاطع والـayah/audio على جهاز؛ هذا نقص دليل، وليس إثبات تلاوة خاطئة. |
+| R04 | [family_activity_publisher.dart:74–111](D:/Flutter/talia_quran/lib/features/memorization_plus/data/repositories/collaborators/family_activity_publisher.dart:74)؛ [memorization_kids_cloud_sync_service.dart:309](D:/Flutter/talia_quran/lib/features/memorization_plus/data/repositories/collaborators/memorization_kids_cloud_sync_service.dart:309) | الناشر يلتقط صاحب البيانات، ينتظر المدخلات/device ID، يرسل RPC ثم يفحص الهوية. تبدل جلسة A إلى B أثناء الانتظار يمكن أن ينشر ملخص A باسم B. الخطر مصدرّي ولم يُعَد إنتاجه بحسابين. | ربط العمل بالمالك المتوقع، فحص المالك وجلسة العميل قبل الإرسال، إلغاء العمل عند تغير الهوية، واختبار توقف المدخلات ثم تبديل الحساب. |
+| R05 | [quran_page_font_guard.dart:52–66](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/quran_page_font_guard.dart:52) | فشل تحميل خط QCF يُعامل كنجاح؛ العارض الداخلي 0.1.0 لا يضيف فحص تحميل ثانٍ، فيتعرض المستخدم لرموز غير مقروءة بلا خطأ/إعادة محاولة. | حالة فشل مترجمة قابلة لإعادة المحاولة؛ لا تعرض glyphs حتى يثبت تحميل الخط؛ fallback معتمد ومقروء عند الحاجة. |
+| R06 | [app_quran_page_view.dart:213](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/app_quran_page_view.dart:213)؛ عارض QCF `QuranLine` | محتوى المصحف يُرسم glyph RichText بلا بديل دلالي عربي للآيات؛ قارئ الشاشة يتعامل مع رموز الخط بدل الآية/حدودها. مراجعة المصدر مؤكدة؛ اختبار TalkBack الحالي غير مكتمل. | شجرة semantics للآيات بنص عربي معتمد أو وضع قراءة قابل للوصول، ثم TalkBack/VoiceOver فعلي. |
+| R07 | [content_manifest.json:59](D:/Flutter/talia_quran/assets/data/content_manifest.json:59)؛ [azkar_release.json](D:/Flutter/talia_quran/assets/data/azkar_release.json) | ترخيص corpus الأذكار مسجل unknown؛ 85 من116 عنصرًا بلا رابط مصدر فردي. موافقة النص الأصلية لا تثبت حق إعادة النشر. | أدلة حقوق/نسبة ومراجع العناصر؛ لا تصف كل العناصر بأنها خاطئة. |
+| R08 | [lib/core/services/quran_audio_service.dart:10](D:/Flutter/talia_quran/lib/core/services/quran_audio_service.dart:10)؛ [quran_reciter.dart:1](D:/Flutter/talia_quran/lib/core/services/quran_reciter.dart:1) | حقوق ملفات التلاوة ومطابقة مقاطع الآيات لستة قراء غير مثبتة بإصدار/بصمات/اختبار segmentation في حزمة الاعتماد. | سجلات مصدر/حقوق والتحقق من حدود المقاطع والـayah/audio على جهاز؛ هذا نقص دليل، وليس إثبات تلاوة خاطئة. |
 
 **توضيح R04:** المسارات العادية في AuthCubit تستخدم حاجز CloudSyncCoordinator قبل تبديل الهوية، وهذا إجراء إيجابي. لكن Supabase التلقائي لروابط الدخول/الاستعادة يمكن أن يحفظ الجلسة قبل إخطار Cubit: `supabase_flutter-2.18.0/lib/src/supabase_auth.dart:302` و`gotrue-2.27.2/lib/src/gotrue_client.dart:1059`. إعداد التهيئة الحالي لا يعطل ذلك. يظل السيناريو الضيق خطرًا عاليًا يحتاج اختبارًا؛ لا يوجد إثبات تسرب وقع فعلًا.
 
 ## 5. المشكلات عالية الأولوية — P2 Major
 | الرمز | الموقع | إعادة الإنتاج/الأثر | الإصلاح المقترح |
 |---|---|---|---|
-| R09 | `parent_pin_recovery_service.dart:47–61`؛ `memorization_kids_local_service.dart:358` | استهلاك رمز موافقة صحيح ثم فشل secure storage/preferences: الرمز يصبح غير قابل لإعادة الاستخدام قبل إكمال PIN، وقد يتباين verifier وعلامة hasPin. | بروتوكول retry-safe وتخزين محلي قابل للاستعادة/التراجع؛ اختبارات فشل كل كتابة ثم الاستئناف. |
-| R10 | `family_dashboard_cubit.dart:278` | `reset()` يعيد Either فشل، لكن Cubit يتجاهله ويعيد التحميل؛ يبقى PIN القديم دون شرح مناسب. | معالجة Left وإظهار فشل؛ إعادة التحميل فقط بعد النجاح. |
-| R11 | `prayer_companion_cubit.dart:57`؛ `home_prayer_times_sheet.dart:728,797` | تنفيذ إجراء ثم إغلاق sheet قبل انتهاء التخزين يؤدي إلى emit بعد close، وحتى catch يحاول emit. | حراسة دورة الحياة وإسناد الكتابة لمالك أطول عمرًا؛ اختبار إغلاق سريع مع كتابة مؤجلة. |
-| R12 | `20261004132950_family_activity_and_parent_recovery.sql:297`؛ `family_activity_inputs_loader.dart:23` | ملخص اليوم محلي بينما today_points/sessions حدود UTC. في القاهرة توجد ساعات حول منتصف الليل فيها قيم «اليوم» غير متجانسة؛ قد تشمل أحداث اليوم السابق أو تختلف فترة الحساب. | عقد موحد لليوم والمنطقة الزمنية، واختبارات منتصف الليل شرق/غرب UTC. |
-| R13 | `quran_mini_player_bar.dart:392` | زر play/pause GestureDetector بحجم38dp بلا اسم/حالة دلالية، متاح عبر shell؛ صعوبة للمستخدم ذي الإعاقة. | >=48dp، دور button واسم مترجم وحالة play/pause/loading. |
+| R09 | [parent_pin_recovery_service.dart:47–61](D:/Flutter/talia_quran/lib/features/memorization_plus/data/repositories/collaborators/parent_pin_recovery_service.dart:47)؛ [memorization_kids_local_service.dart:358](D:/Flutter/talia_quran/lib/features/memorization_plus/data/repositories/collaborators/memorization_kids_local_service.dart:358) | استهلاك رمز موافقة صحيح ثم فشل secure storage/preferences: الرمز يصبح غير قابل لإعادة الاستخدام قبل إكمال PIN، وقد يتباين verifier وعلامة hasPin. | بروتوكول retry-safe وتخزين محلي قابل للاستعادة/التراجع؛ اختبارات فشل كل كتابة ثم الاستئناف. |
+| R10 | [family_dashboard_cubit.dart:278](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart:278) | `reset()` يعيد Either فشل، لكن Cubit يتجاهله ويعيد التحميل؛ يبقى PIN القديم دون شرح مناسب. | معالجة Left وإظهار فشل؛ إعادة التحميل فقط بعد النجاح. |
+| R11 | [prayer_companion_cubit.dart:57](D:/Flutter/talia_quran/lib/features/prayer_companion/presentation/cubits/prayer_companion_cubit.dart:57)؛ [home_prayer_times_sheet.dart:728,797](D:/Flutter/talia_quran/lib/features/home/presentation/widgets/home_prayer_times_sheet.dart:728) | تنفيذ إجراء ثم إغلاق sheet قبل انتهاء التخزين يؤدي إلى emit بعد close، وحتى catch يحاول emit. | حراسة دورة الحياة وإسناد الكتابة لمالك أطول عمرًا؛ اختبار إغلاق سريع مع كتابة مؤجلة. |
+| R12 | [20261004132950_family_activity_and_parent_recovery.sql:297](D:/Flutter/talia_quran/supabase/migrations/20261004132950_family_activity_and_parent_recovery.sql:297)؛ [family_activity_inputs_loader.dart:23](D:/Flutter/talia_quran/lib/core/di/family_activity_inputs_loader.dart:23) | ملخص اليوم محلي بينما today_points/sessions حدود UTC. في القاهرة توجد ساعات حول منتصف الليل فيها قيم «اليوم» غير متجانسة؛ قد تشمل أحداث اليوم السابق أو تختلف فترة الحساب. | عقد موحد لليوم والمنطقة الزمنية، واختبارات منتصف الليل شرق/غرب UTC. |
+| R13 | [quran_mini_player_bar.dart:392](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/quran_mini_player_bar.dart:392) | زر play/pause GestureDetector بحجم38dp بلا اسم/حالة دلالية، متاح عبر shell؛ صعوبة للمستخدم ذي الإعاقة. | >=48dp، دور button واسم مترجم وحالة play/pause/loading. |
 | R14 | إعداد Supabase Auth الحي | leaked-password protection معطل وفق advisor. يسمح بكلمات مرور معروفة التسريب. | تفعيل الحماية إن كانت متاحة في الخطة، أو ضابط مكافئ موثق؛ اختبار التسجيل/التغيير. [وثيقة Supabase](https://supabase.com/docs/guides/auth/password-security). |
 
 ## 6. الأولوية المتوسطة — P3 Minor
-- **R15 — emit بعد إغلاق route:** `quran_page_cubit.dart:57`، `surah_detail_cubit.dart:13`، `surah_list_cubit.dart:30`، `custom_plan_cubit.dart:14`. الخروج قبل اكتمال await يمكن أن يولد StateError؛ يلزم closed guards واختبار مسار الخروج.
-- **R16 — تكبير النص محدود:** `app_shell.dart:284` و`home_prayer_timeline.dart:254` يحدان scale إلى1.2؛ استخدام reflow يحافظ على قابلية القراءة عند200%.
-- **R17 — أهداف لمس صغيرة:** `khatmah_juz_map.dart:31` ستة أعمدة قد تعطي نحو40dp على320dp؛ `quick_navigation_sheet.dart:459` ارتفاع44dp وتسمية الجزء رقم فقط. اضبط التخطيط وأسماء الإجراء.
-- **R18 — دلالات الأطفال واللغة:** `kids_house_card.dart:61` يحتاج ملخص المرحلة/السورة/التقدم/القفل؛ `guardian_linking_page.dart:73` يعلن Guardian linking بالإنجليزية في واجهة عربية.
-- **R19 — تعثر بوابات اختبار الواجهة:** يوجد إخفاق حارس design tokens وعينة goldens/توقعات نص Home؛ يجب تشخيص الفروق واعتماد المقصود منها قبل النشر، وليس تحديث جميع baselines تلقائيًا. تفاصيل الاختبارات النهائية في القسم16.
+- **R15 — emit بعد إغلاق route:** [quran_page_cubit.dart:57](D:/Flutter/talia_quran/lib/features/quran/presentation/cubits/quran_page_cubit.dart:57)، [surah_detail_cubit.dart:13](D:/Flutter/talia_quran/lib/features/quran/presentation/cubits/surah_detail_cubit.dart:13)، [surah_list_cubit.dart:30](D:/Flutter/talia_quran/lib/features/quran/presentation/cubits/surah_list_cubit.dart:30)، [custom_plan_cubit.dart:14](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/cubits/custom_plan_cubit.dart:14). الخروج قبل اكتمال await يمكن أن يولد StateError؛ يلزم closed guards واختبار مسار الخروج.
+- **R16 — تكبير النص محدود:** [app_shell.dart:284](D:/Flutter/talia_quran/lib/core/widgets/app_shell.dart:284) و[home_prayer_timeline.dart:254](D:/Flutter/talia_quran/lib/features/home/presentation/widgets/home_prayer_timeline.dart:254) يحدان scale إلى1.2؛ استخدام reflow يحافظ على قابلية القراءة عند200%.
+- **R17 — أهداف لمس صغيرة:** [khatmah_juz_map.dart:31](D:/Flutter/talia_quran/lib/features/khatmah/presentation/widgets/khatmah_juz_map.dart:31) ستة أعمدة قد تعطي نحو40dp على320dp؛ [quick_navigation_sheet.dart:459](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/quick_navigation_sheet.dart:459) ارتفاع44dp وتسمية الجزء رقم فقط. اضبط التخطيط وأسماء الإجراء.
+- **R18 — دلالات الأطفال واللغة:** [kids_house_card.dart:61](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/widgets/kids_house_card.dart:61) يحتاج ملخص المرحلة/السورة/التقدم/القفل؛ [guardian_linking_page.dart:73](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/pages/guardian_linking_page.dart:73) يعلن Guardian linking بالإنجليزية في واجهة عربية.
+- **R19 — تعثر بوابات اختبار الواجهة:** يوجد إخفاق حارس design tokens وgoldens لواجهات Home والأطفال وتوقعات نص Home؛ يجب تشخيص الفروق واعتماد المقصود منها قبل النشر، وليس تحديث جميع baselines تلقائيًا. مثال خريطة الأطفال الليلية يختلف64.78%؛ المقارنة البصرية أظهرت إزالة قسم أعلى الخريطة وتوطين الأرقام، فلا تُفسر النسبة وحدها كواجهة مكسورة. تفاصيل الاختبارات في القسم16.
 
 ## 7. الأولوية المنخفضة والتحسين — P4 Improvement
-- **R20:** UI يتصل بالمستودع مباشرة في `kids_gamified_home_page.dart:151` و`custom_plan_setup_page.dart:228`؛ استخدم use cases وCubit للسياسة والفشل.
-- **R21:** تسميات قارئ inline بالعربية/الإنجليزية في `quran_page.dart:583` و`reader_top_bar.dart:87`؛ نقلها إلى ARB يمنع تشتت الترجمة.
+- **R20:** UI يتصل بالمستودع مباشرة في [kids_gamified_home_page.dart:151](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart:151) و[custom_plan_setup_page.dart:228](D:/Flutter/talia_quran/lib/features/memorization_plus/presentation/pages/custom_plan_setup_page.dart:228)؛ استخدم use cases وCubit للسياسة والفشل.
+- **R21:** تسميات قارئ inline بالعربية/الإنجليزية في [quran_page.dart:583](D:/Flutter/talia_quran/lib/features/quran/presentation/pages/quran_page.dart:583) و[reader_top_bar.dart:87](D:/Flutter/talia_quran/lib/features/quran/presentation/widgets/reader_top_bar.dart:87)؛ نقلها إلى ARB يمنع تشتت الترجمة.
 - **R22:** تعليقات `android/app/build.gradle.kts:51` تشير إلى debug signing رغم أن التنفيذ يستخدم release signing؛ صحح التعليقات عندما تُعتمد الإصلاحات.
 - **R23:** advisor الأداء: FK `parent_pin_recovery_requests_approved_by_fkey` بلا covering index. قيّم نمط الاستخدام قبل إضافة index؛ لا تحذف unused indexes لمجرد تنبيه آلي.
 - **R24:** request generation للصفحات/البحث تحسين دفاعي. الفحص المتخصص لم يثبت إعادة ترتيب تحميل صفحات عبر المستودع المحلي الحالي المشترك/cache؛ لذلك لا نعتمد ادعاء «فساد مصحف عند التقليب السريع» كعيب P0.
 
 ## 8. نتائج UI/UX
-المراجعة المصدرية شملت التحميل/الخطأ/الفراغ والحوارات والنماذج والمشاركة والتنقل وواجهات الكبار والأطفال والأسرة. النتائج القابلة للإجراء R05/R13/R16–R19/R21. لا توجد أدلة كافية لاعتماد كل درجات اللون/التباين/spacing أو الأداء البصري على آخر APK. orientation مقفل عمدًا portrait في `main.dart:69`؛ ليس عيبًا بحد ذاته، لكن تجربة اللوح/200%/لوحة المفاتيح غير مختبرة.
+المراجعة المصدرية شملت التحميل/الخطأ/الفراغ والحوارات والنماذج والمشاركة والتنقل وواجهات الكبار والأطفال والأسرة. النتائج القابلة للإجراء R05/R13/R16–R19/R21. لا توجد أدلة كافية لاعتماد كل درجات اللون/التباين/spacing أو الأداء البصري على آخر APK. orientation مقفل عمدًا portrait في [main.dart:69](D:/Flutter/talia_quran/lib/main.dart:69)؛ ليس عيبًا بحد ذاته، لكن تجربة اللوح/200%/لوحة المفاتيح غير مختبرة.
 
 فشل توقع نص يستخدم أرقامًا لاتينية مع UI يعرض أرقامًا عربية قد يكون انجراف اختبار لا عيب واجهة؛ يجب الحفاظ على السلوك المقصود ومراجعة التوقع بدل إفساد التوطين لإرضاء الاختبار.
 
@@ -92,52 +92,55 @@ R06/R13/R16–R18 هي النتائج الأساسية: نص دلالي عربي
 
 ## 11. الأمن والخصوصية
 الفحص الحي قراءة metadata فقط، بلا محتويات حسابات أو حذف/تعديل:
--21 جدولًا في public لديها RLS؛ آخر ترحيلات الأسرة/المكافآت/fك الربط موجودة حتى `20261005194008`.
--7 RPCs مختارة تضمنت auth.uid/ملكية أو جلسة حية، search_path فارغًا، بلا PUBLIC/anon execute.
--42 تنبيه SECURITY DEFINER للمستخدم المسجل لا تساوي42 ثغرة؛ وظائف الأسرة المقصودة تستعمل هذا النمط مع حراسة.
--جدول parent_pin_recovery_requests بلا policies مباشرة مع RLS يمكن أن يكون تصميم RPC-only مقصودًا؛ ليس تسربًا مثبتًا.
--R04 خطر عزل حسابات يحتاج حسمًا، R09 خطر كتابة جزئية، R14 إعداد حماية معطل.
--نشر سياسة الخصوصية/صفحة حذف الحساب على HTTPS عام، جداول الاحتفاظ والعقود، وإثبات الموافقة الأبوية قبل معالجة الأطفال ما زالت بوابات غير موثقة. QR/PIN لا يثبت موافقة قانونية.
--الحذف داخل التطبيق والـRPC موجودان؛ الحذف الفعلي/الإغلاق أثناء المزامنة/الفشل/استعادة العملية لم يُنفذ على حساب اختبار.
+- 21 جدولًا في public لديها RLS؛ آخر ترحيلات الأسرة/المكافآت/fك الربط موجودة حتى `20261005194008`.
+- 7 RPCs مختارة تضمنت auth.uid/ملكية أو جلسة حية، search_path فارغًا، بلا PUBLIC/anon execute.
+- 42 تنبيه SECURITY DEFINER للمستخدم المسجل لا تساوي42 ثغرة؛ وظائف الأسرة المقصودة تستعمل هذا النمط مع حراسة.
+- جدول parent_pin_recovery_requests بلا policies مباشرة مع RLS يمكن أن يكون تصميم RPC-only مقصودًا؛ ليس تسربًا مثبتًا.
+- R04 خطر عزل حسابات يحتاج حسمًا، R09 خطر كتابة جزئية، R14 إعداد حماية معطل.
+- نشر سياسة الخصوصية/صفحة حذف الحساب على HTTPS عام، جداول الاحتفاظ والعقود، وإثبات الموافقة الأبوية قبل معالجة الأطفال ما زالت بوابات غير موثقة. QR/PIN لا يثبت موافقة قانونية.
+- الحذف داخل التطبيق والـRPC موجودان؛ الحذف الفعلي/الإغلاق أثناء المزامنة/الفشل/استعادة العملية لم يُنفذ على حساب اختبار.
 
 [قواعد Google لحذف الحساب](https://support.google.com/googleplay/android-developer/answer/13327111) تتطلب مسارًا داخل التطبيق وموردًا ويب للطلب. وجود HTML في المستودع لا يثبت أنه منشور. [سياسة Families](https://support.google.com/googleplay/android-developer/answer/9893335) و[خصوصية Apple](https://developer.apple.com/app-store/review/guidelines/#privacy) تحتاجان مراجعة وفق الجمهور والبلدان المختارة؛ هذا التدقيق ليس اعتمادًا قانونيًا.
 
 ## 12. البنية وجودة الكود
-البنية feature-first مع Cubit وGetIt وrepositories/use cases، Isar/preferences/secure storage وطبقات عزل/مزامنة. التقنيات والميزات الأساسية حُصرت في [capability_coverage.md](capability_coverage.md). R10/R11/R15 تعرض حدود async/lifecycle، R20 خروجًا عن الحدود المعمارية. لم تُعَد كتابة المصدر ولم يُحكم على كل ملف كبير كعيب وظيفي. محلل Flutter نجح **No issues found** في242.6ثانية. لا يتتبع هذا وحده صحة البيانات الدينية أو RLS أو الرحلات.
+البنية feature-first مع Cubit وGetIt وrepositories/use cases، Isar/preferences/secure storage وطبقات عزل/مزامنة. التقنيات والميزات الأساسية حُصرت في [capability_coverage.md](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/capability_coverage.md). R10/R11/R15 تعرض حدود async/lifecycle، R20 خروجًا عن الحدود المعمارية. لم تُعَد كتابة المصدر ولم يُحكم على كل ملف كبير كعيب وظيفي. محلل Flutter نجح **No issues found** في242.6ثانية. لا يتتبع هذا وحده صحة البيانات الدينية أو RLS أو الرحلات.
 
 ## 13. الإصدار والمتاجر والمنصات
--محاولات APK debug وAAB release من الملفات الحالية فشلت في `Unable to establish loopback connection`؛ stack يذكر `UnixDomainSockets.connect0` و`Invalid argument: connect`. إعادة IPv4 وno-daemon لم تعالجها. JDK المرصود Android Studio JBR21.0.10.
--لا APK/AAB جديدًا، وبالتالي لا توقيع مُتحققًا ولا merged manifest ولا16KB alignment مُثبتًا. `key.properties` موجود وغير متتبع، والإعداد يختار release keystore؛ لا ندعي release موقّعًا debug.
--`compileSdk=37` وtarget من Flutter، لكن target الفعلي للـartifact الحالي غير مستخرج. المطلوب الحالي لتطبيق هاتف جديد/تحديث هوAPI36+ وفق [Google Play](https://support.google.com/googleplay/android-developer/answer/11926878).
--اختبار مكتبات native مثل Isar على16KB مطلوب وفق [Android](https://developer.android.com/guide/practices/page-sizes)؛ عدم الاختبار ليس إثبات عدم التوافق.
--الإذن هو SCHEDULE_EXACT_ALARM **وليس USE_EXACT_ALARM**؛ لا نعتمد تقرير مخالفة Play لمجرد وجوده. تحقق من الرفض/السحب/backup/reboot والفallback وفق [Android alarms](https://developer.android.com/develop/background-work/services/alarms).
--بناء iOS وتوقيع/archive وApp Privacy manifests/SDK declarations لم تُثبت على Windows. purpose strings والخلفية موجودة؛ القبول غير مضمون.
--النسخة `1.0.0+1` تحتاج التحقق من عدم استعمال build number سابقًا؛ ليست خطأ تلقائيًا.
--Data Safety/App Privacy/public URLs/صور المتجر/الجمهور والتصريحات وإجراء مراجعة حساب اختبار غير موثقة كمنجزة.
+- محاولات APK debug وAAB release من الملفات الحالية فشلت في `Unable to establish loopback connection`؛ stack يذكر `UnixDomainSockets.connect0` و`Invalid argument: connect`. إعادة IPv4 وno-daemon لم تعالجها. JDK المرصود Android Studio JBR21.0.10.
+- لا APK/AAB جديدًا، وبالتالي لا توقيع مُتحققًا ولا merged manifest ولا16KB alignment مُثبتًا. `key.properties` موجود وغير متتبع، والإعداد يختار release keystore؛ لا ندعي release موقّعًا debug.
+- `compileSdk=37` وtarget من Flutter، لكن target الفعلي للـartifact الحالي غير مستخرج. المطلوب الحالي لتطبيق هاتف جديد/تحديث هوAPI36+ وفق [Google Play](https://support.google.com/googleplay/android-developer/answer/11926878).
+- اختبار مكتبات native مثل Isar على16KB مطلوب وفق [Android](https://developer.android.com/guide/practices/page-sizes)؛ عدم الاختبار ليس إثبات عدم التوافق.
+- الإذن هو SCHEDULE_EXACT_ALARM **وليس USE_EXACT_ALARM**؛ لا نعتمد تقرير مخالفة Play لمجرد وجوده. تحقق من الرفض/السحب/backup/reboot والفallback وفق [Android alarms](https://developer.android.com/develop/background-work/services/alarms).
+- بناء iOS وتوقيع/archive وApp Privacy manifests/SDK declarations لم تُثبت على Windows. purpose strings والخلفية موجودة؛ القبول غير مضمون.
+- النسخة `1.0.0+1` تحتاج التحقق من عدم استعمال build number سابقًا؛ ليست خطأ تلقائيًا.
+- Data Safety/App Privacy/public URLs/صور المتجر/الجمهور والتصريحات وإجراء مراجعة حساب اختبار غير موثقة كمنجزة.
 
 ## 14. خطة الإصلاح المقترحة
 **لا تنفيذ دون موافقة المستخدم.**
-1.أغلق R01–R03 أولًا: source edition/hash comparison، إسناد corpus والخرائط، قرار المحتوى. لا تغيّر identifiers أو progress المخزن بلا خطة توافق.
-2.أصلح R04/R05/R06 وعالج عزل async/التفاعل مع SDK؛ أضف اختبارات deterministic للهوية/الخط وفحص جهاز.
-3.أصلح R09–R13/R15: بروتوكول PIN retry-safe، Either failure، lifecycle، اليوم/timezone، الدلالات واللمس.
-4.حسم حقوق/مصادر الأذكار والصوت، إعداد كلمات المرور، صفحات الخصوصية والموافقة/الحذف.
-5.عالج إخفاقات الاختبارات بدليل؛ لا تضع update-goldens أو تخفف assertions بشكل جماعي.
-6.أصلح بيئة البناء، ابنِ artifact موقّعًا، ثبت مطابقته hash، اختبر fresh install وupgrade مع تقدم محفوظ.
-7.نفّذ مصفوفة الرحلات لكل دور/شبكة/لغة/إعاقة؛ release audio/background/reboot/prayer/deep links/owner-nonowner RLS؛ قِس الأداء وnative16KB قبل store upload.
+1. أغلق R01–R03 أولًا: source edition/hash comparison، إسناد corpus والخرائط، قرار المحتوى. لا تغيّر identifiers أو progress المخزن بلا خطة توافق.
+2. أصلح R04/R05/R06 وعالج عزل async/التفاعل مع SDK؛ أضف اختبارات deterministic للهوية/الخط وفحص جهاز.
+3. أصلح R09–R13/R15: بروتوكول PIN retry-safe، Either failure، lifecycle، اليوم/timezone، الدلالات واللمس.
+4. حسم حقوق/مصادر الأذكار والصوت، إعداد كلمات المرور، صفحات الخصوصية والموافقة/الحذف.
+5. عالج إخفاقات الاختبارات بدليل؛ لا تضع update-goldens أو تخفف assertions بشكل جماعي.
+6. أصلح بيئة البناء، ابنِ artifact موقّعًا، ثبت مطابقته hash، اختبر fresh install وupgrade مع تقدم محفوظ.
+7. نفّذ مصفوفة الرحلات لكل دور/شبكة/لغة/إعاقة؛ release audio/background/reboot/prayer/deep links/owner-nonowner RLS؛ قِس الأداء وnative16KB قبل store upload.
 
 ## 15. ما تم التحقق منه بنجاح
 **Statically Verified:** corpus JSON يحتوي114 سورة مرتبة،6,236 آية بمعرّفات متصلة،604 صفحات،30جزءًا، نصوصًا غير فارغة؛126 مرجع آية يومية صالحًا؛ بصمات assets Quran/surahs/azkar/dua توافق بيانها. هذا تحقق داخلي وليس إثباتًا مرجعيًا لكل حرف/صفحة.
 **Statically Verified:** تحليل Flutter بلا ملاحظات؛ خرائط features/routes/data، إعدادات platform، ترحيلات backend وحراسةRPCs المختارة كما تقدم.
-**Test Verified:** الاختبارات الناجحة تُذكر في السجل النهائي بالقسم16، ولا تُترجم إلى «كل الشاشات تعمل».
-**Runtime Verified على آخر نسخة:** لا شيء. الصور القديمة مستبعدة. كل الرحلات التشغيلية الحالية BLOCKED لبناء جديد، مع تفاصيل [مصفوفة التغطية](capability_coverage.md).
+**Test Verified داخل حاضنة الاختبار:** نجحت دورة هدية ولي الأمر في [guardian_session_gift_cycle_test.dart](D:/Flutter/talia_quran/test/integration/guardian_session_gift_cycle_test.dart)، وفحوص عزل الحساب ودمج البيانات السحابية محليًا، وعرض نص العلامة كاملًا دون ellipsis في [bookmarks_page_exact_text_test.dart](D:/Flutter/talia_quran/test/features/quran/bookmarks_page_exact_text_test.dart)، وترتيب604صفحات الأطفال كـbijection في [quran_page_order_policy_test.dart](D:/Flutter/talia_quran/test/features/quran/domain/services/quran_page_order_policy_test.dart). هذه اختبارات على بيانات/بدائل اختبار، وليست رحلة خادم وجهازين حقيقية. سجلات النجاح بالقسم16، ولا تُترجم إلى «كل الشاشات تعمل».
+**Runtime Verified على آخر نسخة:** لا شيء. الصور القديمة مستبعدة. كل الرحلات التشغيلية الحالية BLOCKED لبناء جديد، مع تفاصيل [مصفوفة التغطية](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/capability_coverage.md).
 
 ## 16. الاختبارات والتحققات غير المكتملة وأسبابها
-**النتيجة النهائية للاختبارات الشاملة: قيد الإكمال؛ سيُحدّث هذا السطر قبل التسليم.**
+**النتيجة: الاختبارات لا تمر.** التشغيل الشامل وصل إلى **3,037 نجاحًا و23 إخفاقًا** ثم توقف عن التقدم؛ بعد غياب tester وغياب تقدم CPU/log لعدة دقائق أُوقفت عملياته المملوكة للتدقيق. رمز الخروج المسجل -1 هو نتيجة الإيقاف، وليس اكتمالًا طبيعيًا للمجموعة. حُددت153 ملف اختبار لم تظهر في السجل، وشُغلت منفصلة عبر Flutter tool نفسه؛ اكتملت في1:52 بنتيجة **1,013 نجاحًا وإخفاقين، exit1**. لا نجمع النجاحين باعتبارهما عدد حالات فريدة مُثبتًا، ولا ندعي اكتمال تشغيل شامل واحد. جميع الإخفاقات المسجلة25 في [test_failures.md](D:/Flutter/talia_quran/audit_artifacts/production_2026_10_06/test_failures.md).
+
+تصنيف الإخفاقات: اختبار هويةQCF؛ fixture9:1؛ حارسdesign tokens؛3توقعات أرقام فيHome/الصلاة؛4goldensHome؛13goldensالأطفال؛واختبارا صفحات الخصوصية بالعربية/الإنجليزية. الإخفاقات الأخيرة تُظهر CRLF فيHTML مقابل LF فيالتوقع، فلا تثبت بذاتها اختلاف المضمون. يجب معالجة قابلية تشغيل الاختبارات علىWindows وفروق الواجهة المقصودة، وعدم تخفيف حراس سلامة المحتوى. تحذير golden tag غير معرف ظهر أيضًا؛ لا يمثل وحده فشلًا وظيفيًا.
 
 | التحقق | النتيجة/الدليل |
 |---|---|
 | flutter analyze --no-pub | نجح؛0ملاحظات،242.6ثانية؛ flutter_analyze.log |
-| flutter test --no-pub --reporter expanded | السجل النهائي flutter_test_complete.log وexit في flutter_test_exit.txt عند الاكتمال |
+| flutter test --no-pub --reporter expanded | 3,037نجاحًا/23إخفاقًا؛ ثم تعثر runner؛ أُوقف exit-1؛ flutter_test_complete.log/run_status.txt |
+| تكملة153ملفًا عبر Dart→Flutter tool مباشرة | 1,013نجاحًا/إخفاقان؛exit1؛ flutter_test_remaining.log وflutter_test_remaining_exit.txt. تجاوزت هذه الطريقة حد طول أوامر Windows batch، ولم تغير الاختبارات. |
 | flutter build appbundle --release --no-pub --dart-define-from-file=.env | exit1؛ خطأ Gradle loopback؛ flutter_release_build.log |
 | debug APK وإعادةIPv4 | فشل كما وثق مراجع الإصدار؛ لم يستبدلAPK القديم |
 | Gradle assembleDebug --no-daemon --stacktrace | exit1؛ gradle_no_daemon.log |
