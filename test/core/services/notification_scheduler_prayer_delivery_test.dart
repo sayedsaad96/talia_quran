@@ -32,6 +32,7 @@ class _FakeScheduler implements PrayerDeliveryScheduler {
   PrayerDeliveryResult result;
   int scheduleCalls = 0;
   int cancelAllCalls = 0;
+  Object? cancelFailure;
 
   @override
   Future<bool> canScheduleExact() async => true;
@@ -42,6 +43,7 @@ class _FakeScheduler implements PrayerDeliveryScheduler {
   @override
   Future<void> cancelPrayerEvents() async {
     cancelAllCalls++;
+    if (cancelFailure != null) throw cancelFailure!;
   }
 
   @override
@@ -86,12 +88,15 @@ Future<void> _stubCommon() async {
   mockPrayerTimesService = MockPrayerTimesService();
   mockGetActiveKhatmahUsecase = MockGetActiveKhatmahUsecase();
 
-  when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
-      .thenReturn(true);
-  when(() => mockNotificationService.attachLocalization(any()))
-      .thenAnswer((_) async {});
-  when(() => mockNotificationService.configureLocalTimezone())
-      .thenAnswer((_) async {});
+  when(
+    () => mockPrayerTimesService.isReadyForNotificationScheduling,
+  ).thenReturn(true);
+  when(
+    () => mockNotificationService.attachLocalization(any()),
+  ).thenAnswer((_) async {});
+  when(
+    () => mockNotificationService.configureLocalTimezone(),
+  ).thenAnswer((_) async {});
   // No selection: the event builder falls back to the first bundled city.
   when(
     () => mockPrayerTimesService.selectedCity(),
@@ -123,50 +128,113 @@ Future<void> _stubCommon() async {
       prayers: any(named: 'prayers'),
     ),
   ).thenAnswer((_) async {});
-  when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((inv) async {
+  when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((
+    inv,
+  ) async {
     final date = inv.positionalArguments[0] as DateTime;
     return [
-      (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr',
-          time: date.add(const Duration(hours: 4))),
-      (key: 'dhuhr', nameAr: 'الظهر', nameEn: 'Dhuhr',
-          time: date.add(const Duration(hours: 12))),
-      (key: 'asr', nameAr: 'العصر', nameEn: 'Asr',
-          time: date.add(const Duration(hours: 15))),
-      (key: 'maghrib', nameAr: 'المغرب', nameEn: 'Maghrib',
-          time: date.add(const Duration(hours: 18))),
-      (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha',
-          time: date.add(const Duration(hours: 20))),
+      (
+        key: 'fajr',
+        nameAr: 'الفجر',
+        nameEn: 'Fajr',
+        time: date.add(const Duration(hours: 4)),
+      ),
+      (
+        key: 'dhuhr',
+        nameAr: 'الظهر',
+        nameEn: 'Dhuhr',
+        time: date.add(const Duration(hours: 12)),
+      ),
+      (
+        key: 'asr',
+        nameAr: 'العصر',
+        nameEn: 'Asr',
+        time: date.add(const Duration(hours: 15)),
+      ),
+      (
+        key: 'maghrib',
+        nameAr: 'المغرب',
+        nameEn: 'Maghrib',
+        time: date.add(const Duration(hours: 18)),
+      ),
+      (
+        key: 'isha',
+        nameAr: 'العشاء',
+        nameEn: 'Isha',
+        time: date.add(const Duration(hours: 20)),
+      ),
     ];
   });
   _stubCancellations();
 }
 
 Map<String, Object> _prayerPrefs([Map<String, Object> extra = const {}]) => {
-      TaliaNotificationService.dailyReviewPreferenceKey: false,
-      TaliaNotificationService.streakAlertPreferenceKey: false,
-      TaliaNotificationService.morningAzkarPreferenceKey: false,
-      TaliaNotificationService.eveningAzkarPreferenceKey: false,
-      TaliaNotificationService.dailyDuaPreferenceKey: false,
-      TaliaNotificationService.dailyAyahPreferenceKey: false,
-      TaliaNotificationService.kidsReminderPreferenceKey: false,
-      TaliaNotificationService.fridayKahfPreferenceKey: false,
-      TaliaNotificationService.weeklyImpactPreferenceKey: false,
-      TaliaNotificationService.tahajjudPreferenceKey: false,
-      TaliaNotificationService.khatmahReminderPreferenceKey: false,
-      TaliaNotificationService.smartReminderPreferenceKey: false,
-      TaliaNotificationService.prayerNotificationsPreferenceKey: true,
-      ...extra,
-    };
+  TaliaNotificationService.dailyReviewPreferenceKey: false,
+  TaliaNotificationService.streakAlertPreferenceKey: false,
+  TaliaNotificationService.morningAzkarPreferenceKey: false,
+  TaliaNotificationService.eveningAzkarPreferenceKey: false,
+  TaliaNotificationService.dailyDuaPreferenceKey: false,
+  TaliaNotificationService.dailyAyahPreferenceKey: false,
+  TaliaNotificationService.kidsReminderPreferenceKey: false,
+  TaliaNotificationService.fridayKahfPreferenceKey: false,
+  TaliaNotificationService.weeklyImpactPreferenceKey: false,
+  TaliaNotificationService.tahajjudPreferenceKey: false,
+  TaliaNotificationService.khatmahReminderPreferenceKey: false,
+  TaliaNotificationService.smartReminderPreferenceKey: false,
+  TaliaNotificationService.prayerNotificationsPreferenceKey: true,
+  ...extra,
+};
 
 void main() {
+  test(
+    'uncertain native cleanup fails background refresh without enabling legacy',
+    () async {
+      await _stubCommon();
+      SharedPreferences.setMockInitialValues(
+        _prayerPrefs({
+          PrayerDeliveryVersion.prefsKey: PrayerDeliveryVersion.nativeAndroidV2,
+        }),
+      );
+      final native = _FakeScheduler(
+        const PrayerDeliveryResult(
+          success: false,
+          scheduledCount: 0,
+          error: 'native unavailable',
+        ),
+      )..cancelFailure = StateError('cleanup unavailable');
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        prayerTimesService: mockPrayerTimesService,
+        prayerDeliveryCoordinator: PrayerDeliveryCoordinator(
+          native,
+          isAndroid: () => true,
+        ),
+      );
+      expect(
+        await scheduler.refreshNotificationsInBackground(
+          lookupAppLocalizations(const Locale('ar')),
+          force: true,
+        ),
+        isFalse,
+      );
+      verifyNever(
+        () => mockNotificationService.schedulePrayerTimesReminders(
+          prayers: any(named: 'prayers'),
+        ),
+      );
+      expect(
+        PrayerDeliveryVersion.read(await SharedPreferences.getInstance()),
+        PrayerDeliveryVersion.nativeAndroidV2,
+      );
+    },
+  );
   setUpAll(() {
     registerFallbackValue(FakeScheduledPrayerNotification());
     registerFallbackValue(<ScheduledPrayerNotification>[]);
     registerFallbackValue(FakeAppLocalizations());
   });
 
-  test('no FLN prayer scheduling when native V2 is the active owner',
-      () async {
+  test('no FLN prayer scheduling when native V2 is the active owner', () async {
     await _stubCommon();
     SharedPreferences.setMockInitialValues(
       _prayerPrefs({
@@ -203,73 +271,76 @@ void main() {
     );
   });
 
-  test('V2 is dormant on non-Android: legacy FLN path keeps ownership',
-      () async {
-    await _stubCommon();
-    SharedPreferences.setMockInitialValues(_prayerPrefs());
-    final fakeScheduler = _FakeScheduler(
-      const PrayerDeliveryResult(success: true, scheduledCount: 35),
-    );
-    final scheduler = NotificationScheduler(
-      mockNotificationService,
-      prayerTimesService: mockPrayerTimesService,
-      prayerDeliveryCoordinator: PrayerDeliveryCoordinator(
-        fakeScheduler,
-        isAndroid: () => false,
-      ),
-    );
+  test(
+    'V2 is dormant on non-Android: legacy FLN path keeps ownership',
+    () async {
+      await _stubCommon();
+      SharedPreferences.setMockInitialValues(_prayerPrefs());
+      final fakeScheduler = _FakeScheduler(
+        const PrayerDeliveryResult(success: true, scheduledCount: 35),
+      );
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        prayerTimesService: mockPrayerTimesService,
+        prayerDeliveryCoordinator: PrayerDeliveryCoordinator(
+          fakeScheduler,
+          isAndroid: () => false,
+        ),
+      );
 
-    await scheduler.refreshNotifications(
-      lookupAppLocalizations(const Locale('ar')),
-    );
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
 
-    expect(fakeScheduler.scheduleCalls, 0);
-    verify(
-      () => mockNotificationService.schedulePrayerTimesReminders(
-        prayers: any(named: 'prayers'),
-      ),
-    ).called(1);
-  });
+      expect(fakeScheduler.scheduleCalls, 0);
+      verify(
+        () => mockNotificationService.schedulePrayerTimesReminders(
+          prayers: any(named: 'prayers'),
+        ),
+      ).called(1);
+    },
+  );
 
-  test('migration failure rebuilds the legacy schedule in the same refresh',
-      () async {
-    await _stubCommon();
-    SharedPreferences.setMockInitialValues(_prayerPrefs());
-    final fakeScheduler = _FakeScheduler(
-      const PrayerDeliveryResult(
-        success: false,
-        scheduledCount: 0,
-        error: 'denied',
-      ),
-    );
-    final scheduler = NotificationScheduler(
-      mockNotificationService,
-      prayerTimesService: mockPrayerTimesService,
-      prayerDeliveryCoordinator: PrayerDeliveryCoordinator(
-        fakeScheduler,
-        isAndroid: () => true,
-      ),
-    );
+  test(
+    'migration failure rebuilds the legacy schedule in the same refresh',
+    () async {
+      await _stubCommon();
+      SharedPreferences.setMockInitialValues(_prayerPrefs());
+      final fakeScheduler = _FakeScheduler(
+        const PrayerDeliveryResult(
+          success: false,
+          scheduledCount: 0,
+          error: 'denied',
+        ),
+      );
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        prayerTimesService: mockPrayerTimesService,
+        prayerDeliveryCoordinator: PrayerDeliveryCoordinator(
+          fakeScheduler,
+          isAndroid: () => true,
+        ),
+      );
 
-    await scheduler.refreshNotifications(
-      lookupAppLocalizations(const Locale('ar')),
-    );
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
 
-    expect(fakeScheduler.scheduleCalls, 1, reason: 'migration attempt');
-    verify(
-      () => mockNotificationService.cancelPrayerTimesReminders(),
-    ).called(1);
-    verify(
-      () => mockNotificationService.schedulePrayerTimesReminders(
-        prayers: any(named: 'prayers'),
-      ),
-    ).called(1);
-    final prefs = await SharedPreferences.getInstance();
-    expect(PrayerDeliveryVersion.read(prefs), PrayerDeliveryVersion.legacy);
-  });
+      expect(fakeScheduler.scheduleCalls, 1, reason: 'migration attempt');
+      verify(
+        () => mockNotificationService.cancelPrayerTimesReminders(),
+      ).called(1);
+      verify(
+        () => mockNotificationService.schedulePrayerTimesReminders(
+          prayers: any(named: 'prayers'),
+        ),
+      ).called(1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(PrayerDeliveryVersion.read(prefs), PrayerDeliveryVersion.legacy);
+    },
+  );
 
-  test('disabling prayer notifications clears both delivery owners',
-      () async {
+  test('disabling prayer notifications clears both delivery owners', () async {
     await _stubCommon();
     SharedPreferences.setMockInitialValues(
       _prayerPrefs({

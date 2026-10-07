@@ -583,7 +583,7 @@ class QuranContinuousPlayerService {
           androidNotificationChannelName: 'تلاوة القرآن الكريم',
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
-          androidNotificationIcon: 'mipmap/launcher_icon',
+          androidNotificationIcon: 'drawable/ic_notification',
         ),
       );
       _backgroundAudioHandler = handler;

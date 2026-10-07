@@ -23,39 +23,41 @@ void main() {
   });
 
   group('AndroidPrayerDeliveryScheduler', () {
-    test('scheduleEvents sends serialized events and reports success', () async {
-      Object? receivedArgs;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-        expect(call.method, 'scheduleEvents');
-        receivedArgs = call.arguments;
-        return <Object?, Object?>{
-          'success': true,
-          'scheduledCount': 1,
-          'exactAllowed': true,
-        };
-      });
+    test(
+      'scheduleEvents sends serialized events and reports success',
+      () async {
+        Object? receivedArgs;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+              expect(call.method, 'scheduleEvents');
+              receivedArgs = call.arguments;
+              return <Object?, Object?>{
+                'success': true,
+                'scheduledCount': 1,
+                'exactAllowed': true,
+              };
+            });
 
-      final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
-      final result = await scheduler.schedulePrayerEvents([event]);
+        final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
+        final result = await scheduler.schedulePrayerEvents([event]);
 
-      expect(result.success, isTrue);
-      expect(result.scheduledCount, 1);
-      expect(result.exactSchedulingAllowed, isTrue);
-      final events = (receivedArgs as Map)['events'] as List;
-      expect(events.single['eventId'], '2026-09-21_fajr');
-      expect(events.single['adhanEnabled'], isTrue);
-      expect(events.single['scheduledAtUtc'], endsWith('Z'));
-    });
+        expect(result.success, isTrue);
+        expect(result.scheduledCount, 1);
+        expect(result.exactSchedulingAllowed, isTrue);
+        final events = (receivedArgs as Map)['events'] as List;
+        expect(events.single['eventId'], '2026-09-21_fajr');
+        expect(events.single['adhanEnabled'], isTrue);
+        expect(events.single['scheduledAtUtc'], endsWith('Z'));
+      },
+    );
 
-    test('empty batch short-circuits without touching the channel',
-        () async {
+    test('empty batch short-circuits without touching the channel', () async {
       var calls = 0;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        calls++;
-        return <Object?, Object?>{'success': true};
-      });
+            calls++;
+            return <Object?, Object?>{'success': true};
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       final result = await scheduler.schedulePrayerEvents(const []);
@@ -68,11 +70,11 @@ void main() {
     test('native failure maps to a non-throwing failed result', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        return <Object?, Object?>{
-          'success': false,
-          'error': 'exact alarms denied',
-        };
-      });
+            return <Object?, Object?>{
+              'success': false,
+              'error': 'exact alarms denied',
+            };
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       final result = await scheduler.schedulePrayerEvents([event]);
@@ -84,8 +86,8 @@ void main() {
     test('platform exception is swallowed into a failed result', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        throw PlatformException(code: 'ALARM_MANAGER', message: 'boom');
-      });
+            throw PlatformException(code: 'ALARM_MANAGER', message: 'boom');
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       final result = await scheduler.schedulePrayerEvents([event]);
@@ -94,23 +96,25 @@ void main() {
       expect(result.error, isNotNull);
     });
 
-    test('missing native handler (MissingPluginException) fails softly',
-        () async {
-      // No handler registered at all → invokeMethod throws
-      // MissingPluginException, which must map to a failed result.
-      final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
-      final result = await scheduler.schedulePrayerEvents([event]);
+    test(
+      'missing native handler (MissingPluginException) fails softly',
+      () async {
+        // No handler registered at all → invokeMethod throws
+        // MissingPluginException, which must map to a failed result.
+        final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
+        final result = await scheduler.schedulePrayerEvents([event]);
 
-      expect(result.success, isFalse);
-    });
+        expect(result.success, isFalse);
+      },
+    );
 
     test('cancelAll targets the cancelAll method', () async {
       var cancelAllCalls = 0;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        if (call.method == 'cancelAll') cancelAllCalls++;
-        return null;
-      });
+            if (call.method == 'cancelAll') cancelAllCalls++;
+            return null;
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       await scheduler.cancelPrayerEvents();
@@ -118,34 +122,55 @@ void main() {
       expect(cancelAllCalls, 1);
     });
 
+    test('cancelAll surfaces a platform failure', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            throw PlatformException(code: 'ALARM_MANAGER', message: 'boom');
+          });
+
+      final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
+
+      await expectLater(
+        scheduler.cancelPrayerEvents(),
+        throwsA(isA<PlatformException>()),
+      );
+    });
+
     test('cancelEvent forwards the serialized event', () async {
       Object? received;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        if (call.method == 'cancelEvent') received = call.arguments;
-        return null;
-      });
+            if (call.method == 'cancelEvent') received = call.arguments;
+            return null;
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       await scheduler.cancelPrayerEvent(event);
 
-      expect(((received as Map)['event'] as Map)['eventId'],
-          '2026-09-21_fajr');
+      expect(((received as Map)['event'] as Map)['eventId'], '2026-09-21_fajr');
+    });
+
+    test('cancelEvent surfaces a missing native handler', () async {
+      final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
+
+      await expectLater(
+        scheduler.cancelPrayerEvent(event),
+        throwsA(isA<MissingPluginException>()),
+      );
     });
 
     test('canScheduleExact reports native permission state', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        expect(call.method, 'canScheduleExact');
-        return <Object?, Object?>{'canScheduleExact': false};
-      });
+            expect(call.method, 'canScheduleExact');
+            return <Object?, Object?>{'canScheduleExact': false};
+          });
 
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       expect(await scheduler.canScheduleExact(), isFalse);
     });
 
-    test('canScheduleExact fails softly when native side is absent',
-        () async {
+    test('canScheduleExact fails softly when native side is absent', () async {
       final scheduler = AndroidPrayerDeliveryScheduler(channel: channel);
       expect(await scheduler.canScheduleExact(), isFalse);
     });

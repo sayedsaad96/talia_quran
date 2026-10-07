@@ -468,8 +468,11 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     );
   }
 
-  Future<bool> requestExactPrayerTimePermission() {
-    return _notificationService.requestExactNotificationPermission();
+  Future<bool> requestExactPrayerTimePermission(AppLocalizations l10n) async {
+    final granted = await _notificationService
+        .requestExactNotificationPermission();
+    if (granted) await _reschedule(l10n);
+    return granted;
   }
 
   Future<void> updateQuietHours({

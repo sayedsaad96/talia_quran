@@ -24,7 +24,6 @@ import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
 import 'prayer_times_service.dart';
 
-
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
 
 bool hasCompletedKidsMissionToday(
@@ -508,6 +507,7 @@ class NotificationScheduler {
             0;
         await _service.scheduleDailyDuaReminder(
           title: l10n.notificationDailyDuaTitle,
+          invitationBody: l10n.notificationDailyDuaBody,
           hour: quiet(hour, minute).hour,
           minute: quiet(hour, minute).minute,
         );
@@ -732,6 +732,10 @@ class NotificationScheduler {
               ),
             );
           } catch (e, stack) {
+            prayerDeliveryFailed = true;
+            // Native cleanup or scheduling is uncertain. Do not fall through
+            // to V1 because it could create duplicate prayer delivery.
+            handledNatively = true;
             TaliaLogger.w(
               '[PrayerV2] native delivery refresh failed',
               e,

@@ -151,6 +151,7 @@ void main() {
     when(
       () => service.scheduleDailyDuaReminder(
         title: any(named: 'title'),
+        invitationBody: any(named: 'invitationBody'),
         hour: any(named: 'hour'),
         minute: any(named: 'minute'),
       ),

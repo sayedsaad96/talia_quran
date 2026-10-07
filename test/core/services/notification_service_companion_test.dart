@@ -29,11 +29,7 @@ void main() {
     ).add(const Duration(minutes: 10));
     return PrayerOccurrence(
       ownerId: 'local',
-      localDate: DateTime(
-        scheduledAt.year,
-        scheduledAt.month,
-        scheduledAt.day,
-      ),
+      localDate: DateTime(scheduledAt.year, scheduledAt.month, scheduledAt.day),
       prayerKey: prayerKey,
       scheduledAt: scheduledAt,
     );
@@ -66,6 +62,10 @@ void main() {
     service.debugSupportsNotifications = true;
 
     when(() => plugin.cancel(id: any(named: 'id'))).thenAnswer((_) async {});
+    when(
+      () => plugin.pendingNotificationRequests(),
+    ).thenAnswer((_) async => []);
+    when(() => plugin.getActiveNotifications()).thenAnswer((_) async => []);
     when(
       () => plugin.zonedSchedule(
         id: any(named: 'id'),
@@ -119,20 +119,40 @@ void main() {
   });
 
   group('cancelPrayerCompanionReminders', () {
-    test('cancels only IDs 2100-2134, never legacy prayer IDs', () async {
+    test(
+      'cancels pending and active companion IDs once, preserving other categories',
+      () async {
+        when(() => plugin.pendingNotificationRequests()).thenAnswer(
+          (_) async => [
+            const PendingNotificationRequest(2100, null, null, null),
+            const PendingNotificationRequest(2134, null, null, null),
+            const PendingNotificationRequest(2000, null, null, null),
+          ],
+        );
+        when(() => plugin.getActiveNotifications()).thenAnswer(
+          (_) async => [
+            const ActiveNotification(id: 2100),
+            const ActiveNotification(id: 2121),
+            const ActiveNotification(id: 1100),
+          ],
+        );
+        await service.cancelPrayerCompanionReminders();
+
+        final cancelledIds = verify(
+          () => plugin.cancel(id: captureAny(named: 'id')),
+        ).captured;
+
+        expect(cancelledIds, unorderedEquals([2100, 2134, 2121]));
+        expect(
+          cancelledIds.any((id) => (id as int) >= 2000 && id <= 2039),
+          isFalse,
+        );
+        verifyNever(() => plugin.cancelAll());
+      },
+    );
+    test('empty companion namespace sends no cancellation requests', () async {
       await service.cancelPrayerCompanionReminders();
-
-      final cancelledIds = verify(
-        () => plugin.cancel(id: captureAny(named: 'id')),
-      ).captured;
-
-      expect(cancelledIds, hasLength(35));
-      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2134)));
-      expect(
-        cancelledIds.any((id) => (id as int) >= 2000 && id <= 2039),
-        isFalse,
-      );
-      verifyNever(() => plugin.cancelAll());
+      verifyNever(() => plugin.cancel(id: any(named: 'id')));
     });
   });
 
@@ -172,22 +192,33 @@ void main() {
       },
     );
 
-    test('cancels the whole companion range before scheduling', () async {
-      await service.schedulePrayerCompanionReminders(
-        reminders: [
-          reminder(id: 2100, kind: PrayerCompanionNotificationKind.preparation),
-        ],
-        titleFor: (r) => 't',
-        bodyFor: (r) => 'b',
-      );
+    test(
+      'clears existing companion reminders before scheduling replacements',
+      () async {
+        when(() => plugin.pendingNotificationRequests()).thenAnswer(
+          (_) async => [
+            const PendingNotificationRequest(2100, null, null, null),
+            const PendingNotificationRequest(2134, null, null, null),
+          ],
+        );
+        await service.schedulePrayerCompanionReminders(
+          reminders: [
+            reminder(
+              id: 2100,
+              kind: PrayerCompanionNotificationKind.preparation,
+            ),
+          ],
+          titleFor: (r) => 't',
+          bodyFor: (r) => 'b',
+        );
 
-      final cancelledIds = verify(
-        () => plugin.cancel(id: captureAny(named: 'id')),
-      ).captured;
+        final cancelledIds = verify(
+          () => plugin.cancel(id: captureAny(named: 'id')),
+        ).captured;
 
-      expect(cancelledIds, hasLength(35));
-      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2134)));
-    });
+        expect(cancelledIds, unorderedEquals([2100, 2134]));
+      },
+    );
 
     test('skips reminders whose scheduled time is in the past', () async {
       final past = ScheduledPrayerCompanionNotification(

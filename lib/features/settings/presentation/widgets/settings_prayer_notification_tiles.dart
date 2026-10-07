@@ -432,7 +432,7 @@ class _PrayerNotificationSettingsSectionState
                           final deniedMessage =
                               context.l10n.notificationExactAlarmDenied;
                           final granted = await _cubit
-                              .requestExactPrayerTimePermission();
+                              .requestExactPrayerTimePermission(context.l10n);
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

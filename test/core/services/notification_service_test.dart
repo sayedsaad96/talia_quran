@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
@@ -65,4 +66,47 @@ void main() {
       expect(tz.local.name, 'Etc/UTC');
     },
   );
+
+  test('exact alarm denial falls back to an inexact reminder', () {
+    expect(
+      exactScheduleWasRejected(
+        AndroidScheduleMode.exactAllowWhileIdle,
+        'exact_alarms_not_permitted',
+      ),
+      isTrue,
+    );
+    expect(
+      exactScheduleWasRejected(
+        AndroidScheduleMode.inexactAllowWhileIdle,
+        'exact_alarms_not_permitted',
+      ),
+      isFalse,
+    );
+    expect(
+      exactScheduleWasRejected(
+        AndroidScheduleMode.exactAllowWhileIdle,
+        'invalid_icon',
+      ),
+      isFalse,
+    );
+  });
+
+  test('empty release corpus keeps the invitation and not a quotation', () {
+    expect(
+      azkarNotificationBody(
+        approvedTexts: const [],
+        invitationBody: 'أذكار الصباح في انتظارك',
+        index: 0,
+      ),
+      'أذكار الصباح في انتظارك',
+    );
+    expect(
+      azkarNotificationBody(
+        approvedTexts: const ['نص معتمد'],
+        invitationBody: 'دعوة عامة',
+        index: 0,
+      ),
+      'نص معتمد',
+    );
+  });
 }

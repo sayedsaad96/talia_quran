@@ -4464,6 +4464,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationDailyDuaTitle => 'Dua of the Day 🤲';
 
   @override
+  String get notificationDailyDuaBody =>
+      'Today\'s dua is waiting for you in Talia';
+
+  @override
   String get notificationFridayKahfTitle => 'Surah Al-Kahf Reminder 🌿';
 
   @override

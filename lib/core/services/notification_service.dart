@@ -21,6 +21,28 @@ import '../utils/talia_logger.dart';
 import 'daily_ayah_notification_target.dart';
 import 'prayer_sound.dart';
 
+/// True when an exact alarm was refused and the same reminder can be
+/// retried with an inexact alarm. Other platform errors must surface.
+@visibleForTesting
+bool exactScheduleWasRejected(AndroidScheduleMode mode, String errorCode) {
+  if (errorCode != 'exact_alarms_not_permitted') return false;
+  return mode == AndroidScheduleMode.exact ||
+      mode == AndroidScheduleMode.exactAllowWhileIdle ||
+      mode == AndroidScheduleMode.alarmClock;
+}
+
+/// Invitation copy when the release corpus yields no quotable text.
+/// Approved dhikr is used verbatim; this never invents a religious quotation.
+@visibleForTesting
+String azkarNotificationBody({
+  required List<String> approvedTexts,
+  required String invitationBody,
+  required int index,
+}) {
+  if (approvedTexts.isEmpty) return invitationBody;
+  return approvedTexts[index.abs() % approvedTexts.length];
+}
+
 bool _timezoneDatabaseInitialized = false;
 bool _localLocationConfigured = false;
 
@@ -224,12 +246,76 @@ class TaliaNotificationService {
   /// prayer-time precision. Other platforms do not need this permission.
   Future<bool> requestExactNotificationPermission() async {
     if (!Platform.isAndroid) return true;
+    _cachedTimedScheduleMode = null;
     try {
       final status = await Permission.scheduleExactAlarm.request();
       return status.isGranted || await canScheduleExactNotifications();
     } catch (error, stack) {
       TaliaLogger.w('Exact alarm permission request failed', error, stack);
       return false;
+    }
+  }
+
+  AndroidScheduleMode? _cachedTimedScheduleMode;
+
+  /// Exact delivery when the OS allows it. Release builds are dozed as soon
+  /// as the process stops; inexact alarms are then batched away from the
+  /// clock time the user chose. Debug stays in the active standby bucket, so
+  /// the same inexact alarm looked punctual there.
+  Future<AndroidScheduleMode> _timedScheduleMode() async {
+    final cached = _cachedTimedScheduleMode;
+    if (cached != null) return cached;
+    final mode = await resolveTimeCriticalScheduleMode('timed_reminder');
+    _cachedTimedScheduleMode = mode;
+    return mode;
+  }
+
+  /// Schedules one notification. Callers that still pass inexact mode are
+  /// upgraded to exact-when-allowed. If the OS rejects the exact alarm, the
+  /// same notification is retried inexact so one denial cannot drop the batch.
+  Future<void> _zonedSchedule({
+    required int id,
+    String? title,
+    String? body,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    DateTimeComponents? matchDateTimeComponents,
+    String? payload,
+  }) async {
+    final mode =
+        androidScheduleMode == AndroidScheduleMode.inexactAllowWhileIdle
+        ? await _timedScheduleMode()
+        : androidScheduleMode;
+    try {
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: notificationDetails,
+        androidScheduleMode: mode,
+        matchDateTimeComponents: matchDateTimeComponents,
+        payload: payload,
+      );
+    } on PlatformException catch (error, stack) {
+      if (!exactScheduleWasRejected(mode, error.code)) rethrow;
+      TaliaLogger.w(
+        'Exact alarm rejected for notification $id; scheduling inexact',
+        error,
+        stack,
+      );
+      _cachedTimedScheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: matchDateTimeComponents,
+        payload: payload,
+      );
     }
   }
 
@@ -311,7 +397,11 @@ class TaliaNotificationService {
   // notifications created outside this service and never ask the OS to trim
   // them silently.
   static const int _iOSSafePendingNotificationLimit = 60;
-  static const String _notificationIcon = '@mipmap/launcher_icon';
+
+  /// Status-bar icon. Must be a white silhouette in `drawable`. The adaptive
+  /// launcher mipmap is rejected when a background receiver posts the
+  /// notification, which drops release alarms after the process is gone.
+  static const String _notificationIcon = '@drawable/ic_notification';
 
   // ─── Notification Channel & Interactive Actions ──────────────────────────────
   // All action labels and channel names resolve through the attached
@@ -1042,27 +1132,25 @@ class TaliaNotificationService {
   /// preparation is informational. Legacy `prayer_category` stays untouched.
   NotificationDetails _prayerCompanionNotificationDetails({
     required bool allowActions,
-  }) =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_prayer_companion',
-          _l10n.notificationChannelPrayerCompanionName,
-          channelDescription:
-              _l10n.notificationChannelPrayerCompanionDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFF1E824C),
-          icon: _notificationIcon,
-          playSound: true,
-          actions: allowActions ? _prayerCompanionActions : null,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          categoryIdentifier: allowActions ? 'prayer_companion_category' : null,
-        ),
-      );
+  }) => NotificationDetails(
+    android: AndroidNotificationDetails(
+      'talia_prayer_companion',
+      _l10n.notificationChannelPrayerCompanionName,
+      channelDescription: _l10n.notificationChannelPrayerCompanionDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      color: const Color(0xFF1E824C),
+      icon: _notificationIcon,
+      playSound: true,
+      actions: allowActions ? _prayerCompanionActions : null,
+    ),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      categoryIdentifier: allowActions ? 'prayer_companion_category' : null,
+    ),
+  );
 
   /// Initialize the notification system. Must be called on app startup.
   Future<void> initialize() async {
@@ -1143,6 +1231,7 @@ class TaliaNotificationService {
   String? takePendingLaunchPayload() => takePendingLaunch()?.payload;
 
   Future<void> configureLocalTimezone() async {
+    _cachedTimedScheduleMode = null;
     // Background WorkManager isolates do not execute [initialize()]. Load the
     // database here as well and guarantee a usable tz.local (UTC fallback) so
     // scheduling can never crash with a LateError.
@@ -1279,7 +1368,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyReviewId);
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _dailyReviewId,
       title: title,
       body: body,
@@ -1313,7 +1402,7 @@ class TaliaNotificationService {
 
     await _plugin.cancel(id: _streakAlertId);
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _streakAlertId,
       title: title,
       body: body,
@@ -1344,7 +1433,7 @@ class TaliaNotificationService {
 
     await _plugin.cancel(id: _streakGentleId);
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _streakGentleId,
       title: title,
       body: body,
@@ -1375,7 +1464,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _smartReminderId);
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _smartReminderId,
       title: title,
       body: body,
@@ -1418,7 +1507,7 @@ class TaliaNotificationService {
       );
       if (reminder == null) continue;
 
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _dailyAyahBaseId + dayOffset,
         title: reminder.title,
         body: reminder.body,
@@ -1452,9 +1541,14 @@ class TaliaNotificationService {
   /// Cancel only the daily ayah reminder.
   Future<void> cancelDailyAyahReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _legacyDailyAyahId);
-    for (var dayOffset = 0; dayOffset < _dailyAyahScheduleDays; dayOffset++) {
-      await _plugin.cancel(id: _dailyAyahBaseId + dayOffset);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id == _legacyDailyAyahId ||
+          (id >= _dailyAyahBaseId &&
+              id < _dailyAyahBaseId + _dailyAyahScheduleDays),
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1470,20 +1564,21 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelMorningAzkarReminder();
     final approvedTexts = await _loadApprovedAzkarTexts('morning');
-    if (approvedTexts.isEmpty) return;
 
     final firstDate = _nextInstanceOfTime(hour, minute);
     final availableSlots = await _availableScheduledNotificationSlots();
     final scheduleDays = math.min(_azkarScheduleDays, availableSlots);
     for (var dayOffset = 0; dayOffset < scheduleDays; dayOffset++) {
       final scheduledDate = firstDate.add(Duration(days: dayOffset));
-      final text =
-          approvedTexts[_azkarIndexForDate(
-            scheduledDate,
-            approvedTexts.length,
-          )];
+      final text = azkarNotificationBody(
+        approvedTexts: approvedTexts,
+        invitationBody: body,
+        index: approvedTexts.isEmpty
+            ? 0
+            : _azkarIndexForDate(scheduledDate, approvedTexts.length),
+      );
 
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _morningAzkarBaseId + dayOffset,
         title: title,
         body: text,
@@ -1498,9 +1593,14 @@ class TaliaNotificationService {
   /// Cancel morning azkar reminders.
   Future<void> cancelMorningAzkarReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _morningAzkarId);
-    for (var i = 0; i < _azkarScheduleDays; i++) {
-      await _plugin.cancel(id: _morningAzkarBaseId + i);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id == _morningAzkarId ||
+          (id >= _morningAzkarBaseId &&
+              id < _morningAzkarBaseId + _azkarScheduleDays),
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1514,20 +1614,21 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelEveningAzkarReminder();
     final approvedTexts = await _loadApprovedAzkarTexts('evening');
-    if (approvedTexts.isEmpty) return;
 
     final firstDate = _nextInstanceOfTime(hour, minute);
     final availableSlots = await _availableScheduledNotificationSlots();
     final scheduleDays = math.min(_azkarScheduleDays, availableSlots);
     for (var dayOffset = 0; dayOffset < scheduleDays; dayOffset++) {
       final scheduledDate = firstDate.add(Duration(days: dayOffset));
-      final text =
-          approvedTexts[_azkarIndexForDate(
-            scheduledDate,
-            approvedTexts.length,
-          )];
+      final text = azkarNotificationBody(
+        approvedTexts: approvedTexts,
+        invitationBody: body,
+        index: approvedTexts.isEmpty
+            ? 0
+            : _azkarIndexForDate(scheduledDate, approvedTexts.length),
+      );
 
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _eveningAzkarBaseId + dayOffset,
         title: title,
         body: text,
@@ -1542,9 +1643,14 @@ class TaliaNotificationService {
   /// Cancel evening azkar reminders.
   Future<void> cancelEveningAzkarReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _eveningAzkarId);
-    for (var i = 0; i < _azkarScheduleDays; i++) {
-      await _plugin.cancel(id: _eveningAzkarBaseId + i);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id == _eveningAzkarId ||
+          (id >= _eveningAzkarBaseId &&
+              id < _eveningAzkarBaseId + _azkarScheduleDays),
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1554,6 +1660,7 @@ class TaliaNotificationService {
   /// the next several days individually and refreshes them when the app resumes.
   Future<void> scheduleDailyDuaReminder({
     required String title,
+    String? invitationBody,
     int hour = 9,
     int minute = 0,
   }) async {
@@ -1561,8 +1668,23 @@ class TaliaNotificationService {
     await cancelDailyDuaReminder();
 
     final duas = await _loadApprovedAzkarTexts('duas');
-    // Fail safe: no corpus → no religious notification content at all.
-    if (duas.isEmpty) return;
+    // No approved quotation: keep the reminder, but only with the localized
+    // invitation. Never substitute a hand-written dua.
+    if (duas.isEmpty) {
+      final invitation = invitationBody?.trim() ?? '';
+      if (invitation.isEmpty) return;
+      await _zonedSchedule(
+        id: _dailyDuaBaseId,
+        title: title,
+        body: invitation,
+        scheduledDate: _nextInstanceOfTime(hour, minute),
+        notificationDetails: _dailyDuaNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: '/azkar/duas',
+      );
+      return;
+    }
 
     final firstDate = _nextInstanceOfTime(hour, minute);
 
@@ -1572,7 +1694,7 @@ class TaliaNotificationService {
       final scheduledDate = firstDate.add(Duration(days: dayOffset));
       final body = duas[_duaIndexForDate(scheduledDate, duas.length)];
 
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _dailyDuaBaseId + dayOffset,
         title: title,
         body: body,
@@ -1586,8 +1708,12 @@ class TaliaNotificationService {
 
   Future<void> cancelDailyDuaReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    for (var dayOffset = 0; dayOffset < _dailyDuaScheduleDays; dayOffset++) {
-      await _plugin.cancel(id: _dailyDuaBaseId + dayOffset);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id >= _dailyDuaBaseId && id < _dailyDuaBaseId + _dailyDuaScheduleDays,
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1600,7 +1726,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _kidsReviewId);
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _kidsReviewId,
       title: title,
       body: body,
@@ -1629,7 +1755,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelFridayKahfReminder();
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _fridayKahfId,
       title: title,
       body: body,
@@ -1662,7 +1788,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelWeeklyImpactReminder();
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _weeklyImpactId,
       title: title,
       body: body,
@@ -1692,7 +1818,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelTahajjudReminder();
 
-    await _plugin.zonedSchedule(
+    await _zonedSchedule(
       id: _tahajjudId,
       title: title,
       body: body,
@@ -1727,7 +1853,7 @@ class TaliaNotificationService {
     );
     for (var i = 0; i < count; i++) {
       final reminder = reminders[i];
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _khatmahReminderBaseId + i,
         title: title,
         body: reminder.body,
@@ -1742,9 +1868,14 @@ class TaliaNotificationService {
   /// Cancel Khatmah reminder.
   Future<void> cancelKhatmahReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _khatmahReminderId);
-    for (var i = 0; i < _khatmahReminderSlots; i++) {
-      await _plugin.cancel(id: _khatmahReminderBaseId + i);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id == _khatmahReminderId ||
+          (id >= _khatmahReminderBaseId &&
+              id < _khatmahReminderBaseId + _khatmahReminderSlots),
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1773,7 +1904,7 @@ class TaliaNotificationService {
     _ensureLocalLocationReady();
     for (final prayer in upcomingPrayers.take(availableSlots)) {
       final tzDate = tz.TZDateTime.from(prayer.scheduledDate, tz.local);
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: _prayerTimesBaseId + prayer.idOffset,
         title: prayer.title,
         body: prayer.body,
@@ -1846,8 +1977,13 @@ class TaliaNotificationService {
   /// Cancel all scheduled prayer times reminders.
   Future<void> cancelPrayerTimesReminders() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    for (var i = 0; i < _prayerTimesMaxCount; i++) {
-      await _plugin.cancel(id: _prayerTimesBaseId + i);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id >= _prayerTimesBaseId &&
+          id < _prayerTimesBaseId + _prayerTimesMaxCount,
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
   }
 
@@ -1897,7 +2033,7 @@ class TaliaNotificationService {
         'Companion reminder id ${reminder.id} is outside the 2100–2129 '
         'companion namespace',
       );
-      await _plugin.zonedSchedule(
+      await _zonedSchedule(
         id: reminder.id,
         title: titleFor(reminder),
         body: bodyFor(reminder),
@@ -1921,16 +2057,32 @@ class TaliaNotificationService {
     }
   }
 
-  /// Cancels ONLY the Companion namespace (2100–2129). Legacy prayer IDs
+  /// Cancels ONLY the Companion namespace (2100–2134). Legacy prayer IDs
   /// (2000–2039) and every other category are never touched.
   Future<void> cancelPrayerCompanionReminders() async {
     if (!_companionSupported) return;
-    for (var i = 0; i < companionPlannedMaxCount; i++) {
-      await _plugin.cancel(id: companionPlannedBaseId + i);
+    final ids = await _ownedScheduledOrActiveIds(
+      (id) =>
+          id >= companionPlannedBaseId &&
+          id < companionFollowUpBaseId + companionFollowUpMaxCount,
+    );
+    for (final id in ids) {
+      await _plugin.cancel(id: id);
     }
-    for (var i = 0; i < companionFollowUpMaxCount; i++) {
-      await _plugin.cancel(id: companionFollowUpBaseId + i);
-    }
+  }
+
+  Future<Set<int>> _ownedScheduledOrActiveIds(
+    bool Function(int id) ownsId,
+  ) async {
+    final pending = await _plugin.pendingNotificationRequests();
+    final active = await _plugin.getActiveNotifications();
+    return <int>{
+      ...pending.map((notification) => notification.id).where(ownsId),
+      ...active
+          .map((notification) => notification.id)
+          .whereType<int>()
+          .where(ownsId),
+    };
   }
 
   // ─── Cancel All & Test Notifications ───────────────────────────────────────
@@ -1951,8 +2103,11 @@ class TaliaNotificationService {
     var notificationBody = body;
     if (azkarCategory != null) {
       final approvedTexts = await _loadApprovedAzkarTexts(azkarCategory);
-      if (approvedTexts.isEmpty) return false;
-      notificationBody = approvedTexts.first;
+      notificationBody = azkarNotificationBody(
+        approvedTexts: approvedTexts,
+        invitationBody: body,
+        index: 0,
+      );
     }
     await requestPermissions();
     if (!await areNotificationsGranted()) return false;

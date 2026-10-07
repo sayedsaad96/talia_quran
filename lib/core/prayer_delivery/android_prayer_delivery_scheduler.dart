@@ -69,14 +69,15 @@ class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
 
   @override
   Future<void> cancelPrayerEvents() async {
-    await _invoke(PrayerDeliveryContract.methodCancelAll);
+    await _invokeCancellation(PrayerDeliveryContract.methodCancelAll);
   }
 
   @override
   Future<void> cancelPrayerEvent(PrayerScheduledEvent event) async {
-    await _invoke(PrayerDeliveryContract.methodCancelEvent, <String, Object>{
-      'event': event.toMap(),
-    });
+    await _invokeCancellation(
+      PrayerDeliveryContract.methodCancelEvent,
+      <String, Object>{'event': event.toMap()},
+    );
   }
 
   @override
@@ -113,4 +114,11 @@ class AndroidPrayerDeliveryScheduler implements PrayerDeliveryScheduler {
       return null;
     }
   }
+
+  /// Cancellation is a state-transition boundary. A platform failure leaves
+  /// ownership uncertain, so callers must see it and avoid enabling V1.
+  Future<void> _invokeCancellation(
+    String method, [
+    Map<String, Object>? arguments,
+  ]) => _channel.invokeMethod<void>(method, arguments);
 }

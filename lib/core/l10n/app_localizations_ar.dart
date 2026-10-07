@@ -4462,6 +4462,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationDailyDuaTitle => 'دعوة من القلب 🤲';
 
   @override
+  String get notificationDailyDuaBody => 'دعاء اليوم بانتظارك في تالية';
+
+  @override
   String get notificationFridayKahfTitle => 'نور ما بين الجمعتين 🌿';
 
   @override

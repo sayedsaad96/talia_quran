@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -21,28 +21,39 @@ void main() {
   late MockStreakReader mockStreakReader;
 
   Future<void> stubAllServiceMethods() async {
-    when(() => mockNotificationService.configureLocalTimezone())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakAlert())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakGentleNudge())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelSmartReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyReviewReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyAyahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelMorningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelEveningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyDuaReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKidsReviewReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelFridayKahfReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.configureLocalTimezone(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakAlert(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakGentleNudge(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelSmartReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyReviewReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyAyahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelMorningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelEveningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyDuaReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKidsReviewReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleWeeklyImpactReminder(
         title: any(named: 'title'),
@@ -51,14 +62,18 @@ void main() {
         minute: any(named: 'minute'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelWeeklyImpactReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelTahajjudReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKhatmahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelPrayerTimesReminders())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelTahajjudReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKhatmahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelPrayerTimesReminders(),
+    ).thenAnswer((_) async {});
 
     when(
       () => mockNotificationService.scheduleDailyReviewReminder(
@@ -87,6 +102,7 @@ void main() {
     when(
       () => mockNotificationService.scheduleDailyDuaReminder(
         title: any(named: 'title'),
+        invitationBody: any(named: 'invitationBody'),
         hour: any(named: 'hour'),
         minute: any(named: 'minute'),
       ),
@@ -196,8 +212,9 @@ void main() {
     test('schedules both gentle nudge and urgent alert when enabled and no '
         'activity today', () async {
       final now = DateTime.now();
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakWithoutActivityToday());
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakWithoutActivityToday());
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -237,8 +254,9 @@ void main() {
         '${TaliaNotificationService.streakAlertPreferenceKey}_hour': 0,
         '${TaliaNotificationService.streakAlertPreferenceKey}_minute': 30,
       });
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => streakWithoutActivityToday());
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakWithoutActivityToday());
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -275,8 +293,9 @@ void main() {
         longestStreak: 10,
         lastActivityDate: now,
       );
-      when(() => mockStreakReader.getStreak())
-          .thenAnswer((_) async => withActivity);
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => withActivity);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -404,30 +423,48 @@ void main() {
       verify(() => mockNotificationService.cancelSmartReminder()).called(1);
     });
 
-    test('recordAppOpen collapses consecutive duplicates and keeps last 7',
-        () async {
-      SharedPreferences.setMockInitialValues({
-        'smart_reminder_open_hours': <String>[
-          '1', '2', '3', '4', '5', '6', '7',
-        ],
-      });
+    test(
+      'recordAppOpen collapses consecutive duplicates and keeps last 7',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'smart_reminder_open_hours': <String>[
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+          ],
+        });
 
-      final scheduler = NotificationScheduler(mockNotificationService);
-      await scheduler.recordAppOpen(now: DateTime(2026, 1, 1, 8));
+        final scheduler = NotificationScheduler(mockNotificationService);
+        await scheduler.recordAppOpen(now: DateTime(2026, 1, 1, 8));
 
-      var prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getStringList('smart_reminder_open_hours'),
-        ['2', '3', '4', '5', '6', '7', '8'],
-      );
+        var prefs = await SharedPreferences.getInstance();
+        expect(prefs.getStringList('smart_reminder_open_hours'), [
+          '2',
+          '3',
+          '4',
+          '5',
+          '6',
+          '7',
+          '8',
+        ]);
 
-      // Same hour again: collapsed, no growth.
-      await scheduler.recordAppOpen(now: DateTime(2026, 1, 1, 8, 30));
-      prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getStringList('smart_reminder_open_hours'),
-        ['2', '3', '4', '5', '6', '7', '8'],
-      );
-    });
+        // Same hour again: collapsed, no growth.
+        await scheduler.recordAppOpen(now: DateTime(2026, 1, 1, 8, 30));
+        prefs = await SharedPreferences.getInstance();
+        expect(prefs.getStringList('smart_reminder_open_hours'), [
+          '2',
+          '3',
+          '4',
+          '5',
+          '6',
+          '7',
+          '8',
+        ]);
+      },
+    );
   });
 }

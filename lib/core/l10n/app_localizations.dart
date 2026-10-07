@@ -7816,6 +7816,12 @@ abstract class AppLocalizations {
   /// **'دعوة من القلب 🤲'**
   String get notificationDailyDuaTitle;
 
+  /// No description provided for @notificationDailyDuaBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء اليوم بانتظارك في تالية'**
+  String get notificationDailyDuaBody;
+
   /// No description provided for @notificationFridayKahfTitle.
   ///
   /// In ar, this message translates to:

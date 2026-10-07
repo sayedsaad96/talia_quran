@@ -92,6 +92,9 @@ class PrayerDeliveryCoordinator {
         '[PrayerV2] migration scheduling failed (${result.error}); '
         'staying on legacy delivery',
       );
+      // A failed native batch can have armed a subset of events. Confirm its
+      // cleanup before restoring V1, otherwise both owners could deliver.
+      await _scheduler.cancelPrayerEvents();
       await rebuildLegacyReminders(); // restore what step 1 cancelled
       return true;
     }

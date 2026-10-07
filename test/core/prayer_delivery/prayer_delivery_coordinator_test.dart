@@ -10,6 +10,7 @@ class _FakeScheduler implements PrayerDeliveryScheduler {
   PrayerDeliveryResult result;
   int scheduleCalls = 0;
   int cancelAllCalls = 0;
+  Object? cancelFailure;
   final List<List<PrayerScheduledEvent>> batches = [];
 
   @override
@@ -21,6 +22,7 @@ class _FakeScheduler implements PrayerDeliveryScheduler {
   @override
   Future<void> cancelPrayerEvents() async {
     cancelAllCalls++;
+    if (cancelFailure != null) throw cancelFailure!;
   }
 
   @override
@@ -34,14 +36,14 @@ class _FakeScheduler implements PrayerDeliveryScheduler {
 }
 
 PrayerScheduledEvent _event(String id) => PrayerScheduledEvent(
-      eventId: id,
-      prayerKey: 'fajr',
-      scheduledAtUtc: DateTime.utc(2026, 9, 20, 21, 12),
-      localPrayerTime: '00:12',
-      timezoneId: 'Africa/Cairo',
-      notificationEnabled: true,
-      adhanEnabled: false,
-    );
+  eventId: id,
+  prayerKey: 'fajr',
+  scheduledAtUtc: DateTime.utc(2026, 9, 20, 21, 12),
+  localPrayerTime: '00:12',
+  timezoneId: 'Africa/Cairo',
+  notificationEnabled: true,
+  adhanEnabled: false,
+);
 
 Future<SharedPreferences> _freshPrefs() async {
   SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -53,7 +55,10 @@ void main() {
     final scheduler = _FakeScheduler(
       const PrayerDeliveryResult(success: true, scheduledCount: 1),
     );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => false);
+    final coordinator = PrayerDeliveryCoordinator(
+      scheduler,
+      isAndroid: () => false,
+    );
     final p = await _freshPrefs();
 
     var legacyCancelled = false;
@@ -72,32 +77,43 @@ void main() {
     expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy);
   });
 
-  test('V1 migration: legacy cancelled, native scheduled, V2 persisted',
-      () async {
-    final scheduler = _FakeScheduler(
-      const PrayerDeliveryResult(success: true, scheduledCount: 2),
-    );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
-    final p = await _freshPrefs();
+  test(
+    'V1 migration: legacy cancelled, native scheduled, V2 persisted',
+    () async {
+      final scheduler = _FakeScheduler(
+        const PrayerDeliveryResult(success: true, scheduledCount: 2),
+      );
+      final coordinator = PrayerDeliveryCoordinator(
+        scheduler,
+        isAndroid: () => true,
+      );
+      final p = await _freshPrefs();
 
-    var legacyCancelled = false;
-    var legacyRebuilt = false;
-    final handled = await coordinator.refreshNativeDelivery(
-      prefs: p,
-      events: [_event('e1'), _event('e2')],
-      cancelLegacyReminders: () async => legacyCancelled = true,
-      rebuildLegacyReminders: () async => legacyRebuilt = true,
-    );
+      var legacyCancelled = false;
+      var legacyRebuilt = false;
+      final handled = await coordinator.refreshNativeDelivery(
+        prefs: p,
+        events: [_event('e1'), _event('e2')],
+        cancelLegacyReminders: () async => legacyCancelled = true,
+        rebuildLegacyReminders: () async => legacyRebuilt = true,
+      );
 
-    expect(handled, isTrue);
-    expect(legacyCancelled, isTrue, reason: '§22 step 1');
-    expect(scheduler.cancelAllCalls, 1, reason: '§22 step 2 (defensive)');
-    expect(scheduler.scheduleCalls, 1);
-    expect(legacyRebuilt, isFalse,
-        reason: 'native succeeded — no legacy rebuild');
-    expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.nativeAndroidV2,
-        reason: '§22 step 6: persisted only after verified success');
-  });
+      expect(handled, isTrue);
+      expect(legacyCancelled, isTrue, reason: '§22 step 1');
+      expect(scheduler.cancelAllCalls, 1, reason: '§22 step 2 (defensive)');
+      expect(scheduler.scheduleCalls, 1);
+      expect(
+        legacyRebuilt,
+        isFalse,
+        reason: 'native succeeded — no legacy rebuild',
+      );
+      expect(
+        PrayerDeliveryVersion.read(p),
+        PrayerDeliveryVersion.nativeAndroidV2,
+        reason: '§22 step 6: persisted only after verified success',
+      );
+    },
+  );
 
   test('V1 migration failure: legacy rebuilt, version stays 1', () async {
     final scheduler = _FakeScheduler(
@@ -107,7 +123,10 @@ void main() {
         error: 'denied',
       ),
     );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
+    final coordinator = PrayerDeliveryCoordinator(
+      scheduler,
+      isAndroid: () => true,
+    );
     final p = await _freshPrefs();
 
     var legacyRebuilt = false;
@@ -120,8 +139,11 @@ void main() {
 
     expect(handled, isTrue, reason: 'fallback legacy rebuild IS the delivery');
     expect(legacyRebuilt, isTrue);
-    expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy,
-        reason: '§22: DO NOT persist V2 on failure');
+    expect(
+      PrayerDeliveryVersion.read(p),
+      PrayerDeliveryVersion.legacy,
+      reason: '§22: DO NOT persist V2 on failure',
+    );
   });
 
   test('V2 owner refresh: native rebuild only, no legacy calls', () async {
@@ -132,7 +154,10 @@ void main() {
     final scheduler = _FakeScheduler(
       const PrayerDeliveryResult(success: true, scheduledCount: 2),
     );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
+    final coordinator = PrayerDeliveryCoordinator(
+      scheduler,
+      isAndroid: () => true,
+    );
 
     var legacyCancelled = false;
     var legacyRebuilt = false;
@@ -145,40 +170,86 @@ void main() {
 
     expect(handled, isTrue);
     expect(scheduler.scheduleCalls, 1);
-    expect(scheduler.cancelAllCalls, 0,
-        reason: 'cancel-first happens inside the native scheduler');
+    expect(
+      scheduler.cancelAllCalls,
+      0,
+      reason: 'cancel-first happens inside the native scheduler',
+    );
     expect(legacyCancelled, isFalse);
     expect(legacyRebuilt, isFalse);
   });
 
-  test('V2 rollback on failure: native cancelled, version 1, legacy rebuilt',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      PrayerDeliveryVersion.prefsKey: PrayerDeliveryVersion.nativeAndroidV2,
-    });
-    final p = await SharedPreferences.getInstance();
-    final scheduler = _FakeScheduler(
-      const PrayerDeliveryResult(
-        success: false,
-        scheduledCount: 0,
-        error: 'boom',
-      ),
-    );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
+  test(
+    'V2 rollback on failure: native cancelled, version 1, legacy rebuilt',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        PrayerDeliveryVersion.prefsKey: PrayerDeliveryVersion.nativeAndroidV2,
+      });
+      final p = await SharedPreferences.getInstance();
+      final scheduler = _FakeScheduler(
+        const PrayerDeliveryResult(
+          success: false,
+          scheduledCount: 0,
+          error: 'boom',
+        ),
+      );
+      final coordinator = PrayerDeliveryCoordinator(
+        scheduler,
+        isAndroid: () => true,
+      );
 
-    var legacyRebuilt = false;
-    final handled = await coordinator.refreshNativeDelivery(
-      prefs: p,
-      events: [_event('e1')],
-      cancelLegacyReminders: () async {},
-      rebuildLegacyReminders: () async => legacyRebuilt = true,
-    );
+      var legacyRebuilt = false;
+      final handled = await coordinator.refreshNativeDelivery(
+        prefs: p,
+        events: [_event('e1')],
+        cancelLegacyReminders: () async {},
+        rebuildLegacyReminders: () async => legacyRebuilt = true,
+      );
 
-    expect(handled, isTrue);
-    expect(scheduler.cancelAllCalls, 1, reason: '§40: cancel native alarms');
-    expect(legacyRebuilt, isTrue);
-    expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy);
-  });
+      expect(handled, isTrue);
+      expect(scheduler.cancelAllCalls, 1, reason: '§40: cancel native alarms');
+      expect(legacyRebuilt, isTrue);
+      expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy);
+    },
+  );
+
+  test(
+    'V2 cleanup failure preserves ownership and does not rebuild legacy',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        PrayerDeliveryVersion.prefsKey: PrayerDeliveryVersion.nativeAndroidV2,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final scheduler = _FakeScheduler(
+        const PrayerDeliveryResult(
+          success: false,
+          scheduledCount: 0,
+          error: 'native schedule failed',
+        ),
+      )..cancelFailure = StateError('native cleanup unavailable');
+      final coordinator = PrayerDeliveryCoordinator(
+        scheduler,
+        isAndroid: () => true,
+      );
+      var legacyRebuilt = false;
+
+      await expectLater(
+        coordinator.refreshNativeDelivery(
+          prefs: prefs,
+          events: [_event('e1')],
+          cancelLegacyReminders: () async {},
+          rebuildLegacyReminders: () async => legacyRebuilt = true,
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(legacyRebuilt, isFalse);
+      expect(
+        PrayerDeliveryVersion.read(prefs),
+        PrayerDeliveryVersion.nativeAndroidV2,
+      );
+    },
+  );
 
   test('empty events on V2: native alarms cancelled, handled', () async {
     SharedPreferences.setMockInitialValues({
@@ -188,7 +259,10 @@ void main() {
     final scheduler = _FakeScheduler(
       const PrayerDeliveryResult(success: true, scheduledCount: 0),
     );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
+    final coordinator = PrayerDeliveryCoordinator(
+      scheduler,
+      isAndroid: () => true,
+    );
 
     final handled = await coordinator.refreshNativeDelivery(
       prefs: p,
@@ -202,25 +276,30 @@ void main() {
     expect(scheduler.scheduleCalls, 0, reason: 'no stale native alarms');
   });
 
-  test('empty events on V1: not handled (legacy path cancels legacy ids)',
-      () async {
-    final scheduler = _FakeScheduler(
-      const PrayerDeliveryResult(success: true, scheduledCount: 0),
-    );
-    final coordinator = PrayerDeliveryCoordinator(scheduler, isAndroid: () => true);
-    final p = await _freshPrefs();
+  test(
+    'empty events on V1: not handled (legacy path cancels legacy ids)',
+    () async {
+      final scheduler = _FakeScheduler(
+        const PrayerDeliveryResult(success: true, scheduledCount: 0),
+      );
+      final coordinator = PrayerDeliveryCoordinator(
+        scheduler,
+        isAndroid: () => true,
+      );
+      final p = await _freshPrefs();
 
-    final handled = await coordinator.refreshNativeDelivery(
-      prefs: p,
-      events: const [],
-      cancelLegacyReminders: () async {},
-      rebuildLegacyReminders: () async {},
-    );
+      final handled = await coordinator.refreshNativeDelivery(
+        prefs: p,
+        events: const [],
+        cancelLegacyReminders: () async {},
+        rebuildLegacyReminders: () async {},
+      );
 
-    expect(handled, isFalse);
-    expect(scheduler.scheduleCalls, 0);
-    expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy);
-  });
+      expect(handled, isFalse);
+      expect(scheduler.scheduleCalls, 0);
+      expect(PrayerDeliveryVersion.read(p), PrayerDeliveryVersion.legacy);
+    },
+  );
 
   test('isNativeOwner mirrors the persisted version and platform', () async {
     final p = await _freshPrefs();
