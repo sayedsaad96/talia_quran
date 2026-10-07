@@ -5,6 +5,16 @@ description: Use when working on any feature, bug, refactor, dependency upgrade,
 
 # Talia Engineering OS
 
+## Project entry contract
+
+Resolve the repository root from this file (`../../..`), not from the terminal's current directory. Read the root `AGENTS.md`, `.codex/AGENTS.md`, and any instructions applying to the files being changed. User scope and higher-priority instructions remain authoritative; this skill never grants production access or permission to publish.
+
+Use [Repository Map](knowledge/repo-map.md) to locate the current owner of a feature, then read that code. For implementation or diagnosis, read the relevant section of [Project Playbook](references/project-playbook.md); it provides Talia-specific invariants, symptom traces, and verification commands. Read only task-relevant modules, not this entire directory.
+
+Follow [Model Delegation](core/model-delegation.md): trivial work directly; Luna for exploration, Terra for routine implementation, Sol for integration/review, Astra only for the project's critical escalation criteria. A normal fix does not start a full audit.
+
+For updates to this skill itself, use the `SKILL_MAINTENANCE` rule in [Task Router](core/task-router.md): inspect the app read-only, edit skill resources, and validate the skill without expanding into application fixes or a release audit.
+
 Treat Talia as a product-specific engineering system, not a generic Flutter repository.
 
 ## Constitution

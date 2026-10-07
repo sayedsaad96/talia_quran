@@ -1,5 +1,7 @@
 # Architecture Contract
 
+Read `.codex/AGENTS.md` and [Project Playbook](project-playbook.md). Talia requires feature-first Clean Architecture, Cubit only, repository/use-case boundaries and dependency injection. Existing cross-feature services are observed legacy structure, not a reason to place new business logic or direct DB access in presentation. Follow existing ownership while moving only task-required logic to the appropriate boundary.
+
 - Follow the current Talia repository architecture unless measurable pain justifies change.
 - Prefer focused, testable, incremental changes over broad rewrites.
 - Search for existing repositories/services/state flows before adding parallel abstractions.

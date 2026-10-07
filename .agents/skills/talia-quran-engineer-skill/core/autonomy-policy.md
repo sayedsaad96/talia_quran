@@ -17,6 +17,8 @@ Proceed with extra evidence for medium/high risk work when rollback is understoo
 
 ## Stop before execution
 
-Stop before destructive production DB changes, production data deletion, irreversible local migration, canonical Quran source/mapping strategy changes, major architecture replacement outside scope, auth/security-model replacement, unsafe secret handling, or destructive Git history/worktree actions.
+Check existing user authorization before destructive production DB changes, production data deletion, irreversible local migration, canonical Quran source/mapping strategy changes, auth/security-model replacement, or destructive Git history/worktree actions. If the exact action/environment and its recovery boundary are not already authorized, prepare a concrete reviewable change first and stop before execution. Do not ask again when the same action is already clearly authorized. Never broaden authorization to a different target, publish unapproved religious content, expose secrets, or replace architecture outside scope.
+
+High risk does not itself require another permission question: continue authorized local inspection, tests and reversible fixes while preserving data and the required verification. If a content source/review gate is missing, block only that publication or canonical replacement; complete unaffected engineering work.
 
 Never destroy unknown/unrecognized work. Preserve user changes and do not reset or clean them away.

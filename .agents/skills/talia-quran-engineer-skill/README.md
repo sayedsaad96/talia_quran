@@ -1,5 +1,9 @@
 # Talia Engineering OS V2
 
+Current revision: 2.1, refreshed against Talia source on 2026-10-06. Start at [SKILL.md](SKILL.md). [Project Playbook](references/project-playbook.md) contains actual owners, critical invariants, symptom traces and relevant test commands; [Model Delegation](core/model-delegation.md) follows project cost/escalation rules.
+
+للاستخدام: اطلب المهمة مع `$talia-quran-engineer`، مثل «شخّص تعذّر استعادة جلسة الحفظ وأصلح السبب مع اختبار يمنع تكراره». يبدأ الوكيل من الكود الحالي، ويختار المراجع والاختبارات المناسبة للمشكلة. تحديث المهارة لا يعني فحص التطبيق كاملًا أو اعتماد جاهزيته للنشر.
+
 A project-specific Agent Skill for **Talia Quran**. It combines product context, Flutter/Supabase engineering rules, Quran-integrity guardrails, focused task modules, controlled workflows, living repository knowledge, and evidence-based completion.
 
 ## How it works
@@ -29,7 +33,21 @@ From the skill root:
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-PowerShell helpers in `scripts/` are intentionally non-destructive diagnostics. If `pwsh` is available, syntax-parse them before distribution.
+PowerShell helpers in `scripts/` are non-destructive diagnostics; Flutter/pub can still write generated caches/build files and use the network. They never authorize production SQL execution. Syntax-parse changed helpers and inspect their exit status.
+
+Scripts derive the project root from their own location, or accept `-ProjectRoot` for a different checkout. From the Talia root:
+
+```powershell
+# Filenames/status only, no secret/config content.
+& ./.agents/skills/talia-quran-engineer-skill/scripts/project_snapshot.ps1
+
+# Analyze a relevant directory and run an existing targeted test.
+& ./.agents/skills/talia-quran-engineer-skill/scripts/talia_doctor.ps1 -AnalyzePaths lib/core/identity -TestPaths test/core/identity/record_owner_provider_test.dart
+```
+
+`talia_doctor.ps1` defaults to analysis of `lib` and no tests. Select `-TestPaths` or `-FullTests`; `-SkipTests` remains supported. `-Doctor` and `-CheckOutdated` opt into broader SDK/network checks. Failed or unavailable checks yield a nonzero exit. `dependency_audit.ps1` explicitly performs the network-sensitive outdated inventory and stops on failure. The helpers are not certification gates: passing the selected checks does not imply runtime or release verification.
+
+Resolve project packages before using the helper's `--no-pub` checks. If local execution policy requires signed scripts, report that environment constraint; do not change the machine-wide policy. Skill structure tests run without Flutter. The creator's optional `quick_validate.py` also requires PyYAML; if absent, report that validator unavailable while retaining the independent structure/link checks.
 
 ## Pressure testing
 

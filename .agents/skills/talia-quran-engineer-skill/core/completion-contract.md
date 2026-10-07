@@ -11,7 +11,11 @@
 - `Measured`: before/after metrics were captured and compared.
 - `Release Verified`: release-specific gates were run and passed.
 
-## Final report template
+## Final report guidance
+
+Match detail and language to the user. For small tasks use a concise summary of what changed, checks actually run and material limitations; do not force empty sections or ecosystem statements. For substantial changes, the following fields form an evidence checklist rather than a required output layout. Verification statuses are independent: a test pass never implies Android runtime or release certification. Distinguish pre-existing failures, new failures and unavailable checks with evidence.
+
+Use Arabic when the user communicates in Arabic, with clickable changed-file links where useful.
 
 ```text
 TASK

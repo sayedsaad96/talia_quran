@@ -71,6 +71,21 @@ class SkillStructureTests(unittest.TestCase):
         for token in ("git reset --hard", "git clean -fd", "drop table", "truncate table"):
             self.assertNotIn(token, value)
 
+    def test_repository_navigation_targets_exist(self) -> None:
+        # Catch stale or invented project entry points, not wording changes.
+        project = ROOT.parents[2]
+        documents = [ROOT / "references/project-playbook.md"]
+        documents.extend((ROOT / "knowledge").glob("*.md"))
+        failures = []
+        for document in documents:
+            for target in re.findall(
+                r"`((?:lib|test|assets|supabase|scripts|docs)/[^`<>]+)`",
+                document.read_text(encoding="utf-8"),
+            ):
+                if not (project / target).exists():
+                    failures.append(f"{document.name}: {target}")
+        self.assertEqual([], failures, "Repository navigation has drifted")
+
     def test_core_router_exposes_required_operating_contracts(self) -> None:
         assert_paths_exist(
             self,

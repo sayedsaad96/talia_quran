@@ -38,7 +38,7 @@ class SkillContractTests(unittest.TestCase):
             self.assertNotIn("latest_flutter:", value)
             self.assertNotIn("latest_supabase", value)
 
-    def test_knowledge_templates_declare_staleness_metadata(self) -> None:
+    def test_source_mapped_knowledge_declares_staleness_metadata(self) -> None:
         for relative in (
             "knowledge/repo-map.md",
             "knowledge/feature-registry.md",
@@ -50,9 +50,9 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn("last_verified", value)
             self.assertIn("confidence", value)
 
-    def test_skill_version_starts_at_v2(self) -> None:
+    def test_skill_version_declares_supported_major(self) -> None:
         value = text("knowledge/skill-version.md")
-        self.assertIn("Version: 2.0", value)
+        self.assertRegex(value, r"(?m)^Version: 2\.\d+$")
         self.assertIn("Known limitations", value)
 
     def test_feature_module_supports_four_product_outcomes(self) -> None:
