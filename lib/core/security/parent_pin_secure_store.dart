@@ -22,6 +22,11 @@ class FlutterParentPinSecureStore implements ParentPinSecureStore {
 
   final FlutterSecureStorage _storage;
 
+  // Throttle state also lives in memory for the session, so a failing
+  // keystore cannot silently reset the failed-attempt count or lockout.
+  final Map<String, int> _sessionFailureCounts = {};
+  final Map<String, DateTime> _sessionBlockedUntil = {};
+
   @override
   Future<String?> readVerifier(String ownerId) =>
       _guard<String?>('readVerifier', () => _storage.read(key: _verifier(ownerId)));
@@ -42,12 +47,21 @@ class FlutterParentPinSecureStore implements ParentPinSecureStore {
       'readBlockedUntil',
       () => _storage.read(key: _ownerKey(_blockedUntilKey, ownerId)),
     );
-    return raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+    final stored = raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+    final session = _sessionBlockedUntil[ownerId];
+    if (stored == null) return session;
+    if (session == null) return stored;
+    return session.isAfter(stored) ? session : stored;
   }
 
   @override
   Future<void> writeBlockedUntil(String ownerId, DateTime? blockedUntil) {
     final key = _ownerKey(_blockedUntilKey, ownerId);
+    if (blockedUntil == null) {
+      _sessionBlockedUntil.remove(ownerId);
+    } else {
+      _sessionBlockedUntil[ownerId] = blockedUntil.toUtc();
+    }
     if (blockedUntil == null) {
       return _guard('writeBlockedUntil', () => _storage.delete(key: key));
     }
@@ -66,17 +80,22 @@ class FlutterParentPinSecureStore implements ParentPinSecureStore {
       'readFailureCount',
       () => _storage.read(key: _ownerKey(_failureCountKey, ownerId)),
     );
-    return int.tryParse(raw ?? '') ?? 0;
+    final stored = int.tryParse(raw ?? '') ?? 0;
+    final session = _sessionFailureCounts[ownerId];
+    return session ?? stored;
   }
 
   @override
-  Future<void> writeFailureCount(String ownerId, int count) => _guard(
-    'writeFailureCount',
-    () => _storage.write(
-      key: _ownerKey(_failureCountKey, ownerId),
-      value: count.toString(),
-    ),
-  );
+  Future<void> writeFailureCount(String ownerId, int count) {
+    _sessionFailureCounts[ownerId] = count;
+    return _guard(
+      'writeFailureCount',
+      () => _storage.write(
+        key: _ownerKey(_failureCountKey, ownerId),
+        value: count.toString(),
+      ),
+    );
+  }
 
   String _verifier(String ownerId) => _ownerKey(_verifierKey, ownerId);
 
