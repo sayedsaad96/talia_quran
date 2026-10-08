@@ -10174,12 +10174,6 @@ abstract class AppLocalizations {
   /// **'دعاء الختام'**
   String get closingDuaButton;
 
-  /// No description provided for @closingDua.
-  ///
-  /// In ar, this message translates to:
-  /// **'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.'**
-  String get closingDua;
-
   /// No description provided for @closingDuaAmen.
   ///
   /// In ar, this message translates to:

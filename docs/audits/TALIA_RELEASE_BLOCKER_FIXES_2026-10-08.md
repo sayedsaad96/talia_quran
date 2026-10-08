@@ -24,10 +24,11 @@ Fixes for the blockers found in the production-readiness audit of 2026-10-08
 | Guardian PIN policy (owner decision) | Optional at child setup; required for sensitive guardian actions | The child setup sheet accepts an empty PIN. Leaving the kids track, opening the guardian area, reopening guardian linking and the guardian completion fallback all go through `ensureGuardianPin`: an existing PIN is verified; with none, the guardian creates one first; unreadable settings ask for the PIN. Unlinking always verifies. |
 | PIN creation for a linked child | Not allowed on the device | A remote guardian owns a linked child. Anyone holding the device could create a PIN, so a linked child's guardian proves themselves through recovery instead (`allowCreate: false`). |
 | Closing dua | Hide, do not rewrite | Content policy: unverified religious text stays blocked; no generated replacement. |
+| Closing dua source (owner decision, 2026-10-09) | The first paragraph of the approved khatm dua | The unsourced ARB string `closingDua` is removed. The sheet reads the first paragraph of `assets/data/khatm_dua.json` (approved; King Fahd Complex Mushaf appendix) at runtime, verbatim, and opens nothing if the record is missing or not approved. The source has no translation, so it is shown in Arabic in every locale. `kClosingDuaApproved` is removed. |
+| Khatm dua text vs the owner's printed Mushaf (owner decision, 2026-10-09) | Keep the current approved text | The owner's printed copy differs from the app text: «بها» vs «به» in «ما تبلغنا به جنتك», «سيدنا ونبينا» vs «نبينا», plus spacing and separators, which points to a different print edition. The approved record stays as is. |
 
 ## Open items
 
-- **Owner:** the closing dua comes back only after its source is documented and reviewed (owner decision, 2026-10-08). Then set `kClosingDuaApproved` to true.
 - **Before enabling the evidence transport:** the local backlog will count as pending again, and dead-lettered evidence has no recovery path (audit P2-3).
 - **Accepted risk (guardian PIN policy):** on an unlinked child's device with no PIN yet, whoever holds the device can create the PIN, and a child who does it first locks the guardian out until a reset. This is still stricter than before, when no PIN meant no check at all.
 - **Hardening:** corrupt parent settings read as "no PIN" (`memorization_kids_storage.dart`), so a guardian action would offer to create a PIN instead of asking for the old one.

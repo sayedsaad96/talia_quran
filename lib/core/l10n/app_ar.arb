@@ -2493,7 +2493,6 @@
   "closingSummaryKhatmahWird": "أتممتَ ورد اليوم — من صفحة {start} إلى {end} — أثرٌ باقٍ بإذن الله.",
   "@closingSummaryKhatmahWird": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
   "closingDuaButton": "دعاء الختام",
-  "closingDua": "اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.",
   "closingDuaAmen": "آمين",
   "closingDone": "تم بحمد الله",
   "closingRestNote": "خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.",

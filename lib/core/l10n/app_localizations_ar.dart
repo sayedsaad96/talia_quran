@@ -5893,10 +5893,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get closingDuaButton => 'دعاء الختام';
 
   @override
-  String get closingDua =>
-      'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.';
-
-  @override
   String get closingDuaAmen => 'آمين';
 
   @override

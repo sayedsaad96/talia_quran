@@ -1,4 +1,7 @@
-﻿import 'package:dartz/dartz.dart';
+﻿import 'dart:convert';
+import 'dart:io';
+
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +9,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/widgets/closing_moment.dart';
+import 'package:talia_quran/features/khatmah/data/datasources/khatm_dua_datasource.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
@@ -21,6 +25,7 @@ void main() {
     await getIt.reset();
     ClosingMomentAyahCard.resetCacheForTest();
     getIt.registerSingleton<QuranRepository>(_ClosingAyahRepository());
+    getIt.registerLazySingleton<KhatmDuaDatasource>(KhatmDuaDatasource.new);
   });
 
   tearDown(() async {
@@ -65,8 +70,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('3/3'), findsOneWidget);
-      // Hidden until the dua's source is approved (kClosingDuaApproved).
-      expect(find.text('Closing dua'), findsNothing);
+      expect(find.text('Closing dua'), findsOneWidget);
       expect(find.text('Share memorization milestone'), findsOneWidget);
     });
 
@@ -135,27 +139,8 @@ void main() {
       expect(find.byKey(const Key('v2_next_plan_item_button')), findsNothing);
     });
 
-    testWidgets('hides the closing dua until its source is approved', (
-      tester,
-    ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1600);
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(
-        _TestApp(
-          child: V2CompletionPage(finalState: _completedState(passed: 3)),
-        ),
-      );
-      await tester.pump();
-
-      expect(kClosingDuaApproved, isFalse);
-      expect(find.byKey(const Key('v2_closing_dua_button')), findsNothing);
-    });
-
-    testWidgets('the closing dua sheet shows the dua and Ameen', (
-      tester,
-    ) async {
+    testWidgets('the closing dua is the first paragraph of the approved '
+        'khatm dua, verbatim', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1600);
       addTearDown(tester.view.reset);
@@ -173,11 +158,47 @@ void main() {
         ),
       );
       await tester.tap(find.text('open'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('closing_dua_text')), findsOneWidget);
+      final record =
+          jsonDecode(File('assets/data/khatm_dua.json').readAsStringSync())
+              as Map<String, dynamic>;
+      expect(record['reviewStatus'], 'approved');
+      final firstParagraph = (record['arabicText'] as String)
+          .split('\n\n')
+          .first
+          .trim();
+      final shown = tester.widget<Text>(
+        find.byKey(const Key('closing_dua_text')),
+      );
+      expect(shown.data, firstParagraph);
       expect(find.byKey(const Key('closing_dua_amen')), findsOneWidget);
       expect(find.text('Ameen'), findsOneWidget);
+    });
+
+    testWidgets('an unapproved khatm dua record opens nothing', (
+      tester,
+    ) async {
+      await getIt.unregister<KhatmDuaDatasource>();
+      getIt.registerSingleton<KhatmDuaDatasource>(_PendingKhatmDuaDatasource());
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showClosingDuaSheet(context),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('closing_dua_text')), findsNothing);
     });
   });
 }
@@ -256,4 +277,16 @@ class _ClosingAyahRepository implements QuranRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _PendingKhatmDuaDatasource extends KhatmDuaDatasource {
+  @override
+  Future<KhatmDuaData> loadDua() async =>
+      const KhatmDuaData(
+        arabicText: 'text',
+        source: 'source',
+        sourceNote: 'note',
+        tier: 'guidance',
+        dedicationInserts: {},
+      );
 }
