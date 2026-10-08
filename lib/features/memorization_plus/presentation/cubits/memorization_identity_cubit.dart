@@ -33,7 +33,7 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
   Future<void> setupChild({
     required String nickname,
     required int age,
-    required String pin,
+    String pin = '',
     int reminderHour = 18,
     int reminderMinute = 30,
     int weeklyGoalSessions = 5,
@@ -43,8 +43,9 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
     final trimmedName = ChildIdentityPolicy.normalizeNickname(nickname);
     if (trimmedName == null ||
         !ChildIdentityPolicy.isValidAge(age) ||
-        pin.length != 4 ||
-        int.tryParse(pin) == null ||
+        // The guardian PIN is optional at setup; when given it must be 4
+        // digits. Guardian actions ask for one later if it was skipped.
+        (pin.isNotEmpty && (pin.length != 4 || int.tryParse(pin) == null)) ||
         reminderHour < 0 ||
         reminderHour > 23 ||
         reminderMinute < 0 ||
@@ -110,11 +111,13 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
       return;
     }
 
-    final pinResult = await _repository.setParentPin(pin);
-    final pinFailure = pinResult.fold((failure) => failure, (_) => null);
-    if (pinFailure != null) {
-      emit(MemorizationIdentityError(message: pinFailure.message));
-      return;
+    if (pin.isNotEmpty) {
+      final pinResult = await _repository.setParentPin(pin);
+      final pinFailure = pinResult.fold((failure) => failure, (_) => null);
+      if (pinFailure != null) {
+        emit(MemorizationIdentityError(message: pinFailure.message));
+        return;
+      }
     }
 
     _pathResolver.notifyChanged();

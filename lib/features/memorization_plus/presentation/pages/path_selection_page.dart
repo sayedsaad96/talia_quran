@@ -333,9 +333,17 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
     setState(() {
       _canSubmit =
           ChildIdentityPolicy.normalizeNickname(_nameController.text) != null &&
-          _pinController.text.length == 4 &&
-          _pinController.text == _confirmPinController.text;
+          _pinIsValidOrEmpty;
     });
+  }
+
+  /// The guardian PIN is optional here: leave both fields empty to skip it
+  /// (guardian actions ask for one later), or enter 4 matching digits.
+  bool get _pinIsValidOrEmpty {
+    final pin = _pinController.text;
+    final confirm = _confirmPinController.text;
+    if (pin.isEmpty && confirm.isEmpty) return true;
+    return pin.length == 4 && pin == confirm;
   }
 
   /// Anything typed that back would silently throw away.
@@ -516,7 +524,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     labelText: context.l10n.parentDashboardCreatePinTitle,
-                    helperText: context.l10n.parentDashboardPinHelp,
+                    helperText: context.l10n.childSetupPinOptionalHelp,
                   ),
                   onChanged: (_) => _refreshValidity(),
                 ),

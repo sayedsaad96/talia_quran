@@ -3306,6 +3306,6 @@
   ,"hijriAdjustmentSubtitle": "عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر."
   ,"hijriAdjustmentToday": "اليوم: {date}"
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
-  ,"kidsManualCompleteConfirmTitle": "هل أتممت حفظ الآية؟"
-  ,"kidsManualCompleteConfirmBody": "ستُحتسب الآية محفوظة. إن كان ولي أمرك معك فاطلب منه أن يستمع إليك أولًا."
+  ,"guardianPinCreateReason": "هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة."
+  ,"childSetupPinOptionalHelp": "اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر."
 }

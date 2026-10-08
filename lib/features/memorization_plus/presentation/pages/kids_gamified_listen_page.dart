@@ -19,8 +19,10 @@ import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
+import '../widgets/guardian_pin_dialog.dart';
 import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_loop_progress_indicator.dart';
@@ -60,6 +62,9 @@ class KidsGamifiedListenPage extends StatelessWidget {
   }
 }
 
+/// Guards the guardian completion flow against a double tap.
+bool _guardianCompletionInFlight = false;
+
 class _KidsGamifiedListenView extends StatelessWidget {
   const _KidsGamifiedListenView({
     required this.surahId,
@@ -74,42 +79,58 @@ class _KidsGamifiedListenView extends StatelessWidget {
   final KidsMissionType missionType;
 
   Future<void> _submitGuardianCompletion(BuildContext context) async {
+    // A double tap would stack two PIN dialogs.
+    if (_guardianCompletionInFlight) return;
+    _guardianCompletionInFlight = true;
+    try {
+      await _runGuardianCompletion(context);
+    } finally {
+      _guardianCompletionInFlight = false;
+    }
+  }
+
+  Future<void> _runGuardianCompletion(BuildContext context) async {
     final cubit = context.read<KidsModeCubit>();
-    // Without a guardian PIN on this device there is nothing to verify; asking
-    // for one would be a dead end, so the child confirms instead.
-    final pinRequired = await cubit.isGuardianPinRequired();
+    // Confirming completion is a guardian action. The PIN is optional at
+    // child setup, so on an unlinked device a guardian without one creates it
+    // here first. A linked child's guardian is remote, and an unreadable
+    // setting asks for the existing PIN.
+    final repository = getIt<MemorizationPlusRepository>();
+    final settings = (await repository.getParentSettings()).fold(
+      (_) => null,
+      (settings) => settings,
+    );
+    final isLinked = (await repository.getMemorizationProfile()).fold(
+      (_) => true,
+      (profile) => profile.isGuardianLinked,
+    );
     if (!context.mounted) return;
-    String? pin;
-    if (pinRequired) {
+    final String? pin;
+    if (settings != null && !settings.hasPin && !isLinked) {
+      pin = await createGuardianPin(context);
+    } else {
+      if (settings != null && !settings.hasPin) {
+        // A linked child without a PIN: the remote guardian sets one through
+        // recovery first, then it is entered below.
+        final recovered = await verifyGuardianPin(
+          context,
+          confirmLabel: context.l10n.confirm,
+          allowRecovery: true,
+        );
+        if (!recovered || !context.mounted) return;
+      }
       pin = await showDialog<String>(
         context: context,
         builder: (_) => const _GuardianPinConfirmationDialog(),
       );
-      if (pin == null || !context.mounted) return;
-    } else {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(dialogContext.l10n.kidsManualCompleteConfirmTitle),
-          content: Text(dialogContext.l10n.kidsManualCompleteConfirmBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(dialogContext.l10n.cancel),
-            ),
-            FilledButton(
-              key: const ValueKey('kids-manual-complete-confirm'),
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(dialogContext.l10n.confirm),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true || !context.mounted) return;
     }
+    if (pin == null || !context.mounted) return;
 
     final accepted = await cubit.submitManualCompletion(guardianPin: pin);
-    if (!accepted && pinRequired && context.mounted) {
+    final alreadyDone =
+        cubit.state is KidsModeLoaded &&
+        (cubit.state as KidsModeLoaded).isCompleted;
+    if (!accepted && !alreadyDone && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
       );

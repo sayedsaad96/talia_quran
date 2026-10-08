@@ -29,15 +29,20 @@ Future<void> showMemorizationPathSettingsSheet(
       );
   final canLinkGuardian =
       profile != null && profile.isChild && !profile.isGuardianLinked;
-  // A linked child's guardian manages from their own account and device.
-  final canOpenGuardianArea =
-      canLinkGuardian &&
-      (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
-        (_) => false,
-        (settings) => settings.hasPin,
-      );
+  // A linked child's guardian manages from their own account and device. The
+  // area is offered even before a PIN exists; opening it creates one.
+  final canOpenGuardianArea = canLinkGuardian;
   if (!context.mounted) return;
   final returnLocation = _currentLocation(context);
+  // A second tap on a tile would pop the page under the sheet and run the
+  // guardian flow twice.
+  var tileActionStarted = false;
+  bool startTileAction() {
+    if (tileActionStarted) return false;
+    tileActionStarted = true;
+    return true;
+  }
+
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: context.tokens.background,
@@ -123,25 +128,23 @@ Future<void> showMemorizationPathSettingsSheet(
                   final repository = getIt<MemorizationPlusRepository>();
                   final profileResult = await repository
                       .getMemorizationProfile();
-                  // A child leaving the kids track needs the guardian: always
-                  // when a guardian is linked, and on this device whenever a
-                  // parent PIN was set (the child could tap the dialog above
-                  // themselves). Only a PIN-less, unlinked profile skips it.
-                  final requiresGuardianPin = await profileResult.fold(
-                    (_) async => true,
-                    (profile) async {
-                      if (!profile.isChild) return false;
-                      if (profile.isGuardianLinked) return true;
-                      final settings = (await repository.getParentSettings())
-                          .fold((_) => null, (settings) => settings);
-                      return settings == null || settings.hasPin;
-                    },
+                  // A child leaving the kids track is a guardian action (the
+                  // child could tap the dialog above themselves). Without a
+                  // PIN yet, the guardian creates one first.
+                  final requiresGuardianPin = profileResult.fold(
+                    (_) => true,
+                    (profile) => profile.isChild,
                   );
                   if (requiresGuardianPin) {
                     if (!context.mounted) return;
-                    final guardianVerified = await verifyGuardianPin(
+                    final isLinked = profileResult.fold(
+                      (_) => true,
+                      (profile) => profile.isGuardianLinked,
+                    );
+                    final guardianVerified = await ensureGuardianPin(
                       context,
-                      allowRecovery: profile?.isGuardianLinked == true,
+                      allowRecovery: isLinked,
+                      allowCreate: !isLinked,
                     );
                     if (!guardianVerified) return;
                   }
@@ -198,6 +201,7 @@ Future<void> showMemorizationPathSettingsSheet(
                   ),
                 ),
                 onTap: () {
+                  if (!startTileAction()) return;
                   Navigator.pop(ctx);
                   _openGuardianArea(context, returnLocation);
                 },
@@ -230,6 +234,7 @@ Future<void> showMemorizationPathSettingsSheet(
                   ),
                 ),
                 onTap: () {
+                  if (!startTileAction()) return;
                   Navigator.pop(ctx);
                   _openGuardianLinking(context);
                 },
@@ -248,23 +253,26 @@ Future<void> showMemorizationPathSettingsSheet(
   );
 }
 
+/// Whether the profile is still an unlinked child. The sheet decided when it
+/// opened; a link can arrive through sync while it is open, and a linked
+/// child's guardian is remote, so the local guardian flows stop.
+Future<bool> _isStillUnlinkedChild() async {
+  final profile = (await getIt<MemorizationPlusRepository>()
+          .getMemorizationProfile())
+      .fold((_) => null, (profile) => profile);
+  return profile != null && profile.isChild && !profile.isGuardianLinked;
+}
+
 /// Re-opens guardian linking for a child who skipped it, after the parent
-/// PIN. A profile that never had a PIN (created before PINs existed) is not
-/// locked out; if the settings cannot be read the PIN is still required.
+/// PIN. A profile without a PIN creates one first.
 Future<void> _openGuardianLinking(BuildContext context) async {
   final repository = getIt<MemorizationPlusRepository>();
-  final settings = (await repository.getParentSettings()).fold(
-    (_) => null,
-    (settings) => settings,
+  if (!await _isStillUnlinkedChild() || !context.mounted) return;
+  final verified = await ensureGuardianPin(
+    context,
+    confirmLabel: context.l10n.confirm,
   );
-  if (settings == null || settings.hasPin) {
-    if (!context.mounted) return;
-    final verified = await verifyGuardianPin(
-      context,
-      confirmLabel: context.l10n.confirm,
-    );
-    if (!verified) return;
-  }
+  if (!verified) return;
   final result = await repository.reopenGuardianLinking();
   if (!context.mounted) return;
   result.fold(
@@ -279,12 +287,14 @@ Future<void> _openGuardianLinking(BuildContext context) async {
 }
 
 /// Opens the family dashboard for the guardian on the child's device, after
-/// the PIN, without changing the child's identity.
+/// the PIN (created first when there is none), without changing the child's
+/// identity.
 Future<void> _openGuardianArea(
   BuildContext context,
   String returnLocation,
 ) async {
-  final verified = await verifyGuardianPin(
+  if (!await _isStillUnlinkedChild() || !context.mounted) return;
+  final verified = await ensureGuardianPin(
     context,
     confirmLabel: context.l10n.confirm,
   );

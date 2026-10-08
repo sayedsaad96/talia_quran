@@ -132,6 +132,11 @@ void main() {
 
     getIt.registerSingleton<MemorizationPlusRepository>(mockRepository);
     getIt.registerSingleton<MemorizationPathResolver>(mockPathResolver);
+    // Guardian actions read the parent settings first; by default a PIN
+    // exists. Tests about a device without a PIN override this.
+    when(() => mockRepository.getParentSettings()).thenAnswer(
+      (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+    );
   });
 
   tearDown(() {
@@ -187,10 +192,10 @@ void main() {
   );
 
   testWidgets(
-    'First-time child profile without linked guardian resets path directly '
-    'without showing the guardian PIN dialog',
+    'an unlinked child without a PIN: the guardian creates one, then the '
+    'path resets',
     (tester) async {
-      // Child path + guardian NOT linked → no PIN required.
+      // Child path + guardian NOT linked + no PIN yet → create it first.
       when(() => mockRepository.getMemorizationProfile()).thenAnswer(
         (_) async => Right(
           MemorizationProfile.empty().copyWith(
@@ -204,6 +209,9 @@ void main() {
         () => mockRepository.getParentSettings(),
       ).thenAnswer((_) async => const Right(ParentSettings()));
       when(
+        () => mockRepository.setParentPin('2468'),
+      ).thenAnswer((_) async => const Right(null));
+      when(
         () => mockRepository.resetMemorizationIdentity(),
       ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
       when(() => mockPathResolver.notifyChanged()).thenReturn(null);
@@ -212,13 +220,38 @@ void main() {
 
       await _openSheetAndConfirmReset(tester);
 
-      // PIN dialog must NOT appear — no TextField on screen.
-      expect(find.byType(TextField), findsNothing);
+      // Leaving the kids track is a guardian action: nothing resets yet.
+      verifyNever(() => mockRepository.resetMemorizationIdentity());
+      await _createGuardianPin(tester, '2468');
 
-      // Identity reset must still fire.
+      verify(() => mockRepository.setParentPin('2468')).called(1);
       verify(() => mockRepository.resetMemorizationIdentity()).called(1);
-      // verifyParentPin must never be called.
       verifyNever(() => mockRepository.verifyParentPin(any()));
+    },
+  );
+
+  testWidgets(
+    'an unlinked child without a PIN cannot leave the kids track by '
+    'cancelling PIN creation',
+    (tester) async {
+      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
+        (_) async => Right(
+          MemorizationProfile.empty().copyWith(
+            selectedPath: MemorizationPath.child,
+          ),
+        ),
+      );
+      when(
+        () => mockRepository.getParentSettings(),
+      ).thenAnswer((_) async => const Right(ParentSettings()));
+
+      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
+      await _openSheetAndConfirmReset(tester);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.setParentPin(any()));
+      verifyNever(() => mockRepository.resetMemorizationIdentity());
     },
   );
 
@@ -530,7 +563,7 @@ void main() {
       expect(find.text('Guardian linking page'), findsNothing);
     });
 
-    testWidgets('a profile that never had a PIN is not locked out', (
+    testWidgets('a profile without a PIN creates one, then links', (
       tester,
     ) async {
       when(
@@ -539,10 +572,15 @@ void main() {
       when(
         () => mockRepository.getParentSettings(),
       ).thenAnswer((_) async => const Right(ParentSettings()));
+      when(
+        () => mockRepository.setParentPin('2468'),
+      ).thenAnswer((_) async => const Right(null));
 
       await openSheet(tester);
       await tester.tap(_linkTile);
       await tester.pumpAndSettle();
+      verifyNever(() => mockRepository.reopenGuardianLinking());
+      await _createGuardianPin(tester, '2468');
 
       verifyNever(() => mockRepository.verifyParentPin(any()));
       verify(() => mockRepository.reopenGuardianLinking()).called(1);
@@ -624,13 +662,92 @@ void main() {
       expect(guardianTile, findsNothing);
     });
 
-    testWidgets('is hidden when no PIN was ever set', (tester) async {
+    testWidgets('without a PIN the guardian creates one, then enters', (
+      tester,
+    ) async {
+      when(
+        () => mockRepository.getParentSettings(),
+      ).thenAnswer((_) async => const Right(ParentSettings()));
+      when(
+        () => mockRepository.setParentPin('2468'),
+      ).thenAnswer((_) async => const Right(null));
+      await openSheetFor(tester, _child());
+
+      await tester.tap(guardianTile);
+      await tester.pumpAndSettle();
+      expect(session.isActive, isFalse);
+      await _createGuardianPin(tester, '2468');
+
+      expect(session.isActive, isTrue);
+      expect(find.text('Family dashboard page'), findsOneWidget);
+      session.end();
+    });
+
+    testWidgets('a PIN created meanwhile is never replaced', (tester) async {
+      // No PIN when the sheet and the dialog open; one exists by the time
+      // the stale dialog saves (another dialog from a double tap set it).
+      var reads = 0;
+      when(() => mockRepository.getParentSettings()).thenAnswer((_) async {
+        reads += 1;
+        return reads <= 1
+            ? const Right(ParentSettings())
+            : const Right(ParentSettings(pinHash: 'secure-v2'));
+      });
+      await openSheetFor(tester, _child());
+
+      await tester.tap(guardianTile);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('guardian-pin-create')),
+        '9999',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('guardian-pin-create-confirm')),
+        '9999',
+      );
+      await tester.tap(find.byKey(const ValueKey('guardian-pin-create-save')));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.setParentPin(any()));
+      expect(session.isActive, isFalse);
+      expect(find.text('Family dashboard page'), findsNothing);
+    });
+
+    testWidgets('mismatched PINs save nothing and open nothing', (
+      tester,
+    ) async {
       when(
         () => mockRepository.getParentSettings(),
       ).thenAnswer((_) async => const Right(ParentSettings()));
       await openSheetFor(tester, _child());
 
-      expect(guardianTile, findsNothing);
+      await tester.tap(guardianTile);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('guardian-pin-create')),
+        '1111',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('guardian-pin-create-confirm')),
+        '2222',
+      );
+      await tester.tap(find.byKey(const ValueKey('guardian-pin-create-save')));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.setParentPin(any()));
+      expect(session.isActive, isFalse);
     });
   });
+}
+
+/// Fills and saves the create-guardian-PIN dialog.
+Future<void> _createGuardianPin(WidgetTester tester, String pin) async {
+  expect(find.byKey(const ValueKey('guardian-pin-create')), findsOneWidget);
+  await tester.enterText(find.byKey(const ValueKey('guardian-pin-create')), pin);
+  await tester.enterText(
+    find.byKey(const ValueKey('guardian-pin-create-confirm')),
+    pin,
+  );
+  await tester.tap(find.byKey(const ValueKey('guardian-pin-create-save')));
+  await tester.pumpAndSettle();
 }
