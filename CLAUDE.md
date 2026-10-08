@@ -17,6 +17,31 @@ Read `docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md` before touching Quran text, 
 
 Canonical data lives in `assets/data/` (`quran.json`, `surahs.json`, `azkar_release.json`, `content_manifest.json`, …). Only `azkar_release.json` is bundled. `azkar.json` is the candidate set. `tools/promote_azkar_candidates.py --ids ... --review-set ...` copies records verbatim into the release file, and only for records that carry a source URL and human review evidence. `lib/core/content/approved_azkar_content.dart` fails closed, so unapproved or malformed records never reach notifications. `test/assets/` holds the corpus and azkar contract tests.
 
+## Agent orchestration (Claude Code)
+
+The main session (Opus) is the orchestrator: it owns scope, architecture decisions, integration, and the final verdict. The user has asked for complexity-based delegation to the project subagents in `.claude/agents/`, so delegating to them does not need a separate request each time. They are the Claude Code counterparts of the Codex roles in `.agents/skills/talia-quran-engineer-skill/core/model-delegation.md` (Luna → Haiku, Terra → Sonnet, Sol/Astra → Opus). The Codex audit fleet (`.codex/agents/`, `AGENTS.md`) is unchanged and still governs a requested pre-release audit.
+
+| Work | Route to |
+|---|---|
+| Trivial edit, a single lookup, or anything where briefing costs more than doing it | Opus directly, no subagent |
+| Locate files/symbols/references/DI wiring, summarize a small area | `haiku-explorer` (read-only) |
+| Fully specified low-risk edit: typo, docs, ARB key pair, boilerplate | `haiku-quick-fix` |
+| Feature, refactor, Cubit/repository/widget work, multi-file change with clear requirements | `sonnet-implementer` |
+| Nontrivial bug, failing test, runtime error | `sonnet-debugger` |
+| Writing or running targeted tests, coverage for a fix | `sonnet-test-engineer` |
+| Architecture, ambiguous requirements, cross-layer design, security, failed Sonnet attempt with unknown cause | Opus directly (plan/decide first) |
+| Independent review of a high-risk change before calling it done | `opus-architecture-reviewer` (read-only) |
+
+High-risk areas (always get Opus review, from the main session or `opus-architecture-reviewer`): Quran/Islamic content and `assets/data/`, `lib/core/memorization/` (engine, SRS, outbox), `lib/core/sync/` and `*_cloud_merge.dart`, `supabase/`, `lib/core/identity/` and `lib/core/security/`, Isar schema changes, prayer delivery/notifications. Quran/religious content is never delegated for generation or "fixing".
+
+Delegation rules:
+- Hybrid tasks: explore (Haiku) → design and define interfaces (Opus) → implement independent parts (Sonnet, in parallel only when they touch disjoint files) → integrate and verify (Opus). Don't involve every agent in every task; normally at most three subagents at once.
+- Brief each subagent with the goal, exact file paths, constraints, the facts already gathered, and the expected report. Don't make it re-explore what is already known.
+- Escalate on evidence: Haiku → Sonnet when judgment is needed; Sonnet → Opus after two failed hypotheses or cross-layer cause. Change strategy instead of retrying the same approach.
+- Only one agent runs `flutter test` at a time (shared TEMP on D:, C: is nearly full), and only one agent edits a given file at a time.
+- Verification scales with risk: low → targeted analyze; medium → `flutter analyze` + relevant tests; high → also Opus review of critical paths, error handling, owner scoping, and regressions. Never report tests as passing unless they were run in this task.
+- Final report to the user: what changed, which agent did the significant parts, what Opus reviewed, tests actually run with results (status words from the engineer skill), and remaining risks. No orchestration logs.
+
 ## Commands
 
 ```bash
