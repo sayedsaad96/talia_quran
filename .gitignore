@@ -65,3 +65,8 @@ android/.kotlin/
 
 # Marketing export bundles (zipped copies of the committed folders)
 marketing/**/*.zip
+
+# Android signing credentials
+*.jks
+*.keystore
+**/key.properties
