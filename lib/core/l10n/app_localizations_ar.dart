@@ -7915,9 +7915,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsManualCompleteConfirmTitle => 'هل أتممت حفظ الآية؟';
+  String get guardianPinCreateReason =>
+      'هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة.';
 
   @override
-  String get kidsManualCompleteConfirmBody =>
-      'ستُحتسب الآية محفوظة. إن كان ولي أمرك معك فاطلب منه أن يستمع إليك أولًا.';
+  String get childSetupPinOptionalHelp =>
+      'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.';
 }

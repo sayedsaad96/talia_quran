@@ -90,6 +90,24 @@ void main() {
       }
     });
 
+    // Juz boundaries confirmed by the project owner (2026-10-08): juz 4 starts
+    // at Al-Imran 93 and juz 11 at At-Tawbah 93. The corpus and the QCF table
+    // must both agree.
+    test('juz 4 starts at 3:93 and juz 11 at 9:93', () {
+      int corpusJuz(int surah, int ayah) =>
+          parsedCorpus.ayahs[surah]!.singleWhere((a) => a.numberInSurah == ayah).juz!;
+
+      for (final (surah, ayah, juz) in const [
+        (3, 92, 3),
+        (3, 93, 4),
+        (9, 92, 10),
+        (9, 93, 11),
+      ]) {
+        expect(corpusJuz(surah, ayah), juz, reason: 'corpus $surah:$ayah');
+        expect(qcf.getJuzNumber(surah, ayah), juz, reason: 'QCF $surah:$ayah');
+      }
+    });
+
     test('page-boundary ayah 5:77 sits on page 120, as the reader draws it', () {
       List<String> keys(int page) => parsedCorpus.byPage[page]!
           .map((a) => '${a.surahId}:${a.numberInSurah}')

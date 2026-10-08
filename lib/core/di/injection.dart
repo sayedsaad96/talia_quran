@@ -1007,13 +1007,6 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
       getIt<ActivityEventRecorder>(),
       getIt<KidsReviewOutcomeCommitter>(),
-      null,
-      null,
-      // An unreadable setting keeps the guardian PIN required.
-      () async => (await getIt<ParentAccessUsecase>().getSettings()).fold(
-        (_) => true,
-        (settings) => settings.hasPin,
-      ),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(

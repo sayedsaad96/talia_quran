@@ -36,7 +36,10 @@ class QuranSettingsPage extends StatelessWidget {
                   isDark: isDark,
                   profile: state.memorizationProfile,
                 ),
-                if (state.memorizationProfile?.hasSelectedPath == true) ...[
+                // A child leaves the kids track only through the
+                // guardian-gated path sheet, never from here.
+                if (state.memorizationProfile?.hasSelectedPath == true &&
+                    state.memorizationProfile?.isChild != true) ...[
                   SettingsDivider(isDark: isDark, indent: 0),
                   ResetMemorizationPathTile(
                     isDark: isDark,

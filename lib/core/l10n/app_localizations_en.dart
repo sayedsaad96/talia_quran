@@ -7916,9 +7916,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsManualCompleteConfirmTitle => 'Finished memorizing this ayah?';
+  String get guardianPinCreateReason =>
+      'This is a guardian action. Create a 4-digit PIN to protect it; you will be asked for it next time.';
 
   @override
-  String get kidsManualCompleteConfirmBody =>
-      'This ayah will count as memorized. If a guardian is with you, ask them to listen to you first.';
+  String get childSetupPinOptionalHelp =>
+      'Optional: create it now or the first time a guardian action needs it.';
 }

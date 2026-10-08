@@ -13366,17 +13366,17 @@ abstract class AppLocalizations {
   /// **'اليوم: {date}'**
   String hijriAdjustmentToday(String date);
 
-  /// No description provided for @kidsManualCompleteConfirmTitle.
+  /// No description provided for @guardianPinCreateReason.
   ///
   /// In ar, this message translates to:
-  /// **'هل أتممت حفظ الآية؟'**
-  String get kidsManualCompleteConfirmTitle;
+  /// **'هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة.'**
+  String get guardianPinCreateReason;
 
-  /// No description provided for @kidsManualCompleteConfirmBody.
+  /// No description provided for @childSetupPinOptionalHelp.
   ///
   /// In ar, this message translates to:
-  /// **'ستُحتسب الآية محفوظة. إن كان ولي أمرك معك فاطلب منه أن يستمع إليك أولًا.'**
-  String get kidsManualCompleteConfirmBody;
+  /// **'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.'**
+  String get childSetupPinOptionalHelp;
 }
 
 class _AppLocalizationsDelegate
