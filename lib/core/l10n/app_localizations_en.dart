@@ -5919,10 +5919,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closingDuaButton => 'Closing dua';
 
   @override
-  String get closingDua =>
-      'O Allah, make what I have memorized a light in my heart and a remembrance with You. Make it a supporter for me, benefit me with what You have taught me, and teach me what benefits me.';
-
-  @override
   String get closingDuaAmen => 'Ameen';
 
   @override

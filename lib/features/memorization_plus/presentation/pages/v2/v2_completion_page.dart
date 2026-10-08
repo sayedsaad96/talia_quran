@@ -106,13 +106,12 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
               style: AppTypography.bodySmall.copyWith(color: textSecondary),
             ),
             const Spacer(),
-            if (kClosingDuaApproved)
-              OutlinedButton.icon(
-                key: const Key('v2_closing_dua_button'),
-                onPressed: () => showClosingDuaSheet(context),
-                icon: const Icon(TaliaIcons.dua),
-                label: Text(l10n.closingDuaButton),
-              ),
+            OutlinedButton.icon(
+              key: const Key('v2_closing_dua_button'),
+              onPressed: () => showClosingDuaSheet(context),
+              icon: const Icon(TaliaIcons.dua),
+              label: Text(l10n.closingDuaButton),
+            ),
             if (!finalState.isReview) ...[
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(

@@ -678,10 +678,9 @@ void main() {
           ),
           findsOneWidget,
         );
-        // The closing dua stays hidden until its source is approved.
         expect(
           find.byKey(const Key('khatmah_wird_closing_dua_button')),
-          findsNothing,
+          findsOneWidget,
         );
         expect(find.text('Done, praise be to Allah'), findsOneWidget);
 

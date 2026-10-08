@@ -2465,7 +2465,6 @@
   "closingSummaryKhatmahWird": "You completed today's wird — pages {start} to {end} — a lasting impact, in shaa Allah.",
   "@closingSummaryKhatmahWird": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
   "closingDuaButton": "Closing dua",
-  "closingDua": "O Allah, make what I have memorized a light in my heart and a remembrance with You. Make it a supporter for me, benefit me with what You have taught me, and teach me what benefits me.",
   "closingDuaAmen": "Ameen",
   "closingDone": "Done, praise be to Allah",
   "closingRestNote": "Take a breath… your memorization awaits you tomorrow, in shaa Allah.",

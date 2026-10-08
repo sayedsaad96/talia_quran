@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../constants/app_spacing.dart';
 import '../di/injection.dart';
@@ -135,16 +136,31 @@ class ClosingMomentAyahCard extends StatelessWidget {
   }
 }
 
-/// Whether the closing dua may be shown. Its text (`closingDua` in the ARB
-/// files) has no recorded source, reference or scholarly review, so under
-/// `docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md` it stays blocked. Set this to
-/// true only once the text is registered with its provenance and review.
-const bool kClosingDuaApproved = false;
+/// The closing dua: the first paragraph of the approved khatm dua
+/// (`assets/data/khatm_dua.json`, the King Fahd Complex Mushaf appendix),
+/// read verbatim at runtime so it keeps that record's source and review. Null
+/// when the record is missing, unreadable or not approved, so nothing
+/// unreviewed is shown. The source has no translation, so it is shown in
+/// Arabic in every locale.
+Future<String?> loadClosingDuaText() async {
+  try {
+    final dua = await getIt<KhatmDuaDatasource>().loadDua();
+    if (!dua.isApproved) return null;
+    final passage = dua.arabicText.split('\n\n').first.trim();
+    return passage.isEmpty ? null : passage;
+  } catch (_) {
+    return null;
+  }
+}
 
 /// Opens the serene closing-dua bottom sheet shared by all closing moments.
-Future<void> showClosingDuaSheet(BuildContext context) {
+/// Nothing opens when the approved text is unavailable.
+Future<void> showClosingDuaSheet(BuildContext context) async {
+  final duaText = await loadClosingDuaText();
+  if (duaText == null || !context.mounted) return;
   return showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
     backgroundColor: context.tokens.card,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
@@ -161,7 +177,7 @@ Future<void> showClosingDuaSheet(BuildContext context) {
           ? AppColors.darkTextSecondary
           : AppColors.lightTextSecondary;
       return SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -170,9 +186,10 @@ Future<void> showClosingDuaSheet(BuildContext context) {
               const Icon(TaliaIcons.dua, color: AppColors.gold, size: 32),
               const SizedBox(height: AppSpacing.md),
               Text(
-                sheetL10n.closingDua,
+                duaText,
                 key: const Key('closing_dua_text'),
                 textAlign: TextAlign.center,
+                textDirection: TextDirection.rtl,
                 style: AppTypography.headlineSmall.copyWith(
                   fontFamily: 'Amiri',
                   color: sheetTextPrimary,
