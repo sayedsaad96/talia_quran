@@ -154,9 +154,15 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     return _local.pendingEvents(ownerId);
   }
 
+  /// While the transport is disabled no upload can ever happen, so local
+  /// evidence is not pending cloud work. Counting it would block sign-out and
+  /// force a full sync on every resume. The receipts stay in place for when
+  /// the transport is enabled.
   @override
-  Future<bool> hasUnacknowledgedEvents() async =>
-      (await pendingEvents()).isNotEmpty;
+  Future<bool> hasUnacknowledgedEvents() async {
+    if (!isEnabled) return false;
+    return (await pendingEvents()).isNotEmpty;
+  }
 
   /// Appends a snapshot. A receipt is not cleared until the response names the
   /// exact sent event ID as applied/alreadyApplied with a valid sequence.
@@ -202,10 +208,12 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
   @override
   Future<bool> flushPending({int maxBatches = 20}) async {
     if (!_owner.isSignedIn) return true;
+    // Disabled transport: the evidence is local-only, so there is nothing to
+    // drain (see [hasUnacknowledgedEvents]).
+    if (!isEnabled) return true;
     for (var batch = 0; batch < maxBatches; batch += 1) {
       final before = await pendingEvents();
       if (before.isEmpty) return true;
-      if (!isEnabled) return false;
       final firstId = before.first.eventId;
       await pushPending();
       final after = await pendingEvents();

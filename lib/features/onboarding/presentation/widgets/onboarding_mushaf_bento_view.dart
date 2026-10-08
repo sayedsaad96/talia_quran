@@ -152,24 +152,9 @@ class OnboardingMushafBentoView extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
 
-                  // Ayah Text in Amiri
-                  OnboardingSourceAyah(
-                    surah: 1,
-                    ayah: 1,
-                    builder: (context, text) => Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.titleMedium.copyWith(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppColors.inkDeep.withValues(alpha: 0.85),
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Al-Isra 17:45 under the Fatiha basmala.
+                  // Al-Isra 17:45 alone under its surah label. No basmalah is
+                  // shown above it: in the Mushaf the basmalah opens a surah,
+                  // so pairing it with a mid-surah ayah would misplace it.
                   OnboardingSourceAyah(
                     surah: 17,
                     ayah: 45,

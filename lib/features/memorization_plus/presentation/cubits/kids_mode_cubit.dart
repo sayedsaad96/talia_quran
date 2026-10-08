@@ -38,6 +38,9 @@ import '../../../../features/quran/domain/repositories/quran_repository.dart';
 part 'kids_mode_state.dart';
 
 typedef KidsGuardianPinVerifier = Future<bool> Function(String pin);
+
+/// Whether a guardian PIN has been set on this device.
+typedef KidsGuardianPinPresence = Future<bool> Function();
 typedef KidsSessionPolicyLoader = Future<KidsSessionPolicy> Function();
 typedef KidsAudioSourceLoader =
     Future<String> Function(int surahId, int ayahNumber);
@@ -66,7 +69,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsReviewOutcomeCommitter? reviewOutcomeCommitter,
     AudioPlayer? audioPlayer,
     KidsAudioSourceLoader? audioSourceLoader,
+    KidsGuardianPinPresence? guardianPinPresence,
   ]) : _activityRecorder = activityRecorder,
+       _guardianPinPresence = guardianPinPresence,
        _reviewOutcomeCommitter = reviewOutcomeCommitter,
        _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
@@ -109,6 +114,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final KidsStreakStore _streakService;
   final AppSessionService? _appSessionService;
   final KidsGuardianPinVerifier? _guardianPinVerifier;
+  final KidsGuardianPinPresence? _guardianPinPresence;
   final KidsSessionPolicyLoader? _sessionPolicyLoader;
   final KidsSessionLogsLoader? _kidsSessionLogsLoader;
   final V2SessionProgressAdapter? _progressAdapter;
@@ -762,18 +768,38 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
+  /// Whether the guardian fallback needs the guardian PIN. A device where no
+  /// PIN was ever set has no guardian credential to ask for, so the child is
+  /// not locked out (the same rule as reopening guardian linking). When the
+  /// answer is unknown the PIN stays required.
+  Future<bool> isGuardianPinRequired() async {
+    final presence = _guardianPinPresence;
+    if (presence == null) return true;
+    try {
+      return await presence();
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Guardian-verified fallback for genuine audio or speech-recognition faults.
   /// A recitation mismatch is pedagogical evidence and can never use this path.
   Future<bool> submitManualCompletion({String? guardianPin}) async {
     if (state is! KidsModeLoaded) return false;
+    final before = state as KidsModeLoaded;
+    if (before.isCompleted || !before.canUseGuardianFallback) return false;
+
+    if (await isGuardianPinRequired()) {
+      final verifier = _guardianPinVerifier;
+      if (verifier == null || guardianPin == null || guardianPin.length != 4) {
+        return false;
+      }
+      if (!await verifier(guardianPin)) return false;
+    }
+    // The checks above awaited; act on the current state, not a snapshot.
+    if (isClosed || state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;
     if (st.isCompleted || !st.canUseGuardianFallback) return false;
-
-    final verifier = _guardianPinVerifier;
-    if (verifier == null || guardianPin == null || guardianPin.length != 4) {
-      return false;
-    }
-    if (!await verifier(guardianPin)) return false;
 
     if (st.isRecording) {
       await _recitationRecorder.stop();

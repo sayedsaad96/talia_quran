@@ -341,6 +341,27 @@ void main() {
     );
 
     test(
+      'disabled transport does not block sign-out and keeps the receipt',
+      () async {
+        await prefs.setBool('use_review_evidence_transport', false);
+        await isar.writeTxn(() => isar.isarReviewEvidenceEvents.put(_event()));
+
+        expect(await service.hasUnacknowledgedEvents(), isFalse);
+        expect(await service.flushPending(), isTrue);
+        expect(transport.appendPayloads, isEmpty);
+        expect(await service.pendingEvents(), hasLength(1));
+      },
+    );
+
+    test('enabled transport still reports undrained evidence', () async {
+      await isar.writeTxn(() => isar.isarReviewEvidenceEvents.put(_event()));
+      transport.onAppend = (_) async => const [];
+
+      expect(await service.hasUnacknowledgedEvents(), isTrue);
+      expect(await service.flushPending(), isFalse);
+    });
+
+    test(
       'explicit dead-letter recovery retries the identical persisted event ID once',
       () async {
         await isar.writeTxn(() => isar.isarReviewEvidenceEvents.put(_event()));

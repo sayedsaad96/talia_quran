@@ -443,12 +443,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  OutlinedButton.icon(
-                    key: const Key('khatmah_wird_closing_dua_button'),
-                    onPressed: () => showClosingDuaSheet(dialogContext),
-                    icon: const Icon(TaliaIcons.dua),
-                    label: Text(dialogL10n.closingDuaButton),
-                  ),
+                  if (kClosingDuaApproved)
+                    OutlinedButton.icon(
+                      key: const Key('khatmah_wird_closing_dua_button'),
+                      onPressed: () => showClosingDuaSheet(dialogContext),
+                      icon: const Icon(TaliaIcons.dua),
+                      label: Text(dialogL10n.closingDuaButton),
+                    ),
                   const SizedBox(height: AppSpacing.sm),
                   FilledButton(
                     key: const Key('khatmah_wird_closing_done_button'),

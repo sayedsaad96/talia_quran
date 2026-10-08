@@ -7914,4 +7914,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String hijriAdjustmentToday(String date) {
     return 'Today: $date';
   }
+
+  @override
+  String get kidsManualCompleteConfirmTitle => 'Finished memorizing this ayah?';
+
+  @override
+  String get kidsManualCompleteConfirmBody =>
+      'This ayah will count as memorized. If a guardian is with you, ask them to listen to you first.';
 }

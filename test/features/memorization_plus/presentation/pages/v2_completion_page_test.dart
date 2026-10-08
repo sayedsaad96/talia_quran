@@ -65,7 +65,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('3/3'), findsOneWidget);
-      expect(find.text('Closing dua'), findsOneWidget);
+      // Hidden until the dua's source is approved (kClosingDuaApproved).
+      expect(find.text('Closing dua'), findsNothing);
       expect(find.text('Share memorization milestone'), findsOneWidget);
     });
 
@@ -134,7 +135,9 @@ void main() {
       expect(find.byKey(const Key('v2_next_plan_item_button')), findsNothing);
     });
 
-    testWidgets('opening closing dua shows serene dua sheet', (tester) async {
+    testWidgets('hides the closing dua until its source is approved', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1600);
       addTearDown(tester.view.reset);
@@ -146,7 +149,30 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.byKey(const Key('v2_closing_dua_button')));
+      expect(kClosingDuaApproved, isFalse);
+      expect(find.byKey(const Key('v2_closing_dua_button')), findsNothing);
+    });
+
+    testWidgets('the closing dua sheet shows the dua and Ameen', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showClosingDuaSheet(context),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('closing_dua_text')), findsOneWidget);

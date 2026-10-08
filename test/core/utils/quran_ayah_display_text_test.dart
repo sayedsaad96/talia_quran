@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:talia_quran/core/utils/quran_ayah_display_text.dart';
 
 void main() {
@@ -40,6 +41,26 @@ void main() {
         text,
       );
     });
+
+    for (final (surah, ayah, number) in const [
+      (7, 206, '٢٠٦'),
+      (96, 19, '١٩'),
+    ]) {
+      test('keeps the sajdah sign of $surah:$ayah and removes only the number',
+          () {
+        final source = qcf.getVerse(surah, ayah);
+        expect(source, contains('۩'), reason: 'fixture must be a sajdah ayah');
+
+        final shown = QuranAyahDisplayText.withoutTrailingNumber(
+          source,
+          ayahNumber: ayah,
+        );
+
+        expect(shown, endsWith('۩'));
+        expect(shown, isNot(contains(number)));
+        expect(source, startsWith(shown));
+      });
+    }
 
     test('replaces the terminal number glyph with Quran verse brackets', () {
       expect(
