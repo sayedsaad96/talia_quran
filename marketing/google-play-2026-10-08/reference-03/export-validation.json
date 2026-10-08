@@ -1,0 +1,25 @@
+[
+  {
+    "file": "01.html",
+    "title": "اقرأ بتأنٍّ\nواستمع",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/2866b701e660781d85b20661e3b6c833bbaf395805c5a429eea63820821892fc/04-reader-clean.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\reference-03\\final\\01.png"
+  }
+]

@@ -1,5 +1,7 @@
 # Talia Share Good / Good Impact V1 Implementation Plan
 
+> **SUPERSEDED (2026-10-07):** never executed; reconciled against HEAD `262e3a38` in `2026-10-07-talia-share-good-v1-delivery.md`. Use that plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a privacy-first worship invitation loop in which signed-in users create invitations and guests can resolve, open, start, and complete eligible Quran and Azkar activities without registration, with exact activity targeting, reusable branded sharing, aggregate Good Chain impact, and no social-network or religious-reward mechanics.

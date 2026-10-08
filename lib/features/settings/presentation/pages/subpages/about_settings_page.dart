@@ -20,17 +20,11 @@ class AboutSettingsPage extends StatelessWidget {
       children: [
         SettingsGroup(
           title: l10n.settingsSectionHelpTutorial,
-          children: [
-            TutorialGuideTile(isDark: isDark),
-          ],
+          children: [TutorialGuideTile(isDark: isDark)],
         ),
         SettingsGroup(
           title: l10n.settingsSectionPrivacySecurity,
-          children: [
-            PrivacyPolicyTile(isDark: isDark),
-            SettingsDivider(isDark: isDark),
-            const SourcesLicensesTile(),
-          ],
+          children: [PrivacyPolicyTile(isDark: isDark)],
         ),
         SettingsGroup(
           title: l10n.settingsSectionAboutTalia,

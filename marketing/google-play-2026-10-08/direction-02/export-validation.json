@@ -1,0 +1,21 @@
+[
+  {
+    "file": "01.html",
+    "title": "رفيقك اليومي\nمع القرآن",
+    "width": 1080,
+    "height": 1920,
+    "font": "92px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\direction-02\\final\\01.png"
+  }
+]

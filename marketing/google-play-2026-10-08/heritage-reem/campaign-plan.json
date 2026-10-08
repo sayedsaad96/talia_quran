@@ -1,0 +1,183 @@
+{
+  "app": "TALIA QURAN / تالية القرآن",
+  "captureDate": "2026-10-08",
+  "canvas": {
+    "width": 1080,
+    "height": 1920,
+    "format": "RGB PNG"
+  },
+  "projectId": "1e8d0a36-f2e3-4302-b966-9a9a009d58e9",
+  "canvasUrl": "https://superdesign.dev/teams/43a2a2f1-f891-40a7-928a-08a492ef18ed/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9",
+  "constraints": [
+    "Fresh captures only; no historical screenshot reuse",
+    "Preserve screenshot raster UI and Quran text unchanged",
+    "No invented earned progress, ratings, awards, or voice accuracy claims",
+    "Arabic editable headlines; exact original brand assets",
+    "Family dashboard evidence is local guest profile; remote guardian linking unverified"
+  ],
+  "primaryStoreSelection": [
+    1,
+    3,
+    5,
+    8,
+    11,
+    12,
+    13,
+    16
+  ],
+  "slides": [
+    {
+      "id": 1,
+      "audience": "adult",
+      "screen": "الرئيسية",
+      "headline": "رفيقك اليومي\nمع القرآن",
+      "support": "قراءة وحفظ وورد يومي في تجربة واحدة",
+      "source": "18-home-updated",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 2,
+      "audience": "adult",
+      "screen": "فهرس القرآن",
+      "headline": "سورتك المفضلة\nأقرب إليك",
+      "support": "تصفّح السور والأجزاء والإشارات المرجعية",
+      "source": "02-quran-index",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 3,
+      "audience": "adult",
+      "screen": "المصحف",
+      "headline": "اقرأ بتأنٍّ\nواستمع",
+      "support": "مصحف واضح وتلاوة من داخل الصفحة",
+      "source": "04-reader-clean",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 4,
+      "audience": "adult",
+      "screen": "مركز الحفظ",
+      "headline": "حفظك ومراجعتك\nفي مكان واحد",
+      "support": "خطتك اليومية والتدريب والمراجعة",
+      "source": "08-adult-hub",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 5,
+      "audience": "adult",
+      "screen": "الخطة المخصصة",
+      "headline": "خطة حفظ\nتناسب يومك",
+      "support": "اختر الوتيرة والنطاق والجدول المناسب لك",
+      "source": "09-hifz-create",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 6,
+      "audience": "adult",
+      "screen": "التدريب بالسورة",
+      "headline": "ابدأ الحفظ\nبسورة تختارها",
+      "support": "انتقل من اختيار السورة إلى جلسة التدريب",
+      "source": "39-practice-surah",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 7,
+      "audience": "adult",
+      "screen": "إعداد الختمة",
+      "headline": "ختمتك\nعلى وتيرتك",
+      "support": "حدّد صفحات يومية أو مدة تناسبك",
+      "source": "16-khatmah-choice",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 8,
+      "audience": "adult",
+      "screen": "لوحة الختمة",
+      "headline": "ورد اليوم\nخطوة نحو الختمة",
+      "support": "تابع صفحاتك وارجع إلى موضع القراءة",
+      "source": "17-khatmah-dashboard",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 9,
+      "audience": "adult",
+      "screen": "الأذكار",
+      "headline": "لحظات ذكر\nوطمأنينة",
+      "support": "أذكار الصباح والمساء والأدعية والمسبحة",
+      "source": "12-azkar",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 10,
+      "audience": "adult",
+      "screen": "تقدمي",
+      "headline": "شاهد رحلتك\nيومًا بعد يوم",
+      "support": "القراءة والمراجعات والنشاط في نظرة واحدة",
+      "source": "13-progress",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 11,
+      "audience": "kids",
+      "screen": "رئيسية الأطفال",
+      "headline": "رحلة قرآنية\nيحبّها طفلك",
+      "support": "رفيقة تعلّم ومهمة واضحة لبداية اليوم",
+      "source": "53-current-kids",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 12,
+      "audience": "kids",
+      "screen": "خريطة الحفظ",
+      "headline": "كل خطوة\nاكتشاف جديد",
+      "support": "بيوت حفظ متتابعة ومسار مرئي للتقدّم",
+      "source": "54-kids-map",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 13,
+      "audience": "kids",
+      "screen": "المهمة والاستماع",
+      "headline": "اسمع وردّد\nخطوة بخطوة",
+      "support": "استماع وترديد ثم محاولة التذكّر",
+      "source": "56-kids-listen",
+      "secondary": "55-kids-stage",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 14,
+      "audience": "kids",
+      "screen": "مصحف الأطفال",
+      "headline": "مصحفه الخاص\nلقراءة هادئة",
+      "support": "اقرأ واستمع وسجّل قراءة الصفحة",
+      "source": "60-kids-reader",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 15,
+      "audience": "kids",
+      "screen": "كنوزي",
+      "headline": "كنوز تنتظر\nرحلته",
+      "support": "وجهات تتقدّم معها رحلة حفظ السور",
+      "source": "62-kids-treasures",
+      "theme": "heritage-ivory-gold"
+    },
+    {
+      "id": 16,
+      "audience": "parent",
+      "screen": "لوحة ولي الأمر وتقدم الطفل",
+      "headline": "كن قريبًا\nمن رحلته",
+      "support": "تابع تقدّم طفلك من لوحة ولي الأمر على الجهاز",
+      "source": "69-child-detail",
+      "theme": "heritage-ivory-gold"
+    }
+  ],
+  "designSystem": {
+    "font": "Reem Kufi",
+    "headline": "#3D3425",
+    "readerCrop": "Slide 03 removes toolbar and top blank space, preserving the entire Fatiha",
+    "accent": "#C4A365",
+    "composition": "Floating overlapping screenshots with gentle rotation and Islamic geometric linework",
+    "background": "#FFFCF2"
+  }
+}

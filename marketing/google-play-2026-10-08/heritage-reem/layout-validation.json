@@ -1,0 +1,498 @@
+[
+  {
+    "id": "01",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "رفيقك اليومي\nمع القرآن",
+    "support": "قراءة وحفظ وورد يومي في تجربة واحدة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "02",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "سورتك المفضلة\nأقرب إليك",
+    "support": "تصفّح السور والأجزاء والإشارات المرجعية",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "03",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "اقرأ بتأنٍّ\nواستمع",
+    "support": "مصحف واضح وتلاوة من داخل الصفحة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/2866b701e660781d85b20661e3b6c833bbaf395805c5a429eea63820821892fc/04-reader-clean.png",
+    "frame": {
+      "left": 217.84912109375,
+      "top": 629.21923828125,
+      "right": 1052.15087890625,
+      "bottom": 1690.78076171875
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 510.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/2866b701e660781d85b20661e3b6c833bbaf395805c5a429eea63820821892fc/04-reader-clean.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "04",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "حفظك ومراجعتك\nفي مكان واحد",
+    "support": "خطتك اليومية والتدريب والمراجعة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/42be8563016ddede6427c3588ff729cc82669c7b95a8817f87801ec002d4f4a8/09-hifz-create.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "05",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "خطة حفظ\nتناسب يومك",
+    "support": "اختر الوتيرة والنطاق والجدول المناسب لك",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/42be8563016ddede6427c3588ff729cc82669c7b95a8817f87801ec002d4f4a8/09-hifz-create.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/42be8563016ddede6427c3588ff729cc82669c7b95a8817f87801ec002d4f4a8/09-hifz-create.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "06",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "ابدأ الحفظ\nبسورة تختارها",
+    "support": "انتقل من اختيار السورة إلى جلسة التدريب",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/68f173f2f6ab5a8fde2f3f754da29d9dae30377d67d0acde88218a2eea8e67a0/39-practice-surah.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/68f173f2f6ab5a8fde2f3f754da29d9dae30377d67d0acde88218a2eea8e67a0/39-practice-surah.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "07",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "ختمتك\nعلى وتيرتك",
+    "support": "حدّد صفحات يومية أو مدة تناسبك",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/a748509fee80fb6f9c596b83466b21e7be5168e402dffcb550f46611202f65d0/16-khatmah-choice.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/08a70909df65b72be0c92d3fb9b64ef79e6c63701736e7cb47fd089cdafa615d/17-khatmah-dashboard.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/a748509fee80fb6f9c596b83466b21e7be5168e402dffcb550f46611202f65d0/16-khatmah-choice.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "08",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "ورد اليوم\nخطوة نحو الختمة",
+    "support": "تابع صفحاتك وارجع إلى موضع القراءة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/08a70909df65b72be0c92d3fb9b64ef79e6c63701736e7cb47fd089cdafa615d/17-khatmah-dashboard.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/a748509fee80fb6f9c596b83466b21e7be5168e402dffcb550f46611202f65d0/16-khatmah-choice.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/08a70909df65b72be0c92d3fb9b64ef79e6c63701736e7cb47fd089cdafa615d/17-khatmah-dashboard.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "09",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "لحظات ذكر\nوطمأنينة",
+    "support": "أذكار الصباح والمساء والأدعية والمسبحة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/e8301f2f47a2078fb451ef8da5f8eefebfa3b98b678a278646809bb268964606/12-azkar.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 510.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/e8301f2f47a2078fb451ef8da5f8eefebfa3b98b678a278646809bb268964606/12-azkar.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "شاهد رحلتك\nيومًا بعد يوم",
+    "support": "القراءة والمراجعات والنشاط في نظرة واحدة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/791888c978298fb834e5e215359527a1f190c07deb5dbb33085672a9eba0962f/13-progress.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/791888c978298fb834e5e215359527a1f190c07deb5dbb33085672a9eba0962f/13-progress.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "رحلة قرآنية\nيحبّها طفلك",
+    "support": "رفيقة تعلّم ومهمة واضحة لبداية اليوم",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "كل خطوة\nاكتشاف جديد",
+    "support": "بيوت حفظ متتابعة ومسار مرئي للتقدّم",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "13",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "اسمع وردّد\nخطوة بخطوة",
+    "support": "استماع وترديد ثم محاولة التذكّر",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/cf38aea95463f0b857232544241a79f7b00f9457630b62b3fde754a1300e72c3/56-kids-listen.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 510.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/cf38aea95463f0b857232544241a79f7b00f9457630b62b3fde754a1300e72c3/56-kids-listen.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "مصحفه الخاص\nلقراءة هادئة",
+    "support": "اقرأ واستمع وسجّل قراءة الصفحة",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/56b6df4b19ee7b7d4b14b3c55209cf63f6468eabb83e30d0ec85533112aa4d2b/60-kids-reader.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/56b6df4b19ee7b7d4b14b3c55209cf63f6468eabb83e30d0ec85533112aa4d2b/60-kids-reader.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "كنوز تنتظر\nرحلته",
+    "support": "وجهات تتقدّم معها رحلة حفظ السور",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/f1d90115b34095222b7eedcc0740ff1c52666f3ff7ca4a0f45f972b6a5aac31a/62-kids-treasures.png",
+    "frame": {
+      "left": 250.1927032470703,
+      "top": 613.4680786132812,
+      "right": 1009.8073272705078,
+      "bottom": 1838.2976684570312
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/f1d90115b34095222b7eedcc0740ff1c52666f3ff7ca4a0f45f972b6a5aac31a/62-kids-treasures.png",
+        "loaded": true
+      }
+    ]
+  },
+  {
+    "id": "16",
+    "font": "\"Reem Kufi\", sans-serif",
+    "headline": "كن قريبًا\nمن رحلته",
+    "support": "تابع تقدّم طفلك من لوحة ولي الأمر على الجهاز",
+    "source": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/7a2db48ec8ff93f0280c202682ff372ecd2468725aa4bef91b4f20107ef40971/69-child-detail.png",
+    "frame": {
+      "left": 194.78952026367188,
+      "top": 623.5320434570312,
+      "right": 915.2105407714844,
+      "bottom": 1828.2334594726562
+    },
+    "headlineBottom": 398.59375,
+    "supportTop": 456.59375,
+    "supportBottom": 507.59375,
+    "footerTop": 1852,
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/7a2db48ec8ff93f0280c202682ff372ecd2468725aa4bef91b4f20107ef40971/69-child-detail.png",
+        "loaded": true
+      }
+    ]
+  }
+]

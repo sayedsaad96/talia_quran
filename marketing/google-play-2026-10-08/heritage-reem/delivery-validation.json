@@ -1,0 +1,178 @@
+[
+  {
+    "id": "01",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 773258
+  },
+  {
+    "id": "02",
+    "offlinePixelMatch": false,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 2,
+    "meanChannelDelta": 0.0017163387345679013,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 363266
+  },
+  {
+    "id": "03",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 461214
+  },
+  {
+    "id": "04",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 357170
+  },
+  {
+    "id": "05",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 416601
+  },
+  {
+    "id": "06",
+    "offlinePixelMatch": false,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 1,
+    "meanChannelDelta": 0.0003116962448559671,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 316499
+  },
+  {
+    "id": "07",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 310527
+  },
+  {
+    "id": "08",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 325271
+  },
+  {
+    "id": "09",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 550684
+  },
+  {
+    "id": "10",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 416391
+  },
+  {
+    "id": "11",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 653202
+  },
+  {
+    "id": "12",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 630494
+  },
+  {
+    "id": "13",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 507841
+  },
+  {
+    "id": "14",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 439068
+  },
+  {
+    "id": "15",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 519675
+  },
+  {
+    "id": "16",
+    "offlinePixelMatch": true,
+    "offlineVisualMatch": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0,
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "bytes": 322669
+  }
+]

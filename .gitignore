@@ -62,3 +62,6 @@ android/.kotlin/
 
 # Golden-test failure artifacts (written by flutter_test on image mismatch)
 **/failures/
+
+# Marketing export bundles (zipped copies of the committed folders)
+marketing/**/*.zip

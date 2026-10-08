@@ -1,0 +1,370 @@
+[
+  {
+    "file": "01.html",
+    "title": "رفيقك اليومي\nمع القرآن",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\01.png"
+  },
+  {
+    "file": "02.html",
+    "title": "سورتك المفضلة\nأقرب إليك",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\02.png"
+  },
+  {
+    "file": "03.html",
+    "title": "اقرأ بتأنٍّ\nواستمع",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/eacb608c7cd2769a9151e76dbcd3e1bc708d9383a19c78be770758a025a69f77/02-quran-index.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/2866b701e660781d85b20661e3b6c833bbaf395805c5a429eea63820821892fc/04-reader-clean.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\03.png"
+  },
+  {
+    "file": "04.html",
+    "title": "حفظك ومراجعتك\nفي مكان واحد",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/42be8563016ddede6427c3588ff729cc82669c7b95a8817f87801ec002d4f4a8/09-hifz-create.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\04.png"
+  },
+  {
+    "file": "05.html",
+    "title": "خطة حفظ\nتناسب يومك",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/42be8563016ddede6427c3588ff729cc82669c7b95a8817f87801ec002d4f4a8/09-hifz-create.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\05.png"
+  },
+  {
+    "file": "06.html",
+    "title": "ابدأ الحفظ\nبسورة تختارها",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/68f173f2f6ab5a8fde2f3f754da29d9dae30377d67d0acde88218a2eea8e67a0/39-practice-surah.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\06.png"
+  },
+  {
+    "file": "07.html",
+    "title": "ختمتك\nعلى وتيرتك",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/08a70909df65b72be0c92d3fb9b64ef79e6c63701736e7cb47fd089cdafa615d/17-khatmah-dashboard.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/a748509fee80fb6f9c596b83466b21e7be5168e402dffcb550f46611202f65d0/16-khatmah-choice.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\07.png"
+  },
+  {
+    "file": "08.html",
+    "title": "ورد اليوم\nخطوة نحو الختمة",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/a748509fee80fb6f9c596b83466b21e7be5168e402dffcb550f46611202f65d0/16-khatmah-choice.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/08a70909df65b72be0c92d3fb9b64ef79e6c63701736e7cb47fd089cdafa615d/17-khatmah-dashboard.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\08.png"
+  },
+  {
+    "file": "09.html",
+    "title": "لحظات ذكر\nوطمأنينة",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/137128afc035f2c9ebb2ab10faaf43fb5c74564271fd851b104a2e3d51fc95c0/18-home-updated.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/e8301f2f47a2078fb451ef8da5f8eefebfa3b98b678a278646809bb268964606/12-azkar.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\09.png"
+  },
+  {
+    "file": "10.html",
+    "title": "شاهد رحلتك\nيومًا بعد يوم",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3662664e1a5970a4101e62562a5755248049d6d30b94f6ec6d9235cdbba5bc23/08-adult-hub.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/791888c978298fb834e5e215359527a1f190c07deb5dbb33085672a9eba0962f/13-progress.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\10.png"
+  },
+  {
+    "file": "11.html",
+    "title": "رحلة قرآنية\nيحبّها طفلك",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\11.png"
+  },
+  {
+    "file": "12.html",
+    "title": "كل خطوة\nاكتشاف جديد",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\12.png"
+  },
+  {
+    "file": "13.html",
+    "title": "اسمع وردّد\nخطوة بخطوة",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/cf38aea95463f0b857232544241a79f7b00f9457630b62b3fde754a1300e72c3/56-kids-listen.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\13.png"
+  },
+  {
+    "file": "14.html",
+    "title": "مصحفه الخاص\nلقراءة هادئة",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/56b6df4b19ee7b7d4b14b3c55209cf63f6468eabb83e30d0ec85533112aa4d2b/60-kids-reader.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\14.png"
+  },
+  {
+    "file": "15.html",
+    "title": "كنوز تنتظر\nرحلته",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/3b60675269c0a145631a76dc59473c47aec51e6767a6b7d131acb96fe458495b/54-kids-map.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/f1d90115b34095222b7eedcc0740ff1c52666f3ff7ca4a0f45f972b6a5aac31a/62-kids-treasures.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\15.png"
+  },
+  {
+    "file": "16.html",
+    "title": "كن قريبًا\nمن رحلته",
+    "width": 1080,
+    "height": 1920,
+    "font": "86px",
+    "images": [
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/brand-assets/talia-official-logo/logo_new.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/1919313fb4cd44b98ff296f091f2b29bdfaac0cc65d1745c5096887377a6a519/53-current-kids.png",
+        "loaded": true
+      },
+      {
+        "src": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/1e8d0a36-f2e3-4302-b966-9a9a009d58e9/content-assets/7a2db48ec8ff93f0280c202682ff372ecd2468725aa4bef91b4f20107ef40971/69-child-detail.png",
+        "loaded": true
+      }
+    ],
+    "overflow": false,
+    "output": "D:\\Flutter\\talia_quran\\marketing\\google-play-2026-10-08\\heritage-reem\\final\\16.png"
+  }
+]

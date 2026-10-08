@@ -1,0 +1,404 @@
+[
+  {
+    "name": "01-welcome.png",
+    "capturedLocal": "2026-10-08T00:27:30.9083333+03:00",
+    "sha256": "3FA18494B6C552E76AFDC16DF04183EF1198AFA142C1C5B9404417825B50FF72",
+    "bytes": 1130347
+  },
+  {
+    "name": "02-quran-index.png",
+    "capturedLocal": "2026-10-08T00:27:43.2000807+03:00",
+    "sha256": "EACB608C7CD2769A9151E76DBCD3E1BC708D9383A19C78BE770758A025A69F77",
+    "bytes": 200628
+  },
+  {
+    "name": "03-reader.png",
+    "capturedLocal": "2026-10-08T00:27:57.3761715+03:00",
+    "sha256": "1B516831490CB8534F342EE7325923747B8C1129DDEC16F2C4854845CAB9F163",
+    "bytes": 356643
+  },
+  {
+    "name": "04-reader-clean.png",
+    "capturedLocal": "2026-10-08T00:28:13.8821984+03:00",
+    "sha256": "2866B701E660781D85B20661E3B6C833BBAF395805C5A429EEA63820821892FC",
+    "bytes": 341479
+  },
+  {
+    "name": "05-reader-exit.png",
+    "capturedLocal": "2026-10-08T00:28:16.7197506+03:00",
+    "sha256": "18E1B76CF7E151EA039E66C433195B26E831C41D157CD5D441D283562DCFFDBF",
+    "bytes": 200911
+  },
+  {
+    "name": "06-hifz-hub.png",
+    "capturedLocal": "2026-10-08T00:28:19.7749481+03:00",
+    "sha256": "875357795D7700583E753B7A9C4DEDF87F0C3782EB1E1314CEE6924966CE8FFC",
+    "bytes": 163452
+  },
+  {
+    "name": "07-adult-hifz.png",
+    "capturedLocal": "2026-10-08T00:28:30.7986776+03:00",
+    "sha256": "05C619E6F589428E8D8882B7CBE42298B700FFE29FEF759EC3EB6E4094A9A4C2",
+    "bytes": 189761
+  },
+  {
+    "name": "08-adult-hub.png",
+    "capturedLocal": "2026-10-08T00:28:40.2689971+03:00",
+    "sha256": "3662664E1A5970A4101E62562A5755248049D6D30B94F6EC6D9235CDBBA5BC23",
+    "bytes": 281634
+  },
+  {
+    "name": "09-hifz-create.png",
+    "capturedLocal": "2026-10-08T00:28:50.4058581+03:00",
+    "sha256": "42BE8563016DDEDE6427C3588FF729CC82669C7B95A8817F87801EC002D4F4A8",
+    "bytes": 181473
+  },
+  {
+    "name": "10-plan-scroll.png",
+    "capturedLocal": "2026-10-08T00:29:02.4749774+03:00",
+    "sha256": "499E0DEAB2589D4F96BCA8D95258B8B7A470AED4CC3CBB8604DC071D473137D8",
+    "bytes": 113729
+  },
+  {
+    "name": "11-back-hub.png",
+    "capturedLocal": "2026-10-08T00:29:19.0295937+03:00",
+    "sha256": "1FFA4D536B256649DE129B4EC46A9B6E677F72740C4397E7D53557E2A3816B2A",
+    "bytes": 281502
+  },
+  {
+    "name": "12-azkar.png",
+    "capturedLocal": "2026-10-08T00:29:21.9450119+03:00",
+    "sha256": "E8301F2F47A2078FB451EF8DA5F8EEFEBFA3B98B678A278646809BB268964606",
+    "bytes": 273593
+  },
+  {
+    "name": "13-progress.png",
+    "capturedLocal": "2026-10-08T00:29:24.9613296+03:00",
+    "sha256": "791888C978298FB834E5E215359527A1F190C07DEB5DBB33085672A9EBA0962F",
+    "bytes": 174385
+  },
+  {
+    "name": "14-home.png",
+    "capturedLocal": "2026-10-08T00:29:37.4257348+03:00",
+    "sha256": "E9278EF90A49A33A2B30AB549123BC2014DFC0644649640DFDB1529F6B91E19E",
+    "bytes": 1130334
+  },
+  {
+    "name": "15-khatmah-setup.png",
+    "capturedLocal": "2026-10-08T00:29:40.1366502+03:00",
+    "sha256": "69B35EB58AFB192D26A144226A15DFEDE78F3A717BEF77E1CD9A80E359B552F6",
+    "bytes": 134324
+  },
+  {
+    "name": "16-khatmah-choice.png",
+    "capturedLocal": "2026-10-08T00:29:58.4765793+03:00",
+    "sha256": "A748509FEE80FB6F9C596B83466B21E7BE5168E402DFFCB550F46611202F65D0",
+    "bytes": 133540
+  },
+  {
+    "name": "17-khatmah-dashboard.png",
+    "capturedLocal": "2026-10-08T00:30:01.4043032+03:00",
+    "sha256": "08A70909DF65B72BE0C92D3FB9B64EF79E6C63701736E7CB47FD089CDAFA615D",
+    "bytes": 252386
+  },
+  {
+    "name": "18-home-updated.png",
+    "capturedLocal": "2026-10-08T00:30:12.5925360+03:00",
+    "sha256": "137128AFC035F2C9EBB2AB10FAAF43FB5C74564271FD851B104A2E3D51FC95C0",
+    "bytes": 1019155
+  },
+  {
+    "name": "19-settings.png",
+    "capturedLocal": "2026-10-08T00:30:15.2862189+03:00",
+    "sha256": "251D609DAC894EC690720FE1B460CA69D808510252B7002752F5B7B7DC3BE0A4",
+    "bytes": 159163
+  },
+  {
+    "name": "20-practice-settings.png",
+    "capturedLocal": "2026-10-08T00:30:25.5732066+03:00",
+    "sha256": "5DAD03ECA9014E971F2BAE5AFA2C4705C8F67522C809E4EB7859F3539B014D06",
+    "bytes": 133132
+  },
+  {
+    "name": "21-reset-path.png",
+    "capturedLocal": "2026-10-08T00:30:35.6779440+03:00",
+    "sha256": "6ED9797DD8C1A929015F501AFB149BAB94FDEE7D608DEE254552CCB5BDA00690",
+    "bytes": 136330
+  },
+  {
+    "name": "22-reset-dialog.png",
+    "capturedLocal": "2026-10-08T00:31:08.5272038+03:00",
+    "sha256": "75EEF4884A321C653F7990DDED18AFF83968C78E17730A5CEA571B7A4BA59BA2",
+    "bytes": 135933
+  },
+  {
+    "name": "23-reset-cancel.png",
+    "capturedLocal": "2026-10-08T00:31:27.6642156+03:00",
+    "sha256": "BB998437F523B90723BCE38853AB5E6C3152C841BF5B88340EE8C8A98C53FE1C",
+    "bytes": 132636
+  },
+  {
+    "name": "24-settings-return.png",
+    "capturedLocal": "2026-10-08T00:31:30.3316934+03:00",
+    "sha256": "4D5F2ABA372D5AAC5B51F3D38725422A891C2A98649E709587A0E2498DB53228",
+    "bytes": 158657
+  },
+  {
+    "name": "25-settings-en.png",
+    "capturedLocal": "2026-10-08T00:31:32.8639330+03:00",
+    "sha256": "D16050B2181201D9F93169CCEBC452635AAF402DF5C9151F8FB6DF7373B685E5",
+    "bytes": 166847
+  },
+  {
+    "name": "26-practice-en.png",
+    "capturedLocal": "2026-10-08T00:31:44.9508252+03:00",
+    "sha256": "1F259EC97AB4269FF97A45616A350F62654BA7A92B192C552FD3E0897B31B8D1",
+    "bytes": 146190
+  },
+  {
+    "name": "27-path-dialog-en.png",
+    "capturedLocal": "2026-10-08T00:31:47.6306337+03:00",
+    "sha256": "D56A7C424ED63203304663754733AE97509E89AD3101E94C23D7901669A644C0",
+    "bytes": 143742
+  },
+  {
+    "name": "28-path-confirm.png",
+    "capturedLocal": "2026-10-08T00:31:59.2234899+03:00",
+    "sha256": "1F259EC97AB4269FF97A45616A350F62654BA7A92B192C552FD3E0897B31B8D1",
+    "bytes": 146190
+  },
+  {
+    "name": "29-path-dialog.png",
+    "capturedLocal": "2026-10-08T00:32:09.8710176+03:00",
+    "sha256": "1473BF5898BE5E64985A7511660B2D71E28EEAFA1C4988E10ADBCF1259775546",
+    "bytes": 144158
+  },
+  {
+    "name": "30-path-field.png",
+    "capturedLocal": "2026-10-08T00:32:33.7881893+03:00",
+    "sha256": "8EE66B7F36C5E82186911DFD9ACA5EF6ECD4CC4BB20A9D900574922E16C992A1",
+    "bytes": 145344
+  },
+  {
+    "name": "31-path-typed.png",
+    "capturedLocal": "2026-10-08T00:33:05.3454993+03:00",
+    "sha256": "D60B300793B40C519F1132950E70986E5528D6FB82482F89DEDC1E9ABFE193C9",
+    "bytes": 146679
+  },
+  {
+    "name": "34-reset-cancelled.png",
+    "capturedLocal": "2026-10-08T00:33:50.9264962+03:00",
+    "sha256": "96DAF2889CC9DF581540A303E3E11146782786DDBDE1B916445D8297E443C9B1",
+    "bytes": 146210
+  },
+  {
+    "name": "35-settings.png",
+    "capturedLocal": "2026-10-08T00:33:53.6091491+03:00",
+    "sha256": "5A04FEE49D2FE28C516A34AFF749E87EB734B1AFA29E02DE93CF03954506556F",
+    "bytes": 166842
+  },
+  {
+    "name": "36-settings-ar.png",
+    "capturedLocal": "2026-10-08T00:33:56.2798577+03:00",
+    "sha256": "9E4D2D2C5872F176F71D808D4B62008C4711C93BEF5B1B8E1C63F8C88F33F93E",
+    "bytes": 158697
+  },
+  {
+    "name": "37-home-return.png",
+    "capturedLocal": "2026-10-08T00:34:15.0446593+03:00",
+    "sha256": "D8C626DE1BB235C4722F28C2EA9CA3258DE50E9B6E6A367D007009266D4347B6",
+    "bytes": 1019102
+  },
+  {
+    "name": "38-hifz-return.png",
+    "capturedLocal": "2026-10-08T00:34:17.8847187+03:00",
+    "sha256": "E16B52B0422EF9DD38444015ED75B0FBD23E9C44BA25166F54C344185320FF05",
+    "bytes": 281345
+  },
+  {
+    "name": "39-practice-surah.png",
+    "capturedLocal": "2026-10-08T00:34:20.6038292+03:00",
+    "sha256": "68F173F2F6AB5A8FDE2F3F754DA29D9DAE30377D67D0ACDE88218A2EEA8E67A0",
+    "bytes": 174501
+  },
+  {
+    "name": "40-change-path.png",
+    "capturedLocal": "2026-10-08T00:34:37.7472970+03:00",
+    "sha256": "0642552F55E409E652B3BC94E76E432D48632BDA188D84B613B98535C91FEBF2",
+    "bytes": 194157
+  },
+  {
+    "name": "41-change-path-confirm.png",
+    "capturedLocal": "2026-10-08T00:34:50.8229744+03:00",
+    "sha256": "DD725F5139F08EB65CDF6CBF90E5EE1EB1F7A5948C217012C9BAB44482C0206D",
+    "bytes": 195293
+  },
+  {
+    "name": "42-choose-path.png",
+    "capturedLocal": "2026-10-08T00:35:03.2063385+03:00",
+    "sha256": "D811F2C3E9B482D70CA2638816FA58D46E30B05792B8620E26E5510EEE0B673F",
+    "bytes": 82125
+  },
+  {
+    "name": "43-choose-kids.png",
+    "capturedLocal": "2026-10-08T00:35:05.8843526+03:00",
+    "sha256": "B874C74977EA771D669676C9C6617FDDC72DC3ED889A867F5264DDD224040841",
+    "bytes": 82330
+  },
+  {
+    "name": "44-kids-confirm.png",
+    "capturedLocal": "2026-10-08T00:35:20.6525865+03:00",
+    "sha256": "210726824D8E7AF676690B9B9D8036A79173A36C53374E67CC7052912FE90C0B",
+    "bytes": 100591
+  },
+  {
+    "name": "45-kids-profile.png",
+    "capturedLocal": "2026-10-08T00:35:49.1804479+03:00",
+    "sha256": "BD0063BE3C05885A81DDB7F714FCA2E67CBA20222DD66D601612939068EC171E",
+    "bytes": 125464
+  },
+  {
+    "name": "46-continue-setup.png",
+    "capturedLocal": "2026-10-08T00:36:09.8121065+03:00",
+    "sha256": "5BC754422E85FA4FF123CEDC5E71CD7B9F84242C78834DED00032C629A674D90",
+    "bytes": 107879
+  },
+  {
+    "name": "47-name-focused.png",
+    "capturedLocal": "2026-10-08T00:36:12.4711900+03:00",
+    "sha256": "948FB146FE03A1FC9232951A515EEA9C036D9F96C584A43FF6650747E7C090F5",
+    "bytes": 107887
+  },
+  {
+    "name": "48-pin-focus.png",
+    "capturedLocal": "2026-10-08T00:36:49.8136104+03:00",
+    "sha256": "0BB5E30BCA4DEBFBF9FA0D1128CFC4EAB65664A94B117E02B228D27016729BF5",
+    "bytes": 101112
+  },
+  {
+    "name": "49-pin-entered.png",
+    "capturedLocal": "2026-10-08T00:37:03.5567048+03:00",
+    "sha256": "AEDF14C339F53B960322481440A74D7FFFB07728A70298E8C5CB7BDA2CC096AC",
+    "bytes": 101109
+  },
+  {
+    "name": "50-confirm-pin-focus.png",
+    "capturedLocal": "2026-10-08T00:37:14.7073744+03:00",
+    "sha256": "A4A0E1D605A6011852052F2EA4350CC9369902409B5DE1DA604FE6FE233E85AF",
+    "bytes": 100028
+  },
+  {
+    "name": "51-profile-ready.png",
+    "capturedLocal": "2026-10-08T00:37:17.3855196+03:00",
+    "sha256": "1ACCDFBF20C544833E96611B414868587447C600040B26B151A49CECD814361E",
+    "bytes": 100182
+  },
+  {
+    "name": "52-kids-home.png",
+    "capturedLocal": "2026-10-08T00:37:37.5781404+03:00",
+    "sha256": "E94F8890FD998829470FC53B0021E62F27A0FF6E91089B63847E2D978DC5292E",
+    "bytes": 440650
+  },
+  {
+    "name": "53-current-kids.png",
+    "capturedLocal": "2026-10-08T00:38:33.0829412+03:00",
+    "sha256": "1919313FB4CD44B98FF296F091F2B29BDFAAC0CC65D1745C5096887377A6A519",
+    "bytes": 441341
+  },
+  {
+    "name": "54-kids-map.png",
+    "capturedLocal": "2026-10-08T00:39:10.8578170+03:00",
+    "sha256": "3B60675269C0A145631A76DC59473C47AEC51E6767A6B7D131ACB96FE458495B",
+    "bytes": 481814
+  },
+  {
+    "name": "55-kids-stage.png",
+    "capturedLocal": "2026-10-08T00:39:24.8627167+03:00",
+    "sha256": "98B0B4302E2649061753D28BD0E811BE6F987B38B025D8216B9F749F6BDC92B8",
+    "bytes": 241957
+  },
+  {
+    "name": "56-kids-listen.png",
+    "capturedLocal": "2026-10-08T00:39:36.9080673+03:00",
+    "sha256": "CF38AEA95463F0B857232544241A79F7B00F9457630B62B3FDE754A1300E72C3",
+    "bytes": 315246
+  },
+  {
+    "name": "57-back-stage.png",
+    "capturedLocal": "2026-10-08T00:39:54.3567715+03:00",
+    "sha256": "98B0B4302E2649061753D28BD0E811BE6F987B38B025D8216B9F749F6BDC92B8",
+    "bytes": 241957
+  },
+  {
+    "name": "58-back-map.png",
+    "capturedLocal": "2026-10-08T00:39:56.7542536+03:00",
+    "sha256": "3B60675269C0A145631A76DC59473C47AEC51E6767A6B7D131ACB96FE458495B",
+    "bytes": 481814
+  },
+  {
+    "name": "59-back-home.png",
+    "capturedLocal": "2026-10-08T00:39:59.1828500+03:00",
+    "sha256": "16AACECA67C5204C3EACA80E4536764AE07D7923CB8C0AEB66696D12D7565283",
+    "bytes": 441002
+  },
+  {
+    "name": "60-kids-reader.png",
+    "capturedLocal": "2026-10-08T00:40:12.8753581+03:00",
+    "sha256": "56B6DF4B19EE7B7D4B14B3C55209CF63F6468EABB83E30D0EC85533112AA4D2B",
+    "bytes": 393227
+  },
+  {
+    "name": "61-home-after-reader.png",
+    "capturedLocal": "2026-10-08T00:40:39.1083505+03:00",
+    "sha256": "137E194C5FD6F75306A4CE0447CF374656DDC06D894F6F666A505A5C113BADDC",
+    "bytes": 441186
+  },
+  {
+    "name": "62-kids-treasures.png",
+    "capturedLocal": "2026-10-08T00:40:41.1966040+03:00",
+    "sha256": "F1D90115B34095222B7EEDCC0740FF1C52666F3FF7CA4A0F45F972B6A5AAC31A",
+    "bytes": 279667
+  },
+  {
+    "name": "63-home-return.png",
+    "capturedLocal": "2026-10-08T00:42:23.0114735+03:00",
+    "sha256": "86B80C15049BB0DA3A54F6B57E335BAACB87D4140528FF46E8A3221502C7794B",
+    "bytes": 441408
+  },
+  {
+    "name": "64-kids-settings.png",
+    "capturedLocal": "2026-10-08T00:42:25.0621031+03:00",
+    "sha256": "1040D02154E2202B67779E4B56F3BE138DDB56107678F61A116F050FECF73E2F",
+    "bytes": 360750
+  },
+  {
+    "name": "65-family-entry.png",
+    "capturedLocal": "2026-10-08T00:43:01.7254403+03:00",
+    "sha256": "3065D13D485EDACDA29BE88DD7503EE28F2DD3B2C87AFC9ACD0414CFB4501E69",
+    "bytes": 345532
+  },
+  {
+    "name": "66-family-pin-entered.png",
+    "capturedLocal": "2026-10-08T00:43:47.3225904+03:00",
+    "sha256": "978EE55340B68252FBD372F3DF144FBDF714E4A9B0D766E5B9DC5A13FB96429C",
+    "bytes": 346784
+  },
+  {
+    "name": "67-family-dashboard.png",
+    "capturedLocal": "2026-10-08T00:43:49.5456612+03:00",
+    "sha256": "DAF795FA1710DC35E9CAD04D4CF5219A346896319B08FFEF3247E58B322B4D3D",
+    "bytes": 344192
+  },
+  {
+    "name": "68-family-loaded.png",
+    "capturedLocal": "2026-10-08T00:44:06.0352344+03:00",
+    "sha256": "6F4F1616ED8BEEE2235355416A0400D340DC27F2A6E2A2ED337AF2DCE73E8AC2",
+    "bytes": 123733
+  },
+  {
+    "name": "69-child-detail.png",
+    "capturedLocal": "2026-10-08T00:44:30.0290992+03:00",
+    "sha256": "7A2DB48EC8FF93F0280C202682FF372ECD2468725AA4BEF91B4F20107EF40971",
+    "bytes": 182045
+  }
+]
