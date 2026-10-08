@@ -18,6 +18,8 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_daily_mission_tile.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_name_ribbon.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_progress_header.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_day_complete_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
@@ -535,7 +537,22 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('يوسف'), findsOneWidget);
+      // The greeting lives in the header; the mission card ribbon repeats
+      // the name in the Talia banner style.
+      expect(
+        find.descendant(
+          of: find.byType(KidsProgressHeader),
+          matching: find.textContaining('يوسف'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(KidsNameRibbon),
+          matching: find.text('يوسف'),
+        ),
+        findsWidgets,
+      );
     });
 
     testWidgets(

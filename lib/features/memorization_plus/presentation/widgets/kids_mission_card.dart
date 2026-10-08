@@ -7,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 import 'kids_chunky_button.dart';
+import 'kids_name_ribbon.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
@@ -18,10 +19,15 @@ class KidsMissionCard extends StatelessWidget {
     this.onContinue,
     this.isReviewMission = false,
     this.reviewAyahs,
+    this.childName,
   });
 
   final KidsJourneyStage? stage;
   final String? surahName;
+
+  /// The child's name, shown on the banner ribbon. Without it the card keeps
+  /// the generic Talia ribbon image.
+  final String? childName;
   final VoidCallback? onContinue;
 
   /// Whether the resolved next mission is a review task (due SRS review or
@@ -86,12 +92,15 @@ class KidsMissionCard extends StatelessWidget {
             ),
           ].join(' • ');
 
-    final banner = Image.asset(
-      KidsTheme.ribbonBannerAsset,
-      width: 64,
-      height: 64,
-      fit: BoxFit.contain,
-    );
+    final name = childName?.trim();
+    final Widget banner = name == null || name.isEmpty
+        ? Image.asset(
+            KidsTheme.ribbonBannerAsset,
+            width: 64,
+            height: 64,
+            fit: BoxFit.contain,
+          )
+        : KidsNameRibbon(name: name);
 
     final missionText = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -418,6 +418,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                       ] else ...[
                         KidsMissionCard(
                           stage: state.missionStage,
+                          childName: childName,
                           // A mission in another surah never borrows the
                           // loaded surah's name.
                           surahName:
