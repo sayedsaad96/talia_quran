@@ -11,6 +11,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/review_record_identity.dart';
 import 'package:talia_quran/core/memorization/v2/kids_review_outcome_committer.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/kids_streak_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
@@ -23,7 +24,6 @@ import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
-import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -32,7 +32,6 @@ import 'package:talia_quran/features/memorization_plus/domain/usecases/memorizat
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
-import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
 import '../../../../helpers/isar_test_core.dart';
 
 import 'memorization_session_cubit_test.mocks.dart'
@@ -1906,7 +1905,7 @@ void main() {
     );
 
     test(
-      'markCompleted records StreakService activity as the single streak source',
+      'markCompleted records activity in the kids streak, not the adult one',
       () async {
         await cubit.load(114, 1, 'ayah text');
         cubit.debugSetLoopCount(3);
@@ -2326,14 +2325,13 @@ class _ResumeQuranRepository implements QuranRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _FakeStreakService implements StreakService {
+class _FakeStreakService implements KidsStreakStore {
   int recordCalls = 0;
 
   @override
-  Future<StreakResult> recordActivity({int activityDelta = 1}) async {
+  Future<void> recordActivity({int activityDelta = 1}) async {
     expect(activityDelta, 1);
     recordCalls++;
-    return const StreakResult.sameDay();
   }
 
   @override

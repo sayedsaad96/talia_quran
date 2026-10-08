@@ -21,6 +21,17 @@ class HomeUnifiedProgress extends StatelessWidget {
   @visibleForTesting
   static DateTime Function() clock = DateTime.now;
 
+  /// Share of the Quran memorized, in Western digits and without the sign.
+  /// It never rounds up, and never shows 0 once an ayah is memorized: below
+  /// 10% it keeps one decimal, under 0.1% it reads `<0.1`.
+  static String memorizedPercent(int memorized, int total) {
+    if (memorized <= 0 || total <= 0) return '0';
+    final tenths = memorized * 1000 ~/ total;
+    if (tenths == 0) return '<0.1';
+    if (tenths < 100) return '${tenths ~/ 10}.${tenths % 10}';
+    return '${memorized * 100 ~/ total}';
+  }
+
   const HomeUnifiedProgress({
     super.key,
     required this.state,
@@ -145,10 +156,15 @@ class _JourneyRingCompact extends StatelessWidget {
     final memPct = progress.totalAyahs > 0
         ? progress.memorizedAyahs / progress.totalAyahs
         : 0.0;
+    final digits = HomeUnifiedProgress.memorizedPercent(
+      progress.memorizedAyahs,
+      progress.totalAyahs,
+    );
     final percent = context.isArabic
-        ? '${context.numText((memPct * 100).round())}٪'
-        : '${(memPct * 100).round()}%';
-    // Captioned: on its own the ring read as an unexplained "0%".
+        ? '${context.digitText(digits.replaceAll('.', '٫'))}٪'
+        : '$digits%';
+    // Captioned with the ayah count: the percentage of the whole Quran moves
+    // slowly, so the count shows each newly memorized ayah.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -176,7 +192,10 @@ class _JourneyRingCompact extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          context.l10n.homeQuranMemorizedCaption,
+          context.l10n.homeMemorizedAyahsCaption(
+            progress.memorizedAyahs,
+            context.numText(progress.memorizedAyahs),
+          ),
           style: AppTypography.labelSmall.copyWith(color: skin.textSecondary),
         ),
       ],

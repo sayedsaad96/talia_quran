@@ -173,12 +173,13 @@ Future<_Repo> _pump(
   return repo;
 }
 
+/// Scrolls the lazily built page until [finder] matches at least once (it
+/// may match several widgets), then brings the first match into view.
 Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
-  await tester.scrollUntilVisible(
-    finder,
-    200,
-    scrollable: find.byType(Scrollable).first,
-  );
+  for (var i = 0; i < 50 && finder.evaluate().isEmpty; i++) {
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -200));
+    await tester.pump();
+  }
   await tester.ensureVisible(finder.first);
   await tester.pumpAndSettle();
 }
@@ -195,7 +196,7 @@ void main() {
         _mission('3', KidsHomeMissionStatus.acknowledged),
       ]),
     );
-    await _scrollTo(tester, find.text('Home missions').first);
+    await _scrollTo(tester, find.text('Home missions'));
 
     expect(find.text('Waiting for child'), findsOneWidget);
     expect(find.text("Child says it's done"), findsOneWidget);
@@ -275,7 +276,7 @@ void main() {
       _remoteChild([_mission('2', KidsHomeMissionStatus.reported)]),
       locale: const Locale('ar'),
     );
-    await _scrollTo(tester, find.text('المهمات المنزلية').first);
+    await _scrollTo(tester, find.text('المهمات المنزلية'));
 
     expect(find.text('اطّلعت'), findsOneWidget);
     expect(tester.takeException(), isNull);

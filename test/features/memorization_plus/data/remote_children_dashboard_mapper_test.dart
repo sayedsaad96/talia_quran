@@ -87,6 +87,46 @@ void main() {
       expect(summary.production!.activeDaysLast30, 18);
     });
 
+    test('reads the kids progress extras when present', () {
+      final activity = mapper.activityFromDashboardJson(
+        snapshot(
+          overrides: {
+            'week_read_pages_count': 6,
+            'achievements': [
+              {'id': 'firstAyah', 'at': '2026-09-01T00:00:00Z'},
+              {'id': 42, 'at': 'bad'},
+            ],
+            'activities': [
+              {
+                'at': '2026-10-05T06:00:00Z',
+                'kind': 'memorize',
+                'key': 'memorize|kids|20261005|114:3',
+                'surah': 114,
+                'start': 1,
+                'end': 3,
+              },
+              {'at': 'nope', 'kind': 'reading', 'key': 'x'},
+            ],
+          },
+        ),
+      )!;
+
+      expect(activity.weekReadPagesCount, 6);
+      expect(activity.achievements, {'firstAyah': DateTime.utc(2026, 9, 1)});
+      expect(activity.events.single.surahId, 114);
+      expect(activity.events.single.endAyah, 3);
+      expect(activity.events.single.kind.name, 'memorize');
+      expect(activity.events.single.isKids, isTrue);
+    });
+
+    test('an older snapshot without the extras still parses', () {
+      final activity = mapper.activityFromDashboardJson(snapshot())!;
+
+      expect(activity.weekReadPagesCount, isNull);
+      expect(activity.achievements, isEmpty);
+      expect(activity.events, isEmpty);
+    });
+
     test('absent snapshot stays null instead of zero activity', () {
       final summary = mapper.remoteChildSummaryFromDashboardJson(
         child(reviewSummary: {'review_count': 0, 'tracked_count': 0}),

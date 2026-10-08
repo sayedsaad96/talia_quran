@@ -1,3 +1,4 @@
+import '../../../../home/domain/entities/activity_event.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../../core/memorization/remote_child_production_summary_builder.dart';
@@ -249,7 +250,50 @@ class MemorizationCloudMappers {
       readPagesCount: readPages,
       todayActivityCount: todayActivity,
       todayReadPagesCount: todayReadPages,
+      weekReadPagesCount: count('week_read_pages_count'),
+      achievements: _snapshotAchievements(snapshot['achievements']),
+      events: _snapshotEvents(snapshot['activities']),
     );
+  }
+
+  /// Optional `achievements` entries (`{id, at}`); malformed ones are skipped.
+  static Map<String, DateTime> _snapshotAchievements(Object? raw) => {
+    if (raw is List)
+      for (final item in raw)
+        if (item is Map && item['id'] is String && item['at'] is String)
+          if (DateTime.tryParse(item['at'] as String) case final at?)
+            item['id'] as String: at.toUtc(),
+  };
+
+  /// The child's published kids activity; malformed entries are skipped.
+  static List<ActivityEvent> _snapshotEvents(Object? raw) {
+    if (raw is! List) return const [];
+    int? number(Object? value) => value is num ? value.toInt() : null;
+    final events = <ActivityEvent>[];
+    for (final item in raw) {
+      if (item is! Map || item['key'] is! String || item['at'] is! String) {
+        continue;
+      }
+      final at = DateTime.tryParse(item['at'] as String);
+      final kind = ActivityEventKind.values
+          .where((k) => k.name == item['kind'])
+          .firstOrNull;
+      if (at == null || kind == null) continue;
+      events.add(
+        ActivityEvent(
+          occurredAt: at.toLocal(),
+          kind: kind,
+          idempotencyKey: item['key'] as String,
+          surahId: number(item['surah']),
+          startAyah: number(item['start']),
+          endAyah: number(item['end']),
+          pageNumber: number(item['page']),
+          isKids: true,
+        ),
+      );
+    }
+    events.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+    return events;
   }
 
   /// Reconstructs the parent-facing production summary from cloud rows.

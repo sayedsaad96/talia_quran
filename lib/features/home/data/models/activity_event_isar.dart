@@ -18,6 +18,10 @@ class ActivityEventIsar {
   int? endAyah;
   int? pageNumber;
 
+  /// True for kids-track entries. Null on rows written before the tag
+  /// existed; legacy kids rows are recognised by their idempotency key.
+  bool? isKids;
+
   @Index(unique: true)
   late String idempotencyKey;
 }

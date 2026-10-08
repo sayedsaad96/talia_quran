@@ -23,27 +23,28 @@ const ActivityEventIsarSchema = CollectionSchema(
       name: r'idempotencyKey',
       type: IsarType.string,
     ),
+    r'isKids': PropertySchema(id: 2, name: r'isKids', type: IsarType.bool),
     r'kindIndex': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'kindIndex',
       type: IsarType.long,
     ),
     r'occurredAt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'occurredAt',
       type: IsarType.dateTime,
     ),
     r'pageNumber': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'pageNumber',
       type: IsarType.long,
     ),
     r'startAyah': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'startAyah',
       type: IsarType.long,
     ),
-    r'surahId': PropertySchema(id: 6, name: r'surahId', type: IsarType.long),
+    r'surahId': PropertySchema(id: 7, name: r'surahId', type: IsarType.long),
   },
 
   estimateSize: _activityEventIsarEstimateSize,
@@ -106,11 +107,12 @@ void _activityEventIsarSerialize(
 ) {
   writer.writeLong(offsets[0], object.endAyah);
   writer.writeString(offsets[1], object.idempotencyKey);
-  writer.writeLong(offsets[2], object.kindIndex);
-  writer.writeDateTime(offsets[3], object.occurredAt);
-  writer.writeLong(offsets[4], object.pageNumber);
-  writer.writeLong(offsets[5], object.startAyah);
-  writer.writeLong(offsets[6], object.surahId);
+  writer.writeBool(offsets[2], object.isKids);
+  writer.writeLong(offsets[3], object.kindIndex);
+  writer.writeDateTime(offsets[4], object.occurredAt);
+  writer.writeLong(offsets[5], object.pageNumber);
+  writer.writeLong(offsets[6], object.startAyah);
+  writer.writeLong(offsets[7], object.surahId);
 }
 
 ActivityEventIsar _activityEventIsarDeserialize(
@@ -123,11 +125,12 @@ ActivityEventIsar _activityEventIsarDeserialize(
   object.endAyah = reader.readLongOrNull(offsets[0]);
   object.id = id;
   object.idempotencyKey = reader.readString(offsets[1]);
-  object.kindIndex = reader.readLong(offsets[2]);
-  object.occurredAt = reader.readDateTime(offsets[3]);
-  object.pageNumber = reader.readLongOrNull(offsets[4]);
-  object.startAyah = reader.readLongOrNull(offsets[5]);
-  object.surahId = reader.readLongOrNull(offsets[6]);
+  object.isKids = reader.readBoolOrNull(offsets[2]);
+  object.kindIndex = reader.readLong(offsets[3]);
+  object.occurredAt = reader.readDateTime(offsets[4]);
+  object.pageNumber = reader.readLongOrNull(offsets[5]);
+  object.startAyah = reader.readLongOrNull(offsets[6]);
+  object.surahId = reader.readLongOrNull(offsets[7]);
   return object;
 }
 
@@ -143,14 +146,16 @@ P _activityEventIsarDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 5:
       return (reader.readLongOrNull(offset)) as P;
     case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -754,6 +759,33 @@ extension ActivityEventIsarQueryFilter
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
+  isKidsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'isKids'),
+      );
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
+  isKidsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'isKids'),
+      );
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
+  isKidsEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isKids', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterFilterCondition>
   kindIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1120,6 +1152,20 @@ extension ActivityEventIsarQuerySortBy
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
+  sortByIsKids() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isKids', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
+  sortByIsKidsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isKids', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
   sortByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.asc);
@@ -1234,6 +1280,20 @@ extension ActivityEventIsarQuerySortThenBy
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
+  thenByIsKids() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isKids', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
+  thenByIsKidsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isKids', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QAfterSortBy>
   thenByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'kindIndex', Sort.asc);
@@ -1324,6 +1384,13 @@ extension ActivityEventIsarQueryWhereDistinct
   }
 
   QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
+  distinctByIsKids() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isKids');
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, ActivityEventIsar, QDistinct>
   distinctByKindIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'kindIndex');
@@ -1377,6 +1444,12 @@ extension ActivityEventIsarQueryProperty
   idempotencyKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'idempotencyKey');
+    });
+  }
+
+  QueryBuilder<ActivityEventIsar, bool?, QQueryOperations> isKidsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isKids');
     });
   }
 

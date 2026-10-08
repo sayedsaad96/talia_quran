@@ -491,13 +491,17 @@ void main() {
       ),
     );
     when(
-      mockMemRepo.getAllReviewRecords(scope: ReviewRecordReadScope.kids),
+      mockMemRepo.getAllReviewRecords(scope: ReviewRecordReadScope.adult),
     ).thenAnswer((_) async => const Right([]));
 
     await cubit.load();
     final state = cubit.state as HomeLoaded;
     final route = Uri.parse(state.heroAction!.route);
 
+    // Home never reads the kids track's records, even for a child profile.
+    verifyNever(
+      mockMemRepo.getAllReviewRecords(scope: ReviewRecordReadScope.kids),
+    );
     expect(state.isKids, isTrue);
     expect(route.path, '/memorization-plus/kids-home');
     expect(route.queryParameters['surahId'], '3');
@@ -855,6 +859,29 @@ void main() {
     expect((state as HomeLoaded).recentActivity, events);
   });
 
+  test('reloads recent activity when the feed changes', () async {
+    final events = <ActivityEvent>[];
+    await cubit.close();
+    cubit = buildCubit(
+      getRecentActivity: GetRecentActivityUsecase(_MemoryActivityFeed(events)),
+    );
+    await cubit.load();
+    expect((cubit.state as HomeLoaded).recentActivity, isEmpty);
+
+    events.add(
+      ActivityEvent(
+        occurredAt: DateTime.utc(2026, 9, 9, 12),
+        kind: ActivityEventKind.reading,
+        idempotencyKey: 'reading|20260909|1',
+        pageNumber: 1,
+      ),
+    );
+    progressEvents.notify(ProgressChangedReason.activityFeed);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+
+    expect((cubit.state as HomeLoaded).recentActivity, hasLength(1));
+  });
+
   test('active contextual slot is never weeklyReflection redirecting to progress', () async {
     await cubit.load();
 
@@ -870,10 +897,10 @@ class _MemoryActivityFeed implements ActivityFeedRepository {
   final List<ActivityEvent> events;
 
   @override
-  Future<void> append(ActivityEvent event) async {}
+  Future<void> append(ActivityEvent event, {bool replace = false}) async {}
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20}) async =>
+  Future<List<ActivityEvent>> recent({int limit = 20, bool kids = false}) async =>
       events.take(limit).toList();
 
   @override
@@ -888,13 +915,13 @@ class _PendingActivityFeed implements ActivityFeedRepository {
   final recentRequested = Completer<void>();
 
   @override
-  Future<void> append(ActivityEvent event) async {}
+  Future<void> append(ActivityEvent event, {bool replace = false}) async {}
 
   @override
   Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => const {};
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20}) {
+  Future<List<ActivityEvent>> recent({int limit = 20, bool kids = false}) {
     if (!recentRequested.isCompleted) recentRequested.complete();
     return pendingRecent.future;
   }

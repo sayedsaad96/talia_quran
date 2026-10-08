@@ -764,7 +764,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing to review yet. Start memorizing first; your ayahs will appear here when their review is due.';
 
   @override
-  String get homeQuranMemorizedCaption => 'of the Quran memorized';
+  String homeMemorizedAyahsCaption(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText ayahs memorized',
+      one: '$countText ayah memorized',
+      zero: 'No ayahs memorized yet',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get kidsSetupDiscardTitle => 'Discard child setup?';
@@ -2253,6 +2262,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readPageConfirmed => 'Page counted';
+
+  @override
+  String get readPageCounting => 'Counting this page shortly';
+
+  @override
+  String get kidsProgressTitle => 'My progress';
+
+  @override
+  String get kidsProgressSubtitle =>
+      'Your stars, achievements and certificates';
+
+  @override
+  String get kidsProgressTaliaStart =>
+      'Let\'s begin! Memorize your first ayah to earn your first achievement';
+
+  @override
+  String kidsProgressTaliaNew(String title) {
+    return 'Masha\'Allah! You earned “$title”';
+  }
+
+  @override
+  String kidsProgressTaliaNext(String title) {
+    return 'You\'re close to “$title”, keep going!';
+  }
+
+  @override
+  String get kidsProgressTaliaAllDone =>
+      'Masha\'Allah! You collected every achievement';
+
+  @override
+  String kidsProgressLevel(String levelText) {
+    return 'Level $levelText';
+  }
+
+  @override
+  String get kidsProgressLevelLabel => 'Level';
+
+  @override
+  String get kidsProgressStars => 'Stars';
+
+  @override
+  String get kidsProgressStreak => 'Days in a row';
+
+  @override
+  String get kidsProgressAyahs => 'Ayahs memorized';
+
+  @override
+  String get kidsProgressWeekPages => 'Pages this week';
+
+  @override
+  String get kidsProgressRecentTitle => 'Recent activity';
+
+  @override
+  String get kidsProgressRecentEmpty =>
+      'Read or memorize and your activity shows here';
+
+  @override
+  String get kidsProgressCertificatesEmpty =>
+      'Finish a surah to earn your first certificate';
+
+  @override
+  String get kidsAchievementsTitle => 'My achievements';
+
+  @override
+  String kidsAchievementsCount(String unlockedText, String totalText) {
+    return '$unlockedText of $totalText';
+  }
+
+  @override
+  String kidsAchievementProgress(String currentText, String targetText) {
+    return '$currentText / $targetText';
+  }
+
+  @override
+  String get kidsAchievementFirstAyah => 'First ayah';
+
+  @override
+  String get kidsAchievementAyahs10 => '10 ayahs';
+
+  @override
+  String get kidsAchievementAyahs50 => '50 ayahs';
+
+  @override
+  String get kidsAchievementAyahs100 => '100 ayahs';
+
+  @override
+  String get kidsAchievementFirstSurah => 'First surah';
+
+  @override
+  String get kidsAchievementSurahs3 => '3 surahs';
+
+  @override
+  String get kidsAchievementSurahs10 => '10 surahs';
+
+  @override
+  String get kidsAchievementFirstPage => 'First page';
+
+  @override
+  String get kidsAchievementPages10 => '10 pages';
+
+  @override
+  String get kidsAchievementPages30 => '30 pages';
+
+  @override
+  String get kidsAchievementStreak3 => '3 days in a row';
+
+  @override
+  String get kidsAchievementStreak7 => 'A full week';
+
+  @override
+  String get kidsAchievementStreak30 => 'A month in a row';
+
+  @override
+  String get kidsAchievementFirstStar => 'First star';
+
+  @override
+  String get kidsAchievementStars10 => '10 stars';
+
+  @override
+  String get kidsAchievementStars50 => '50 stars';
+
+  @override
+  String get childDetailProgressTitle =>
+      'Progress, achievements and certificates';
+
+  @override
+  String get childDetailProgressUnavailable =>
+      'The child\'s progress hasn\'t arrived yet. It appears after the child opens the app online.';
+
+  @override
+  String get childDetailCertificatesEmpty => 'No certificates yet';
+
+  @override
+  String get childDetailCertificateOpenHint =>
+      'Tap a certificate to print or share it';
 
   @override
   String get dailyPlanRatingWeakDesc => 'Needed the Mushaf';

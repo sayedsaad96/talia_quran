@@ -5,6 +5,7 @@ import '../../../../core/services/daily_reading_log_service.dart';
 import '../../../../core/services/streak_service.dart';
 import '../../../../core/services/activity_event_recorder.dart';
 import '../../../../features/home/domain/entities/activity_event.dart';
+import '../../../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -46,6 +47,7 @@ class QuranPageCubit extends Cubit<QuranPageState> {
     this._streakService, [
     this._readingLog,
     this._activityRecorder,
+    this._kidsStreak,
   ]) : super(QuranPageInitial());
 
   final QuranRepository _repository;
@@ -53,6 +55,7 @@ class QuranPageCubit extends Cubit<QuranPageState> {
   final StreakService _streakService;
   final DailyReadingLogService? _readingLog;
   final ActivityEventRecorder? _activityRecorder;
+  final KidsStreakStore? _kidsStreak;
 
   Future<void> loadPage(int pageNumber) async {
     emit(QuranPageLoading());
@@ -134,6 +137,47 @@ class QuranPageCubit extends Cubit<QuranPageState> {
           startAyah: ayahs.isEmpty ? null : ayahs.first.numberInSurah,
           endAyah: ayahs.isEmpty ? null : ayahs.last.numberInSurah,
           pageNumber: pageNumber,
+        ),
+      );
+    } catch (_) {}
+    if (_isShowing(pageNumber)) {
+      emit(QuranPageLoaded(current.detail, isReadConfirmed: true));
+    }
+    return true;
+  }
+
+  /// Confirms a page read in the kids reader. Kids reading belongs to the
+  /// kids track only: its own streak and kids-tagged activity. The primary
+  /// learner's read pages, reading log, streak and daily wird stay untouched.
+  Future<bool> confirmKidsRead(int pageNumber) async {
+    final current = state;
+    if (current is! QuranPageLoaded ||
+        current.detail.pageNumber != pageNumber) {
+      return false;
+    }
+    if (current.isReadConfirmed) return true;
+
+    try {
+      await _kidsStreak?.recordActivity();
+    } catch (_) {
+      // Streak recording is supplementary and must not invalidate reading.
+    }
+    try {
+      final now = DateTime.now();
+      final ayahs = current.detail.ayahs;
+      await _activityRecorder?.record(
+        ActivityEvent(
+          occurredAt: now,
+          kind: ActivityEventKind.reading,
+          idempotencyKey:
+              'reading|kids|${ActivityEventRecorder.dayKey(now)}|$pageNumber',
+          surahId: current.detail.surahs.isEmpty
+              ? null
+              : current.detail.surahs.first.id,
+          startAyah: ayahs.isEmpty ? null : ayahs.first.numberInSurah,
+          endAyah: ayahs.isEmpty ? null : ayahs.last.numberInSurah,
+          pageNumber: pageNumber,
+          isKids: true,
         ),
       );
     } catch (_) {}

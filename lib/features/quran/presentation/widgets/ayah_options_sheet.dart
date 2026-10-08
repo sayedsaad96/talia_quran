@@ -34,12 +34,10 @@ class AyahOptionsSheet extends StatefulWidget {
     super.key,
     required this.ayah,
     required this.surahName,
-    required this.onInteraction,
   });
 
   final Ayah ayah;
   final String surahName;
-  final VoidCallback onInteraction;
 
   @override
   State<AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -47,7 +45,6 @@ class AyahOptionsSheet extends StatefulWidget {
 
 class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
   Future<void> _playAyah() async {
-    widget.onInteraction();
     final cubit = context.read<QuranAudioPlayerCubit>();
     if (cubit.state.scope == PlayScope.singleAyah &&
         cubit.state.isPlaying &&
@@ -60,7 +57,6 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
   }
 
   void _startLearning() {
-    widget.onInteraction();
     final router = GoRouter.of(context);
     final location = Uri(
       path: AppRoutes.memorizationV2Session,

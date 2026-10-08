@@ -97,19 +97,6 @@ class QuranReaderPage extends StatefulWidget {
   final QuranReaderMode readerMode;
   final KhatmahCubit? khatmahCubit;
 
-  /// In khatmah mode, listening to the recitation of the page on screen is
-  /// engagement with that page (B3). The page's minimum reading time still
-  /// has to elapse, so a brief tap on play never confirms a page. Free
-  /// reading keeps requiring a touch.
-  static bool countsAsListening({
-    required QuranReaderMode mode,
-    required QuranAudioPlayerState audio,
-    required int currentPage,
-  }) =>
-      mode == QuranReaderMode.khatmah &&
-      audio.isPlaying &&
-      audio.currentPageNumber == currentPage;
-
   @override
   State<QuranReaderPage> createState() => _QuranReaderPageState();
 }
@@ -145,6 +132,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   late bool _tajweed = _readTajweedPreference();
   final _showLongPressHintNotifier = ValueNotifier<bool>(false);
   final _showReadConfirmedNotifier = ValueNotifier<bool>(false);
+
+  /// Reading time left before the current page counts; null when no page is
+  /// being counted.
+  final _readCountdownNotifier = ValueNotifier<Duration?>(null);
 
   // Keep these for internal logic that doesn't need to trigger UI rebuild.
   int? _currentPageNumber;
@@ -227,12 +218,21 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     _isFocusModeNotifier.dispose();
     _showLongPressHintNotifier.dispose();
     _showReadConfirmedNotifier.dispose();
+    _readCountdownNotifier.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _khatmahCubit?.refreshDate();
+    if (state == AppLifecycleState.resumed) {
+      _khatmahCubit?.refreshDate();
+      // Time away from the app is not reading: count the page afresh.
+      final detail = _currentDetail;
+      if (detail != null) _startReadTimer(detail);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _cancelReadTimer();
+    }
   }
 
   void _openAtPage(int pageNumber) {
@@ -330,21 +330,18 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   }
 
   void _loadPage(int pageNumber) {
-    _readTimer?.cancel();
-    _readTimer = null;
+    _cancelReadTimer();
     unawaited(_quranPageCubit.loadPage(pageNumber));
   }
 
-  void _registerPageInteraction(int pageNumber, BuildContext context) {
-    final normalizedPage = _normalizePageNumber(pageNumber);
-    _readConfirmationGate.registerInteraction(normalizedPage);
-    _confirmReadIfReady(normalizedPage, context);
+  void _cancelReadTimer() {
+    _readTimer?.cancel();
+    _readTimer = null;
+    _readCountdownNotifier.value = null;
   }
 
-  void _confirmReadIfReady(int pageNumber, BuildContext context) {
-    if (!mounted || !context.mounted || _currentPageNumber != pageNumber) {
-      return;
-    }
+  void _confirmReadIfReady(int pageNumber) {
+    if (!mounted || _currentPageNumber != pageNumber) return;
     if (!_readConfirmationGate.shouldConfirm(pageNumber)) {
       return;
     }
@@ -470,10 +467,12 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     );
   }
 
-  void _startReadTimer(QuranPageDetail detail, BuildContext context) {
+  void _startReadTimer(QuranPageDetail detail) {
     final pageNumber = detail.pageNumber;
-    if (_currentPageNumber != pageNumber ||
+    if (!mounted ||
+        _currentPageNumber != pageNumber ||
         _readConfirmationGate.hasConfirmed(pageNumber) ||
+        _readConfirmationGate.hasPending(pageNumber) ||
         _readTimer != null) {
       return;
     }
@@ -482,15 +481,17 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       0,
       (sum, ayah) => sum + ayah.text.length,
     );
-    final requiredSeconds = (totalChars / 20).ceil().clamp(5, 60);
+    final required = Duration(
+      seconds: QuranReadConfirmationGate.requiredSeconds(totalChars),
+    );
 
-    _readTimer = Timer(Duration(seconds: requiredSeconds), () {
+    _readCountdownNotifier.value = required;
+    _readTimer = Timer(required, () {
       _readTimer = null;
-      if (!mounted || !context.mounted || _currentPageNumber != pageNumber) {
-        return;
-      }
+      if (!mounted || _currentPageNumber != pageNumber) return;
+      _readCountdownNotifier.value = null;
       _readConfirmationGate.registerTimerElapsed(pageNumber);
-      _confirmReadIfReady(pageNumber, context);
+      _confirmReadIfReady(pageNumber);
     });
   }
 
@@ -530,10 +531,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     int verseNumber,
     LongPressStartDetails _,
   ) async {
-    final pageNumber = _currentPageNumber;
-    if (pageNumber != null) {
-      _registerPageInteraction(pageNumber, context);
-    }
     final audioCubit = context.read<QuranAudioPlayerCubit>();
 
     // Fire-and-forget: opening the sheet must not wait on the platform
@@ -552,11 +549,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         child: AyahOptionsSheet(
           ayah: ayah,
           surahName: qcf.getSurahNameArabic(surahNumber),
-          onInteraction: () {
-            if (mounted && context.mounted && _currentPageNumber != null) {
-              _registerPageInteraction(_currentPageNumber!, context);
-            }
-          },
         ),
       ),
     );
@@ -660,15 +652,6 @@ class _QuranReaderPageState extends State<QuranReaderPage>
               audioState.currentPageNumber != _currentPageNumber) {
             _openAtPage(audioState.currentPageNumber!);
           }
-          final page = _currentPageNumber;
-          if (page != null &&
-              QuranReaderPage.countsAsListening(
-                mode: widget.readerMode,
-                audio: audioState,
-                currentPage: page,
-              )) {
-            _registerPageInteraction(page, context);
-          }
         },
         child: BlocConsumer<QuranPageCubit, QuranPageState>(
           listener: (context, state) {
@@ -678,13 +661,12 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                 final isNewlyConfirmed = _readConfirmationGate.markConfirmed(
                   state.detail.pageNumber,
                 );
-                _readTimer?.cancel();
-                _readTimer = null;
+                _cancelReadTimer();
                 if (isNewlyConfirmed) {
                   _showReadConfirmed();
                 }
               } else {
-                _startReadTimer(state.detail, context);
+                _startReadTimer(state.detail);
               }
 
               if (state.readConfirmationError != null) {
@@ -753,138 +735,136 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                         ValueListenableBuilder<bool>(
                           valueListenable: _isFocusModeNotifier,
                           builder: (context, isFocusMode, _) {
-                            return Listener(
-                              behavior: HitTestBehavior.translucent,
-                              onPointerDown: (_) =>
-                                  _registerPageInteraction(pageNumber, context),
-                              onPointerSignal: (_) =>
-                                  _registerPageInteraction(pageNumber, context),
-                              child: AppQuranPageView(
-                                pageController: _pageController!,
-                                highlights: currentHighlights,
-                                isDarkMode: isDark,
-                                isTajweed: _tajweed,
-                                pageBackgroundColor: bg,
-                                onPageChanged: (page) {
-                                  HapticFeedback.selectionClick();
-                                  // Only update notifier — no setState = no
-                                  // Scaffold rebuild during page turn animation.
-                                  _currentPageNumber = page;
-                                  _currentPageNotifier.value = page;
-                                  _saveCurrentPage(page);
-                                  _pageBookmarks = _bookmarksForPage(page);
-                                  _registerPageInteraction(page, context);
-                                  _loadPage(page);
-                                  unawaited(
-                                    qcf.QcfFontLoader.preloadPages(
-                                      page,
-                                      radius: 8,
-                                    ),
-                                  );
-                                },
-                                onLongPress:
-                                    (surahNumber, verseNumber, details) =>
-                                        _showAyahOptions(
-                                          context,
-                                          surahNumber,
-                                          verseNumber,
-                                          details,
-                                        ),
-                                topBar: isFocusMode
-                                    ? null
-                                    : Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (widget.readerMode ==
-                                              QuranReaderMode.khatmah)
-                                            KhatmahReaderSessionBar(
-                                              cubit: _khatmahCubit,
-                                              currentPage: pageNumber,
-                                            ),
-                                          ReaderTopBar(
-                                            surahName: firstSurah?.nameAr ?? '',
-                                            juzNumber: juzNumber,
-                                            pageNumber: pageNumber,
-                                            primary: accent,
-                                            bg: bg,
-                                            onBack: () {
-                                              if (context.canPop()) {
-                                                context.pop();
-                                              } else {
-                                                context.go('/');
-                                              }
-                                            },
-                                            onOpenMenu: () =>
-                                                ReaderOverflowSheet.show(
-                                                  context,
-                                                  onOpenNavigation: () =>
-                                                      _openQuickNav(
-                                                        context,
-                                                        pageNumber,
-                                                      ),
-                                                  tajweedEnabled: _tajweed,
-                                                  onTajweedChanged: _setTajweed,
-                                                  onEnterFocus: () {
-                                                    HapticFeedback.selectionClick();
-                                                    _isFocusModeNotifier.value =
-                                                        true;
-                                                  },
-                                                ),
-                                          ),
-                                          // Laid out below the header (not
-                                          // pinned at a fixed offset) so the
-                                          // taller khatmah header stays
-                                          // visible.
-                                          ValueListenableBuilder<bool>(
-                                            valueListenable:
-                                                _showLongPressHintNotifier,
-                                            builder: (context, show, _) {
-                                              if (!show) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              return Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: AppSpacing.md,
-                                                    ),
-                                                child: LongPressHintBanner(
-                                                  accent: accent,
-                                                  bg: bg,
-                                                  onDismiss:
-                                                      _dismissLongPressHint,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
+                            return AppQuranPageView(
+                              pageController: _pageController!,
+                              highlights: currentHighlights,
+                              isDarkMode: isDark,
+                              isTajweed: _tajweed,
+                              pageBackgroundColor: bg,
+                              onPageChanged: (page) {
+                                HapticFeedback.selectionClick();
+                                // Only update notifier — no setState = no
+                                // Scaffold rebuild during page turn animation.
+                                _currentPageNumber = page;
+                                _currentPageNotifier.value = page;
+                                _saveCurrentPage(page);
+                                _pageBookmarks = _bookmarksForPage(page);
+                                _loadPage(page);
+                                unawaited(
+                                  qcf.QcfFontLoader.preloadPages(
+                                    page,
+                                    radius: 8,
+                                  ),
+                                );
+                              },
+                              onLongPress:
+                                  (surahNumber, verseNumber, details) =>
+                                      _showAyahOptions(
+                                        context,
+                                        surahNumber,
+                                        verseNumber,
+                                        details,
                                       ),
-                                bottomBar: ValueListenableBuilder<bool>(
-                                  valueListenable: _showReadConfirmedNotifier,
-                                  builder: (context, showReadConfirmed, _) {
-                                    return Column(
+                              topBar: isFocusMode
+                                  ? null
+                                  : Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const ReaderDockedAudioBar(),
-                                        if (!isFocusMode)
-                                          ReaderFooter(
-                                            pageNumber: pageNumber,
-                                            hizbNumber:
-                                                MushafHizbHelper.getHizb(
+                                        if (widget.readerMode ==
+                                            QuranReaderMode.khatmah)
+                                          KhatmahReaderSessionBar(
+                                            cubit: _khatmahCubit,
+                                            currentPage: pageNumber,
+                                          ),
+                                        ReaderTopBar(
+                                          surahName: firstSurah?.nameAr ?? '',
+                                          juzNumber: juzNumber,
+                                          pageNumber: pageNumber,
+                                          primary: accent,
+                                          bg: bg,
+                                          onBack: () {
+                                            if (context.canPop()) {
+                                              context.pop();
+                                            } else {
+                                              context.go('/');
+                                            }
+                                          },
+                                          onOpenMenu: () =>
+                                              ReaderOverflowSheet.show(
+                                                context,
+                                                onOpenNavigation: () =>
+                                                    _openQuickNav(
+                                                      context,
+                                                      pageNumber,
+                                                    ),
+                                                tajweedEnabled: _tajweed,
+                                                onTajweedChanged: _setTajweed,
+                                                onEnterFocus: () {
+                                                  HapticFeedback.selectionClick();
+                                                  _isFocusModeNotifier.value =
+                                                      true;
+                                                },
+                                              ),
+                                        ),
+                                        // Laid out below the header (not
+                                        // pinned at a fixed offset) so the
+                                        // taller khatmah header stays
+                                        // visible.
+                                        ValueListenableBuilder<bool>(
+                                          valueListenable:
+                                              _showLongPressHintNotifier,
+                                          builder: (context, show, _) {
+                                            if (!show) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: AppSpacing.md,
+                                                  ),
+                                              child: LongPressHintBanner(
+                                                accent: accent,
+                                                bg: bg,
+                                                onDismiss:
+                                                    _dismissLongPressHint,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                              bottomBar: ValueListenableBuilder<bool>(
+                                valueListenable: _showReadConfirmedNotifier,
+                                builder: (context, showReadConfirmed, _) {
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const ReaderDockedAudioBar(),
+                                      if (!isFocusMode)
+                                        ValueListenableBuilder<Duration?>(
+                                          valueListenable:
+                                              _readCountdownNotifier,
+                                          builder: (context, countdown, _) =>
+                                              ReaderFooter(
+                                                pageNumber: pageNumber,
+                                                hizbNumber:
+                                                    MushafHizbHelper.getHizb(
+                                                      pageNumber,
+                                                    ),
+                                                accent: accent,
+                                                bg: bg,
+                                                showReadConfirmed:
+                                                    showReadConfirmed,
+                                                readCountdown: countdown,
+                                                onPageTap: () => _openQuickNav(
+                                                  context,
                                                   pageNumber,
                                                 ),
-                                            accent: accent,
-                                            bg: bg,
-                                            showReadConfirmed:
-                                                showReadConfirmed,
-                                            onPageTap: () => _openQuickNav(
-                                              context,
-                                              pageNumber,
-                                            ),
-                                          ),
-                                      ],
-                                    );
-                                  },
-                                ),
+                                              ),
+                                        ),
+                                    ],
+                                  );
+                                },
                               ),
                             );
                           },

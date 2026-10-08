@@ -158,6 +158,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  Widget footer({required bool confirmed, Duration? countdown}) => MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: ReaderFooter(
+        pageNumber: 3,
+        hizbNumber: 1,
+        accent: AppColors.primary,
+        bg: AppColors.parchmentLight,
+        showReadConfirmed: confirmed,
+        readCountdown: countdown,
+      ),
+    ),
+  );
+
+  testWidgets('ReaderFooter shows the page is still being counted', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      footer(confirmed: false, countdown: const Duration(seconds: 25)),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('تُحتسب الصفحة بعد قليل'), findsOneWidget);
+    expect(find.byKey(const Key('reader_read_countdown')), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 25));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('ReaderFooter hides the countdown once the page counts', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      footer(confirmed: true, countdown: const Duration(seconds: 25)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('تُحتسب الصفحة بعد قليل'), findsNothing);
+    expect(find.text('تم احتساب الصفحة'), findsOneWidget);
+  });
+
   testWidgets('ReaderDockedAudioBar renders nothing when idle', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

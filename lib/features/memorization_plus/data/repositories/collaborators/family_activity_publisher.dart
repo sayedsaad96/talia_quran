@@ -22,6 +22,8 @@ class FamilyActivityInputs {
     required this.todayReadPages,
     required this.events,
     required this.certificates,
+    this.weekReadPages = const {},
+    this.achievements = const {},
   });
 
   final int currentStreak;
@@ -36,6 +38,12 @@ class FamilyActivityInputs {
   final Set<int> todayReadPages;
   final List<ActivityEvent> events;
   final List<CertificateAward> certificates;
+
+  /// Distinct Mushaf pages confirmed in the last 7 local days.
+  final Set<int> weekReadPages;
+
+  /// Kids milestones reached (id name → first date), for the guardian's view.
+  final Map<String, DateTime> achievements;
 }
 
 typedef FamilyActivityInputsLoader = Future<FamilyActivityInputs> Function();
@@ -57,6 +65,7 @@ class FamilyActivityPublisher {
   static const deviceIdKey = InstallDeviceId.key;
   static const maxActivities = 100;
   static const maxCertificates = 100;
+  static const maxAchievements = 50;
   static const _maxCount = 9999999999;
   static const _lastPage = 604;
 
@@ -134,10 +143,13 @@ class FamilyActivityPublisher {
       ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
     final certificates = [...inputs.certificates]
       ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
+    final achievements = inputs.achievements.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     return {
       'day_key': today,
       'read_pages_count': _pages(inputs.readPages),
       'today_read_pages_count': _pages(inputs.todayReadPages),
+      'week_read_pages_count': _pages(inputs.weekReadPages),
       'total_xp': _count(inputs.totalXp),
       'current_streak': _count(inputs.currentStreak),
       'longest_streak': _count(inputs.longestStreak),
@@ -154,6 +166,12 @@ class FamilyActivityPublisher {
             'cert_type': cert.type.name,
             'earned_at': cert.earnedAt.toUtc().toIso8601String(),
           },
+      ],
+      // Optional keys the server stores as-is (it validates only the
+      // required ones), so the guardian sees the child's milestones.
+      'achievements': [
+        for (final entry in achievements.take(maxAchievements))
+          {'id': entry.key, 'at': entry.value.toUtc().toIso8601String()},
       ],
     };
   }

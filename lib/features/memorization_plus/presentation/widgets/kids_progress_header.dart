@@ -20,6 +20,7 @@ class KidsProgressHeader extends StatelessWidget {
     this.onAvatarTap,
     this.onSettingsTap,
     this.onTreasuresTap,
+    this.onProgressTap,
   });
 
   final KidsProgress progress;
@@ -29,6 +30,9 @@ class KidsProgressHeader extends StatelessWidget {
 
   /// Opens «كنوزي» (regions and certificates). No chip when null.
   final VoidCallback? onTreasuresTap;
+
+  /// Opens the kids «تقدّمي» page. No chip when null.
+  final VoidCallback? onProgressTap;
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +171,31 @@ class KidsProgressHeader extends StatelessWidget {
                 starsEarned: progress.starsEarned,
                 streakDays: progress.currentStreak,
               ),
-              if (onTreasuresTap != null) ...[
+              if (onTreasuresTap != null || onProgressTap != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                _TreasuresChip(onTap: onTreasuresTap!),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      if (onTreasuresTap != null)
+                        _HeaderChip(
+                          key: const ValueKey('kids-home-treasures'),
+                          icon: TaliaKidsIcons.certificate,
+                          label: l10n.kidsTreasuresTitle,
+                          onTap: onTreasuresTap!,
+                        ),
+                      if (onProgressTap != null)
+                        _HeaderChip(
+                          key: const ValueKey('kids-home-progress'),
+                          icon: TaliaKidsIcons.trophy,
+                          label: l10n.kidsProgressTitle,
+                          onTap: onProgressTap!,
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ],
           ),
@@ -180,57 +206,56 @@ class KidsProgressHeader extends StatelessWidget {
 }
 
 /// «كنوزي» entry: a gold-trimmed chip with a 48 dp touch target.
-class _TreasuresChip extends StatelessWidget {
-  const _TreasuresChip({required this.onTap});
+class _HeaderChip extends StatelessWidget {
+  const _HeaderChip({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: const ValueKey('kids-home-treasures'),
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: KidsTheme.goldStar.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            border: Border.all(
+              color: KidsTheme.goldStar.withValues(alpha: 0.45),
             ),
-            decoration: BoxDecoration(
-              color: KidsTheme.goldStar.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              border: Border.all(
-                color: KidsTheme.goldStar.withValues(alpha: 0.45),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const TaliaIcon(
-                  TaliaKidsIcons.certificate,
-                  color: KidsTheme.goldStar,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Flexible(
-                  child: Text(
-                    context.l10n.kidsTreasuresTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0,
-                    ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TaliaIcon(icon, color: KidsTheme.goldStar, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

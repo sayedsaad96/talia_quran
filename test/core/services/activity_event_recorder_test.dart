@@ -12,7 +12,7 @@ class _FakeFeed implements ActivityFeedRepository {
   final appended = <ActivityEvent>[];
 
   @override
-  Future<void> append(ActivityEvent event) async {
+  Future<void> append(ActivityEvent event, {bool replace = false}) async {
     if (fail) throw StateError('isar');
     appended.add(event);
   }
@@ -21,7 +21,10 @@ class _FakeFeed implements ActivityFeedRepository {
   Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => {};
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20}) async => appended;
+  Future<List<ActivityEvent>> recent({
+    int limit = 20,
+    bool kids = false,
+  }) async => appended;
 }
 
 ActivityEvent _event() => ActivityEvent(

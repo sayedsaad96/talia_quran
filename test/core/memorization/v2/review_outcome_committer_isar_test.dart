@@ -13,6 +13,9 @@ import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
+import 'package:talia_quran/core/services/activity_event_recorder.dart';
+import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
+import 'package:talia_quran/features/home/domain/repositories/activity_feed_repository.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
@@ -116,6 +119,44 @@ void main() {
         bus.dispose();
       },
     );
+
+    test('each passed ayah extends the recent-activity entry', () async {
+      final feed = _MemoryFeed();
+      final recording = V2ReviewOutcomeCommitter(
+        isar: isar,
+        owner: const FixedRecordOwnerProvider('owner-a'),
+        scheduler: const ScheduleNextReviewUsecase(),
+        now: () => DateTime.utc(2026, 9, 8, 12),
+        activityRecorder: ActivityEventRecorder(feed),
+      );
+
+      await recording.commitAutomaticPass(
+        previousState: _recitingState,
+        nextState: _nextState,
+        taskId: 'ayah-1',
+      );
+      expect(feed.rows.values.single.endAyah, 1);
+
+      await recording.commitAutomaticPass(
+        previousState: _recitingState.copyWith(currentAyahIndex: 1),
+        nextState: _nextState.copyWith(passedAyahNumbers: {1, 2}),
+        taskId: 'ayah-2',
+      );
+      // A retry of the same task adds nothing.
+      await recording.commitAutomaticPass(
+        previousState: _recitingState.copyWith(currentAyahIndex: 1),
+        nextState: _nextState.copyWith(passedAyahNumbers: {1, 2}),
+        taskId: 'ayah-2',
+      );
+
+      final entry = feed.rows.values.single;
+      expect(entry.kind, ActivityEventKind.memorize);
+      expect(entry.surahId, 1);
+      expect(entry.startAyah, 1);
+      expect(entry.endAyah, 2);
+      expect(entry.isKids, isFalse);
+      expect(feed.writes, 2);
+    });
 
     test('outcome checkpoints preserve the session launch context', () async {
       await isar.writeTxn(() async {
@@ -483,3 +524,27 @@ const _nextState = V2SessionState(
   failureTracker: V2AyahFailureTracker.empty,
   blockReviewRequired: false,
 );
+
+class _MemoryFeed implements ActivityFeedRepository {
+  final rows = <String, ActivityEvent>{};
+  int writes = 0;
+
+  @override
+  Future<void> append(ActivityEvent event, {bool replace = false}) async {
+    writes++;
+    if (replace || !rows.containsKey(event.idempotencyKey)) {
+      rows[event.idempotencyKey] = event;
+    }
+  }
+
+  @override
+  Future<List<ActivityEvent>> recent({
+    int limit = 20,
+    bool kids = false,
+  }) async => rows.values.toList();
+
+  @override
+  Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => {
+    for (final event in rows.values) event.kind,
+  };
+}

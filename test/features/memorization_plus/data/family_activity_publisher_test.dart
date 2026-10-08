@@ -145,6 +145,42 @@ void main() {
     });
   });
 
+  group('kids progress extras', () {
+    test('sends the week pages and the unlocked kids achievements', () {
+      final snapshot = FamilyActivityPublisher.buildSnapshot(
+        FamilyActivityInputs(
+          currentStreak: 3,
+          longestStreak: 5,
+          totalXp: 0,
+          activityByDay: const {},
+          readPages: const {1, 2, 3},
+          todayReadPages: const {3},
+          events: const [],
+          certificates: const [],
+          weekReadPages: const {2, 3, 700},
+          achievements: {
+            'firstAyah': DateTime.utc(2026, 9, 1),
+            'pages10': DateTime.utc(2026, 10, 2, 8),
+          },
+        ),
+        _now,
+      );
+
+      expect(snapshot['week_read_pages_count'], 2);
+      expect(snapshot['achievements'], [
+        {'id': 'pages10', 'at': '2026-10-02T08:00:00.000Z'},
+        {'id': 'firstAyah', 'at': '2026-09-01T00:00:00.000Z'},
+      ]);
+    });
+
+    test('older inputs without the extras still build', () {
+      final snapshot = FamilyActivityPublisher.buildSnapshot(_inputs(), _now);
+
+      expect(snapshot['week_read_pages_count'], 0);
+      expect(snapshot['achievements'], isEmpty);
+    });
+  });
+
   group('publish', () {
     test('sends once and skips an unchanged snapshot', () async {
       final calls = <Map<String, dynamic>>[];

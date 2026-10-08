@@ -9,21 +9,26 @@ class ActivityFeedRepositoryImpl implements ActivityFeedRepository {
 
   final Isar _isar;
 
+  /// Kids rows written before the [ActivityEventIsar.isKids] tag existed.
+  static const _legacyKidsKeyPrefix = 'memorize|kids|';
+
   @override
-  Future<void> append(ActivityEvent event) async {
+  Future<void> append(ActivityEvent event, {bool replace = false}) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.activityEventIsars
           .filter()
           .idempotencyKeyEqualTo(event.idempotencyKey)
           .findFirst();
-      if (existing != null) return;
+      if (existing != null && !replace) return;
       final row = ActivityEventIsar()
+        ..id = existing?.id ?? Isar.autoIncrement
         ..occurredAt = event.occurredAt.toUtc()
         ..kindIndex = event.kind.index
         ..surahId = event.surahId
         ..startAyah = event.startAyah
         ..endAyah = event.endAyah
         ..pageNumber = event.pageNumber
+        ..isKids = event.isKids
         ..idempotencyKey = event.idempotencyKey;
       await _isar.activityEventIsars.put(row);
     });
@@ -37,34 +42,51 @@ class ActivityFeedRepositoryImpl implements ActivityFeedRepository {
         .findAll();
     return {
       for (final row in rows)
-        ActivityEventKind.values[row.kindIndex.clamp(
-          0,
-          ActivityEventKind.values.length - 1,
-        )],
+        if (!_isKidsRow(row)) _kindOf(row),
     };
   }
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20}) async {
-    final rows = await _isar.activityEventIsars
-        .where()
-        .sortByOccurredAtDesc()
-        .limit(limit)
-        .findAll();
+  Future<List<ActivityEvent>> recent({
+    int limit = 20,
+    bool kids = false,
+  }) async {
+    final query = kids
+        ? _isar.activityEventIsars.filter().group(
+            (q) => q
+                .isKidsEqualTo(true)
+                .or()
+                .idempotencyKeyStartsWith(_legacyKidsKeyPrefix),
+          )
+        : _isar.activityEventIsars
+              .filter()
+              .not()
+              .isKidsEqualTo(true)
+              .and()
+              .not()
+              .idempotencyKeyStartsWith(_legacyKidsKeyPrefix);
+    final rows = await query.sortByOccurredAtDesc().limit(limit).findAll();
     return [
       for (final row in rows)
         ActivityEvent(
           occurredAt: row.occurredAt.toLocal(),
-          kind: ActivityEventKind.values[row.kindIndex.clamp(
-            0,
-            ActivityEventKind.values.length - 1,
-          )],
+          kind: _kindOf(row),
           idempotencyKey: row.idempotencyKey,
           surahId: row.surahId,
           startAyah: row.startAyah,
           endAyah: row.endAyah,
           pageNumber: row.pageNumber,
+          isKids: _isKidsRow(row),
         ),
     ];
   }
+
+  static bool _isKidsRow(ActivityEventIsar row) =>
+      row.isKids == true || row.idempotencyKey.startsWith(_legacyKidsKeyPrefix);
+
+  static ActivityEventKind _kindOf(ActivityEventIsar row) =>
+      ActivityEventKind.values[row.kindIndex.clamp(
+        0,
+        ActivityEventKind.values.length - 1,
+      )];
 }

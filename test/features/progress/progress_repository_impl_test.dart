@@ -109,6 +109,32 @@ void main() {
       expect(progress.learningAyahs, 1);
     });
 
+    test('reads adult progress even when the profile is a child', () async {
+      final memPlus = _FakeMemPlusDatasource(
+        [_reviewRecord(1, 1)],
+        MemorizationProfileModel.fromEntity(
+          MemorizationProfile.empty().copyWith(
+            selectedPath: MemorizationPath.child,
+          ),
+        ),
+      );
+      final repository = ProgressRepositoryImpl(
+        _FakeProgressDatasource(),
+        memPlus,
+        _FakeQuranDatasource(),
+        const _FakeStreakReader(),
+        ProgressEventsBus(),
+      );
+
+      final result = await repository.getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+
+      expect(memPlus.requestedScopes, [ReviewRecordReadScope.adult]);
+      expect(progress.memorizedAyahs, 1);
+      expect(progress.kidsPoints, 0);
+      expect(memPlus.kidsProgressReads, 0);
+    });
+
     group('juz_amma achievement', () {
       AyahModel ayah(int surahId, int n, int juz) => AyahModel(
         number: surahId * 10 + n,
@@ -206,9 +232,12 @@ AyahReviewRecordModel _reviewRecord(int surahId, int ayahNumber) {
 }
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
-  _FakeMemPlusDatasource([this.records = const []]);
+  _FakeMemPlusDatasource([this.records = const [], this.profile]);
 
   final List<AyahReviewRecordModel> records;
+  final MemorizationProfileModel? profile;
+  final requestedScopes = <ReviewRecordReadScope>[];
+  int kidsProgressReads = 0;
 
   @override
   Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
@@ -220,7 +249,7 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<MemorizationProfileModel> getMemorizationProfile() async =>
-      MemorizationProfileModel.empty();
+      profile ?? MemorizationProfileModel.empty();
 
   @override
   Future<void> saveMemorizationProfile(
@@ -261,7 +290,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<List<AyahReviewRecordModel>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
     bool includeAllAudiences = false,
-  }) async => records;
+  }) async {
+    requestedScopes.add(scope);
+    return records;
+  }
 
   @override
   Future<DailyPlanModel?> getCachedDailyPlan() async => null;
@@ -270,8 +302,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<CustomMemorizationPlanModel?> getCustomPlan() async => null;
 
   @override
-  Future<KidsProgressModel> getKidsProgress() async =>
-      const KidsProgressModel.empty();
+  Future<KidsProgressModel> getKidsProgress() async {
+    kidsProgressReads++;
+    return const KidsProgressModel.empty();
+  }
 
   @override
   Future<AyahReviewRecordModel?> getReviewRecord(

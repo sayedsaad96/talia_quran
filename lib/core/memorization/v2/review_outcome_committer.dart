@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:isar_community/isar.dart';
 
 import '../../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -557,17 +559,31 @@ final class V2ReviewOutcomeCommitter {
     required V2SessionState state,
   }) async {
     if (result.alreadyCommitted) return;
-    if (state.phase != V2SessionPhase.completed) return;
-    final ayahs = state.blockAyahs;
+    // Memorization shows on home as soon as an ayah passes, and its entry
+    // grows with each passed ayah. A block review is logged once complete.
+    final int? startAyah;
+    final int? endAyah;
+    if (kind == ActivityEventKind.memorize) {
+      final passed = state.passedAyahNumbers;
+      if (passed.isEmpty) return;
+      startAyah = passed.reduce(min);
+      endAyah = passed.reduce(max);
+    } else {
+      if (state.phase != V2SessionPhase.completed) return;
+      final ayahs = state.blockAyahs;
+      startAyah = ayahs.isEmpty ? null : ayahs.first.numberInSurah;
+      endAyah = ayahs.isEmpty ? null : ayahs.last.numberInSurah;
+    }
     await _activityRecorder?.record(
       ActivityEvent(
         occurredAt: _now(),
         kind: kind,
         idempotencyKey: '${kind.name}|${result.sessionId}|block',
         surahId: state.surahId,
-        startAyah: ayahs.isEmpty ? null : ayahs.first.numberInSurah,
-        endAyah: ayahs.isEmpty ? null : ayahs.last.numberInSurah,
+        startAyah: startAyah,
+        endAyah: endAyah,
       ),
+      replace: kind == ActivityEventKind.memorize,
     );
   }
 

@@ -19,7 +19,6 @@ class ProgressLoaded extends ProgressState {
   const ProgressLoaded({
     required this.progress,
     this.selectedPath,
-    this.isKids = false,
     this.activityCountsByDay = const {},
     this.activityStartDate,
     this.totalXp = 0,
@@ -27,7 +26,6 @@ class ProgressLoaded extends ProgressState {
   });
   final OverallProgress progress;
   final MemorizationPath? selectedPath;
-  final bool isKids;
   final Map<String, int> activityCountsByDay;
   final DateTime? activityStartDate;
   final int totalXp;
@@ -39,7 +37,6 @@ class ProgressLoaded extends ProgressState {
     return ProgressLoaded(
       progress: progress,
       selectedPath: selectedPath,
-      isKids: isKids,
       activityCountsByDay: activityCountsByDay,
       activityStartDate: activityStartDate,
       totalXp: totalXp ?? this.totalXp,
@@ -51,7 +48,6 @@ class ProgressLoaded extends ProgressState {
   List<Object?> get props => [
     progress,
     selectedPath,
-    isKids,
     activityCountsByDay,
     activityStartDate,
     totalXp,

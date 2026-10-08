@@ -62,5 +62,74 @@ void main() {
       expect(recent.first.kind, ActivityEventKind.khatmah);
       expect(recent.last.surahId, 1);
     });
+
+    test('replace extends an entry with the same key', () async {
+      ActivityEvent block(int end, int hour) => ActivityEvent(
+        occurredAt: DateTime.utc(2026, 9, 9, hour),
+        kind: ActivityEventKind.memorize,
+        idempotencyKey: 'memorize|session-1|block',
+        surahId: 1,
+        startAyah: 1,
+        endAyah: end,
+      );
+
+      await repository.append(block(1, 10));
+      await repository.append(block(2, 11));
+      expect((await repository.recent()).single.endAyah, 1);
+
+      await repository.append(block(3, 12), replace: true);
+
+      final recent = await repository.recent();
+      expect(await isar.activityEventIsars.count(), 1);
+      expect(recent.single.endAyah, 3);
+      expect(recent.single.occurredAt, DateTime.utc(2026, 9, 9, 12).toLocal());
+    });
+
+    test('keeps the kids track out of the adult feed', () async {
+      await repository.append(
+        ActivityEvent(
+          occurredAt: DateTime.utc(2026, 9, 9, 10),
+          kind: ActivityEventKind.reading,
+          idempotencyKey: 'reading|20260909|1',
+          pageNumber: 1,
+        ),
+      );
+      await repository.append(
+        ActivityEvent(
+          occurredAt: DateTime.utc(2026, 9, 9, 11),
+          kind: ActivityEventKind.reading,
+          idempotencyKey: 'reading|kids|20260909|2',
+          pageNumber: 2,
+          isKids: true,
+        ),
+      );
+      // Written before the audience tag existed; recognised by its key.
+      await isar.writeTxn(
+        () => isar.activityEventIsars.put(
+          ActivityEventIsar()
+            ..occurredAt = DateTime.utc(2026, 9, 9, 12)
+            ..kindIndex = ActivityEventKind.memorize.index
+            ..surahId = 114
+            ..startAyah = 1
+            ..endAyah = 1
+            ..idempotencyKey = 'memorize|kids|20260909|114:1',
+        ),
+      );
+
+      final adult = await repository.recent();
+      final kids = await repository.recent(kids: true);
+
+      expect(adult.map((e) => e.idempotencyKey), ['reading|20260909|1']);
+      expect(adult.single.isKids, isFalse);
+      expect(kids.map((e) => e.idempotencyKey), [
+        'memorize|kids|20260909|114:1',
+        'reading|kids|20260909|2',
+      ]);
+      expect(kids.every((e) => e.isKids), isTrue);
+      expect(
+        await repository.kindsSince(DateTime.utc(2026, 9, 9)),
+        {ActivityEventKind.reading},
+      );
+    });
   });
 }

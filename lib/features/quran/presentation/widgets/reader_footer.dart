@@ -21,6 +21,7 @@ class ReaderFooter extends StatelessWidget {
     required this.accent,
     required this.bg,
     required this.showReadConfirmed,
+    this.readCountdown,
     this.onPageTap,
   });
 
@@ -29,6 +30,10 @@ class ReaderFooter extends StatelessWidget {
   final Color accent;
   final Color bg;
   final bool showReadConfirmed;
+
+  /// Reading time still needed before the page counts. Non-null while the
+  /// page is being counted; a ring fills over this duration.
+  final Duration? readCountdown;
 
   /// Opens the Quick Navigation sheet. Null keeps the indicator static.
   final VoidCallback? onPageTap;
@@ -87,33 +92,101 @@ class ReaderFooter extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: AnimatedOpacity(
-              opacity: showReadConfirmed ? 1 : 0,
-              duration: disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(TaliaIcons.checkCircleFilled, color: accent, size: 16),
-                    const SizedBox(width: AppSpacing.xs),
-                    Flexible(
-                      child: Text(
-                        context.l10n.readPageConfirmed,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.titleSmall.copyWith(
-                          fontFamily: 'Amiri',
-                          color: accent,
-                          fontWeight: FontWeight.w700,
-                          height: 1.5,
-                        ),
+            child: !showReadConfirmed && readCountdown != null
+                ? _ReadCountdown(
+                    key: ValueKey(pageNumber),
+                    duration: readCountdown!,
+                    accent: accent,
+                  )
+                : AnimatedOpacity(
+                    opacity: showReadConfirmed ? 1 : 0,
+                    duration: disableAnimations
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
+                    child: _ReadStatus(
+                      icon: Icon(
+                        TaliaIcons.checkCircleFilled,
+                        color: accent,
+                        size: 16,
                       ),
+                      label: context.l10n.readPageConfirmed,
+                      color: accent,
                     ),
-                  ],
-                ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A small ring that fills while the page's reading time runs.
+class _ReadCountdown extends StatelessWidget {
+  const _ReadCountdown({
+    super.key,
+    required this.duration,
+    required this.accent,
+  });
+
+  final Duration duration;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = accent.withValues(alpha: 0.7);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    return _ReadStatus(
+      icon: SizedBox(
+        key: const Key('reader_read_countdown'),
+        width: 14,
+        height: 14,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: disableAnimations ? Duration.zero : duration,
+          builder: (context, value, _) => CircularProgressIndicator(
+            value: value,
+            strokeWidth: 2,
+            color: muted,
+            backgroundColor: accent.withValues(alpha: 0.15),
+          ),
+        ),
+      ),
+      label: context.l10n.readPageCounting,
+      color: muted,
+    );
+  }
+}
+
+class _ReadStatus extends StatelessWidget {
+  const _ReadStatus({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final Widget icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.titleSmall.copyWith(
+                fontFamily: 'Amiri',
+                color: color,
+                fontWeight: FontWeight.w700,
+                height: 1.5,
               ),
             ),
           ),

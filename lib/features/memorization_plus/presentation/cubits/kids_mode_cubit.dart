@@ -22,10 +22,10 @@ import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/activity_event_recorder.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
-import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
 import '../../../../core/utils/talia_logger.dart';
 import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
+import '../../data/datasources/kids_streak_store.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_recalled_words.dart';
@@ -104,7 +104,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final QuranRepository _quranRepository;
   final V2SessionEngine _sessionEngine;
   final V2SessionReviewAdapter _reviewAdapter;
-  final StreakService _streakService;
+
+  /// The kids track's own streak; the shared adult streak is never touched.
+  final KidsStreakStore _streakService;
   final AppSessionService? _appSessionService;
   final KidsGuardianPinVerifier? _guardianPinVerifier;
   final KidsSessionPolicyLoader? _sessionPolicyLoader;
@@ -1022,6 +1024,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           surahId: surahId,
           startAyah: ayahNumber,
           endAyah: ayahNumber,
+          isKids: true,
         ),
       );
     } catch (_) {

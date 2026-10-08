@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../home/domain/entities/activity_event.dart';
+
 /// Latest family activity snapshot a linked child device published through
 /// `publish_child_family_activity`, as returned in the dashboard's
 /// `activity_snapshot`. Absent (null on [RemoteChildSummary]) until the child
@@ -15,6 +17,9 @@ class RemoteChildActivity extends Equatable {
     required this.readPagesCount,
     required this.todayActivityCount,
     required this.todayReadPagesCount,
+    this.weekReadPagesCount,
+    this.achievements = const {},
+    this.events = const [],
   });
 
   /// Server time the snapshot was last accepted.
@@ -29,6 +34,16 @@ class RemoteChildActivity extends Equatable {
   final int readPagesCount;
   final int todayActivityCount;
   final int todayReadPagesCount;
+
+  /// Distinct pages confirmed in the child's last 7 days; null when the child
+  /// device predates this field.
+  final int? weekReadPagesCount;
+
+  /// Kids milestones reached (id name → first date).
+  final Map<String, DateTime> achievements;
+
+  /// The child's recent kids activity, newest first.
+  final List<ActivityEvent> events;
 
   /// Whether the "today" counters describe [now]'s calendar day.
   bool isForDay(DateTime now) {
@@ -51,5 +66,8 @@ class RemoteChildActivity extends Equatable {
     readPagesCount,
     todayActivityCount,
     todayReadPagesCount,
+    weekReadPagesCount,
+    achievements,
+    events,
   ];
 }

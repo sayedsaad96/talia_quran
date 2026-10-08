@@ -11,6 +11,7 @@ class ActivityEvent extends Equatable {
     this.startAyah,
     this.endAyah,
     this.pageNumber,
+    this.isKids = false,
   });
 
   final DateTime occurredAt;
@@ -21,6 +22,10 @@ class ActivityEvent extends Equatable {
   final int? endAyah;
   final int? pageNumber;
 
+  /// Logged by the kids track. Kids entries never appear in the adult home
+  /// feed; they feed the guardian's view of the child instead.
+  final bool isKids;
+
   @override
   List<Object?> get props => [
     occurredAt,
@@ -30,5 +35,6 @@ class ActivityEvent extends Equatable {
     startAyah,
     endAyah,
     pageNumber,
+    isKids,
   ];
 }

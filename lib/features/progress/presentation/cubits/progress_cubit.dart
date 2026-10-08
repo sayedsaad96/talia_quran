@@ -90,7 +90,6 @@ class ProgressCubit extends Cubit<ProgressState> {
         ProgressLoaded(
           progress: progress,
           selectedPath: profile?.selectedPath,
-          isKids: _pathResolver.isKids(profile),
           activityCountsByDay: heatmap?.countsByDay ?? const {},
           activityStartDate: heatmap?.startDate,
           totalXp: totalXp,

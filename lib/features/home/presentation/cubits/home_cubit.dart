@@ -331,12 +331,10 @@ class HomeCubit extends Cubit<HomeState> {
 
     var reviewRecords = const <AyahReviewRecord>[];
     try {
+      // Home shows the primary (adult) learner only; kids progress stays on
+      // the kids screens.
       final reviewRecordsResult = await _memorizationRepository
-          .getAllReviewRecords(
-            scope: isKids
-                ? ReviewRecordReadScope.kids
-                : ReviewRecordReadScope.adult,
-          );
+          .getAllReviewRecords(scope: ReviewRecordReadScope.adult);
       reviewRecords = reviewRecordsResult.getOrElse(() => []);
     } catch (error, stackTrace) {
       TaliaLogger.w('Failed to load home review records', error, stackTrace);

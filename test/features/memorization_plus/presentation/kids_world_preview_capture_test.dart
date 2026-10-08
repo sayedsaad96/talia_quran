@@ -26,6 +26,10 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_g
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_treasures_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_progress_page.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_achievements.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_progress_snapshot.dart';
+import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_talia_companion.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -213,6 +217,59 @@ void main() {
         ),
       ],
       onBack: () {},
+    ),
+    'progress': () => KidsProgressContent(
+      snapshot: KidsProgressSnapshot(
+        level: 2,
+        levelProgress: 0.4,
+        points: 150,
+        stars: 7,
+        currentStreak: 3,
+        longestStreak: 4,
+        memorizedAyahs: 12,
+        weekPages: 5,
+        achievements: KidsAchievementCatalog.evaluate(
+          const KidsAchievementInputs(
+            memorizedAyahs: 12,
+            memorizedSurahs: 1,
+            readPages: 5,
+            longestStreak: 4,
+            stars: 7,
+          ),
+          now: DateTime.utc(2026, 10, 2),
+        ),
+        certificates: [
+          CertificateAward(
+            id: 'cert_surah_114',
+            titleAr: 'شهادة حفظ سورة الناس',
+            type: CertificateType.surah,
+            earnedAt: DateTime(2026, 10, 1),
+            surahId: 114,
+            surahNameAr: 'الناس',
+            surahNameEn: 'An-Nas',
+          ),
+        ],
+        recentActivity: [
+          ActivityEvent(
+            occurredAt: DateTime.now().subtract(const Duration(hours: 2)),
+            kind: ActivityEventKind.memorize,
+            idempotencyKey: 'memorize|kids|20261002|114:3',
+            surahId: 114,
+            startAyah: 1,
+            endAyah: 3,
+            isKids: true,
+          ),
+          ActivityEvent(
+            occurredAt: DateTime.now().subtract(const Duration(days: 1)),
+            kind: ActivityEventKind.reading,
+            idempotencyKey: 'reading|kids|20261001|604',
+            pageNumber: 604,
+            isKids: true,
+          ),
+        ],
+      ),
+      onBack: () {},
+      now: DateTime.utc(2026, 10, 2, 12),
     ),
     'journey': () => KidsGamifiedJourneyContent(
       state: _journey,

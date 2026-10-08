@@ -439,3 +439,73 @@ class _Panel extends StatelessWidget {
     );
   }
 }
+
+/// The child's kids progress: read on this device for a local child, or from
+/// the family dashboard for a linked child on another device.
+class _ChildProgressSection extends StatefulWidget {
+  const _ChildProgressSection({required this.child});
+
+  final FamilyChildEntry child;
+
+  @override
+  State<_ChildProgressSection> createState() => _ChildProgressSectionState();
+}
+
+class _ChildProgressSectionState extends State<_ChildProgressSection> {
+  Future<KidsProgressSnapshot?>? _local;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.child.isLocal) _local = _loadLocal();
+  }
+
+  Future<KidsProgressSnapshot?> _loadLocal() async {
+    if (!getIt.isRegistered<KidsProgressSnapshotLoader>()) return null;
+    try {
+      return await getIt<KidsProgressSnapshotLoader>().load();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final name = widget.child.shownName(l10n);
+    final unavailable = Text(
+      l10n.childDetailProgressUnavailable,
+      style: AppTypography.bodySmall.copyWith(
+        color: context.tokens.textSecondary,
+      ),
+    );
+    final summary = widget.child.remoteSummary;
+    if (!widget.child.isLocal) {
+      if (summary == null) return unavailable;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (summary.activity == null) ...[
+            unavailable,
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          ChildProgressPanel(
+            snapshot: remoteKidsProgressSnapshot(summary, now: DateTime.now()),
+            childName: name,
+          ),
+        ],
+      );
+    }
+    return FutureBuilder<KidsProgressSnapshot?>(
+      future: _local,
+      builder: (context, result) {
+        if (result.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final snapshot = result.data;
+        if (snapshot == null) return unavailable;
+        return ChildProgressPanel(snapshot: snapshot, childName: name);
+      },
+    );
+  }
+}

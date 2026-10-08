@@ -11,9 +11,10 @@ class ActivityEventRecorder {
   final ActivityFeedRepository _repository;
   final ProgressEventsBus? _progressEvents;
 
-  Future<void> record(ActivityEvent event) async {
+  /// Appends [event]; with [replace], overwrites the entry with its key.
+  Future<void> record(ActivityEvent event, {bool replace = false}) async {
     try {
-      await _repository.append(event);
+      await _repository.append(event, replace: replace);
       _progressEvents?.notify(ProgressChangedReason.activityFeed);
     } catch (_) {}
   }

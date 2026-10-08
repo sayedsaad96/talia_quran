@@ -247,6 +247,10 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
               if (!context.mounted) return;
               await context.push(AppRoutes.memorizationPlusKidsTreasures);
             }),
+            onProgressTap: () => _openDestination(() async {
+              if (!context.mounted) return;
+              await context.push(AppRoutes.memorizationPlusKidsProgress);
+            }),
           );
         },
       ),
@@ -324,6 +328,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onPathSettingsTap,
     this.onReadingMissionTap,
     this.onTreasuresTap,
+    this.onProgressTap,
     this.onHomeMissionReport,
     this.taliaHappy = false,
   });
@@ -341,6 +346,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   /// Opens «كنوزي» from the progress header chip.
   final VoidCallback? onTreasuresTap;
+  final VoidCallback? onProgressTap;
 
   /// «أنجزتها!» on the home-mission card.
   final void Function(String missionId)? onHomeMissionReport;
@@ -374,6 +380,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
                         onTreasuresTap: onTreasuresTap,
+                        onProgressTap: onProgressTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       if (taliaHappy)

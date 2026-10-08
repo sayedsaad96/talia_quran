@@ -252,7 +252,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
           )) {
             return false;
           }
-          return _quranPageCubit.confirmRead(page);
+          return _quranPageCubit.confirmKidsRead(page);
         },
         store: getIt<KidsReadingReceiptStore>(),
       );

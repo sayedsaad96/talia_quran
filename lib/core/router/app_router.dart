@@ -48,6 +48,7 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_home_p
 import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_progress_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
@@ -102,6 +103,8 @@ abstract class AppRoutes {
       '/memorization-plus/kids-completion';
   static const String memorizationPlusKidsTreasures =
       '/memorization-plus/kids-treasures';
+  static const String memorizationPlusKidsProgress =
+      '/memorization-plus/kids-progress';
 
   static const String familyDashboard = '/family-dashboard';
   static const String childDetail = '/family-dashboard/child';
@@ -831,6 +834,12 @@ abstract class AppRouter {
         path: AppRoutes.memorizationPlusKidsTreasures,
         redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (context, state) => const KidsTreasuresPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsProgress,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) => const KidsProgressPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

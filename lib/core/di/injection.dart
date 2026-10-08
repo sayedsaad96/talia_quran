@@ -125,6 +125,10 @@ import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
+import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_progress_cubit.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -608,7 +612,8 @@ Future<void> configureDependencies({bool background = false}) async {
     () => MemorizationPlusRepositoryImpl(
       getIt<MemorizationPlusLocalDatasource>(),
       getIt<QuranRepository>(),
-      getIt<StreakReader>(),
+      // Only the kids collaborators read a streak here: the kids one.
+      getIt<KidsStreakStore>(),
       getIt<ProgressEventsBus>(),
       getIt<SharedPreferences>(),
       metrics: const ProgressMetricsService(),
@@ -899,6 +904,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<StreakService>(),
       getIt<DailyReadingLogService>(),
       getIt<ActivityEventRecorder>(),
+      getIt<KidsStreakStore>(),
     ),
   );
   getIt.registerFactory<PracticeSurahCubit>(
@@ -975,7 +981,7 @@ Future<void> configureDependencies({bool background = false}) async {
         ),
       ),
       getIt<V2SessionReviewAdapter>(),
-      getIt<StreakService>(),
+      getIt<KidsStreakStore>(),
       null,
       getIt<AppSessionService>(),
       (pin) async => (await getIt<ParentAccessUsecase>().verifyPin(
@@ -1013,6 +1019,30 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
     ),
   );
+  // The kids track's own streak (owner-scoped). The shared StreakService is
+  // the primary (adult) learner's, shown on home and "تقدمي".
+  getIt.registerLazySingleton<KidsStreakStore>(
+    () => KidsStreakStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+      // Before the split, a child's streak lived in the shared streak. Copy
+      // it once for a child profile so an existing streak is not lost.
+      legacySeed: () async {
+        final profile = await getIt<MemorizationPlusLocalDatasource>()
+            .getMemorizationProfile();
+        if (!profile.isChild) return null;
+        final streakService = getIt<StreakService>();
+        return KidsStreakSeed(
+          streak: await streakService.getStreak(),
+          activityByDay: await streakService.getActivityMap(
+            days: KidsStreakStore.retainDays,
+          ),
+        );
+      },
+      onRecorded: () async =>
+          getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
+    ),
+  );
   // Plan 2 — pages the child confirmed reading today (owner-scoped).
   getIt.registerLazySingleton<KidsReadingReceiptStore>(
     () => KidsReadingReceiptStore(
@@ -1020,6 +1050,38 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
       onRecorded: () async =>
           getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
+    ),
+  );
+  // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).
+  getIt.registerLazySingleton<KidsAchievementStore>(
+    () => KidsAchievementStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerFactory<KidsProgressSnapshotLoader>(
+    () => KidsProgressSnapshotLoader(
+      progress: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsProgress()).fold(
+            (failure) => throw failure,
+            (progress) => progress,
+          ),
+      streak: () => getIt<KidsStreakStore>().getStreak(),
+      pagesOn: (day) => getIt<KidsReadingReceiptStore>().pagesOn(day),
+      allPages: () => getIt<KidsReadingReceiptStore>().allPages(),
+      certificates: () =>
+          getIt<AchievementService>().getEarnedCertificates(isKids: true),
+      recentActivity: () => getIt<ActivityFeedRepository>().recent(
+        limit: KidsProgressSnapshotLoader.recentLimit,
+        kids: true,
+      ),
+      achievements: (inputs) => getIt<KidsAchievementStore>().sync(inputs),
+    ),
+  );
+  getIt.registerFactory<KidsProgressCubit>(
+    () => KidsProgressCubit(
+      () => getIt<KidsProgressSnapshotLoader>().load(),
+      getIt<ProgressEventsBus>(),
     ),
   );
   getIt.registerFactory<KidsTreasuresCubit>(

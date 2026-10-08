@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -10,8 +11,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/services/kids_progress_snapshot.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/child_activity_summary.dart';
+import '../widgets/child_progress_panel.dart';
 import '../widgets/family_child_name.dart';
 import '../widgets/child_pin_recovery_panel.dart';
 import '../widgets/child_rewards_panel.dart';
@@ -165,6 +168,13 @@ class _ChildDetailBody extends StatelessWidget {
 
         // ─── Metrics row ───────────────────────────────────────────────────
         _MetricsRow(child: child),
+        const SizedBox(height: AppSpacing.md),
+
+        // ─── Kids progress, achievements and certificates ─────────────────
+        _Panel(
+          title: context.l10n.childDetailProgressTitle,
+          child: _ChildProgressSection(child: child),
+        ),
         const SizedBox(height: AppSpacing.md),
 
         if (child.localData case final localData?) ...[

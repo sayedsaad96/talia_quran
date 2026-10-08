@@ -4,7 +4,11 @@ import 'package:dartz/dartz.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/services/activity_event_recorder.dart';
+import 'package:talia_quran/core/services/daily_reading_log_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
+import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/kids_streak_store.dart';
 import 'package:talia_quran/features/progress/domain/usecases/save_read_page_usecase.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
@@ -17,7 +21,23 @@ class MockSaveReadPageUsecase extends Mock implements SaveReadPageUsecase {}
 
 class MockStreakService extends Mock implements StreakService {}
 
+class MockKidsStreakStore extends Mock implements KidsStreakStore {}
+
+class MockDailyReadingLog extends Mock implements DailyReadingLogService {}
+
+class MockActivityRecorder extends Mock implements ActivityEventRecorder {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(
+      ActivityEvent(
+        occurredAt: DateTime(2026),
+        kind: ActivityEventKind.reading,
+        idempotencyKey: 'fallback',
+      ),
+    );
+  });
+
   late MockQuranRepository repository;
   late MockSaveReadPageUsecase saveRead;
   late MockStreakService streak;
@@ -105,6 +125,44 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('kids reading records only the kids track', () async {
+    final kidsStreak = MockKidsStreakStore();
+    final readingLog = MockDailyReadingLog();
+    final recorder = MockActivityRecorder();
+    when(() => kidsStreak.recordActivity()).thenAnswer((_) async {});
+    final recorded = <ActivityEvent>[];
+    when(() => recorder.record(any())).thenAnswer((invocation) async {
+      recorded.add(invocation.positionalArguments.single as ActivityEvent);
+    });
+    final cubit = QuranPageCubit(
+      repository,
+      saveRead,
+      streak,
+      readingLog,
+      recorder,
+      kidsStreak,
+    );
+    await cubit.loadPage(11);
+
+    expect(await cubit.confirmKidsRead(11), isTrue);
+
+    expect((cubit.state as QuranPageLoaded).isReadConfirmed, isTrue);
+    verify(() => kidsStreak.recordActivity()).called(1);
+    verifyNever(() => streak.recordActivity());
+    verifyNever(() => saveRead(any()));
+    verifyZeroInteractions(readingLog);
+    expect(recorded.single.isKids, isTrue);
+    expect(recorded.single.pageNumber, 11);
+    await cubit.close();
+  });
+
+  test('kids reading is refused before the page loads', () async {
+    final cubit = QuranPageCubit(repository, saveRead, streak);
+
+    expect(await cubit.confirmKidsRead(11), isFalse);
+    await cubit.close();
+  });
 
   test('a failed streak write never blocks khatmah confirmation', () async {
     when(() => streak.recordActivity()).thenThrow(StateError('isar'));

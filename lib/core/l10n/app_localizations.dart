@@ -1509,11 +1509,11 @@ abstract class AppLocalizations {
   /// **'لا توجد آيات للمراجعة بعد. ابدأ الحفظ أولًا، وستظهر آياتك هنا عندما يحين موعد مراجعتها.'**
   String get memorizationHubNothingToReview;
 
-  /// No description provided for @homeQuranMemorizedCaption.
+  /// No description provided for @homeMemorizedAyahsCaption.
   ///
   /// In ar, this message translates to:
-  /// **'حُفظ من القرآن'**
-  String get homeQuranMemorizedCaption;
+  /// **'{count, plural, =0{لم تُحفظ آيات بعد} =1{آية محفوظة} =2{آيتان محفوظتان} few{{countText} آيات محفوظة} other{{countText} آية محفوظة}}'**
+  String homeMemorizedAyahsCaption(int count, String countText);
 
   /// No description provided for @kidsSetupDiscardTitle.
   ///
@@ -4177,6 +4177,240 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم احتساب الصفحة'**
   String get readPageConfirmed;
+
+  /// No description provided for @readPageCounting.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُحتسب الصفحة بعد قليل'**
+  String get readPageCounting;
+
+  /// No description provided for @kidsProgressTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدّمي'**
+  String get kidsProgressTitle;
+
+  /// No description provided for @kidsProgressSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجومك وإنجازاتك وشهاداتك'**
+  String get kidsProgressSubtitle;
+
+  /// No description provided for @kidsProgressTaliaStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'هيا نبدأ! احفظ أول آية لتحصل على أول إنجاز'**
+  String get kidsProgressTaliaStart;
+
+  /// No description provided for @kidsProgressTaliaNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله! حصلت على «{title}»'**
+  String kidsProgressTaliaNew(String title);
+
+  /// No description provided for @kidsProgressTaliaNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت قريب من «{title}»، تابع!'**
+  String kidsProgressTaliaNext(String title);
+
+  /// No description provided for @kidsProgressTaliaAllDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله! جمعت كل الإنجازات'**
+  String get kidsProgressTaliaAllDone;
+
+  /// No description provided for @kidsProgressLevel.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستوى {levelText}'**
+  String kidsProgressLevel(String levelText);
+
+  /// No description provided for @kidsProgressLevelLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستوى'**
+  String get kidsProgressLevelLabel;
+
+  /// No description provided for @kidsProgressStars.
+  ///
+  /// In ar, this message translates to:
+  /// **'النجوم'**
+  String get kidsProgressStars;
+
+  /// No description provided for @kidsProgressStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام متتالية'**
+  String get kidsProgressStreak;
+
+  /// No description provided for @kidsProgressAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات حفظتها'**
+  String get kidsProgressAyahs;
+
+  /// No description provided for @kidsProgressWeekPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحات هذا الأسبوع'**
+  String get kidsProgressWeekPages;
+
+  /// No description provided for @kidsProgressRecentTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر نشاط'**
+  String get kidsProgressRecentTitle;
+
+  /// No description provided for @kidsProgressRecentEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ أو احفظ ليظهر نشاطك هنا'**
+  String get kidsProgressRecentEmpty;
+
+  /// No description provided for @kidsProgressCertificatesEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل سورة لتحصل على أول شهادة'**
+  String get kidsProgressCertificatesEmpty;
+
+  /// No description provided for @kidsAchievementsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنجازاتي'**
+  String get kidsAchievementsTitle;
+
+  /// No description provided for @kidsAchievementsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{unlockedText} من {totalText}'**
+  String kidsAchievementsCount(String unlockedText, String totalText);
+
+  /// No description provided for @kidsAchievementProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{currentText} / {targetText}'**
+  String kidsAchievementProgress(String currentText, String targetText);
+
+  /// No description provided for @kidsAchievementFirstAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول آية'**
+  String get kidsAchievementFirstAyah;
+
+  /// No description provided for @kidsAchievementAyahs10.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشر آيات'**
+  String get kidsAchievementAyahs10;
+
+  /// No description provided for @kidsAchievementAyahs50.
+  ///
+  /// In ar, this message translates to:
+  /// **'خمسون آية'**
+  String get kidsAchievementAyahs50;
+
+  /// No description provided for @kidsAchievementAyahs100.
+  ///
+  /// In ar, this message translates to:
+  /// **'مئة آية'**
+  String get kidsAchievementAyahs100;
+
+  /// No description provided for @kidsAchievementFirstSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول سورة'**
+  String get kidsAchievementFirstSurah;
+
+  /// No description provided for @kidsAchievementSurahs3.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلاث سور'**
+  String get kidsAchievementSurahs3;
+
+  /// No description provided for @kidsAchievementSurahs10.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشر سور'**
+  String get kidsAchievementSurahs10;
+
+  /// No description provided for @kidsAchievementFirstPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول صفحة'**
+  String get kidsAchievementFirstPage;
+
+  /// No description provided for @kidsAchievementPages10.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشر صفحات'**
+  String get kidsAchievementPages10;
+
+  /// No description provided for @kidsAchievementPages30.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلاثون صفحة'**
+  String get kidsAchievementPages30;
+
+  /// No description provided for @kidsAchievementStreak3.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلاثة أيام متتالية'**
+  String get kidsAchievementStreak3;
+
+  /// No description provided for @kidsAchievementStreak7.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع كامل'**
+  String get kidsAchievementStreak7;
+
+  /// No description provided for @kidsAchievementStreak30.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهر من المواظبة'**
+  String get kidsAchievementStreak30;
+
+  /// No description provided for @kidsAchievementFirstStar.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول نجمة'**
+  String get kidsAchievementFirstStar;
+
+  /// No description provided for @kidsAchievementStars10.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشر نجمات'**
+  String get kidsAchievementStars10;
+
+  /// No description provided for @kidsAchievementStars50.
+  ///
+  /// In ar, this message translates to:
+  /// **'خمسون نجمة'**
+  String get kidsAchievementStars50;
+
+  /// No description provided for @childDetailProgressTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم والإنجازات والشهادات'**
+  String get childDetailProgressTitle;
+
+  /// No description provided for @childDetailProgressUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.'**
+  String get childDetailProgressUnavailable;
+
+  /// No description provided for @childDetailCertificatesEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد شهادات بعد'**
+  String get childDetailCertificatesEmpty;
+
+  /// No description provided for @childDetailCertificateOpenHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط على الشهادة لطباعتها أو مشاركتها'**
+  String get childDetailCertificateOpenHint;
 
   /// No description provided for @dailyPlanRatingWeakDesc.
   ///

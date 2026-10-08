@@ -761,7 +761,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا توجد آيات للمراجعة بعد. ابدأ الحفظ أولًا، وستظهر آياتك هنا عندما يحين موعد مراجعتها.';
 
   @override
-  String get homeQuranMemorizedCaption => 'حُفظ من القرآن';
+  String homeMemorizedAyahsCaption(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية محفوظة',
+      few: '$countText آيات محفوظة',
+      two: 'آيتان محفوظتان',
+      one: 'آية محفوظة',
+      zero: 'لم تُحفظ آيات بعد',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get kidsSetupDiscardTitle => 'تجاهل إعداد الطفل؟';
@@ -2238,6 +2249,136 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get readPageConfirmed => 'تم احتساب الصفحة';
+
+  @override
+  String get readPageCounting => 'تُحتسب الصفحة بعد قليل';
+
+  @override
+  String get kidsProgressTitle => 'تقدّمي';
+
+  @override
+  String get kidsProgressSubtitle => 'نجومك وإنجازاتك وشهاداتك';
+
+  @override
+  String get kidsProgressTaliaStart =>
+      'هيا نبدأ! احفظ أول آية لتحصل على أول إنجاز';
+
+  @override
+  String kidsProgressTaliaNew(String title) {
+    return 'ما شاء الله! حصلت على «$title»';
+  }
+
+  @override
+  String kidsProgressTaliaNext(String title) {
+    return 'أنت قريب من «$title»، تابع!';
+  }
+
+  @override
+  String get kidsProgressTaliaAllDone => 'ما شاء الله! جمعت كل الإنجازات';
+
+  @override
+  String kidsProgressLevel(String levelText) {
+    return 'المستوى $levelText';
+  }
+
+  @override
+  String get kidsProgressLevelLabel => 'المستوى';
+
+  @override
+  String get kidsProgressStars => 'النجوم';
+
+  @override
+  String get kidsProgressStreak => 'أيام متتالية';
+
+  @override
+  String get kidsProgressAyahs => 'آيات حفظتها';
+
+  @override
+  String get kidsProgressWeekPages => 'صفحات هذا الأسبوع';
+
+  @override
+  String get kidsProgressRecentTitle => 'آخر نشاط';
+
+  @override
+  String get kidsProgressRecentEmpty => 'اقرأ أو احفظ ليظهر نشاطك هنا';
+
+  @override
+  String get kidsProgressCertificatesEmpty => 'أكمل سورة لتحصل على أول شهادة';
+
+  @override
+  String get kidsAchievementsTitle => 'إنجازاتي';
+
+  @override
+  String kidsAchievementsCount(String unlockedText, String totalText) {
+    return '$unlockedText من $totalText';
+  }
+
+  @override
+  String kidsAchievementProgress(String currentText, String targetText) {
+    return '$currentText / $targetText';
+  }
+
+  @override
+  String get kidsAchievementFirstAyah => 'أول آية';
+
+  @override
+  String get kidsAchievementAyahs10 => 'عشر آيات';
+
+  @override
+  String get kidsAchievementAyahs50 => 'خمسون آية';
+
+  @override
+  String get kidsAchievementAyahs100 => 'مئة آية';
+
+  @override
+  String get kidsAchievementFirstSurah => 'أول سورة';
+
+  @override
+  String get kidsAchievementSurahs3 => 'ثلاث سور';
+
+  @override
+  String get kidsAchievementSurahs10 => 'عشر سور';
+
+  @override
+  String get kidsAchievementFirstPage => 'أول صفحة';
+
+  @override
+  String get kidsAchievementPages10 => 'عشر صفحات';
+
+  @override
+  String get kidsAchievementPages30 => 'ثلاثون صفحة';
+
+  @override
+  String get kidsAchievementStreak3 => 'ثلاثة أيام متتالية';
+
+  @override
+  String get kidsAchievementStreak7 => 'أسبوع كامل';
+
+  @override
+  String get kidsAchievementStreak30 => 'شهر من المواظبة';
+
+  @override
+  String get kidsAchievementFirstStar => 'أول نجمة';
+
+  @override
+  String get kidsAchievementStars10 => 'عشر نجمات';
+
+  @override
+  String get kidsAchievementStars50 => 'خمسون نجمة';
+
+  @override
+  String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
+
+  @override
+  String get childDetailProgressUnavailable =>
+      'لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.';
+
+  @override
+  String get childDetailCertificatesEmpty => 'لا توجد شهادات بعد';
+
+  @override
+  String get childDetailCertificateOpenHint =>
+      'اضغط على الشهادة لطباعتها أو مشاركتها';
 
   @override
   String get dailyPlanRatingWeakDesc => 'احتجت للمصحف';

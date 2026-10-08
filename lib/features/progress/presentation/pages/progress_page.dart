@@ -30,7 +30,6 @@ import '../../../../core/utils/locale_number_formatter.dart';
 part '../widgets/progress_stat_cards.dart';
 part '../widgets/progress_detailed_card.dart';
 part '../widgets/progress_achievements.dart';
-part '../widgets/progress_smart_memorization.dart';
 part '../widgets/progress_certificates.dart';
 
 class ProgressPage extends StatelessWidget {
@@ -87,7 +86,6 @@ class _ProgressView extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: _ProgressContent(
                       progress: state.progress,
-                      isKids: state.isKids,
                       isDark: isDark,
                       activityCountsByDay: state.activityCountsByDay,
                       activityStartDate: state.activityStartDate,
@@ -273,7 +271,6 @@ class _ShareProgressMenu extends StatelessWidget {
 class _ProgressContent extends StatefulWidget {
   const _ProgressContent({
     required this.progress,
-    required this.isKids,
     required this.isDark,
     this.activityCountsByDay = const {},
     this.activityStartDate,
@@ -282,7 +279,6 @@ class _ProgressContent extends StatefulWidget {
   });
 
   final OverallProgress progress;
-  final bool isKids;
   final bool isDark;
   final Map<String, int> activityCountsByDay;
   final DateTime? activityStartDate;
@@ -336,7 +332,6 @@ class _ProgressContentState extends State<_ProgressContent>
   @override
   Widget build(BuildContext context) {
     final p = widget.progress;
-    final isKids = widget.isKids;
     final isDark = widget.isDark;
 
     return FadeTransition(
@@ -467,196 +462,118 @@ class _ProgressContentState extends State<_ProgressContent>
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppSpacing.md),
-              if (isKids) ...[
-                // ─── Kids Memorization Stats ─────────────────────
-                _DetailedProgressCard(
-                  isDark: isDark,
-                  icon: TaliaIcons.starFilled,
-                  iconColor: AppColors.gold,
-                  title: context.l10n.memorization,
-                  percentage: p.memorizedAyahsPercentage,
-                  rows: [
-                    _DetailRow(
-                      label: context.l10n.memorizedAyahs,
-                      current: p.memorizedAyahs,
-                      total: p.totalAyahs,
-                      color: AppColors.primary,
-                    ),
-                    _DetailRow(
-                      label: context.l10n.memorizedSurahsLabel,
-                      current: p.memorizedSurahs,
-                      total: p.totalSurahs,
-                      color: AppColors.gold,
-                    ),
-                    _DetailRow(
-                      label: context.l10n.memorizedJuzLabel,
-                      current: p.memorizedJuz,
-                      total: p.totalJuz,
-                      color: AppColors.info,
-                    ),
-                  ],
-                  extraInfo: [
-                    _InfoChip(
-                      label: context.l10n.points,
-                      value: context.numText(p.kidsPoints),
-                      color: AppColors.primary,
-                      isDark: isDark,
-                    ),
-                    _InfoChip(
-                      label: context.l10n.stars,
-                      value: context.numText(p.kidsStars),
-                      color: AppColors.gold,
-                      isDark: isDark,
-                    ),
-                    if (p.startedAyahs > 0)
-                      _InfoChip(
-                        label: context.l10n.startedAyahsLabel,
-                        value: context.numText(p.startedAyahs),
-                        color: AppColors.warning,
-                        isDark: isDark,
-                      ),
-                    if (p.lastMemorizedSurahId != null &&
-                        p.lastMemorizedAyahNumber != null)
-                      _InfoChip(
-                        label: context.l10n.lastMemorizedLabel,
-                        value: context.l10n.surahAyahFormat(
-                          context.localizedSurahName(p.lastMemorizedSurahId!),
-                          LocaleNumberFormatter.format(
-                            (p.lastMemorizedAyahNumber!).toString(),
-                            context.l10n.localeName,
-                          ),
-                        ),
-                        color: AppColors.primary,
-                        isDark: isDark,
-                        wide: true,
-                      ),
-                  ],
+              // ─── Adult Memorization Stats ────────────────────
+              if (p.reviewAyahs > 0) ...[
+                _DueReviewsBanner(
+                  dueCount: p.reviewAyahs,
+                  hasOverdue: p.overdueReviews > 0,
+                  onStart: _openMemorization,
                 ),
-              ] else ...[
-                // ─── Adult Memorization Stats ────────────────────
-                if (p.reviewAyahs > 0) ...[
-                  _DueReviewsBanner(
-                    dueCount: p.reviewAyahs,
-                    hasOverdue: p.overdueReviews > 0,
-                    onStart: _openMemorization,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-                _DetailedProgressCard(
-                  isDark: isDark,
-                  icon: TaliaIcons.hifz,
-                  iconColor: AppColors.primary,
-                  title: context.l10n.memorization,
-                  percentage: p.memorizedAyahsPercentage,
-                  rows: [
-                    _DetailRow(
-                      label: context.l10n.memorizedAyahs,
-                      current: p.memorizedAyahs,
-                      total: p.totalAyahs,
-                      color: AppColors.primary,
-                    ),
-                    _DetailRow(
-                      label: context.l10n.startedAyahsLabel,
-                      current: p.startedAyahs,
-                      total: p.totalAyahs,
-                      color: AppColors.warning,
-                    ),
-                    _DetailRow(
-                      label: context.l10n.memorizedSurahsLabel,
-                      current: p.memorizedSurahs,
-                      total: p.totalSurahs,
-                      color: AppColors.gold,
-                    ),
-                    _DetailRow(
-                      label: context.l10n.memorizedJuzLabel,
-                      current: p.memorizedJuz,
-                      total: p.totalJuz,
-                      color: AppColors.info,
-                    ),
-                  ],
-                  extraInfo: [
-                    _InfoChip(
-                      label: context.l10n.learning,
-                      value: context.numText(p.learningAyahs),
-                      color: AppColors.warning,
-                      isDark: isDark,
-                    ),
-                    _InfoChip(
-                      label: context.l10n.progressDueReviewsLabel,
-                      value: context.numText(p.reviewAyahs),
-                      color: AppColors.info,
-                      isDark: isDark,
-                    ),
-                    if (p.overdueReviews > 0)
-                      _InfoChip(
-                        label: context.l10n.overdueReviewsLabel,
-                        value: context.numText(p.overdueReviews),
-                        color: AppColors.error,
-                        isDark: isDark,
-                      ),
-                    if (p.reviewedAyahsTotal > 0)
-                      _InfoChip(
-                        label: context.l10n.reviewedAyahsTotalLabel,
-                        value: context.numText(p.reviewedAyahsTotal),
-                        color: AppColors.primary,
-                        isDark: isDark,
-                      ),
-                    if (p.startedAyahs > 0)
-                      _InfoChip(
-                        label: context.l10n.retentionRateLabel,
-                        value: context.digitText(
-                          context.digitText(
-                            '${(p.retentionRate * 100).toStringAsFixed(0)}%',
-                          ),
-                        ),
-                        color: AppColors.primary,
-                        isDark: isDark,
-                      ),
-                    if (p.lastReviewedAt case final reviewedAt?)
-                      _InfoChip(
-                        label: context.l10n.lastReviewLabel,
-                        value: context.digitText(
-                          MaterialLocalizations.of(
-                            context,
-                          ).formatShortDate(reviewedAt.toLocal()),
-                        ),
-                        color: AppColors.gold,
-                        isDark: isDark,
-                      ),
-                    if (p.lastMemorizedSurahId != null &&
-                        p.lastMemorizedAyahNumber != null)
-                      _InfoChip(
-                        label: context.l10n.lastMemorizedLabel,
-                        value: context.l10n.surahAyahFormat(
-                          context.localizedSurahName(p.lastMemorizedSurahId!),
-                          LocaleNumberFormatter.format(
-                            (p.lastMemorizedAyahNumber!).toString(),
-                            context.l10n.localeName,
-                          ),
-                        ),
-                        color: AppColors.primary,
-                        isDark: isDark,
-                        wide: true,
-                      ),
-                  ],
-                ),
+                const SizedBox(height: AppSpacing.md),
               ],
+              _DetailedProgressCard(
+                isDark: isDark,
+                icon: TaliaIcons.hifz,
+                iconColor: AppColors.primary,
+                title: context.l10n.memorization,
+                percentage: p.memorizedAyahsPercentage,
+                rows: [
+                  _DetailRow(
+                    label: context.l10n.memorizedAyahs,
+                    current: p.memorizedAyahs,
+                    total: p.totalAyahs,
+                    color: AppColors.primary,
+                  ),
+                  _DetailRow(
+                    label: context.l10n.startedAyahsLabel,
+                    current: p.startedAyahs,
+                    total: p.totalAyahs,
+                    color: AppColors.warning,
+                  ),
+                  _DetailRow(
+                    label: context.l10n.memorizedSurahsLabel,
+                    current: p.memorizedSurahs,
+                    total: p.totalSurahs,
+                    color: AppColors.gold,
+                  ),
+                  _DetailRow(
+                    label: context.l10n.memorizedJuzLabel,
+                    current: p.memorizedJuz,
+                    total: p.totalJuz,
+                    color: AppColors.info,
+                  ),
+                ],
+                extraInfo: [
+                  _InfoChip(
+                    label: context.l10n.learning,
+                    value: context.numText(p.learningAyahs),
+                    color: AppColors.warning,
+                    isDark: isDark,
+                  ),
+                  _InfoChip(
+                    label: context.l10n.progressDueReviewsLabel,
+                    value: context.numText(p.reviewAyahs),
+                    color: AppColors.info,
+                    isDark: isDark,
+                  ),
+                  if (p.overdueReviews > 0)
+                    _InfoChip(
+                      label: context.l10n.overdueReviewsLabel,
+                      value: context.numText(p.overdueReviews),
+                      color: AppColors.error,
+                      isDark: isDark,
+                    ),
+                  if (p.reviewedAyahsTotal > 0)
+                    _InfoChip(
+                      label: context.l10n.reviewedAyahsTotalLabel,
+                      value: context.numText(p.reviewedAyahsTotal),
+                      color: AppColors.primary,
+                      isDark: isDark,
+                    ),
+                  if (p.startedAyahs > 0)
+                    _InfoChip(
+                      label: context.l10n.retentionRateLabel,
+                      value: context.digitText(
+                        context.digitText(
+                          '${(p.retentionRate * 100).toStringAsFixed(0)}%',
+                        ),
+                      ),
+                      color: AppColors.primary,
+                      isDark: isDark,
+                    ),
+                  if (p.lastReviewedAt case final reviewedAt?)
+                    _InfoChip(
+                      label: context.l10n.lastReviewLabel,
+                      value: context.digitText(
+                        MaterialLocalizations.of(
+                          context,
+                        ).formatShortDate(reviewedAt.toLocal()),
+                      ),
+                      color: AppColors.gold,
+                      isDark: isDark,
+                    ),
+                  if (p.lastMemorizedSurahId != null &&
+                      p.lastMemorizedAyahNumber != null)
+                    _InfoChip(
+                      label: context.l10n.lastMemorizedLabel,
+                      value: context.l10n.surahAyahFormat(
+                        context.localizedSurahName(p.lastMemorizedSurahId!),
+                        LocaleNumberFormatter.format(
+                          (p.lastMemorizedAyahNumber!).toString(),
+                          context.l10n.localeName,
+                        ),
+                      ),
+                      color: AppColors.primary,
+                      isDark: isDark,
+                      wide: true,
+                    ),
+                ],
+              ),
 
               const SizedBox(height: AppSpacing.sectionGap),
 
-              // ─── Kids track stats (shown on adult profile when kids data exists)
-              if (!isKids && p.kidsPoints > 0) ...[
-                SectionHeader(
-                  title: context.l10n.kidsTrack,
-                  padding: EdgeInsets.zero,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _SmartMemorizationCard(progress: p, isDark: isDark),
-                const SizedBox(height: AppSpacing.sectionGap),
-              ],
-
               // ─── Certificates Section ─────────────────────────
-              _CertificatesSection(isDark: isDark, isKids: isKids),
+              _CertificatesSection(isDark: isDark, isKids: false),
               const SizedBox(height: AppSpacing.sectionGap),
 
               // ─── Achievements Section ───────────────────────

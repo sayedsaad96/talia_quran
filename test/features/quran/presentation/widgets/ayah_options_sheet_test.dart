@@ -50,8 +50,8 @@ void main() {
       home: Scaffold(
         body: BlocProvider<QuranAudioPlayerCubit>.value(
           value: mockAudioCubit,
-          child: AyahOptionsSheet(
-            ayah: const Ayah(
+          child: const AyahOptionsSheet(
+            ayah: Ayah(
               number: 285,
               surahId: 2,
               text:
@@ -59,7 +59,6 @@ void main() {
               numberInSurah: 285,
             ),
             surahName: 'البقرة',
-            onInteraction: () {},
           ),
         ),
       ),

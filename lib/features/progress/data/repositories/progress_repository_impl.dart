@@ -13,7 +13,6 @@ import '../../domain/repositories/progress_repository.dart';
 import '../datasources/progress_local_datasource.dart';
 
 import '../../../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
-import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../quran/data/datasources/quran_local_datasource.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
@@ -35,17 +34,11 @@ class ProgressRepositoryImpl implements ProgressRepository {
   @override
   Future<Either<Failure, OverallProgress>> getOverallProgress() async {
     try {
-      final profile = await _memPlusDs.getMemorizationProfile();
-      final isChild = profile.selectedPath == MemorizationPath.child;
-      final reviewScope = isChild
-          ? ReviewRecordReadScope.kids
-          : ReviewRecordReadScope.adult;
-      final progressAudience = isChild
-          ? ProgressAudience.kids
-          : ProgressAudience.adult;
-
+      // Home and "تقدمي" belong to the primary (adult) learner. The kids
+      // track keeps its own progress on the kids screens and never feeds
+      // these numbers, whichever path is selected.
       final memPlusRecords = await _memPlusDs.getAllReviewRecords(
-        scope: reviewScope,
+        scope: ReviewRecordReadScope.adult,
       );
 
       final structure = await QuranStructureMaps.load(_quranDs);
@@ -72,7 +65,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       final metrics = _metrics.calculate(
         records: memPlusRecords,
         now: DateTime.now().toUtc(),
-        audience: progressAudience,
+        audience: ProgressAudience.adult,
         surahAyahCounts: surahAyahCounts,
         ayahKeysByJuz: ayahKeysByJuz,
         totalAyahs: AppConstants.totalAyahs,
@@ -105,8 +98,6 @@ class ProgressRepositoryImpl implements ProgressRepository {
         reviewAyahs: metrics.dueReviews,
       );
 
-      final kidsProgress = await _memPlusDs.getKidsProgress();
-
       return Right(
         OverallProgress(
           memorizedAyahs: metrics.memorizedAyahs,
@@ -132,8 +123,6 @@ class ProgressRepositoryImpl implements ProgressRepository {
           achievements: achievements,
           readPagesCount: metrics.readPagesCount,
           totalQuranPages: metrics.totalQuranPages,
-          kidsPoints: kidsProgress.totalPoints,
-          kidsStars: kidsProgress.starsEarned,
         ),
       );
     } catch (e) {
