@@ -13365,6 +13365,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اليوم: {date}'**
   String hijriAdjustmentToday(String date);
+
+  /// No description provided for @kidsManualCompleteConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أتممت حفظ الآية؟'**
+  String get kidsManualCompleteConfirmTitle;
+
+  /// No description provided for @kidsManualCompleteConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستُحتسب الآية محفوظة. إن كان ولي أمرك معك فاطلب منه أن يستمع إليك أولًا.'**
+  String get kidsManualCompleteConfirmBody;
 }
 
 class _AppLocalizationsDelegate

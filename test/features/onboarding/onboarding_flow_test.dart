@@ -204,7 +204,7 @@ void main() {
       },
     );
 
-    testWidgets('first slide shows Al-Isra 17:45 verbatim under the basmala', (
+    testWidgets('first slide shows Al-Isra 17:45 verbatim with no basmalah', (
       tester,
     ) async {
       await _registerCore();
@@ -224,7 +224,8 @@ void main() {
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       await tester.pump();
 
-      expect(find.text(basmala!), findsOneWidget);
+      // A basmalah above a mid-surah ayah would misplace it in the Mushaf.
+      expect(find.text(basmala!), findsNothing);
       expect(find.text('$isra45 ﴿٤٥﴾'), findsOneWidget);
       expect(find.text('سورة الإسراء'), findsOneWidget);
     });

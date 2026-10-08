@@ -356,6 +356,17 @@ void main() {
     expect(find.text('privacy route'), findsOneWidget);
   });
 
+  testWidgets('about page links to sources & licenses (Tanzil attribution)', (
+    tester,
+  ) async {
+    await _pumpSettings(tester);
+
+    await _tapVisibleText(tester, 'About Talia');
+    await _tapVisibleText(tester, 'Sources & licenses');
+
+    expect(find.text('sources route'), findsOneWidget);
+  });
+
   testWidgets('tutorial navigation still uses the existing route', (
     tester,
   ) async {
@@ -542,6 +553,10 @@ GoRouter _settingsRouter() {
       GoRoute(
         path: AppRoutes.tutorialGuide,
         builder: (_, _) => const Scaffold(body: Text('tutorial route')),
+      ),
+      GoRoute(
+        path: AppRoutes.sourcesLicenses,
+        builder: (_, _) => const Scaffold(body: Text('sources route')),
       ),
       GoRoute(
         path: AppRoutes.memorizationHub,

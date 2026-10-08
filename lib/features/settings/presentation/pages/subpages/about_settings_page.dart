@@ -24,7 +24,13 @@ class AboutSettingsPage extends StatelessWidget {
         ),
         SettingsGroup(
           title: l10n.settingsSectionPrivacySecurity,
-          children: [PrivacyPolicyTile(isDark: isDark)],
+          children: [
+            PrivacyPolicyTile(isDark: isDark),
+            SettingsDivider(isDark: isDark),
+            // The Tanzil licence requires the attribution and tanzil.net link
+            // to stay reachable in the app.
+            const SourcesLicensesTile(),
+          ],
         ),
         SettingsGroup(
           title: l10n.settingsSectionAboutTalia,

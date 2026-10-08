@@ -3268,4 +3268,6 @@
   ,"hijriAdjustmentSubtitle": "Shift the Hijri date to match your country's announcement of the new month."
   ,"hijriAdjustmentToday": "Today: {date}"
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
+  ,"kidsManualCompleteConfirmTitle": "Finished memorizing this ayah?"
+  ,"kidsManualCompleteConfirmBody": "This ayah will count as memorized. If a guardian is with you, ask them to listen to you first."
 }

@@ -1,6 +1,8 @@
 class QuranAyahDisplayText {
   static const _terminalSpacing = r'[\s\u200E\u200F\u061C]*';
-  static const _ayahDecoration = r'[۝۞۩﴿﴾()\[\]{}\u06DD\u06DE\u06E9]+';
+  // Only marks that frame the ayah number. The sajdah sign (U+06E9) and the
+  // hizb sign (U+06DE) are part of the Mushaf text and must stay.
+  static const _ayahDecoration = r'[۝﴿﴾()\[\]{}\u06DD]+';
 
   static String withoutTrailingNumber(String text, {required int ayahNumber}) {
     final numberAlternatives = _numberScripts(

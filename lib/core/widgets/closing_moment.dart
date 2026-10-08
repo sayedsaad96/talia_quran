@@ -135,6 +135,12 @@ class ClosingMomentAyahCard extends StatelessWidget {
   }
 }
 
+/// Whether the closing dua may be shown. Its text (`closingDua` in the ARB
+/// files) has no recorded source, reference or scholarly review, so under
+/// `docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md` it stays blocked. Set this to
+/// true only once the text is registered with its provenance and review.
+const bool kClosingDuaApproved = false;
+
 /// Opens the serene closing-dua bottom sheet shared by all closing moments.
 Future<void> showClosingDuaSheet(BuildContext context) {
   return showModalBottomSheet<void>(

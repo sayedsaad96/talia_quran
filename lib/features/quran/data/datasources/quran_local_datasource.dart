@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/quran/quran_basmalah.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
@@ -151,6 +152,12 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
           );
         }
         final numberInSurah = verseObj['verse'] as int;
+        // The reader draws the Mushaf from the QCF page layout, and 56 ayahs
+        // at page boundaries sit on a different page there than in the
+        // corpus `page` field. Page lookups (long-press, page playback,
+        // search, read receipts) must match the page the user sees, so the
+        // page comes from the QCF layout. The corpus file is not changed.
+        final mushafPage = qcf.getPageNumber(surah.id, numberInSurah);
         final parts = QuranBasmalah.split(
           surahId: surah.id,
           ayahNumber: numberInSurah,
@@ -163,13 +170,13 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
           text: parts.body,
           numberInSurah: numberInSurah,
           juz: juz,
-          page: page,
+          page: mushafPage,
           canonicalText: rawText,
           leadingBasmalah: parts.basmalah,
         );
         parsedAyahs.add(ayah);
 
-        cachedByPage.putIfAbsent(page, () => []).add(ayah);
+        cachedByPage.putIfAbsent(mushafPage, () => []).add(ayah);
       }
 
       cachedAyahs[surah.id] = parsedAyahs;

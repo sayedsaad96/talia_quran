@@ -77,6 +77,7 @@ void main() {
       V2SessionEngine? engine,
       AudioPlayer? audioPlayer,
       KidsAudioSourceLoader? audioSourceLoader,
+      KidsGuardianPinPresence? guardianPinPresence,
     }) => KidsModeCubit(
       GetKidsProgressUsecase(repository),
       GetKidsJourneyUsecase(repository),
@@ -99,6 +100,7 @@ void main() {
       null,
       audioPlayer,
       audioSourceLoader,
+      guardianPinPresence,
     );
 
     setUp(() {
@@ -1790,6 +1792,61 @@ void main() {
         expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
       },
     );
+    group('guardian fallback without a PIN on the device', () {
+      Future<void> reachFallback({
+        required KidsGuardianPinPresence presence,
+      }) async {
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.unavailable(),
+          ),
+          policy: KidsSessionPolicy.forAge(6),
+          guardianPinPresence: presence,
+        );
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.startRecording();
+        expect((cubit.state as KidsModeLoaded).canUseGuardianFallback, isTrue);
+      }
+
+      test('completes without a PIN when none was ever set', () async {
+        await reachFallback(presence: () async => false);
+
+        expect(await cubit.isGuardianPinRequired(), isFalse);
+        expect(await cubit.submitManualCompletion(), isTrue);
+        expect(repository.lastSavedReview?.lastRating, PerformanceRating.weak);
+        expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      });
+
+      test('keeps the PIN required when the setting cannot be read', () async {
+        await reachFallback(presence: () async => throw StateError('io'));
+
+        expect(await cubit.isGuardianPinRequired(), isTrue);
+        expect(await cubit.submitManualCompletion(), isFalse);
+        expect(repository.awardCalls, 0);
+        expect(await cubit.submitManualCompletion(guardianPin: '1234'), isTrue);
+      });
+
+      test('a set PIN is still required', () async {
+        await reachFallback(presence: () async => true);
+
+        expect(await cubit.submitManualCompletion(), isFalse);
+        expect(await cubit.submitManualCompletion(guardianPin: '9999'), isFalse);
+        expect(repository.awardCalls, 0);
+      });
+    });
     test(
       'automatic completion with missing transcript does not award or complete',
       () async {

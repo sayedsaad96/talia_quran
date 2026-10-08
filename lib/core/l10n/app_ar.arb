@@ -3306,4 +3306,6 @@
   ,"hijriAdjustmentSubtitle": "عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر."
   ,"hijriAdjustmentToday": "اليوم: {date}"
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
+  ,"kidsManualCompleteConfirmTitle": "هل أتممت حفظ الآية؟"
+  ,"kidsManualCompleteConfirmBody": "ستُحتسب الآية محفوظة. إن كان ولي أمرك معك فاطلب منه أن يستمع إليك أولًا."
 }

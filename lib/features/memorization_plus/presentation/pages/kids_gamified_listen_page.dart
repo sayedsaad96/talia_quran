@@ -74,16 +74,42 @@ class _KidsGamifiedListenView extends StatelessWidget {
   final KidsMissionType missionType;
 
   Future<void> _submitGuardianCompletion(BuildContext context) async {
-    final pin = await showDialog<String>(
-      context: context,
-      builder: (_) => const _GuardianPinConfirmationDialog(),
-    );
-    if (pin == null || !context.mounted) return;
+    final cubit = context.read<KidsModeCubit>();
+    // Without a guardian PIN on this device there is nothing to verify; asking
+    // for one would be a dead end, so the child confirms instead.
+    final pinRequired = await cubit.isGuardianPinRequired();
+    if (!context.mounted) return;
+    String? pin;
+    if (pinRequired) {
+      pin = await showDialog<String>(
+        context: context,
+        builder: (_) => const _GuardianPinConfirmationDialog(),
+      );
+      if (pin == null || !context.mounted) return;
+    } else {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(dialogContext.l10n.kidsManualCompleteConfirmTitle),
+          content: Text(dialogContext.l10n.kidsManualCompleteConfirmBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('kids-manual-complete-confirm'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(dialogContext.l10n.confirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+    }
 
-    final accepted = await context.read<KidsModeCubit>().submitManualCompletion(
-      guardianPin: pin,
-    );
-    if (!accepted && context.mounted) {
+    final accepted = await cubit.submitManualCompletion(guardianPin: pin);
+    if (!accepted && pinRequired && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
       );

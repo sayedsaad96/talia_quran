@@ -72,6 +72,33 @@ void main() {
       expect(totalAyahCount, 6236);
     });
 
+    test('every ayah resolves on the page the reader draws it on (QCF layout)', () {
+      // The reader long-press and page playback look an ayah up on the page
+      // returned by qcf.getPageNumber, so the page index must agree with it.
+      for (final surah in allSurahs) {
+        for (final ayah in parsedCorpus.ayahs[surah.id]!) {
+          final drawnPage = qcf.getPageNumber(ayah.surahId, ayah.numberInSurah);
+          expect(ayah.page, drawnPage,
+              reason: '${ayah.surahId}:${ayah.numberInSurah} page index '
+                  '${ayah.page} differs from drawn page $drawnPage');
+          final onPage = parsedCorpus.byPage[drawnPage]!.where(
+            (a) => a.surahId == ayah.surahId && a.numberInSurah == ayah.numberInSurah,
+          );
+          expect(onPage, hasLength(1),
+              reason: '${ayah.surahId}:${ayah.numberInSurah} not on page $drawnPage');
+        }
+      }
+    });
+
+    test('page-boundary ayah 5:77 sits on page 120, as the reader draws it', () {
+      List<String> keys(int page) => parsedCorpus.byPage[page]!
+          .map((a) => '${a.surahId}:${a.numberInSurah}')
+          .toList();
+
+      expect(keys(120).last, '5:77');
+      expect(keys(121).first, '5:78');
+    });
+
     test('qcf.getSurahNameArabic returns valid Arabic name for all 114 surahs', () {
       for (int surahId = 1; surahId <= 114; surahId++) {
         final arabicName = qcf.getSurahNameArabic(surahId);
