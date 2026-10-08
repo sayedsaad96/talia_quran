@@ -8,7 +8,10 @@ import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
 import '../services/audio_lifecycle_manager.dart';
+import '../privacy/recitation_voice_consent.dart';
+import '../router/app_router.dart';
 import '../services/app_session_service.dart';
+import '../widgets/recitation_voice_disclosure_dialog.dart';
 import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
@@ -197,6 +200,17 @@ Future<void> configureDependencies({bool background = false}) async {
   // ─── External ───────────────────────────────────────────────────────────────
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
+  getIt.registerLazySingleton<RecitationVoiceConsent>(
+    () => RecitationVoiceConsent(
+      sharedPrefs,
+      ask: () async {
+        // No navigator (e.g. a background isolate): fail closed.
+        final context = AppRouter.rootNavigatorKey.currentContext;
+        if (context == null) return false;
+        return showRecitationVoiceDisclosure(context);
+      },
+    ),
+  );
   final deletionPending = AccountDeletionMarker.hasPendingOperation(
     sharedPrefs,
   );
@@ -929,7 +943,9 @@ Future<void> configureDependencies({bool background = false}) async {
     () => ListeningReviewCubit(
       source: getIt<ListeningQuizSource>(),
       audio: JustAudioListeningAudio(getIt<AudioCacheService>()),
-      capture: SpeechToTextListeningCapture(),
+      capture: SpeechToTextListeningCapture(
+        voiceConsent: getIt<RecitationVoiceConsent>().ensure,
+      ),
       stats: getIt<ListeningReviewStatsStore>(),
     ),
   );
@@ -982,7 +998,9 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
       getIt<V2SessionReviewAdapter>(),
       getIt<KidsStreakStore>(),
-      null,
+      KidsSpeechRecitationRecorder(
+        voiceConsent: getIt<RecitationVoiceConsent>().ensure,
+      ),
       getIt<AppSessionService>(),
       (pin) async => (await getIt<ParentAccessUsecase>().verifyPin(
         pin,
@@ -1206,6 +1224,7 @@ Future<void> configureDependencies({bool background = false}) async {
       appSessionService: getIt<AppSessionService>(),
       recitationPassThreshold:
           getIt<SettingsRepository>().getSimilarityThreshold,
+      voiceConsent: getIt<RecitationVoiceConsent>(),
     ),
   );
 

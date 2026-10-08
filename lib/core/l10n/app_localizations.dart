@@ -12967,7 +12967,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyEffectiveDate.
   ///
   /// In ar, this message translates to:
-  /// **'تاريخ النفاذ: ٢ أكتوبر ٢٠٢٦'**
+  /// **'تاريخ النفاذ: ٩ أكتوبر ٢٠٢٦'**
   String get privacyEffectiveDate;
 
   /// No description provided for @privacyIntro.
@@ -13015,7 +13015,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyTechnicalData.
   ///
   /// In ar, this message translates to:
-  /// **'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث.'**
+  /// **'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث. ينشئ التطبيق أيضًا معرّف تثبيت عشوائيًا على هذا الجهاز؛ ليس معرّفًا إعلانيًا ولا معرّف عتاد، ويُرسل مع تحديثات المتابعة الأسرية واستعادة رمز ولي الأمر ليميّز الخادم بين أجهزتك. يُنشأ معرّف جديد إذا مسحت بيانات التطبيق أو أعدت تثبيته.'**
   String get privacyTechnicalData;
 
   /// No description provided for @privacyPurposeTitle.
@@ -13045,7 +13045,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyCamera.
   ///
   /// In ar, this message translates to:
-  /// **'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط.'**
+  /// **'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط. يستخدم الماسح مكتبة Google ML Kit التي تقرأ الرمز على الجهاز، ولا تُرسل صور الكاميرا إلى Google. قد تجمع Google معلومات استخدام وتشخيص محدودة عن أداء المكتبة، مثل بيانات الجهاز والتطبيق، وفق سياساتها.'**
   String get privacyCamera;
 
   /// No description provided for @privacyNotifications.
@@ -13099,7 +13099,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyProvidersBody.
   ///
   /// In ar, this message translates to:
-  /// **'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه.'**
+  /// **'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه. قد تتلقى Google ML Kit، المستخدمة لمسح رمز QR، بيانات تشخيص محدودة.'**
   String get privacyProvidersBody;
 
   /// No description provided for @privacyProviderProtection.
@@ -13371,6 +13371,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.'**
   String get childSetupPinOptionalHelp;
+
+  /// No description provided for @recitationVoiceDisclosureTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبل بدء التسميع'**
+  String get recitationVoiceDisclosureTitle;
+
+  /// No description provided for @recitationVoiceDisclosureBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.'**
+  String get recitationVoiceDisclosureBody;
+
+  /// No description provided for @recitationVoiceDisclosureGuardian.
+  ///
+  /// In ar, this message translates to:
+  /// **'إذا كان المستخدم طفلًا، فليقرأ وليّ الأمر هذا البيان ويقرّر.'**
+  String get recitationVoiceDisclosureGuardian;
+
+  /// No description provided for @recitationVoiceDisclosureAccept.
+  ///
+  /// In ar, this message translates to:
+  /// **'موافق، استخدم الميكروفون'**
+  String get recitationVoiceDisclosureAccept;
+
+  /// No description provided for @recitationVoiceDisclosureDecline.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا، سأقيّم بنفسي'**
+  String get recitationVoiceDisclosureDecline;
 }
 
 class _AppLocalizationsDelegate

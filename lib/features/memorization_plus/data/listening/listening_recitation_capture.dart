@@ -27,13 +27,20 @@ abstract interface class ListeningRecitationCapture {
 }
 
 class SpeechToTextListeningCapture implements ListeningRecitationCapture {
-  SpeechToTextListeningCapture([SpeechToText? speech])
-    : _speech = speech ?? SpeechToText();
+  SpeechToTextListeningCapture({
+    SpeechToText? speech,
+    Future<bool> Function()? voiceConsent,
+  }) : _speech = speech ?? SpeechToText(),
+       _voiceConsent = voiceConsent;
 
   /// How long [stop] waits for the recognizer's final result.
   static const _finalResultWait = Duration(milliseconds: 1200);
 
   final SpeechToText _speech;
+
+  /// The speech disclosure (RecitationVoiceConsent.ensure); declining it is
+  /// handled like a denied microphone, which falls back to self-grading.
+  final Future<bool> Function()? _voiceConsent;
   bool _initialized = false;
   String _words = '';
   Completer<void>? _finalResult;
@@ -42,6 +49,10 @@ class SpeechToTextListeningCapture implements ListeningRecitationCapture {
   @override
   Future<ListeningCaptureReadiness> prepare() async {
     if (_initialized) return ListeningCaptureReadiness.ready;
+    final consent = _voiceConsent;
+    if (consent != null && !await consent()) {
+      return ListeningCaptureReadiness.permissionDenied;
+    }
     var status = await Permission.microphone.status;
     if (!status.isGranted) status = await Permission.microphone.request();
     if (!status.isGranted) return ListeningCaptureReadiness.permissionDenied;

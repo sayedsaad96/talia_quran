@@ -47,6 +47,15 @@
     }
     header.top h1 { margin: 0; font-size: 1.6rem; }
     .lang-switch { display: flex; gap: 6px; }
+    .page-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+    .page-links a {
+      display: inline-flex; align-items: center; padding: 8px 14px;
+      border: 1px solid var(--divider); border-radius: 999px;
+      background: var(--card); color: var(--accent); font-weight: 600;
+      text-decoration: none;
+    }
+    .page-links a:hover { border-color: var(--accent); }
+    .page-links a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .lang-switch button {
       font: inherit; font-size: 0.9rem; cursor: pointer;
       padding: 6px 14px; border-radius: 999px;
@@ -86,6 +95,11 @@
         <button type="button" id="btn-en" lang="en" onclick="setLang('en')">English</button>
       </div>
     </header>
+
+    <nav class="page-links" aria-label="صفحات الموقع / Site pages">
+      <a href="privacy-policy.html"><span data-lang="ar">سياسة الخصوصية</span><span data-lang="en">Privacy Policy</span></a>
+      <a href="delete-account.html"><span data-lang="ar">حذف الحساب والبيانات</span><span data-lang="en">Account and Data Deletion</span></a>
+    </nav>
 
     <!-- ===================== العربية ===================== -->
     <main data-lang="ar" lang="ar" dir="rtl">

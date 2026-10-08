@@ -7668,7 +7668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progressXpToNextLevel => 'Toward next level';
 
   @override
-  String get privacyEffectiveDate => 'Effective date: October 2, 2026';
+  String get privacyEffectiveDate => 'Effective date: October 9, 2026';
 
   @override
   String get privacyIntro =>
@@ -7699,7 +7699,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyTechnicalData =>
-      'Technical data and support: Account and audio services receive ordinary connection information such as IP address, request time and technical data needed for service operation and security. The app logs technical errors locally. If you contact us, we process your email, message and information you choose to send to resolve your request. The current version does not include third-party advertising or behavioral analytics SDKs.';
+      'Technical data and support: Account and audio services receive ordinary connection information such as IP address, request time and technical data needed for service operation and security. The app logs technical errors locally. If you contact us, we process your email, message and information you choose to send to resolve your request. The current version does not include third-party advertising or behavioral analytics SDKs. The app also creates a random installation ID on this device. It is not an advertising ID or a hardware identifier; it is sent with family-monitoring updates and parent PIN recovery so the service can tell your devices apart. A new one is created if you clear app data or reinstall the app.';
 
   @override
   String get privacyPurposeTitle => '3. Purposes of Processing';
@@ -7717,7 +7717,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyCamera =>
-      'Camera: Used when you choose to scan a guardian-link QR code. The scanner processes camera frames to read the code; the app does not save or upload camera images. The pairing token is sent to the account service to validate and establish the link.';
+      'Camera: Used when you choose to scan a guardian-link QR code. The scanner processes camera frames to read the code; the app does not save or upload camera images. The pairing token is sent to the account service to validate and establish the link. The scanner uses Google ML Kit, which reads the code on the device; camera images are not sent to Google. Google may collect limited usage and diagnostic information about ML Kit\'s performance, such as device and app details, under its own policies.';
 
   @override
   String get privacyNotifications =>
@@ -7751,7 +7751,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyProvidersBody =>
-      'Supabase processes authentication, account and cloud progress data for the app. Your device’s speech-recognition provider may process recitation audio. EveryAyah provides reciter recordings online and receives ordinary technical request data during streaming or downloads. Email services may process verification and support messages. Linked guardians and apps you select for sharing receive the data described above.';
+      'Supabase processes authentication, account and cloud progress data for the app. Your device’s speech-recognition provider may process recitation audio. EveryAyah provides reciter recordings online and receives ordinary technical request data during streaming or downloads. Email services may process verification and support messages. Linked guardians and apps you select for sharing receive the data described above. Google ML Kit, used for QR scanning, may receive limited diagnostic data.';
 
   @override
   String get privacyProviderProtection =>
@@ -7918,4 +7918,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get childSetupPinOptionalHelp =>
       'Optional: create it now or the first time a guardian action needs it.';
+
+  @override
+  String get recitationVoiceDisclosureTitle => 'Before you recite';
+
+  @override
+  String get recitationVoiceDisclosureBody =>
+      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers; only the assessment result is saved with your progress. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
+
+  @override
+  String get recitationVoiceDisclosureGuardian =>
+      'If the user is a child, a parent or guardian should read this and decide.';
+
+  @override
+  String get recitationVoiceDisclosureAccept => 'Agree, use the microphone';
+
+  @override
+  String get recitationVoiceDisclosureDecline => 'No, I\'ll grade myself';
 }

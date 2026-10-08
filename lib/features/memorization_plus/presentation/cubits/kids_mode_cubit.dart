@@ -1144,11 +1144,17 @@ class KidsRecitationCaptureResult {
 class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   KidsSpeechRecitationRecorder({
     SpeechToText? speechToText,
+    Future<bool> Function()? voiceConsent,
     @visibleForTesting Future<bool> Function()? microphonePermission,
   }) : _speechToText = speechToText ?? SpeechToText(),
+       _voiceConsent = voiceConsent,
        _microphonePermission = microphonePermission;
 
   final SpeechToText _speechToText;
+
+  /// The speech disclosure (RecitationVoiceConsent.ensure); declining it is
+  /// handled like a denied microphone, so the manual path stays available.
+  final Future<bool> Function()? _voiceConsent;
   final Future<bool> Function()? _microphonePermission;
   bool _speechEnabled = false;
   void Function(SpeechRecognitionError error)? _onSpeechError;
@@ -1277,6 +1283,8 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       error.errorMsg == 'error_speech_timeout';
 
   Future<bool> _ensureMicrophonePermission() async {
+    final consent = _voiceConsent;
+    if (consent != null && !await consent()) return false;
     final override = _microphonePermission;
     if (override != null) return override();
     var status = await Permission.microphone.status;

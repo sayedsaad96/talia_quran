@@ -7,7 +7,6 @@ import 'dart:async';
 // Follows the same STT + Audio patterns as HifzSessionCubit but delegates
 // all domain logic to the pure V2SessionEngine.
 
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -33,6 +32,7 @@ import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
+import '../../../../core/privacy/recitation_voice_consent.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
@@ -218,7 +218,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     AudioCacheService? audioCacheService,
     AppSessionService? appSessionService,
     double Function()? recitationPassThreshold,
+    RecitationVoiceConsent? voiceConsent,
   }) : _quranRepo = quranRepository,
+       _voiceConsent = voiceConsent,
        _recitationPassThreshold = recitationPassThreshold,
        _memRepo = memorizationRepository,
        _baseEngine = sessionEngine,
@@ -233,7 +235,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
        _audioCache = audioCacheService ?? AudioCacheService.instance,
        _appSessionService = appSessionService,
        super(const MSInitial()) {
-    _initSpeech();
+    // Initializing the recognizer can prompt for the microphone, so it waits
+    // for the speech disclosure (startRecording initializes it otherwise).
+    if (voiceConsent == null || voiceConsent.isAccepted) _initSpeech();
     AudioLifecycleManager.instance.register(_player);
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
@@ -266,6 +270,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   // ── STT ──────────────────────────────────────────────────────────────────
 
   final SpeechToText _speechToText;
+
+  /// Shown before the first microphone use; declining leaves the learner on
+  /// the page with the self-grade route. Null only in unit tests.
+  final RecitationVoiceConsent? _voiceConsent;
   bool _speechEnabled = false;
   bool _evaluationInFlight = false;
 
@@ -388,9 +396,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           plan.isActive &&
           plan.targetUser == PlanTargetUser.adult &&
           plan.difficulty == MemorizationDifficulty.challenging) {
-        final planThreshold = PlanSchedulePolicy.passThreshold(
-          plan.difficulty,
-        );
+        final planThreshold = PlanSchedulePolicy.passThreshold(plan.difficulty);
         threshold = threshold == null || threshold < planThreshold
             ? planThreshold
             : threshold;
@@ -671,6 +677,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (st.isRecording || st.isEvaluating) return;
 
     if (st.isPlaying) await stopAudio();
+
+    final consent = _voiceConsent;
+    if (consent != null && !await consent.ensure()) return;
+    if (isClosed || state is! MSActive) return;
 
     // Permission check.
     var status = await Permission.microphone.status;

@@ -318,7 +318,9 @@ class MemorizationRouteGuard {
   static Future<String?> parentDashboardRedirect() async {
     final profile = await _readProfile();
     if (profile?.isChild == true) {
-      return guardianSessionActive() ? null : AppRoutes.memorizationPlusKidsHome;
+      return guardianSessionActive()
+          ? null
+          : AppRoutes.memorizationPlusKidsHome;
     }
     try {
       final authState = getIt<AuthCubit>().state;
@@ -386,6 +388,10 @@ class MemorizationRouteGuard {
 abstract class AppRouter {
   // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+  /// For app-wide dialogs raised outside a widget, such as the recitation
+  /// speech disclosure.
+  static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
   /// True when go_router could not match the requested location at all
   /// (as opposed to a failing async redirect).
