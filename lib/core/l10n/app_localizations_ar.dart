@@ -1442,6 +1442,61 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateNotFound => 'لم يتم العثور على الشهادة';
 
   @override
+  String get certificateTemplateRecipientIntro =>
+      'تشهد منصة تالية لتحفيظ القرآن الكريم بأن';
+
+  @override
+  String get certificateTemplateMemorizedAction => 'قد أتم بنجاح حفظ';
+
+  @override
+  String get certificateTemplateReadingAction => 'قد أتم بنجاح تلاوة';
+
+  @override
+  String get certificateTemplateDate => 'التاريخ';
+
+  @override
+  String get certificateTemplateVerification => 'كود التوثيق';
+
+  @override
+  String get certificateTemplateDedication => 'إهداء إلى';
+
+  @override
+  String get certificateTemplateJuz => 'الجزء';
+
+  @override
+  String get certificateTemplateSurah => 'سورة';
+
+  @override
+  String get certificateTemplateHalfQuran => 'نصف القرآن الكريم';
+
+  @override
+  String get certificateTemplateFullQuran => 'القرآن الكريم كاملاً';
+
+  @override
+  String get certificateTemplateKhatmah => 'ختمة القرآن الكريم كاملاً';
+
+  @override
+  String get certificateChildLearner => 'طفل تالية';
+
+  @override
+  String get certificateTitleKhatmah => 'شهادة إتمام ختمة تلاوة القرآن الكريم';
+
+  @override
+  String get certificateTemplateSignature => 'التوقيع';
+
+  @override
+  String certificateTemplateVerseReference(
+    Object ayahNumber,
+    Object surahName,
+  ) {
+    return '($surahName: $ayahNumber)';
+  }
+
+  @override
+  String get certificateTemplateBlessing =>
+      'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.';
+
+  @override
   String shareCertificateJuz(Object juz) {
     return 'بفضل الله أتممت حفظ الجزء $juz من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
   }

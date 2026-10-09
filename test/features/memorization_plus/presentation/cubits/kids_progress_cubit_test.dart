@@ -31,6 +31,38 @@ void main() {
     await cubit.close();
   });
 
+  test(
+    'loads and normalizes the local child nickname with the snapshot',
+    () async {
+      final cubit = KidsProgressCubit(
+        () async => _snapshot(3),
+        ProgressEventsBus(),
+        childNameLoader: () async => '  مريم  ',
+      );
+
+      await cubit.load();
+
+      expect(cubit.state, KidsProgressLoaded(_snapshot(3), childName: 'مريم'));
+      await cubit.close();
+    },
+  );
+
+  test(
+    'keeps progress available when the child nickname cannot load',
+    () async {
+      final cubit = KidsProgressCubit(
+        () async => _snapshot(3),
+        ProgressEventsBus(),
+        childNameLoader: () async => throw StateError('settings unavailable'),
+      );
+
+      await cubit.load();
+
+      expect(cubit.state, KidsProgressLoaded(_snapshot(3)));
+      await cubit.close();
+    },
+  );
+
   test('a failed load shows an error', () async {
     final cubit = KidsProgressCubit(
       () async => throw StateError('boom'),

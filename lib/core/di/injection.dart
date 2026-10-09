@@ -1100,6 +1100,11 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KidsProgressCubit(
       () => getIt<KidsProgressSnapshotLoader>().load(),
       getIt<ProgressEventsBus>(),
+      childNameLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+            (_) => null,
+            (settings) => settings.localChildNickname,
+          ),
     ),
   );
   getIt.registerFactory<KidsTreasuresCubit>(

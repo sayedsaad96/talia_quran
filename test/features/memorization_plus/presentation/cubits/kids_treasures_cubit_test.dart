@@ -50,6 +50,24 @@ void main() {
   KidsTreasuresCubit build(List<CertificateAward> certs) =>
       KidsTreasuresCubit(memRepo, quranRepo, certificatesLoader: () => certs);
 
+  test('loads the trimmed child nickname for certificates', () async {
+    when(
+      () => memRepo.getKidsSessionLogs(),
+    ).thenAnswer((_) async => const Right(<KidsSessionLog>[]));
+    when(
+      () => quranRepo.getSurahs(),
+    ).thenAnswer((_) async => Right([_surah(114, 6)]));
+    when(() => memRepo.getParentSettings()).thenAnswer(
+      (_) async => const Right(ParentSettings(localChildNickname: ' مريم ')),
+    );
+
+    final cubit = build(const []);
+    addTearDown(cubit.close);
+    await cubit.load();
+
+    expect((cubit.state as KidsTreasuresLoaded).childName, 'مريم');
+  });
+
   test('loads region progress and the kids certificates', () async {
     when(() => memRepo.getKidsSessionLogs()).thenAnswer(
       (_) async => Right([for (var a = 1; a <= 6; a++) _log(114, a)]),

@@ -145,6 +145,7 @@ flutter:
     - assets/images/logo_new_padded.png
     - assets/images/logo_new.png
     - assets/images/logo.png
+    - assets/images/certificate.png
     - assets/images/mosque_bg_vertical.jpg
     - assets/images/mosque_bg.png
     - assets/images/splash_hero.png

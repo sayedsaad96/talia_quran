@@ -1447,6 +1447,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certificateNotFound => 'Certificate not found';
 
   @override
+  String get certificateTemplateRecipientIntro => 'Talia Quran certifies that';
+
+  @override
+  String get certificateTemplateMemorizedAction => 'has successfully memorized';
+
+  @override
+  String get certificateTemplateReadingAction =>
+      'has successfully completed reading';
+
+  @override
+  String get certificateTemplateDate => 'Date';
+
+  @override
+  String get certificateTemplateVerification => 'Verification code';
+
+  @override
+  String get certificateTemplateDedication => 'Dedicated to';
+
+  @override
+  String get certificateTemplateJuz => 'Juz';
+
+  @override
+  String get certificateTemplateSurah => 'Surah';
+
+  @override
+  String get certificateTemplateHalfQuran => 'Half of the Holy Quran';
+
+  @override
+  String get certificateTemplateFullQuran => 'The entire Holy Quran';
+
+  @override
+  String get certificateTemplateKhatmah => 'A complete Quran recitation';
+
+  @override
+  String get certificateChildLearner => 'Talia learner';
+
+  @override
+  String get certificateTitleKhatmah => 'Quran Recitation Khatmah Certificate';
+
+  @override
+  String get certificateTemplateSignature => 'Signature';
+
+  @override
+  String certificateTemplateVerseReference(
+    Object ayahNumber,
+    Object surahName,
+  ) {
+    return '($surahName: $ayahNumber)';
+  }
+
+  @override
+  String get certificateTemplateBlessing =>
+      'We ask Allah the Exalted to make the Holy Quran the spring of their heart, the light of their chest, and their companion in this world and the Hereafter.';
+
+  @override
   String shareCertificateJuz(Object juz) {
     return 'By Allah\'s grace, I memorized Juz $juz of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
   }

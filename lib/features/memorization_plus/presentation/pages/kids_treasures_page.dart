@@ -78,6 +78,7 @@ class _KidsTreasuresView extends StatelessWidget {
             :final homeMissions,
             :final homeMissionsPaused,
             :final guardianLinked,
+            :final childName,
           ) =>
             KidsTreasuresContent(
               regions: regions,
@@ -86,6 +87,7 @@ class _KidsTreasuresView extends StatelessWidget {
               homeMissions: homeMissions,
               homeMissionsPaused: homeMissionsPaused,
               guardianLinked: guardianLinked,
+              childName: childName,
               onRequestReward: context.read<KidsTreasuresCubit>().requestReward,
               onReportHomeMission: context
                   .read<KidsTreasuresCubit>()
@@ -151,6 +153,7 @@ class KidsTreasuresContent extends StatelessWidget {
     this.homeMissions = const [],
     this.homeMissionsPaused = false,
     this.guardianLinked = false,
+    this.childName,
     this.onRequestReward,
     this.onReportHomeMission,
   });
@@ -162,6 +165,7 @@ class KidsTreasuresContent extends StatelessWidget {
   final List<KidsHomeMission> homeMissions;
   final bool homeMissionsPaused;
   final bool guardianLinked;
+  final String? childName;
   final void Function(String rewardId)? onRequestReward;
   final void Function(String missionId)? onReportHomeMission;
 
@@ -258,7 +262,7 @@ class KidsTreasuresContent extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       for (final cert in certificates) ...[
-                        _CertificateCard(award: cert),
+                        _CertificateCard(award: cert, childName: childName),
                         const SizedBox(height: AppSpacing.sm),
                       ],
                     ],
@@ -375,38 +379,70 @@ class _RegionCard extends StatelessWidget {
 }
 
 class _CertificateCard extends StatelessWidget {
-  const _CertificateCard({required this.award});
+  const _CertificateCard({required this.award, this.childName});
 
   final CertificateAward award;
+  final String? childName;
 
   @override
   Widget build(BuildContext context) {
     final title = context.isArabic
         ? award.titleAr
         : (award.titleEn ?? award.titleAr);
+    // The decoration (with its drop shadow) sits outside the Material so the
+    // ink splash cannot clip the shadow.
     return Container(
-      key: ValueKey('kids-certificate-${award.id}'),
-      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: _creamCard(),
-      child: Row(
-        children: [
-          const TaliaIcon(
-            TaliaKidsIcons.certificate,
-            color: KidsTheme.goldStar,
-            size: 32,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              title,
-              style: AppTypography.titleSmall.copyWith(
-                color: KidsTheme.inkOnParchment,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-              ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('kids-certificate-${award.id}'),
+          borderRadius: KidsTheme.cardRadius,
+          onTap: () {
+            final userName = childName?.trim();
+            context.push(
+              AppRoutes.certificate,
+              extra: <String, dynamic>{
+                'award': award,
+                // Never `taliaUser`: the certificate route would swap in the
+                // adult profile name for that sentinel.
+                'userName': userName?.isNotEmpty == true
+                    ? userName
+                    : context.l10n.certificateChildLearner,
+              },
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                const TaliaIcon(
+                  TaliaKidsIcons.certificate,
+                  color: KidsTheme.goldStar,
+                  size: 32,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.titleSmall.copyWith(
+                      color: KidsTheme.inkOnParchment,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+                TaliaIcon(
+                  context.isArabic
+                      ? TaliaKidsIcons.chevronBack
+                      : TaliaKidsIcons.chevronForward,
+                  color: KidsTheme.inkOnParchment,
+                  size: 20,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

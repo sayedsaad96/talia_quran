@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -42,6 +43,57 @@ Widget _content({
 );
 
 void main() {
+  testWidgets('tapping a certificate opens it with the child name', (
+    tester,
+  ) async {
+    Map<String, dynamic>? opened;
+    final cert = CertificateAward(
+      id: 'cert_surah_114',
+      titleAr: 'شهادة حفظ سورة الناس',
+      type: CertificateType.surah,
+      earnedAt: DateTime.utc(2026, 10, 1),
+      surahId: 114,
+    );
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => KidsTreasuresContent(
+            regions: kidsRegionProgress(const {}),
+            certificates: [cert],
+            childName: 'مريم',
+            onBack: () {},
+          ),
+        ),
+        GoRoute(
+          path: '/certificate',
+          builder: (_, state) {
+            opened = state.extra as Map<String, dynamic>?;
+            return const Scaffold(body: Text('certificate'));
+          },
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(
+        locale: const Locale('ar'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final card = find.byKey(const ValueKey('kids-certificate-cert_surah_114'));
+    await tester.scrollUntilVisible(card, 200);
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(opened?['award'], cert);
+    expect(opened?['userName'], 'مريم');
+  });
+
   testWidgets('shows five region cards in order with name and progress', (
     tester,
   ) async {

@@ -61,10 +61,12 @@ class _KidsProgressView extends StatelessWidget {
               ),
             ),
           ),
-          KidsProgressLoaded(:final snapshot) => KidsProgressContent(
-            snapshot: snapshot,
-            onBack: () => _back(context),
-          ),
+          KidsProgressLoaded(:final snapshot, :final childName) =>
+            KidsProgressContent(
+              snapshot: snapshot,
+              childName: childName,
+              onBack: () => _back(context),
+            ),
         },
       ),
     );
@@ -76,11 +78,13 @@ class KidsProgressContent extends StatelessWidget {
     super.key,
     required this.snapshot,
     required this.onBack,
+    this.childName,
     this.now,
   });
 
   final KidsProgressSnapshot snapshot;
   final VoidCallback onBack;
+  final String? childName;
 
   /// Clock override for previews and tests.
   final DateTime? now;
@@ -132,7 +136,7 @@ class KidsProgressContent extends StatelessWidget {
                       _SceneNote(l10n.kidsProgressCertificatesEmpty)
                     else
                       for (final award in snapshot.certificates) ...[
-                        _CertificateCard(award: award),
+                        _CertificateCard(award: award, childName: childName),
                         const SizedBox(height: AppSpacing.sm),
                       ],
                     const SizedBox(height: AppSpacing.xl),
@@ -559,9 +563,10 @@ class KidsAchievementBadge extends StatelessWidget {
 }
 
 class _CertificateCard extends StatelessWidget {
-  const _CertificateCard({required this.award});
+  const _CertificateCard({required this.award, this.childName});
 
   final CertificateAward award;
+  final String? childName;
 
   @override
   Widget build(BuildContext context) {
@@ -573,10 +578,20 @@ class _CertificateCard extends StatelessWidget {
       child: InkWell(
         key: ValueKey('kids-progress-certificate-${award.id}'),
         borderRadius: KidsTheme.cardRadius,
-        onTap: () => context.push(
-          AppRoutes.certificate,
-          extra: <String, dynamic>{'award': award},
-        ),
+        onTap: () {
+          final userName = childName?.trim();
+          context.push(
+            AppRoutes.certificate,
+            extra: <String, dynamic>{
+              'award': award,
+              // This must never be `taliaUser`: the certificate route treats
+              // that sentinel as permission to substitute the adult profile.
+              'userName': userName?.isNotEmpty == true
+                  ? userName
+                  : context.l10n.certificateChildLearner,
+            },
+          );
+        },
         child: Ink(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: _creamCard(),

@@ -1,121 +1,104 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import '../../../../core/icons/talia_icons.dart';
-import '../../../../core/services/achievement_service.dart';
+
+import '../../../../core/constants/surah_names.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
+import '../../domain/certificate_verse.dart';
+import '../../domain/entities/certificate_award.dart';
 import 'certificate_palette.dart';
 
 export 'certificate_palette.dart';
 
-// ─── Painter للزخارف والإطارات الإسلامية الناصعة Vector ─────────────────
-class CertificateFramePainter extends CustomPainter {
-  const CertificateFramePainter({required this.theme});
-  final CertificateStyleTheme theme;
+/// The fixed landscape canvas used by previews, PNG exports, and PDFs.
+const certificateCanvasSize = Size(1536, 1024);
+const certificateAssetPath = 'assets/images/certificate.png';
+const certificateLogoAssetPath = 'assets/images/logo.png';
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final outerBorderPaint = Paint()
-      ..color = theme.borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
+/// The handwritten mark printed above the signature line.
+const certificateSignatureText = 'Talia';
 
-    final innerBorderPaint = Paint()
-      ..color = theme.innerBorderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+/// Copy which can be supplied to an off-tree screenshot renderer.
+class CertificateTemplateCopy {
+  const CertificateTemplateCopy({
+    required this.titleJuz,
+    required this.titleSurah,
+    required this.titleHalfQuran,
+    required this.titleFullQuran,
+    required this.titleKhatmah,
+    required this.recipientIntro,
+    required this.memorizedAction,
+    required this.readingAction,
+    required this.dateLabel,
+    required this.signatureLabel,
+    required this.verificationLabel,
+    required this.dedicationLabel,
+    required this.blessing,
+    required this.verseReference,
+    required this.juzLabel,
+    required this.surahLabel,
+    required this.halfQuranLabel,
+    required this.fullQuranLabel,
+    required this.khatmahLabel,
+  });
 
-    // 1. Outer & Inner Frame Lines
-    const margin = 12.0;
-    final outerRect = Rect.fromLTWH(
-      margin,
-      margin,
-      size.width - margin * 2,
-      size.height - margin * 2,
-    );
-    final innerRect = Rect.fromLTWH(
-      margin + 6,
-      margin + 6,
-      size.width - (margin + 6) * 2,
-      size.height - (margin + 6) * 2,
-    );
+  final String Function(String juz) titleJuz;
+  final String Function(String surahName) titleSurah;
+  final String titleHalfQuran;
+  final String titleFullQuran;
+  final String titleKhatmah;
+  final String recipientIntro;
+  final String memorizedAction;
+  final String readingAction;
+  final String dateLabel;
+  final String signatureLabel;
+  final String verificationLabel;
+  final String dedicationLabel;
+  final String blessing;
+  final String Function(String surahName, String ayahNumber) verseReference;
+  final String juzLabel;
+  final String surahLabel;
+  final String halfQuranLabel;
+  final String fullQuranLabel;
+  final String khatmahLabel;
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(outerRect, const Radius.circular(8)),
-      outerBorderPaint,
+  factory CertificateTemplateCopy.forLanguage(String languageCode) {
+    final locale = Locale(
+      languageCode.toLowerCase().startsWith('ar') ? 'ar' : 'en',
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(innerRect, const Radius.circular(6)),
-      innerBorderPaint,
-    );
-
-    // 2. Corner Ornaments (Custom Geometric Arches)
-    _drawCornerOrnament(canvas, const Offset(14, 14), 0, size.width * 0.15);
-    _drawCornerOrnament(
-      canvas,
-      Offset(size.width - margin - 2, margin + 2),
-      math.pi / 2,
-      size.width * 0.15,
-    );
-    _drawCornerOrnament(
-      canvas,
-      Offset(margin + 2, size.height - margin - 2),
-      -math.pi / 2,
-      size.width * 0.15,
-    );
-    _drawCornerOrnament(
-      canvas,
-      Offset(size.width - margin - 2, size.height - margin - 2),
-      math.pi,
-      size.width * 0.15,
+    return CertificateTemplateCopy.fromLocalizations(
+      lookupAppLocalizations(locale),
     );
   }
 
-  void _drawCornerOrnament(
-    Canvas canvas,
-    Offset corner,
-    double rotation,
-    double ornamentSize,
-  ) {
-    canvas.save();
-    canvas.translate(corner.dx, corner.dy);
-    canvas.rotate(rotation);
-
-    final paint = Paint()
-      ..color = theme.accentGold.withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    for (int i = 1; i <= 3; i++) {
-      final rect = Rect.fromLTWH(
-        4.0 * i,
-        4.0 * i,
-        ornamentSize - 8.0 * i,
-        ornamentSize - 8.0 * i,
+  factory CertificateTemplateCopy.fromLocalizations(AppLocalizations l10n) =>
+      CertificateTemplateCopy(
+        titleJuz: l10n.certificateTitleJuz,
+        titleSurah: l10n.certificateTitleSurahNamed,
+        titleHalfQuran: l10n.certificateTitleHalfQuran,
+        titleFullQuran: l10n.certificateTitleFullQuran,
+        titleKhatmah: l10n.certificateTitleKhatmah,
+        recipientIntro: l10n.certificateTemplateRecipientIntro,
+        memorizedAction: l10n.certificateTemplateMemorizedAction,
+        readingAction: l10n.certificateTemplateReadingAction,
+        dateLabel: l10n.certificateTemplateDate,
+        signatureLabel: l10n.certificateTemplateSignature,
+        verificationLabel: l10n.certificateTemplateVerification,
+        dedicationLabel: l10n.certificateTemplateDedication,
+        blessing: l10n.certificateTemplateBlessing,
+        verseReference: (surahName, ayahNumber) =>
+            l10n.certificateTemplateVerseReference(ayahNumber, surahName),
+        juzLabel: l10n.certificateTemplateJuz,
+        surahLabel: l10n.certificateTemplateSurah,
+        halfQuranLabel: l10n.certificateTemplateHalfQuran,
+        fullQuranLabel: l10n.certificateTemplateFullQuran,
+        khatmahLabel: l10n.certificateTemplateKhatmah,
       );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(3.0 * i)),
-        paint,
-      );
-    }
-
-    final dotPaint = Paint()
-      ..color = theme.accentGold
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(
-      Offset(ornamentSize * 0.3, ornamentSize * 0.3),
-      2.5,
-      dotPaint,
-    );
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(CertificateFramePainter old) =>
-      old.theme.type != theme.type;
 }
 
-// ─── Certificate Widget ───────────────────────────────────────────────────
+/// Renders the bundled certificate artwork. One template is intentionally used
+/// for the screen preview, saved PNG, shared PNG, and PDF.
 class CertificateWidget extends StatelessWidget {
   const CertificateWidget({
     super.key,
@@ -123,23 +106,40 @@ class CertificateWidget extends StatelessWidget {
     required this.award,
     required this.completionDate,
     this.languageCode = 'ar',
+    this.copy,
     this.styleType = CertificateStyleType.classicParchment,
   });
 
   final String userName;
   final CertificateAward award;
   final DateTime completionDate;
-
-  /// The app locale used for display-only values in this certificate image.
-  /// The verification code remains a stable, copyable identifier.
   final String languageCode;
+  final CertificateTemplateCopy? copy;
+
+  /// Retained so existing callers compile; artwork is no longer configurable.
   final CertificateStyleType styleType;
 
-  CertificateStyleTheme get theme => CertificateStyleTheme.get(styleType);
+  bool get _isArabic => languageCode.toLowerCase().startsWith('ar');
+  CertificateTemplateCopy get _copy =>
+      copy ?? CertificateTemplateCopy.forLanguage(languageCode);
 
-  String get _arabicJuzNumber {
-    if (award.juzNumber == null) return '';
-    final juzNumber = award.juzNumber!;
+  String get _title => switch (award.type) {
+    CertificateType.juz => _copy.titleJuz(_juzNumber),
+    CertificateType.surah => _copy.titleSurah(_surahName),
+    CertificateType.halfQuran => _copy.titleHalfQuran,
+    CertificateType.fullQuran => _copy.titleFullQuran,
+    CertificateType.khatmahReading => _copy.titleKhatmah,
+  };
+
+  String get _achievementText => switch (award.type) {
+    CertificateType.juz => '${_copy.juzLabel} $_juzNumber',
+    CertificateType.surah => '${_copy.surahLabel} $_surahName',
+    CertificateType.halfQuran => _copy.halfQuranLabel,
+    CertificateType.fullQuran => _copy.fullQuranLabel,
+    CertificateType.khatmahReading => _copy.khatmahLabel,
+  };
+
+  String get _juzNumber {
     const arabic = [
       '',
       'الأول',
@@ -173,306 +173,64 @@ class CertificateWidget extends StatelessWidget {
       'التاسع والعشرون',
       'الثلاثون',
     ];
-    return juzNumber <= 30 ? arabic[juzNumber] : juzNumber.toString();
+    final number = award.juzNumber;
+    if (!_isArabic) return '${number ?? ''}';
+    return number != null && number > 0 && number < arabic.length
+        ? arabic[number]
+        : '${number ?? ''}';
   }
 
-  String get _achievementText {
-    switch (award.type) {
-      case CertificateType.juz:
-        return 'الجزء $_arabicJuzNumber';
-      case CertificateType.surah:
-        return 'سورة ${award.surahNameAr ?? ""}';
-      case CertificateType.halfQuran:
-        return 'نصف القرآن الكريم';
-      case CertificateType.fullQuran:
-        return 'القرآن الكريم كاملاً';
-      case CertificateType.khatmahReading:
-        return 'ختمة القرآن الكريم كاملاً';
-    }
+  String get _surahName {
+    if (_isArabic) return award.surahNameAr ?? SurahNames.nameAr(award.surahId);
+    return award.surahNameEn ??
+        award.surahNameAr ??
+        SurahNames.nameEn(award.surahId);
   }
 
-  String get _certificateTitle {
-    switch (award.type) {
-      case CertificateType.juz:
-        return 'شهادة حفظ جزء من القرآن';
-      case CertificateType.surah:
-        return 'شهادة حفظ سورة من القرآن';
-      case CertificateType.halfQuran:
-        return 'شهادة حفظ نصف القرآن الكريم';
-      case CertificateType.fullQuran:
-        return 'شهادة ختم القرآن الكريم كاملاً';
-      case CertificateType.khatmahReading:
-        return 'شهادة ختم تلاوة القرآن الكريم';
-    }
-  }
-
-  String get _actionText {
-    if (award.type == CertificateType.khatmahReading) {
-      return 'قد أتم بنجاح تلاوة';
-    }
-    return 'قد أتم بنجاح حفظ';
-  }
+  String get _verseReference => _copy.verseReference(
+    _isArabic
+        ? SurahNames.nameAr(CertificateVerse.surahId)
+        : SurahNames.nameEn(CertificateVerse.surahId),
+    LocaleNumberFormatter.format(
+      '${CertificateVerse.ayahNumber}',
+      languageCode,
+    ),
+  );
 
   String get _formattedDate => LocaleNumberFormatter.format(
     '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}',
     languageCode,
   );
 
-  bool get _isFullOrHalf =>
-      award.type == CertificateType.fullQuran ||
-      award.type == CertificateType.halfQuran ||
-      award.type == CertificateType.khatmahReading;
-
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: AspectRatio(
-        aspectRatio: 1.414,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: theme.bgGradient,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 18,
-                spreadRadius: 4,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+    final textDirection = _isArabic ? TextDirection.rtl : TextDirection.ltr;
+    return MediaQuery.withNoTextScaling(
+      child: Directionality(
+        textDirection: textDirection,
+        child: AspectRatio(
+          aspectRatio:
+              certificateCanvasSize.width / certificateCanvasSize.height,
+          child: ClipRect(
             child: Stack(
+              fit: StackFit.expand,
               children: [
-                // ─── إطار الزخرفة المتجهي Vector ───────────────────────
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: CertificateFramePainter(theme: theme),
-                  ),
+                const Image(
+                  image: AssetImage(certificateAssetPath),
+                  fit: BoxFit.fill,
                 ),
-
-                // ─── وسام ختم القرآن العائم (إذا كان ختم أو نصف) ────────
-                if (_isFullOrHalf)
-                  Positioned(
-                    top: 24,
-                    left: 28,
-                    child: _RoyalRibbonBadge(theme: theme),
-                  ),
-
-                // ─── كود التوثيق المرجعي ─────────────────────────────
-                Positioned(
-                  bottom: 18,
-                  right: 28,
-                  child: Text(
-                    'كود التوثيق: ${award.verificationCode}',
-                    style: TextStyle(
-                      fontFamily: 'Amiri',
-                      fontSize: 10,
-                      color: theme.secondaryText.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // ─── المحتوى الرئيسي ─────────────────────────────────
-                Positioned.fill(
-                  child: Center(
-                    child: FractionallySizedBox(
-                      widthFactor: 0.68,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.center,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // ─── اللوجو (أعلى) ───────────────────
-                              Image.asset(
-                                'assets/images/logo_new.png',
-                                width: 48,
-                                height: 68,
-                                cacheWidth: 100,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, _, _) => Icon(
-                                  TaliaIcons.mushaf,
-                                  color: theme.accentGold,
-                                  size: 70,
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // ─── عنوان الشهادة ────────────────────
-                              Text(
-                                _certificateTitle,
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.primaryText,
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // ─── سطر الشهادة مع خطوط الزخرفة ─────────────
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildDecorativeLine(theme.accentGold),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'تشهد منصة تالية لتحفيظ القرآن الكريم بأن',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Amiri',
-                                      fontSize: 18,
-                                      color: theme.secondaryText,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _buildDecorativeLine(theme.accentGold),
-                                ],
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // ─── اسم الطالب مع زخرفة جانبية ──────────────
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildOrnamentIcon(theme.accentGold),
-                                  const SizedBox(width: 16),
-                                  Text(
-                                    userName,
-                                    style: TextStyle(
-                                      fontFamily: 'Amiri',
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.accentGold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  _buildOrnamentIcon(theme.accentGold),
-                                ],
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              Text(
-                                _actionText,
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 19,
-                                  color: theme.secondaryText,
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // ─── بادج الإنجاز ─────────────────────
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.badgeBg,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: theme.accentGold.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  _achievementText,
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.badgeText,
-                                  ),
-                                ),
-                              ),
-
-                              if (award.dedication != null &&
-                                  award.dedication!.trim().isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  'إهداء إلى: ${award.dedication!.trim()}',
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.accentGold,
-                                  ),
-                                ),
-                              ],
-
-                              const SizedBox(height: 14),
-
-                              const SizedBox(height: 20),
-
-                              // ─── التاريخ والختم ─────────────────
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // التاريخ (يمين)
-                                  Column(
-                                    children: [
-                                      Text(
-                                        _formattedDate,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: theme.primaryText,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'Amiri',
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        width: 90,
-                                        height: 1,
-                                        color: theme.primaryText.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'التاريخ',
-                                        style: TextStyle(
-                                          fontFamily: 'Amiri',
-                                          fontSize: 14,
-                                          color: theme.secondaryText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(width: 180),
-
-                                  // ختم التطبيق الرسمى (يسار)
-                                  _AppSeal(size: 104, theme: theme),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                _CertificateContent(
+                  copy: _copy,
+                  title: _title,
+                  userName: userName,
+                  achievementText: _achievementText,
+                  actionText: award.type == CertificateType.khatmahReading
+                      ? _copy.readingAction
+                      : _copy.memorizedAction,
+                  verseReference: _verseReference,
+                  dedication: award.dedication?.trim(),
+                  formattedDate: _formattedDate,
+                  verificationCode: award.verificationCode,
                 ),
               ],
             ),
@@ -481,306 +239,366 @@ class CertificateWidget extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildDecorativeLine(Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 4,
-          height: 4,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        Container(width: 50, height: 1, color: color),
-      ],
-    );
-  }
-
-  Widget _buildOrnamentIcon(Color color) {
-    return SizedBox(
-      width: 26,
-      height: 26,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 15,
-            height: 15,
-            decoration: BoxDecoration(
-              border: Border.all(color: color, width: 1.5),
-            ),
-          ),
-          Transform.rotate(
-            angle: math.pi / 4,
-            child: Container(
-              width: 15,
-              height: 15,
-              decoration: BoxDecoration(
-                border: Border.all(color: color, width: 1.5),
-              ),
-            ),
-          ),
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-/// Royal Ribbon Badge for Full Quran / Half Quran completion
-class _RoyalRibbonBadge extends StatelessWidget {
-  final CertificateStyleTheme theme;
-  const _RoyalRibbonBadge({required this.theme});
+const _ink = Color(0xff173c37);
+const _gold = Color(0xffa8802f);
+const _goldLine = Color(0xffc9a45c);
+const _muted = Color(0xff6b5a3c);
+const _pillText = Color(0xfff7ecd2);
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.accentGold,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.accentGold.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(TaliaIcons.certificate, size: 16, color: Colors.white),
-          const SizedBox(width: 4),
-          Text(
-            'وسام ختم القرآن',
-            style: TextStyle(
-              fontFamily: 'Amiri',
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: theme.badgeBg,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AppSeal extends StatelessWidget {
-  const _AppSeal({required this.size, required this.theme});
-
-  final double size;
-  final CertificateStyleTheme theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: theme.sealBg,
-              boxShadow: [
-                BoxShadow(
-                  color: theme.sealGold.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-          ),
-          CustomPaint(
-            size: Size.square(size),
-            painter: _AppSealPainter(
-              darkGreen: theme.primaryText,
-              goldAccent: theme.sealGold,
-              bgBeige: theme.sealBg,
-            ),
-          ),
-          Container(
-            width: size * 0.58,
-            height: size * 0.58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: theme.badgeBg,
-              border: Border.all(color: theme.sealGold, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(TaliaIcons.mushaf, color: theme.sealGold, size: size * 0.16),
-              const SizedBox(height: 2),
-              Text(
-                'تالية القرآن',
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: size * 0.13,
-                  fontWeight: FontWeight.bold,
-                  color: theme.sealGold,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AppSealPainter extends CustomPainter {
-  const _AppSealPainter({
-    required this.darkGreen,
-    required this.goldAccent,
-    required this.bgBeige,
+/// Lays the copy over the artwork. Positions are fractions of the canvas, so
+/// the preview and the 3x export match exactly; every band shrinks its text
+/// rather than overflow into the artwork.
+class _CertificateContent extends StatelessWidget {
+  const _CertificateContent({
+    required this.copy,
+    required this.title,
+    required this.userName,
+    required this.achievementText,
+    required this.actionText,
+    required this.verseReference,
+    required this.dedication,
+    required this.formattedDate,
+    required this.verificationCode,
   });
 
-  final Color darkGreen;
-  final Color goldAccent;
-  final Color bgBeige;
+  final CertificateTemplateCopy copy;
+  final String title;
+  final String userName;
+  final String achievementText;
+  final String actionText;
+  final String verseReference;
+  final String? dedication;
+  final String formattedDate;
+  final String verificationCode;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final height = constraints.maxHeight;
+      final s = width / certificateCanvasSize.width;
+      final hasDedication = dedication?.isNotEmpty ?? false;
+
+      // The parchment between the window artwork and the seal spans roughly
+      // 0.31–0.69 of the width around the arch at 0.5.
+      Widget band({
+        double cx = .5,
+        required double cy,
+        required double w,
+        required double h,
+        required Widget child,
+      }) => Positioned(
+        left: (cx - w / 2) * width,
+        top: (cy - h / 2) * height,
+        width: w * width,
+        height: h * height,
+        child: Center(
+          child: FittedBox(fit: BoxFit.scaleDown, child: child),
+        ),
+      );
+
+      Text text(
+        String value,
+        double size, {
+        FontWeight? weight,
+        Color color = _ink,
+        String? fontFamily,
+      }) => Text(
+        value,
+        maxLines: 1,
+        softWrap: false,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: fontFamily ?? 'Amiri',
+          fontSize: size * s,
+          fontWeight: weight,
+          color: color,
+          height: 1.25,
+        ),
+      );
+
+      return Stack(
+        children: [
+          band(
+            cy: .118,
+            w: .08,
+            h: .095,
+            child: Image.asset(
+              certificateLogoAssetPath,
+              width: 96 * s,
+              height: 96 * s,
+            ),
+          ),
+          band(
+            cy: .215,
+            w: .38,
+            h: .075,
+            child: text(title, 52, weight: FontWeight.bold),
+          ),
+          band(
+            cy: .292,
+            w: .38,
+            h: .045,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _GoldRule(length: 120 * s, scale: s, dotAtStart: true),
+                SizedBox(width: 14 * s),
+                text(copy.recipientIntro, 26, color: _muted),
+                SizedBox(width: 14 * s),
+                _GoldRule(length: 120 * s, scale: s, dotAtStart: false),
+              ],
+            ),
+          ),
+          band(
+            cy: .378,
+            w: .38,
+            h: .08,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _Rosette(size: 30 * s),
+                SizedBox(width: 22 * s),
+                text(userName, 56, weight: FontWeight.bold, color: _gold),
+                SizedBox(width: 22 * s),
+                _Rosette(size: 30 * s),
+              ],
+            ),
+          ),
+          band(
+            cy: .458,
+            w: .38,
+            h: .045,
+            child: text(actionText, 27, color: _muted),
+          ),
+          band(
+            cy: .532,
+            w: .38,
+            h: .075,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 44 * s,
+                vertical: 8 * s,
+              ),
+              decoration: BoxDecoration(
+                color: _ink,
+                borderRadius: BorderRadius.circular(26 * s),
+                border: Border.all(color: _goldLine, width: 1.5 * s),
+              ),
+              child: text(
+                achievementText,
+                34,
+                weight: FontWeight.bold,
+                color: _pillText,
+              ),
+            ),
+          ),
+          band(
+            cy: .621,
+            w: .38,
+            h: .062,
+            // Quran text is always laid out right-to-left, whatever the
+            // certificate language, so the ornate brackets face inward.
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: text(
+                '﴿ ${CertificateVerse.text} ﴾',
+                36,
+                weight: FontWeight.bold,
+              ),
+            ),
+          ),
+          band(
+            cy: .671,
+            w: .2,
+            h: .03,
+            child: text(verseReference, 18, color: _muted),
+          ),
+          band(
+            cy: .738,
+            w: .38,
+            h: .085,
+            child: SizedBox(
+              width: .38 * width,
+              child: Text(
+                copy.blessing,
+                maxLines: 3,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontSize: 24 * s,
+                  color: _ink,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
+          if (hasDedication)
+            band(
+              cy: .806,
+              w: .38,
+              h: .032,
+              child: text(
+                '${copy.dedicationLabel}: $dedication',
+                20,
+                color: _gold,
+              ),
+            ),
+          ..._signatureColumn(
+            cx: .385,
+            value: text(formattedDate, 24, weight: FontWeight.bold),
+            label: copy.dateLabel,
+            band: band,
+            text: text,
+            width: width,
+            height: height,
+            s: s,
+          ),
+          ..._signatureColumn(
+            cx: .615,
+            value: text(
+              certificateSignatureText,
+              68,
+              weight: FontWeight.bold,
+              fontFamily: 'MrsSaintDelafield',
+            ),
+            label: copy.signatureLabel,
+            band: band,
+            text: text,
+            width: width,
+            height: height,
+            s: s,
+          ),
+          band(
+            cy: .938,
+            w: .16,
+            h: .022,
+            child: text(
+              '${copy.verificationLabel}: $verificationCode',
+              15,
+              color: _muted,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  /// A value over a gold rule with its caption beneath, as on paper forms.
+  List<Widget> _signatureColumn({
+    required double cx,
+    required Widget value,
+    required String label,
+    required Widget Function({
+      double cx,
+      required double cy,
+      required double w,
+      required double h,
+      required Widget child,
+    })
+    band,
+    required Text Function(
+      String value,
+      double size, {
+      FontWeight? weight,
+      Color color,
+      String? fontFamily,
+    })
+    text,
+    required double width,
+    required double height,
+    required double s,
+  }) => [
+    band(cx: cx, cy: .853, w: .14, h: .06, child: value),
+    Positioned(
+      left: (cx - .055) * width,
+      top: .888 * height,
+      width: .11 * width,
+      height: 1.4 * s,
+      child: const ColoredBox(color: _goldLine),
+    ),
+    band(
+      cx: cx,
+      cy: .912,
+      w: .14,
+      h: .03,
+      child: text(label, 19, color: _muted),
+    ),
+  ];
+}
+
+/// A thin gold line ending in a small diamond, framing the intro line.
+class _GoldRule extends StatelessWidget {
+  const _GoldRule({
+    required this.length,
+    required this.scale,
+    required this.dotAtStart,
+  });
+
+  final double length;
+  final double scale;
+  final bool dotAtStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = Transform.rotate(
+      angle: math.pi / 4,
+      child: Container(width: 6 * scale, height: 6 * scale, color: _goldLine),
+    );
+    final line = Container(
+      width: length,
+      height: 1.5 * scale,
+      color: _goldLine,
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: dotAtStart ? [dot, line] : [line, dot],
+    );
+  }
+}
+
+/// The eight-point gold ornament flanking the recipient's name.
+class _Rosette extends StatelessWidget {
+  const _Rosette({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(size: Size.square(size), painter: const _RosettePainter());
+}
+
+class _RosettePainter extends CustomPainter {
+  const _RosettePainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    final outerPath = Path();
-    const int petals = 32;
-    for (var i = 0; i < petals * 2; i++) {
-      final angle = (math.pi * 2 * i) / (petals * 2);
-      final r = i.isEven ? radius : radius - 3.5;
-      final p = Offset(
-        center.dx + math.cos(angle) * r,
-        center.dy + math.sin(angle) * r,
-      );
-      if (i == 0) {
-        outerPath.moveTo(p.dx, p.dy);
-      } else {
-        outerPath.lineTo(p.dx, p.dy);
-      }
-    }
-    outerPath.close();
-
-    canvas.drawPath(
-      outerPath,
-      Paint()
-        ..color = goldAccent
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(
-      outerPath,
-      Paint()
-        ..color = darkGreen.withValues(alpha: 0.5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.5,
-    );
-
-    canvas.drawCircle(center, radius - 5, Paint()..color = bgBeige);
-    canvas.drawCircle(
-      center,
-      radius - 5,
-      Paint()
-        ..color = darkGreen
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
-    );
-
-    final starRadius = radius - 12;
-    final rectWidth = starRadius * math.sqrt(2);
-
-    final goldStroke = Paint()
-      ..color = goldAccent
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    final stroke = Paint()
+      ..color = _gold
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8;
+      ..strokeWidth = radius * .12;
+    final fill = Paint()..color = _gold;
 
-    final greenStroke = Paint()
-      ..color = darkGreen
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    for (int i = 0; i < 2; i++) {
-      canvas.save();
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(i * math.pi / 4);
-      final rect = Rect.fromCenter(
-        center: Offset.zero,
-        width: rectWidth,
-        height: rectWidth,
-      );
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..color = goldAccent.withValues(alpha: 0.15)
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawRect(rect, goldStroke);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: rectWidth - 6,
-          height: rectWidth - 6,
-        ),
-        greenStroke,
-      );
-      canvas.restore();
+    final star = Path();
+    for (var i = 0; i < 16; i++) {
+      final r = i.isEven ? radius * .95 : radius * .62;
+      final angle = i * math.pi / 8 - math.pi / 2;
+      final point = center + Offset(math.cos(angle), math.sin(angle)) * r;
+      i == 0
+          ? star.moveTo(point.dx, point.dy)
+          : star.lineTo(point.dx, point.dy);
     }
-
-    for (var i = 0; i < 8; i++) {
-      final angle = (math.pi * 2 * i) / 8;
-      final p = Offset(
-        center.dx + math.cos(angle) * (starRadius + 2.5),
-        center.dy + math.sin(angle) * (starRadius + 2.5),
-      );
-      canvas.drawCircle(
-        p,
-        3.0,
-        Paint()
-          ..color = bgBeige
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawCircle(
-        p,
-        3.0,
-        Paint()
-          ..color = goldAccent
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
-      canvas.drawCircle(
-        p,
-        1.2,
-        Paint()
-          ..color = darkGreen
-          ..style = PaintingStyle.fill,
-      );
-    }
+    star.close();
+    canvas
+      ..drawPath(star, stroke)
+      ..drawCircle(center, radius * .38, stroke)
+      ..drawCircle(center, radius * .16, fill);
   }
 
   @override
-  bool shouldRepaint(_AppSealPainter oldDelegate) {
-    return oldDelegate.darkGreen != darkGreen ||
-        oldDelegate.goldAccent != goldAccent ||
-        oldDelegate.bgBeige != bgBeige;
-  }
+  bool shouldRepaint(_RosettePainter oldDelegate) => false;
 }

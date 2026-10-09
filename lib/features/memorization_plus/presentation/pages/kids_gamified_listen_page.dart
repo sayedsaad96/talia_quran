@@ -1084,12 +1084,33 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
   }
 }
 
+/// The child's nickname from kids setup, or null when it is unavailable.
+Future<String?> _loadKidsCertificateName() async {
+  try {
+    if (!getIt.isRegistered<MemorizationPlusRepository>()) return null;
+    final result = await getIt<MemorizationPlusRepository>()
+        .getParentSettings();
+    final nickname = result
+        .fold((_) => null, (settings) => settings.localChildNickname)
+        ?.trim();
+    return nickname == null || nickname.isEmpty ? null : nickname;
+  } catch (_) {
+    return null;
+  }
+}
+
 Future<void> _navigateAfterKidsCompletion(
   BuildContext context,
   KidsModeLoaded state,
 ) async {
   if (state.newAwards.isNotEmpty) {
-    await showCertificateCelebrationDialog(context, state.newAwards);
+    final childName = await _loadKidsCertificateName();
+    if (!context.mounted) return;
+    await showCertificateCelebrationDialog(
+      context,
+      state.newAwards,
+      userName: childName ?? context.l10n.certificateChildLearner,
+    );
   }
   if (!context.mounted) return;
   // K11: carry session points (and any level-up) to the completion screen.

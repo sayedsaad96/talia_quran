@@ -2733,6 +2733,102 @@ abstract class AppLocalizations {
   /// **'لم يتم العثور على الشهادة'**
   String get certificateNotFound;
 
+  /// No description provided for @certificateTemplateRecipientIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشهد منصة تالية لتحفيظ القرآن الكريم بأن'**
+  String get certificateTemplateRecipientIntro;
+
+  /// No description provided for @certificateTemplateMemorizedAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد أتم بنجاح حفظ'**
+  String get certificateTemplateMemorizedAction;
+
+  /// No description provided for @certificateTemplateReadingAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد أتم بنجاح تلاوة'**
+  String get certificateTemplateReadingAction;
+
+  /// No description provided for @certificateTemplateDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get certificateTemplateDate;
+
+  /// No description provided for @certificateTemplateVerification.
+  ///
+  /// In ar, this message translates to:
+  /// **'كود التوثيق'**
+  String get certificateTemplateVerification;
+
+  /// No description provided for @certificateTemplateDedication.
+  ///
+  /// In ar, this message translates to:
+  /// **'إهداء إلى'**
+  String get certificateTemplateDedication;
+
+  /// No description provided for @certificateTemplateJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجزء'**
+  String get certificateTemplateJuz;
+
+  /// No description provided for @certificateTemplateSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة'**
+  String get certificateTemplateSurah;
+
+  /// No description provided for @certificateTemplateHalfQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصف القرآن الكريم'**
+  String get certificateTemplateHalfQuran;
+
+  /// No description provided for @certificateTemplateFullQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'القرآن الكريم كاملاً'**
+  String get certificateTemplateFullQuran;
+
+  /// No description provided for @certificateTemplateKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة القرآن الكريم كاملاً'**
+  String get certificateTemplateKhatmah;
+
+  /// No description provided for @certificateChildLearner.
+  ///
+  /// In ar, this message translates to:
+  /// **'طفل تالية'**
+  String get certificateChildLearner;
+
+  /// No description provided for @certificateTitleKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة إتمام ختمة تلاوة القرآن الكريم'**
+  String get certificateTitleKhatmah;
+
+  /// No description provided for @certificateTemplateSignature.
+  ///
+  /// In ar, this message translates to:
+  /// **'التوقيع'**
+  String get certificateTemplateSignature;
+
+  /// No description provided for @certificateTemplateVerseReference.
+  ///
+  /// In ar, this message translates to:
+  /// **'({surahName}: {ayahNumber})'**
+  String certificateTemplateVerseReference(Object ayahNumber, Object surahName);
+
+  /// No description provided for @certificateTemplateBlessing.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.'**
+  String get certificateTemplateBlessing;
+
   /// No description provided for @shareCertificateJuz.
   ///
   /// In ar, this message translates to:

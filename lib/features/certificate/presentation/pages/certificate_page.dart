@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
@@ -33,7 +32,6 @@ class CertificatePage extends StatefulWidget {
 
 class _CertificatePageState extends State<CertificatePage> {
   final _screenshotController = ScreenshotController();
-  CertificateStyleType _selectedStyle = CertificateStyleType.classicParchment;
   bool _isSaving = false;
 
   @override
@@ -65,17 +63,27 @@ class _CertificatePageState extends State<CertificatePage> {
     CertificateType.khatmahReading => 'talia_certificate_khatmah.png',
   };
 
-  Future<Uint8List> _captureCertificateBytes() =>
-      _screenshotController.captureFromWidget(
-        CertificateWidget(
-          userName: widget.userName,
-          award: widget.award,
-          completionDate: widget.award.earnedAt,
-          languageCode: Localizations.localeOf(context).languageCode,
-          styleType: _selectedStyle,
-        ),
-        pixelRatio: 3.0,
-      );
+  Future<Uint8List> _captureCertificateBytes() async {
+    await Future.wait([
+      precacheImage(const AssetImage(certificateAssetPath), context),
+      precacheImage(const AssetImage(certificateLogoAssetPath), context),
+    ]);
+    if (!mounted) {
+      throw StateError('Certificate page was disposed before capture.');
+    }
+    return _screenshotController.captureFromWidget(
+      CertificateWidget(
+        userName: widget.userName,
+        award: widget.award,
+        completionDate: widget.award.earnedAt,
+        languageCode: Localizations.localeOf(context).languageCode,
+        copy: CertificateTemplateCopy.fromLocalizations(context.l10n),
+      ),
+      context: context,
+      targetSize: certificateCanvasSize,
+      pixelRatio: 3.0,
+    );
+  }
 
   Future<void> _share() async {
     setState(() => _isSaving = true);
@@ -292,14 +300,15 @@ class _CertificatePageState extends State<CertificatePage> {
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
                           child: CertificateWidget(
-                            key: ValueKey(_selectedStyle),
                             userName: widget.userName,
                             award: widget.award,
                             completionDate: widget.award.earnedAt,
                             languageCode: Localizations.localeOf(
                               context,
                             ).languageCode,
-                            styleType: _selectedStyle,
+                            copy: CertificateTemplateCopy.fromLocalizations(
+                              context.l10n,
+                            ),
                           ),
                         ),
                       ),
@@ -345,11 +354,7 @@ class _CertificatePageState extends State<CertificatePage> {
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildActionButtons(),
-                          const SizedBox(width: AppSpacing.md),
-                          _buildStyleSwitcher(),
-                        ],
+                        children: [_buildActionButtons()],
                       ),
                     ),
                   );
@@ -358,48 +363,6 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStyleSwitcher() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: Colors.white24, width: 1),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 10),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: CertificateStyleType.values.map((style) {
-          final isSelected = style == _selectedStyle;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: ChoiceChip(
-              label: Text(
-                style.displayName,
-                style: AppTypography.titleSmall.copyWith(
-                  fontFamily: 'Amiri',
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.black : Colors.white70,
-                ),
-              ),
-              selected: isSelected,
-              selectedColor: CertificatePagePalette.gold,
-              backgroundColor: Colors.white12,
-              onSelected: (selected) {
-                if (selected) {
-                  unawaited(HapticFeedback.selectionClick());
-                  setState(() => _selectedStyle = style);
-                }
-              },
-            ),
-          );
-        }).toList(),
       ),
     );
   }

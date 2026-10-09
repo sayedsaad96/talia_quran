@@ -33,6 +33,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     this.homeMissions = const [],
     this.homeMissionsPaused = false,
     this.guardianLinked = false,
+    this.childName,
     this.rewardMessage,
     this.rewardMessageId = 0,
   });
@@ -53,6 +54,9 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
   /// A guardian follows this child from their own device.
   final bool guardianLinked;
 
+  /// The nickname from kids setup, printed on the child's certificates.
+  final String? childName;
+
   /// A cubit message code for a gift request that did not go through.
   final String? rewardMessage;
 
@@ -71,6 +75,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     homeMissions: homeMissions ?? this.homeMissions,
     homeMissionsPaused: homeMissionsPaused,
     guardianLinked: guardianLinked,
+    childName: childName,
     rewardMessage: rewardMessage,
     rewardMessageId: rewardMessageId ?? this.rewardMessageId,
   );
@@ -83,6 +88,7 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     homeMissions,
     homeMissionsPaused,
     guardianLinked,
+    childName,
     rewardMessage,
     rewardMessageId,
   ];
@@ -137,6 +143,19 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
     }
   }
 
+  /// A name only personalizes certificates, so a failure just drops it.
+  Future<String?> _loadChildName() async {
+    try {
+      final result = await _memorizationRepository.getParentSettings();
+      final name = result
+          .fold((_) => null, (settings) => settings.localChildNickname)
+          ?.trim();
+      return name == null || name.isEmpty ? null : name;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> load() async {
     emit(const KidsTreasuresLoading());
     try {
@@ -161,6 +180,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
           ? const <KidsHomeMission>[]
           : await _loadMissions();
       final guardianLinked = await _isGuardianLinked();
+      final childName = await _loadChildName();
       if (isClosed) return;
       emit(
         KidsTreasuresLoaded(
@@ -170,6 +190,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
           homeMissions: missions,
           homeMissionsPaused: paused,
           guardianLinked: guardianLinked,
+          childName: childName,
         ),
       );
     } catch (_) {

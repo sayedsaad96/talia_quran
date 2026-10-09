@@ -17,13 +17,19 @@ import '../../../settings/presentation/cubits/profile_cubit.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
+/// [userName] names the certificate recipient. Kids flows pass the child's
+/// name so the adult account profile is never printed on a child's certificate.
 Future<void> showCertificateCelebrationDialog(
   BuildContext context,
-  List<CertificateAward> awards,
-) {
+  List<CertificateAward> awards, {
+  String? userName,
+}) {
   if (awards.isEmpty) return Future.value();
 
-  final userName = _resolveUserName(context);
+  final explicitName = userName?.trim();
+  final recipientName = explicitName != null && explicitName.isNotEmpty
+      ? explicitName
+      : _resolveUserName(context);
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -34,7 +40,7 @@ Future<void> showCertificateCelebrationDialog(
         unawaited(
           context.push(
             '/certificate',
-            extra: {'award': award, 'userName': userName},
+            extra: {'award': award, 'userName': recipientName},
           ),
         );
       },
