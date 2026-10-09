@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appName": "Talia",
+  "appName": "Talia Quran",
   "home": "Home",
   "quran": "Quran",
   "hifz": "Memorize",
@@ -303,7 +303,7 @@
   "morningAzkarTime": "Everyday at 6:00 AM",
   "eveningAzkarTime": "Everyday at 6:00 PM",
   "taliaDescription": "A premium app for memorizing and reviewing the Holy Quran",
-  "settingsAppBrand": "Talia",
+  "settingsAppBrand": "Talia Quran",
   "tutorialGuideTitle": "Talia user guide",
   "tutorialGuideSubtitle": "Learn every feature and how to use it",
   "tutorialGuideHeroSubtitle": "Talia's knowledge hub and feature guide",

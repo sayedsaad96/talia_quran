@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// Application name
   ///
   /// In ar, this message translates to:
-  /// **'تالية'**
+  /// **'Talia Quran'**
   String get appName;
 
   /// No description provided for @home.
@@ -1650,7 +1650,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppBrand.
   ///
   /// In ar, this message translates to:
-  /// **'تالية — Talia'**
+  /// **'Talia Quran'**
   String get settingsAppBrand;
 
   /// No description provided for @tutorialGuideTitle.

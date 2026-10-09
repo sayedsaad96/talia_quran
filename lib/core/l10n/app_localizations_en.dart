@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Talia';
+  String get appName => 'Talia Quran';
 
   @override
   String get home => 'Home';
@@ -849,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'A premium app for memorizing and reviewing the Holy Quran';
 
   @override
-  String get settingsAppBrand => 'Talia';
+  String get settingsAppBrand => 'Talia Quran';
 
   @override
   String get tutorialGuideTitle => 'Talia user guide';

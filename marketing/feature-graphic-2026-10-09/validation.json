@@ -1,0 +1,59 @@
+{
+  "headline": "رحلة مع القرآن\nلكل العائلة",
+  "copy": "قراءة • حفظ • تعلّم",
+  "fontLoaded": true,
+  "overflow": false,
+  "images": [
+    {
+      "loaded": true,
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "loaded": true,
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "loaded": true,
+      "width": 1254,
+      "height": 1254
+    }
+  ],
+  "bounds": [
+    {
+      "element": "screen adult",
+      "x": 59.227970123291016,
+      "y": 98.18453979492188,
+      "right": 278.7720375061035,
+      "bottom": 446.4717102050781
+    },
+    {
+      "element": "screen kids",
+      "x": 257.490966796875,
+      "y": 65.28247833251953,
+      "right": 478.509033203125,
+      "bottom": 422.04566192626953
+    },
+    {
+      "element": "brand",
+      "x": 826.921875,
+      "y": 68,
+      "right": 960,
+      "bottom": 110
+    },
+    {
+      "element": "copy",
+      "x": 528,
+      "y": 145,
+      "right": 960,
+      "bottom": 387.5
+    }
+  ],
+  "format": "png",
+  "width": 1024,
+  "height": 500,
+  "channels": 3,
+  "hasAlpha": false,
+  "bytes": 233572
+}

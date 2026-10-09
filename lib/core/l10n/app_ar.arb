@@ -1,6 +1,6 @@
 {
   "@@locale": "ar",
-  "appName": "تالية",
+  "appName": "Talia Quran",
   "@appName": {
     "description": "Application name"
   },
@@ -306,7 +306,7 @@
   "morningAzkarTime": "كل يوم الساعة ٦:٠٠ صباحًا",
   "eveningAzkarTime": "كل يوم الساعة ٦:٠٠ مساءً",
   "taliaDescription": "تطبيق متميز لحفظ ومراجعة القرآن الكريم",
-  "settingsAppBrand": "تالية — Talia",
+  "settingsAppBrand": "Talia Quran",
   "tutorialGuideTitle": "دليل استخدام تالية",
   "tutorialGuideSubtitle": "تعرف على كل مزايا التطبيق وطريقة استخدامها",
   "tutorialGuideHeroSubtitle": "مركز المعرفة وشرح مزايا تالية",

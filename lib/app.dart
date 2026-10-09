@@ -24,7 +24,6 @@ import 'features/prayer_companion/application/prayer_companion_controller.dart';
 import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
 
-
 /// Notifier that signals when [AppInitializer] has finished.
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
 /// into the full BlocProvider tree + GoRouter.
@@ -95,7 +94,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     // Before initialization, show a minimal app with only the splash route.
     if (!AppInitializer.isInitialized) {
       return MaterialApp.router(
-        title: 'تالية',
+        onGenerateTitle: (context) => AppLocalizations.of(context).appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
