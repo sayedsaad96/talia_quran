@@ -27,7 +27,9 @@ class KidsStageDetails extends StatelessWidget {
     final startButton = KidsChunkyButton(
       onPressed: onStartMission,
       icon: TaliaKidsIcons.play,
-      label: context.l10n.kidsGamifiedStartMission,
+      label: stage.requiresHouseReview
+          ? context.l10n.kidsHouseReviewAction
+          : context.l10n.kidsGamifiedStartMission,
       height: 68,
     );
 
@@ -36,6 +38,21 @@ class KidsStageDetails extends StatelessWidget {
       children: [
         _RibbonHeader(stage: stage, surahName: surahName),
         const SizedBox(height: AppSpacing.lg),
+        Text(
+          context.l10n.kidsHouseReviewHint,
+          textAlign: TextAlign.center,
+          style: AppTypography.bodyMedium.copyWith(
+            color: KidsTheme.reviewPurple,
+          ),
+        ),
+        if (stage.requiresHouseReview)
+          Text(
+            context.l10n.kidsHouseReviewRemaining(
+              context.numText(stage.pendingHouseReviewAyahs.length),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        const SizedBox(height: AppSpacing.sm),
         _MissionStep(
           icon: TaliaKidsIcons.listen,
           title: context.l10n.kidsGamifiedListenStep,

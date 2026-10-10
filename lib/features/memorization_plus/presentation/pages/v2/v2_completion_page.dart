@@ -1,6 +1,5 @@
 import 'dart:async';
 import '../../../../../core/icons/talia_icons.dart';
-import '../../../../../core/utils/locale_number_formatter.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
 
 import 'package:flutter/material.dart';
@@ -31,12 +30,14 @@ class V2CompletionPage extends StatefulWidget {
     super.key,
     required this.finalState,
     this.nextStepLoader,
+    this.isSurahPractice = false,
   });
 
   final V2SessionState finalState;
 
   /// Visible for tests; production resolves today's plan via DI.
   final V2NextStepLoader? nextStepLoader;
+  final bool isSurahPractice;
 
   @override
   State<V2CompletionPage> createState() => _V2CompletionPageState();
@@ -143,12 +144,11 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
                 style: FilledButton.styleFrom(backgroundColor: primary),
                 icon: const Icon(TaliaIcons.skipNext),
                 label: Text(
-                  l10n.v2NextPlanItem(
-                    LocaleNumberFormatter.format(
-                      (next.remaining).toString(),
-                      l10n.localeName,
-                    ),
-                  ),
+                  widget.isSurahPractice
+                      ? l10n.practiceNextPassage(
+                          context.numText(next.remaining),
+                        )
+                      : l10n.v2NextPlanItem(context.numText(next.remaining)),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),

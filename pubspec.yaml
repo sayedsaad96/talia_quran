@@ -155,6 +155,8 @@ flutter:
     - assets/images/kids/house_current.png
     - assets/images/kids/house_locked.png
     - assets/images/kids/house_review.png
+    - assets/images/kids/house_garden.png
+    - assets/images/kids/house_library.png
     - assets/images/kids/ribbon_banner.png
     - assets/images/kids/star_reward.png
     - assets/images/talia/talia_avatar.png

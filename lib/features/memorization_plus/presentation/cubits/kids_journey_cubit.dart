@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,6 +26,9 @@ typedef KidsJourneySessionLogsLoader = Future<List<KidsSessionLog>?> Function();
 /// Today's confirmed Mushaf pages for the reading mission. When absent (or
 /// throwing) the reading mission is omitted.
 typedef KidsReadingPagesLoader = Future<Set<int>> Function();
+typedef KidsReadingPagesForDayLoader = Future<Set<int>> Function(DateTime day);
+
+typedef KidsRecentReadingDaysLoader = Future<int> Function(DateTime before);
 
 /// The child's local home missions («مهمة من البيت»). When absent (or
 /// throwing) no home card is shown; never an error state.
@@ -56,6 +57,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsResumeMissionLoader? resumeMissionLoader,
     KidsJourneySessionLogsLoader? sessionLogsLoader,
     KidsReadingPagesLoader? readingPagesLoader,
+    KidsReadingPagesForDayLoader? readingPagesForDayLoader,
+    KidsRecentReadingDaysLoader? recentReadingDaysLoader,
     KidsJourneyPolicyLoader? policyLoader,
     KidsHomeMissionsLoader? homeMissionsLoader,
     KidsChildPolicyReader? childPolicyReader,
@@ -63,17 +66,21 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     KidsInboundRefresh? inboundRefresh,
     KidsNextMissionResolver missionResolver = const KidsNextMissionResolver(),
     bool v2Enabled = true,
+    DateTime Function()? clock,
   }) : _reviewRecordsLoader = reviewRecordsLoader,
        _inboundRefresh = inboundRefresh,
        _resumeMissionLoader = resumeMissionLoader,
        _sessionLogsLoader = sessionLogsLoader,
        _readingPagesLoader = readingPagesLoader,
+       _readingPagesForDayLoader = readingPagesForDayLoader,
+       _recentReadingDaysLoader = recentReadingDaysLoader,
        _policyLoader = policyLoader,
        _homeMissionsLoader = homeMissionsLoader,
        _childPolicyReader = childPolicyReader,
        _childPolicyRefresh = childPolicyRefresh,
        _missionResolver = missionResolver,
        _v2Enabled = v2Enabled,
+       _clock = clock ?? DateTime.now,
        super(const KidsJourneyInitial());
 
   final GetKidsJourneyUsecase _getJourney;
@@ -83,6 +90,9 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsResumeMissionLoader? _resumeMissionLoader;
   final KidsJourneySessionLogsLoader? _sessionLogsLoader;
   final KidsReadingPagesLoader? _readingPagesLoader;
+  final KidsReadingPagesForDayLoader? _readingPagesForDayLoader;
+  final KidsRecentReadingDaysLoader? _recentReadingDaysLoader;
+  final DateTime Function() _clock;
   final KidsJourneyPolicyLoader? _policyLoader;
   final KidsHomeMissionsLoader? _homeMissionsLoader;
   final KidsChildPolicyReader? _childPolicyReader;
@@ -200,7 +210,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
             loadStages: _loadStages,
           )
         : null;
-    final now = DateTime.now().toUtc();
+    final now = _clock().toUtc();
     KidsNextMission? resolveWith(KidsDailyBudget budget) =>
         _missionResolver.resolve(
           activeSurahId: activeSurahId,
@@ -243,7 +253,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           : await _surahName(missionSurahId),
       isReturningAfterBreak: kidsIsReturningAfterBreak(
         progressResult.fold((_) => null, (p) => p.lastSessionAt),
-        DateTime.now(),
+        _clock(),
       ),
     );
     if (!isStale()) emit(loaded);
@@ -317,39 +327,55 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     required bool dayGoalReached,
     required List<KidsSessionLog> logs,
   }) async {
-    Set<int>? pages;
-    try {
-      pages = await _readingPagesLoader?.call();
-    } catch (_) {
-      pages = null;
-    }
+    final now = _clock();
+    final reading = await _dailyReading(now);
     try {
       await _childPolicyRefresh?.call();
     } catch (_) {
       // Keep the last known policy.
     }
     final policy = _childPolicy();
-    final now = DateTime.now();
-    final homeMission = policy.homeMissionsEnabled
-        ? await _homeCardMission(now)
-        : null;
-    final missions = resolveKidsDailyMissions(
+    List<KidsHomeMission> homeMissions;
+    try {
+      homeMissions = policy.homeMissionsEnabled
+          ? await _homeMissionsLoader?.call() ?? const []
+          : const [];
+    } catch (_) {
+      // An unreadable assignment list is not evidence that no guardian task
+      // exists. Keep the learning journey available and retry on refresh.
+      return const [];
+    }
+    return resolveKidsDailyMissions(
       now: now,
       learning: learning,
       dayGoalReached: dayGoalReached,
       logs: logs,
-      pagesReadToday: pages ?? const <int>{},
-      homeMission: homeMission,
-      // Slots are positional [learning, reading, home]: without home
-      // missions at most the first two can show.
-      maxMissions: policy.homeMissionsEnabled
-          ? policy.maxDailySuggestions
-          : math.min(policy.maxDailySuggestions, 2),
+      pagesReadToday: reading.pages ?? const <int>{},
+      homeMissions: homeMissions,
+      recentReadingDays: reading.recentDays,
+      readingAvailable: reading.pages != null,
+      maxMissions: policy.maxDailySuggestions,
     );
-    if (pages != null) return missions;
-    return missions
-        .where((m) => m.kind != KidsDailyMissionKind.reading)
-        .toList(growable: false);
+  }
+
+  Future<({Set<int>? pages, int recentDays})> _dailyReading(
+    DateTime now,
+  ) async {
+    Set<int>? pages;
+    var recentDays = 0;
+    try {
+      pages = _readingPagesForDayLoader != null
+          ? await _readingPagesForDayLoader(now)
+          : await _readingPagesLoader?.call();
+    } catch (_) {
+      // A missing receipt source cannot prove reading completion.
+    }
+    try {
+      recentDays = await _recentReadingDaysLoader?.call(now) ?? 0;
+    } catch (_) {
+      // Start gently when historical receipts are unavailable.
+    }
+    return (pages: pages, recentDays: recentDays);
   }
 
   /// The guardian policy, sanitized; the default on a missing or failing
@@ -360,42 +386,6 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           .sanitized();
     } catch (_) {
       return const KidsChildPolicy();
-    }
-  }
-
-  /// The home mission behind the home card (P3-R16): the oldest `assigned`
-  /// one; else the latest mission reported TODAY (local day, even if already
-  /// acknowledged) so the card shows its done state; else none. A reported mission never blocks newer ones.
-  /// Fail-open: any loader error simply means no home card.
-  Future<KidsHomeMission?> _homeCardMission(DateTime now) async {
-    try {
-      final missions = await _homeMissionsLoader?.call();
-      if (missions == null) return null;
-      final assigned =
-          missions
-              .where((m) => m.status == KidsHomeMissionStatus.assigned)
-              .toList()
-            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      if (assigned.isNotEmpty) return assigned.first;
-      final today = DateTime(now.year, now.month, now.day);
-      bool reportedToday(KidsHomeMission m) {
-        final at = m.reportedAt?.toLocal();
-        if (at == null) return false;
-        return DateTime(at.year, at.month, at.day) == today;
-      }
-
-      final doneToday =
-          missions
-              .where(
-                (m) =>
-                    m.status != KidsHomeMissionStatus.assigned &&
-                    reportedToday(m),
-              )
-              .toList()
-            ..sort((a, b) => b.reportedAt!.compareTo(a.reportedAt!));
-      return doneToday.isEmpty ? null : doneToday.first;
-    } catch (_) {
-      return null;
     }
   }
 
@@ -410,10 +400,6 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       policy = null;
     }
     if (logs == null) return KidsDailyBudget.unlimited;
-    return KidsDailyBudget.fromLogs(
-      logs: logs,
-      policy: policy,
-      now: DateTime.now(),
-    );
+    return KidsDailyBudget.fromLogs(logs: logs, policy: policy, now: _clock());
   }
 }

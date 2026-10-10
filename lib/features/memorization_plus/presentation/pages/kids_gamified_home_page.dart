@@ -95,6 +95,8 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
   bool _taliaHappy = false;
   bool _reportingHomeMission = false;
   Timer? _happyTimer;
+  Timer? _dailyRefreshTimer;
+  String _dailyDayKey = kidsDayKey(DateTime.now());
 
   @override
   void initState() {
@@ -102,12 +104,14 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
     _nickname = widget.childName;
     if (_nickname == null) unawaited(_loadNickname());
     WidgetsBinding.instance.addObserver(this);
+    _scheduleDailyRefresh();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     if (!(ModalRoute.isCurrentOf(context) ?? true)) return;
+    _refreshDailyMissionsIfNeeded();
     unawaited(
       context.read<KidsJourneyCubit>().refreshFromGuardian(
         surahId: widget.surahId,
@@ -145,7 +149,35 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _happyTimer?.cancel();
+    _dailyRefreshTimer?.cancel();
     super.dispose();
+  }
+
+  void _refreshDailyMissionsIfNeeded() {
+    final today = kidsDayKey(DateTime.now());
+    if (today == _dailyDayKey) return;
+    _dailyDayKey = today;
+    unawaited(
+      context.read<KidsJourneyCubit>().load(
+        surahId: widget.surahId,
+        followFrontier: true,
+        showLoading: false,
+      ),
+    );
+  }
+
+  void _scheduleDailyRefresh() {
+    _dailyRefreshTimer?.cancel();
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day + 1);
+    _dailyRefreshTimer = Timer(midnight.difference(now), () {
+      if (!mounted) return;
+      if ((ModalRoute.isCurrentOf(context) ?? true) &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        _refreshDailyMissionsIfNeeded();
+      }
+      _scheduleDailyRefresh();
+    });
   }
 
   Future<void> _loadNickname() async {
@@ -472,6 +504,14 @@ class KidsGamifiedHomeContent extends StatelessWidget {
       KidsSectionHeading(
         text: context.l10n.kidsDailyMissionsTitle,
         fontFamily: 'Amiri',
+      ),
+      Text(
+        others.every((mission) => mission.kind == KidsDailyMissionKind.home)
+            ? context.l10n.kidsDailyGuardianHint
+            : context.l10n.kidsDailySuggestedHint,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: KidsTheme.inkOnParchment),
       ),
       for (final mission in others) ...[
         const SizedBox(height: AppSpacing.sm),

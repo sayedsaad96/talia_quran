@@ -29,6 +29,7 @@ import '../../data/datasources/kids_streak_store.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_recalled_words.dart';
+import '../../domain/services/kids_house_review_policy.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
@@ -150,6 +151,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   DateTime? _sessionStartedAt;
   String? _sessionId;
   KidsMissionType _missionType = KidsMissionType.newMemorization;
+  bool _requiresHouseReview = false;
+  String? _guardianAuditionSessionId;
 
   // Recording timer
   Timer? _recordingTimer;
@@ -167,23 +170,32 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsMissionType missionType = KidsMissionType.newMemorization,
   }) async {
     emit(const KidsModeLoading());
+    _requiresHouseReview = false;
+    _guardianAuditionSessionId = null;
 
     final journeyResult = await _getKidsJourney(
       GetKidsJourneyParams(surahId: surahId),
     );
-    final isUnlocked = journeyResult.fold(
-      (_) => false,
-      (stages) => stages.any(
-        (stage) =>
-            stage.isUnlocked &&
+    final targetStage = journeyResult.fold<KidsJourneyStage?>((_) => null, (
+      stages,
+    ) {
+      for (final stage in stages) {
+        if (stage.isUnlocked &&
             ayahNumber >= stage.startAyah &&
-            ayahNumber <= stage.endAyah,
-      ),
-    );
-    if (!isUnlocked) {
+            ayahNumber <= stage.endAyah) {
+          return stage;
+        }
+      }
+      return null;
+    });
+    if (targetStage == null ||
+        (targetStage.requiresHouseReview &&
+            !targetStage.pendingHouseReviewAyahs.contains(ayahNumber))) {
       emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
       return;
     }
+    _requiresHouseReview = targetStage.requiresHouseReview;
+    if (_requiresHouseReview) missionType = KidsMissionType.linkedReview;
 
     String resolvedText = ayahText;
     if (resolvedText.isEmpty ||
@@ -263,10 +275,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     final initialSession = V2SessionState.initial(
       surahId: surahId,
       blockAyahs: [fallbackAyah],
-      // Kids missions are single-ayah blocks: a "block review" would only
-      // repeat the recitation the child just passed, and no kids UI drives
-      // startBlockReview — requiring it parks the session at
-      // blockReviewPending and the celebration never fires.
+      // Teach each ayah separately. The durable journey gate schedules a
+      // later recitation of every ayah once the entire house is memorized.
       blockReviewRequired: false,
     );
     sessionState ??= isReview
@@ -378,6 +388,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       }
       if (saved.blockAyahNumbers.isEmpty) {
         await adapter.clear(surahId);
+        return null;
+      }
+      if (saved.blockAyahNumbers.length != 1 ||
+          saved.blockAyahNumbers.single != fallbackAyah.numberInSurah) {
         return null;
       }
 
@@ -767,6 +781,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   Future<bool> submitManualCompletion({String? guardianPin}) async {
     if (state is! KidsModeLoaded) return false;
     final before = state as KidsModeLoaded;
+    final requestedSessionId = _sessionId;
     if (before.isCompleted || !before.canUseGuardianFallback) return false;
 
     final verifier = _guardianPinVerifier;
@@ -777,7 +792,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // The checks above awaited; act on the current state, not a snapshot.
     if (isClosed || state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;
-    if (st.isCompleted || !st.canUseGuardianFallback) return false;
+    if (st.isCompleted ||
+        !st.canUseGuardianFallback ||
+        _sessionId != requestedSessionId) {
+      return false;
+    }
 
     if (st.isRecording) {
       await _recitationRecorder.stop();
@@ -794,6 +813,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       }
       emit(st.copyWith(isRecording: false, recordingSeconds: 0));
     }
+    _guardianAuditionSessionId = requestedSessionId;
     await markCompleted(manualGrade: true);
     return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
@@ -816,6 +836,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       );
       return;
     }
+    if (!manualGrade) {
+      final assessment = _evaluator.evaluate(
+        targetText: st.ayahText,
+        spokenText: automaticSpokenText!,
+      );
+      if (!assessment.passed) {
+        emit(
+          st.copyWith(recordingError: CubitMessageCodes.kidsRecitationMismatch),
+        );
+        return;
+      }
+      automaticSimilarity = assessment.similarityScore;
+    }
 
     // BUG-4 FIX: prevent completing without listening the required times.
     // The manual/self-grade route (V1-M8) bypasses this gate so a first-use
@@ -836,6 +869,21 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _completionsInFlight.add(completionKey);
 
     try {
+      final terminal = _completeV2Session(
+        st.sessionState,
+        manualGrade: manualGrade,
+        automaticSpokenText: automaticSpokenText,
+      );
+      if (!_sessionReachedCompletion(terminal)) {
+        emit(
+          st.copyWith(
+            sessionState: terminal,
+            recordingError: CubitMessageCodes.kidsRecitationMismatch,
+          ),
+        );
+        await _saveKidsSession(terminal);
+        return;
+      }
       final failureCount = st.sessionState.failureTracker.failureCountFor(
         st.surahId,
         st.ayahNumber,
@@ -845,13 +893,21 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         st.ayahNumber,
       );
       final effectiveHint = manualGrade ? V2HintLevel.fullAyah : trackedHint;
-      final masteryRating = _masteryRatingFor(
-        failureCount: failureCount,
-        hintLevel: effectiveHint,
-        // K31: STT tolerance (kKidsPassThreshold) lets a near match pass,
-        // but only an exact recitation is evidence of excellent mastery.
-        exactRecitation: manualGrade || (automaticSimilarity ?? 1.0) >= 1.0,
-      );
+      final guardianAudition =
+          manualGrade &&
+          _requiresHouseReview &&
+          _sessionId != null &&
+          _guardianAuditionSessionId == _sessionId;
+      final masteryRating = guardianAudition
+          ? PerformanceRating.average
+          : _masteryRatingFor(
+              failureCount: failureCount,
+              hintLevel: effectiveHint,
+              // K31: STT tolerance (kKidsPassThreshold) lets a near match pass,
+              // but only an exact recitation is evidence of excellent mastery.
+              exactRecitation:
+                  manualGrade || (automaticSimilarity ?? 1.0) >= 1.0,
+            );
       final startedAt = _sessionStartedAt ?? DateTime.now().toUtc();
       final durationSeconds = max(
         0,
@@ -904,6 +960,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         }
       }
 
+      if (_requiresHouseReview &&
+          _missionType == KidsMissionType.linkedReview &&
+          masteryRating != PerformanceRating.weak &&
+          awardSessionId != null) {
+        awardSessionId = KidsHouseReviewPolicy.proofId(
+          st.surahId,
+          st.ayahNumber,
+          awardSessionId,
+        );
+      }
       final result = await _awardPoints(
         AwardKidsPointsParams(
           completionAuthorized: true,

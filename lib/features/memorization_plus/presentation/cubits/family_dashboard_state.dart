@@ -14,6 +14,7 @@ enum FamilyDashboardFeedbackType {
   rewardUnlocked,
   rewardApproved,
   reminderSaved,
+  houseSizeSaved,
   accountPasswordIncorrect,
   accountCheckUnavailable,
   failure,
@@ -54,6 +55,9 @@ class FamilyDashboardFeedback extends Equatable {
       message = null;
   const FamilyDashboardFeedback.reminderSaved()
     : type = FamilyDashboardFeedbackType.reminderSaved,
+      message = null;
+  const FamilyDashboardFeedback.houseSizeSaved()
+    : type = FamilyDashboardFeedbackType.houseSizeSaved,
       message = null;
   const FamilyDashboardFeedback.accountPasswordIncorrect()
     : type = FamilyDashboardFeedbackType.accountPasswordIncorrect,

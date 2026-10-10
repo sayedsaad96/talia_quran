@@ -1156,16 +1156,23 @@ class _GuardianPinConfirmationDialogState
     return AlertDialog(
       title: Text(context.l10n.parentDashboardEnterPinTitle),
       content: SingleChildScrollView(
-        child: TextField(
-          controller: _pinController,
-          autofocus: true,
-          obscureText: true,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          decoration: InputDecoration(
-            helperText: context.l10n.parentDashboardPinHelp,
-          ),
-          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(context.l10n.kidsGuardianAuditionHint),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _pinController,
+              autofocus: true,
+              obscureText: true,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              decoration: InputDecoration(
+                helperText: context.l10n.parentDashboardPinHelp,
+              ),
+              onSubmitted: (value) => Navigator.pop(context, value.trim()),
+            ),
+          ],
         ),
       ),
       actions: [

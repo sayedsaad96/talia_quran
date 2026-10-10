@@ -46,11 +46,13 @@ import '../memorization/smart_coach_engine.dart';
 import '../memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../memorization/memorization_progress_reader.dart';
 import '../memorization/progress_metrics_service.dart';
+import '../../features/memorization_plus/domain/usecases/get_plan_details_usecase.dart';
+import '../../features/memorization_plus/presentation/cubits/plan_details_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/memorization_tab_cubit.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_child_policy.dart';
-import '../../features/memorization_plus/domain/entities/kids_home_mission.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/kids_review_outcome_committer.dart';
@@ -1028,7 +1030,30 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
-    () => CustomPlanCubit(getIt<MemorizationPlusRepository>()),
+    () => CustomPlanCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<ProgressEventsBus>(),
+    ),
+  );
+  getIt.registerFactory<MemorizationTabCubit>(
+    () => MemorizationTabCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<ProgressEventsBus>(),
+      getIt<MemorizationPathResolver>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetPlanDetailsUseCase>(
+    () => GetPlanDetailsUseCase(
+      getIt<MemorizationPlusRepository>(),
+      getIt<QuranRepository>(),
+      getIt<ProgressMetricsService>(),
+    ),
+  );
+  getIt.registerFactory<PlanDetailsCubit>(
+    () => PlanDetailsCubit(
+      getIt<GetPlanDetailsUseCase>(),
+      getIt<ProgressEventsBus>(),
+    ),
   );
   // K37 — which map houses the child already saw completed (display state).
   getIt.registerLazySingleton<KidsMapCelebrationStore>(
@@ -1145,7 +1170,7 @@ Future<void> configureDependencies({bool background = false}) async {
       homeMissionsLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getHomeMissions();
-        return result.getOrElse(() => const <KidsHomeMission>[]);
+        return result.fold((failure) => throw failure, (missions) => missions);
       },
       // App-lifetime policy singleton: read, refreshed on each home load,
       // never disposed here.
@@ -1153,14 +1178,16 @@ Future<void> configureDependencies({bool background = false}) async {
       childPolicyRefresh: () => getIt<KidsPolicyController>().reload(),
       inboundRefresh: ({bool force = false}) =>
           getIt<KidsInboundRefresher>().refresh(force: force),
-      readingPagesLoader: () async {
+      readingPagesForDayLoader: (day) async {
         if (!getIt.isRegistered<KidsReadingReceiptStore>()) {
           throw StateError('KidsReadingReceiptStore is not registered');
         }
         return getIt<KidsReadingReceiptStore>().pagesOn(
-          kidsDayKey(DateTime.now()),
+          kidsDayKey(day.toLocal()),
         );
       },
+      recentReadingDaysLoader: (before) =>
+          getIt<KidsReadingReceiptStore>().recentReadingDays(before),
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getMemorizationProfile();

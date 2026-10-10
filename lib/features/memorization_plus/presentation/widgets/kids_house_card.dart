@@ -43,7 +43,9 @@ class KidsHouseCard extends StatelessWidget {
     final l10n = context.l10n;
     final reducedMotion = MediaQuery.of(context).disableAnimations;
 
-    final title = _isReview
+    final title = stage.requiresHouseReview
+        ? l10n.kidsHouseReviewTitle
+        : _isReview
         ? l10n.kidsGamifiedReviewHouseTitle(
             LocaleNumberFormatter.format(
               (stage.stageNumber).toString(),
@@ -153,6 +155,16 @@ class KidsHouseCard extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 6),
+                    if (stage.requiresHouseReview)
+                      Text(
+                        l10n.kidsHouseReviewRemaining(
+                          context.numText(stage.pendingHouseReviewAyahs.length),
+                        ),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: KidsTheme.reviewPurple,
+                        ),
+                      ),
 
                     // Progress track
                     ClipRRect(
@@ -328,11 +340,22 @@ class _DestinationLandmark extends StatelessWidget {
       KidsJourneyStageStatus.completed => KidsTheme.houseCompletedAsset,
       KidsJourneyStageStatus.needsReview => KidsTheme.houseReviewAsset,
     };
+    final variant = (stageNumber - 1) % 3;
+    final houseAsset =
+        status == KidsJourneyStageStatus.current ||
+            status == KidsJourneyStageStatus.completed
+        ? switch (variant) {
+            1 => KidsTheme.houseGardenAsset,
+            2 => KidsTheme.houseLibraryAsset,
+            _ => asset,
+          }
+        : asset;
 
     Widget buildingImage = Image.asset(
-      asset,
+      houseAsset,
       width: 96,
       height: 96,
+      cacheWidth: 288,
       fit: BoxFit.contain,
     );
 

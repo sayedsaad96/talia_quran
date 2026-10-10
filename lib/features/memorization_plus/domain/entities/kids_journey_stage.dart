@@ -11,6 +11,8 @@ class KidsJourneyStage extends Equatable {
     required this.completedAyahs,
     required this.status,
     this.reviewAyah,
+    this.requiresHouseReview = false,
+    this.pendingHouseReviewAyahs = const [],
   });
 
   final int stageNumber;
@@ -23,6 +25,8 @@ class KidsJourneyStage extends Equatable {
   /// The most overdue ayah of a house that needs review — the one that made
   /// it need review. Null for every other status (K30).
   final int? reviewAyah;
+  final bool requiresHouseReview;
+  final List<int> pendingHouseReviewAyahs;
 
   int get totalAyahs => endAyah - startAyah + 1;
   int get completedCount => completedAyahs.length;
@@ -51,6 +55,8 @@ class KidsJourneyStage extends Equatable {
     completedAyahs,
     status,
     reviewAyah,
+    requiresHouseReview,
+    pendingHouseReviewAyahs,
   ];
 
   /// A copy of this stage with [ayahNumber] marked as completed. A no-op when
@@ -66,6 +72,8 @@ class KidsJourneyStage extends Equatable {
       completedAyahs: [...completedAyahs, ayahNumber]..sort(),
       status: status,
       reviewAyah: reviewAyah,
+      requiresHouseReview: requiresHouseReview,
+      pendingHouseReviewAyahs: pendingHouseReviewAyahs,
     );
   }
 }

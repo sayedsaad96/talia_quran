@@ -21,6 +21,8 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/services/plan_schedule_policy.dart';
 import '../cubits/custom_plan_cubit.dart';
+import '../widgets/custom_plan_return_banner.dart';
+import '../../../../core/widgets/fallback_pop_scope.dart';
 
 part 'custom_plan_setup_form.dart';
 part 'custom_plan_setup_selectors.dart';
@@ -175,6 +177,8 @@ abstract class _CustomPlanSetupController extends State<_CustomPlanSetupView> {
   int _endSurahId = 114;
   int _startAyah = 1;
   int _newAyahsPerDay = 3;
+  DateTime? _createdAt;
+  CustomMemorizationPlan? _savedPlan;
 
   /// The quick preset last applied; it stays highlighted while its values
   /// are unchanged.
@@ -271,6 +275,8 @@ abstract class _CustomPlanSetupController extends State<_CustomPlanSetupView> {
   }
 
   void _populateFromExisting(CustomMemorizationPlan plan) {
+    _savedPlan = plan;
+    _createdAt = plan.createdAt;
     _nameController.text = plan.name;
     _startSurahId = plan.startSurahId;
     _endSurahId = plan.endSurahId;
@@ -362,7 +368,7 @@ abstract class _CustomPlanSetupController extends State<_CustomPlanSetupView> {
       enableFarRevision: _enableFarRevision,
       nearRevisionCount: _nearRevisionCount,
       farRevisionCount: _farRevisionCount,
-      createdAt: DateTime.now(),
+      createdAt: _createdAt ?? DateTime.now().toUtc(),
       targetUser: _targetUser,
     );
 
@@ -373,14 +379,31 @@ abstract class _CustomPlanSetupController extends State<_CustomPlanSetupView> {
     BuildContext context,
     CustomMemorizationPlan plan,
   ) async {
+    if (plan.targetUser == PlanTargetUser.adult &&
+        GoRouterState.of(context).uri.queryParameters['returnToPlanDetails'] ==
+            'true' &&
+        context.canPop()) {
+      context.pop(true);
+      return;
+    }
     final resolver = MemorizationNavigationResolver(
       getIt<MemorizationPlusRepository>(),
     );
     final destination = plan.targetUser == PlanTargetUser.child
         ? await resolver.childOnboardingLocation()
-        : await resolver.adultEntryLocation();
+        : AppRoutes.memorizationHub;
     if (!context.mounted) return;
     context.go(destination);
+  }
+
+  void _returnToSelectedPlan() {
+    if (GoRouterState.of(context).uri.queryParameters['returnToPlanDetails'] ==
+            'true' &&
+        context.canPop()) {
+      context.pop(false);
+    } else {
+      context.go(AppRoutes.memorizationHub);
+    }
   }
 
   Future<void> _showDeletePlanConfirmation(BuildContext context) async {
@@ -410,40 +433,44 @@ class _CustomPlanSetupViewState extends _CustomPlanSetupController
     final isDark = context.isDark;
     final primaryColor = Theme.of(context).primaryColor;
 
-    return Scaffold(
-      backgroundColor: context.tokens.background,
-      body: BlocConsumer<CustomPlanCubit, CustomPlanState>(
-        listener: (context, state) {
-          if (state is CustomPlanSaved) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.l10n.customPlanSaved),
-                backgroundColor: AppColors.primary,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return FallbackPopScope(
+      fallbackLocation: AppRoutes.memorizationHub,
+      child: Scaffold(
+        backgroundColor: context.tokens.background,
+        body: BlocConsumer<CustomPlanCubit, CustomPlanState>(
+          listener: (context, state) {
+            if (state is CustomPlanSaved) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.l10n.customPlanSaved),
+                  backgroundColor: AppColors.primary,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
                 ),
-              ),
-            );
-            // Navigate directly into the freshly saved plan (session/journey)
-            // instead of dropping the user back on the hub.
-            _goToSavedPlan(context, state.plan);
-          } else if (state is CustomPlanLoaded) {
-            _populateFromExisting(state.plan);
-          }
-        },
-        builder: (context, state) {
-          if (state is CustomPlanLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              );
+              // The learner reviews the saved plan before starting a session.
+              _goToSavedPlan(context, state.plan);
+            } else if (state is CustomPlanLoaded) {
+              _populateFromExisting(state.plan);
+            } else if (state is CustomPlanEmpty) {
+              _savedPlan = null;
+            }
+          },
+          builder: (context, state) {
+            if (state is CustomPlanLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return _CustomPlanFormBody(
-            host: this,
-            planState: state,
-            isDark: isDark,
-            primaryColor: primaryColor,
-          );
-        },
+            return _CustomPlanFormBody(
+              host: this,
+              planState: state,
+              isDark: isDark,
+              primaryColor: primaryColor,
+            );
+          },
+        ),
       ),
     );
   }

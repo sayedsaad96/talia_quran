@@ -39,7 +39,8 @@ final class KidsJourneyContinuation extends Equatable {
 }
 
 /// Resolves one distraction-free kids mission using the product priority:
-/// due review, resumed session, linked review, current memorization, then the
+/// mandatory house recitation, due review, resumed session, linked review,
+/// current memorization, then the
 /// next surah on [KidsJourneyPath] (Al-Fatiha, then An-Nas down to An-Naba).
 final class KidsNextMissionResolver {
   const KidsNextMissionResolver({
@@ -61,6 +62,8 @@ final class KidsNextMissionResolver {
     KidsDailyBudget budget = KidsDailyBudget.unlimited,
     KidsJourneyContinuation? continuation,
   }) {
+    final requiredHouse = _mandatoryHouseMission(stages);
+    if (requiredHouse != null) return requiredHouse;
     final dueReviews =
         reviewRecords
             .where(
@@ -102,6 +105,9 @@ final class KidsNextMissionResolver {
 
     // Today's new-ayah quota is used up: never offer a mission the session
     // gate would refuse (N3). Callers show the "day complete" card instead.
+    if (continuation?.mission?.type == KidsMissionType.linkedReview) {
+      return continuation!.mission;
+    }
     if (budget.newAyahLimitReached) return null;
 
     for (final stage in stages) {
@@ -120,7 +126,9 @@ final class KidsNextMissionResolver {
     // Without a continuation the caller could not look ahead: keep starting
     // the next surah on the path from its first ayah.
     final nextSurahId = _nextSurah(activeSurahId);
-    if (nextSurahId != null && stages.isNotEmpty) {
+    if (nextSurahId != null &&
+        stages.isNotEmpty &&
+        !stages.any((stage) => stage.status == KidsJourneyStageStatus.locked)) {
       return KidsNextMission(
         type: KidsMissionType.newMemorization,
         surahId: nextSurahId,
@@ -181,13 +189,18 @@ final class KidsNextMissionResolver {
   /// and write no log, so the same mission would come back forever.
   ///
   /// Returns null while [stages] still has open work (no look-ahead needed).
-  /// An unreadable surah journey falls back to starting that surah.
+  /// An unreadable surah journey provides no new work until it can be loaded.
   Future<KidsJourneyContinuation?> findContinuation({
     required int activeSurahId,
     required List<KidsJourneyStage> stages,
     required KidsSurahStagesLoader loadStages,
   }) async {
-    if (stages.isEmpty || stages.any(_isOpen)) return null;
+    if (stages.isEmpty ||
+        stages.any(_isOpen) ||
+        _mandatoryHouseMission(stages) != null ||
+        stages.any((stage) => stage.status == KidsJourneyStageStatus.locked)) {
+      return null;
+    }
     for (
       var surahId = _nextSurah(activeSurahId);
       surahId != null;
@@ -195,14 +208,10 @@ final class KidsNextMissionResolver {
     ) {
       final surahStages = await loadStages(surahId);
       if (surahStages == null || surahStages.isEmpty) {
-        return KidsJourneyContinuation(
-          KidsNextMission(
-            type: KidsMissionType.newMemorization,
-            surahId: surahId,
-            ayahNumbers: const [1],
-          ),
-        );
+        return const KidsJourneyContinuation(null);
       }
+      final mandatory = _mandatoryHouseMission(surahStages);
+      if (mandatory != null) return KidsJourneyContinuation(mandatory);
       for (final stage in surahStages) {
         if (!_isOpen(stage)) continue;
         return KidsJourneyContinuation(
@@ -212,6 +221,11 @@ final class KidsNextMissionResolver {
             ayahNumbers: [stage.nextAyahToStart],
           ),
         );
+      }
+      if (surahStages.any(
+        (stage) => stage.status == KidsJourneyStageStatus.locked,
+      )) {
+        return const KidsJourneyContinuation(null);
       }
     }
     return const KidsJourneyContinuation(null);
@@ -232,6 +246,24 @@ final class KidsNextMissionResolver {
   }
 
   /// A stage with an ayah left to memorize.
+  static KidsNextMission? _mandatoryHouseMission(
+    List<KidsJourneyStage> stages,
+  ) {
+    for (final stage in stages) {
+      if (!stage.isUnlocked ||
+          !stage.requiresHouseReview ||
+          stage.pendingHouseReviewAyahs.isEmpty) {
+        continue;
+      }
+      return KidsNextMission(
+        type: KidsMissionType.linkedReview,
+        surahId: stage.surahId,
+        ayahNumbers: [stage.pendingHouseReviewAyahs.first],
+      );
+    }
+    return null;
+  }
+
   static bool _isOpen(KidsJourneyStage stage) =>
       stage.status == KidsJourneyStageStatus.current &&
       stage.completedCount < stage.totalAyahs;

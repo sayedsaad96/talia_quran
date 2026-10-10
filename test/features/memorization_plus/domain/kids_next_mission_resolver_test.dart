@@ -561,7 +561,7 @@ void main() {
       expect(mission, isNull);
     });
 
-    test('an unreadable next journey keeps starting that surah', () async {
+    test('an unreadable next journey cannot invent unlocked work', () async {
       final continuation = await const KidsNextMissionResolver()
           .findContinuation(
             activeSurahId: 114,
@@ -569,8 +569,8 @@ void main() {
             loadStages: loader({113: null}),
           );
 
-      expect(continuation?.mission?.surahId, 113);
-      expect(continuation?.mission?.ayahNumbers, const [1]);
+      expect(continuation, isNotNull);
+      expect(continuation?.mission, isNull);
     });
 
     test('a current stage with every ayah completed is not reopened', () {

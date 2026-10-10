@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
@@ -34,8 +34,9 @@ void main() {
   });
 
   group('V2CompletionPage closing moment', () {
-    testWidgets('renders serene closing moment before statistics',
-        (tester) async {
+    testWidgets('renders serene closing moment before statistics', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1600);
       addTearDown(tester.view.reset);
@@ -113,10 +114,36 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        expect(find.byKey(const Key('v2_next_plan_item_button')), findsOneWidget);
+        expect(
+          find.byKey(const Key('v2_next_plan_item_button')),
+          findsOneWidget,
+        );
         expect(find.textContaining('4'), findsWidgets);
       },
     );
+
+    testWidgets('split-surah completion offers the next passage', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          child: V2CompletionPage(
+            finalState: _completedState(passed: 3),
+            isSurahPractice: true,
+            nextStepLoader: () async => (
+              route: '/memorization-v2?surahId=1&startAyah=4&blockSize=3',
+              remaining: 4,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Next passage (4 ayahs remaining)'), findsOneWidget);
+      expect(find.byKey(const Key('v2_next_plan_item_button')), findsOneWidget);
+    });
 
     testWidgets('without remaining plan work only the hub is offered', (
       tester,
@@ -177,9 +204,7 @@ void main() {
       expect(find.text('Ameen'), findsOneWidget);
     });
 
-    testWidgets('an unapproved khatm dua record opens nothing', (
-      tester,
-    ) async {
+    testWidgets('an unapproved khatm dua record opens nothing', (tester) async {
       await getIt.unregister<KhatmDuaDatasource>();
       getIt.registerSingleton<KhatmDuaDatasource>(_PendingKhatmDuaDatasource());
 
@@ -281,12 +306,11 @@ class _ClosingAyahRepository implements QuranRepository {
 
 class _PendingKhatmDuaDatasource extends KhatmDuaDatasource {
   @override
-  Future<KhatmDuaData> loadDua() async =>
-      const KhatmDuaData(
-        arabicText: 'text',
-        source: 'source',
-        sourceNote: 'note',
-        tier: 'guidance',
-        dedicationInserts: {},
-      );
+  Future<KhatmDuaData> loadDua() async => const KhatmDuaData(
+    arabicText: 'text',
+    source: 'source',
+    sourceNote: 'note',
+    tier: 'guidance',
+    dedicationInserts: {},
+  );
 }

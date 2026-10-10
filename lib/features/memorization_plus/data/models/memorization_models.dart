@@ -461,6 +461,8 @@ class ParentSettingsModel extends ParentSettings {
     super.policyVersion,
     super.policySyncedVersion,
     super.policyLinkConfirmed,
+    super.kidsAyahsPerHouse,
+    super.kidsHouseSizesBySurah,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -494,10 +496,27 @@ class ParentSettingsModel extends ParentSettings {
         policyLinkConfirmed: json['policyLinkConfirmed'] is bool
             ? json['policyLinkConfirmed'] as bool
             : null,
+        kidsAyahsPerHouse: sanitizeKidsAyahsPerHouse(
+          _intOr(json['kidsAyahsPerHouse'], 0),
+        ),
+        kidsHouseSizesBySurah: _houseSizes(json['kidsHouseSizesBySurah']),
       );
 
   static bool _boolOr(Object? raw, bool fallback) =>
       raw is bool ? raw : fallback;
+
+  static Map<int, int> _houseSizes(Object? raw) {
+    if (raw is! Map) return const {};
+    final sizes = <int, int>{};
+    for (final entry in raw.entries) {
+      final surah = int.tryParse('${entry.key}');
+      final size = sanitizeKidsAyahsPerHouse(_intOr(entry.value, 0));
+      if (surah != null && surah >= 1 && surah <= 114 && size != null) {
+        sizes[surah] = size;
+      }
+    }
+    return sizes;
+  }
 
   static int _intOr(Object? raw, int fallback) =>
       raw is num && raw.isFinite ? raw.toInt() : fallback;
@@ -521,6 +540,8 @@ class ParentSettingsModel extends ParentSettings {
         policyVersion: settings.policyVersion,
         policySyncedVersion: settings.policySyncedVersion,
         policyLinkConfirmed: settings.policyLinkConfirmed,
+        kidsAyahsPerHouse: settings.kidsAyahsPerHouse,
+        kidsHouseSizesBySurah: settings.kidsHouseSizesBySurah,
       );
 
   Map<String, dynamic> toJson() => {
@@ -533,6 +554,10 @@ class ParentSettingsModel extends ParentSettings {
     'localChildNickname': localChildNickname,
     'guidanceAudioEnabled': guidanceAudioEnabled,
     'sessionGoalMinutes': sessionGoalMinutes,
+    'kidsAyahsPerHouse': kidsAyahsPerHouse,
+    'kidsHouseSizesBySurah': kidsHouseSizesBySurah.map(
+      (key, value) => MapEntry('$key', value),
+    ),
     'startingSurahId': startingSurahId,
     'kidsHifzV2Enabled': kidsHifzV2Enabled,
     'kidsReduceMotion': kidsReduceMotion,

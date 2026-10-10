@@ -255,12 +255,21 @@ void main() {
           expect(await reachedWith(goalMinutes: 10, seconds: 10 * 60), isTrue);
         });
 
-        test('an out-of-range goal falls back to the age-band default', () async {
-          // No profile → default age band (10 minutes).
-          expect(await reachedWith(goalMinutes: 99, seconds: 10 * 60), isTrue);
-          expect(await reachedWith(goalMinutes: 0, seconds: 10 * 60), isTrue);
-          expect(await reachedWith(goalMinutes: 99, seconds: 9 * 60), isFalse);
-        });
+        test(
+          'an out-of-range goal falls back to the age-band default',
+          () async {
+            // No profile → default age band (10 minutes).
+            expect(
+              await reachedWith(goalMinutes: 99, seconds: 10 * 60),
+              isTrue,
+            );
+            expect(await reachedWith(goalMinutes: 0, seconds: 10 * 60), isTrue);
+            expect(
+              await reachedWith(goalMinutes: 99, seconds: 9 * 60),
+              isFalse,
+            );
+          },
+        );
       });
 
       test(
@@ -364,22 +373,22 @@ void main() {
       },
     );
 
-    test('custom adult plan opens both Today Plan and Review Quiz', () async {
-      final resolver = MemorizationNavigationResolver(
-        _FakeRepository(customPlan: _customPlan(3, PlanTargetUser.adult)),
-      );
+    test(
+      'an adult plan without generated work cannot launch a fallback block',
+      () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(customPlan: _customPlan(3, PlanTargetUser.adult)),
+        );
 
-      final targets = await resolver.resolve();
+        final targets = await resolver.resolve();
 
-      expect(
-        Uri.parse(targets.todayPlanLocation).queryParameters['surahId'],
-        '3',
-      );
-      expect(
-        Uri.parse(targets.reviewQuizLocation).queryParameters['surahId'],
-        '3',
-      );
-    });
+        expect(targets.todayPlanLocation, AppRoutes.memorizationHub);
+        expect(
+          Uri.parse(targets.reviewQuizLocation).queryParameters['surahId'],
+          '3',
+        );
+      },
+    );
   });
 }
 

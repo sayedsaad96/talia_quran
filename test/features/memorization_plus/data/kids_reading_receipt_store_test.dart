@@ -107,6 +107,30 @@ void main() {
     expect(await store.allPages(), {3, 4, 9});
   });
 
+  test(
+    'recent reading counts only the previous seven local days for this owner',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'kids_reading_receipts_a': jsonEncode({
+          '2026-10-02': [5],
+          '2026-10-01': [5, 6],
+          '2026-09-25': [8],
+          '2026-09-24': [9],
+          '2026-09-30': [],
+          '2026-10-03': [10],
+        }),
+        'kids_reading_receipts_b': jsonEncode({
+          '2026-10-01': [1],
+        }),
+      });
+      final a = await storeFor('a');
+      expect(await a.recentReadingDays(now), 2);
+      expect(await a.recentReadingDays(now.toUtc()), 2);
+      expect(await (await storeFor('b')).recentReadingDays(now), 1);
+      expect(await (await storeFor('c')).recentReadingDays(now), 0);
+    },
+  );
+
   test('onRecorded fires after a save and its failure is swallowed', () async {
     var calls = 0;
     final store = KidsReadingReceiptStore(

@@ -19,7 +19,13 @@ class _CustomPlanFormBody extends StatelessWidget {
       slivers: [
         // ── App Bar ──
         SliverAppBar(
-          expandedHeight: 160,
+          leading: IconButton(
+            key: const Key('custom_plan_back'),
+            onPressed: host._returnToSelectedPlan,
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const BackButtonIcon(),
+          ),
+          expandedHeight: 200,
           pinned: true,
           backgroundColor: context.tokens.background,
           elevation: 0,
@@ -40,16 +46,22 @@ class _CustomPlanFormBody extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        context.l10n.customPlanTitle,
-                        style: AppTypography.displaySmall.copyWith(
-                          color: Colors.white,
-                          fontFamily: 'Amiri',
+                      Flexible(
+                        child: Text(
+                          context.l10n.customPlanTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.displaySmall.copyWith(
+                            color: Colors.white,
+                            fontFamily: 'Amiri',
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         context.l10n.customPlanSubtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.white70,
                         ),
@@ -71,6 +83,14 @@ class _CustomPlanFormBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (host._savedPlan?.isActive == true &&
+                      host._savedPlan?.isForChild == false) ...[
+                    CustomPlanReturnBanner(
+                      planName: host._savedPlan!.name,
+                      onReturn: host._returnToSelectedPlan,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   _PresetSelector(
                     isDark: isDark,
                     onSelect: host._applyPreset,
@@ -291,9 +311,10 @@ class _CustomPlanFormBody extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xl),
 
                   // ── Save Button ──
-                  SizedBox(
-                    height: 56,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 56),
                     child: ElevatedButton(
+                      key: const Key('custom_plan_save'),
                       onPressed: host._save,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -310,11 +331,14 @@ class _CustomPlanFormBody extends StatelessWidget {
                         children: [
                           const Icon(TaliaIcons.save),
                           const SizedBox(width: 12),
-                          Text(
-                            context.l10n.customPlanSaveAndStart,
-                            style: AppTypography.titleMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              context.l10n.customPlanSaveAndView,
+                              textAlign: TextAlign.center,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],

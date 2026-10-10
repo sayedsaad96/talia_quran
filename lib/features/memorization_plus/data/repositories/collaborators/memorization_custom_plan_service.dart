@@ -29,6 +29,10 @@ class MemorizationCustomPlanService {
     CustomMemorizationPlan plan,
   ) async {
     try {
+      // Invalidate before replacing the plan. If invalidation cannot be
+      // persisted, do not report a successful save while an old daily plan
+      // can still launch under the new settings.
+      await _datasource.clearDailyPlanCache();
       await _datasource.saveCustomPlan(
         CustomMemorizationPlanModel.fromEntity(plan),
       );
@@ -37,14 +41,6 @@ class MemorizationCustomPlanService {
         PlanCloudDirtyKeys.customPlanLocalUpdatedAt,
         DateTime.now().toUtc().toIso8601String(),
       );
-      // Clear the cached daily plan so that a stale surahId from a previous
-      // session does not override the correct entry point (endSurahId) when
-      // the user returns to the app after saving a new plan.
-      try {
-        await _datasource.clearDailyPlanCache();
-      } catch (_) {
-        // Non-critical: cache clearing failure should not block plan saving.
-      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure.from(e));

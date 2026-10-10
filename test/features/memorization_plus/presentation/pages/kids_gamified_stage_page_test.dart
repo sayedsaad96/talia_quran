@@ -14,6 +14,48 @@ void main() {
   });
 
   group('KidsGamifiedStagePage', () {
+    testWidgets(
+      'mandatory review shows remaining ayahs and routes the first pending recitation in RTL',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 740);
+        addTearDown(tester.view.reset);
+        const stage = KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: [1, 2, 3],
+          status: KidsJourneyStageStatus.needsReview,
+          requiresHouseReview: true,
+          pendingHouseReviewAyahs: [2, 3],
+        );
+        var started = false;
+        await tester.pumpWidget(
+          _TestApp(
+            locale: const Locale('ar'),
+            child: KidsGamifiedStageContent(
+              stage: stage,
+              surahName: 'الناس',
+              onBack: () {},
+              onStartMission: () => started = true,
+            ),
+          ),
+        );
+        final action = find.text('ابدأ تسميع آيات البيت');
+        expect(find.text('متبقي للتسميع: ٢ آية'), findsOneWidget);
+        await tester.ensureVisible(action);
+        await tester.pump();
+        await tester.tap(action);
+        expect(started, isTrue);
+        expect(
+          kidsNextMissionLocation(stage),
+          '${AppRoutes.memorizationPlusKids}?surahId=114&ayahNumber=2&missionType=linkedReview',
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('renders stage info and starts mission', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
@@ -210,14 +252,15 @@ const _stage = KidsJourneyStage(
 );
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.child, this.locale = const Locale('en')});
 
   final Widget child;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,

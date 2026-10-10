@@ -112,30 +112,42 @@ class MemorizationDailyPlanService {
             r.ayahNumber: r,
         };
 
-        int totalAyahs = 7; // fallback
-        List<Ayah> ayahs = [];
+        int? totalAyahs;
+        List<Ayah>? ayahs;
         final surahResult = await _quranRepository.getSurahDetail(
           currentSurahId,
         );
-        surahResult.fold((_) {}, (detail) {
+        surahResult.fold((failure) => throw failure, (detail) {
           totalAyahs = detail.surah.ayahCount;
           ayahs = detail.ayahs;
         });
+        final canonicalTotal = totalAyahs;
+        final canonicalAyahs = ayahs;
+        if (canonicalTotal == null ||
+            canonicalAyahs == null ||
+            canonicalAyahs.length != canonicalTotal) {
+          throw StateError(
+            'Incomplete canonical ayah detail for $currentSurahId',
+          );
+        }
 
         // startAyah applies only to the first surah in the memorization order
         // (i.e. startSurahId itself), not to any other surah in the range.
         final firstAyah =
             customPlan != null && currentSurahId == customPlan.startSurahId
-            ? customPlan.startAyah.clamp(1, totalAyahs)
+            ? customPlan.startAyah.clamp(1, canonicalTotal)
             : 1;
 
-        for (int i = firstAyah; i <= totalAyahs; i++) {
+        final beforeSurah = newAyahs.length;
+        for (int i = firstAyah; i <= canonicalTotal; i++) {
           final record = surahRecords[i];
 
-          String ayahText = 'النص غير متوفر';
-          try {
-            ayahText = ayahs.firstWhere((a) => a.numberInSurah == i).text;
-          } catch (_) {}
+          final matchingAyahs = canonicalAyahs
+              .where((ayah) => ayah.numberInSurah == i)
+              .toList(growable: false);
+          if (matchingAyahs.length != 1 || matchingAyahs.single.text.isEmpty) {
+            throw StateError('Missing canonical ayah $currentSurahId:$i');
+          }
 
           if (!reviewSelection.blocksNewMemorization &&
               (record == null || record.isNew)) {
@@ -144,15 +156,18 @@ class MemorizationDailyPlanService {
                 DailyPlanAyah(
                   surahId: currentSurahId,
                   ayahNumber: i,
-                  ayahText: ayahText,
+                  ayahText: matchingAyahs.single.text,
                   record: record,
                 ),
               );
             }
           }
         }
-        planSurahId = currentSurahId;
-        if (newAyahs.isNotEmpty || reviewSelection.blocksNewMemorization) {
+        if (beforeSurah == 0 && newAyahs.isNotEmpty) {
+          planSurahId = currentSurahId;
+        }
+        if (newAyahs.length >= effectiveNewPerDay ||
+            reviewSelection.blocksNewMemorization) {
           break;
         }
 
@@ -200,24 +215,26 @@ class MemorizationDailyPlanService {
     );
     final textByKey = <String, String>{};
     for (final result in details) {
-      result.fold((_) {}, (detail) {
+      result.fold((failure) => throw failure, (detail) {
         for (final ayah in detail.ayahs) {
           textByKey['${ayah.surahId}:${ayah.numberInSurah}'] = ayah.text;
         }
       });
     }
-    return selected
-        .map(
-          (record) => DailyPlanAyah(
-            surahId: record.surahId,
-            ayahNumber: record.ayahNumber,
-            ayahText:
-                textByKey['${record.surahId}:${record.ayahNumber}'] ??
-                'النص غير متوفر',
-            record: record,
-          ),
-        )
-        .toList();
+    return selected.map((record) {
+      final text = textByKey['${record.surahId}:${record.ayahNumber}'];
+      if (text == null || text.isEmpty) {
+        throw StateError(
+          'Missing canonical ayah ${record.surahId}:${record.ayahNumber}',
+        );
+      }
+      return DailyPlanAyah(
+        surahId: record.surahId,
+        ayahNumber: record.ayahNumber,
+        ayahText: text,
+        record: record,
+      );
+    }).toList();
   }
 
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async {

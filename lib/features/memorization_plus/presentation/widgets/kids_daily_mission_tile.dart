@@ -29,25 +29,34 @@ class KidsDailyMissionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final title = switch (mission.kind) {
-      KidsDailyMissionKind.reading => l10n.kidsReadingMissionTitle,
-      KidsDailyMissionKind.home =>
-        mission.homeMissionTitle ?? l10n.kidsDailyMissionsTitle,
-      _ => l10n.kidsDailyMissionsTitle,
+    final title = switch (mission.suggestion) {
+      KidsDailySuggestion.readPage => l10n.kidsReadingMissionTitle,
+      KidsDailySuggestion.readTwoPages => l10n.kidsDailyReadTwoPages,
+      KidsDailySuggestion.reciteAyah => l10n.kidsDailyReciteAyah,
+      KidsDailySuggestion.listenAndRecite => l10n.kidsDailyListenAndRecite,
+      KidsDailySuggestion.reviewAyah => l10n.kidsDailyReviewAyah,
+      null => switch (mission.kind) {
+        KidsDailyMissionKind.reading => l10n.kidsReadingMissionTitle,
+        KidsDailyMissionKind.home =>
+          mission.homeMissionTitle ?? l10n.kidsDailyMissionsTitle,
+        _ => l10n.kidsDailyMissionsTitle,
+      },
     };
     final icon = switch (mission.kind) {
       KidsDailyMissionKind.reading => TaliaKidsIcons.mushaf,
       KidsDailyMissionKind.home => TaliaKidsIcons.home,
+      KidsDailyMissionKind.practice => TaliaKidsIcons.recite,
       _ => TaliaKidsIcons.flag,
     };
     if (mission.kind == KidsDailyMissionKind.home) {
       return _buildHome(context, title, icon);
     }
+    final canOpen = !_done || mission.kind == KidsDailyMissionKind.reading;
     return Semantics(
-      button: true,
+      button: canOpen,
       label: _done ? '$title, ${l10n.kidsMissionDone}' : title,
       excludeSemantics: true,
-      onTap: onTap,
+      onTap: canOpen ? onTap : null,
       child: Material(
         color: KidsTheme.creamParchment,
         shape: const RoundedRectangleBorder(
@@ -56,7 +65,7 @@ class KidsDailyMissionTile extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: KidsTheme.cardRadius,
-          onTap: onTap,
+          onTap: canOpen ? onTap : null,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 64),
             child: Padding(

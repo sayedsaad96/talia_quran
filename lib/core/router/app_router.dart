@@ -53,6 +53,8 @@ import '../../features/memorization_plus/presentation/pages/kids_treasures_page.
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
+import '../../features/memorization_plus/presentation/pages/plan_details_page.dart';
+import '../../features/memorization_plus/presentation/pages/memorization_tab_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
 import '../../features/memorization_plus/presentation/pages/family_dashboard_page.dart';
@@ -85,6 +87,7 @@ abstract class AppRoutes {
   static const String hifzPracticeSurah = '/memorization/practice-surah';
   static const String listeningReview = '/memorization/listening-review';
   static const String memorizationHub = '/memorization';
+  static const String memorizationOptions = '/memorization/options';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
   static const String settings = '/settings';
@@ -112,6 +115,8 @@ abstract class AppRoutes {
       '/memorization-plus/custom-plan';
   static const String memorizationPlusDailyPlan =
       '/memorization-plus/daily-plan';
+  static const String memorizationPlusPlanDetails =
+      '/memorization-plus/plan-details';
   static const String memorizationV2Session = '/memorization-v2/session';
   static const String qcfRenderingPoc = '/debug/qcf-rendering-poc';
   static const String login = '/login';
@@ -939,6 +944,20 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusPlanDetails,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) => const PlanDetailsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationOptions,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) => const MemorizationHubPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationV2Session,
         redirect: (context, state) =>
             MemorizationRouteGuard.v2SessionRedirect(state),
@@ -1012,7 +1031,7 @@ abstract class AppRouter {
               GoRoute(
                 path: AppRoutes.memorizationHub,
                 pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: MemorizationHubPage()),
+                    const NoTransitionPage(child: MemorizationTabPage()),
               ),
               GoRoute(
                 path: AppRoutes.hifz,

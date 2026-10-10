@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import 'practice_passage_dialog.dart';
 
 class PracticeSurahTile extends StatefulWidget {
   const PracticeSurahTile({
@@ -29,24 +30,79 @@ class PracticeSurahTile extends StatefulWidget {
 class _PracticeSurahTileState extends State<PracticeSurahTile> {
   /// Guards the async route lookup so a double tap never opens two sessions.
   bool _opening = false;
+  bool _navigating = false;
 
   Surah get surah => widget.surah;
   bool get isDark => widget.isDark;
   Color get primary => widget.primary;
 
   Future<void> _open() async {
-    if (_opening) return;
+    if (_opening || _navigating) return;
     setState(() => _opening = true);
     try {
-      final route = await MemorizationNavigationResolver(
-        getIt<MemorizationPlusRepository>(),
-      ).practiceSurahSessionLocation(surah.id, surahAyahCount: surah.ayahCount);
+      final selection = await _choosePassage();
+      if (selection == null || !mounted) return;
+      final route =
+          await MemorizationNavigationResolver(
+            getIt<MemorizationPlusRepository>(),
+          ).practiceSurahSessionLocation(
+            surah.id,
+            surahAyahCount: surah.ayahCount,
+            startAyah: selection.startAyah,
+            ayahCount: selection.ayahCount,
+          );
       if (!mounted) return;
-      await context.push(route);
+      setState(() => _opening = false);
+      _navigating = true;
+      try {
+        await context.push(route);
+      } finally {
+        _navigating = false;
+      }
     } finally {
       if (mounted) setState(() => _opening = false);
     }
   }
+
+  Future<({int startAyah, int ayahCount})?> _choosePassage() async {
+    final choice = await showDialog<_PracticePassageChoice>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.practicePassageTitle),
+        content: Text(context.l10n.practicePassageMessage),
+        actionsOverflowDirection: VerticalDirection.up,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.cancel),
+          ),
+          OutlinedButton(
+            key: const Key('practice_choose_split'),
+            onPressed: () =>
+                Navigator.pop(dialogContext, _PracticePassageChoice.split),
+            child: Text(context.l10n.practiceChoosePassage),
+          ),
+          FilledButton(
+            key: const Key('practice_choose_whole'),
+            onPressed: () =>
+                Navigator.pop(dialogContext, _PracticePassageChoice.whole),
+            child: Text(context.l10n.practiceWholeSurah),
+          ),
+        ],
+      ),
+    );
+    if (choice == _PracticePassageChoice.whole) {
+      return (startAyah: 1, ayahCount: surah.ayahCount);
+    }
+    if (choice != _PracticePassageChoice.split || !mounted) return null;
+    return _chooseSplitPassage();
+  }
+
+  Future<({int startAyah, int ayahCount})?> _chooseSplitPassage() =>
+      showDialog<({int startAyah, int ayahCount})>(
+        context: context,
+        builder: (_) => PracticePassageDialog(surahAyahCount: surah.ayahCount),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -133,3 +189,5 @@ class _PracticeSurahTileState extends State<PracticeSurahTile> {
     );
   }
 }
+
+enum _PracticePassageChoice { whole, split }

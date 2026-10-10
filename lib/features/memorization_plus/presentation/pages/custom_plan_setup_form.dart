@@ -191,32 +191,38 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
       children: [
         Icon(icon, color: context.tokens.textSecondary, size: 20),
         const SizedBox(width: AppSpacing.sm),
-        Text(
-          label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: context.tokens.textPrimary,
-          ),
-        ),
-        const Spacer(),
-        DropdownButton<int>(
-          value: value,
-          underline: const SizedBox.shrink(),
-          dropdownColor: context.tokens.surface,
-          style: AppTypography.bodyMedium.copyWith(
-            color: context.tokens.textPrimary,
-          ),
-          items: List.generate(
-            114,
-            (i) => DropdownMenuItem(
-              value: i + 1,
-              child: Text(
-                '${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : '${context.l10n.surah} ${i + 1}'}',
-              ),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.bodyMedium.copyWith(
+              color: context.tokens.textPrimary,
             ),
           ),
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: DropdownButton<int>(
+            value: value,
+            isExpanded: true,
+            underline: const SizedBox.shrink(),
+            dropdownColor: context.tokens.surface,
+            style: AppTypography.bodyMedium.copyWith(
+              color: context.tokens.textPrimary,
+            ),
+            items: List.generate(
+              114,
+              (i) => DropdownMenuItem(
+                value: i + 1,
+                child: Text(
+                  '${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : '${context.l10n.surah} ${i + 1}'}',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
         ),
       ],
     );
@@ -258,13 +264,15 @@ mixin _CustomPlanRangeFields on _CustomPlanSetupController {
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                title,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: context.tokens.textPrimary,
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.tokens.textPrimary,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

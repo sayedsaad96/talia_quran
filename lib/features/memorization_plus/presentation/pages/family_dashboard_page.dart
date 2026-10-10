@@ -26,6 +26,7 @@ import '../widgets/family_child_name.dart';
 import '../widgets/family_remote_status_banner.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/kids_policy_controls.dart';
+import '../widgets/kids_house_size_selector.dart';
 import 'child_detail_page.dart';
 
 import '../../../../core/widgets/locale_time_picker.dart';
@@ -221,6 +222,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
         l10n.parentRewardApprovedFeedback,
       FamilyDashboardFeedbackType.reminderSaved =>
         l10n.parentDashboardReminderSaved,
+      FamilyDashboardFeedbackType.houseSizeSaved => l10n.kidsHouseSizeSaved,
       FamilyDashboardFeedbackType.accountPasswordIncorrect =>
         l10n.parentDashboardAccountPasswordIncorrect,
       FamilyDashboardFeedbackType.accountCheckUnavailable =>
@@ -317,6 +319,19 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (hasLocalChild) ...[
+                  KidsHouseSizeSelector(
+                    current: settings.kidsAyahsPerHouse,
+                    onSave: (count) async {
+                      final saved = await dashboardCubit.setKidsHouseSize(
+                        count,
+                      );
+                      if (saved && sheetContext.mounted) {
+                        Navigator.pop(sheetContext);
+                      }
+                      return saved;
+                    },
+                  ),
+                  const Divider(),
                   Text(
                     context.l10n.kidsJourneyBetaTitle,
                     style: AppTypography.titleMedium,

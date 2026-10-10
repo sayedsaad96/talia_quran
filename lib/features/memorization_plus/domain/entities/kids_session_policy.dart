@@ -134,3 +134,6 @@ final class KidsJourneyCursor extends Equatable {
   @override
   List<Object?> get props => [pathId, activeSurahId, nextAyah];
 }
+
+int? sanitizeKidsAyahsPerHouse(int? value) =>
+    value == null || value < 1 || value > 10 ? null : value;

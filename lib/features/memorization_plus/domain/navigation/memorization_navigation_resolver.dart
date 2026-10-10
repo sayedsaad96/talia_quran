@@ -133,26 +133,19 @@ class MemorizationNavigationResolver {
     const resolver = KidsNextMissionResolver();
     final continuation = await resolver.findContinuation(
       activeSurahId: surahId,
-      stages: KidsNextMissionResolver.withCompletedAyah(
-        stages,
-        surahId: surahId,
-        ayahNumber: completedAyah,
-      ),
+      stages: stages,
       loadStages: (id) async => (await _repository.getKidsJourney(
         surahId: id,
       )).fold((_) => null, (stages) => stages),
     );
-    KidsNextMission? resolveWith(KidsDailyBudget budget) =>
-        resolver.resolveSkippingAyah(
-          activeSurahId: surahId,
-          stages: stages,
-          reviewRecords: reviewRecords,
-          now: at.toUtc(),
-          justCompletedSurahId: surahId,
-          justCompletedAyah: completedAyah,
-          budget: budget,
-          continuation: continuation,
-        );
+    KidsNextMission? resolveWith(KidsDailyBudget budget) => resolver.resolve(
+      activeSurahId: surahId,
+      stages: stages,
+      reviewRecords: reviewRecords,
+      now: at.toUtc(),
+      budget: budget,
+      continuation: continuation,
+    );
     final mission = resolveWith(budget);
     return (
       mission: mission,
@@ -216,6 +209,8 @@ class MemorizationNavigationResolver {
   Future<String> practiceSurahSessionLocation(
     int surahId, {
     int? surahAyahCount,
+    int? startAyah,
+    int? ayahCount,
   }) async {
     final cachedPlan = await _cachedPlan();
     final reviewRecords = await _reviewRecords(ReviewRecordReadScope.adult);
@@ -225,6 +220,8 @@ class MemorizationNavigationResolver {
       cachedPlan: cachedPlan,
       reviewRecords: reviewRecords,
       surahAyahCount: surahAyahCount,
+      explicitStartAyah: startAyah,
+      explicitAyahCount: ayahCount,
       customPlan: await _customPlan(),
     );
   }
@@ -305,6 +302,8 @@ class MemorizationNavigationResolver {
     // memorization or reopening the latest journey position.
     final reviewRecords = await _reviewRecords(ReviewRecordReadScope.kids);
     final now = DateTime.now();
+    final mandatorySurah = await _mandatoryKidsHouseSurah();
+    if (mandatorySurah != null) return mandatorySurah;
     final dueReviews =
         reviewRecords
             .where(
@@ -354,6 +353,37 @@ class MemorizationNavigationResolver {
   }
 
   /// Same age-band budget the home screen and session gate use; a log read
+  Future<int?> _mandatoryKidsHouseSurah() async {
+    final profile = await _profile();
+    if (profile?.isChild != true) return null;
+    final logs = (await _repository.getKidsSessionLogs()).fold(
+      (_) => <KidsSessionLog>[],
+      (logs) => logs,
+    );
+    final started = logs
+        .where(KidsSessionLogsCloudMerge.isCanonicalRewardLog)
+        .map((log) => log.surahId)
+        .toSet();
+    final settings = (await _repository.getParentSettings()).fold(
+      (_) => null,
+      (settings) => settings,
+    );
+    final first = KidsJourneyPath.surahIds.indexOf(
+      settings?.startingSurahId ?? KidsJourneyPath.firstSurahId,
+    );
+    for (final id in KidsJourneyPath.surahIds.skip(first < 0 ? 0 : first)) {
+      if (!started.contains(id)) continue;
+      final stages = (await _repository.getKidsJourney(
+        surahId: id,
+      )).fold((_) => null, (stages) => stages);
+      if (stages == null) return id;
+      if (stages.any((stage) => stage.requiresHouseReview && stage.isUnlocked)) {
+        return id;
+      }
+    }
+    return null;
+  }
+
   /// failure is unlimited (fail-open).
   Future<KidsDailyBudget> _kidsDailyBudget(DateTime now) async {
     final logsResult = await _repository.getKidsSessionLogs();
@@ -390,6 +420,8 @@ class MemorizationNavigationResolver {
     required DailyPlan? cachedPlan,
     required List<AyahReviewRecord> reviewRecords,
     int? surahAyahCount,
+    int? explicitStartAyah,
+    int? explicitAyahCount,
     CustomMemorizationPlan? customPlan,
   }) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
@@ -400,16 +432,40 @@ class MemorizationNavigationResolver {
         cachedPlan.isRequiredPlanCompleted) {
       return AppRoutes.memorizationHub;
     }
+    if (intent == PendingAyahIntent.continueDailyPlan &&
+        customPlan != null &&
+        customPlan.isActive &&
+        customPlan.targetUser == PlanTargetUser.adult &&
+        (cachedPlan == null ||
+            cachedPlan.totalItems == 0 ||
+            cachedPlan.isRequiredPlanCompleted)) {
+      // A configured plan without a usable generated plan is a rest day,
+      // completed range, or generation failure. Never invent a practice
+      // session from the plan's difficulty settings.
+      return AppRoutes.memorizationHub;
+    }
 
-    final target = _pendingAyahResolver.resolve(
-      PendingAyahResolverInput(
-        surahId: surahId!,
-        intent: intent,
-        cachedDailyPlan: cachedPlan,
-        reviewRecords: reviewRecords,
-        surahAyahCount: surahAyahCount,
-      ),
-    );
+    final target =
+        intent == PendingAyahIntent.practiceSurah &&
+            explicitStartAyah != null &&
+            explicitAyahCount != null &&
+            explicitStartAyah >= 1 &&
+            explicitAyahCount >= 1
+        ? PendingAyahTarget(
+            surahId: surahId!,
+            startAyah: explicitStartAyah,
+            blockSize: explicitAyahCount,
+            intent: PendingAyahIntent.practiceSurah,
+          )
+        : _pendingAyahResolver.resolve(
+            PendingAyahResolverInput(
+              surahId: surahId!,
+              intent: intent,
+              cachedDailyPlan: cachedPlan,
+              reviewRecords: reviewRecords,
+              surahAyahCount: surahAyahCount,
+            ),
+          );
     final launchContext = switch (intent) {
       // Same rule as [dailyPlanAyahLocation]: recall work on a reviewed ayah
       // is a review; launching it as memorize would re-teach known material.
@@ -441,9 +497,9 @@ class MemorizationNavigationResolver {
       ),
     };
 
-    // Memorization blocks follow the plan's difficulty (M-U4), trimmed to
-    // today's remaining new ayahs when continuing the plan (N3); reviews
-    // always target a single ayah.
+    // Practice blocks follow the plan's difficulty. Daily-plan memorization
+    // instead uses every contiguous unfinished generated new ayah; reviews
+    // retain their own passage picker in the session Cubit.
     final adultPlan =
         customPlan != null &&
             customPlan.isActive &&
@@ -457,7 +513,9 @@ class MemorizationNavigationResolver {
         if (adultPlan != null &&
             launchContext.intent == LearningIntent.memorize)
           'blockSize':
-              '${PlanSchedulePolicy.fitToDailyPlan(PlanSchedulePolicy.blockSize(adultPlan), intent == PendingAyahIntent.continueDailyPlan ? cachedPlan : null, surahId: target.surahId, startAyah: target.startAyah)}',
+              '${explicitAyahCount ?? PlanSchedulePolicy.fitToDailyPlan(PlanSchedulePolicy.blockSize(adultPlan), intent == PendingAyahIntent.continueDailyPlan ? cachedPlan : null, surahId: target.surahId, startAyah: target.startAyah)}',
+        if (adultPlan == null && explicitAyahCount != null)
+          'blockSize': '$explicitAyahCount',
       },
     ).toString();
   }

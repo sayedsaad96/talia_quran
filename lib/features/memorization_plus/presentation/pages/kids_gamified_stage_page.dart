@@ -41,6 +41,10 @@ class KidsGamifiedStagePage extends StatefulWidget {
 /// the house flagged (K30).
 @visibleForTesting
 String kidsNextMissionLocation(KidsJourneyStage stage) {
+  if (stage.requiresHouseReview && stage.pendingHouseReviewAyahs.isNotEmpty) {
+    return '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}'
+        '&ayahNumber=${stage.pendingHouseReviewAyahs.first}&missionType=${KidsMissionType.linkedReview.name}';
+  }
   final missionType = switch (stage.status) {
     KidsJourneyStageStatus.completed ||
     KidsJourneyStageStatus.needsReview => KidsMissionType.linkedReview,

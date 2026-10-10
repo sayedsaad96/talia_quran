@@ -32,11 +32,14 @@ class _FakeProgressDatasource implements ProgressLocalDatasource {
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   _FakeMemPlusDatasource(this.records);
   final List<AyahReviewRecordModel> records;
+  ParentSettingsModel _parentSettings = const ParentSettingsModel.defaults();
 
   @override
   Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
-    Future<List<KidsSessionLogModel>> Function(List<KidsSessionLogModel> current)
-        mutate,
+    Future<List<KidsSessionLogModel>> Function(
+      List<KidsSessionLogModel> current,
+    )
+    mutate,
   ) async => mutate(const []);
 
   @override
@@ -107,12 +110,24 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
   @override
-  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {}
+  Future<void> markKidsSessionLogsCloudSynced(
+    Iterable<String> localIds,
+  ) async {}
   @override
-  Future<ParentSettingsModel> getParentSettings() async =>
-      const ParentSettingsModel.defaults();
+  Future<ParentSettingsModel> getParentSettings() async => _parentSettings;
   @override
-  Future<void> saveParentSettings(ParentSettingsModel settings) async {}
+  Future<void> saveParentSettings(ParentSettingsModel settings) async {
+    _parentSettings = settings;
+  }
+
+  @override
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  ) async {
+    _parentSettings = ParentSettingsModel.fromEntity(mutate(_parentSettings));
+    return _parentSettings;
+  }
+
   @override
   Future<List<ParentRewardModel>> getParentRewards() async => const [];
   @override
@@ -217,14 +232,17 @@ ProgressRepositoryImpl _repo(List<AyahReviewRecordModel> records) =>
 
 void main() {
   group('ProgressRepositoryImpl — adult production source filtering', () {
-    test('v2Session record counts in memorizedAyahs when strength >= 6', () async {
-      final result = await _repo([
-        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
-      ]).getOverallProgress();
-      final progress = result.getOrElse(() => throw StateError('failed'));
-      expect(progress.memorizedAyahs, 1);
-      expect(progress.memorizedAyahs, 1);
-    });
+    test(
+      'v2Session record counts in memorizedAyahs when strength >= 6',
+      () async {
+        final result = await _repo([
+          _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
+        ]).getOverallProgress();
+        final progress = result.getOrElse(() => throw StateError('failed'));
+        expect(progress.memorizedAyahs, 1);
+        expect(progress.memorizedAyahs, 1);
+      },
+    );
 
     test('kidsMode record is excluded from adult production counts', () async {
       final result = await _repo([
@@ -243,15 +261,18 @@ void main() {
       expect(progress.memorizedAyahs, 1);
     });
 
-    test('legacy ambiguous source tags do not count in adult progress', () async {
-      final result = await _repo([
-        _reviewRecord(1, ReviewRecordCreatedByMode.adultMemPlus),
-        _reviewRecord(2, ReviewRecordCreatedByMode.unknown),
-        _reviewRecord(3, ReviewRecordCreatedByMode.migration),
-      ]).getOverallProgress();
-      final progress = result.getOrElse(() => throw StateError('failed'));
-      expect(progress.memorizedAyahs, 0);
-    });
+    test(
+      'legacy ambiguous source tags do not count in adult progress',
+      () async {
+        final result = await _repo([
+          _reviewRecord(1, ReviewRecordCreatedByMode.adultMemPlus),
+          _reviewRecord(2, ReviewRecordCreatedByMode.unknown),
+          _reviewRecord(3, ReviewRecordCreatedByMode.migration),
+        ]).getOverallProgress();
+        final progress = result.getOrElse(() => throw StateError('failed'));
+        expect(progress.memorizedAyahs, 0);
+      },
+    );
 
     test('mixed source list counts v2Session + hifz only', () async {
       final result = await _repo([
@@ -268,16 +289,8 @@ void main() {
 
     test('due reviews count only adult production records', () async {
       final result = await _repo([
-        _reviewRecord(
-          1,
-          ReviewRecordCreatedByMode.v2Session,
-          strengthLevel: 3,
-        ),
-        _reviewRecord(
-          2,
-          ReviewRecordCreatedByMode.kidsMode,
-          strengthLevel: 3,
-        ),
+        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session, strengthLevel: 3),
+        _reviewRecord(2, ReviewRecordCreatedByMode.kidsMode, strengthLevel: 3),
       ]).getOverallProgress();
       final progress = result.getOrElse(() => throw StateError('failed'));
       expect(progress.reviewAyahs, 1);
@@ -286,39 +299,48 @@ void main() {
   });
 
   group('ProgressRepositoryImpl — two-tier memorization metrics', () {
-    test('started includes reviewed-once; memorized requires strength >= 6', () async {
-      final result = await _repo([
-        _reviewRecord(
-          1,
-          ReviewRecordCreatedByMode.v2Session,
-          strengthLevel: 6,
-        ),
-        _reviewRecord(
-          2,
-          ReviewRecordCreatedByMode.v2Session,
-          strengthLevel: 3,
-        ),
-        _reviewRecord(
-          3,
-          ReviewRecordCreatedByMode.v2Session,
-          strengthLevel: 5,
-        ),
-      ]).getOverallProgress();
-      final progress = result.getOrElse(() => throw StateError('failed'));
+    test(
+      'started includes reviewed-once; memorized requires strength >= 6',
+      () async {
+        final result = await _repo([
+          _reviewRecord(
+            1,
+            ReviewRecordCreatedByMode.v2Session,
+            strengthLevel: 6,
+          ),
+          _reviewRecord(
+            2,
+            ReviewRecordCreatedByMode.v2Session,
+            strengthLevel: 3,
+          ),
+          _reviewRecord(
+            3,
+            ReviewRecordCreatedByMode.v2Session,
+            strengthLevel: 5,
+          ),
+        ]).getOverallProgress();
+        final progress = result.getOrElse(() => throw StateError('failed'));
 
-      expect(progress.startedAyahs, 3);
-      expect(progress.memorizedAyahs, 1);
-      expect(progress.learningAyahs, 2);
-      expect(progress.memorizedAyahs + progress.learningAyahs, progress.startedAyahs);
-    });
+        expect(progress.startedAyahs, 3);
+        expect(progress.memorizedAyahs, 1);
+        expect(progress.learningAyahs, 2);
+        expect(
+          progress.memorizedAyahs + progress.learningAyahs,
+          progress.startedAyahs,
+        );
+      },
+    );
 
-    test('reviewedAyahsTotal sums review repetitions across counted records', () async {
-      final result = await _repo([
-        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
-        _reviewRecord(2, ReviewRecordCreatedByMode.v2Session),
-      ]).getOverallProgress();
-      final progress = result.getOrElse(() => throw StateError('failed'));
-      expect(progress.reviewedAyahsTotal, 10);
-    });
+    test(
+      'reviewedAyahsTotal sums review repetitions across counted records',
+      () async {
+        final result = await _repo([
+          _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
+          _reviewRecord(2, ReviewRecordCreatedByMode.v2Session),
+        ]).getOverallProgress();
+        final progress = result.getOrElse(() => throw StateError('failed'));
+        expect(progress.reviewedAyahsTotal, 10);
+      },
+    );
   });
 }

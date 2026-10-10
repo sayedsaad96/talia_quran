@@ -30,6 +30,8 @@ class ParentSettings extends Equatable {
     this.policyVersion = 0,
     this.policySyncedVersion = 0,
     this.policyLinkConfirmed,
+    this.kidsAyahsPerHouse,
+    this.kidsHouseSizesBySurah = const {},
   });
 
   final String? pinHash;
@@ -67,6 +69,8 @@ class ParentSettings extends Equatable {
   /// Last link state the server confirmed for this child: true after a CAS
   /// or pull succeeded, false after "Child link is not active", null unknown.
   final bool? policyLinkConfirmed;
+  final int? kidsAyahsPerHouse;
+  final Map<int, int> kidsHouseSizesBySurah;
 
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
@@ -91,6 +95,9 @@ class ParentSettings extends Equatable {
     int? policySyncedVersion,
     bool? policyLinkConfirmed,
     bool clearPolicyLinkConfirmed = false,
+    int? kidsAyahsPerHouse,
+    bool clearKidsAyahsPerHouse = false,
+    Map<int, int>? kidsHouseSizesBySurah,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -113,6 +120,10 @@ class ParentSettings extends Equatable {
     policyLinkConfirmed: clearPolicyLinkConfirmed
         ? null
         : (policyLinkConfirmed ?? this.policyLinkConfirmed),
+    kidsAyahsPerHouse: clearKidsAyahsPerHouse
+        ? null
+        : kidsAyahsPerHouse ?? this.kidsAyahsPerHouse,
+    kidsHouseSizesBySurah: kidsHouseSizesBySurah ?? this.kidsHouseSizesBySurah,
   );
 
   @override
@@ -134,6 +145,8 @@ class ParentSettings extends Equatable {
     policyVersion,
     policySyncedVersion,
     policyLinkConfirmed,
+    kidsAyahsPerHouse,
+    kidsHouseSizesBySurah,
   ];
 }
 

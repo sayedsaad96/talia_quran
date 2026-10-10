@@ -714,6 +714,174 @@ void main() {
         expect(restored.passedAyahNumbers, {1});
       },
     );
+
+    test(
+      'daily-plan checkpoint resumes only its exact generated range',
+      () async {
+        final saved = IsarV2Session.create(
+          surahId: 1,
+          blockAyahNumbers: const [1, 2, 3],
+          currentAyahIndex: 1,
+          phaseIndex: V2SessionPhase.memorizing.index,
+          passedAyahNumbers: const {1},
+          failureCounts: const {},
+          hintLevels: const {},
+          blockReviewRequired: true,
+          launchContext: const LearningLaunchContext(
+            ayah: AyahReference(surahId: 1, ayahNumber: 1),
+            intent: LearningIntent.memorize,
+            origin: LearningOrigin.dailyPlan,
+          ),
+        );
+        when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => saved);
+
+        await cubit.startSession(
+          surahId: 1,
+          startAyah: 1,
+          blockSize: 3,
+          launchContext: const LearningLaunchContext(
+            ayah: AyahReference(surahId: 1, ayahNumber: 1),
+            intent: LearningIntent.memorize,
+            origin: LearningOrigin.dailyPlan,
+          ),
+        );
+
+        expect((cubit.state as MSActive).sessionState.passedAyahNumbers, {1});
+        verifyNever(mockLocalDatasource.clearSession(1));
+      },
+    );
+
+    test('changed daily-plan range replaces stale checkpoint', () async {
+      final saved = IsarV2Session.create(
+        surahId: 1,
+        blockAyahNumbers: const [1, 2],
+        currentAyahIndex: 0,
+        phaseIndex: V2SessionPhase.learning.index,
+        passedAyahNumbers: const {},
+        failureCounts: const {},
+        hintLevels: const {},
+        blockReviewRequired: true,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 1),
+          intent: LearningIntent.memorize,
+          origin: LearningOrigin.dailyPlan,
+        ),
+      );
+      when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => saved);
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 1,
+        blockSize: 3,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 1),
+          intent: LearningIntent.memorize,
+          origin: LearningOrigin.dailyPlan,
+        ),
+      );
+
+      expect(
+        (cubit.state as MSActive).sessionState.blockAyahs.map(
+          (ayah) => ayah.numberInSurah,
+        ),
+        [1, 2, 3],
+      );
+      verify(mockLocalDatasource.clearSession(1)).called(1);
+    });
+
+    for (final persistenceFails in [false, true]) {
+      test(
+        'replacing a practice range ${persistenceFails ? 'retains checkpoint on failure' : 'preserves abandoned failures'}',
+        () async {
+          stubReviewWrite();
+          if (persistenceFails) {
+            when(
+              mockMemRepo.saveReviewRecord(any),
+            ).thenAnswer((_) async => const Left(CacheFailure()));
+          }
+          final saved = IsarV2Session.create(
+            surahId: 1,
+            blockAyahNumbers: const [1, 2],
+            currentAyahIndex: 0,
+            phaseIndex: V2SessionPhase.memorizing.index,
+            passedAyahNumbers: const {},
+            failureCounts: const {1: 1},
+            hintLevels: const {},
+            blockReviewRequired: true,
+            launchContext: const LearningLaunchContext(
+              ayah: AyahReference(surahId: 1, ayahNumber: 1),
+              intent: LearningIntent.memorize,
+              origin: LearningOrigin.surahPractice,
+            ),
+          );
+          when(
+            mockLocalDatasource.getSession(1),
+          ).thenAnswer((_) async => saved);
+          await cubit.startSession(
+            surahId: 1,
+            startAyah: 1,
+            blockSize: 3,
+            launchContext: const LearningLaunchContext(
+              ayah: AyahReference(surahId: 1, ayahNumber: 1),
+              intent: LearningIntent.memorize,
+              origin: LearningOrigin.surahPractice,
+            ),
+          );
+          final written =
+              verify(mockMemRepo.saveReviewRecord(captureAny)).captured.single
+                  as AyahReviewRecord;
+          expect(written.ayahNumber, 1);
+          expect(written.lastRating, PerformanceRating.weak);
+          if (persistenceFails) {
+            expect(cubit.state, isA<MSError>());
+            verifyNever(mockLocalDatasource.clearSession(1));
+            verifyNever(mockLocalDatasource.saveSession(any));
+          } else {
+            expect((cubit.state as MSActive).sessionState.totalAyahsInBlock, 3);
+            verify(mockLocalDatasource.clearSession(1)).called(1);
+          }
+        },
+      );
+    }
+
+    test('daily-plan review checkpoint remains resumable', () async {
+      final saved = IsarV2Session.create(
+        surahId: 1,
+        blockAyahNumbers: const [2],
+        currentAyahIndex: 0,
+        phaseIndex: V2SessionPhase.reciting.index,
+        passedAyahNumbers: const {},
+        failureCounts: const {},
+        hintLevels: const {},
+        blockReviewRequired: true,
+        review: true,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 2),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.dailyPlan,
+        ),
+      );
+      when(
+        mockLocalDatasource.getSession(1, review: true),
+      ).thenAnswer((_) async => saved);
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 2,
+        blockSize: 1,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 2),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.dailyPlan,
+        ),
+      );
+
+      expect(
+        (cubit.state as MSActive).sessionState.phase,
+        V2SessionPhase.reciting,
+      );
+      verifyNever(mockLocalDatasource.clearSession(1, review: true));
+    });
   });
 
   group('audio playback', () {

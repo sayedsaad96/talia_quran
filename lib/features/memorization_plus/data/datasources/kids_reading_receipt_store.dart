@@ -67,6 +67,21 @@ class KidsReadingReceiptStore {
   Future<Set<int>> pagesOn(String dayKey) async =>
       Set<int>.of(_readAll()[dayKey] ?? const <int>{});
 
+  /// Confirmed reading days in the previous week, excluding today so daily
+  /// suggestions do not change as the child completes today's activities.
+  Future<int> recentReadingDays(DateTime before) async {
+    final local = before.toLocal();
+    final all = _readAll();
+    var count = 0;
+    for (var offset = 1; offset <= 7; offset++) {
+      final day = kidsDayKey(
+        DateTime(local.year, local.month, local.day - offset),
+      );
+      if (all[day]?.isNotEmpty ?? false) count++;
+    }
+    return count;
+  }
+
   /// Distinct pages across the retained [retainDays] history.
   Future<Set<int>> allPages() async => {
     for (final pages in _readAll().values) ...pages,

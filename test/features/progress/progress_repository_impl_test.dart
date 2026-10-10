@@ -235,6 +235,7 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   _FakeMemPlusDatasource([this.records = const [], this.profile]);
 
   final List<AyahReviewRecordModel> records;
+  ParentSettingsModel _parentSettings = const ParentSettingsModel.defaults();
   final MemorizationProfileModel? profile;
   final requestedScopes = <ReviewRecordReadScope>[];
   int kidsProgressReads = 0;
@@ -349,11 +350,20 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   ) async {}
 
   @override
-  Future<ParentSettingsModel> getParentSettings() async =>
-      const ParentSettingsModel.defaults();
+  Future<ParentSettingsModel> getParentSettings() async => _parentSettings;
 
   @override
-  Future<void> saveParentSettings(ParentSettingsModel settings) async {}
+  Future<void> saveParentSettings(ParentSettingsModel settings) async {
+    _parentSettings = settings;
+  }
+
+  @override
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  ) async {
+    _parentSettings = ParentSettingsModel.fromEntity(mutate(_parentSettings));
+    return _parentSettings;
+  }
 
   @override
   Future<List<ParentRewardModel>> getParentRewards() async => const [];

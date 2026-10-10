@@ -13497,6 +13497,378 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لا، سأقيّم بنفسي'**
   String get recitationVoiceDisclosureDecline;
+
+  /// No description provided for @practicePassageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مقطع التمرين'**
+  String get practicePassageTitle;
+
+  /// No description provided for @practicePassageMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمرّن على السورة كاملة أو اختر مقطعًا لهذه الجلسة.'**
+  String get practicePassageMessage;
+
+  /// No description provided for @practiceWholeSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'السورة كاملة'**
+  String get practiceWholeSurah;
+
+  /// No description provided for @practiceChoosePassage.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مقطعًا'**
+  String get practiceChoosePassage;
+
+  /// No description provided for @practicePassageFieldsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رقم آية البداية وعدد الآيات.'**
+  String get practicePassageFieldsHint;
+
+  /// No description provided for @practiceStartAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية البداية'**
+  String get practiceStartAyah;
+
+  /// No description provided for @practiceAyahCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الآيات'**
+  String get practiceAyahCount;
+
+  /// No description provided for @practicePassageInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر آيات ضمن حدود السورة.'**
+  String get practicePassageInvalid;
+
+  /// No description provided for @practiceNextPassage.
+  ///
+  /// In ar, this message translates to:
+  /// **'المقطع التالي (متبقي {remaining} آية)'**
+  String practiceNextPassage(String remaining);
+
+  /// No description provided for @customPlanSaveAndView.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الخطة وعرض التفاصيل'**
+  String get customPlanSaveAndView;
+
+  /// No description provided for @planDetailsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الخطة'**
+  String get planDetailsTitle;
+
+  /// No description provided for @planDetailsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعرض خطتك الكاملة وتقدمك.'**
+  String get planDetailsSubtitle;
+
+  /// No description provided for @planDetailsProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدمك في هذه الخطة'**
+  String get planDetailsProgress;
+
+  /// No description provided for @planDetailsTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي آيات الخطة'**
+  String get planDetailsTotal;
+
+  /// No description provided for @planDetailsLearning.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد التثبيت'**
+  String get planDetailsLearning;
+
+  /// No description provided for @planDetailsUnstarted.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تبدأ حفظها بعد'**
+  String get planDetailsUnstarted;
+
+  /// No description provided for @planDetailsMastery.
+  ///
+  /// In ar, this message translates to:
+  /// **'إتقان الآيات التي تدربت عليها'**
+  String get planDetailsMastery;
+
+  /// No description provided for @planDetailsMasteryHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة الآيات التي وصلت إلى الحفظ المتقن من الآيات التي تدربت عليها، بناءً على التدريب والمراجعة.'**
+  String get planDetailsMasteryHint;
+
+  /// No description provided for @planDetailsNoAssessment.
+  ///
+  /// In ar, this message translates to:
+  /// **'يظهر بعد بدء التدريب.'**
+  String get planDetailsNoAssessment;
+
+  /// No description provided for @planDetailsReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعات ضمن الخطة'**
+  String get planDetailsReviews;
+
+  /// No description provided for @planDetailsDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستحقة الآن'**
+  String get planDetailsDue;
+
+  /// No description provided for @planDetailsOverdue.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخرة'**
+  String get planDetailsOverdue;
+
+  /// No description provided for @planDetailsReviewEvents.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات المراجعة المكتملة'**
+  String get planDetailsReviewEvents;
+
+  /// No description provided for @planDetailsNextReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'موعد المراجعة القادم'**
+  String get planDetailsNextReview;
+
+  /// No description provided for @planDetailsNoReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تُجدول مراجعات بعد.'**
+  String get planDetailsNoReviews;
+
+  /// No description provided for @planDetailsSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعدادات خطتك المحفوظة'**
+  String get planDetailsSettings;
+
+  /// No description provided for @planDetailsEnabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفعّلة'**
+  String get planDetailsEnabled;
+
+  /// No description provided for @planDetailsDisabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوقفة'**
+  String get planDetailsDisabled;
+
+  /// No description provided for @planDetailsCreated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الإنشاء'**
+  String get planDetailsCreated;
+
+  /// No description provided for @planDetailsActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطة نشطة'**
+  String get planDetailsActive;
+
+  /// No description provided for @planDetailsBySurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم لكل سورة'**
+  String get planDetailsBySurah;
+
+  /// No description provided for @planDetailsScopeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشمل الأعداد الآيات الموجودة في خطتك بدءًا من آية البداية التي اخترتها.'**
+  String get planDetailsScopeHint;
+
+  /// No description provided for @planDetailsTodayHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد تشمل جلسة اليوم مراجعات من سور أخرى سبق لك التدريب عليها.'**
+  String get planDetailsTodayHint;
+
+  /// No description provided for @planDetailsStartSession.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الجلسة'**
+  String get planDetailsStartSession;
+
+  /// No description provided for @planDetailsEdit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الخطة'**
+  String get planDetailsEdit;
+
+  /// No description provided for @planDetailsTodayDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكملت ورد اليوم. يظهر الورد التالي في يوم الحفظ القادم.'**
+  String get planDetailsTodayDone;
+
+  /// No description provided for @planDetailsRestDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'يوم راحة: مراجعات فقط.'**
+  String get planDetailsRestDay;
+
+  /// No description provided for @planDetailsTodayEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد ورد مجدول اليوم.'**
+  String get planDetailsTodayEmpty;
+
+  /// No description provided for @planDetailsTodayUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل ورد اليوم. اسحب للتحديث قبل بدء الجلسة.'**
+  String get planDetailsTodayUnavailable;
+
+  /// No description provided for @planDetailsBacklog.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ الجديد متوقف مؤقتًا حتى تستدرك المراجعات المستحقة.'**
+  String get planDetailsBacklog;
+
+  /// No description provided for @planDetailsTodayNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات الحفظ الجديدة اليوم'**
+  String get planDetailsTodayNew;
+
+  /// No description provided for @planDetailsTodayReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات المراجعة اليوم'**
+  String get planDetailsTodayReview;
+
+  /// No description provided for @planDetailsInScope.
+  ///
+  /// In ar, this message translates to:
+  /// **'يشمل التقدم ما حفظته سابقًا داخل نطاق هذه الخطة.'**
+  String get planDetailsInScope;
+
+  /// No description provided for @planDetailsRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتبقي للحفظ'**
+  String get planDetailsRemaining;
+
+  /// No description provided for @customPlanSelectedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطتك المختارة'**
+  String get customPlanSelectedTitle;
+
+  /// No description provided for @customPlanReturnSelected.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرجوع للخطة المختارة'**
+  String get customPlanReturnSelected;
+
+  /// No description provided for @planDetailsExitToSetup.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخروج إلى إعدادات الخطة'**
+  String get planDetailsExitToSetup;
+
+  /// No description provided for @planDetailsOtherOptions.
+  ///
+  /// In ar, this message translates to:
+  /// **'بقية خيارات الحفظ'**
+  String get planDetailsOtherOptions;
+
+  /// No description provided for @kidsHouseSizeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الآيات في كل مهمة (بيت)'**
+  String get kidsHouseSizeTitle;
+
+  /// No description provided for @kidsDailyGuardianHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه مهام اختارها لك وليّ أمرك.'**
+  String get kidsDailyGuardianHint;
+
+  /// No description provided for @kidsDailySuggestedHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراحات تتجدد كل يوم، تناسب قراءتك وتدريبك.'**
+  String get kidsDailySuggestedHint;
+
+  /// No description provided for @kidsDailyReadTwoPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ صفحتين من المصحف وأكّد قراءتهما'**
+  String get kidsDailyReadTwoPages;
+
+  /// No description provided for @kidsDailyReciteAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع آية من الذاكرة في تدريبك'**
+  String get kidsDailyReciteAyah;
+
+  /// No description provided for @kidsDailyListenAndRecite.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع وردّد ثم سمّع آيتك'**
+  String get kidsDailyListenAndRecite;
+
+  /// No description provided for @kidsDailyReviewAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع آية وسمّعها في جلسة المراجعة'**
+  String get kidsDailyReviewAyah;
+
+  /// No description provided for @kidsHouseSizeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر من ١ إلى ١٠ آيات على جهاز الطفل. يطبَّق العدد الجديد على السور التي لم يبدأها بعد، وتحتفظ السور الجاري حفظها بتقسيم بيوتها.'**
+  String get kidsHouseSizeHint;
+
+  /// No description provided for @kidsHouseSizeSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ عدد آيات المهمة.'**
+  String get kidsHouseSizeSaved;
+
+  /// No description provided for @kidsHouseReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسميع آيات البيت'**
+  String get kidsHouseReviewTitle;
+
+  /// No description provided for @kidsHouseReviewHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'نراجع ونسمّع كل آيات هذا البيت قبل فتح البيت التالي.'**
+  String get kidsHouseReviewHint;
+
+  /// No description provided for @kidsHouseReviewAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ تسميع آيات البيت'**
+  String get kidsHouseReviewAction;
+
+  /// No description provided for @kidsGuardianAuditionHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم.'**
+  String get kidsGuardianAuditionHint;
+
+  /// No description provided for @kidsHouseReviewRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي للتسميع: {count} آية'**
+  String kidsHouseReviewRemaining(String count);
 }
 
 class _AppLocalizationsDelegate

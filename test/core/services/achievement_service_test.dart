@@ -92,8 +92,12 @@ void main() {
           smartRecords: [_smartMemorized(1, 1)],
         );
 
-        final firstAwards = await service.checkAndUnlockCertificates(isKids: false);
-        final secondAwards = await service.checkAndUnlockCertificates(isKids: false);
+        final firstAwards = await service.checkAndUnlockCertificates(
+          isKids: false,
+        );
+        final secondAwards = await service.checkAndUnlockCertificates(
+          isKids: false,
+        );
         final firstIds = firstAwards.map((award) => award.id).toSet();
 
         expect(firstIds, containsAll(['cert_surah_1', 'cert_juz_1']));
@@ -138,7 +142,10 @@ void main() {
         );
 
         // No repository injected — must not throw.
-        await expectLater(service.checkAndUnlockCertificates(isKids: false), completes);
+        await expectLater(
+          service.checkAndUnlockCertificates(isKids: false),
+          completes,
+        );
       },
     );
   });
@@ -218,11 +225,14 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   _FakeMemPlusDatasource(this.records);
 
   final List<AyahReviewRecordModel> records;
+  ParentSettingsModel _parentSettings = const ParentSettingsModel.defaults();
 
   @override
   Future<List<KidsSessionLogModel>> updateKidsSessionLogs(
-    Future<List<KidsSessionLogModel>> Function(List<KidsSessionLogModel> current)
-        mutate,
+    Future<List<KidsSessionLogModel>> Function(
+      List<KidsSessionLogModel> current,
+    )
+    mutate,
   ) async => mutate(const []);
 
   @override
@@ -342,14 +352,25 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
   @override
-  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {}
+  Future<void> markKidsSessionLogsCloudSynced(
+    Iterable<String> localIds,
+  ) async {}
 
   @override
-  Future<ParentSettingsModel> getParentSettings() async =>
-      const ParentSettingsModel.defaults();
+  Future<ParentSettingsModel> getParentSettings() async => _parentSettings;
 
   @override
-  Future<void> saveParentSettings(ParentSettingsModel settings) async {}
+  Future<void> saveParentSettings(ParentSettingsModel settings) async {
+    _parentSettings = settings;
+  }
+
+  @override
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  ) async {
+    _parentSettings = ParentSettingsModel.fromEntity(mutate(_parentSettings));
+    return _parentSettings;
+  }
 
   @override
   Future<List<ParentRewardModel>> getParentRewards() async => const [];

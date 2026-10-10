@@ -105,6 +105,9 @@ abstract class MemorizationPlusLocalDatasource {
   // Parent dashboard
   Future<ParentSettingsModel> getParentSettings();
   Future<void> saveParentSettings(ParentSettingsModel settings);
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  );
   Future<List<ParentRewardModel>> getParentRewards();
   Future<void> saveParentRewards(List<ParentRewardModel> rewards);
   Future<List<KidsHomeMission>> getHomeMissions();

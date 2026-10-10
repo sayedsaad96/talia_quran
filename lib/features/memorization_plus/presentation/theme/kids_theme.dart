@@ -105,6 +105,9 @@ abstract final class KidsTheme {
       'assets/images/kids/house_current.png';
   static const String houseLockedAsset = 'assets/images/kids/house_locked.png';
   static const String houseReviewAsset = 'assets/images/kids/house_review.png';
+  static const String houseGardenAsset = 'assets/images/kids/house_garden.png';
+  static const String houseLibraryAsset =
+      'assets/images/kids/house_library.png';
   static const String ribbonBannerAsset =
       'assets/images/kids/ribbon_banner.png';
   static const String starRewardAsset = 'assets/images/kids/star_reward.png';

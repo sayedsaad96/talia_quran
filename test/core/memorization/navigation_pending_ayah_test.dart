@@ -264,7 +264,8 @@ void main() {
       },
     );
 
-    test('memorize blocks follow the plan difficulty (M-U4)', () async {
+    test("daily-plan memorize blocks cover today's full contiguous run, "
+        'not the difficulty block size', () async {
       final nav = MemorizationNavigationResolver(
         _FakeRepository(
           cachedPlan: DailyPlan(
@@ -305,7 +306,9 @@ void main() {
       final query = Uri.parse(targets.todayPlanLocation).queryParameters;
 
       expect(query['intent'], 'memorize');
-      expect(query['blockSize'], '3');
+      // Easy difficulty would be 3, but the generated plan's unfinished
+      // contiguous range (ayahs 4–7) drives a daily-plan launch.
+      expect(query['blockSize'], '4');
     });
 
     test("a memorize block never outgrows today's new ayahs (N3)", () async {

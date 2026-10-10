@@ -2,8 +2,11 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -346,6 +349,9 @@ void main() {
     group('daily missions', () {
       Future<KidsJourneyCubit> build({
         KidsReadingPagesLoader? readingPagesLoader,
+        KidsReadingPagesForDayLoader? readingPagesForDayLoader,
+        KidsRecentReadingDaysLoader? recentReadingDaysLoader,
+        DateTime Function()? clock,
         KidsHomeMissionsLoader? homeMissionsLoader,
         KidsChildPolicyReader? childPolicyReader,
         KidsChildPolicyRefresh? childPolicyRefresh,
@@ -374,27 +380,118 @@ void main() {
               ),
           ],
           readingPagesLoader: readingPagesLoader,
+          readingPagesForDayLoader: readingPagesForDayLoader,
+          recentReadingDaysLoader: recentReadingDaysLoader,
+          clock: clock,
           homeMissionsLoader: homeMissionsLoader,
           childPolicyReader: childPolicyReader,
           childPolicyRefresh: childPolicyRefresh,
         );
       }
 
-      test("learning and reading are completed by today's work", () async {
-        final c = await build(readingPagesLoader: () async => {5});
+      test(
+        'guardian tasks and confirmed reading survive reload and day change',
+        () async {
+          SharedPreferences.setMockInitialValues({});
+          var now = DateTime(2026, 10, 2, 9);
+          final receipts = KidsReadingReceiptStore(
+            await SharedPreferences.getInstance(),
+            const FixedRecordOwnerProvider('child-a'),
+            clock: () => now,
+          );
+          await receipts.recordPage(5);
+          now = DateTime(2026, 10, 3, 9);
+          await receipts.recordPage(6);
+          now = DateTime(2026, 10, 4, 9);
+          var assignments = <KidsHomeMission>[];
+          final c = await build(
+            clock: () => now,
+            withTodayLog: false,
+            readingPagesForDayLoader: (day) =>
+                receipts.pagesOn(kidsDayKey(day)),
+            recentReadingDaysLoader: receipts.recentReadingDays,
+            homeMissionsLoader: () async => assignments,
+          );
+          Future<KidsJourneyLoaded> reload() async {
+            await c.load(surahId: tSurahId, followFrontier: true);
+            return c.state as KidsJourneyLoaded;
+          }
 
-        await c.load(surahId: tSurahId, followFrontier: true);
+          KidsDailyMission reading(KidsJourneyLoaded state) =>
+              state.dailyMissions.singleWhere(
+                (mission) => mission.kind == KidsDailyMissionKind.reading,
+              );
+          expect(reading(await reload()).targetCount, 2);
+          await receipts.recordPage(7);
+          expect(
+            reading(await reload()).status,
+            KidsDailyMissionStatus.available,
+          );
+          await receipts.recordPage(8);
+          expect(
+            reading(await reload()).status,
+            KidsDailyMissionStatus.completed,
+          );
 
-        final loaded = c.state as KidsJourneyLoaded;
-        expect(loaded.dailyMissions.map((m) => m.kind), [
-          KidsDailyMissionKind.learning,
-          KidsDailyMissionKind.reading,
-        ]);
-        expect(
-          loaded.dailyMissions.map((m) => m.status),
-          everyElement(KidsDailyMissionStatus.completed),
-        );
-      });
+          assignments = [
+            KidsHomeMission(
+              id: 'guardian-task',
+              title: 'رتب غرفتك',
+              status: KidsHomeMissionStatus.assigned,
+              createdAt: now,
+            ),
+          ];
+          expect(
+            (await reload()).dailyMissions.single.homeMissionId,
+            'guardian-task',
+          );
+          assignments = [
+            KidsHomeMission(
+              id: 'guardian-task',
+              title: 'رتب غرفتك',
+              status: KidsHomeMissionStatus.reported,
+              createdAt: now,
+              reportedAt: now,
+            ),
+          ];
+          expect(
+            (await reload()).dailyMissions.single.status,
+            KidsDailyMissionStatus.completed,
+          );
+          now = DateTime(2026, 10, 5, 9);
+          final tomorrow = await reload();
+          expect(
+            tomorrow.dailyMissions.any(
+              (m) => m.kind == KidsDailyMissionKind.home,
+            ),
+            isFalse,
+          );
+          expect(reading(tomorrow).status, KidsDailyMissionStatus.available);
+          expect(reading(tomorrow).id, startsWith('2026-10-05:'));
+        },
+      );
+
+      test(
+        "suggested practice and reading are completed by today's work",
+        () async {
+          final c = await build(readingPagesLoader: () async => {5});
+
+          await c.load(surahId: tSurahId, followFrontier: true);
+
+          final loaded = c.state as KidsJourneyLoaded;
+          expect(
+            loaded.dailyMissions.map((m) => m.kind),
+            unorderedEquals([
+              KidsDailyMissionKind.practice,
+              KidsDailyMissionKind.reading,
+            ]),
+          );
+          expect(
+            loaded.dailyMissions.map((m) => m.status),
+            everyElement(KidsDailyMissionStatus.completed),
+          );
+        },
+      );
 
       test('a loader error omits the reading mission (fail-open)', () async {
         final c = await build(
@@ -456,33 +553,36 @@ void main() {
         expect(home.status, KidsDailyMissionStatus.available);
       });
 
-      test('with nothing assigned, a mission reported today shows done', () async {
-        final c = await build(
-          readingPagesLoader: () async => {5},
-          homeMissionsLoader: () async => [
-            homeMission(
-              '1',
-              KidsHomeMissionStatus.reported,
-              DateTime(2026, 9, 1),
-              reportedAt: DateTime.now().subtract(const Duration(days: 2)),
-            ),
-            homeMission(
-              '2',
-              KidsHomeMissionStatus.reported,
-              DateTime(2026, 9, 2),
-              reportedAt: DateTime.now(),
-            ),
-          ],
-        );
+      test(
+        'with nothing assigned, a mission reported today shows done',
+        () async {
+          final c = await build(
+            readingPagesLoader: () async => {5},
+            homeMissionsLoader: () async => [
+              homeMission(
+                '1',
+                KidsHomeMissionStatus.reported,
+                DateTime(2026, 9, 1),
+                reportedAt: DateTime.now().subtract(const Duration(days: 2)),
+              ),
+              homeMission(
+                '2',
+                KidsHomeMissionStatus.reported,
+                DateTime(2026, 9, 2),
+                reportedAt: DateTime.now(),
+              ),
+            ],
+          );
 
-        await c.load(surahId: tSurahId, followFrontier: true);
+          await c.load(surahId: tSurahId, followFrontier: true);
 
-        final loaded = c.state as KidsJourneyLoaded;
-        final home = loaded.dailyMissions.last;
-        expect(home.kind, KidsDailyMissionKind.home);
-        expect(home.homeMissionId, '2');
-        expect(home.status, KidsDailyMissionStatus.completed);
-      });
+          final loaded = c.state as KidsJourneyLoaded;
+          final home = loaded.dailyMissions.last;
+          expect(home.kind, KidsDailyMissionKind.home);
+          expect(home.homeMissionId, '2');
+          expect(home.status, KidsDailyMissionStatus.completed);
+        },
+      );
 
       test('a mission reported on an earlier day shows no home card', () async {
         final c = await build(
@@ -551,21 +651,24 @@ void main() {
           ),
         ];
 
-        test('one daily suggestion shows only the learning card', () async {
-          final c = await build(
-            readingPagesLoader: () async => {5},
-            homeMissionsLoader: () async => assigned(),
-            childPolicyReader: () =>
-                const KidsChildPolicy(maxDailySuggestions: 1),
-          );
+        test(
+          'a one-suggestion limit still shows the guardian assignment',
+          () async {
+            final c = await build(
+              readingPagesLoader: () async => {5},
+              homeMissionsLoader: () async => assigned(),
+              childPolicyReader: () =>
+                  const KidsChildPolicy(maxDailySuggestions: 1),
+            );
 
-          await c.load(surahId: tSurahId, followFrontier: true);
+            await c.load(surahId: tSurahId, followFrontier: true);
 
-          final loaded = c.state as KidsJourneyLoaded;
-          expect(loaded.dailyMissions.map((m) => m.kind), [
-            KidsDailyMissionKind.learning,
-          ]);
-        });
+            final loaded = c.state as KidsJourneyLoaded;
+            expect(loaded.dailyMissions.map((m) => m.kind), [
+              KidsDailyMissionKind.home,
+            ]);
+          },
+        );
 
         test('home missions disabled hides an assigned mission', () async {
           final c = await build(
@@ -578,27 +681,31 @@ void main() {
           await c.load(surahId: tSurahId, followFrontier: true);
 
           final loaded = c.state as KidsJourneyLoaded;
-          expect(loaded.dailyMissions.map((m) => m.kind), [
-            KidsDailyMissionKind.learning,
-            KidsDailyMissionKind.reading,
-          ]);
-        });
-
-        test('without a reader the default policy keeps all three', () async {
-          final c = await build(
-            readingPagesLoader: () async => {5},
-            homeMissionsLoader: () async => assigned(),
+          expect(
+            loaded.dailyMissions.map((m) => m.kind),
+            unorderedEquals([
+              KidsDailyMissionKind.practice,
+              KidsDailyMissionKind.reading,
+            ]),
           );
-
-          await c.load(surahId: tSurahId, followFrontier: true);
-
-          final loaded = c.state as KidsJourneyLoaded;
-          expect(loaded.dailyMissions.map((m) => m.kind), [
-            KidsDailyMissionKind.learning,
-            KidsDailyMissionKind.reading,
-            KidsDailyMissionKind.home,
-          ]);
         });
+
+        test(
+          'default policy gives the section to guardian assignments',
+          () async {
+            final c = await build(
+              readingPagesLoader: () async => {5},
+              homeMissionsLoader: () async => assigned(),
+            );
+
+            await c.load(surahId: tSurahId, followFrontier: true);
+
+            final loaded = c.state as KidsJourneyLoaded;
+            expect(loaded.dailyMissions.map((m) => m.kind), [
+              KidsDailyMissionKind.home,
+            ]);
+          },
+        );
 
         test('the home load refreshes the policy before applying it', () async {
           var policy = const KidsChildPolicy();
@@ -629,7 +736,8 @@ void main() {
           await c.load(surahId: tSurahId, followFrontier: true);
 
           final loaded = c.state as KidsJourneyLoaded;
-          expect(loaded.dailyMissions, hasLength(2));
+          expect(loaded.dailyMissions, hasLength(1));
+          expect(loaded.dailyMissions.single.kind, KidsDailyMissionKind.home);
         });
 
         test('a throwing reader falls back to the default policy', () async {
@@ -642,7 +750,8 @@ void main() {
           await c.load(surahId: tSurahId, followFrontier: true);
 
           final loaded = c.state as KidsJourneyLoaded;
-          expect(loaded.dailyMissions, hasLength(3));
+          expect(loaded.dailyMissions, hasLength(1));
+          expect(loaded.dailyMissions.single.kind, KidsDailyMissionKind.home);
         });
       });
 
@@ -811,6 +920,16 @@ void main() {
           );
           stubJourneys({
             114: [done(114)],
+            113: const [
+              KidsJourneyStage(
+                stageNumber: 1,
+                surahId: 113,
+                startAyah: 1,
+                endAyah: 5,
+                completedAyahs: [],
+                status: KidsJourneyStageStatus.current,
+              ),
+            ],
           });
 
           await cubit.load(surahId: 114);

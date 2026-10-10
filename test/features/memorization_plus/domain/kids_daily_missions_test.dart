@@ -9,184 +9,211 @@ void main() {
   const learning = KidsNextMission(
     type: KidsMissionType.newMemorization,
     surahId: 114,
-    ayahNumbers: [1, 2],
+    ayahNumbers: [1],
   );
-
-  KidsSessionLog log(DateTime localAt, {int points = 10}) => KidsSessionLog(
-    id: 'l-${localAt.microsecondsSinceEpoch}',
+  KidsHomeMission home(
+    String id, {
+    KidsHomeMissionStatus status = KidsHomeMissionStatus.assigned,
+    DateTime? reportedAt,
+  }) => KidsHomeMission(
+    id: id,
+    title: 'Task $id',
+    status: status,
+    createdAt: DateTime(2026, 10, int.parse(id)),
+    reportedAt: reportedAt,
+  );
+  KidsSessionLog log({
+    DateTime? at,
+    int points = 10,
+    int repeats = 2,
+    KidsMissionType type = KidsMissionType.newMemorization,
+    int hints = 0,
+  }) => KidsSessionLog(
+    id: 'log',
     surahId: 114,
     ayahNumber: 1,
-    repeatsCompleted: 3,
+    repeatsCompleted: repeats,
     pointsEarned: points,
-    completedAt: localAt.toUtc(),
+    completedAt: at ?? now,
+    missionType: type,
+    hintCount: hints,
   );
-
   List<KidsDailyMission> resolve({
-    KidsNextMission? learningMission = learning,
-    bool dayGoalReached = false,
+    DateTime? at,
+    KidsNextMission? mission = learning,
+    List<KidsHomeMission> homes = const [],
     List<KidsSessionLog> logs = const [],
     Set<int> pages = const {},
-    int max = kKidsMaxDailyMissions,
-    KidsHomeMission? home,
-    DateTime? at,
+    int readingDays = 0,
+    int cap = 3,
+    bool reading = true,
   }) => resolveKidsDailyMissions(
     now: at ?? now,
-    learning: learningMission,
-    dayGoalReached: dayGoalReached,
+    learning: mission,
+    dayGoalReached: mission == null,
     logs: logs,
     pagesReadToday: pages,
-    maxMissions: max,
-    homeMission: home,
+    homeMissions: homes,
+    recentReadingDays: readingDays,
+    maxMissions: cap,
+    readingAvailable: reading,
   );
 
-  test('learning card first, reading second', () {
-    final r = resolve();
-    expect(r.map((m) => m.kind), [
-      KidsDailyMissionKind.learning,
-      KidsDailyMissionKind.reading,
-    ]);
+  test('guardian assignments replace suggestions and are oldest first', () {
+    final cards = resolve(homes: [home('3'), home('1'), home('2')]);
+    expect(cards.map((m) => m.homeMissionId), ['1', '2', '3']);
+    expect(cards.every((m) => m.kind == KidsDailyMissionKind.home), isTrue);
     expect(
-      r.every((m) => m.status == KidsDailyMissionStatus.available),
+      cards.every((m) => m.status == KidsDailyMissionStatus.available),
       isTrue,
     );
   });
-
-  test('learning completes after any positive log today', () {
-    final r = resolve(logs: [log(DateTime(2026, 10, 2, 8))]);
-    expect(r.first.status, KidsDailyMissionStatus.completed);
-    expect(r.first.learning, learning);
+  test('suggestion cap never hides an explicit guardian assignment', () {
+    for (final cap in [0, 1, 2]) {
+      expect(
+        resolve(homes: [home('1'), home('2'), home('3')], cap: cap),
+        hasLength(3),
+      );
+    }
   });
-
-  test("yesterday's log does not complete today", () {
-    final r = resolve(logs: [log(DateTime(2026, 10, 1, 23, 59))]);
-    expect(r.first.status, KidsDailyMissionStatus.available);
-  });
-
-  test('zero-point log does not complete', () {
-    final r = resolve(logs: [log(DateTime(2026, 10, 2, 8), points: 0)]);
-    expect(r.first.status, KidsDailyMissionStatus.available);
-  });
-
-  test('reading completes with one confirmed page', () {
-    final r = resolve(pages: {5});
-    expect(r[1].status, KidsDailyMissionStatus.completed);
-  });
-
-  test('day goal reached and no learning mission', () {
-    final done = resolve(
-      learningMission: null,
-      dayGoalReached: true,
-      logs: [log(DateTime(2026, 10, 2, 8))],
+  test(
+    'reported today remains done beside pending assignments without duplicates',
+    () {
+      final done = home(
+        '1',
+        status: KidsHomeMissionStatus.acknowledged,
+        reportedAt: now,
+      );
+      final cards = resolve(homes: [done, home('2'), done]);
+      expect(cards.map((m) => m.homeMissionId), ['2', '1']);
+      expect(cards.last.status, KidsDailyMissionStatus.completed);
+      expect(cards.last.homeMissionTitle, 'Task 1');
+    },
+  );
+  test('old completed guardian tasks allow daily suggestions', () {
+    final cards = resolve(
+      homes: [
+        home(
+          '1',
+          status: KidsHomeMissionStatus.reported,
+          reportedAt: now.subtract(const Duration(days: 1)),
+        ),
+      ],
     );
-    expect(done.map((m) => m.kind), [
-      KidsDailyMissionKind.learning,
+    expect(cards.any((m) => m.kind == KidsDailyMissionKind.home), isFalse);
+    expect(cards, hasLength(2));
+  });
+  test('suggestions are stable within the day and change on the next day', () {
+    final first = resolve();
+    expect(resolve(at: DateTime(2026, 10, 2, 23, 59)), first);
+    final next = resolve(at: now.add(const Duration(days: 1)));
+    expect(
+      first.map((m) => m.suggestion).toList(),
+      isNot(next.map((m) => m.suggestion).toList()),
+    );
+    expect(
+      first.map((m) => m.kind),
+      unorderedEquals([
+        KidsDailyMissionKind.reading,
+        KidsDailyMissionKind.practice,
+      ]),
+    );
+  });
+  test('a new reader always receives a gentle one-page goal', () {
+    for (var offset = 0; offset < 7; offset++) {
+      final card = resolve(
+        at: now.add(Duration(days: offset)),
+      ).singleWhere((m) => m.kind == KidsDailyMissionKind.reading);
+      expect(card.targetCount, 1);
+    }
+  });
+  test(
+    'recent confirmed reading adapts goals; two pages need two distinct receipts',
+    () {
+      final days = [now, now.add(const Duration(days: 1))];
+      final day = days.firstWhere(
+        (day) =>
+            resolve(at: day, readingDays: 3).any((m) => m.targetCount == 2),
+      );
+      KidsDailyMission card(Set<int> pages) => resolve(
+        at: day,
+        readingDays: 3,
+        pages: pages,
+      ).singleWhere((m) => m.kind == KidsDailyMissionKind.reading);
+      expect(card({5}).status, KidsDailyMissionStatus.available);
+      expect(card({5, 6}).status, KidsDailyMissionStatus.completed);
+      expect(card({0, 605}).status, KidsDailyMissionStatus.available);
+    },
+  );
+  test('opening or zero-point/yesterday logs cannot complete a task', () {
+    final cards = resolve(
+      logs: [
+        log(points: 0),
+        log(at: now.subtract(const Duration(days: 1))),
+      ],
+    );
+    expect(
+      cards.every((m) => m.status == KidsDailyMissionStatus.available),
+      isTrue,
+    );
+  });
+  test('listening task needs completed recitation with listening evidence', () {
+    final day = [now, now.add(const Duration(days: 1))].firstWhere(
+      (day) => resolve(
+        at: day,
+      ).any((m) => m.suggestion == KidsDailySuggestion.listenAndRecite),
+    );
+    final completed = resolve(
+      at: day,
+      logs: [log(at: day, repeats: 2)],
+    ).singleWhere((m) => m.kind == KidsDailyMissionKind.practice);
+    expect(completed.suggestion, KidsDailySuggestion.listenAndRecite);
+    expect(completed.status, KidsDailyMissionStatus.completed);
+    expect(completed.learning, learning);
+    final pending = resolve(
+      at: day,
+      logs: [log(at: day, repeats: 1)],
+    ).singleWhere((m) => m.kind == KidsDailyMissionKind.practice);
+    expect(pending.status, KidsDailyMissionStatus.available);
+  });
+  test(
+    'review suggestions use the authorized review and require review evidence',
+    () {
+      const review = KidsNextMission(
+        type: KidsMissionType.linkedReview,
+        surahId: 1,
+        ayahNumbers: [2],
+      );
+      final pending = resolve(
+        mission: review,
+      ).singleWhere((m) => m.kind == KidsDailyMissionKind.practice);
+      expect(pending.suggestion, KidsDailySuggestion.reviewAyah);
+      expect(pending.learning, review);
+      expect(pending.status, KidsDailyMissionStatus.available);
+      final done = resolve(
+        mission: review,
+        logs: [log(type: KidsMissionType.linkedReview)],
+      ).singleWhere((m) => m.kind == KidsDailyMissionKind.practice);
+      expect(done.status, KidsDailyMissionStatus.completed);
+    },
+  );
+  test('no authorized work does not invent another session', () {
+    expect(resolve(mission: null).map((m) => m.kind), [
       KidsDailyMissionKind.reading,
     ]);
-    expect(done.first.status, KidsDailyMissionStatus.completed);
-    expect(done.first.learning, isNull);
-
-    final none = resolve(learningMission: null, dayGoalReached: true);
-    expect(none.map((m) => m.kind), [KidsDailyMissionKind.reading]);
+    expect(resolve(mission: null, reading: false), isEmpty);
   });
-
-  test('maxMissions limits the list', () {
-    expect(resolve(max: 1).map((m) => m.kind), [KidsDailyMissionKind.learning]);
-    expect(resolve(max: 0), isEmpty);
-  });
-
-  test('ids are stable per day', () {
-    expect(resolve().map((m) => m.id), [
-      '2026-10-02:learning',
-      '2026-10-02:reading',
+  test('caps and unavailable reading sources apply to suggestions', () {
+    expect(resolve(cap: 0), isEmpty);
+    expect(resolve(cap: -1), isEmpty);
+    expect(resolve(cap: 1), hasLength(1));
+    expect(resolve(cap: 100), hasLength(2));
+    expect(resolve(reading: false).map((m) => m.kind), [
+      KidsDailyMissionKind.practice,
     ]);
-    expect(kidsDayKey(DateTime(2026, 1, 5)), '2026-01-05');
   });
-
-  group('home mission card', () {
-    KidsHomeMission mission(
-      KidsHomeMissionStatus status, {
-      String id = '12',
-    }) => KidsHomeMission(
-      id: id,
-      title: 'رتّب غرفتك',
-      status: status,
-      createdAt: DateTime(2026, 10, 1),
-    );
-
-    test('assigned mission adds a third card after learning and reading', () {
-      final r = resolve(home: mission(KidsHomeMissionStatus.assigned));
-      expect(r.map((m) => m.kind), [
-        KidsDailyMissionKind.learning,
-        KidsDailyMissionKind.reading,
-        KidsDailyMissionKind.home,
-      ]);
-      final home = r.last;
-      expect(home.id, '2026-10-02:home:12');
-      expect(home.homeMissionId, '12');
-      expect(home.homeMissionTitle, 'رتّب غرفتك');
-      expect(home.status, KidsDailyMissionStatus.available);
-    });
-
-    test('reported and acknowledged missions are completed', () {
-      for (final status in [
-        KidsHomeMissionStatus.reported,
-        KidsHomeMissionStatus.acknowledged,
-      ]) {
-        expect(
-          resolve(home: mission(status)).last.status,
-          KidsDailyMissionStatus.completed,
-        );
-      }
-    });
-
-    test('maxMissions 2 leaves the home card out', () {
-      final r = resolve(
-        home: mission(KidsHomeMissionStatus.assigned),
-        max: 2,
-      );
-      expect(r.map((m) => m.kind), [
-        KidsDailyMissionKind.learning,
-        KidsDailyMissionKind.reading,
-      ]);
-    });
-
-    test('slots are positional: no learning card and max 2 gives no home', () {
-      final home = mission(KidsHomeMissionStatus.assigned);
-      final capped = resolve(learningMission: null, home: home, max: 2);
-      expect(capped.map((m) => m.kind), [KidsDailyMissionKind.reading]);
-
-      final full = resolve(learningMission: null, home: home, max: 3);
-      expect(full.map((m) => m.kind), [
-        KidsDailyMissionKind.reading,
-        KidsDailyMissionKind.home,
-      ]);
-    });
-
-    test('no home mission means no home card', () {
-      expect(
-        resolve().any((m) => m.kind == KidsDailyMissionKind.home),
-        isFalse,
-      );
-    });
-  });
-
-  test('maxMissions above the cap is clamped to kKidsMaxDailyMissions', () {
-    final r = resolve(
-      max: 5,
-      home: KidsHomeMission(
-        id: '1',
-        title: 't',
-        status: KidsHomeMissionStatus.assigned,
-        createdAt: DateTime(2026, 10, 1),
-      ),
-    );
-    expect(r, hasLength(kKidsMaxDailyMissions));
-    expect(resolve(max: -1), isEmpty);
-  });
-
-  test('a UTC now is normalised to the local day key', () {
-    final local = DateTime(2026, 10, 2, 0, 30);
-    final r = resolve(at: local.toUtc());
-    expect(r.first.id, '${kidsDayKey(local)}:learning');
+  test('UTC input uses the same local calendar and IDs', () {
+    expect(resolve(at: now.toUtc()), resolve(at: now));
+    expect(resolve().every((m) => m.id.startsWith('2026-10-02:')), isTrue);
   });
 }

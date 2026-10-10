@@ -37,8 +37,8 @@ import '../../../../helpers/isar_test_core.dart';
 import 'memorization_session_cubit_test.mocks.dart'
     show MockAudioPlayer, MockSpeechToText;
 
-
-Future<void> _initializeKidsResumeIsarCoreForTests() => initializeIsarCoreForTests();
+Future<void> _initializeKidsResumeIsarCoreForTests() =>
+    initializeIsarCoreForTests();
 
 Future<V2SessionProgressAdapter> _openKidsResumeAdapter() async {
   await _initializeKidsResumeIsarCoreForTests();
@@ -112,6 +112,130 @@ void main() {
 
     tearDown(() async {
       await cubit.close();
+    });
+
+    group('mandatory house recitation', () {
+      setUp(() {
+        repository.journey = const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 114,
+            startAyah: 1,
+            endAyah: 2,
+            completedAyahs: [1, 2],
+            status: KidsJourneyStageStatus.needsReview,
+            requiresHouseReview: true,
+            pendingHouseReviewAyahs: [1, 2],
+          ),
+        ];
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 5,
+                starsEarned: 0,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+      });
+
+      test(
+        'new and resume links become recall and produce per-ayah proof',
+        () async {
+          await cubit.load(
+            114,
+            1,
+            'ayah text',
+            missionType: KidsMissionType.resume,
+          );
+          final loaded = cubit.state as KidsModeLoaded;
+          expect(loaded.isReview, isTrue);
+          expect(loaded.maxLoops, 0);
+          expect(loaded.sessionState.phase, V2SessionPhase.reciting);
+          await cubit.markCompleted(automaticSpokenText: 'ayah text');
+          expect(repository.lastMissionType, KidsMissionType.linkedReview);
+          expect(
+            repository.lastSessionId,
+            startsWith('kids_house_review_114_1_'),
+          );
+          expect(repository.lastMasteryRating, PerformanceRating.excellent);
+        },
+      );
+
+      test(
+        'an already-reviewed ayah cannot be reopened as mandatory work',
+        () async {
+          repository.journey = const [
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: 114,
+              startAyah: 1,
+              endAyah: 2,
+              completedAyahs: [1, 2],
+              status: KidsJourneyStageStatus.needsReview,
+              requiresHouseReview: true,
+              pendingHouseReviewAyahs: [2],
+            ),
+          ];
+          await cubit.load(114, 1, 'ayah text');
+          expect(cubit.state, isA<KidsModeError>());
+          expect(repository.awardCalls, 0);
+        },
+      );
+
+      test(
+        'wrong spoken words cannot commit review despite claimed similarity',
+        () async {
+          await cubit.load(114, 1, 'ayah text');
+          await cubit.markCompleted(
+            automaticSpokenText: 'different words',
+            automaticSimilarity: 1,
+          );
+          expect(repository.awardCalls, 0);
+          expect(repository.markCalls, 0);
+          expect((cubit.state as KidsModeLoaded).isCompleted, isFalse);
+        },
+      );
+
+      test('direct manual grading supplies no house review proof', () async {
+        await cubit.load(114, 1, 'ayah text');
+        await cubit.markCompleted(manualGrade: true);
+        expect(repository.lastMasteryRating, PerformanceRating.weak);
+        expect(
+          repository.lastSessionId,
+          isNot(startsWith('kids_house_review_')),
+        );
+      });
+
+      test(
+        'technical failure needs PIN before guardian audition is accepted',
+        () async {
+          await cubit.close();
+          cubit = buildCubit(
+            recorder: _FakeKidsRecitationRecorder(
+              result: const KidsRecitationCaptureResult.unavailable(),
+            ),
+          );
+          await cubit.load(114, 1, 'ayah text');
+          await cubit.startRecording();
+          expect(
+            await cubit.submitManualCompletion(guardianPin: '9999'),
+            isFalse,
+          );
+          expect(repository.awardCalls, 0);
+          expect(
+            await cubit.submitManualCompletion(guardianPin: '1234'),
+            isTrue,
+          );
+          expect(repository.lastMasteryRating, PerformanceRating.average);
+          expect(
+            repository.lastSessionId,
+            startsWith('kids_house_review_114_1_'),
+          );
+        },
+      );
     });
 
     test(

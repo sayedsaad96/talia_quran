@@ -39,6 +39,7 @@ import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../../memorization_plus/domain/entities/custom_memorization_plan.dart';
+import '../../../memorization_plus/data/models/isar_v2_session.dart';
 import '../../../memorization_plus/domain/services/plan_schedule_policy.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
@@ -425,6 +426,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       (_) => <Ayah>[],
       (detail) => detail.ayahs,
     );
+    if (allAyahs.isEmpty) {
+      emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
+      return;
+    }
+    final requestedContext = _launchContext!;
+    final isReview = requestedContext.intent == LearningIntent.review;
+    final startIndex = (startAyah - 1).clamp(0, allAyahs.length - 1);
+    final requestedMemorizeAyahs = allAyahs
+        .sublist(startIndex, (startIndex + blockSize).clamp(0, allAyahs.length))
+        .map((ayah) => ayah.numberInSurah)
+        .toList(growable: false);
 
     // Resume check: if a persisted session exists for this surah and is in a
     // restorable phase, rehydrate it instead of starting fresh. A terminal
@@ -435,7 +447,6 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // belongs to the saved block and the saved intent matches — otherwise a
     // stale checkpoint would silently swallow the explicit target (plan item,
     // SmartCoach due ayah, review tap).
-    final isReview = _launchContext!.intent == LearningIntent.review;
     final savedOpt = await _progressAdapter.loadIfExists(
       surahId,
       review: isReview,
@@ -449,9 +460,12 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // begin the next block without replaying the old result.
         await _progressAdapter.clear(surahId, review: isReview);
       } else if (savedPhase != V2SessionPhase.created &&
-          saved.blockAyahNumbers.isNotEmpty &&
-          saved.blockAyahNumbers.contains(startAyah) &&
-          _isResumableIntent(saved.launchContext.intent, isReview)) {
+          _canResumeCheckpoint(
+            saved,
+            requested: requestedContext,
+            requestedMemorizeAyahs: requestedMemorizeAyahs,
+            requestedIsReview: isReview,
+          )) {
         _launchContext = saved.launchContext;
         _sessionState = V2SessionProgressAdapter.restore(saved, allAyahs);
         emit(
@@ -476,14 +490,20 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // checkpoint explicitly. Clearing it first gives the new session its
         // own sessionId, so its outcomes are never mistaken for duplicates of
         // the old session's already-committed tasks.
-        await _progressAdapter.clear(surahId, review: isReview);
+        if (!await _discardIncompatibleCheckpoint(
+          saved,
+          allAyahs,
+          requestedIsReview: isReview,
+        )) {
+          emit(const MSError(message: CubitMessageCodes.hifzReviewSaveFailed));
+          return;
+        }
       }
     }
 
     // Slice block: from startAyah (1-based) for blockSize ayahs. A review
     // covers the due passage around its target (N4): the following due
     // ayahs on the same page, each still recited and scheduled on its own.
-    final startIndex = (startAyah - 1).clamp(0, allAyahs.length - 1);
     final List<Ayah> blockAyahs;
     if (isReview) {
       final passage = ReviewPassagePicker.pick(
@@ -493,8 +513,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       );
       blockAyahs = passage.isEmpty ? [allAyahs[startIndex]] : passage;
     } else {
-      final endIndex = (startIndex + blockSize).clamp(0, allAyahs.length);
-      blockAyahs = allAyahs.sublist(startIndex, endIndex);
+      blockAyahs = allAyahs.sublist(
+        startIndex,
+        (startIndex + blockSize).clamp(0, allAyahs.length),
+      );
     }
 
     if (blockAyahs.isEmpty) {
@@ -1022,6 +1044,63 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   bool _isResumableIntent(LearningIntent? saved, bool requestedIsReview) {
     if (requestedIsReview) return saved == LearningIntent.review;
     return saved == null || saved == LearningIntent.memorize;
+  }
+
+  bool _canResumeCheckpoint(
+    IsarV2Session saved, {
+    required LearningLaunchContext requested,
+    required List<int> requestedMemorizeAyahs,
+    required bool requestedIsReview,
+  }) {
+    final savedContext = saved.launchContext;
+    if (!_isResumableIntent(savedContext.intent, requestedIsReview)) {
+      return false;
+    }
+    final scopedRequest =
+        requested.origin == LearningOrigin.dailyPlan ||
+        requested.origin == LearningOrigin.surahPractice;
+    final scopedSaved =
+        savedContext.origin == LearningOrigin.dailyPlan ||
+        savedContext.origin == LearningOrigin.surahPractice;
+    if (!requestedIsReview && (scopedRequest || scopedSaved)) {
+      return savedContext.origin == requested.origin &&
+          _sameAyahNumbers(saved.blockAyahNumbers, requestedMemorizeAyahs);
+    }
+    // Legacy and generic launches retain historical containment semantics.
+    return saved.blockAyahNumbers.isNotEmpty &&
+        saved.blockAyahNumbers.contains(requested.ayah.ayahNumber);
+  }
+
+  bool _sameAyahNumbers(List<int> left, List<int> right) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (left[index] != right[index]) return false;
+    }
+    return true;
+  }
+
+  Future<bool> _discardIncompatibleCheckpoint(
+    IsarV2Session saved,
+    List<Ayah> allAyahs, {
+    required bool requestedIsReview,
+  }) async {
+    try {
+      final restored = V2SessionProgressAdapter.restore(saved, allAyahs);
+      final weakResult = await _reviewAdapter.recordAbandonedFailures(
+        restored.failureTracker,
+        passedAyahNumbers: restored.passedAyahNumbers,
+      );
+      if (weakResult.isLeft()) return false;
+      await _progressAdapter.clear(saved.surahId, review: requestedIsReview);
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.e(
+        'V2: Failed to replace incompatible checkpoint',
+        error,
+        stack,
+      );
+      return false;
+    }
   }
 
   Future<void> _runEvaluationExclusive(

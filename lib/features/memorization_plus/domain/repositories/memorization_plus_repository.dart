@@ -117,6 +117,7 @@ abstract class MemorizationPlusRepository
   });
   Future<Either<Failure, ParentSettings>> getParentSettings();
   Future<Either<Failure, void>> saveParentSettings(ParentSettings settings);
+  Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count);
   Future<Either<Failure, bool>> verifyParentPin(String pin);
   Future<Either<Failure, void>> setParentPin(String pin);
   Future<Either<Failure, void>> resetParentAccess();

@@ -14,6 +14,7 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
   /// Same guarantee for the home-mission list (child report, guardian
   /// acknowledgement and cloud pull-merge all rewrite the whole list).
   static final Map<String, Future<void>> _kidsHomeMissionLocks = {};
+  static final Map<String, Future<void>> _kidsSettingsLocks = {};
 
   String _kidsOwnerKey(String base, String ownerId) => '$base|$ownerId';
 
@@ -265,13 +266,50 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
 
   Future<void> saveParentSettings(ParentSettingsModel settings) {
     final ownerId = _owner.currentOwnerId;
-    return _setStringOrThrow(
+    return _withKidsLogWriteLock(ownerId, () async {
+      final current = await getParentSettings();
+      _ensureStorageOwner(ownerId);
+      final merged = settings.copyWith(
+        kidsAyahsPerHouse: current.kidsAyahsPerHouse,
+        clearKidsAyahsPerHouse: current.kidsAyahsPerHouse == null,
+        kidsHouseSizesBySurah: {
+          ...settings.kidsHouseSizesBySurah,
+          ...current.kidsHouseSizesBySurah,
+        },
+      );
+      await _saveParentSettingsForOwner(
+        ParentSettingsModel.fromEntity(merged),
+        ownerId,
+      );
+    }, locks: _kidsSettingsLocks);
+  }
+
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  ) {
+    final ownerId = _owner.currentOwnerId;
+    return _withKidsLogWriteLock(ownerId, () async {
+      final current = await getParentSettings();
+      _ensureStorageOwner(ownerId);
+      final next = ParentSettingsModel.fromEntity(mutate(current));
+      await _saveParentSettingsForOwner(next, ownerId);
+      return next;
+    }, locks: _kidsSettingsLocks);
+  }
+
+  Future<void> _saveParentSettingsForOwner(
+    ParentSettingsModel settings,
+    String ownerId,
+  ) async {
+    _ensureStorageOwner(ownerId);
+    await _setStringOrThrow(
       _kidsOwnerKey(
         MemorizationPlusLocalDatasourceImpl._kParentSettings,
         ownerId,
       ),
       jsonEncode(settings.toJson()),
     );
+    _ensureStorageOwner(ownerId);
   }
 
   Future<List<ParentRewardModel>> getParentRewards() async {

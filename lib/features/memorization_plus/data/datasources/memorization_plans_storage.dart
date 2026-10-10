@@ -15,8 +15,8 @@ mixin MemorizationPlansStorageMixin on MemorizationLocalStorageMixin {
     jsonEncode(plan.toJson()),
   );
 
-  Future<void> clearDailyPlanCache() async =>
-      _prefs.remove(MemorizationPlusLocalDatasourceImpl._kDailyPlan);
+  Future<void> clearDailyPlanCache() =>
+      _removeOrThrow(MemorizationPlusLocalDatasourceImpl._kDailyPlan);
 
   @override
   Future<CustomMemorizationPlanModel?> getCustomPlan() async {

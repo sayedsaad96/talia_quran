@@ -55,7 +55,7 @@ void main() {
 
       expect(find.text("Today's Plan"), findsOneWidget);
       expect(find.text("Continue Today's Plan"), findsOneWidget);
-      expect(find.text("View Today's Plan"), findsOneWidget);
+      expect(find.text('Plan details'), findsOneWidget);
       expect(find.text('Practice'), findsOneWidget);
       expect(find.text('Practice by Surah'), findsOneWidget);
       expect(find.text('Listening Quiz'), findsOneWidget);

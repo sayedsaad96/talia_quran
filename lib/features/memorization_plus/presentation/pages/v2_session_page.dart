@@ -18,6 +18,8 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
+import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../domain/usecases/get_next_practice_passage_usecase.dart';
 import '../cubits/memorization_session_cubit.dart';
 import 'v2/v2_block_review_page.dart';
 import 'v2/v2_recitation_result_sheet.dart';
@@ -322,7 +324,20 @@ class _V2SessionViewState extends State<_V2SessionView> {
       );
     }
     if (state is MSCompleted) {
-      return V2CompletionPage(finalState: state.finalState);
+      final isSurahPractice =
+          widget.launchContext.origin == LearningOrigin.surahPractice;
+      return V2CompletionPage(
+        finalState: state.finalState,
+        isSurahPractice: isSurahPractice,
+        nextStepLoader: isSurahPractice
+            ? () => GetNextPracticePassageUseCase(getIt<QuranRepository>())(
+                surahId: state.finalState.surahId,
+                completedThroughAyah:
+                    state.finalState.blockAyahs.last.numberInSurah,
+                passageSize: widget.blockSize,
+              )
+            : null,
+      );
     }
     if (state is! MSActive) return const SizedBox.shrink();
 

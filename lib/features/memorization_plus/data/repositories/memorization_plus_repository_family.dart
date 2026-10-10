@@ -123,6 +123,17 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
       _kidsLocal.getParentSettings();
 
   @override
+  Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(
+    int? count,
+  ) async {
+    final outcome = await _kidsLocal.setKidsAyahsPerHouse(count);
+    if (outcome.isRight()) {
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
+    }
+    return outcome;
+  }
+
+  @override
   Future<Either<Failure, void>> saveParentSettings(
     ParentSettings settings,
   ) async {

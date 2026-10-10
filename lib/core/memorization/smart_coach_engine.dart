@@ -133,17 +133,27 @@ class SmartCoachEngine {
 
       // Priority 6: New ayahs in daily plan
       if (pendingNew.isNotEmpty) {
+        // A daily plan can span surahs: recommend the first surah's
+        // contiguous run only, so the range never mixes ayah numbers.
+        final first = pendingNew.first;
+        var endAyah = first.ayahNumber;
+        for (final ayah in pendingNew.skip(1)) {
+          if (ayah.surahId != first.surahId || ayah.ayahNumber != endAyah + 1) {
+            break;
+          }
+          endAyah = ayah.ayahNumber;
+        }
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.memorizeNewAyahs,
           explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
           route: _v2SessionRoute(
-            plan.surahId,
-            pendingNew.first.ayahNumber,
+            first.surahId,
+            first.ayahNumber,
             intent: LearningIntent.memorize,
           ),
-          surahId: plan.surahId,
-          startAyah: pendingNew.first.ayahNumber,
-          endAyah: pendingNew.last.ayahNumber,
+          surahId: first.surahId,
+          startAyah: first.ayahNumber,
+          endAyah: endAyah,
         );
       }
     }

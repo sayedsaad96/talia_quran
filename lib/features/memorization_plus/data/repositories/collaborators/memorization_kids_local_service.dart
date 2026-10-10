@@ -21,6 +21,7 @@ import '../../../../quran/domain/repositories/quran_repository.dart';
 import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../../domain/services/kids_due_review_policy.dart';
+import '../../../domain/services/kids_house_review_policy.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 
@@ -121,6 +122,7 @@ class MemorizationKidsLocalService {
     required int surahId,
   }) async {
     try {
+      final ownerId = _owner.currentOwnerId;
       final logs = await _datasource.getKidsSessionLogs();
       final completed = logs
           .where(
@@ -141,19 +143,43 @@ class MemorizationKidsLocalService {
           record.key: record,
       };
 
-      var totalAyahs = 7;
       final detailResult = await _quranRepository.getSurahDetail(surahId);
-      detailResult.fold(
-        (_) {},
-        (detail) => totalAyahs = detail.surah.ayahCount,
-      );
+      final detail = detailResult.fold((failure) => null, (detail) => detail);
+      if (detail == null ||
+          detail.surah.id != surahId ||
+          detail.surah.ayahCount < 1 ||
+          detail.ayahs.length != detail.surah.ayahCount ||
+          detail.ayahs.map((ayah) => ayah.numberInSurah).toSet().length !=
+              detail.surah.ayahCount ||
+          detail.ayahs.any(
+            (ayah) =>
+                ayah.surahId != surahId ||
+                ayah.numberInSurah < 1 ||
+                ayah.numberInSurah > detail.surah.ayahCount,
+          )) {
+        return const Left(CacheFailure());
+      }
+      final totalAyahs = detail.surah.ayahCount;
 
       final profile = await _datasource.getMemorizationProfile();
-      final stageSize = KidsSessionPolicy.forChildAge(
+      _ensureKidsOwner(ownerId);
+      final stageSize = await _houseSize(
+        surahId,
+        logs,
         profile.childAge,
-      ).journeyStageSize;
+        ownerId,
+      );
+      final settings = await _datasource.getParentSettings();
+      final blockedByEarlierSurah = await _earlierHouseUnfinished(
+        surahId,
+        logs,
+        settings,
+        profile.childAge,
+        ownerId,
+      );
+      _ensureKidsOwner(ownerId);
       final stages = <KidsJourneyStage>[];
-      var foundCurrent = false;
+      var foundCurrent = blockedByEarlierSurah;
       for (var start = 1; start <= totalAyahs; start += stageSize) {
         final end = min(start + stageSize - 1, totalAyahs);
         final ayahRange = List<int>.generate(end - start + 1, (i) => start + i);
@@ -163,7 +189,19 @@ class MemorizationKidsLocalService {
 
         KidsJourneyStageStatus status;
         int? reviewAyah;
-        if (stageCompleted.length == ayahRange.length) {
+        final pendingHouseReviewAyahs = KidsHouseReviewPolicy.pendingAyahs(
+          logs,
+          surahId,
+          ayahRange,
+        );
+        if (foundCurrent) {
+          status = KidsJourneyStageStatus.locked;
+        } else if (stageCompleted.length == ayahRange.length &&
+            pendingHouseReviewAyahs.isNotEmpty) {
+          status = KidsJourneyStageStatus.needsReview;
+          reviewAyah = pendingHouseReviewAyahs.first;
+          foundCurrent = true;
+        } else if (stageCompleted.length == ayahRange.length) {
           reviewAyah = _mostOverdueKidsAyah(
             surahId: surahId,
             ayahRange: ayahRange,
@@ -188,12 +226,165 @@ class MemorizationKidsLocalService {
             completedAyahs: stageCompleted,
             status: status,
             reviewAyah: reviewAyah,
+            requiresHouseReview:
+                status != KidsJourneyStageStatus.locked &&
+                pendingHouseReviewAyahs.isNotEmpty,
+            pendingHouseReviewAyahs: pendingHouseReviewAyahs,
           ),
         );
       }
       return Right(stages);
     } catch (e) {
       return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<int> _houseSize(
+    int surahId,
+    List<KidsSessionLog> logs,
+    int? age,
+    String ownerId,
+  ) async {
+    final settings = await _datasource.getParentSettings();
+    _ensureKidsOwner(ownerId);
+    final frozen = sanitizeKidsAyahsPerHouse(
+      settings.kidsHouseSizesBySurah[surahId],
+    );
+    if (frozen != null) return frozen;
+    final ageDefault = KidsSessionPolicy.forChildAge(age).journeyStageSize;
+    if (logs.any(
+      (log) =>
+          log.surahId == surahId &&
+          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    )) {
+      final saved = await _freezeHouseSize(surahId, ageDefault, ownerId);
+      return saved.kidsHouseSizesBySurah[surahId]!;
+    }
+    return sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ?? ageDefault;
+  }
+
+  Future<bool> _earlierHouseUnfinished(
+    int target,
+    List<KidsSessionLog> logs,
+    ParentSettings settings,
+    int? age,
+    String ownerId,
+  ) async {
+    const path = KidsJourneyPath.surahIds;
+    // A house the child already started stays accessible: its earned stages
+    // never relock, even if an earlier house is unfinished (legacy frontier,
+    // or a guardian moving the starting surah). Pending house recitations
+    // elsewhere are still enforced by the mandatory-mission routing.
+    final targetAlreadyStarted = logs.any(
+      (log) =>
+          log.surahId == target &&
+          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    );
+    if (targetAlreadyStarted) return false;
+    final targetIndex = path.indexOf(target);
+    final firstIndex = path.indexOf(settings.startingSurahId);
+    if (targetIndex < 0 || firstIndex < 0 || targetIndex <= firstIndex) {
+      return false;
+    }
+    for (final id in path.sublist(firstIndex, targetIndex)) {
+      final passed = logs
+          .where(
+            (log) =>
+                log.surahId == id &&
+                KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+          )
+          .map((log) => log.ayahNumber)
+          .toSet();
+      if (passed.isEmpty) return true;
+      final outcome = await _quranRepository.getSurahDetail(id);
+      final detail = outcome.fold(
+        (failure) => throw failure,
+        (detail) => detail,
+      );
+      if (detail.surah.id != id ||
+          detail.surah.ayahCount < 1 ||
+          detail.ayahs.length != detail.surah.ayahCount ||
+          detail.ayahs.map((ayah) => ayah.numberInSurah).toSet().length !=
+              detail.surah.ayahCount ||
+          detail.ayahs.any(
+            (ayah) =>
+                ayah.surahId != id ||
+                ayah.numberInSurah < 1 ||
+                ayah.numberInSurah > detail.surah.ayahCount,
+          )) {
+        throw const CacheFailure();
+      }
+      if (detail.ayahs.any((ayah) => !passed.contains(ayah.numberInSurah))) {
+        return true;
+      }
+      final size = await _houseSize(id, logs, age, ownerId);
+      for (var start = 1; start <= detail.surah.ayahCount; start += size) {
+        final range = [
+          for (
+            var ayah = start;
+            ayah <= min(start + size - 1, detail.surah.ayahCount);
+            ayah++
+          )
+            ayah,
+        ];
+        if (KidsHouseReviewPolicy.pendingAyahs(logs, id, range).isNotEmpty) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Future<ParentSettings> _freezeHouseSize(
+    int surahId,
+    int size,
+    String ownerId,
+  ) {
+    _ensureKidsOwner(ownerId);
+    return _datasource.updateKidsHouseSettings((current) {
+      _ensureKidsOwner(ownerId);
+      return current.copyWith(
+        kidsHouseSizesBySurah: {
+          surahId: size,
+          ...current.kidsHouseSizesBySurah,
+        },
+      );
+    });
+  }
+
+  Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(
+    int? count,
+  ) async {
+    if (count != null && sanitizeKidsAyahsPerHouse(count) == null) {
+      return const Left(ValidationFailure());
+    }
+    try {
+      final ownerId = _owner.currentOwnerId;
+      final logs = await _datasource.getKidsSessionLogs();
+      final profile = await _datasource.getMemorizationProfile();
+      _ensureKidsOwner(ownerId);
+      final ageDefault = KidsSessionPolicy.forChildAge(
+        profile.childAge,
+      ).journeyStageSize;
+      final started = logs
+          .where(KidsSessionLogsCloudMerge.isCanonicalRewardLog)
+          .map((log) => log.surahId)
+          .toSet();
+      final next = await _datasource.updateKidsHouseSettings((current) {
+        _ensureKidsOwner(ownerId);
+        return current.copyWith(
+          kidsAyahsPerHouse: count,
+          clearKidsAyahsPerHouse: count == null,
+          kidsHouseSizesBySurah: {
+            for (final id in started) id: ageDefault,
+            ...current.kidsHouseSizesBySurah,
+          },
+        );
+      });
+      _ensureKidsOwner(ownerId);
+      return Right(next);
+    } catch (error) {
+      return Left(CacheFailure.from(error));
     }
   }
 
@@ -632,6 +823,7 @@ class MemorizationKidsLocalService {
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
   }) {
+    final ownerId = _owner.currentOwnerId;
     if (missionType == KidsMissionType.newMemorization &&
         !completionAuthorized) {
       return Future.value(
@@ -642,9 +834,11 @@ class MemorizationKidsLocalService {
     }
     return _withKidsAwardLock(surahId, ayahNumber, () async {
       try {
-        final ownerId = _owner.currentOwnerId;
+        _ensureKidsOwner(ownerId);
         final current = await _reconcileKidsProjection();
+        _ensureKidsOwner(ownerId);
         final logs = await _datasource.getKidsSessionLogs();
+        _ensureKidsOwner(ownerId);
         final alreadyCompleted = logs.any(
           (log) =>
               log.surahId == surahId &&
@@ -672,7 +866,11 @@ class MemorizationKidsLocalService {
             hintCount: max(0, hintCount),
             masteryRating: masteryRating,
           );
-          final reviewCommitted = await _appendImmutableKidsLog(reviewLog);
+          final reviewCommitted = await _appendImmutableKidsLog(
+            reviewLog,
+            expectedOwnerId: ownerId,
+          );
+          _ensureKidsOwner(ownerId);
           final reviewUpdated = await _reconcileKidsProjection();
           await _runKidsRewardAncillaryEffects();
           final reviewWasNewCommit = reviewCommitted.id == reviewLog.id;
@@ -731,7 +929,24 @@ class MemorizationKidsLocalService {
         }
         // The immutable positive log is the commit point. The aggregate below is
         // a projection and can be repaired from this log after interruption.
-        final committed = await _appendImmutableKidsLog(log);
+        if (KidsSessionLogsCloudMerge.isCanonicalRewardLog(log)) {
+          final settings = await _datasource.getParentSettings();
+          final profile = await _datasource.getMemorizationProfile();
+          _ensureKidsOwner(ownerId);
+          await _freezeHouseSize(
+            surahId,
+            sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ??
+                KidsSessionPolicy.forChildAge(
+                  profile.childAge,
+                ).journeyStageSize,
+            ownerId,
+          );
+          _ensureKidsOwner(ownerId);
+        }
+        final committed = await _appendImmutableKidsLog(
+          log,
+          expectedOwnerId: ownerId,
+        );
         if (_owner.currentOwnerId != ownerId) {
           throw StateError('Kids data owner changed during reward commit');
         }
@@ -815,14 +1030,17 @@ class MemorizationKidsLocalService {
   }
 
   Future<KidsSessionLogModel> _appendImmutableKidsLog(
-    KidsSessionLogModel candidate,
-  ) async {
-    final ownerId = _owner.currentOwnerId;
+    KidsSessionLogModel candidate, {
+    String? expectedOwnerId,
+  }) async {
+    final ownerId = expectedOwnerId ?? _owner.currentOwnerId;
+    _ensureKidsOwner(ownerId);
     var committed = candidate;
     // The dedupe scan and the append run in one atomic read-modify-write:
     // a concurrent award or cloud-sync writer holding the same lock can no
     // longer drop this evidence.
     await _datasource.updateKidsSessionLogs((logs) async {
+      _ensureKidsOwner(ownerId);
       for (final existing in logs) {
         if (existing.id == candidate.id) {
           final conflicts =

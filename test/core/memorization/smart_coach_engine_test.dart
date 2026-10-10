@@ -387,6 +387,50 @@ void main() {
       },
     );
 
+    test('new-ayah range never spans two surahs of a multi-surah plan', () {
+      final snapshot = MemorizationSnapshot(
+        profile: _adultProfile(),
+        reviewRecords: [],
+        cachedDailyPlan: DailyPlan(
+          generatedAt: DateTime.now().toUtc(),
+          surahId: 78,
+          newAyahs: const [
+            DailyPlanAyah(
+              surahId: 78,
+              ayahNumber: 39,
+              ayahText: 'text',
+              record: null,
+            ),
+            DailyPlanAyah(
+              surahId: 78,
+              ayahNumber: 40,
+              ayahText: 'text',
+              record: null,
+            ),
+            DailyPlanAyah(
+              surahId: 79,
+              ayahNumber: 1,
+              ayahText: 'text',
+              record: null,
+            ),
+          ],
+          nearRevision: const [],
+          farRevision: const [],
+          completedAyahNums: const [],
+        ),
+      );
+
+      final recommendation = engine.recommend(snapshot);
+
+      expect(
+        recommendation?.kind,
+        SmartCoachRecommendationKind.memorizeNewAyahs,
+      );
+      expect(recommendation?.surahId, 78);
+      expect(recommendation?.startAyah, 39);
+      expect(recommendation?.endAyah, 40);
+    });
+
     test(
       'kids mission recommendation has kidsMissionAvailable explanation code',
       () {

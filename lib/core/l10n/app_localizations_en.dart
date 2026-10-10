@@ -7990,4 +7990,211 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureDecline => 'No, I\'ll grade myself';
+
+  @override
+  String get practicePassageTitle => 'Choose your practice passage';
+
+  @override
+  String get practicePassageMessage =>
+      'Practice the whole surah or choose a passage for this session.';
+
+  @override
+  String get practiceWholeSurah => 'Whole surah';
+
+  @override
+  String get practiceChoosePassage => 'Choose passage';
+
+  @override
+  String get practicePassageFieldsHint =>
+      'Enter the first ayah and how many ayahs to include.';
+
+  @override
+  String get practiceStartAyah => 'Start ayah';
+
+  @override
+  String get practiceAyahCount => 'Number of ayahs';
+
+  @override
+  String get practicePassageInvalid => 'Choose ayahs within this surah.';
+
+  @override
+  String practiceNextPassage(String remaining) {
+    return 'Next passage ($remaining ayahs remaining)';
+  }
+
+  @override
+  String get customPlanSaveAndView => 'Save plan and view details';
+
+  @override
+  String get planDetailsTitle => 'Plan details';
+
+  @override
+  String get planDetailsSubtitle => 'View your complete plan and progress.';
+
+  @override
+  String get planDetailsProgress => 'Progress within this plan';
+
+  @override
+  String get planDetailsTotal => 'Target ayahs';
+
+  @override
+  String get planDetailsLearning => 'Being consolidated';
+
+  @override
+  String get planDetailsUnstarted => 'Not started yet';
+
+  @override
+  String get planDetailsMastery => 'Mastery of studied ayahs';
+
+  @override
+  String get planDetailsMasteryHint =>
+      'The share of studied ayahs that reached memorized status through practice and review.';
+
+  @override
+  String get planDetailsNoAssessment => 'Available after you start practicing.';
+
+  @override
+  String get planDetailsReviews => 'Reviews within this plan';
+
+  @override
+  String get planDetailsDue => 'Due now';
+
+  @override
+  String get planDetailsOverdue => 'Overdue';
+
+  @override
+  String get planDetailsReviewEvents => 'Completed review attempts';
+
+  @override
+  String get planDetailsNextReview => 'Next scheduled review';
+
+  @override
+  String get planDetailsNoReviews => 'No reviews scheduled yet.';
+
+  @override
+  String get planDetailsSettings => 'Your saved settings';
+
+  @override
+  String get planDetailsEnabled => 'Enabled';
+
+  @override
+  String get planDetailsDisabled => 'Disabled';
+
+  @override
+  String get planDetailsCreated => 'Created on';
+
+  @override
+  String get planDetailsActive => 'Active plan';
+
+  @override
+  String get planDetailsBySurah => 'Progress by surah';
+
+  @override
+  String get planDetailsScopeHint =>
+      'Counts cover the ayahs included in your plan, starting from your selected first ayah.';
+
+  @override
+  String get planDetailsTodayHint =>
+      'Today\'s session may include reviews from other surahs you have studied.';
+
+  @override
+  String get planDetailsStartSession => 'Start session';
+
+  @override
+  String get planDetailsEdit => 'Edit plan';
+
+  @override
+  String get planDetailsTodayDone =>
+      'Today\'s work is complete. Your next assignment will appear on your next study day.';
+
+  @override
+  String get planDetailsRestDay => 'Rest day: reviews only.';
+
+  @override
+  String get planDetailsTodayEmpty => 'No work is scheduled for today.';
+
+  @override
+  String get planDetailsTodayUnavailable =>
+      'Today\'s assignment could not be loaded. Pull to refresh before starting.';
+
+  @override
+  String get planDetailsBacklog =>
+      'New memorization is paused while you catch up on due reviews.';
+
+  @override
+  String get planDetailsTodayNew => 'New ayahs today';
+
+  @override
+  String get planDetailsTodayReview => 'Review ayahs today';
+
+  @override
+  String get planDetailsInScope =>
+      'In-plan progress includes your existing memorization in this range.';
+
+  @override
+  String get planDetailsRemaining => 'Remaining to memorize';
+
+  @override
+  String get customPlanSelectedTitle => 'Your selected plan';
+
+  @override
+  String get customPlanReturnSelected => 'Return to selected plan';
+
+  @override
+  String get planDetailsExitToSetup => 'Back to plan setup';
+
+  @override
+  String get planDetailsOtherOptions => 'More memorization options';
+
+  @override
+  String get kidsHouseSizeTitle => 'Ayahs in each mission (house)';
+
+  @override
+  String get kidsDailyGuardianHint =>
+      'These tasks were chosen by your guardian.';
+
+  @override
+  String get kidsDailySuggestedHint =>
+      'New daily suggestions to suit your reading and practice.';
+
+  @override
+  String get kidsDailyReadTwoPages => 'Read two Mushaf pages and confirm them';
+
+  @override
+  String get kidsDailyReciteAyah =>
+      'Recite an ayah from memory in your practice';
+
+  @override
+  String get kidsDailyListenAndRecite =>
+      'Listen, repeat, then recite your ayah';
+
+  @override
+  String get kidsDailyReviewAyah =>
+      'Review and recite an ayah in your review session';
+
+  @override
+  String get kidsHouseSizeHint =>
+      'Choose 1–10 ayahs on this child\'s device. The new size applies to surahs not yet started; houses already in progress keep their grouping.';
+
+  @override
+  String get kidsHouseSizeSaved => 'House mission size saved.';
+
+  @override
+  String get kidsHouseReviewTitle => 'Recite this house';
+
+  @override
+  String get kidsHouseReviewHint =>
+      'Review and recite every ayah in this house to open the next house.';
+
+  @override
+  String get kidsHouseReviewAction => 'Start house recitation';
+
+  @override
+  String get kidsGuardianAuditionHint =>
+      'Guardian: first listen to the child reciting this ayah correctly, then enter your PIN to confirm the assessment.';
+
+  @override
+  String kidsHouseReviewRemaining(String count) {
+    return 'Ayahs left to recite: $count';
+  }
 }

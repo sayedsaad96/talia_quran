@@ -48,6 +48,9 @@ void main() {
     test(
       'getKidsJourney builds unlocked current stage and locked next stages',
       () async {
+        await repository.saveParentSettings(
+          const ParentSettings(startingSurahId: 114),
+        );
         final result = await repository.getKidsJourney(surahId: 114);
 
         final stages = result.getOrElse(
@@ -548,12 +551,25 @@ void main() {
     test(
       'a house that needs review names its most overdue ayah (K30)',
       () async {
+        await repository.saveParentSettings(
+          const ParentSettings(startingSurahId: 114),
+        );
         for (final ayah in [1, 2, 3, 4, 5]) {
           await repository.awardKidsPoints(
             completionAuthorized: true,
             surahId: 114,
             ayahNumber: ayah,
             repeatsCompleted: 3,
+          );
+        }
+        // Complete the mandatory house recitation before checking periodic SRS.
+        for (final ayah in [1, 2, 3, 4, 5]) {
+          await repository.awardKidsPoints(
+            surahId: 114,
+            ayahNumber: ayah,
+            repeatsCompleted: 0,
+            missionType: KidsMissionType.linkedReview,
+            sessionId: 'kids_house_review_114_${ayah}_fixture',
           );
         }
         AyahReviewRecord record(int ayah, DateTime next) => AyahReviewRecord(
@@ -583,6 +599,9 @@ void main() {
     test(
       'kids session log drives journey while kidsMode records feed kids metrics only',
       () async {
+        await repository.saveParentSettings(
+          const ParentSettings(startingSurahId: 114),
+        );
         await repository.awardKidsPoints(
           completionAuthorized: true,
           surahId: 114,
@@ -687,6 +706,9 @@ void main() {
     });
 
     test('duplicate kids completion does not disturb journey status', () async {
+      await repository.saveParentSettings(
+        const ParentSettings(startingSurahId: 114),
+      );
       for (var ayah = 1; ayah <= 5; ayah++) {
         await repository.awardKidsPoints(
           completionAuthorized: true,
@@ -709,8 +731,9 @@ void main() {
       );
 
       expect(logs.where((log) => log.ayahNumber == 5), hasLength(1));
-      expect(stages.first.status, KidsJourneyStageStatus.completed);
-      expect(stages.last.status, KidsJourneyStageStatus.current);
+      expect(stages.first.status, KidsJourneyStageStatus.needsReview);
+      expect(stages.first.pendingHouseReviewAyahs, [1, 2, 3, 4, 5]);
+      expect(stages.last.status, KidsJourneyStageStatus.locked);
     });
 
     test(

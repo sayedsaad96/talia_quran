@@ -7989,4 +7989,206 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureDecline => 'لا، سأقيّم بنفسي';
+
+  @override
+  String get practicePassageTitle => 'اختر مقطع التمرين';
+
+  @override
+  String get practicePassageMessage =>
+      'تمرّن على السورة كاملة أو اختر مقطعًا لهذه الجلسة.';
+
+  @override
+  String get practiceWholeSurah => 'السورة كاملة';
+
+  @override
+  String get practiceChoosePassage => 'اختر مقطعًا';
+
+  @override
+  String get practicePassageFieldsHint => 'أدخل رقم آية البداية وعدد الآيات.';
+
+  @override
+  String get practiceStartAyah => 'آية البداية';
+
+  @override
+  String get practiceAyahCount => 'عدد الآيات';
+
+  @override
+  String get practicePassageInvalid => 'اختر آيات ضمن حدود السورة.';
+
+  @override
+  String practiceNextPassage(String remaining) {
+    return 'المقطع التالي (متبقي $remaining آية)';
+  }
+
+  @override
+  String get customPlanSaveAndView => 'حفظ الخطة وعرض التفاصيل';
+
+  @override
+  String get planDetailsTitle => 'تفاصيل الخطة';
+
+  @override
+  String get planDetailsSubtitle => 'اعرض خطتك الكاملة وتقدمك.';
+
+  @override
+  String get planDetailsProgress => 'تقدمك في هذه الخطة';
+
+  @override
+  String get planDetailsTotal => 'إجمالي آيات الخطة';
+
+  @override
+  String get planDetailsLearning => 'قيد التثبيت';
+
+  @override
+  String get planDetailsUnstarted => 'لم تبدأ حفظها بعد';
+
+  @override
+  String get planDetailsMastery => 'إتقان الآيات التي تدربت عليها';
+
+  @override
+  String get planDetailsMasteryHint =>
+      'نسبة الآيات التي وصلت إلى الحفظ المتقن من الآيات التي تدربت عليها، بناءً على التدريب والمراجعة.';
+
+  @override
+  String get planDetailsNoAssessment => 'يظهر بعد بدء التدريب.';
+
+  @override
+  String get planDetailsReviews => 'المراجعات ضمن الخطة';
+
+  @override
+  String get planDetailsDue => 'مستحقة الآن';
+
+  @override
+  String get planDetailsOverdue => 'متأخرة';
+
+  @override
+  String get planDetailsReviewEvents => 'محاولات المراجعة المكتملة';
+
+  @override
+  String get planDetailsNextReview => 'موعد المراجعة القادم';
+
+  @override
+  String get planDetailsNoReviews => 'لم تُجدول مراجعات بعد.';
+
+  @override
+  String get planDetailsSettings => 'إعدادات خطتك المحفوظة';
+
+  @override
+  String get planDetailsEnabled => 'مفعّلة';
+
+  @override
+  String get planDetailsDisabled => 'متوقفة';
+
+  @override
+  String get planDetailsCreated => 'تاريخ الإنشاء';
+
+  @override
+  String get planDetailsActive => 'خطة نشطة';
+
+  @override
+  String get planDetailsBySurah => 'التقدم لكل سورة';
+
+  @override
+  String get planDetailsScopeHint =>
+      'تشمل الأعداد الآيات الموجودة في خطتك بدءًا من آية البداية التي اخترتها.';
+
+  @override
+  String get planDetailsTodayHint =>
+      'قد تشمل جلسة اليوم مراجعات من سور أخرى سبق لك التدريب عليها.';
+
+  @override
+  String get planDetailsStartSession => 'ابدأ الجلسة';
+
+  @override
+  String get planDetailsEdit => 'تعديل الخطة';
+
+  @override
+  String get planDetailsTodayDone =>
+      'أكملت ورد اليوم. يظهر الورد التالي في يوم الحفظ القادم.';
+
+  @override
+  String get planDetailsRestDay => 'يوم راحة: مراجعات فقط.';
+
+  @override
+  String get planDetailsTodayEmpty => 'لا يوجد ورد مجدول اليوم.';
+
+  @override
+  String get planDetailsTodayUnavailable =>
+      'تعذر تحميل ورد اليوم. اسحب للتحديث قبل بدء الجلسة.';
+
+  @override
+  String get planDetailsBacklog =>
+      'الحفظ الجديد متوقف مؤقتًا حتى تستدرك المراجعات المستحقة.';
+
+  @override
+  String get planDetailsTodayNew => 'آيات الحفظ الجديدة اليوم';
+
+  @override
+  String get planDetailsTodayReview => 'آيات المراجعة اليوم';
+
+  @override
+  String get planDetailsInScope =>
+      'يشمل التقدم ما حفظته سابقًا داخل نطاق هذه الخطة.';
+
+  @override
+  String get planDetailsRemaining => 'المتبقي للحفظ';
+
+  @override
+  String get customPlanSelectedTitle => 'خطتك المختارة';
+
+  @override
+  String get customPlanReturnSelected => 'الرجوع للخطة المختارة';
+
+  @override
+  String get planDetailsExitToSetup => 'الخروج إلى إعدادات الخطة';
+
+  @override
+  String get planDetailsOtherOptions => 'بقية خيارات الحفظ';
+
+  @override
+  String get kidsHouseSizeTitle => 'عدد الآيات في كل مهمة (بيت)';
+
+  @override
+  String get kidsDailyGuardianHint => 'هذه مهام اختارها لك وليّ أمرك.';
+
+  @override
+  String get kidsDailySuggestedHint =>
+      'اقتراحات تتجدد كل يوم، تناسب قراءتك وتدريبك.';
+
+  @override
+  String get kidsDailyReadTwoPages => 'اقرأ صفحتين من المصحف وأكّد قراءتهما';
+
+  @override
+  String get kidsDailyReciteAyah => 'سمّع آية من الذاكرة في تدريبك';
+
+  @override
+  String get kidsDailyListenAndRecite => 'استمع وردّد ثم سمّع آيتك';
+
+  @override
+  String get kidsDailyReviewAyah => 'راجع آية وسمّعها في جلسة المراجعة';
+
+  @override
+  String get kidsHouseSizeHint =>
+      'اختر من ١ إلى ١٠ آيات على جهاز الطفل. يطبَّق العدد الجديد على السور التي لم يبدأها بعد، وتحتفظ السور الجاري حفظها بتقسيم بيوتها.';
+
+  @override
+  String get kidsHouseSizeSaved => 'تم حفظ عدد آيات المهمة.';
+
+  @override
+  String get kidsHouseReviewTitle => 'تسميع آيات البيت';
+
+  @override
+  String get kidsHouseReviewHint =>
+      'نراجع ونسمّع كل آيات هذا البيت قبل فتح البيت التالي.';
+
+  @override
+  String get kidsHouseReviewAction => 'ابدأ تسميع آيات البيت';
+
+  @override
+  String get kidsGuardianAuditionHint =>
+      'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم.';
+
+  @override
+  String kidsHouseReviewRemaining(String count) {
+    return 'متبقي للتسميع: $count آية';
+  }
 }

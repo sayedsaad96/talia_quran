@@ -138,8 +138,8 @@ void main() {
     });
   });
 
-  // N3: the session opened from today's plan used the configured block size,
-  // so a plan shrunk to 2 ayahs (session length) still opened a 3-ayah block.
+  // Daily sessions must consume the generated contiguous plan range, not the
+  // difficulty practice-block cap.
   group('fitToDailyPlan (N3)', () {
     DailyPlan today(List<int> ayahs, {List<int> completed = const []}) =>
         DailyPlan(
@@ -179,9 +179,12 @@ void main() {
       expect(fit(5, today([1, 2, 5]), 1), 2);
     });
 
-    test('keeps the block when the plan has more ayahs', () {
-      expect(fit(3, today([1, 2, 3, 4, 5]), 1), 3);
-    });
+    test(
+      'uses every contiguous unfinished planned ayah beyond difficulty cap',
+      () {
+        expect(fit(3, today([1, 2, 3, 4, 5]), 1), 5);
+      },
+    );
 
     test('a start ayah outside the plan keeps the block', () {
       expect(fit(3, today([1, 2]), 4), 3);
@@ -217,4 +220,3 @@ void main() {
     });
   });
 }
-

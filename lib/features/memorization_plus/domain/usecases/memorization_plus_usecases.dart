@@ -394,6 +394,9 @@ class ParentAccessUsecase {
   Future<Either<Failure, void>> saveSettings(ParentSettings settings) =>
       _repository.saveParentSettings(settings);
 
+  Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count) =>
+      _repository.setKidsAyahsPerHouse(count);
+
   Future<Either<Failure, bool>> verifyPin(String pin) =>
       _repository.verifyParentPin(pin);
 

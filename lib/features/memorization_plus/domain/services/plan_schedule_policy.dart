@@ -50,7 +50,9 @@ abstract final class PlanSchedulePolicy {
     return fitting.clamp(1, configured);
   }
 
-  /// Ayahs per memorization block, never more than the daily new ayahs.
+  /// Ayahs per practice block. Daily-plan launches use the generated plan's
+  /// contiguous unfinished range instead, so difficulty never truncates a
+  /// time-budgeted daily assignment.
   static int blockSize(CustomMemorizationPlan plan) {
     final byDifficulty = switch (plan.difficulty) {
       MemorizationDifficulty.easy => 3,
@@ -61,7 +63,8 @@ abstract final class PlanSchedulePolicy {
     return byDifficulty < daily ? byDifficulty : daily;
   }
 
-  /// Fits [blockSize] to today's plan for a session starting at
+  /// Returns today's full contiguous unfinished new-ayah range for a session
+  /// starting at
   /// [startAyah]: the block covers at most the unfinished new ayahs of
   /// [today] that run contiguously from [startAyah], so the session never
   /// memorizes more than the plan (and its time estimate) promised. A start
@@ -83,8 +86,7 @@ abstract final class PlanSchedulePolicy {
     while (remaining.contains(startAyah + run)) {
       run++;
     }
-    if (run == 0) return blockSize;
-    return run < blockSize ? run : blockSize;
+    return run == 0 ? blockSize : run;
   }
 
   /// Recitation pass threshold for [difficulty].

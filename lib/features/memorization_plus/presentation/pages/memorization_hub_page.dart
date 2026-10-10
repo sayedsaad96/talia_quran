@@ -296,14 +296,15 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
           icon: TaliaIcons.checklist,
-          title: context.l10n.memorizationHubViewPlanTitle,
+          title: context.l10n.planDetailsTitle,
           description: hasPlan
-              ? context.l10n.dailyPlanProgressCount(
-                  context.numText(dailyPlan?.requiredCompletedCount ?? 0),
-                  context.numText(dailyPlan?.totalItems ?? 0),
-                )
+              ? context.l10n.planDetailsSubtitle
               : context.l10n.dailyPlanNoPlanTitle,
-          route: AppRoutes.memorizationPlusDailyPlan,
+          onTap: () => context.openLocation(
+            hasPlan
+                ? AppRoutes.memorizationHub
+                : AppRoutes.memorizationPlusCustomPlan,
+          ),
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),

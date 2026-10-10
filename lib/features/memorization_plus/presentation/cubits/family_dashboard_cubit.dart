@@ -541,5 +541,32 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     );
   }
 
+  Future<bool> setKidsHouseSize(int? count) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded ||
+        !current.dashboard.children.any((child) => child.isLocal)) {
+      return false;
+    }
+    final outcome = await _parentAccess.setKidsAyahsPerHouse(count);
+    if (isClosed) return false;
+    return outcome.fold(
+      (failure) {
+        emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
+        );
+        return false;
+      },
+      (_) {
+        unawaited(
+          refresh(feedback: const FamilyDashboardFeedback.houseSizeSaved()),
+        );
+        return true;
+      },
+    );
+  }
+
   bool _isValidPin(String pin) => pin.length == 4 && int.tryParse(pin) != null;
 }
