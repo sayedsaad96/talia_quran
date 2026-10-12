@@ -4587,11 +4587,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'تنبيهات الصلوات بمقطع الأذان المرفق';
 
   @override
-  String get notificationChannelPrayerCompanionName => 'مرافق الصلاة';
+  String get notificationChannelPrayerCompanionName => 'رفيق الصلاة ';
 
   @override
   String get notificationChannelPrayerCompanionDescription =>
-      'تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي';
+      'تنبيهات رفيق الصلاة  اللطيفة للتأكيد الذاتي';
 
   @override
   String get notificationActionCompanionConfirm => 'نعم، صليتها';
@@ -4611,7 +4611,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationCompanionCheckInTitle => 'مرافق الصلاة';
+  String get notificationCompanionCheckInTitle => 'رفيق الصلاة ';
 
   @override
   String notificationCompanionCheckInBody(Object prayer) {
@@ -4619,7 +4619,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationCompanionFollowUpTitle => 'مرافق الصلاة';
+  String get notificationCompanionFollowUpTitle => 'رفيق الصلاة ';
 
   @override
   String notificationCompanionFollowUpBody(Object prayer) {
@@ -7444,7 +7444,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get prayerCompanionSettingsTitle => 'مرافق الصلاة';
+  String get prayerCompanionSettingsTitle => 'رفيق الصلاة ';
 
   @override
   String get microReviewTitle => 'لمحة مراجعة';
@@ -7477,7 +7477,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله';
 
   @override
-  String get prayerCompanionEnable => 'تفعيل مرافق الصلاة';
+  String get prayerCompanionEnable => 'تفعيل رفيق الصلاة ';
 
   @override
   String get prayerCompanionPreparation => 'تذكير الاستعداد';

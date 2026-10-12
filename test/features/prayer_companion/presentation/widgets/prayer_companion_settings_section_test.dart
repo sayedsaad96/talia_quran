@@ -84,12 +84,10 @@ void main() {
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
 
-    expect(find.text('تفعيل مرافق الصلاة'), findsOneWidget);
+    expect(find.text('تفعيل رفيق الصلاة '), findsOneWidget);
     expect(find.text('مسح تأكيدات الصلاة'), findsOneWidget);
 
-    await tester.tap(
-      find.widgetWithText(SwitchListTile, 'تفعيل مرافق الصلاة'),
-    );
+    await tester.tap(find.widgetWithText(SwitchListTile, 'تفعيل رفيق الصلاة '));
     await tester.pumpAndSettle();
 
     expect(prefs.getBool(PrayerCompanionPreferences.enabledKey), isTrue);
@@ -103,10 +101,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Default is ON.
-    expect(
-      prefs.getBool(PrayerSerenityWatcher.enabledKey) ?? true,
-      isTrue,
-    );
+    expect(prefs.getBool(PrayerSerenityWatcher.enabledKey) ?? true, isTrue);
     expect(find.text('وضع سكينة الصلاة'), findsOneWidget);
 
     await tester.tap(find.widgetWithText(SwitchListTile, 'وضع سكينة الصلاة'));

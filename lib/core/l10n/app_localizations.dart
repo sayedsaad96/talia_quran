@@ -8029,13 +8029,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationChannelPrayerCompanionName.
   ///
   /// In ar, this message translates to:
-  /// **'مرافق الصلاة'**
+  /// **'رفيق الصلاة '**
   String get notificationChannelPrayerCompanionName;
 
   /// No description provided for @notificationChannelPrayerCompanionDescription.
   ///
   /// In ar, this message translates to:
-  /// **'تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي'**
+  /// **'تنبيهات رفيق الصلاة  اللطيفة للتأكيد الذاتي'**
   String get notificationChannelPrayerCompanionDescription;
 
   /// No description provided for @notificationActionCompanionConfirm.
@@ -8071,7 +8071,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationCompanionCheckInTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مرافق الصلاة'**
+  /// **'رفيق الصلاة '**
   String get notificationCompanionCheckInTitle;
 
   /// No description provided for @notificationCompanionCheckInBody.
@@ -8083,7 +8083,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationCompanionFollowUpTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مرافق الصلاة'**
+  /// **'رفيق الصلاة '**
   String get notificationCompanionFollowUpTitle;
 
   /// No description provided for @notificationCompanionFollowUpBody.
@@ -12661,7 +12661,7 @@ abstract class AppLocalizations {
   /// No description provided for @prayerCompanionSettingsTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مرافق الصلاة'**
+  /// **'رفيق الصلاة '**
   String get prayerCompanionSettingsTitle;
 
   /// No description provided for @microReviewTitle.
@@ -12721,7 +12721,7 @@ abstract class AppLocalizations {
   /// No description provided for @prayerCompanionEnable.
   ///
   /// In ar, this message translates to:
-  /// **'تفعيل مرافق الصلاة'**
+  /// **'تفعيل رفيق الصلاة '**
   String get prayerCompanionEnable;
 
   /// No description provided for @prayerCompanionPreparation.

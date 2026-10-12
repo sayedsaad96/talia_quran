@@ -1973,8 +1973,8 @@
   "notificationChannelPrayerDescription": "تنبيهات عند دخول وقت الصلاة",
   "notificationChannelPrayerAthanName": "صوت أذان الصلاة",
   "notificationChannelPrayerAthanDescription": "تنبيهات الصلوات بمقطع الأذان المرفق",
-  "notificationChannelPrayerCompanionName": "مرافق الصلاة",
-  "notificationChannelPrayerCompanionDescription": "تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي",
+  "notificationChannelPrayerCompanionName": "رفيق الصلاة ",
+  "notificationChannelPrayerCompanionDescription": "تنبيهات رفيق الصلاة  اللطيفة للتأكيد الذاتي",
   "notificationActionCompanionConfirm": "نعم، صليتها",
   "notificationActionCompanionPrayNow": "سأصلي الآن",
   "notificationActionCompanionRemindLater": "ذكرني لاحقاً",
@@ -1985,14 +1985,14 @@
       "prayer": {}
     }
   },
-  "notificationCompanionCheckInTitle": "مرافق الصلاة",
+  "notificationCompanionCheckInTitle": "رفيق الصلاة ",
   "notificationCompanionCheckInBody": "هل صليت {prayer}؟",
   "@notificationCompanionCheckInBody": {
     "placeholders": {
       "prayer": {}
     }
   },
-  "notificationCompanionFollowUpTitle": "مرافق الصلاة",
+  "notificationCompanionFollowUpTitle": "رفيق الصلاة ",
   "notificationCompanionFollowUpBody": "تذكير لطيف: هل صليت {prayer}؟",
   "@notificationCompanionFollowUpBody": {
     "placeholders": {
@@ -3127,7 +3127,7 @@
   },
   "prayerCompanionRowSemantics": "{prayer}: {status}",
   "@prayerCompanionRowSemantics": {"placeholders": {"prayer": {"type": "String"}, "status": {"type": "String"}}},
-  "prayerCompanionSettingsTitle": "مرافق الصلاة",
+  "prayerCompanionSettingsTitle": "رفيق الصلاة ",
   "microReviewTitle": "لمحة مراجعة",
   "microReviewQuestion": "من حفظك القديم… لسه فاكرها؟",
   "microReviewReference": "سورة {surah}، آية {ayah}",
@@ -3138,7 +3138,7 @@
   "prayerSerenitySubtitle": "نوقف التلاوة بهدوء عند دخول وقت الصلاة",
   "prayerSerenityNotificationTitle": "حان وقت اللقاء 🕌",
   "prayerSerenityNotificationBody": "أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله",
-  "prayerCompanionEnable": "تفعيل مرافق الصلاة",
+  "prayerCompanionEnable": "تفعيل رفيق الصلاة ",
   "prayerCompanionPreparation": "تذكير الاستعداد",
   "prayerCompanionPreparationDisabled": "معطّل",
   "prayerCompanionMinutesValue": "{minutes} دقائق",

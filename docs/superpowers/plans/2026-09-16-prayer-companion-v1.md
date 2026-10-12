@@ -810,7 +810,7 @@ git commit -m "feat(prayer): show companion status in prayer sheet"
 ~~~dart
 testWidgets('Companion is off by default and enabling it reschedules', (tester) async {
   await tester.pumpWidget(settingsHarness());
-  expect(find.text('مرافق الصلاة'), findsOneWidget);
+  expect(find.text('رفيق الصلاة '), findsOneWidget);
   await tester.tap(find.byType(Switch).first);
   await tester.pumpAndSettle();
   expect(prefs.getBool(PrayerCompanionPreferences.enabledKey), isTrue);
@@ -837,7 +837,7 @@ Add exactly these controls: Companion enablement; preparation interval dropdown 
 Add ARB keys for section title, controls, preparation intervals, fixed check-in description, status text, action labels, daily count, local-storage explanation, clear confirmation, failure, and notification title/body. Use these production terms:
 
 ~~~text
-Arabic: مرافق الصلاة; هل أديت صلاة {prayer}؟; تم التأكيد; لم يتم التأكيد بعد.
+Arabic: رفيق الصلاة ; هل أديت صلاة {prayer}؟; تم التأكيد; لم يتم التأكيد بعد.
 English: Prayer Companion; Did you pray {prayer}?; Confirmed; Not confirmed yet.
 ~~~
 
