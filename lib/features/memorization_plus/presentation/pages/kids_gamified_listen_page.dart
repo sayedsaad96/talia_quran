@@ -460,7 +460,9 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             onRemindMe: onRemindMe,
                             onManualComplete: onManualComplete,
                           ),
-                          if (onFamilyPractice != null && !calm) ...[
+                          if (onFamilyPractice != null &&
+                              !calm &&
+                              !state.isCompleted) ...[
                             const SizedBox(height: AppSpacing.md),
                             Center(
                               child: TextButton.icon(

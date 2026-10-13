@@ -1132,6 +1132,7 @@ Future<void> configureDependencies({bool background = false}) async {
       effortEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
         KidsEnrichmentFeature.effortAchievements,
       ),
+      currentOwner: () => getIt<RecordOwnerProvider>().currentOwnerId,
     ),
   );
   getIt.registerFactory<KidsProgressCubit>(

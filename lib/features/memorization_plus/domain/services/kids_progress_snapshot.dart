@@ -80,9 +80,11 @@ class KidsProgressSnapshotLoader {
     achievements,
     Future<List<KidsSessionLog>> Function()? sessionLogs,
     bool Function()? effortEnabled,
+    String Function()? currentOwner,
     DateTime Function()? clock,
   }) : _sessionLogs = sessionLogs,
        _effortEnabled = effortEnabled,
+       _currentOwner = currentOwner,
        _progress = progress,
        _streak = streak,
        _pagesOn = pagesOn,
@@ -109,6 +111,11 @@ class KidsProgressSnapshotLoader {
   final Future<List<KidsSessionLog>> Function()? _sessionLogs;
   final bool Function()? _effortEnabled;
 
+  /// The record owner. When set, a load whose owner changed while it was
+  /// reading is abandoned before it stores any milestone, so one account's
+  /// numbers are never written under the next account.
+  final String Function()? _currentOwner;
+
   Future<KidsEffortAchievementInputs?> _effortInputs() async {
     final logs = _sessionLogs;
     if (logs == null || !(_effortEnabled?.call() ?? false)) return null;
@@ -121,6 +128,7 @@ class KidsProgressSnapshotLoader {
   }
 
   Future<KidsProgressSnapshot> load() async {
+    final owner = _currentOwner?.call();
     final now = _clock();
     final progress = await _progress();
     final streak = await _streak();
@@ -133,6 +141,9 @@ class KidsProgressSnapshotLoader {
       ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
     final longestStreak = max(streak.longestStreak, streak.currentStreak);
     final effort = await _effortInputs();
+    if (_currentOwner != null && _currentOwner() != owner) {
+      throw StateError('Kids data owner changed while loading progress');
+    }
     final achievements = await _achievements(
       KidsAchievementInputs(
         memorizedAyahs: progress.ayahsCompleted,

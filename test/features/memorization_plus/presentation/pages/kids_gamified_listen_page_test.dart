@@ -1105,6 +1105,16 @@ void main() {
       expect(entry, findsNothing);
     });
 
+    testWidgets('never appears once the ayah is completed', (tester) async {
+      await pumpContent(
+        tester,
+        _baseState.copyWith(isCompleted: true),
+        onFamilyPractice: () {},
+      );
+
+      expect(entry, findsNothing);
+    });
+
     testWidgets('never appears while the ayah is playing', (tester) async {
       await pumpContent(
         tester,

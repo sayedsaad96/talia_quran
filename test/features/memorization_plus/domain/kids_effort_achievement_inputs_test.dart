@@ -204,6 +204,34 @@ void main() {
       );
     });
 
+    test('an owner change mid-load stores nothing for the new owner', () async {
+      var owner = 'a';
+      var stored = false;
+      final switching = KidsProgressSnapshotLoader(
+        progress: () async => const KidsProgress.initial(),
+        streak: () async =>
+            const StreakEntity(currentStreak: 0, longestStreak: 0),
+        pagesOn: (_) async => const {},
+        allPages: () async => const {},
+        certificates: () => const [],
+        recentActivity: () async => const [],
+        achievements: (inputs) async {
+          stored = true;
+          return const [];
+        },
+        sessionLogs: () async {
+          owner = 'b';
+          return [_log('r1', at: day1, type: KidsMissionType.dueReview)];
+        },
+        effortEnabled: () => true,
+        currentOwner: () => owner,
+        clock: () => now,
+      );
+
+      await expectLater(switching.load(), throwsStateError);
+      expect(stored, isFalse);
+    });
+
     test('unreadable logs unlock nothing and do not break the page', () async {
       final snapshot = await loader(
         sessionLogs: () async => throw StateError('storage unavailable'),
