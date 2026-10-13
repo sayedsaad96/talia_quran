@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../domain/services/kids_world_growth_snapshot.dart';
 import '../../domain/services/kids_world_phase.dart';
 import 'kids_world_palette.dart';
 
@@ -18,11 +19,16 @@ class KidsWorldScene extends StatefulWidget {
     required this.phase,
     required this.child,
     this.animate = true,
+    this.growth = KidsWorldGrowthSnapshot.none,
   });
 
   final KidsWorldPhase phase;
   final Widget child;
   final bool animate;
+
+  /// Decorative plants and blossoms for saved milestones; static, so they
+  /// never move with or without reduced motion.
+  final KidsWorldGrowthSnapshot growth;
 
   @override
   State<KidsWorldScene> createState() => _KidsWorldSceneState();
@@ -82,6 +88,7 @@ class _KidsWorldSceneState extends State<KidsWorldScene>
               drift: _drift,
               phase: widget.phase,
               animating: animating,
+              growth: widget.growth,
               rtl: Directionality.of(context) == TextDirection.rtl,
             ),
           ),
@@ -98,12 +105,14 @@ class _ScenePainter extends CustomPainter {
     required this.phase,
     required this.animating,
     required this.rtl,
+    this.growth = KidsWorldGrowthSnapshot.none,
   }) : super(repaint: drift);
 
   final Animation<double> drift;
   final KidsWorldPhase phase;
   final bool animating;
   final bool rtl;
+  final KidsWorldGrowthSnapshot growth;
 
   static final List<Offset> _stars = () {
     final r = math.Random(7);
@@ -185,6 +194,34 @@ class _ScenePainter extends CustomPainter {
       color: palette.hills[1],
       flip: true,
     );
+    // Plants stand on the front hill's surface.
+    if (!growth.isEmpty) _drawGrowth(canvas, size);
+  }
+
+  /// Height of the front hill (top 0.87, bump 0.05, flipped) at [x], from
+  /// the same two quadratic curves [_drawHill] draws.
+  static double _frontHillY(Size size, double x) {
+    final w = size.width;
+    final y = size.height * 0.87;
+    final rise = size.height * 0.05;
+    final mid = Offset(w * 0.6, y - rise * 0.4);
+    final (p0, c, p1) = x <= w * 0.6
+        ? (Offset(0, y), Offset(w * 0.3, y + rise), mid)
+        : (mid, Offset(w * 0.85, y - rise), Offset(w, y));
+    // x(t) is monotonic on each segment: bisect for t.
+    var lo = 0.0;
+    var hi = 1.0;
+    Offset at(double t) =>
+        p0 * ((1 - t) * (1 - t)) + c * (2 * (1 - t) * t) + p1 * (t * t);
+    for (var i = 0; i < 20; i++) {
+      final t = (lo + hi) / 2;
+      if (at(t).dx < x) {
+        lo = t;
+      } else {
+        hi = t;
+      }
+    }
+    return at((lo + hi) / 2).dy;
   }
 
   void _drawNight(Canvas canvas, Size size, KidsWorldPalette palette) {
@@ -214,6 +251,59 @@ class _ScenePainter extends CustomPainter {
     canvas
       ..drawCircle(center, radius, _moonPaint)
       ..drawCircle(center + bite, radius * 0.9, _bitePaint);
+  }
+
+  /// Fixed slots across the width (as fractions), so the same milestones
+  /// always draw the same world; mirrored in RTL.
+  static const _plantSlots = [
+    0.08, 0.92, 0.22, 0.78, 0.35, 0.65, 0.15, 0.85, 0.48, 0.28, 0.72, 0.57,
+  ];
+
+  final Paint _trunkPaint = Paint();
+  final Paint _leafPaint = Paint();
+  final Paint _blossomPaint = Paint();
+
+  void _drawGrowth(Canvas canvas, Size size) {
+    final day = phase == KidsWorldPhase.day;
+    _trunkPaint.color = day ? const Color(0xFF8D6E63) : const Color(0xFF3E2C26);
+    _leafPaint.color = day ? const Color(0xFF2E8B4E) : const Color(0xFF1C5A43);
+    final unit = size.shortestSide * 0.03;
+    double groundAt(double x) => _frontHillY(size, x) + unit * 0.3;
+    for (var i = 0; i < growth.plants; i++) {
+      final fraction = _plantSlots[i % _plantSlots.length];
+      final x = size.width * (rtl ? 1 - fraction : fraction);
+      final base = groundAt(x);
+      // A gentle variety of heights, fixed per slot.
+      final height = unit * (2.2 + (i % 3) * 0.5);
+      canvas
+        ..drawRect(
+          Rect.fromLTWH(x - unit * 0.15, base - height, unit * 0.3, height),
+          _trunkPaint,
+        )
+        ..drawCircle(Offset(x, base - height), unit * 0.95, _leafPaint);
+    }
+    const blossomColors = [
+      Color(0xFFF9A8D4),
+      Color(0xFFFDE68A),
+      Color(0xFFC4B5FD),
+    ];
+    const blossomSlots = [0.12, 0.42, 0.70];
+    for (var i = 0; i < growth.blossoms; i++) {
+      final fraction = blossomSlots[i % blossomSlots.length];
+      final x = size.width * (rtl ? 1 - fraction : fraction);
+      final center = Offset(x, groundAt(x) - unit * 0.8);
+      _blossomPaint.color = blossomColors[i % blossomColors.length]
+          .withValues(alpha: day ? 1 : 0.75);
+      for (var petal = 0; petal < 5; petal++) {
+        final angle = petal * 2 * math.pi / 5;
+        canvas.drawCircle(
+          center + Offset(math.cos(angle), math.sin(angle)) * unit * 0.4,
+          unit * 0.3,
+          _blossomPaint,
+        );
+      }
+      canvas.drawCircle(center, unit * 0.22, _trunkPaint);
+    }
   }
 
   void _drawCloud(Canvas canvas, Offset origin, double scale, Paint paint) {
@@ -268,5 +358,6 @@ class _ScenePainter extends CustomPainter {
       oldDelegate.drift != drift ||
       oldDelegate.phase != phase ||
       oldDelegate.animating != animating ||
-      oldDelegate.rtl != rtl;
+      oldDelegate.rtl != rtl ||
+      oldDelegate.growth != growth;
 }

@@ -85,6 +85,7 @@ import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
 import '../../features/memorization_plus/presentation/world/kids_policy_controller.dart';
 import '../../features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
+import '../../features/memorization_plus/presentation/world/kids_world_growth_controller.dart';
 import '../../features/memorization_plus/data/listening/listening_audio.dart';
 import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
 import '../../features/memorization_plus/data/listening/listening_recitation_capture.dart';
@@ -1099,6 +1100,19 @@ Future<void> configureDependencies({bool background = false}) async {
   // Rollout switches for the kids enrichment roadmap (all off by default).
   getIt.registerLazySingleton<KidsEnrichmentFlags>(
     () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  // Decorative world growth from milestones already stored (T10, off by
+  // default).
+  getIt.registerLazySingleton<KidsWorldGrowthController>(
+    () => KidsWorldGrowthController(
+      unlockedAchievements: () => getIt<KidsAchievementStore>().unlocked(),
+      enabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.worldGrowth,
+      ),
+      changes: getIt<ProgressEventsBus>().changes.where(
+        (reason) => reason == ProgressChangedReason.kidsProgress,
+      ),
+    ),
   );
   // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).
   getIt.registerLazySingleton<KidsAchievementStore>(

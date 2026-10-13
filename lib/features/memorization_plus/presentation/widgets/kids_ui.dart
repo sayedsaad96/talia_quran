@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/services/kids_world_growth_snapshot.dart';
 import '../../domain/services/kids_world_phase.dart';
 import '../theme/kids_theme.dart';
+import '../world/kids_world_growth_controller.dart';
 import '../world/kids_world_palette.dart';
 import '../world/kids_world_phase_controller.dart';
 import '../world/kids_world_scene.dart';
@@ -24,6 +26,7 @@ class KidsBackground extends StatefulWidget {
 
 class _KidsBackgroundState extends State<KidsBackground> {
   KidsWorldPhaseController? _controller;
+  KidsWorldGrowthController? _growth;
 
   @override
   void initState() {
@@ -31,25 +34,38 @@ class _KidsBackgroundState extends State<KidsBackground> {
     if (getIt.isRegistered<KidsWorldPhaseController>()) {
       _controller = getIt<KidsWorldPhaseController>()..ensureStarted();
     }
+    if (getIt.isRegistered<KidsWorldGrowthController>()) {
+      _growth = getIt<KidsWorldGrowthController>()..ensureStarted();
+    }
   }
 
-  Widget _scene(KidsWorldPhase phase) {
+  Widget _scene(KidsWorldPhase phase, KidsWorldGrowthSnapshot growth) {
     return KidsWorldPhaseScope(
       phase: phase,
       child: KidsWorldScene(
         phase: phase,
         animate: widget.animate,
+        growth: growth,
         child: widget.child,
       ),
     );
   }
 
+  Widget _withGrowth(KidsWorldPhase phase) {
+    final growth = _growth;
+    if (growth == null) return _scene(phase, KidsWorldGrowthSnapshot.none);
+    return ValueListenableBuilder<KidsWorldGrowthSnapshot>(
+      valueListenable: growth,
+      builder: (context, snapshot, _) => _scene(phase, snapshot),
+    );
+  }
+
   Widget _world() {
     final controller = _controller;
-    if (controller == null) return _scene(KidsWorldPhase.night);
+    if (controller == null) return _withGrowth(KidsWorldPhase.night);
     return ValueListenableBuilder<KidsWorldPhase>(
       valueListenable: controller,
-      builder: (context, phase, _) => _scene(phase),
+      builder: (context, phase, _) => _withGrowth(phase),
     );
   }
 

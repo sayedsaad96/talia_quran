@@ -335,6 +335,8 @@
 
 ### T10 — تطور العالم
 
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذ خلف مفتاح `worldGrowth` (مغلق افتراضيًا). `buildKidsWorldGrowthSnapshot` (pure) يحوّل الإنجازات المخزنة فعلًا إلى زينة: شجرة لكل إنجاز من الكتالوج الأصلي (حد أقصى 12) وزهرة لكل إنجاز جهد (حتى 3)، ويتجاهل الـ IDs المجهولة. `KidsWorldGrowthController` يقرأ `KidsAchievementStore.unlocked()` عند فتح كل شاشة أطفال (فيتبع المالك الحالي بعد تبديل الحساب)، ويعيد القراءة عند حدث `kidsProgress`، ويؤجل القراءة إلى microtask كي لا يعيد بناء مستمعين أثناء build، ويعرض لا شيء عند فشل القراءة. الرسم ثابت بلا حركة على سطح التل الأمامي، ويُعكس في RTL. لم تتغير المناطق الخمس ولا ترتيب الرحلة ولا الأقفال، ولا يوجد احتفال جديد. ملاحظة: الإنجاز يُحفظ حين يُحمَّل التقدم (صفحة «تقدّمي» أو نشر نشاط الأسرة)، فالشجرة الجديدة تظهر بعد ذلك لا فور انتهاء الجلسة. لم يُنفذ golden ولا قياس أداء على جهاز؛ تحقق بصري بصورتين مولّدتين (نهار/ليل، 360×720) ثم حُذفتا.
+
 **ملفات:** جديد `domain/services/kids_world_growth_snapshot.dart`؛ تمديد `presentation/world/kids_world_scene.dart` ومكونات الخريطة والاحتفال فقط. اختبارات جديدة `domain/kids_world_growth_snapshot_test.dart` وجوار `presentation/world/kids_world_scene_test.dart` و`domain/kids_map_celebration_test.dart`.
 
 **واجهة:** `KidsWorldGrowthSnapshot buildKidsWorldGrowthSnapshot(KidsWorldGrowthEvidence evidence)`؛ يستهلك إنجازات T2 وإكمال دروس T5/أنشطة T9 وإثبات T4. كل مصدر اختياري؛ لا يعتمد تشغيل العالم على تفعيل جميع الميزات.
