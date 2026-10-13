@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../adult_journey_feature_flags.dart';
+import '../../application/adult_journey_launch_resolver.dart';
 import '../../application/adult_journey_usecases.dart';
 import '../../domain/entities/adult_journey_context.dart';
 import '../../domain/entities/adult_journey_preferences.dart';
@@ -12,6 +13,7 @@ import '../../domain/entities/adult_journey_suggestion.dart';
 import '../../domain/entities/adult_journey_update.dart';
 import '../../domain/services/adult_journey_suggestion_policy.dart';
 import '../../domain/services/adult_local_date.dart';
+import '../adult_journey_safe_routes.dart';
 import 'adult_journey_state.dart';
 
 /// Presents the optional adult-journey overlay. Home feeds it through
@@ -37,7 +39,9 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     required Stream<void> accountChanges,
     required DateTime Function() now,
     AdultJourneySuggestionPolicy policy = const AdultJourneySuggestionPolicy(),
-  }) : _load = loadAdultJourney,
+    AdultJourneyLaunchResolver? launchResolver,
+  }) : _launchResolver = launchResolver,
+       _load = loadAdultJourney,
        _update = updateAdultJourney,
        _flags = flags,
        _owner = owner,
@@ -54,7 +58,9 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   final RecordOwnerProvider _owner;
   final DateTime Function() _now;
   final AdultJourneySuggestionPolicy _policy;
+  final AdultJourneyLaunchResolver? _launchResolver;
   late final StreamSubscription<void> _accountSub;
+  bool _launching = false;
 
   int _epoch = 0;
   int _seq = 0;
@@ -101,6 +107,33 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   }
 
   Future<bool> clearToday() => _write(const ClearAdultToday());
+
+  /// The route to open for [suggestion], resolved now (Phase B). Null means
+  /// "do not navigate": hidden overlay, another launch in progress, an
+  /// account change during the lookup, or a child profile. Without a
+  /// resolver (tests, Settings) the Phase A safe route is used.
+  Future<String?> resolveLaunch(AdultJourneySuggestion suggestion) async {
+    final owner = _syncOwner();
+    if (!state.isVisible || _stateOwner != owner || _launching) return null;
+    final resolver = _launchResolver;
+    if (resolver == null) return adultJourneySafeRoute(suggestion);
+    final epoch = _epoch;
+    final visibility = _visibility;
+    _launching = true;
+    String? route;
+    try {
+      route = await resolver.resolve(
+        suggestion: suggestion,
+        expectedOwnerId: owner,
+      );
+    } catch (error, stack) {
+      TaliaLogger.w('Adult journey launch failed', error, stack);
+    } finally {
+      _launching = false;
+    }
+    if (!_isCurrent(owner, epoch) || visibility != _visibility) return null;
+    return route;
+  }
 
   Future<void> _reload(String owner) async {
     final epoch = _epoch;

@@ -30,6 +30,25 @@ Also fixed: same-owner barrier events (Khatmah writes) no longer hide the overla
 ### Not verified
 
 - No Android/device run (Task 6 manual matrix belongs to Phase C).
-- No widget test of `AdultJourneyHomeSlot` with a real `HomeCubit`; the first-run/invite rule is covered only by code review.
-- Dark-mode checks for the today card and invite card; semantics/screen-reader checks.
+- ~~No widget test of `AdultJourneyHomeSlot`~~ — closed in Phase B: `adult_journey_home_slot_test.dart` (wiring through `HomeCubit`, first-run rule, child/no-track gating, snooze).
+- ~~Dark-mode and semantics checks~~ — closed in Phase B: light/dark × ar/en at 320 px against `textContrastGuideline`, `labeledTapTargetGuideline`, `androidTapTargetGuideline`.
 - All rollout flags remain off: the shipped Home and Settings are unchanged until `adult_journey_flag_personalization` is set on a device.
+
+## Phase B (2026-10-13)
+
+Base: `4438e529` (Phase A) on `feat/adult-journey-phase-a`. Phase A re-verified first: `flutter analyze` clean; 413 related tests passed.
+
+Changes: `application/adult_journey_launch_resolver.dart` (new); `AdultJourneyCubit.resolveLaunch`; the today card resolves on tap inside its double-tap guard; DI registers the resolver over `MemorizationNavigationResolver.resolve()`.
+
+Rules: memorize → `todayPlanLocation` and review → `reviewQuizLocation`, both re-resolved at tap time and used verbatim (no `blockSize`/`origin`/`intent` rewrite). Review that falls back to plan setup opens the hub (which explains, as the hub itself does). Plan setup → custom plan screen. Child profile, owner change or barrier generation change during the lookup → no navigation. A failed lookup → hub. Resume → its section only; reading/khatmah use the current Home load's route.
+
+- `flutter analyze`: no issues.
+- `flutter test test/features/adult_journey`: 145 passed (new: 14 resolver tests, 5 cubit `resolveLaunch` tests).
+- `flutter test test/features/home test/features/settings test/core/identity test/core/journey test/integration/account_switch_isolation_test.dart test/features/memorization_plus/presentation/navigation test/features/memorization_plus/domain/navigation`: 288 passed.
+- Not run: full suite (only adult-journey files and two DI registrations changed since the Phase A full run); no device run.
+
+### Phase A gaps closed with Phase B
+
+- `test/features/adult_journey/presentation/adult_journey_home_slot_test.dart`: 11 tests, including a non-vacuous accessibility matrix.
+- Final: `flutter analyze` clean; `flutter test test/features/adult_journey test/features/home test/features/settings test/core/identity test/core/journey test/integration/account_switch_isolation_test.dart test/features/memorization_plus/presentation/navigation test/features/memorization_plus/domain/navigation`: 444 passed.
+- Still open: device run (owner, Phase C matrix).

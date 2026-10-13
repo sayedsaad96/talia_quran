@@ -2,9 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/adult_journey/adult_journey_feature_flags.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/router/app_router.dart';
+import 'package:talia_quran/features/adult_journey/application/adult_journey_launch_resolver.dart';
 import 'package:talia_quran/features/adult_journey/application/adult_journey_usecases.dart';
+import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_suggestion.dart';
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_context.dart';
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_preferences.dart';
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_update.dart';
@@ -48,7 +53,11 @@ void main() {
 
   tearDown(() => changes.close());
 
-  AdultJourneyCubit build({bool personalization = true, bool budget = true}) {
+  AdultJourneyCubit build({
+    bool personalization = true,
+    bool budget = true,
+    AdultJourneyLaunchResolver? launchResolver,
+  }) {
     final flags = AdultJourneyFlags(
       (key) => key == AdultJourneyFeature.personalization.storageKey
           ? personalization
@@ -63,6 +72,7 @@ void main() {
       owner: owner,
       accountChanges: changes.stream,
       now: () => now,
+      launchResolver: launchResolver,
     );
     addTearDown(cubit.close);
     return cubit;
@@ -377,6 +387,85 @@ void main() {
     expect(await cubit.clearToday(), isTrue);
     expect(cubit.state.todayMinutes, isNull);
     expect(cubit.state.preferences.goal, AdultJourneyGoal.reading);
+  });
+
+  group('resolveLaunch', () {
+    const review = AdultJourneySuggestion(
+      launchKind: AdultJourneyLaunchKind.review,
+      reason: AdultJourneySuggestionReason.goalMatch,
+    );
+    const fresh = '/memorization-plus/v2/session?surahId=36&intent=review';
+
+    late AccountDataBarrier barrier;
+    late int lookups;
+    Completer<void>? hold;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      barrier = AccountDataBarrier.forPreferences(
+        await SharedPreferences.getInstance(),
+      );
+      lookups = 0;
+      hold = null;
+    });
+
+    AdultJourneyLaunchResolver resolver() => AdultJourneyLaunchResolver(
+      owner: owner,
+      captureLease: barrier.capture,
+      memorizationDestinations: () async {
+        lookups++;
+        await hold?.future;
+        return const AdultMemorizationDestinations(
+          isChild: false,
+          todayPlanLocation: '/memorization-plus/v2/session?surahId=2',
+          reviewQuizLocation: fresh,
+        );
+      },
+    );
+
+    test('returns the freshly resolved route', () async {
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      final cubit = build(launchResolver: resolver());
+      await cubit.refreshContext(ctx('a'));
+      expect(await cubit.resolveLaunch(review), fresh);
+    });
+
+    test('nothing while hidden', () async {
+      final cubit = build(launchResolver: resolver());
+      expect(await cubit.resolveLaunch(review), isNull);
+      expect(lookups, 0);
+    });
+
+    test('a second tap during a launch resolves nothing', () async {
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      final cubit = build(launchResolver: resolver());
+      await cubit.refreshContext(ctx('a'));
+      hold = Completer<void>();
+      final first = cubit.resolveLaunch(review);
+      expect(await cubit.resolveLaunch(review), isNull);
+      hold!.complete();
+      expect(await first, fresh);
+      expect(lookups, 1);
+    });
+
+    test('an account switch during the launch opens nothing', () async {
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      final cubit = build(launchResolver: resolver());
+      await cubit.refreshContext(ctx('a'));
+      hold = Completer<void>();
+      final pending = cubit.resolveLaunch(review);
+      owner.currentOwnerId = 'b';
+      changes.add(null);
+      hold!.complete();
+      expect(await pending, isNull);
+    });
+
+    test('without a resolver the Phase A safe route is used', () async {
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+      expect(await cubit.resolveLaunch(review), AppRoutes.memorizationHub);
+    });
   });
 
   test('no emission after close', () async {

@@ -39,10 +39,15 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
   bool _changingTime = false;
   bool _navigating = false;
 
-  Future<void> _open(String route) async {
+  /// One tap → one fresh resolution → at most one navigation. A null route
+  /// (account changed, child profile, another launch running) opens nothing.
+  Future<void> _open(AdultJourneySuggestion suggestion) async {
     if (_navigating) return;
     _navigating = true;
     try {
+      final cubit = context.read<AdultJourneyCubit>();
+      final route = await cubit.resolveLaunch(suggestion);
+      if (route == null || !mounted) return;
       final open = widget.openRoute ?? (c, r) => c.openLocation(r);
       await open(context, route);
     } finally {
@@ -156,8 +161,10 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
     ];
   }
 
+  /// Tappable only when a safe destination exists; the actual route is
+  /// resolved at tap time.
   VoidCallback? _openerFor(AdultJourneySuggestion suggestion) {
-    final route = adultJourneySafeRoute(suggestion);
-    return route == null ? null : () => _open(route);
+    if (adultJourneySafeRoute(suggestion) == null) return null;
+    return () => _open(suggestion);
   }
 }

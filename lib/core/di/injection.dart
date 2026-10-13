@@ -41,6 +41,8 @@ import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
+import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/adult_journey/application/adult_journey_usecases.dart';
 import '../../features/adult_journey/data/adult_journey_repository_impl.dart';
 import '../../features/adult_journey/domain/repositories/adult_journey_repository.dart';
@@ -1160,6 +1162,25 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<UpdateAdultJourney>(
     () => UpdateAdultJourney(getIt<AdultJourneyRepository>()),
   );
+  // Phase B: memorization destinations are resolved fresh at tap time.
+  getIt.registerLazySingleton<AdultJourneyLaunchResolver>(
+    () => AdultJourneyLaunchResolver(
+      owner: getIt<RecordOwnerProvider>(),
+      captureLease: () =>
+          AccountDataBarrier.forPreferences(getIt<SharedPreferences>())
+              .capture(),
+      memorizationDestinations: () async {
+        final targets = await MemorizationNavigationResolver(
+          getIt<MemorizationPlusRepository>(),
+        ).resolve();
+        return AdultMemorizationDestinations(
+          isChild: targets.profile?.isChild ?? false,
+          todayPlanLocation: targets.todayPlanLocation,
+          reviewQuizLocation: targets.reviewQuizLocation,
+        );
+      },
+    ),
+  );
   getIt.registerFactory<AdultJourneyCubit>(
     () => AdultJourneyCubit(
       loadAdultJourney: getIt<LoadAdultJourney>(),
@@ -1170,6 +1191,7 @@ Future<void> configureDependencies({bool background = false}) async {
         getIt<SharedPreferences>(),
       ).changes,
       now: DateTime.now,
+      launchResolver: getIt<AdultJourneyLaunchResolver>(),
     ),
   );
   // Decorative world growth from milestones already stored (T10, off by
