@@ -229,6 +229,8 @@
 
 ### T4 — «نتعلم سوا»
 
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذت **الخطوة الأولى فقط** (إرشاد بلا إثبات) خلف مفتاح `familyPractice` (مغلق افتراضيًا). `KidsFamilyPracticeCubit` مستقل تمامًا (`begin/advance/cancel`) لا يعرف `KidsModeCubit` ولا الـ committer ولا المكافآت؛ أربع خطوات ثابتة (`KidsFamilyPracticeStep`): استماع مشترك، الكبير يقرأ ببطء، الطفل يحاول وحده، مدح المحاولة. تُفتح كـ bottom sheet من زر «نتعلم سوا» في صفحة الاستماع، ويظهر الزر فقط حين لا يكون الطفل يسمّع أو يستحضر أو يسجّل أو يُشغَّل الصوت. الإرشاد نصي: لا يشغّل صوتًا ولا ميكروفونًا، ويذكر صراحة أنه لا يكمل الآية. لم يُعدَّل `kids_mode_cubit.dart` أصلًا. **لم يُنفذ بعد:** `KidsFamilyPracticeReceipt` وحفظ إثبات المشاركة بالـ PIN، وإنجاز المشاركة في T2 (ينتظران قرارًا وتصميم تخزين مستقل).
+
 **ملفات:** جديد `presentation/cubits/kids_family_practice_cubit.dart`، `presentation/widgets/kids_family_practice_panel.dart`، `domain/entities/kids_family_practice_receipt.dart` وrepository/use case له إذا لزم حفظ إثبات المشاركة. تمديد صفحة الجلسة ولوحة ولي الأمر دون زر إنهاء جديد للحفظ. اختبارات جديدة `presentation/cubits/kids_family_practice_cubit_test.dart` و`presentation/widgets/kids_family_practice_panel_test.dart`، وجوار `presentation/cubits/kids_mode_cubit_test.dart`.
 
 **واجهة:** الإرشاد يستقبل سياق المهمة الحالي؛ `begin()` و`advance()` و`cancel()` يديرون خطوات المشاركة فقط. إثبات المشاركة `recordFamilyPractice(receipt)` منفصل ومكرر التنفيذ بأمان، لا يستدعي awardKidsPoints أو committer.

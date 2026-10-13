@@ -975,6 +975,35 @@
   "kidsWeeklyCoachingTipKeepRhythm": "أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.",
   "kidsWeeklyCoachingTipAddReview": "في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.",
   "kidsWeeklyCoachingTipStartSmall": "أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.",
+  "kidsFamilyPracticeAction": "نتعلم سوا",
+  "kidsFamilyPracticeContext": "{surah} · الآية {ayah}",
+  "@kidsFamilyPracticeContext": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsFamilyPracticeStepCounter": "الخطوة {current} من {total}",
+  "@kidsFamilyPracticeStepCounter": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsFamilyPracticeStepListen": "استمعوا إلى الآية معًا، بقدر ما يحب الطفل.",
+  "kidsFamilyPracticeStepGrownUp": "يقرأ الكبير الآية ببطء بينما يتابع الطفل.",
+  "kidsFamilyPracticeStepChildTries": "الآن يحاول الطفل قولها وحده، والكبير يُنصت بلطف.",
+  "kidsFamilyPracticeStepPraise": "امدحوا المحاولة وليس النتيجة فقط.",
+  "kidsFamilyPracticeFinished": "أحسنتم معًا! يمكنكم العودة إلى الآية الآن.",
+  "kidsFamilyPracticeNote": "هذه مشاركة في التعلّم، ولا تُكمل الآية.",
   "childDetailProgressTitle": "التقدم والإنجازات والشهادات",
   "childDetailProgressUnavailable": "لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.",
   "childDetailCertificatesEmpty": "لا توجد شهادات بعد",

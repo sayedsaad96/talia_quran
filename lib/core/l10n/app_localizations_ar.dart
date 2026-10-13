@@ -2482,6 +2482,43 @@ class AppLocalizationsAr extends AppLocalizations {
       'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
 
   @override
+  String get kidsFamilyPracticeAction => 'نتعلم سوا';
+
+  @override
+  String kidsFamilyPracticeContext(String surah, String ayah) {
+    return '$surah · الآية $ayah';
+  }
+
+  @override
+  String kidsFamilyPracticeStepCounter(String current, String total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get kidsFamilyPracticeStepListen =>
+      'استمعوا إلى الآية معًا، بقدر ما يحب الطفل.';
+
+  @override
+  String get kidsFamilyPracticeStepGrownUp =>
+      'يقرأ الكبير الآية ببطء بينما يتابع الطفل.';
+
+  @override
+  String get kidsFamilyPracticeStepChildTries =>
+      'الآن يحاول الطفل قولها وحده، والكبير يُنصت بلطف.';
+
+  @override
+  String get kidsFamilyPracticeStepPraise =>
+      'امدحوا المحاولة وليس النتيجة فقط.';
+
+  @override
+  String get kidsFamilyPracticeFinished =>
+      'أحسنتم معًا! يمكنكم العودة إلى الآية الآن.';
+
+  @override
+  String get kidsFamilyPracticeNote =>
+      'هذه مشاركة في التعلّم، ولا تُكمل الآية.';
+
+  @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override

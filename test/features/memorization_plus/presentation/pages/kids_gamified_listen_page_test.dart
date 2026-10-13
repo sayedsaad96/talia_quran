@@ -1048,6 +1048,73 @@ void main() {
       expect(tester.hasRunningAnimations, isFalse);
     });
   });
+
+  group('family practice entry', () {
+    Future<void> pumpContent(
+      WidgetTester tester,
+      KidsModeLoaded state, {
+      VoidCallback? onFamilyPractice,
+    }) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1400);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: state,
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onTryFromMemory: () {},
+            onFamilyPractice: onFamilyPractice,
+          ),
+        ),
+      );
+    }
+
+    final entry = find.byKey(const ValueKey('kids-family-practice-open'));
+
+    testWidgets('is hidden unless the feature wires it', (tester) async {
+      await pumpContent(tester, _baseState);
+
+      expect(entry, findsNothing);
+    });
+
+    testWidgets('shows while listening and calls back on tap', (tester) async {
+      var opened = false;
+      await pumpContent(
+        tester,
+        _baseState,
+        onFamilyPractice: () => opened = true,
+      );
+
+      await tester.ensureVisible(entry);
+      await tester.tap(entry);
+
+      expect(opened, isTrue);
+    });
+
+    testWidgets('never appears while recording', (tester) async {
+      await pumpContent(
+        tester,
+        _baseState.copyWith(isRecording: true),
+        onFamilyPractice: () {},
+      );
+
+      expect(entry, findsNothing);
+    });
+
+    testWidgets('never appears while the ayah is playing', (tester) async {
+      await pumpContent(
+        tester,
+        _baseState.copyWith(isPlaying: true),
+        onFamilyPractice: () {},
+      );
+
+      expect(entry, findsNothing);
+    });
+  });
 }
 
 final _baseState = KidsModeLoaded(

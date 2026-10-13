@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,7 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 import '../widgets/guardian_pin_dialog.dart';
 import '../widgets/kids_chunky_button.dart';
+import '../widgets/kids_family_practice_panel.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_loop_progress_indicator.dart';
 import '../widgets/kids_recording_waveform.dart';
@@ -64,6 +66,13 @@ class KidsGamifiedListenPage extends StatelessWidget {
 
 /// Guards the guardian completion flow against a double tap.
 bool _guardianCompletionInFlight = false;
+
+/// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
+bool _familyPracticeEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.familyPractice,
+    );
 
 class _KidsGamifiedListenView extends StatelessWidget {
   const _KidsGamifiedListenView({
@@ -265,6 +274,13 @@ class _KidsGamifiedListenView extends StatelessWidget {
                 context.read<KidsModeCubit>().revealFirstWord(),
             onRemindMe: () => context.read<KidsModeCubit>().remindMe(),
             onManualComplete: () => _submitGuardianCompletion(context),
+            onFamilyPractice: _familyPracticeEnabled()
+                ? () => showKidsFamilyPracticeSheet(
+                    context,
+                    surahId: state.surahId,
+                    ayahNumber: state.ayahNumber,
+                  )
+                : null,
           );
         },
       ),
@@ -318,7 +334,12 @@ class KidsGamifiedListenContent extends StatelessWidget {
     this.onRevealFirstWord,
     this.onRemindMe,
     this.onManualComplete,
+    this.onFamilyPractice,
   });
+
+  /// «نتعلم سوا» entry (null hides it). Shown only while the child is
+  /// listening, never during recitation, recall or recording.
+  final VoidCallback? onFamilyPractice;
 
   final KidsModeLoaded state;
   final VoidCallback onBack;
@@ -439,6 +460,19 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             onRemindMe: onRemindMe,
                             onManualComplete: onManualComplete,
                           ),
+                          if (onFamilyPractice != null && !calm) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Center(
+                              child: TextButton.icon(
+                                key: const ValueKey('kids-family-practice-open'),
+                                onPressed: onFamilyPractice,
+                                icon: const Icon(TaliaIcons.family),
+                                label: Text(
+                                  context.l10n.kidsFamilyPracticeAction,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 96),
                         ],
                       ),

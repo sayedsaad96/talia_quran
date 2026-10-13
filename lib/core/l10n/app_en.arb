@@ -959,6 +959,35 @@
   "kidsWeeklyCoachingTipKeepRhythm": "A steady week. Keep the same short time each day.",
   "kidsWeeklyCoachingTipAddReview": "Next time, add one short review before a new ayah.",
   "kidsWeeklyCoachingTipStartSmall": "A quiet week. A short session of a few minutes is a good way back.",
+  "kidsFamilyPracticeAction": "Learn together",
+  "kidsFamilyPracticeContext": "{surah} · ayah {ayah}",
+  "@kidsFamilyPracticeContext": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsFamilyPracticeStepCounter": "Step {current} of {total}",
+  "@kidsFamilyPracticeStepCounter": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsFamilyPracticeStepListen": "Listen to the ayah together, as many times as the child likes.",
+  "kidsFamilyPracticeStepGrownUp": "A grown-up says the ayah slowly while the child follows along.",
+  "kidsFamilyPracticeStepChildTries": "Now the child tries to say it alone, and a grown-up listens kindly.",
+  "kidsFamilyPracticeStepPraise": "Praise the effort, not only the result.",
+  "kidsFamilyPracticeFinished": "Well done, together! You can go back to the ayah now.",
+  "kidsFamilyPracticeNote": "This is shared practice. It does not complete the ayah.",
   "childDetailProgressTitle": "Progress, achievements and certificates",
   "childDetailProgressUnavailable": "The child's progress hasn't arrived yet. It appears after the child opens the app online.",
   "childDetailCertificatesEmpty": "No certificates yet",

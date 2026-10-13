@@ -4574,6 +4574,60 @@ abstract class AppLocalizations {
   /// **'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.'**
   String get kidsWeeklyCoachingTipStartSmall;
 
+  /// No description provided for @kidsFamilyPracticeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'نتعلم سوا'**
+  String get kidsFamilyPracticeAction;
+
+  /// No description provided for @kidsFamilyPracticeContext.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah} · الآية {ayah}'**
+  String kidsFamilyPracticeContext(String surah, String ayah);
+
+  /// No description provided for @kidsFamilyPracticeStepCounter.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخطوة {current} من {total}'**
+  String kidsFamilyPracticeStepCounter(String current, String total);
+
+  /// No description provided for @kidsFamilyPracticeStepListen.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمعوا إلى الآية معًا، بقدر ما يحب الطفل.'**
+  String get kidsFamilyPracticeStepListen;
+
+  /// No description provided for @kidsFamilyPracticeStepGrownUp.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرأ الكبير الآية ببطء بينما يتابع الطفل.'**
+  String get kidsFamilyPracticeStepGrownUp;
+
+  /// No description provided for @kidsFamilyPracticeStepChildTries.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآن يحاول الطفل قولها وحده، والكبير يُنصت بلطف.'**
+  String get kidsFamilyPracticeStepChildTries;
+
+  /// No description provided for @kidsFamilyPracticeStepPraise.
+  ///
+  /// In ar, this message translates to:
+  /// **'امدحوا المحاولة وليس النتيجة فقط.'**
+  String get kidsFamilyPracticeStepPraise;
+
+  /// No description provided for @kidsFamilyPracticeFinished.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنتم معًا! يمكنكم العودة إلى الآية الآن.'**
+  String get kidsFamilyPracticeFinished;
+
+  /// No description provided for @kidsFamilyPracticeNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه مشاركة في التعلّم، ولا تُكمل الآية.'**
+  String get kidsFamilyPracticeNote;
+
   /// No description provided for @childDetailProgressTitle.
   ///
   /// In ar, this message translates to:
