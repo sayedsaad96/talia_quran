@@ -341,6 +341,18 @@ void main() {
       expect(prefs.getString('kids_support_profile_owner-a'), isNull);
     });
 
+    test('clears adult journey preferences but not its rollout flags', () async {
+      await prefs.setString('adult_journey_v1_owner-a', '{"schemaVersion":1}');
+      await prefs.setBool('adult_journey_flag_personalization', true);
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(prefs.getString('adult_journey_v1_owner-a'), isNull);
+      expect(prefs.getBool('adult_journey_flag_personalization'), isTrue);
+      expect(prefs.getString('theme_mode'), 'dark');
+      expect(prefs.getString('locale'), 'ar');
+    });
+
     test('retains device preferences', () async {
       await AccountDataReset(isar, prefs).clearAccountOwnedData();
       expect(prefs.getString('theme_mode'), 'dark');

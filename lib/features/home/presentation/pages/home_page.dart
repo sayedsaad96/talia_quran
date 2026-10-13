@@ -15,6 +15,7 @@ import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../adult_journey/presentation/widgets/adult_journey_home_slot.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
 import '../../domain/services/home_primary_action_resolver.dart';
@@ -244,6 +245,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
             const SliverToBoxAdapter(
               child: LinearProgressIndicator(minHeight: 2),
             ),
+          const AdultJourneyHomeSlot(key: ValueKey('adult_journey_home_slot')),
           if (widget.state.isFirstRun)
             SliverToBoxAdapter(
               child: Padding(

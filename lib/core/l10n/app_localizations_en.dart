@@ -8397,4 +8397,128 @@ class AppLocalizationsEn extends AppLocalizations {
   String kidsHouseReviewRemaining(String count) {
     return 'Ayahs left to recite: $count';
   }
+
+  @override
+  String get adultJourneyInviteTitle => 'Make your journey fit you';
+
+  @override
+  String get adultJourneyInviteBody =>
+      'Pick what you want to focus on now. You can change it or skip it any time.';
+
+  @override
+  String get adultJourneyInviteAction => 'Personalize your journey';
+
+  @override
+  String get adultJourneyInviteLater => 'Later';
+
+  @override
+  String get adultJourneySettingsTileTitle => 'Personalize your journey';
+
+  @override
+  String get adultJourneySettingsTileSubtitle => 'Goal and experience';
+
+  @override
+  String get adultJourneySetupTitle => 'Personalize your journey';
+
+  @override
+  String get adultJourneySetupGoalLabel => 'What do you want right now?';
+
+  @override
+  String get adultJourneyGoalReading => 'Reading';
+
+  @override
+  String get adultJourneyGoalMemorization => 'New memorization';
+
+  @override
+  String get adultJourneyGoalReview => 'Strengthen what I memorized';
+
+  @override
+  String get adultJourneyGoalAzkar => 'Azkar';
+
+  @override
+  String get adultJourneyExperienceLabel =>
+      'How would you describe yourself? (optional)';
+
+  @override
+  String get adultJourneyExperienceHint =>
+      'This only shapes wording and suggestions. It never changes your memorization or plan.';
+
+  @override
+  String get adultJourneyExperienceBeginner => 'Beginner';
+
+  @override
+  String get adultJourneyExperienceContinuing => 'Keeping steady';
+
+  @override
+  String get adultJourneyExperienceReturning => 'Returning after a break';
+
+  @override
+  String get adultJourneyErrorSaveFailed =>
+      'Could not save. Your previous choice is unchanged; you can try again.';
+
+  @override
+  String get adultJourneyErrorUnavailable =>
+      'Your account is not ready right now. Try again shortly.';
+
+  @override
+  String get adultJourneyErrorUnsupported =>
+      'Preferences cannot be changed in this version.';
+
+  @override
+  String get adultJourneyTodayTitle => 'How much time do you have today?';
+
+  @override
+  String get adultJourneyTodayHint =>
+      'We suggest what fits your time. Durations are approximate and never cut a session short.';
+
+  @override
+  String get adultJourneyFitTitle => 'Fits your time today';
+
+  @override
+  String adultJourneyApproxMinutes(String count) {
+    return 'About $count min';
+  }
+
+  @override
+  String get adultJourneyDurationUnavailable => 'Duration unavailable';
+
+  @override
+  String get adultJourneyExceedsBudget =>
+      'May take longer than the time you picked. It stays visible because it is a priority.';
+
+  @override
+  String get adultJourneyChangeTime => 'Change time';
+
+  @override
+  String get adultJourneyBackToUsual => 'Back to the usual suggestions';
+
+  @override
+  String get adultJourneyResumeTitle => 'Review your session';
+
+  @override
+  String get adultJourneyResumeSubtitle => 'Go back to the section you were in';
+
+  @override
+  String get adultJourneyNeedsPlanTitle =>
+      'Start by setting up a memorization plan';
+
+  @override
+  String get adultJourneyNeedsPlanSubtitle =>
+      'There is no memorization plan yet.';
+
+  @override
+  String get adultJourneyNoReviewTitle => 'Nothing memorized to review yet';
+
+  @override
+  String get adultJourneyNoReviewSubtitle =>
+      'You can begin by setting up a memorization plan.';
+
+  @override
+  String get adultJourneyOpenMemorization => 'Open the memorization hub';
+
+  @override
+  String get adultJourneyOpenReading => 'Start reading';
+
+  @override
+  String get adultJourneyOpenAzkar => 'Open Azkar';
 }

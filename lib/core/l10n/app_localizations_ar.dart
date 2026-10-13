@@ -8385,4 +8385,124 @@ class AppLocalizationsAr extends AppLocalizations {
   String kidsHouseReviewRemaining(String count) {
     return 'متبقي للتسميع: $count آية';
   }
+
+  @override
+  String get adultJourneyInviteTitle => 'خلّي رحلتك مناسبة لك';
+
+  @override
+  String get adultJourneyInviteBody =>
+      'اختر ما تريد التركيز عليه الآن. يمكنك تغييره أو تجاهله في أي وقت.';
+
+  @override
+  String get adultJourneyInviteAction => 'خصص رحلتك';
+
+  @override
+  String get adultJourneyInviteLater => 'لاحقًا';
+
+  @override
+  String get adultJourneySettingsTileTitle => 'تخصيص رحلتك';
+
+  @override
+  String get adultJourneySettingsTileSubtitle => 'الهدف والخبرة';
+
+  @override
+  String get adultJourneySetupTitle => 'خصص رحلتك';
+
+  @override
+  String get adultJourneySetupGoalLabel => 'ما الذي تريده الآن؟';
+
+  @override
+  String get adultJourneyGoalReading => 'قراءة';
+
+  @override
+  String get adultJourneyGoalMemorization => 'حفظ جديد';
+
+  @override
+  String get adultJourneyGoalReview => 'تثبيت المحفوظ';
+
+  @override
+  String get adultJourneyGoalAzkar => 'أذكار';
+
+  @override
+  String get adultJourneyExperienceLabel => 'كيف تصف نفسك؟ (اختياري)';
+
+  @override
+  String get adultJourneyExperienceHint =>
+      'يؤثر في الصياغة والاقتراحات فقط، ولا يغيّر حفظك أو خطتك.';
+
+  @override
+  String get adultJourneyExperienceBeginner => 'مبتدئ';
+
+  @override
+  String get adultJourneyExperienceContinuing => 'مستمر';
+
+  @override
+  String get adultJourneyExperienceReturning => 'عائد بعد انقطاع';
+
+  @override
+  String get adultJourneyErrorSaveFailed =>
+      'تعذّر الحفظ. اختيارك السابق باقٍ كما هو، يمكنك المحاولة مرة أخرى.';
+
+  @override
+  String get adultJourneyErrorUnavailable =>
+      'حسابك غير جاهز الآن. حاول بعد قليل.';
+
+  @override
+  String get adultJourneyErrorUnsupported =>
+      'تعذّر تعديل التفضيلات في هذا الإصدار.';
+
+  @override
+  String get adultJourneyTodayTitle => 'كم من الوقت لديك اليوم؟';
+
+  @override
+  String get adultJourneyTodayHint =>
+      'نقترح ما يناسب وقتك. المدد تقريبية ولا تقطع أي جلسة.';
+
+  @override
+  String get adultJourneyFitTitle => 'مناسب لوقتك اليوم';
+
+  @override
+  String adultJourneyApproxMinutes(String count) {
+    return 'تقريبًا $count د';
+  }
+
+  @override
+  String get adultJourneyDurationUnavailable => 'المدة غير متاحة';
+
+  @override
+  String get adultJourneyExceedsBudget =>
+      'قد يحتاج أكثر من وقتك المختار، ويبقى ظاهرًا لأنه من أولوياتك.';
+
+  @override
+  String get adultJourneyChangeTime => 'غيّر الوقت';
+
+  @override
+  String get adultJourneyBackToUsual => 'العودة للاقتراحات المعتادة';
+
+  @override
+  String get adultJourneyResumeTitle => 'راجع جلستك';
+
+  @override
+  String get adultJourneyResumeSubtitle => 'ارجع إلى القسم الذي كنت فيه';
+
+  @override
+  String get adultJourneyNeedsPlanTitle => 'ابدأ بإعداد خطة الحفظ';
+
+  @override
+  String get adultJourneyNeedsPlanSubtitle => 'لا توجد خطة حفظ بعد.';
+
+  @override
+  String get adultJourneyNoReviewTitle => 'لا يوجد محفوظ للمراجعة بعد';
+
+  @override
+  String get adultJourneyNoReviewSubtitle => 'يمكنك البدء بإعداد خطة حفظ.';
+
+  @override
+  String get adultJourneyOpenMemorization => 'افتح مركز الحفظ';
+
+  @override
+  String get adultJourneyOpenReading => 'ابدأ القراءة';
+
+  @override
+  String get adultJourneyOpenAzkar => 'افتح الأذكار';
 }

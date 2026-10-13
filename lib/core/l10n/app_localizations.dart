@@ -14181,6 +14181,228 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'متبقي للتسميع: {count} آية'**
   String kidsHouseReviewRemaining(String count);
+
+  /// No description provided for @adultJourneyInviteTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خلّي رحلتك مناسبة لك'**
+  String get adultJourneyInviteTitle;
+
+  /// No description provided for @adultJourneyInviteBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر ما تريد التركيز عليه الآن. يمكنك تغييره أو تجاهله في أي وقت.'**
+  String get adultJourneyInviteBody;
+
+  /// No description provided for @adultJourneyInviteAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصص رحلتك'**
+  String get adultJourneyInviteAction;
+
+  /// No description provided for @adultJourneyInviteLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'لاحقًا'**
+  String get adultJourneyInviteLater;
+
+  /// No description provided for @adultJourneySettingsTileTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخصيص رحلتك'**
+  String get adultJourneySettingsTileTitle;
+
+  /// No description provided for @adultJourneySettingsTileSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الهدف والخبرة'**
+  String get adultJourneySettingsTileSubtitle;
+
+  /// No description provided for @adultJourneySetupTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصص رحلتك'**
+  String get adultJourneySetupTitle;
+
+  /// No description provided for @adultJourneySetupGoalLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما الذي تريده الآن؟'**
+  String get adultJourneySetupGoalLabel;
+
+  /// No description provided for @adultJourneyGoalReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة'**
+  String get adultJourneyGoalReading;
+
+  /// No description provided for @adultJourneyGoalMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ جديد'**
+  String get adultJourneyGoalMemorization;
+
+  /// No description provided for @adultJourneyGoalReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'تثبيت المحفوظ'**
+  String get adultJourneyGoalReview;
+
+  /// No description provided for @adultJourneyGoalAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار'**
+  String get adultJourneyGoalAzkar;
+
+  /// No description provided for @adultJourneyExperienceLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف تصف نفسك؟ (اختياري)'**
+  String get adultJourneyExperienceLabel;
+
+  /// No description provided for @adultJourneyExperienceHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يؤثر في الصياغة والاقتراحات فقط، ولا يغيّر حفظك أو خطتك.'**
+  String get adultJourneyExperienceHint;
+
+  /// No description provided for @adultJourneyExperienceBeginner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبتدئ'**
+  String get adultJourneyExperienceBeginner;
+
+  /// No description provided for @adultJourneyExperienceContinuing.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستمر'**
+  String get adultJourneyExperienceContinuing;
+
+  /// No description provided for @adultJourneyExperienceReturning.
+  ///
+  /// In ar, this message translates to:
+  /// **'عائد بعد انقطاع'**
+  String get adultJourneyExperienceReturning;
+
+  /// No description provided for @adultJourneyErrorSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الحفظ. اختيارك السابق باقٍ كما هو، يمكنك المحاولة مرة أخرى.'**
+  String get adultJourneyErrorSaveFailed;
+
+  /// No description provided for @adultJourneyErrorUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابك غير جاهز الآن. حاول بعد قليل.'**
+  String get adultJourneyErrorUnavailable;
+
+  /// No description provided for @adultJourneyErrorUnsupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تعديل التفضيلات في هذا الإصدار.'**
+  String get adultJourneyErrorUnsupported;
+
+  /// No description provided for @adultJourneyTodayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كم من الوقت لديك اليوم؟'**
+  String get adultJourneyTodayTitle;
+
+  /// No description provided for @adultJourneyTodayHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقترح ما يناسب وقتك. المدد تقريبية ولا تقطع أي جلسة.'**
+  String get adultJourneyTodayHint;
+
+  /// No description provided for @adultJourneyFitTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مناسب لوقتك اليوم'**
+  String get adultJourneyFitTitle;
+
+  /// No description provided for @adultJourneyApproxMinutes.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقريبًا {count} د'**
+  String adultJourneyApproxMinutes(String count);
+
+  /// No description provided for @adultJourneyDurationUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'المدة غير متاحة'**
+  String get adultJourneyDurationUnavailable;
+
+  /// No description provided for @adultJourneyExceedsBudget.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد يحتاج أكثر من وقتك المختار، ويبقى ظاهرًا لأنه من أولوياتك.'**
+  String get adultJourneyExceedsBudget;
+
+  /// No description provided for @adultJourneyChangeTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'غيّر الوقت'**
+  String get adultJourneyChangeTime;
+
+  /// No description provided for @adultJourneyBackToUsual.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة للاقتراحات المعتادة'**
+  String get adultJourneyBackToUsual;
+
+  /// No description provided for @adultJourneyResumeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع جلستك'**
+  String get adultJourneyResumeTitle;
+
+  /// No description provided for @adultJourneyResumeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ارجع إلى القسم الذي كنت فيه'**
+  String get adultJourneyResumeSubtitle;
+
+  /// No description provided for @adultJourneyNeedsPlanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ بإعداد خطة الحفظ'**
+  String get adultJourneyNeedsPlanTitle;
+
+  /// No description provided for @adultJourneyNeedsPlanSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد خطة حفظ بعد.'**
+  String get adultJourneyNeedsPlanSubtitle;
+
+  /// No description provided for @adultJourneyNoReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد محفوظ للمراجعة بعد'**
+  String get adultJourneyNoReviewTitle;
+
+  /// No description provided for @adultJourneyNoReviewSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك البدء بإعداد خطة حفظ.'**
+  String get adultJourneyNoReviewSubtitle;
+
+  /// No description provided for @adultJourneyOpenMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح مركز الحفظ'**
+  String get adultJourneyOpenMemorization;
+
+  /// No description provided for @adultJourneyOpenReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ القراءة'**
+  String get adultJourneyOpenReading;
+
+  /// No description provided for @adultJourneyOpenAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح الأذكار'**
+  String get adultJourneyOpenAzkar;
 }
 
 class _AppLocalizationsDelegate

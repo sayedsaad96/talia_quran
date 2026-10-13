@@ -40,6 +40,11 @@ import '../l10n/locale_cubit.dart';
 import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
+import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../../features/adult_journey/application/adult_journey_usecases.dart';
+import '../../features/adult_journey/data/adult_journey_repository_impl.dart';
+import '../../features/adult_journey/domain/repositories/adult_journey_repository.dart';
+import '../../features/adult_journey/presentation/cubits/adult_journey_cubit.dart';
 import '../memorization/kids_hifz_feature_flags.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../memorization/pending_ayah_resolver.dart';
@@ -1137,6 +1142,35 @@ Future<void> configureDependencies({bool background = false}) async {
   // Rollout switches for the kids enrichment roadmap (all off by default).
   getIt.registerLazySingleton<KidsEnrichmentFlags>(
     () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  // Adult journey package 1: owner-scoped preferences and rollout switches
+  // (all off by default). Home does not depend on these.
+  getIt.registerLazySingleton<AdultJourneyFlags>(
+    () => AdultJourneyFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<AdultJourneyRepository>(
+    () => AdultJourneyRepositoryImpl(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<LoadAdultJourney>(
+    () => LoadAdultJourney(getIt<AdultJourneyRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateAdultJourney>(
+    () => UpdateAdultJourney(getIt<AdultJourneyRepository>()),
+  );
+  getIt.registerFactory<AdultJourneyCubit>(
+    () => AdultJourneyCubit(
+      loadAdultJourney: getIt<LoadAdultJourney>(),
+      updateAdultJourney: getIt<UpdateAdultJourney>(),
+      flags: getIt<AdultJourneyFlags>(),
+      owner: getIt<RecordOwnerProvider>(),
+      accountChanges: AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ).changes,
+      now: DateTime.now,
+    ),
   );
   // Decorative world growth from milestones already stored (T10, off by
   // default).

@@ -8,6 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/features/adult_journey/adult_journey_feature_flags.dart';
+import 'package:talia_quran/features/adult_journey/application/adult_journey_usecases.dart';
+import 'package:talia_quran/features/adult_journey/data/adult_journey_repository_impl.dart';
+import 'package:talia_quran/features/adult_journey/presentation/cubits/adult_journey_cubit.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/locale_cubit.dart';
@@ -246,6 +251,38 @@ void main() {
     expect(find.text('Kids & Guardian'), findsNothing);
   });
 
+  group('adult journey settings tile', () {
+    const title = 'Personalize your journey';
+
+    testWidgets('shows for a confirmed adult profile', (tester) async {
+      await _pumpSettings(
+        tester,
+        path: MemorizationPath.adult,
+        adultJourneyEnabled: true,
+      );
+      expect(find.text(title), findsOneWidget);
+    });
+
+    testWidgets('is hidden for a child profile', (tester) async {
+      await _pumpSettings(
+        tester,
+        path: MemorizationPath.child,
+        adultJourneyEnabled: true,
+      );
+      expect(find.text(title), findsNothing);
+    });
+
+    testWidgets('is hidden when no path is chosen', (tester) async {
+      await _pumpSettings(tester, adultJourneyEnabled: true);
+      expect(find.text(title), findsNothing);
+    });
+
+    testWidgets('is hidden when the rollout flags are off', (tester) async {
+      await _pumpSettings(tester, path: MemorizationPath.adult);
+      expect(find.text(title), findsNothing);
+    });
+  });
+
   testWidgets(
     'account group contains delete account and privacy remains in about',
     (tester) async {
@@ -436,6 +473,7 @@ Future<_FakeMemorizationRepository> _pumpSettings(
   ),
   Size viewSize = const Size(1080, 1800),
   TextScaler textScaler = TextScaler.noScaling,
+  bool adultJourneyEnabled = false,
 }) async {
   tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
@@ -450,6 +488,7 @@ Future<_FakeMemorizationRepository> _pumpSettings(
     themeMode: themeMode,
     versionInfo: versionInfo,
   );
+  if (adultJourneyEnabled) _registerAdultJourney();
 
   await tester.pumpWidget(
     _SettingsTestApp(
@@ -461,6 +500,25 @@ Future<_FakeMemorizationRepository> _pumpSettings(
   );
   await tester.pumpAndSettle();
   return repo;
+}
+
+/// Adult journey with every rollout flag on, over the real local repository.
+void _registerAdultJourney() {
+  final repo = AdultJourneyRepositoryImpl(
+    getIt<SharedPreferences>(),
+    const FixedRecordOwnerProvider('local-owner'),
+  );
+  getIt.registerSingleton<AdultJourneyFlags>(AdultJourneyFlags((_) => true));
+  getIt.registerFactory<AdultJourneyCubit>(
+    () => AdultJourneyCubit(
+      loadAdultJourney: LoadAdultJourney(repo),
+      updateAdultJourney: UpdateAdultJourney(repo),
+      flags: getIt<AdultJourneyFlags>(),
+      owner: const FixedRecordOwnerProvider('local-owner'),
+      accountChanges: const Stream<void>.empty(),
+      now: DateTime.now,
+    ),
+  );
 }
 
 Future<_FakeMemorizationRepository> _registerSettingsDependencies({
