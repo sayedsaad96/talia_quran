@@ -5,6 +5,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../home/presentation/theme/home_skin.dart';
 import '../../../home/presentation/widgets/glass_panel.dart';
+import '../cubits/adult_journey_state.dart';
+import 'adult_journey_error_text.dart';
 
 /// The non-blocking invitation to personalize. «لاحقًا» hides it for the
 /// local day only; the setup stays available from Settings.
@@ -14,11 +16,15 @@ class AdultJourneySetupInviteCard extends StatelessWidget {
     required this.skin,
     required this.onPersonalize,
     required this.onLater,
+    this.error,
   });
 
   final HomeSkin skin;
   final VoidCallback onPersonalize;
   final VoidCallback onLater;
+
+  /// A failed «لاحقًا» snooze; shown here, where the action was taken.
+  final AdultJourneyErrorCode? error;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +50,11 @@ class AdultJourneySetupInviteCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          if (error case final code?)
+            AdultJourneyErrorText(
+              code,
+              key: const ValueKey('adult_invite_error'),
+            ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             alignment: WrapAlignment.end,

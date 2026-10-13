@@ -117,6 +117,27 @@ void main() {
     expect(value.lastHomeSeenAtUtc, DateTime.utc(2026, 10, 11, 8));
   });
 
+  test('changes fire only for a saved write, with the owner id', () async {
+    final seen = <String>[];
+    final sub = repo.changes.listen(seen.add);
+    addTearDown(sub.cancel);
+
+    await repo.update(expectedOwnerId: 'owner-a', command: _profile);
+    expect(seen, ['owner-a']);
+
+    // Unchanged: no write, no event.
+    await repo.update(expectedOwnerId: 'owner-a', command: _profile);
+    expect(seen, ['owner-a']);
+
+    // Failed: no event.
+    store.failWrites = true;
+    await repo.update(
+      expectedOwnerId: 'owner-a',
+      command: SetAdultToday(localDate: '2026-10-11', minutes: 5),
+    );
+    expect(seen, ['owner-a']);
+  });
+
   test('a same-day visit is unchanged and not written', () async {
     await repo.update(
       expectedOwnerId: 'owner-a',

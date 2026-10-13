@@ -11,4 +11,8 @@ abstract interface class AdultJourneyRepository {
     required String expectedOwnerId,
     required AdultJourneyUpdate command,
   });
+
+  /// The owner id after each saved change, so other screens showing this
+  /// owner's preferences (Home, Settings) re-read.
+  Stream<String> get changes;
 }

@@ -34,48 +34,12 @@ class AdultJourneySuggestionPolicy {
     final protected = <AdultJourneySuggestion>[];
     final optional = <_Ranked>[];
     for (final (index, action) in context.actions.indexed) {
-      final kind = launchKindOf(action);
-      final minutes = journeyActionMinutes(action);
-      final exceeds = budget != null && minutes > budget;
       if (action.priority.index <=
           UnifiedJourneyPriority.p3ReviewBacklog.index) {
-        protected.add(
-          AdultJourneySuggestion(
-            action: action,
-            launchKind: kind,
-            estimatedMinutes: minutes,
-            exceedsBudget: exceeds,
-            reason: kind == AdultJourneyLaunchKind.resume
-                ? AdultJourneySuggestionReason.resume
-                : AdultJourneySuggestionReason.urgent,
-            resumeDestination: kind == AdultJourneyLaunchKind.resume
-                ? resumeDestinationOf(action.route)
-                : null,
-          ),
-        );
-        continue;
+        protected.add(_protectedSuggestion(action, budget));
+      } else {
+        optional.add(_rank(index, action, budget, goal, light));
       }
-      final matches = goal != null && _matchesGoal(kind, goal);
-      final fits = budget != null && !exceeds;
-      optional.add(
-        _Ranked(
-          index: index,
-          demoted: light && kind == AdultJourneyLaunchKind.memorize,
-          matchesGoal: matches,
-          fits: budget == null || !exceeds,
-          suggestion: AdultJourneySuggestion(
-            action: action,
-            launchKind: kind,
-            estimatedMinutes: minutes,
-            exceedsBudget: exceeds,
-            reason: matches
-                ? AdultJourneySuggestionReason.goalMatch
-                : fits
-                ? AdultJourneySuggestionReason.timeFit
-                : AdultJourneySuggestionReason.ordinary,
-          ),
-        ),
-      );
     }
     optional.sort(_Ranked.compare);
 
@@ -92,6 +56,61 @@ class AdultJourneySuggestionPolicy {
       ?goalStart,
       ...optional.map((r) => r.suggestion),
     ].take(maxSuggestions).toList(growable: false);
+  }
+
+  /// p1–p3 (resume, critical alert, review backlog): kept first, in order,
+  /// even when longer than today's time.
+  AdultJourneySuggestion _protectedSuggestion(
+    UnifiedJourneyAction action,
+    int? budget,
+  ) {
+    final kind = launchKindOf(action);
+    final minutes = journeyActionMinutes(action);
+    final isResume = kind == AdultJourneyLaunchKind.resume;
+    return AdultJourneySuggestion(
+      action: action,
+      launchKind: kind,
+      estimatedMinutes: minutes,
+      exceedsBudget: budget != null && minutes > budget,
+      reason: isResume
+          ? AdultJourneySuggestionReason.resume
+          : AdultJourneySuggestionReason.urgent,
+      resumeDestination: isResume ? resumeDestinationOf(action.route) : null,
+    );
+  }
+
+  /// An optional (p4–p6) action with its ranking keys.
+  _Ranked _rank(
+    int index,
+    UnifiedJourneyAction action,
+    int? budget,
+    AdultJourneyGoal? goal,
+    bool light,
+  ) {
+    final kind = launchKindOf(action);
+    final minutes = journeyActionMinutes(action);
+    final exceeds = budget != null && minutes > budget;
+    final matches = goal != null && _matchesGoal(kind, goal);
+    // A time was chosen and this fits it: the reason shown to the user.
+    final fitsChosenTime = budget != null && !exceeds;
+    return _Ranked(
+      index: index,
+      demoted: light && kind == AdultJourneyLaunchKind.memorize,
+      matchesGoal: matches,
+      // For ranking only: with no time chosen, everything is "within time".
+      withinTime: !exceeds,
+      suggestion: AdultJourneySuggestion(
+        action: action,
+        launchKind: kind,
+        estimatedMinutes: minutes,
+        exceedsBudget: exceeds,
+        reason: matches
+            ? AdultJourneySuggestionReason.goalMatch
+            : fitsChosenTime
+            ? AdultJourneySuggestionReason.timeFit
+            : AdultJourneySuggestionReason.ordinary,
+      ),
+    );
   }
 
   /// An explained destination for the goal when no existing action covers
@@ -191,14 +210,14 @@ class _Ranked {
     required this.index,
     required this.demoted,
     required this.matchesGoal,
-    required this.fits,
+    required this.withinTime,
     required this.suggestion,
   });
 
   final int index;
   final bool demoted;
   final bool matchesGoal;
-  final bool fits;
+  final bool withinTime;
   final AdultJourneySuggestion suggestion;
 
   /// Light return first avoids new memorization, then goal, then time, then
@@ -206,7 +225,7 @@ class _Ranked {
   static int compare(_Ranked a, _Ranked b) {
     if (a.demoted != b.demoted) return a.demoted ? 1 : -1;
     if (a.matchesGoal != b.matchesGoal) return a.matchesGoal ? -1 : 1;
-    if (a.fits != b.fits) return a.fits ? -1 : 1;
+    if (a.withinTime != b.withinTime) return a.withinTime ? -1 : 1;
     return a.index.compareTo(b.index);
   }
 }

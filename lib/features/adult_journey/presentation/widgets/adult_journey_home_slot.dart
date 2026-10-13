@@ -87,9 +87,13 @@ class _SlotBody extends StatefulWidget {
 }
 
 /// Feeds each Home load to the cubit and evaluates a visit at exactly two
-/// points: after a Home load was applied, and when the app resumes. The
-/// repository writes at most one visit per local day and owner.
+/// points: after a Home load was applied, when the app resumes, and after any
+/// navigation (popping back to Home, switching back to its tab). The
+/// foreground check decides; the repository writes at most one visit per
+/// local day and owner, so repeated checks cost no writes.
 class _SlotBodyState extends State<_SlotBody> with WidgetsBindingObserver {
+  Listenable? _routerDelegate;
+
   @override
   void initState() {
     super.initState();
@@ -100,14 +104,31 @@ class _SlotBodyState extends State<_SlotBody> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final delegate = GoRouter.maybeOf(context)?.routerDelegate;
+    if (identical(delegate, _routerDelegate)) return;
+    _routerDelegate?.removeListener(_onNavigation);
+    _routerDelegate = delegate?..addListener(_onNavigation);
+  }
+
+  @override
   void dispose() {
+    _routerDelegate?.removeListener(_onNavigation);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  /// Routes settle after the frame; check Home's position then.
+  void _onNavigation() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeRecordVisit());
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _maybeRecordVisit();
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    context.read<AdultJourneyCubit>().refreshDay();
+    _maybeRecordVisit();
   }
 
   Future<void> _feed(HomeState home) async {
@@ -163,6 +184,7 @@ class _SlotBodyState extends State<_SlotBody> with WidgetsBindingObserver {
           skin: skin,
           onPersonalize: () => showAdultJourneySetupSheet(context, cubit),
           onLater: cubit.snoozeSetup,
+          error: state.errorFor(AdultJourneyErrorSource.snooze),
         ),
       if (state.todayBudgetEnabled)
         AdultTodayBudgetCard(state: state, skin: skin),

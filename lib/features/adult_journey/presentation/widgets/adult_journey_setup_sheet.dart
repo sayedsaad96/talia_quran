@@ -8,6 +8,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/adult_journey_preferences.dart';
 import '../cubits/adult_journey_cubit.dart';
 import '../cubits/adult_journey_state.dart';
+import 'adult_journey_error_text.dart';
 
 /// Opens the shared personalization sheet (Home and Settings). Nothing is
 /// written until the user saves; cancelling or dismissing saves nothing.
@@ -37,6 +38,9 @@ class _AdultJourneySetupSheetState extends State<AdultJourneySetupSheet> {
   late AdultJourneyExperience? _experience;
   bool _failedWithoutCode = false;
 
+  // A profile error from an earlier, dismissed sheet is not shown again.
+  bool _attempted = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +54,7 @@ class _AdultJourneySetupSheetState extends State<AdultJourneySetupSheet> {
     final cubit = context.read<AdultJourneyCubit>();
     final goal = _goal;
     if (goal == null || cubit.state.isSaving) return;
+    setState(() => _attempted = true);
     final ok = await cubit.saveProfile(goal, _experience);
     if (!mounted) return;
     if (ok) {
@@ -156,28 +161,15 @@ class _AdultJourneySetupSheetState extends State<AdultJourneySetupSheet> {
 
   List<Widget> _errorAndActions(BuildContext context, AdultJourneyState state) {
     final l10n = context.l10n;
-    final code =
-        state.error ??
-        (_failedWithoutCode ? AdultJourneyErrorCode.unavailable : null);
+    // Only a profile save's failure belongs in this sheet.
+    final code = !_attempted
+        ? null
+        : state.errorFor(AdultJourneyErrorSource.profile) ??
+              (_failedWithoutCode ? AdultJourneyErrorCode.unavailable : null);
     final failed = code != null;
     return [
-      if (code != null) ...[
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          switch (code) {
-            AdultJourneyErrorCode.saveFailed =>
-              l10n.adultJourneyErrorSaveFailed,
-            AdultJourneyErrorCode.unavailable =>
-              l10n.adultJourneyErrorUnavailable,
-            AdultJourneyErrorCode.unsupportedRecord =>
-              l10n.adultJourneyErrorUnsupported,
-          },
-          key: const ValueKey('adult_setup_error'),
-          style: AppTypography.bodySmall.copyWith(
-            color: Theme.of(context).colorScheme.error,
-          ),
-        ),
-      ],
+      if (code != null)
+        AdultJourneyErrorText(code, key: const ValueKey('adult_setup_error')),
       const SizedBox(height: AppSpacing.md),
       Wrap(
         alignment: WrapAlignment.end,

@@ -12,6 +12,7 @@ import '../../domain/entities/adult_journey_suggestion.dart';
 import '../adult_journey_safe_routes.dart';
 import '../cubits/adult_journey_cubit.dart';
 import '../cubits/adult_journey_state.dart';
+import 'adult_journey_error_text.dart';
 import 'adult_journey_suggestion_tile.dart';
 
 /// «مناسب لوقتك اليوم»: 5/10/20 minute chips (none selected by default) and at
@@ -88,7 +89,13 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
           ),
           const SizedBox(height: AppSpacing.sm),
           if (showChips) _chips(minutes),
-          if (widget.state.error != null) _error(widget.state.error!),
+          // Only this card's own failures (time choice, back to usual).
+          if (widget.state.errorFor(AdultJourneyErrorSource.today)
+              case final code?)
+            AdultJourneyErrorText(
+              code,
+              key: const ValueKey('adult_today_error'),
+            ),
           if (minutes != null) ..._suggestions(),
         ],
       ),
@@ -109,27 +116,6 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
             onSelected: busy ? null : (_) => _choose(m),
           ),
       ],
-    );
-  }
-
-  /// A failed save is never silent; the previous choice stays as it was.
-  Widget _error(AdultJourneyErrorCode code) {
-    final l10n = context.l10n;
-    return Padding(
-      key: const ValueKey('adult_today_error'),
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: Text(
-        switch (code) {
-          AdultJourneyErrorCode.saveFailed => l10n.adultJourneyErrorSaveFailed,
-          AdultJourneyErrorCode.unavailable =>
-            l10n.adultJourneyErrorUnavailable,
-          AdultJourneyErrorCode.unsupportedRecord =>
-            l10n.adultJourneyErrorUnsupported,
-        },
-        style: AppTypography.bodySmall.copyWith(
-          color: Theme.of(context).colorScheme.error,
-        ),
-      ),
     );
   }
 

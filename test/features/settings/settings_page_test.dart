@@ -277,6 +277,37 @@ void main() {
       expect(find.text(title), findsNothing);
     });
 
+    testWidgets('a newer-schema record explains instead of opening the sheet', (
+      tester,
+    ) async {
+      await _pumpSettings(
+        tester,
+        path: MemorizationPath.adult,
+        adultJourneyEnabled: true,
+      );
+      await getIt<SharedPreferences>().setString(
+        AdultJourneyRepositoryImpl.keyFor('local-owner'),
+        '{"schemaVersion":2}',
+      );
+
+      await tester.ensureVisible(find.text(title));
+      await tester.tap(find.text(title));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Preferences cannot be changed in this version.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('adult_setup_save')), findsNothing);
+      expect(
+        getIt<SharedPreferences>().getString(
+          AdultJourneyRepositoryImpl.keyFor('local-owner'),
+        ),
+        '{"schemaVersion":2}',
+        reason: 'the newer record is left untouched',
+      );
+    });
+
     testWidgets('is hidden when the rollout flags are off', (tester) async {
       await _pumpSettings(tester, path: MemorizationPath.adult);
       expect(find.text(title), findsNothing);

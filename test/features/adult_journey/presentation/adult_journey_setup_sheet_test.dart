@@ -150,6 +150,28 @@ void main() {
     expect(fixture.cubit.state.preferences, _saved);
   });
 
+  testWidgets('a reopened sheet does not show the earlier failure', (
+    tester,
+  ) async {
+    fixture.updateReturns(
+      const AdultJourneySaveResult.failed(AdultJourneySaveFailure.storage),
+    );
+    await openSheet(tester);
+    await tester.tap(find.byKey(const ValueKey('adult_goal_reading')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('adult_setup_save')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('adult_setup_error')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('adult_setup_cancel')));
+    await tester.pumpAndSettle();
+    expect(fixture.cubit.state.error, isNotNull, reason: 'still in state');
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('adult_setup_error')), findsNothing);
+  });
+
   testWidgets('renders Arabic labels', (tester) async {
     await openSheet(tester, locale: 'ar');
 

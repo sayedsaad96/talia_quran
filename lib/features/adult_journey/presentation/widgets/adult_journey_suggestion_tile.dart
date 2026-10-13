@@ -27,16 +27,7 @@ class AdultJourneySuggestionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final (title, subtitle, icon) = _content(context);
-    final minutes = suggestion.estimatedMinutes;
-    final estimate = minutes == null
-        ? l10n.adultJourneyDurationUnavailable
-        : l10n.adultJourneyApproxMinutes(context.numText(minutes));
-    final detail = [
-      if (subtitle.isNotEmpty) subtitle,
-      estimate,
-    ].join(context.listSeparator);
     // GlassPanel paints a decorated box above its Material, which would hide
     // the ListTile ink, so the tile brings its own transparent Material.
     return Material(
@@ -51,35 +42,44 @@ class AdultJourneySuggestionTile extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              detail,
-              style: AppTypography.bodySmall.copyWith(
-                color: skin.textSecondary,
-              ),
-            ),
-            if (suggestion.exceedsBudget) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l10n.adultJourneyExceedsBudget,
-                key: const ValueKey('adult_exceeds_note'),
-                style: AppTypography.bodySmall.copyWith(
-                  color: skin.textSecondary,
-                ),
-              ),
-              TextButton(
-                key: const ValueKey('adult_change_time'),
-                onPressed: onChangeTime,
-                child: Text(l10n.adultJourneyChangeTime),
-              ),
-            ],
-          ],
-        ),
+        subtitle: _subtitle(context, subtitle),
         trailing: onOpen == null ? null : Icon(context.forwardChevron),
         onTap: onOpen,
       ),
+    );
+  }
+
+  /// Detail line with the approximate time, plus the over-budget note and the
+  /// change-time action when the item is longer than today's choice.
+  Widget _subtitle(BuildContext context, String subtitle) {
+    final l10n = context.l10n;
+    final minutes = suggestion.estimatedMinutes;
+    final estimate = minutes == null
+        ? l10n.adultJourneyDurationUnavailable
+        : l10n.adultJourneyApproxMinutes(context.numText(minutes));
+    final detail = [
+      if (subtitle.isNotEmpty) subtitle,
+      estimate,
+    ].join(context.listSeparator);
+    final style = AppTypography.bodySmall.copyWith(color: skin.textSecondary);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(detail, style: style),
+        if (suggestion.exceedsBudget) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.adultJourneyExceedsBudget,
+            key: const ValueKey('adult_exceeds_note'),
+            style: style,
+          ),
+          TextButton(
+            key: const ValueKey('adult_change_time'),
+            onPressed: onChangeTime,
+            child: Text(l10n.adultJourneyChangeTime),
+          ),
+        ],
+      ],
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/identity/account_data_barrier.dart';
@@ -38,6 +40,12 @@ class AdultJourneyRepositoryImpl implements AdultJourneyRepository {
   final AdultJourneyPreferencesCodec _codec;
   final AdultJourneyUpdateReducer _reducer;
   bool _cacheUntrusted = false;
+
+  // Synchronous so a cubit can tell its own save (still `isSaving`) apart.
+  final _changes = StreamController<String>.broadcast(sync: true);
+
+  @override
+  Stream<String> get changes => _changes.stream;
 
   AccountDataBarrier get _barrier => AccountDataBarrier.forPreferences(_prefs);
 
@@ -126,6 +134,7 @@ class AdultJourneyRepositoryImpl implements AdultJourneyRepository {
     }
     _checkOwner(ownerId);
     lease.check();
+    _changes.add(ownerId);
     return AdultJourneySaveResult.saved(next);
   }
 

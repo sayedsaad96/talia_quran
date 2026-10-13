@@ -1192,6 +1192,7 @@ Future<void> configureDependencies({bool background = false}) async {
       ).changes,
       now: DateTime.now,
       launchResolver: getIt<AdultJourneyLaunchResolver>(),
+      preferenceChanges: getIt<AdultJourneyRepository>().changes,
     ),
   );
   // Decorative world growth from milestones already stored (T10, off by

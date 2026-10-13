@@ -207,6 +207,23 @@ void main() {
     expect(find.text(_inviteTitle), findsNothing);
   });
 
+  testWidgets('a failed «Later» shows on the invite, not the time card', (
+    tester,
+  ) async {
+    flagValues[AdultJourneyFeature.todayBudget.storageKey] = true;
+    when(() => update(any(), any())).thenAnswer(
+      (_) async =>
+          const AdultJourneySaveResult.failed(AdultJourneySaveFailure.storage),
+    );
+    await pumpSlot(tester, _home());
+    await tester.tap(find.text('Later'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('adult_invite_error')), findsOneWidget);
+    expect(find.byKey(const ValueKey('adult_today_error')), findsNothing);
+    expect(find.text(_inviteTitle), findsOneWidget, reason: 'not snoozed');
+  });
+
   testWidgets('the budget flag adds the time card under the invite', (
     tester,
   ) async {
@@ -390,10 +407,8 @@ void main() {
         await tester.pumpAndSettle();
         verifyNever(() => update('owner-a', captureAny()));
 
-        // Back on Home, the next load counts again.
+        // Popping back to Home counts by itself, with no Home reload.
         router.pop();
-        await tester.pumpAndSettle();
-        home.push(reloaded('night'));
         await tester.pumpAndSettle();
         expect(visits(), hasLength(1));
       });
@@ -408,6 +423,11 @@ void main() {
         home.push(reloaded('evening'));
         await tester.pumpAndSettle();
         verifyNever(() => update('owner-a', captureAny()));
+
+        // Switching back to the Home tab counts, with no Home reload.
+        router.go('/');
+        await tester.pumpAndSettle();
+        expect(visits(), hasLength(1));
       });
     });
 

@@ -41,6 +41,7 @@ void main() {
   late _MockUpdate update;
   late _MutableOwner owner;
   late StreamController<void> changes;
+  late StreamController<String> prefChanges;
   final now = DateTime(2026, 10, 13, 10);
 
   setUpAll(() => registerFallbackValue(const ClearAdultToday()));
@@ -50,9 +51,13 @@ void main() {
     update = _MockUpdate();
     owner = _MutableOwner('a');
     changes = StreamController<void>.broadcast(sync: true);
+    prefChanges = StreamController<String>.broadcast(sync: true);
   });
 
-  tearDown(() => changes.close());
+  tearDown(() async {
+    await changes.close();
+    await prefChanges.close();
+  });
 
   AdultJourneyCubit build({
     bool personalization = true,
@@ -77,6 +82,7 @@ void main() {
       accountChanges: changes.stream,
       now: () => now,
       launchResolver: launchResolver,
+      preferenceChanges: prefChanges.stream,
     );
     addTearDown(cubit.close);
     return cubit;
@@ -391,6 +397,188 @@ void main() {
     expect(await cubit.clearToday(), isTrue);
     expect(cubit.state.todayMinutes, isNull);
     expect(cubit.state.preferences.goal, AdultJourneyGoal.reading);
+  });
+
+  group('whole-branch review fixes', () {
+    test('a same-owner event during a save still reports the save', () async {
+      loads('a', AdultJourneyLoadResult.missing);
+      final slow = Completer<AdultJourneySaveResult>();
+      when(() => update('a', any())).thenAnswer((_) => slow.future);
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+
+      final saving = cubit.saveProfile(AdultJourneyGoal.reading, null);
+      // e.g. a Khatmah write fires the barrier for the same owner; its
+      // re-read sees the saved record.
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      changes.add(null);
+      slow.complete(const AdultJourneySaveResult.saved(_readingProfile));
+
+      expect(await saving, isTrue);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.preferences, _readingProfile);
+      expect(cubit.state.isSaving, isFalse);
+      expect(cubit.state.error, isNull);
+    });
+
+    test('a failure is tagged with the action that caused it', () async {
+      loads('a', AdultJourneyLoadResult.missing);
+      when(() => update('a', any())).thenAnswer(
+        (_) async => const AdultJourneySaveResult.failed(
+          AdultJourneySaveFailure.storage,
+        ),
+      );
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+
+      await cubit.snoozeSetup();
+      expect(
+        cubit.state.errorFor(AdultJourneyErrorSource.snooze),
+        AdultJourneyErrorCode.saveFailed,
+      );
+      expect(cubit.state.errorFor(AdultJourneyErrorSource.today), isNull);
+      expect(cubit.state.errorFor(AdultJourneyErrorSource.profile), isNull);
+
+      await cubit.setTodayMinutes(5);
+      expect(cubit.state.errorFor(AdultJourneyErrorSource.snooze), isNull);
+      expect(
+        cubit.state.errorFor(AdultJourneyErrorSource.today),
+        AdultJourneyErrorCode.saveFailed,
+      );
+    });
+
+    test('a pending error survives a Home re-read', () async {
+      loads('a', AdultJourneyLoadResult.missing);
+      when(() => update('a', any())).thenAnswer(
+        (_) async => const AdultJourneySaveResult.failed(
+          AdultJourneySaveFailure.storage,
+        ),
+      );
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+      await cubit.snoozeSetup();
+      await cubit.refreshContext(ctx('a'));
+      expect(
+        cubit.state.errorFor(AdultJourneyErrorSource.snooze),
+        AdultJourneyErrorCode.saveFailed,
+      );
+    });
+
+    test('a save from another screen (Settings) refreshes this one', () async {
+      loads('a', AdultJourneyLoadResult.missing);
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+      expect(cubit.state.setupInviteDue, isTrue);
+
+      loads('a', const AdultJourneyLoadResult.ready(_readingProfile));
+      prefChanges.add('a');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.preferences, _readingProfile);
+      expect(cubit.state.setupInviteDue, isFalse);
+    });
+
+    test(
+      'a visit finishing during a user save keeps the save in charge',
+      () async {
+        loads('a', AdultJourneyLoadResult.missing);
+        final saveDone = Completer<AdultJourneySaveResult>();
+        when(() => update('a', any())).thenAnswer((invocation) {
+          final command = invocation.positionalArguments[1];
+          if (command is RecordAdultHomeVisit) {
+            return Future.value(
+              AdultJourneySaveResult.saved(
+                AdultJourneyPreferences(lastHomeSeenAtUtc: now.toUtc()),
+              ),
+            );
+          }
+          return saveDone.future;
+        });
+        final cubit = AdultJourneyCubit(
+          loadAdultJourney: load,
+          updateAdultJourney: update,
+          flags: AdultJourneyFlags((_) => true),
+          owner: owner,
+          accountChanges: changes.stream,
+          now: () => now,
+        );
+        addTearDown(cubit.close);
+        await cubit.refreshContext(ctx('a'));
+
+        final saving = cubit.saveProfile(AdultJourneyGoal.reading, null);
+        expect(cubit.state.isSaving, isTrue);
+        await cubit.recordHomeVisit();
+        expect(cubit.state.isSaving, isTrue, reason: 'buttons stay disabled');
+
+        saveDone.complete(const AdultJourneySaveResult.saved(_readingProfile));
+        expect(await saving, isTrue);
+        expect(cubit.state.isSaving, isFalse);
+        expect(cubit.state.preferences, _readingProfile);
+      },
+    );
+
+    test('refreshDay waits while a save is in flight', () async {
+      var clock = DateTime(2026, 10, 13, 23, 59);
+      loads('a', AdultJourneyLoadResult.missing);
+      final slow = Completer<AdultJourneySaveResult>();
+      when(() => update('a', any())).thenAnswer((_) => slow.future);
+      final cubit = AdultJourneyCubit(
+        loadAdultJourney: load,
+        updateAdultJourney: update,
+        flags: AdultJourneyFlags((_) => true),
+        owner: owner,
+        accountChanges: changes.stream,
+        now: () => clock,
+      );
+      addTearDown(cubit.close);
+      await cubit.refreshContext(ctx('a'));
+
+      final saving = cubit.setTodayMinutes(5);
+      clock = DateTime(2026, 10, 14, 0, 1);
+      cubit.refreshDay();
+      expect(cubit.state.isSaving, isTrue, reason: 'buttons stay disabled');
+
+      slow.complete(const AdultJourneySaveResult.saved(_readingProfile));
+      expect(await saving, isTrue);
+      expect(cubit.state.isSaving, isFalse);
+    });
+
+    test('a change for another owner is ignored', () async {
+      loads('a', AdultJourneyLoadResult.missing);
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+      clearInteractions(load);
+      prefChanges.add('b');
+      await Future<void>.delayed(Duration.zero);
+      verifyNever(() => load(any()));
+    });
+
+    test('refreshDay drops yesterday\'s time choice', () async {
+      var clock = DateTime(2026, 10, 13, 23, 50);
+      const yesterday = AdultJourneyPreferences(
+        todayLocalDate: '2026-10-13',
+        todayMinutes: 10,
+      );
+      loads('a', const AdultJourneyLoadResult.ready(yesterday));
+      final cubit = AdultJourneyCubit(
+        loadAdultJourney: load,
+        updateAdultJourney: update,
+        flags: AdultJourneyFlags((_) => true),
+        owner: owner,
+        accountChanges: changes.stream,
+        now: () => clock,
+      );
+      addTearDown(cubit.close);
+      await cubit.refreshContext(ctx('a'));
+      expect(cubit.state.todayMinutes, 10);
+
+      cubit.refreshDay();
+      expect(cubit.state.todayMinutes, 10, reason: 'same day: no change');
+
+      clock = DateTime(2026, 10, 14, 0, 10);
+      cubit.refreshDay();
+      expect(cubit.state.localDate, '2026-10-14');
+      expect(cubit.state.todayMinutes, isNull);
+    });
   });
 
   group('resolveLaunch', () {

@@ -8,6 +8,9 @@ import '../../domain/services/adult_return_policy.dart';
 /// exceptions never reach the state.
 enum AdultJourneyErrorCode { saveFailed, unavailable, unsupportedRecord }
 
+/// Which action failed, so only that action's card shows the message.
+enum AdultJourneyErrorSource { profile, snooze, today, returnAction }
+
 /// [hidden] means "show the ordinary experience": flag off, not a confirmed
 /// adult, identity unresolved, or nothing loaded yet.
 enum AdultJourneyStatus { hidden, ready }
@@ -24,6 +27,7 @@ class AdultJourneyState extends Equatable {
     this.returnTimeActionsEnabled = false,
     this.isSaving = false,
     this.error,
+    this.errorSource,
   });
 
   static const hidden = AdultJourneyState();
@@ -48,6 +52,11 @@ class AdultJourneyState extends Equatable {
   final bool returnTimeActionsEnabled;
   final bool isSaving;
   final AdultJourneyErrorCode? error;
+  final AdultJourneyErrorSource? errorSource;
+
+  /// The error to show for [source], or null.
+  AdultJourneyErrorCode? errorFor(AdultJourneyErrorSource source) =>
+      errorSource == source ? error : null;
 
   bool get isVisible => status == AdultJourneyStatus.ready;
 
@@ -60,6 +69,7 @@ class AdultJourneyState extends Equatable {
     List<AdultJourneySuggestion>? suggestions,
     bool? isSaving,
     Object? error = _keep,
+    Object? errorSource = _keep,
   }) {
     return AdultJourneyState(
       status: status,
@@ -74,6 +84,9 @@ class AdultJourneyState extends Equatable {
       error: identical(error, _keep)
           ? this.error
           : error as AdultJourneyErrorCode?,
+      errorSource: identical(errorSource, _keep)
+          ? this.errorSource
+          : errorSource as AdultJourneyErrorSource?,
     );
   }
 
@@ -91,5 +104,6 @@ class AdultJourneyState extends Equatable {
     returnTimeActionsEnabled,
     isSaving,
     error,
+    errorSource,
   ];
 }

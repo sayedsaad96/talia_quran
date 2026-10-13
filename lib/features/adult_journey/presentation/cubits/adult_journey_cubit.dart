@@ -42,6 +42,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     AdultJourneySuggestionPolicy policy = const AdultJourneySuggestionPolicy(),
     AdultJourneyLaunchResolver? launchResolver,
     AdultReturnPolicy returnPolicy = const AdultReturnPolicy(),
+    Stream<String>? preferenceChanges,
   }) : _launchResolver = launchResolver,
        _returnPolicy = returnPolicy,
        _load = loadAdultJourney,
@@ -53,6 +54,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
        _lastOwner = owner.currentOwnerId,
        super(AdultJourneyState.hidden) {
     _accountSub = accountChanges.listen((_) => _onAccountEvent());
+    _preferencesSub = preferenceChanges?.listen(_onPreferencesChanged);
   }
 
   final LoadAdultJourney _load;
@@ -64,6 +66,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   final AdultJourneyLaunchResolver? _launchResolver;
   final AdultReturnPolicy _returnPolicy;
   late final StreamSubscription<void> _accountSub;
+  StreamSubscription<String>? _preferencesSub;
   bool _launching = false;
 
   int _epoch = 0;
@@ -100,17 +103,25 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   Future<bool> saveProfile(
     AdultJourneyGoal goal,
     AdultJourneyExperience? experience,
-  ) => _write(SaveAdultProfile(goal: goal, experience: experience));
+  ) => _write(
+    SaveAdultProfile(goal: goal, experience: experience),
+    AdultJourneyErrorSource.profile,
+  );
 
-  Future<bool> snoozeSetup() => _write(SnoozeAdultSetup(_localDate()));
+  Future<bool> snoozeSetup() =>
+      _write(SnoozeAdultSetup(_localDate()), AdultJourneyErrorSource.snooze);
 
   Future<bool> setTodayMinutes(int minutes) async {
     if (!adultJourneyMinuteChoices.contains(minutes)) return false;
     if (!_flags.isEnabled(AdultJourneyFeature.todayBudget)) return false;
-    return _write(SetAdultToday(localDate: _localDate(), minutes: minutes));
+    return _write(
+      SetAdultToday(localDate: _localDate(), minutes: minutes),
+      AdultJourneyErrorSource.today,
+    );
   }
 
-  Future<bool> clearToday() => _write(const ClearAdultToday());
+  Future<bool> clearToday() =>
+      _write(const ClearAdultToday(), AdultJourneyErrorSource.today);
 
   bool get _gentleReturnOn =>
       _flags.isEnabled(AdultJourneyFeature.gentleReturn);
@@ -146,24 +157,33 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   /// opens a session by itself.
   Future<bool> startLightReturn() {
     if (!_flags.gentleReturnTimeActionsEnabled) return Future.value(false);
-    return _write(StartAdultLightReturn(_localDate()));
+    return _write(
+      StartAdultLightReturn(_localDate()),
+      AdultJourneyErrorSource.returnAction,
+    );
   }
 
   /// «اختر وقتي»: the invitation is done for today; the time card shows its
   /// choices, and nothing is saved until a time is picked.
   Future<bool> chooseReturnTime() {
     if (!_flags.gentleReturnTimeActionsEnabled) return Future.value(false);
-    return _write(DismissAdultReturn(_localDate()));
+    return _write(
+      DismissAdultReturn(_localDate()),
+      AdultJourneyErrorSource.returnAction,
+    );
   }
 
   /// «أكمل كالمعتاد»: clears today's choice and the invitation; the profile,
   /// plans and review dates are untouched.
-  Future<bool> continueAsUsual() => _write(ContinueAdultAsUsual(_localDate()));
+  Future<bool> continueAsUsual() => _write(
+    ContinueAdultAsUsual(_localDate()),
+    AdultJourneyErrorSource.returnAction,
+  );
 
   /// The route to open for [suggestion], resolved now (Phase B). Null means
   /// "do not navigate": hidden overlay, another launch in progress, an
   /// account change during the lookup, or a child profile. Without a
-  /// resolver (tests, Settings) the Phase A safe route is used.
+  /// resolver (tests) the Phase A safe route is used.
   Future<String?> resolveLaunch(AdultJourneySuggestion suggestion) async {
     final owner = _syncOwner();
     if (!state.isVisible || _stateOwner != owner || _launching) return null;
@@ -201,17 +221,23 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
       if (!isClosed) _syncOwner();
       return;
     }
+    _lastLoadStatus = result.status;
     // A newer-schema record behaves like no feature at all (spec §5): showing
     // defaults would offer an invite that can never be saved or dismissed.
     if (result.status == AdultJourneyLoadStatus.unavailable ||
         result.status == AdultJourneyLoadStatus.unsupported) {
       return _hide();
     }
+    // A re-read keeps a pending error visible; only a new action clears it.
+    final keepError = _stateOwner == owner && state.isVisible;
     _stateOwner = owner;
-    _publish(result.preferences);
+    _publish(result.preferences, keepError: keepError);
   }
 
-  Future<bool> _write(AdultJourneyUpdate command) async {
+  Future<bool> _write(
+    AdultJourneyUpdate command,
+    AdultJourneyErrorSource source,
+  ) async {
     final owner = _syncOwner();
     if (!state.isVisible || state.isSaving || _stateOwner != owner) {
       return false;
@@ -219,7 +245,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     final epoch = _epoch;
     final visibility = _visibility;
     _seq++;
-    _emit(state.copyWith(isSaving: true, error: null));
+    _emit(state.copyWith(isSaving: true, error: null, errorSource: null));
     AdultJourneySaveResult result;
     try {
       result = await _update(owner, command);
@@ -230,8 +256,13 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
       );
     }
     if (!_isCurrent(owner, epoch)) {
-      if (!isClosed) _syncOwner();
-      return false;
+      if (isClosed) return false;
+      final sameOwner = owner == _owner.currentOwnerId;
+      _syncOwner();
+      // A same-owner barrier event (e.g. a Khatmah write) only re-reads: the
+      // record was saved and that re-read publishes it. A blocked barrier made
+      // the save itself fail. Another owner always counts as failure.
+      return sameOwner && result.isSuccess;
     }
     // A load that started while this save was in flight may have read the
     // record before the write: make it stale.
@@ -241,7 +272,13 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
       return result.isSuccess;
     }
     if (!result.isSuccess) {
-      _emit(state.copyWith(isSaving: false, error: _errorFor(result.failure)));
+      _emit(
+        state.copyWith(
+          isSaving: false,
+          error: _errorFor(result.failure),
+          errorSource: source,
+        ),
+      );
       return false;
     }
     _publish(result.preferences ?? state.preferences);
@@ -257,7 +294,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     };
   }
 
-  void _publish(AdultJourneyPreferences prefs) {
+  void _publish(AdultJourneyPreferences prefs, {bool keepError = false}) {
     final now = _now();
     final localDate = AdultLocalDate.format(now.toLocal());
     final budgetOn = _flags.isEnabled(AdultJourneyFeature.todayBudget);
@@ -287,6 +324,8 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
             !prefs.profileCompleted && !prefs.isSetupSnoozedOn(localDate),
         returnOffer: _returnOfferFor(prefs, now, onHome: context != null),
         returnTimeActionsEnabled: _flags.gentleReturnTimeActionsEnabled,
+        error: keepError ? state.error : null,
+        errorSource: keepError ? state.errorSource : null,
       ),
     );
   }
@@ -331,6 +370,29 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     _hide();
   }
 
+  /// Another screen (Settings, or a visit) saved this owner's record: re-read
+  /// so Home and Settings agree. Own saves are skipped while [isSaving]; they
+  /// publish their result themselves.
+  void _onPreferencesChanged(String ownerId) {
+    if (ownerId != _owner.currentOwnerId || _stateOwner != ownerId) return;
+    if (!state.isVisible || state.isSaving) return;
+    unawaited(_reload(ownerId));
+  }
+
+  /// Re-publishes for a new local day (Home left open past midnight) so
+  /// yesterday's time choice and suggestions are not shown.
+  void refreshDay() {
+    final owner = _syncOwner();
+    // Never mid-save: publishing would re-enable the buttons early.
+    if (!state.isVisible || state.isSaving || _stateOwner != owner) return;
+    if (state.localDate == _localDate()) return;
+    _publish(state.preferences, keepError: false);
+  }
+
+  /// Why the last read hid the overlay (Settings picks its message from it).
+  AdultJourneyLoadStatus? get lastLoadStatus => _lastLoadStatus;
+  AdultJourneyLoadStatus? _lastLoadStatus;
+
   void _onAccountEvent() {
     final owner = _owner.currentOwnerId;
     if (owner != _lastOwner) return _syncOwnerOn(owner);
@@ -360,6 +422,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   @override
   Future<void> close() async {
     await _accountSub.cancel();
+    await _preferencesSub?.cancel();
     return super.close();
   }
 }

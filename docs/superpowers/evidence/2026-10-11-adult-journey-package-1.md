@@ -70,3 +70,18 @@ Copy: «لا شيء ضاع» removed; «اختر وقتي» (MSA) to match the b
 ### Still open — owner's Android run (plan Task 6)
 
 New/existing/guest/signed-in user; Arabic/English; offline; text scale; background with recitation audio playing; midnight; process restart; account switch; simulated save error. Check that 5 minutes never stops recitation and Back returns correctly. Then enable on a device in order: `adult_journey_flag_personalization` → `adult_journey_flag_todayBudget` → `adult_journey_flag_gentleReturn`, and confirm turning all three off restores today's Home with progress intact.
+
+## Whole-branch review and fixes (2026-10-13)
+
+Base: `9709a8fa`. Scope check vs `main`: all app-code changes outside `lib/features/adult_journey` are insertion-only; no changes to assets/, supabase/, pubspec/lock, build.yaml, android/, or core memorization/sync/security/prayer delivery; `flutter gen-l10n` produces no diff.
+
+Before the fixes: `flutter analyze` clean; full `flutter test` 4068 passed, 1 failed (pre-existing `design_token_guard_test`, four kids/certificate files not in the branch).
+
+Independent whole-branch review (`opus-architecture-reviewer`): merge recommended; no P0–P2. All P3/P4 findings fixed (see the plan's "إصلاحات مراجعة الفرع كاملًا" table); a focused re-review of the fix diff found no P0–P2 and four small P4s, also fixed.
+
+Final, on the committed code:
+- `flutter analyze`: no issues.
+- Related suites (`test/features/adult_journey`, the three adult-journey integration files, settings, home, identity, account switch): 470 passed.
+- Full `flutter test`: 4080 passed, 2 failed —
+  - `design_token_guard_test`: pre-existing, files outside the branch.
+  - `memorization_tab_cubit_test` "retained tab refreshes…": timing-flaky (real 300 ms waits); passed 5/5 in isolation; `memorization_plus` is untouched by the branch. Tracked separately.

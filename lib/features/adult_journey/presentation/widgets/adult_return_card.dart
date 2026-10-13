@@ -9,6 +9,7 @@ import '../../../home/presentation/widgets/glass_panel.dart';
 import '../../domain/services/adult_return_policy.dart';
 import '../cubits/adult_journey_cubit.dart';
 import '../cubits/adult_journey_state.dart';
+import 'adult_journey_error_text.dart';
 
 /// The gentle-return invitation (spec §4.3). It only records a choice: no
 /// button navigates or opens a session, and the wording never claims the user
@@ -68,7 +69,13 @@ class _AdultReturnCardState extends State<AdultReturnCard> {
               height: 1.5,
             ),
           ),
-          if (_failed && widget.state.error != null) _error(),
+          if (_failed)
+            if (widget.state.errorFor(AdultJourneyErrorSource.returnAction)
+                case final code?)
+              AdultJourneyErrorText(
+                code,
+                key: const ValueKey('adult_return_error'),
+              ),
           const SizedBox(height: AppSpacing.md),
           _actions(),
         ],
@@ -103,26 +110,6 @@ class _AdultReturnCardState extends State<AdultReturnCard> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _error() {
-    final l10n = context.l10n;
-    return Padding(
-      key: const ValueKey('adult_return_error'),
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: Text(
-        switch (widget.state.error!) {
-          AdultJourneyErrorCode.saveFailed => l10n.adultJourneyErrorSaveFailed,
-          AdultJourneyErrorCode.unavailable =>
-            l10n.adultJourneyErrorUnavailable,
-          AdultJourneyErrorCode.unsupportedRecord =>
-            l10n.adultJourneyErrorUnsupported,
-        },
-        style: AppTypography.bodySmall.copyWith(
-          color: Theme.of(context).colorScheme.error,
-        ),
-      ),
     );
   }
 }
