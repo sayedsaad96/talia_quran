@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _migrationName = '20261013120000_kids_child_reading_support.sql';
+const _migrationName = '20261013152615_kids_child_reading_support.sql';
 const _rpc = 'compare_and_swap_child_reading_support';
 const _signature = 'public.$_rpc(uuid,bigint,text)';
 
