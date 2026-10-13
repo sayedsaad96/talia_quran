@@ -125,6 +125,68 @@ void main() {
     });
   });
 
+  test('light return: five minutes, light, invitation done — one record', () {
+    const current = AdultJourneyPreferences(
+      goal: AdultJourneyGoal.memorization,
+      profileCompleted: true,
+      returnOfferLocalDate: '2026-10-11',
+    );
+    final next = reducer.reduce(
+      current,
+      const StartAdultLightReturn('2026-10-11'),
+    )!;
+    expect(next.minutesFor('2026-10-11'), 5);
+    expect(next.lightReturnFor('2026-10-11'), isTrue);
+    expect(next.returnDismissedLocalDate, '2026-10-11');
+    expect(next.goal, AdultJourneyGoal.memorization);
+  });
+
+  test('continue as usual clears today and the invitation, keeps profile', () {
+    const current = AdultJourneyPreferences(
+      goal: AdultJourneyGoal.review,
+      experience: AdultJourneyExperience.returning,
+      profileCompleted: true,
+      todayLocalDate: '2026-10-11',
+      todayMinutes: 5,
+      lightReturnToday: true,
+    );
+    final next = reducer.reduce(
+      current,
+      const ContinueAdultAsUsual('2026-10-11'),
+    )!;
+    expect(next.todayMinutes, isNull);
+    expect(next.lightReturnToday, isFalse);
+    expect(next.returnDismissedLocalDate, '2026-10-11');
+    expect(next.goal, AdultJourneyGoal.review);
+    expect(next.experience, AdultJourneyExperience.returning);
+  });
+
+  test('becoming «عائد» clears an earlier dismissal; staying does not', () {
+    const dismissed = AdultJourneyPreferences(
+      goal: AdultJourneyGoal.reading,
+      experience: AdultJourneyExperience.continuing,
+      profileCompleted: true,
+      returnDismissedLocalDate: '2026-09-01',
+    );
+    final returning = reducer.reduce(
+      dismissed,
+      const SaveAdultProfile(
+        goal: AdultJourneyGoal.reading,
+        experience: AdultJourneyExperience.returning,
+      ),
+    )!;
+    expect(returning.returnDismissedLocalDate, isNull);
+
+    final again = reducer.reduce(
+      returning.copyWith(returnDismissedLocalDate: '2026-10-11'),
+      const SaveAdultProfile(
+        goal: AdultJourneyGoal.review,
+        experience: AdultJourneyExperience.returning,
+      ),
+    )!;
+    expect(again.returnDismissedLocalDate, '2026-10-11');
+  });
+
   test('snooze and dismissal are separate fields', () {
     final snoozed = reducer.reduce(
       AdultJourneyPreferences.empty,

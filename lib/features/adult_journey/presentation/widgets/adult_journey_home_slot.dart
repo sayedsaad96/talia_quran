@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -10,6 +13,7 @@ import '../../adult_journey_feature_flags.dart';
 import '../adult_journey_context_adapter.dart';
 import '../cubits/adult_journey_cubit.dart';
 import '../cubits/adult_journey_state.dart';
+import 'adult_return_card.dart';
 import 'adult_journey_setup_invite_card.dart';
 import 'adult_journey_setup_sheet.dart';
 import 'adult_today_budget_card.dart';
@@ -18,7 +22,11 @@ import 'adult_today_budget_card.dart';
 /// nothing (and builds no cubit) unless personalization is on, and nothing
 /// until a confirmed adult's preferences have loaded.
 class AdultJourneyHomeSlot extends StatelessWidget {
-  const AdultJourneyHomeSlot({super.key});
+  const AdultJourneyHomeSlot({super.key, this.isHomeForeground});
+
+  /// Whether Home is what the user sees right now; defaults to
+  /// [adultJourneyHomeIsForeground]. Injectable for tests.
+  final bool Function(BuildContext context)? isHomeForeground;
 
   static bool get _enabled =>
       getIt.isRegistered<AdultJourneyFlags>() &&
@@ -30,36 +38,93 @@ class AdultJourneyHomeSlot extends StatelessWidget {
     if (!_enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     return BlocProvider<AdultJourneyCubit>(
       create: (_) => getIt<AdultJourneyCubit>(),
-      child: const _SlotBody(),
+      child: _SlotBody(
+        isHomeForeground: isHomeForeground ?? adultJourneyHomeIsForeground,
+      ),
     );
   }
 }
 
+/// Home is in front of the user: the app is resumed, the shell's selected
+/// branch is Home (index 0), and Home's route is the top route — not a hidden
+/// tab of the `indexedStack` or a page pushed over it (spec §4.3).
+bool adultJourneyHomeIsForeground(BuildContext context) {
+  final lifecycle = WidgetsBinding.instance.lifecycleState;
+  if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+    return false;
+  }
+  final shell = StatefulNavigationShell.maybeOf(context);
+  if (shell != null && shell.currentIndex != 0) return false;
+  return _everyEnclosingRouteIsCurrent(context);
+}
+
+/// Pages opened from Home (reader, sessions, sheets, dialogs) are pushed on
+/// the ROOT navigator, above the shell, so Home's own branch route stays
+/// "current" under them. Walk up through every enclosing navigator: Home is
+/// in front only if each route on the way is the top of its navigator.
+bool _everyEnclosingRouteIsCurrent(BuildContext context) {
+  BuildContext? current = context;
+  while (current != null) {
+    final route = ModalRoute.of(current);
+    if (route == null) return true;
+    if (!route.isCurrent) return false;
+    final navigatorContext = route.navigator?.context;
+    if (navigatorContext == null || identical(navigatorContext, current)) {
+      return true;
+    }
+    current = navigatorContext;
+  }
+  return true;
+}
+
 class _SlotBody extends StatefulWidget {
-  const _SlotBody();
+  const _SlotBody({required this.isHomeForeground});
+
+  final bool Function(BuildContext context) isHomeForeground;
 
   @override
   State<_SlotBody> createState() => _SlotBodyState();
 }
 
-class _SlotBodyState extends State<_SlotBody> {
+/// Feeds each Home load to the cubit and evaluates a visit at exactly two
+/// points: after a Home load was applied, and when the app resumes. The
+/// repository writes at most one visit per local day and owner.
+class _SlotBodyState extends State<_SlotBody> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _feed(context.read<HomeCubit>().state);
     });
   }
 
-  void _feed(HomeState home) {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _maybeRecordVisit();
+  }
+
+  Future<void> _feed(HomeState home) async {
     if (home is! HomeLoaded) return;
-    context.read<AdultJourneyCubit>().refreshContext(
+    await context.read<AdultJourneyCubit>().refreshContext(
       buildAdultJourneyContext(
         state: home,
         ownerId: getIt<RecordOwnerProvider>().currentOwnerId,
         now: DateTime.now(),
       ),
     );
+    _maybeRecordVisit();
+  }
+
+  void _maybeRecordVisit() {
+    if (!mounted || !widget.isHomeForeground(context)) return;
+    unawaited(context.read<AdultJourneyCubit>().recordHomeVisit());
   }
 
   @override
@@ -91,9 +156,18 @@ class _SlotBodyState extends State<_SlotBody> {
     final cubit = context.read<AdultJourneyCubit>();
     // One welcome card: Home's own first-run card wins over the invite.
     final showInvite = state.setupInviteDue && !home.isFirstRun;
-    if (!showInvite && !state.todayBudgetEnabled) {
-      return const SizedBox.shrink();
-    }
+    final cards = <Widget>[
+      if (state.returnOffer != null) AdultReturnCard(state: state, skin: skin),
+      if (showInvite)
+        AdultJourneySetupInviteCard(
+          skin: skin,
+          onPersonalize: () => showAdultJourneySetupSheet(context, cubit),
+          onLater: cubit.snoozeSetup,
+        ),
+      if (state.todayBudgetEnabled)
+        AdultTodayBudgetCard(state: state, skin: skin),
+    ];
+    if (cards.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
@@ -104,16 +178,10 @@ class _SlotBodyState extends State<_SlotBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showInvite)
-            AdultJourneySetupInviteCard(
-              skin: skin,
-              onPersonalize: () => showAdultJourneySetupSheet(context, cubit),
-              onLater: cubit.snoozeSetup,
-            ),
-          if (showInvite && state.todayBudgetEnabled)
-            const SizedBox(height: AppSpacing.md),
-          if (state.todayBudgetEnabled)
-            AdultTodayBudgetCard(state: state, skin: skin),
+          for (final (i, card) in cards.indexed) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.md),
+            card,
+          ],
         ],
       ),
     );

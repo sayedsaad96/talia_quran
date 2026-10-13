@@ -13,6 +13,7 @@ import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_context.dart';
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_preferences.dart';
 import 'package:talia_quran/features/adult_journey/domain/entities/adult_journey_update.dart';
+import 'package:talia_quran/features/adult_journey/domain/services/adult_return_policy.dart';
 import 'package:talia_quran/features/adult_journey/presentation/cubits/adult_journey_cubit.dart';
 import 'package:talia_quran/features/adult_journey/presentation/cubits/adult_journey_state.dart';
 
@@ -56,6 +57,7 @@ void main() {
   AdultJourneyCubit build({
     bool personalization = true,
     bool budget = true,
+    bool gentle = false,
     AdultJourneyLaunchResolver? launchResolver,
   }) {
     final flags = AdultJourneyFlags(
@@ -63,6 +65,8 @@ void main() {
           ? personalization
           : key == AdultJourneyFeature.todayBudget.storageKey
           ? budget
+          : key == AdultJourneyFeature.gentleReturn.storageKey
+          ? gentle
           : false,
     );
     final cubit = AdultJourneyCubit(
@@ -466,6 +470,232 @@ void main() {
       await cubit.refreshContext(ctx('a'));
       expect(await cubit.resolveLaunch(review), AppRoutes.memorizationHub);
     });
+  });
+
+  group('gentle return', () {
+    // `now` is 2026-10-13 10:00 local; nine days earlier is an absence.
+    final nineDaysAgo = DateTime(2026, 10, 4, 10).toUtc();
+    const today = '2026-10-13';
+
+    AdultJourneyPreferences away({
+      AdultJourneyExperience? experience,
+      String? dismissed,
+    }) => AdultJourneyPreferences(
+      goal: AdultJourneyGoal.review,
+      experience: experience,
+      profileCompleted: true,
+      lastHomeSeenAtUtc: nineDaysAgo,
+      returnDismissedLocalDate: dismissed,
+    );
+
+    test('flag off: no offer and no visit write', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      final cubit = build();
+      await cubit.refreshContext(ctx('a'));
+      expect(cubit.state.returnOffer, isNull);
+      await cubit.recordHomeVisit();
+      verifyNever(() => update(any(), any()));
+    });
+
+    test('after seven or more days the absence offer shows on Home', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+      expect(cubit.state.returnOffer?.reason, AdultReturnReason.absence);
+      expect(cubit.state.returnOffer?.eligibleLocalDate, today);
+    });
+
+    test('Settings (no Home context) never shows or records it', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      final cubit = build(gentle: true);
+      await cubit.loadPreferences();
+      expect(cubit.state.returnOffer, isNull);
+      await cubit.recordHomeVisit();
+      verifyNever(() => update(any(), any()));
+    });
+
+    test(
+      'a visit writes RecordAdultHomeVisit with the current instant',
+      () async {
+        loads('a', AdultJourneyLoadResult.ready(away()));
+        when(() => update('a', any())).thenAnswer(
+          (_) async => AdultJourneySaveResult.saved(
+            away().copyWith(
+              lastHomeSeenAtUtc: now.toUtc(),
+              returnOfferLocalDate: today,
+            ),
+          ),
+        );
+        final cubit = build(gentle: true);
+        await cubit.refreshContext(ctx('a'));
+        await cubit.recordHomeVisit();
+
+        final command =
+            verify(() => update('a', captureAny())).captured.single
+                as RecordAdultHomeVisit;
+        expect(command.nowUtc, now.toUtc());
+        expect(
+          cubit.state.returnOffer?.reason,
+          AdultReturnReason.absence,
+          reason: 'the stored offer keeps it for the rest of the day',
+        );
+        expect(cubit.state.isSaving, isFalse, reason: 'visits are silent');
+      },
+    );
+
+    test('a same-day visit (unchanged) emits nothing', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      when(
+        () => update('a', any()),
+      ).thenAnswer((_) async => AdultJourneySaveResult.unchanged(away()));
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+      final emitted = <AdultJourneyState>[];
+      final sub = cubit.stream.listen(emitted.add);
+      await cubit.recordHomeVisit();
+      await sub.cancel();
+      expect(emitted, isEmpty);
+    });
+
+    test('a visit finishing after a non-adult refresh shows nothing', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      final slow = Completer<AdultJourneySaveResult>();
+      when(() => update('a', any())).thenAnswer((_) => slow.future);
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+      final visit = cubit.recordHomeVisit();
+      await cubit.refreshContext(ctx('a', isAdult: false));
+      slow.complete(AdultJourneySaveResult.saved(away()));
+      await visit;
+      expect(cubit.state.isVisible, isFalse);
+    });
+
+    test('a visit for A finishing after a switch to B shows nothing', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      final slow = Completer<AdultJourneySaveResult>();
+      when(() => update('a', any())).thenAnswer((_) => slow.future);
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+
+      final visit = cubit.recordHomeVisit();
+      owner.currentOwnerId = 'b';
+      changes.add(null);
+      slow.complete(
+        AdultJourneySaveResult.saved(
+          away().copyWith(returnOfferLocalDate: today),
+        ),
+      );
+      await visit;
+      expect(cubit.state, AdultJourneyState.hidden);
+      verifyNever(() => update('b', any()));
+    });
+
+    test('becoming «عائد» after an old dismissal shows the options', () async {
+      final dismissedLongAgo = AdultJourneyPreferences(
+        goal: AdultJourneyGoal.reading,
+        experience: AdultJourneyExperience.continuing,
+        profileCompleted: true,
+        lastHomeSeenAtUtc: now.toUtc(),
+        returnDismissedLocalDate: '2026-09-01',
+      );
+      loads('a', AdultJourneyLoadResult.ready(dismissedLongAgo));
+      when(() => update('a', any())).thenAnswer(
+        (_) async => AdultJourneySaveResult.saved(
+          AdultJourneyPreferences(
+            goal: AdultJourneyGoal.reading,
+            experience: AdultJourneyExperience.returning,
+            profileCompleted: true,
+            lastHomeSeenAtUtc: now.toUtc(),
+          ),
+        ),
+      );
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+      expect(cubit.state.returnOffer, isNull);
+
+      await cubit.saveProfile(
+        AdultJourneyGoal.reading,
+        AdultJourneyExperience.returning,
+      );
+      expect(cubit.state.returnOffer?.reason, AdultReturnReason.selfDescribed);
+    });
+
+    test('light start writes one command and needs the budget flag', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      when(() => update('a', any())).thenAnswer(
+        (_) async => AdultJourneySaveResult.saved(
+          away(dismissed: today).copyWith(
+            todayLocalDate: today,
+            todayMinutes: 5,
+            lightReturnToday: true,
+          ),
+        ),
+      );
+      final noBudget = build(gentle: true, budget: false);
+      await noBudget.refreshContext(ctx('a'));
+      expect(noBudget.state.returnTimeActionsEnabled, isFalse);
+      expect(await noBudget.startLightReturn(), isFalse);
+      expect(await noBudget.chooseReturnTime(), isFalse);
+      verifyNever(() => update(any(), any()));
+
+      final cubit = build(gentle: true);
+      await cubit.refreshContext(ctx('a'));
+      expect(await cubit.startLightReturn(), isTrue);
+      final command =
+          verify(() => update('a', captureAny())).captured.single
+              as StartAdultLightReturn;
+      expect(command.localDate, today);
+      expect(cubit.state.returnOffer, isNull);
+      expect(cubit.state.todayMinutes, 5);
+    });
+
+    test('continue as usual works without the budget flag', () async {
+      loads('a', AdultJourneyLoadResult.ready(away()));
+      when(() => update('a', any())).thenAnswer(
+        (_) async => AdultJourneySaveResult.saved(away(dismissed: today)),
+      );
+      final cubit = build(gentle: true, budget: false);
+      await cubit.refreshContext(ctx('a'));
+      expect(await cubit.continueAsUsual(), isTrue);
+      expect(
+        verify(() => update('a', captureAny())).captured.single,
+        isA<ContinueAdultAsUsual>(),
+      );
+      expect(cubit.state.returnOffer, isNull);
+      expect(cubit.state.preferences.goal, AdultJourneyGoal.review);
+    });
+
+    test(
+      'self-described returning shows options until the first dismissal',
+      () async {
+        final recent = AdultJourneyPreferences(
+          goal: AdultJourneyGoal.reading,
+          experience: AdultJourneyExperience.returning,
+          profileCompleted: true,
+          lastHomeSeenAtUtc: now.toUtc(),
+        );
+        loads('a', AdultJourneyLoadResult.ready(recent));
+        final cubit = build(gentle: true);
+        await cubit.refreshContext(ctx('a'));
+        expect(
+          cubit.state.returnOffer?.reason,
+          AdultReturnReason.selfDescribed,
+        );
+
+        loads(
+          'a',
+          AdultJourneyLoadResult.ready(
+            recent.copyWith(returnDismissedLocalDate: '2026-10-10'),
+          ),
+        );
+        await cubit.refreshContext(ctx('a'));
+        expect(
+          cubit.state.returnOffer,
+          isNull,
+          reason: 'no daily repeat once dismissed',
+        );
+      },
+    );
   });
 
   test('no emission after close', () async {

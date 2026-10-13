@@ -8521,4 +8521,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adultJourneyOpenAzkar => 'Open Azkar';
+
+  @override
+  String get adultJourneyReturnTitleAbsence =>
+      'Welcome back. Shall we start with a light step?';
+
+  @override
+  String get adultJourneyReturnTitleSelf => 'Shall we start with a light step?';
+
+  @override
+  String get adultJourneyReturnBody =>
+      'Your plans and reviews stay exactly as they are. Choose what suits you today.';
+
+  @override
+  String get adultJourneyReturnLight => 'Light start today';
+
+  @override
+  String get adultJourneyReturnChooseTime => 'Choose my time';
+
+  @override
+  String get adultJourneyReturnContinue => 'Continue as usual';
 }

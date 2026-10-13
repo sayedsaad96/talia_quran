@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
@@ -120,6 +123,7 @@ void main() {
     HomeState home, {
     Brightness brightness = Brightness.light,
     String locale = 'en',
+    bool Function(BuildContext)? foreground,
   }) async {
     final cubit = _FakeHomeCubit(home);
     addTearDown(cubit.close);
@@ -129,7 +133,9 @@ void main() {
         brightness: brightness,
         home: BlocProvider<HomeCubit>.value(
           value: cubit,
-          child: const CustomScrollView(slivers: [AdultJourneyHomeSlot()]),
+          child: CustomScrollView(
+            slivers: [AdultJourneyHomeSlot(isHomeForeground: foreground)],
+          ),
         ),
       ),
     );
@@ -208,6 +214,233 @@ void main() {
     await pumpSlot(tester, _home());
     expect(find.text(_inviteTitle), findsOneWidget);
     expect(find.text(_todayTitle), findsOneWidget);
+  });
+
+  group('home visits and the return card', () {
+    const welcomeBack = 'Welcome back. Shall we start with a light step?';
+
+    setUp(() {
+      flagValues[AdultJourneyFeature.gentleReturn.storageKey] = true;
+      when(() => update(any(), any())).thenAnswer(
+        (_) async =>
+            const AdultJourneySaveResult.unchanged(AdultJourneyPreferences()),
+      );
+    });
+
+    List<RecordAdultHomeVisit> visits() => verify(
+      () => update('owner-a', captureAny()),
+    ).captured.whereType<RecordAdultHomeVisit>().toList();
+
+    testWidgets('a foreground adult Home load records one visit', (
+      tester,
+    ) async {
+      await pumpSlot(tester, _home(), foreground: (_) => true);
+      expect(visits(), hasLength(1));
+    });
+
+    testWidgets('a hidden tab or background Home records nothing', (
+      tester,
+    ) async {
+      await pumpSlot(tester, _home(), foreground: (_) => false);
+      verifyNever(() => update(any(), any()));
+    });
+
+    testWidgets('a child or unconfirmed adult records nothing', (tester) async {
+      await pumpSlot(
+        tester,
+        _home(track: MemorizationTrack.kids, isKids: true),
+        foreground: (_) => true,
+      );
+      await pumpSlot(tester, _home(track: null), foreground: (_) => true);
+      verifyNever(() => update(any(), any()));
+    });
+
+    testWidgets('gentle return off: no visit is recorded', (tester) async {
+      flagValues[AdultJourneyFeature.gentleReturn.storageKey] = false;
+      await pumpSlot(tester, _home(), foreground: (_) => true);
+      verifyNever(() => update(any(), any()));
+    });
+
+    testWidgets('returning to the app records a visit when Home is in front', (
+      tester,
+    ) async {
+      var inFront = false;
+      await pumpSlot(tester, _home(), foreground: (_) => inFront);
+      verifyNever(() => update(any(), any()));
+
+      inFront = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(visits(), hasLength(1));
+    });
+
+    testWidgets('default check: a page pushed over Home blocks the visit', (
+      tester,
+    ) async {
+      final home = await pumpSlot(tester, _home());
+      expect(visits(), hasLength(1), reason: 'Home itself is in front');
+
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(builder: (_) => const Text('reader')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      home.push(_home(firstRun: false));
+      home.push(
+        HomeLoaded(
+          progress: _progress,
+          greeting: 'evening',
+          activityStartDate: DateTime.utc(2026, 1, 1),
+          selectedTrack: MemorizationTrack.adults,
+          heroAction: _explore,
+          alternativeActions: const [_explore],
+        ),
+      );
+      await tester.pumpAndSettle();
+      verifyNever(() => update('owner-a', captureAny()));
+    });
+
+    group('production router shape', () {
+      // Home is branch 0 of a StatefulShellRoute.indexedStack; pages opened
+      // from Home are top-level routes on the ROOT navigator (app_router).
+      late GoRouter router;
+      late _FakeHomeCubit home;
+
+      Future<void> pumpRouter(WidgetTester tester) async {
+        home = _FakeHomeCubit(_home());
+        addTearDown(home.close);
+        final rootKey = GlobalKey<NavigatorState>();
+        router = GoRouter(
+          navigatorKey: rootKey,
+          initialLocation: '/',
+          routes: [
+            StatefulShellRoute.indexedStack(
+              builder: (_, _, shell) => Scaffold(body: shell),
+              branches: [
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/',
+                      builder: (_, _) => const CustomScrollView(
+                        slivers: [AdultJourneyHomeSlot()],
+                      ),
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: [
+                    GoRoute(
+                      path: '/other',
+                      builder: (_, _) => const Text('other tab'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/reader',
+              parentNavigatorKey: rootKey,
+              builder: (_, _) => const Scaffold(body: Text('reader')),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+        await tester.pumpWidget(
+          BlocProvider<HomeCubit>.value(
+            value: home,
+            child: adultTestRouterApp(router: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      HomeLoaded reloaded(String greeting) => HomeLoaded(
+        progress: _progress,
+        greeting: greeting,
+        activityStartDate: DateTime.utc(2026, 1, 1),
+        selectedTrack: MemorizationTrack.adults,
+        heroAction: _explore,
+        alternativeActions: const [_explore],
+      );
+
+      testWidgets('Home in front of the shell records a visit', (tester) async {
+        await pumpRouter(tester);
+        expect(visits(), hasLength(1));
+      });
+
+      testWidgets('a root page over Home blocks reloads and resumes', (
+        tester,
+      ) async {
+        await pumpRouter(tester);
+        expect(visits(), hasLength(1));
+
+        unawaited(router.push('/reader'));
+        await tester.pumpAndSettle();
+        expect(find.text('reader'), findsOneWidget);
+
+        home.push(reloaded('evening'));
+        await tester.pumpAndSettle();
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+        verifyNever(() => update('owner-a', captureAny()));
+
+        // Back on Home, the next load counts again.
+        router.pop();
+        await tester.pumpAndSettle();
+        home.push(reloaded('night'));
+        await tester.pumpAndSettle();
+        expect(visits(), hasLength(1));
+      });
+
+      testWidgets('another tab selected blocks the visit', (tester) async {
+        await pumpRouter(tester);
+        expect(visits(), hasLength(1));
+
+        router.go('/other');
+        await tester.pumpAndSettle();
+        expect(find.text('other tab'), findsOneWidget);
+        home.push(reloaded('evening'));
+        await tester.pumpAndSettle();
+        verifyNever(() => update('owner-a', captureAny()));
+      });
+    });
+
+    testWidgets('a stored offer for today shows the return card first', (
+      tester,
+    ) async {
+      when(() => load(any())).thenAnswer(
+        (_) async => const AdultJourneyLoadResult.ready(
+          AdultJourneyPreferences(
+            goal: AdultJourneyGoal.reading,
+            profileCompleted: true,
+            returnOfferLocalDate: adultTestToday,
+          ),
+        ),
+      );
+      await pumpSlot(tester, _home(), foreground: (_) => false);
+      expect(find.text(welcomeBack), findsOneWidget);
+      expect(find.text(_inviteTitle), findsNothing, reason: 'profile done');
+    });
+
+    testWidgets('the slot never navigates by itself', (tester) async {
+      when(() => load(any())).thenAnswer(
+        (_) async => const AdultJourneyLoadResult.ready(
+          AdultJourneyPreferences(returnOfferLocalDate: adultTestToday),
+        ),
+      );
+      await pumpSlot(tester, _home(), foreground: (_) => true);
+      expect(find.byType(CustomScrollView), findsOneWidget);
+      expect(
+        tester.state<NavigatorState>(find.byType(Navigator)).canPop(),
+        isFalse,
+      );
+    });
   });
 
   group('dark mode and accessibility', () {

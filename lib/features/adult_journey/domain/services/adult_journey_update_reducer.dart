@@ -21,6 +21,11 @@ class AdultJourneyUpdateReducer {
         goal: goal,
         experience: experience,
         profileCompleted: true,
+        // Newly describing oneself as «عائد» shows the options at once
+        // (spec §4.3), even if an earlier invitation was dismissed.
+        returnDismissedLocalDate: _becomesReturning(current, experience)
+            ? null
+            : current.returnDismissedLocalDate,
       ),
       SnoozeAdultSetup(:final localDate) => current.copyWith(
         setupSnoozedLocalDate: localDate,
@@ -40,10 +45,29 @@ class AdultJourneyUpdateReducer {
       DismissAdultReturn(:final localDate) => current.copyWith(
         returnDismissedLocalDate: localDate,
       ),
+      StartAdultLightReturn(:final localDate) => current.copyWith(
+        todayLocalDate: localDate,
+        todayMinutes: 5,
+        lightReturnToday: true,
+        returnDismissedLocalDate: localDate,
+      ),
+      ContinueAdultAsUsual(:final localDate) => current.copyWith(
+        todayLocalDate: null,
+        todayMinutes: null,
+        lightReturnToday: false,
+        returnDismissedLocalDate: localDate,
+      ),
     };
     if (next == null || next == current) return null;
     return next;
   }
+
+  static bool _becomesReturning(
+    AdultJourneyPreferences current,
+    AdultJourneyExperience? next,
+  ) =>
+      next == AdultJourneyExperience.returning &&
+      current.experience != AdultJourneyExperience.returning;
 
   /// At most one write per local day: a later visit on the same day keeps the
   /// stored instant. The offer is decided from the previous visit before it is

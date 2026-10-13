@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/adult_journey_preferences.dart';
 import '../../domain/entities/adult_journey_suggestion.dart';
+import '../../domain/services/adult_return_policy.dart';
 
 /// Why the last save failed. The UI maps it to a localized message; raw
 /// exceptions never reach the state.
@@ -19,6 +20,8 @@ class AdultJourneyState extends Equatable {
     this.localDate,
     this.todayBudgetEnabled = false,
     this.setupInviteDue = false,
+    this.returnOffer,
+    this.returnTimeActionsEnabled = false,
     this.isSaving = false,
     this.error,
   });
@@ -36,6 +39,13 @@ class AdultJourneyState extends Equatable {
   /// Personalization is on, no profile yet, and not snoozed today. Home still
   /// hides the invite while its own first-run card is visible.
   final bool setupInviteDue;
+
+  /// The gentle-return invitation to show today, or null (flag off, not due,
+  /// or dismissed today).
+  final AdultReturnDecision? returnOffer;
+
+  /// «بداية خفيفة» and «اختر وقتي» need the today-budget flag as well.
+  final bool returnTimeActionsEnabled;
   final bool isSaving;
   final AdultJourneyErrorCode? error;
 
@@ -58,6 +68,8 @@ class AdultJourneyState extends Equatable {
       localDate: localDate,
       todayBudgetEnabled: todayBudgetEnabled,
       setupInviteDue: setupInviteDue,
+      returnOffer: returnOffer,
+      returnTimeActionsEnabled: returnTimeActionsEnabled,
       isSaving: isSaving ?? this.isSaving,
       error: identical(error, _keep)
           ? this.error
@@ -75,6 +87,8 @@ class AdultJourneyState extends Equatable {
     localDate,
     todayBudgetEnabled,
     setupInviteDue,
+    returnOffer,
+    returnTimeActionsEnabled,
     isSaving,
     error,
   ];

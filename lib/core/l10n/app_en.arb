@@ -3519,4 +3519,10 @@
   ,"adultJourneyOpenMemorization": "Open the memorization hub"
   ,"adultJourneyOpenReading": "Start reading"
   ,"adultJourneyOpenAzkar": "Open Azkar"
+  ,"adultJourneyReturnTitleAbsence": "Welcome back. Shall we start with a light step?"
+  ,"adultJourneyReturnTitleSelf": "Shall we start with a light step?"
+  ,"adultJourneyReturnBody": "Your plans and reviews stay exactly as they are. Choose what suits you today."
+  ,"adultJourneyReturnLight": "Light start today"
+  ,"adultJourneyReturnChooseTime": "Choose my time"
+  ,"adultJourneyReturnContinue": "Continue as usual"
 }

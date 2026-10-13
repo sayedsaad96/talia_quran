@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
@@ -97,5 +98,20 @@ Widget adultTestApp({
       child: child!,
     ),
     home: Scaffold(body: home),
+  );
+}
+
+/// [adultTestApp] for a [GoRouter] (shell and root-navigator tests).
+Widget adultTestRouterApp({required GoRouter router, String locale = 'en'}) {
+  return MaterialApp.router(
+    locale: Locale(locale),
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: AppLocalizations.supportedLocales,
+    routerConfig: router,
   );
 }

@@ -52,3 +52,21 @@ Rules: memorize → `todayPlanLocation` and review → `reviewQuizLocation`, bot
 - `test/features/adult_journey/presentation/adult_journey_home_slot_test.dart`: 11 tests, including a non-vacuous accessibility matrix.
 - Final: `flutter analyze` clean; `flutter test test/features/adult_journey test/features/home test/features/settings test/core/identity test/core/journey test/integration/account_switch_isolation_test.dart test/features/memorization_plus/presentation/navigation test/features/memorization_plus/domain/navigation`: 444 passed.
 - Still open: device run (owner, Phase C matrix).
+
+## Phase C (2026-10-13)
+
+Base: `6540d91b` (Phase B). Gentle return: `StartAdultLightReturn`/`ContinueAdultAsUsual` commands; cubit `recordHomeVisit`/`startLightReturn`/`chooseReturnTime`/`continueAsUsual` and `returnOffer` state; visit binding in `AdultJourneyHomeSlot` (Home load + app resume, foreground = resumed + shell branch 0 + every enclosing route current); `AdultReturnCard` (Sonnet implementer) + 6 strings; Task 6 integration tests.
+
+Review (`opus-architecture-reviewer`, static): one P2 + three P3, all fixed:
+1. P2 — a page on the root navigator over Home still counted as Home in front → walk every enclosing route. A real `GoRouter` + `StatefulShellRoute.indexedStack` test fails with the old check and passes with the fix.
+2. P3 — choosing «عائد» after an old dismissal showed nothing → the reducer clears the dismissal on that transition; reducer + cubit tests.
+3. P3 — isolation assertions could pass vacuously → every write asserted saved; the held write is proven in flight.
+4. P3 — Task 6 coverage → recorded as deliberate deviations in the plan.
+Copy: «لا شيء ضاع» removed; «اختر وقتي» (MSA) to match the body.
+
+- Full suite before the fixes: 4062 passed, 1 failed (`design_token_guard_test`, the same four pre-existing kids/certificate files).
+- After the fixes: `flutter analyze` clean; `flutter test test/features/adult_journey test/integration/adult_journey_non_mutation_test.dart test/integration/adult_journey_account_isolation_test.dart test/features/home test/features/settings test/core/identity test/integration/account_switch_isolation_test.dart`: 457 passed.
+
+### Still open — owner's Android run (plan Task 6)
+
+New/existing/guest/signed-in user; Arabic/English; offline; text scale; background with recitation audio playing; midnight; process restart; account switch; simulated save error. Check that 5 minutes never stops recitation and Back returns correctly. Then enable on a device in order: `adult_journey_flag_personalization` → `adult_journey_flag_todayBudget` → `adult_journey_flag_gentleReturn`, and confirm turning all three off restores today's Home with progress intact.

@@ -13,6 +13,7 @@ import '../../domain/entities/adult_journey_suggestion.dart';
 import '../../domain/entities/adult_journey_update.dart';
 import '../../domain/services/adult_journey_suggestion_policy.dart';
 import '../../domain/services/adult_local_date.dart';
+import '../../domain/services/adult_return_policy.dart';
 import '../adult_journey_safe_routes.dart';
 import 'adult_journey_state.dart';
 
@@ -40,7 +41,9 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     required DateTime Function() now,
     AdultJourneySuggestionPolicy policy = const AdultJourneySuggestionPolicy(),
     AdultJourneyLaunchResolver? launchResolver,
+    AdultReturnPolicy returnPolicy = const AdultReturnPolicy(),
   }) : _launchResolver = launchResolver,
+       _returnPolicy = returnPolicy,
        _load = loadAdultJourney,
        _update = updateAdultJourney,
        _flags = flags,
@@ -59,6 +62,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   final DateTime Function() _now;
   final AdultJourneySuggestionPolicy _policy;
   final AdultJourneyLaunchResolver? _launchResolver;
+  final AdultReturnPolicy _returnPolicy;
   late final StreamSubscription<void> _accountSub;
   bool _launching = false;
 
@@ -107,6 +111,54 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   }
 
   Future<bool> clearToday() => _write(const ClearAdultToday());
+
+  bool get _gentleReturnOn =>
+      _flags.isEnabled(AdultJourneyFeature.gentleReturn);
+
+  /// Records an eligible adult Home visit (spec §4.3). The caller has checked
+  /// that Home is in the foreground; this checks the flag, a loaded confirmed
+  /// adult on Home, and the owner. Silent: a failure shows nothing, and the
+  /// repository writes at most once per local day.
+  Future<void> recordHomeVisit() async {
+    if (!_gentleReturnOn) return;
+    final owner = _syncOwner();
+    if (!state.isVisible || _stateOwner != owner || _context == null) return;
+    final epoch = _epoch;
+    final visibility = _visibility;
+    AdultJourneySaveResult result;
+    try {
+      result = await _update(owner, RecordAdultHomeVisit(_now().toUtc()));
+    } catch (error, stack) {
+      TaliaLogger.w('Adult journey visit not recorded', error, stack);
+      return;
+    }
+    if (!_isCurrent(owner, epoch)) {
+      if (!isClosed) _syncOwner();
+      return;
+    }
+    if (visibility != _visibility || _stateOwner != owner) return;
+    if (!result.isSuccess || !result.changed || state.isSaving) return;
+    _seq++;
+    _publish(result.preferences!);
+  }
+
+  /// «بداية خفيفة اليوم»: five minutes preferring existing review. Never
+  /// opens a session by itself.
+  Future<bool> startLightReturn() {
+    if (!_flags.gentleReturnTimeActionsEnabled) return Future.value(false);
+    return _write(StartAdultLightReturn(_localDate()));
+  }
+
+  /// «اختر وقتي»: the invitation is done for today; the time card shows its
+  /// choices, and nothing is saved until a time is picked.
+  Future<bool> chooseReturnTime() {
+    if (!_flags.gentleReturnTimeActionsEnabled) return Future.value(false);
+    return _write(DismissAdultReturn(_localDate()));
+  }
+
+  /// «أكمل كالمعتاد»: clears today's choice and the invitation; the profile,
+  /// plans and review dates are untouched.
+  Future<bool> continueAsUsual() => _write(ContinueAdultAsUsual(_localDate()));
 
   /// The route to open for [suggestion], resolved now (Phase B). Null means
   /// "do not navigate": hidden overlay, another launch in progress, an
@@ -233,8 +285,31 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
         todayBudgetEnabled: budgetOn,
         setupInviteDue:
             !prefs.profileCompleted && !prefs.isSetupSnoozedOn(localDate),
+        returnOffer: _returnOfferFor(prefs, now, onHome: context != null),
+        returnTimeActionsEnabled: _flags.gentleReturnTimeActionsEnabled,
       ),
     );
+  }
+
+  /// Home only. A self-described «عائد» sees the options until the first
+  /// dismissal or choice, without any absence claim; afterwards only a real
+  /// seven-day gap brings the invitation back.
+  AdultReturnDecision? _returnOfferFor(
+    AdultJourneyPreferences prefs,
+    DateTime now, {
+    required bool onHome,
+  }) {
+    if (!onHome || !_gentleReturnOn) return null;
+    final decision = _returnPolicy.evaluate(
+      now: now,
+      lastHomeSeenAtUtc: prefs.lastHomeSeenAtUtc,
+      returnOfferLocalDate: prefs.returnOfferLocalDate,
+      returnDismissedLocalDate: prefs.returnDismissedLocalDate,
+      explicitlyReturning:
+          prefs.experience == AdultJourneyExperience.returning &&
+          prefs.returnDismissedLocalDate == null,
+    );
+    return decision.showOffer ? decision : null;
   }
 
   String _localDate() => AdultLocalDate.format(_now().toLocal());

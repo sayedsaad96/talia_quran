@@ -8505,4 +8505,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adultJourneyOpenAzkar => 'افتح الأذكار';
+
+  @override
+  String get adultJourneyReturnTitleAbsence =>
+      'أهلًا برجوعك، نبدأ بخطوة خفيفة؟';
+
+  @override
+  String get adultJourneyReturnTitleSelf => 'نبدأ بخطوة خفيفة؟';
+
+  @override
+  String get adultJourneyReturnBody =>
+      'خططك ومراجعاتك باقية كما هي. اختر ما يناسبك اليوم.';
+
+  @override
+  String get adultJourneyReturnLight => 'بداية خفيفة اليوم';
+
+  @override
+  String get adultJourneyReturnChooseTime => 'اختر وقتي';
+
+  @override
+  String get adultJourneyReturnContinue => 'أكمل كالمعتاد';
 }

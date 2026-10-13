@@ -3557,4 +3557,10 @@
   ,"adultJourneyOpenMemorization": "افتح مركز الحفظ"
   ,"adultJourneyOpenReading": "ابدأ القراءة"
   ,"adultJourneyOpenAzkar": "افتح الأذكار"
+  ,"adultJourneyReturnTitleAbsence": "أهلًا برجوعك، نبدأ بخطوة خفيفة؟"
+  ,"adultJourneyReturnTitleSelf": "نبدأ بخطوة خفيفة؟"
+  ,"adultJourneyReturnBody": "خططك ومراجعاتك باقية كما هي. اختر ما يناسبك اليوم."
+  ,"adultJourneyReturnLight": "بداية خفيفة اليوم"
+  ,"adultJourneyReturnChooseTime": "اختر وقتي"
+  ,"adultJourneyReturnContinue": "أكمل كالمعتاد"
 }

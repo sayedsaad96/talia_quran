@@ -14403,6 +14403,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'افتح الأذكار'**
   String get adultJourneyOpenAzkar;
+
+  /// No description provided for @adultJourneyReturnTitleAbsence.
+  ///
+  /// In ar, this message translates to:
+  /// **'أهلًا برجوعك، نبدأ بخطوة خفيفة؟'**
+  String get adultJourneyReturnTitleAbsence;
+
+  /// No description provided for @adultJourneyReturnTitleSelf.
+  ///
+  /// In ar, this message translates to:
+  /// **'نبدأ بخطوة خفيفة؟'**
+  String get adultJourneyReturnTitleSelf;
+
+  /// No description provided for @adultJourneyReturnBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'خططك ومراجعاتك باقية كما هي. اختر ما يناسبك اليوم.'**
+  String get adultJourneyReturnBody;
+
+  /// No description provided for @adultJourneyReturnLight.
+  ///
+  /// In ar, this message translates to:
+  /// **'بداية خفيفة اليوم'**
+  String get adultJourneyReturnLight;
+
+  /// No description provided for @adultJourneyReturnChooseTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر وقتي'**
+  String get adultJourneyReturnChooseTime;
+
+  /// No description provided for @adultJourneyReturnContinue.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل كالمعتاد'**
+  String get adultJourneyReturnContinue;
 }
 
 class _AppLocalizationsDelegate

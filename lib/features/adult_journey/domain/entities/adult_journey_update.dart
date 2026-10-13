@@ -60,3 +60,20 @@ final class DismissAdultReturn extends AdultJourneyUpdate {
 
   final String localDate;
 }
+
+/// «بداية خفيفة اليوم»: five minutes, prefer existing review, and the return
+/// invitation is done for today — one write. It pauses nothing and moves no
+/// review dates.
+final class StartAdultLightReturn extends AdultJourneyUpdate {
+  const StartAdultLightReturn(this.localDate);
+
+  final String localDate;
+}
+
+/// «أكمل كالمعتاد»: clears today's choice and the invitation for today; the
+/// profile stays.
+final class ContinueAdultAsUsual extends AdultJourneyUpdate {
+  const ContinueAdultAsUsual(this.localDate);
+
+  final String localDate;
+}
