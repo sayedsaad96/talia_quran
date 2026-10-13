@@ -4628,6 +4628,66 @@ abstract class AppLocalizations {
   /// **'هذه مشاركة في التعلّم، ولا تُكمل الآية.'**
   String get kidsFamilyPracticeNote;
 
+  /// No description provided for @kidsGameTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أي سورة هذه؟'**
+  String get kidsGameTitle;
+
+  /// No description provided for @kidsGamePrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع، ثم اختر السورة.'**
+  String get kidsGamePrompt;
+
+  /// No description provided for @kidsGameListen.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع'**
+  String get kidsGameListen;
+
+  /// No description provided for @kidsGameRoundCounter.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجولة {current} من {total}'**
+  String kidsGameRoundCounter(String current, String total);
+
+  /// No description provided for @kidsGameCorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجابة صحيحة!'**
+  String get kidsGameCorrect;
+
+  /// No description provided for @kidsGameAnswerWas.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الآية من {surah}.'**
+  String kidsGameAnswerWas(String surah);
+
+  /// No description provided for @kidsGameFinished.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجابات الصحيحة: {correct} من {total}. استماع رائع!'**
+  String kidsGameFinished(String correct, String total);
+
+  /// No description provided for @kidsGameUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ آية أولًا، ثم عُد لتلعب.'**
+  String get kidsGameUnavailable;
+
+  /// No description provided for @kidsGameAudioFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تشغيل التلاوة. تحقق من الاتصال وحاول مجددًا.'**
+  String get kidsGameAudioFailed;
+
+  /// No description provided for @kidsGameNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'للمتعة والتعلّم فقط، ولا يغيّر رحلتك.'**
+  String get kidsGameNote;
+
   /// No description provided for @childDetailProgressTitle.
   ///
   /// In ar, this message translates to:

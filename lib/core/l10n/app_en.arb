@@ -988,6 +988,43 @@
   "kidsFamilyPracticeStepPraise": "Praise the effort, not only the result.",
   "kidsFamilyPracticeFinished": "Well done, together! You can go back to the ayah now.",
   "kidsFamilyPracticeNote": "This is shared practice. It does not complete the ayah.",
+  "kidsGameTitle": "Which surah?",
+  "kidsGamePrompt": "Listen, then choose the surah.",
+  "kidsGameListen": "Listen",
+  "kidsGameRoundCounter": "Round {current} of {total}",
+  "@kidsGameRoundCounter": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameCorrect": "That's right!",
+  "kidsGameAnswerWas": "This ayah is from {surah}.",
+  "@kidsGameAnswerWas": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameFinished": "Right answers: {correct} of {total}. Great listening!",
+  "@kidsGameFinished": {
+    "placeholders": {
+      "correct": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameUnavailable": "Memorize an ayah first, then come back to play.",
+  "kidsGameAudioFailed": "The recitation couldn't play. Check the connection and try again.",
+  "kidsGameNote": "Just for fun and learning. It doesn't change your journey.",
   "childDetailProgressTitle": "Progress, achievements and certificates",
   "childDetailProgressUnavailable": "The child's progress hasn't arrived yet. It appears after the child opens the app online.",
   "childDetailCertificatesEmpty": "No certificates yet",

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
@@ -27,6 +28,13 @@ import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
+
+/// The listening game chip shows only while its rollout flag is on.
+bool _learningGamesEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.learningGames,
+    );
 
 class KidsGamifiedHomePage extends StatelessWidget {
   const KidsGamifiedHomePage({
@@ -283,6 +291,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
               if (!context.mounted) return;
               await context.push(AppRoutes.memorizationPlusKidsProgress);
             }),
+            onGameTap: _learningGamesEnabled()
+                ? () => _openDestination(() async {
+                    if (!context.mounted) return;
+                    await context.push(AppRoutes.memorizationPlusKidsGame);
+                  })
+                : null,
           );
         },
       ),
@@ -361,6 +375,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onReadingMissionTap,
     this.onTreasuresTap,
     this.onProgressTap,
+    this.onGameTap,
     this.onHomeMissionReport,
     this.taliaHappy = false,
   });
@@ -379,6 +394,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   /// Opens «كنوزي» from the progress header chip.
   final VoidCallback? onTreasuresTap;
   final VoidCallback? onProgressTap;
+
+  /// Opens the listening game; null hides its chip (flag off).
+  final VoidCallback? onGameTap;
 
   /// «أنجزتها!» on the home-mission card.
   final void Function(String missionId)? onHomeMissionReport;
@@ -413,6 +431,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onSettingsTap: onPathSettingsTap,
                         onTreasuresTap: onTreasuresTap,
                         onProgressTap: onProgressTap,
+                        onGameTap: onGameTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       if (taliaHappy)

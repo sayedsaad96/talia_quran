@@ -2519,6 +2519,43 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذه مشاركة في التعلّم، ولا تُكمل الآية.';
 
   @override
+  String get kidsGameTitle => 'أي سورة هذه؟';
+
+  @override
+  String get kidsGamePrompt => 'استمع، ثم اختر السورة.';
+
+  @override
+  String get kidsGameListen => 'استمع';
+
+  @override
+  String kidsGameRoundCounter(String current, String total) {
+    return 'الجولة $current من $total';
+  }
+
+  @override
+  String get kidsGameCorrect => 'إجابة صحيحة!';
+
+  @override
+  String kidsGameAnswerWas(String surah) {
+    return 'هذه الآية من $surah.';
+  }
+
+  @override
+  String kidsGameFinished(String correct, String total) {
+    return 'الإجابات الصحيحة: $correct من $total. استماع رائع!';
+  }
+
+  @override
+  String get kidsGameUnavailable => 'احفظ آية أولًا، ثم عُد لتلعب.';
+
+  @override
+  String get kidsGameAudioFailed =>
+      'تعذّر تشغيل التلاوة. تحقق من الاتصال وحاول مجددًا.';
+
+  @override
+  String get kidsGameNote => 'للمتعة والتعلّم فقط، ولا يغيّر رحلتك.';
+
+  @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override

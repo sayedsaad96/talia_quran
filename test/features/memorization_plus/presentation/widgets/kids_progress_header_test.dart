@@ -41,6 +41,31 @@ void main() {
       expect(find.text('5-day streak'), findsOneWidget);
     });
 
+    testWidgets('the game chip appears only when it is wired', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      const progress = KidsProgress.initial();
+      final game = find.byKey(const ValueKey('kids-home-game'));
+
+      await tester.pumpWidget(
+        const _TestApp(child: KidsProgressHeader(progress: progress)),
+      );
+      expect(game, findsNothing);
+
+      var opened = false;
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsProgressHeader(
+            progress: progress,
+            onGameTap: () => opened = true,
+          ),
+        ),
+      );
+      await tester.tap(game);
+      expect(opened, isTrue);
+    });
+
     testWidgets('hides the streak badge when the streak is zero', (
       tester,
     ) async {

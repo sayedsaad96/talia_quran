@@ -322,6 +322,8 @@
 ### T9 — ألعاب تعليمية قصيرة
 
 > **نطاق 2026-10-12:** `listenAndChooseSurah` فقط؛ `chooseMeaning` ينتظر T5.
+>
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذت لعبة «أي سورة هذه؟» خلف مفتاح `learningGames` (مغلق افتراضيًا). `buildListenAndChooseSurahGame` يختار الجولات (حتى 3) من آيات حفظها الطفل فعلًا فقط (سجلات `newMemorization` المكافأة وعلى مسار الرحلة)، وبلا آية محفوظة لا لعبة. الخيارات أسماء سور فقط من `SurahNames` القائمة (السورة الصحيحة + سور محفوظة أخرى ثم الأقرب على مسار الرحلة)، ولا يُعرض نص قرآني ولا يُعاد ترتيب كلمات. التلاوة من نفس مصدر جلسة الأطفال (`AudioCacheService.getAudioSource`). `KidsLearningGameCubit` يملك مشغّلًا واحدًا مسجّلًا في `AudioLifecycleManager`، بلا ميكروفون ولا محرك جلسة ولا committer ولا نقاط؛ الإجابة توقف التلاوة، والنقر المزدوج والخيار المجهول لا يُحسبان، والمصدر المتأخر بعد الإجابة لا يُشغَّل. المسار `/memorization-plus/kids-game` محروس: للأطفال فقط، ومع المفتاح المغلق يعود الرابط القديم لرئيسية الأطفال. المدخل شريحة «أي سورة هذه؟» في رأس رئيسية الأطفال. لا يُسجَّل إكمال اللعبة في أي مخزن (لا حاجة له قبل ربطه بـ T10). اختبارات: 7 للبناء والتقييم، 9 للـ cubit، 4 للصفحة (منها العربية على 320px)، 4 لحارس المسار، 1 لشريحة الرأس. لم تُجرَّب على جهاز (التلاوة عبر الشبكة/الكاش، والتداخل مع تشغيل البالغ في الخلفية بنفس سلوك جلسة الأطفال الحالية).
 
 **ملفات:** جديد `domain/entities/kids_learning_game.dart`، `domain/services/kids_learning_game_evaluator.dart`، `presentation/cubits/kids_learning_game_cubit.dart`، `presentation/pages/kids_learning_game_page.dart`؛ تمديد مستودع المحتوى T5 ومسارات محروسة. اختبارات جديدة `domain/kids_learning_game_evaluator_test.dart` و`presentation/pages/kids_learning_game_page_test.dart` واختبارات route في `test/core/router/`.
 

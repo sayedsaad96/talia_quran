@@ -136,6 +136,7 @@ import '../../features/memorization_plus/data/datasources/kids_achievement_store
 import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_progress_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_learning_game_cubit.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -1112,6 +1113,17 @@ Future<void> configureDependencies({bool background = false}) async {
       changes: getIt<ProgressEventsBus>().changes.where(
         (reason) => reason == ProgressChangedReason.kidsProgress,
       ),
+    ),
+  );
+  // «أي سورة هذه؟» listening game (T9, behind its route guard and flag).
+  getIt.registerFactory<KidsLearningGameCubit>(
+    () => KidsLearningGameCubit(
+      sessionLogs: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsSessionLogs()).fold(
+            (failure) => throw failure,
+            (logs) => logs,
+          ),
+      audioSource: AudioCacheService.instance.getAudioSource,
     ),
   );
   // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).

@@ -1004,6 +1004,43 @@
   "kidsFamilyPracticeStepPraise": "امدحوا المحاولة وليس النتيجة فقط.",
   "kidsFamilyPracticeFinished": "أحسنتم معًا! يمكنكم العودة إلى الآية الآن.",
   "kidsFamilyPracticeNote": "هذه مشاركة في التعلّم، ولا تُكمل الآية.",
+  "kidsGameTitle": "أي سورة هذه؟",
+  "kidsGamePrompt": "استمع، ثم اختر السورة.",
+  "kidsGameListen": "استمع",
+  "kidsGameRoundCounter": "الجولة {current} من {total}",
+  "@kidsGameRoundCounter": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameCorrect": "إجابة صحيحة!",
+  "kidsGameAnswerWas": "هذه الآية من {surah}.",
+  "@kidsGameAnswerWas": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameFinished": "الإجابات الصحيحة: {correct} من {total}. استماع رائع!",
+  "@kidsGameFinished": {
+    "placeholders": {
+      "correct": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsGameUnavailable": "احفظ آية أولًا، ثم عُد لتلعب.",
+  "kidsGameAudioFailed": "تعذّر تشغيل التلاوة. تحقق من الاتصال وحاول مجددًا.",
+  "kidsGameNote": "للمتعة والتعلّم فقط، ولا يغيّر رحلتك.",
   "childDetailProgressTitle": "التقدم والإنجازات والشهادات",
   "childDetailProgressUnavailable": "لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.",
   "childDetailCertificatesEmpty": "لا توجد شهادات بعد",

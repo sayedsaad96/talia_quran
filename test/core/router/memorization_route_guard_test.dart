@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
@@ -228,6 +229,52 @@ void main() {
     test('allows guests with no profile', () async {
       registerProfile(null);
       expect(await MemorizationRouteGuard.kidsOnlyRedirect(), isNull);
+    });
+  });
+
+  group('kidsLearningGameRedirect', () {
+    void registerFlag({required bool on}) => getIt
+        .registerSingleton<KidsEnrichmentFlags>(
+          KidsEnrichmentFlags(
+            (key) =>
+                on && key == KidsEnrichmentFeature.learningGames.storageKey,
+          ),
+        );
+
+    test('a child with the flag on may open the game', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      registerFlag(on: true);
+
+      expect(await MemorizationRouteGuard.kidsLearningGameRedirect(), isNull);
+    });
+
+    test('with the flag off a stale link returns to the kids home', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      registerFlag(on: false);
+
+      expect(
+        await MemorizationRouteGuard.kidsLearningGameRedirect(),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+
+    test('without the flags wired the game stays closed', () async {
+      registerProfile(_profile(MemorizationPath.child));
+
+      expect(
+        await MemorizationRouteGuard.kidsLearningGameRedirect(),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+
+    test('an adult is sent to the memorization hub even when on', () async {
+      registerProfile(_profile(MemorizationPath.adult));
+      registerFlag(on: true);
+
+      expect(
+        await MemorizationRouteGuard.kidsLearningGameRedirect(),
+        AppRoutes.memorizationPlus,
+      );
     });
   });
 

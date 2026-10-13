@@ -2536,6 +2536,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is shared practice. It does not complete the ayah.';
 
   @override
+  String get kidsGameTitle => 'Which surah?';
+
+  @override
+  String get kidsGamePrompt => 'Listen, then choose the surah.';
+
+  @override
+  String get kidsGameListen => 'Listen';
+
+  @override
+  String kidsGameRoundCounter(String current, String total) {
+    return 'Round $current of $total';
+  }
+
+  @override
+  String get kidsGameCorrect => 'That\'s right!';
+
+  @override
+  String kidsGameAnswerWas(String surah) {
+    return 'This ayah is from $surah.';
+  }
+
+  @override
+  String kidsGameFinished(String correct, String total) {
+    return 'Right answers: $correct of $total. Great listening!';
+  }
+
+  @override
+  String get kidsGameUnavailable =>
+      'Memorize an ayah first, then come back to play.';
+
+  @override
+  String get kidsGameAudioFailed =>
+      'The recitation couldn\'t play. Check the connection and try again.';
+
+  @override
+  String get kidsGameNote =>
+      'Just for fun and learning. It doesn\'t change your journey.';
+
+  @override
   String get childDetailProgressTitle =>
       'Progress, achievements and certificates';
 

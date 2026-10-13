@@ -21,6 +21,7 @@ class KidsProgressHeader extends StatelessWidget {
     this.onSettingsTap,
     this.onTreasuresTap,
     this.onProgressTap,
+    this.onGameTap,
   });
 
   final KidsProgress progress;
@@ -33,6 +34,9 @@ class KidsProgressHeader extends StatelessWidget {
 
   /// Opens the kids «تقدّمي» page. No chip when null.
   final VoidCallback? onProgressTap;
+
+  /// Opens the «أي سورة هذه؟» listening game. No chip when null.
+  final VoidCallback? onGameTap;
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +175,9 @@ class KidsProgressHeader extends StatelessWidget {
                 starsEarned: progress.starsEarned,
                 streakDays: progress.currentStreak,
               ),
-              if (onTreasuresTap != null || onProgressTap != null) ...[
+              if (onTreasuresTap != null ||
+                  onProgressTap != null ||
+                  onGameTap != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
@@ -192,6 +198,13 @@ class KidsProgressHeader extends StatelessWidget {
                           icon: TaliaKidsIcons.trophy,
                           label: l10n.kidsProgressTitle,
                           onTap: onProgressTap!,
+                        ),
+                      if (onGameTap != null)
+                        _HeaderChip(
+                          key: const ValueKey('kids-home-game'),
+                          icon: TaliaKidsIcons.listen,
+                          label: l10n.kidsGameTitle,
+                          onTap: onGameTap!,
                         ),
                     ],
                   ),

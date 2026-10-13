@@ -12,6 +12,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../constants/app_constants.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../memorization/kids_enrichment_feature_flags.dart';
 import '../memorization/learning_launch_context.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../services/get_daily_wird_usecase.dart';
@@ -48,6 +49,7 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_home_p
 import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_learning_game_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_progress_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_treasures_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
@@ -108,6 +110,7 @@ abstract class AppRoutes {
       '/memorization-plus/kids-treasures';
   static const String memorizationPlusKidsProgress =
       '/memorization-plus/kids-progress';
+  static const String memorizationPlusKidsGame = '/memorization-plus/kids-game';
 
   static const String familyDashboard = '/family-dashboard';
   static const String childDetail = '/family-dashboard/child';
@@ -277,6 +280,19 @@ class MemorizationRouteGuard {
     final profile = await _readProfile();
     if (profile == null || profile.isChild) return null;
     return AppRoutes.memorizationPlus;
+  }
+
+  /// The listening game is kids-only and exists only while its rollout flag
+  /// is on; a stale link with the flag off returns to the kids home.
+  static Future<String?> kidsLearningGameRedirect() async {
+    final audienceRedirect = await kidsOnlyRedirect();
+    if (audienceRedirect != null) return audienceRedirect;
+    final enabled =
+        getIt.isRegistered<KidsEnrichmentFlags>() &&
+        getIt<KidsEnrichmentFlags>().isEnabled(
+          KidsEnrichmentFeature.learningGames,
+        );
+    return enabled ? null : AppRoutes.memorizationPlusKidsHome;
   }
 
   /// Resolves a bare Kids home link through the child's configured journey
@@ -851,6 +867,13 @@ abstract class AppRouter {
         path: AppRoutes.memorizationPlusKidsProgress,
         redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (context, state) => const KidsProgressPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsGame,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.kidsLearningGameRedirect(),
+        builder: (context, state) => const KidsLearningGamePage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
