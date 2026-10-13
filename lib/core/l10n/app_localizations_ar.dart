@@ -2422,6 +2422,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsAchievementStars50 => 'خمسون نجمة';
 
   @override
+  String get kidsAchievementFirstReview => 'أول مراجعة';
+
+  @override
+  String get kidsAchievementTriedAgain => 'حاولت من جديد ونجحت';
+
+  @override
+  String get kidsAchievementComeback => 'عدت من جديد';
+
+  @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override
@@ -6229,6 +6238,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsHomeMissionSuggestShare => 'شارك لعبتك مع غيرك';
+
+  @override
+  String get kidsHomeMissionSuggestLearning =>
+      'احكِ لأسرتك شيئًا تعلّمته اليوم';
+
+  @override
+  String get kidsHomeMissionSuggestBag => 'جهّز حقيبتك المدرسية لليوم التالي';
 
   @override
   String get kidsAyahAlreadyCompleted =>

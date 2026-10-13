@@ -7,6 +7,8 @@ import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_session_policy.dart';
+import '../../domain/services/kids_home_mission_templates.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
@@ -22,16 +24,26 @@ class HomeMissionsPanel extends StatelessWidget {
     required this.missions,
     required this.onAdd,
     required this.onAcknowledge,
+    this.templateAgeBand,
   });
 
   final List<KidsHomeMission> missions;
   final ValueChanged<String> onAdd;
   final ValueChanged<String> onAcknowledge;
 
+  /// When set, the add dialog suggests the educational templates for this age
+  /// band; null keeps the four suggestions every guardian already had.
+  final KidsAgeBand? templateAgeBand;
+
   Future<void> _showAddDialog(BuildContext context) async {
+    final band = templateAgeBand;
     final title = await showDialog<String>(
       context: context,
-      builder: (_) => const HomeMissionDialog(),
+      builder: (_) => HomeMissionDialog(
+        templates: band == null
+            ? KidsHomeMissionTemplates.legacy
+            : KidsHomeMissionTemplates.idsFor(band),
+      ),
     );
     if (title != null && title.isNotEmpty) onAdd(title);
   }
@@ -139,10 +151,15 @@ class _HomeMissionRow extends StatelessWidget {
   }
 }
 
-/// Add-mission dialog: four built-in non-religious suggestion chips (tapping
-/// one fills the field) plus free text of 1-120 characters.
+/// Add-mission dialog: built-in non-religious suggestion chips (tapping one
+/// fills the field, which stays editable) plus free text of 1-120 characters.
 class HomeMissionDialog extends StatefulWidget {
-  const HomeMissionDialog({super.key});
+  const HomeMissionDialog({
+    super.key,
+    this.templates = KidsHomeMissionTemplates.legacy,
+  });
+
+  final List<KidsHomeMissionTemplateId> templates;
 
   @override
   State<HomeMissionDialog> createState() => _HomeMissionDialogState();
@@ -152,20 +169,29 @@ class _HomeMissionDialogState extends State<HomeMissionDialog> {
   final _controller = TextEditingController();
   String? _errorText;
 
+  /// A second tap on «حفظ» while the dialog is closing must not pop the page
+  /// underneath it.
+  bool _submitted = false;
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  List<String> _suggestions(AppLocalizations l10n) => [
-    l10n.kidsHomeMissionSuggestTidy,
-    l10n.kidsHomeMissionSuggestHelp,
-    l10n.kidsHomeMissionSuggestKind,
-    l10n.kidsHomeMissionSuggestShare,
-  ];
+  String _suggestion(AppLocalizations l10n, KidsHomeMissionTemplateId id) =>
+      switch (id) {
+        KidsHomeMissionTemplateId.tidyRoom => l10n.kidsHomeMissionSuggestTidy,
+        KidsHomeMissionTemplateId.helpTable => l10n.kidsHomeMissionSuggestHelp,
+        KidsHomeMissionTemplateId.kindWord => l10n.kidsHomeMissionSuggestKind,
+        KidsHomeMissionTemplateId.shareToy => l10n.kidsHomeMissionSuggestShare,
+        KidsHomeMissionTemplateId.tellLearning =>
+          l10n.kidsHomeMissionSuggestLearning,
+        KidsHomeMissionTemplateId.prepareBag => l10n.kidsHomeMissionSuggestBag,
+      };
 
   void _submit() {
+    if (_submitted) return;
     final text = _controller.text.trim();
     if (text.isEmpty) {
       setState(() => _errorText = context.l10n.fieldRequired);
@@ -182,6 +208,7 @@ class _HomeMissionDialogState extends State<HomeMissionDialog> {
       );
       return;
     }
+    _submitted = true;
     Navigator.pop(context, text);
   }
 
@@ -199,11 +226,12 @@ class _HomeMissionDialogState extends State<HomeMissionDialog> {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.xs,
               children: [
-                for (final suggestion in _suggestions(l10n))
+                for (final id in widget.templates)
                   ActionChip(
-                    label: Text(suggestion),
+                    key: ValueKey('home-mission-template-${id.name}'),
+                    label: Text(_suggestion(l10n, id)),
                     onPressed: () => setState(() {
-                      _controller.text = suggestion;
+                      _controller.text = _suggestion(l10n, id);
                       _errorText = null;
                     }),
                   ),

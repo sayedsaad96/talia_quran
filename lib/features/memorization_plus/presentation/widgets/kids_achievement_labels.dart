@@ -24,6 +24,9 @@ String kidsAchievementTitle(AppLocalizations l10n, KidsAchievementId id) =>
       KidsAchievementId.firstStar => l10n.kidsAchievementFirstStar,
       KidsAchievementId.stars10 => l10n.kidsAchievementStars10,
       KidsAchievementId.stars50 => l10n.kidsAchievementStars50,
+      KidsAchievementId.firstReview => l10n.kidsAchievementFirstReview,
+      KidsAchievementId.triedAgain => l10n.kidsAchievementTriedAgain,
+      KidsAchievementId.comeback => l10n.kidsAchievementComeback,
     };
 
 /// Milestone icon: the kids glyphs on kids screens, the standard Talia
@@ -41,4 +44,10 @@ IconData kidsAchievementIcon(
     kids ? TaliaKidsIcons.flame : TaliaIcons.flame,
   KidsAchievementMetric.stars =>
     kids ? TaliaKidsIcons.starFilled : TaliaIcons.starFilled,
+  KidsAchievementMetric.reviews =>
+    kids ? TaliaKidsIcons.repeat : TaliaIcons.repeat,
+  KidsAchievementMetric.retries =>
+    kids ? TaliaKidsIcons.refresh : TaliaIcons.refresh,
+  KidsAchievementMetric.comebacks =>
+    kids ? TaliaKidsIcons.sun : TaliaIcons.sun,
 };

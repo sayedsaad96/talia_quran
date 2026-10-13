@@ -17,7 +17,16 @@ class KidsAchievementStore {
 
   String get _key => 'kids_achievements_${_owner.currentOwnerId}';
 
-  Map<String, DateTime> unlocked() {
+  Map<String, DateTime> unlocked() => {
+    for (final entry in _storedEntries().entries)
+      if (entry.value is String)
+        if (DateTime.tryParse(entry.value as String) case final date?)
+          entry.key: date.toUtc(),
+  };
+
+  /// Every stored `{id: value}` pair, including ids this build's catalog does
+  /// not know (written by a newer build) and values it cannot read.
+  Map<String, Object?> _storedEntries() {
     try {
       final raw = _prefs.getString(_key);
       if (raw == null) return {};
@@ -25,9 +34,7 @@ class KidsAchievementStore {
       if (decoded is! Map) return {};
       return {
         for (final entry in decoded.entries)
-          if (entry.key is String && entry.value is String)
-            if (DateTime.tryParse(entry.value as String) case final date?)
-              entry.key as String: date.toUtc(),
+          if (entry.key is String) entry.key as String: entry.value,
       };
     } catch (_) {
       return {};
@@ -35,6 +42,8 @@ class KidsAchievementStore {
   }
 
   /// Evaluates the milestones and stores any reached for the first time.
+  /// Entries already stored are never dropped, so a milestone unlocked by a
+  /// newer build survives a sync from an older one.
   Future<List<KidsAchievement>> sync(KidsAchievementInputs inputs) async {
     final stored = unlocked();
     final all = KidsAchievementCatalog.evaluate(
@@ -42,19 +51,16 @@ class KidsAchievementStore {
       now: _clock().toUtc(),
       unlocked: stored,
     );
-    final reached = {
-      for (final achievement in all)
-        achievement.id.name: ?achievement.unlockedAt,
-    };
-    if (reached.length != stored.length) {
-      await _prefs.setString(
-        _key,
-        jsonEncode({
-          for (final entry in reached.entries)
-            entry.key: entry.value.toIso8601String(),
-        }),
-      );
+    final merged = _storedEntries();
+    var changed = false;
+    for (final achievement in all) {
+      final unlockedAt = achievement.unlockedAt;
+      if (unlockedAt != null && !stored.containsKey(achievement.id.name)) {
+        merged[achievement.id.name] = unlockedAt.toIso8601String();
+        changed = true;
+      }
     }
+    if (changed) await _prefs.setString(_key, jsonEncode(merged));
     return all;
   }
 }

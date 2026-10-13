@@ -9,6 +9,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../auth/domain/services/account_password_verifier.dart';
 import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 import '../../domain/usecases/parent_reward_usecases.dart';
@@ -57,6 +58,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
   /// PIN, or null when recovery is not possible on this device.
   String? get recoveryAccountEmail => _accountVerifier?.currentEmail;
   int _feedbackEventId = 0;
+  bool _addingHomeMission = false;
   int _refreshGeneration = 0;
 
   int _nextFeedbackEventId() => ++_feedbackEventId;
@@ -455,13 +457,22 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     if (current is! FamilyDashboardLoaded) return;
     final trimmed = title.trim();
     if (trimmed.isEmpty) return;
+    // The server has no idempotency key, so a repeated submit while the first
+    // is still in flight would create the mission twice.
+    if (_addingHomeMission) return;
+    _addingHomeMission = true;
 
-    final result = childId != null
-        ? await _remoteLink.createRemoteHomeMission(
-            childUserId: childId,
-            title: trimmed,
-          )
-        : await _parentAccess.addLocalHomeMission(trimmed);
+    final Either<Failure, List<KidsHomeMission>> result;
+    try {
+      result = childId != null
+          ? await _remoteLink.createRemoteHomeMission(
+              childUserId: childId,
+              title: trimmed,
+            )
+          : await _parentAccess.addLocalHomeMission(trimmed);
+    } finally {
+      _addingHomeMission = false;
+    }
     await result.fold(
       (failure) async => emit(
         current.copyWith(

@@ -1,7 +1,20 @@
 import 'package:equatable/equatable.dart';
 
+import 'kids_effort_achievement_inputs.dart';
+
 /// What a kids milestone counts.
-enum KidsAchievementMetric { ayahs, surahs, pages, streak, stars }
+enum KidsAchievementMetric {
+  ayahs,
+  surahs,
+  pages,
+  streak,
+  stars,
+
+  /// Effort milestones (see [KidsEffortAchievementInputs]).
+  reviews,
+  retries,
+  comebacks,
+}
 
 /// Kids-only milestones. Names are stable storage keys: never rename one.
 enum KidsAchievementId {
@@ -21,6 +34,12 @@ enum KidsAchievementId {
   firstStar,
   stars10,
   stars50,
+
+  // Effort milestones, appended after the originals (enum names are storage
+  // keys; never reorder or rename).
+  firstReview,
+  triedAgain,
+  comeback,
 }
 
 class KidsAchievementSpec {
@@ -39,7 +58,12 @@ class KidsAchievementInputs extends Equatable {
     this.readPages = 0,
     this.longestStreak = 0,
     this.stars = 0,
+    this.effort,
   });
+
+  /// Effort counts, or null while effort milestones are not in use: they are
+  /// then neither evaluated nor shown.
+  final KidsEffortAchievementInputs? effort;
 
   final int memorizedAyahs;
 
@@ -57,6 +81,9 @@ class KidsAchievementInputs extends Equatable {
     KidsAchievementMetric.pages => readPages,
     KidsAchievementMetric.streak => longestStreak,
     KidsAchievementMetric.stars => stars,
+    KidsAchievementMetric.reviews => effort?.completedReviews ?? 0,
+    KidsAchievementMetric.retries => effort?.retriedSuccesses ?? 0,
+    KidsAchievementMetric.comebacks => effort?.comebacks ?? 0,
   };
 
   @override
@@ -66,6 +93,7 @@ class KidsAchievementInputs extends Equatable {
     readPages,
     longestStreak,
     stars,
+    effort,
   ];
 }
 
@@ -176,6 +204,27 @@ abstract final class KidsAchievementCatalog {
     ),
   ];
 
+  /// Effort milestones: a first completed review, success after trying again,
+  /// and coming back after a break. They count effort, never mastery, and are
+  /// evaluated only when [KidsAchievementInputs.effort] is set.
+  static const effortSpecs = <KidsAchievementSpec>[
+    KidsAchievementSpec(
+      KidsAchievementId.firstReview,
+      KidsAchievementMetric.reviews,
+      1,
+    ),
+    KidsAchievementSpec(
+      KidsAchievementId.triedAgain,
+      KidsAchievementMetric.retries,
+      1,
+    ),
+    KidsAchievementSpec(
+      KidsAchievementId.comeback,
+      KidsAchievementMetric.comebacks,
+      1,
+    ),
+  ];
+
   /// Evaluates every milestone. [unlocked] (id name → date) keeps earlier
   /// unlocks, so a milestone never re-locks when its data ages out; a target
   /// met for the first time unlocks at [now].
@@ -184,7 +233,10 @@ abstract final class KidsAchievementCatalog {
     required DateTime now,
     Map<String, DateTime> unlocked = const {},
   }) => [
-    for (final spec in specs)
+    for (final spec in [
+      ...specs,
+      if (inputs.effort != null) ...effortSpecs,
+    ])
       KidsAchievement(
         spec: spec,
         current: inputs.valueOf(spec.metric).clamp(0, spec.target),

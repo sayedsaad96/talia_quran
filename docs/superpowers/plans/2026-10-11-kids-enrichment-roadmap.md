@@ -12,6 +12,40 @@
 
 **Baseline:** HEAD عند إعداد الخطة: `81cf125a89b952baebcafe818ef82eda43e46f95`. فُحصت شجرة عمل تحتوي تعديلات سابقة، منها ملفات الترجمة؛ المرجع ليس snapshot نظيفًا. أعد فحص فرق الملفات المستهدفة قبل التنفيذ. لم تُشغّل اختبارات أو تحقق أجهزة أثناء كتابة الخطة.
 
+## 0. مراجعة 2026-10-12 — مقارنة بالكود وقرارات المالك (تُقدَّم على ما يخالفها أدناه)
+
+**خط الأساس المعاد فحصه:** HEAD `6843a67a` — commit وثائق للبالغين فقط بعد baseline الخطة؛ لا تغيير في كود الأطفال. الملفات الـ44 المذكورة في القسم 2 موجودة، والفجوات المعلنة في القسم 2 مؤكدة. فحص قراءة فقط؛ لم تُشغّل اختبارات.
+
+**قرارات المالك (2026-10-12):**
+- **T6 وT11 وT12 مؤجلة** خارج هذه المبادرة (تتسق مع تأجيل الإرشاد الصوتي وحزم المحتوى في نطاق Talia Adventure v1). لا يُنفذ T0-A لأنه لا يُحتاج إلا لها.
+- **T1: قوالب تربوية فقط** — بلا نسبة دينية أو آية أو حديث أو دعاء داخل القالب؛ لذلك لا يحتاج T1 مراجعة مصادر شرعية.
+
+**نتائج لم تذكرها الخطة أو قللت منها:**
+1. `KidsAchievementStore.sync` (`data/datasources/kids_achievement_store.dart`) يعيد كتابة الخريطة من `KidsAchievementCatalog.evaluate` فقط، فيُسقط أي ID غير معروف للكتالوج الحالي (downgrade أو إنجاز مستقبلي). **إصلاحه شرط قبل T2:** دمج المفاتيح المخزنة غير المعروفة عند الكتابة. إضافة قيم لـ `KidsAchievementId` تكسر `switch` الشامل في `kids_achievement_labels.dart` (تحتاج ARB عربي/إنجليزي)، وتحقق أن عرض إنجازات الطفل البعيد (`RemoteChildActivity.achievements`) يتجاهل IDs المجهولة دون crash.
+2. `create_kids_home_mission(p_child_user_id, p_title)` بلا مفتاح idempotency؛ النقر المزدوج ينشئ مهمتين. في T1 يكفي قفل الإرسال في الواجهة/الـ Cubit؛ لا migration. العنوان نص حر 1–120 حرفًا، فالقالب يملأ النموذج فقط بلغة ولي الأمر.
+3. جهاز ولي الأمر لا يملك `KidsSessionLog` للطفل البعيد؛ يملك ملخص `RemoteChildActivity` فقط (أحداث محدودة، إنجازات، `weekReadPagesCount`). **T3 في الإصدار الأول للطفل المحلي فقط**؛ الطفل البعيد لاحقًا عبر مفاتيح اختيارية في snapshot النشاط (نفس نمط الإنجازات، بلا migration) مع عرض «غير متاح» عند غيابها.
+4. قرار «طفل واحد لكل جهاز» قائم، و`AccountDataReset` يمسح بيانات الحساب المغادر. لذلك **T0 مخفف:** لا كيان `KidsFeatureScope` ولا childKey أو ترحيل هوية جديد. النطاق = `ownerId` على جهاز الطفل، و`childUserId` من الربط على جهاز ولي الأمر. يسقط اختبار `sameOwnerDifferentChildIsIsolated`؛ يبقى `lateResultAfterOwnerChangeIsDiscarded` لأي تخزين جديد.
+5. مفاتيح الإطلاق تتبع نمط `lib/core/memorization/kids_hifz_feature_flags.dart` القائم (SharedPreferences، الغائب = false)؛ لا remote config.
+6. `kids_mode_cubit.dart` (1378 سطرًا) و`kids_gamified_listen_page.dart` (1190 سطرًا) تلمسهما T4/T7/T8؛ تُنفذ هذه المهام متتابعة لا متوازية.
+
+**التصنيف المعتمد:**
+
+| المهمة | الحالة | الشرط |
+|---|---|---|
+| T0 | جاهز | النسخة المخففة (البند 4–5) |
+| T1 | جاهز | تربوية فقط + قفل الإرسال المزدوج |
+| T2 | جاهز بعد إصلاح المخزن | البند 1 أولًا؛ الحقول `attemptCount`/`hintCount`/`missionType` موجودة في `KidsSessionLog` |
+| T3 | جاهز للطفل المحلي | البند 3 |
+| T10 | جاهز بعد T2 | إسقاط بصري من إنجازات محفوظة فقط |
+| T9 | جزئي | `listenAndChooseSurah` فقط (تلاوة وأسماء سور قائمة)؛ `chooseMeaning` ينتظر T5 |
+| T8 | مشروط | يمس جلسة الحفظ: مراجعة Opus واختبارات committer إلزامية |
+| T4 | مشروط | إرشاد بلا حفظ receipt أولًا؛ receipt + PIN في خطوة ثانية |
+| T7 | مشروط | محلي فقط، مثبت في snapshot الجلسة؛ مخاطرة متوسطة–عالية |
+| T5 | محجوب | لا مصدر معاني مرخص (الغريب ينتظر إذن مجمع الملك فهد) |
+| T6، T11، T12، T0-A | مؤجل | قرار المالك 2026-10-12 |
+
+**ترتيب التنفيذ المعدل:** T0 (مخفف) → إصلاح مخزن الإنجازات → T1 → T2 → T3 (محلي) → T10 → T9 (لعبة السورة) → T8 → T4 → T7، كلٌّ في PR مستقل. هذا المسار لا يمس `assets/data/quran.json` ولا Isar schema ولا migrations السحابة.
+
 ## 1. عقد النطاق والأولوية
 
 الأولوية هنا ترتيب تنفيذ، وليست تصنيف شدة عيوب. أهمية المحتوى التعليمي مرتفعة، لكن إطلاقه ينتظر اعتماد المحتوى. يمكن إعداده بالتوازي مع المراحل المبكرة دون نشر مواد غير معتمدة.
@@ -103,6 +137,10 @@
 
 ### T0 — إثبات الأساس وحدود الإطلاق
 
+> **مراجعة 2026-10-12:** نسخة مخففة — مفاتيح بنمط `KidsHifzFeatureFlags` وbaseline فقط؛ لا `KidsFeatureScope` ولا ترحيل هوية (انظر القسم 0، البندين 4–5).
+>
+> **حالة التنفيذ (2026-10-12، غير مثبت في git):** نُفذ `lib/core/memorization/kids_enrichment_feature_flags.dart` + اختباره (6/6) + تسجيل DI. baseline G0 على شجرة العمل الحالية: analyze بلا مشاكل، وكل حزم G0 ناجحة (memorization_plus 1235، core/memorization 392، router 51، kids_quran_reader 25، house_review_gate 14، account_switch 2، progress_snapshot 2، account_data_reset 15). لا تُشغّل بوابات الجهاز لأن T0 لا يغيّر سلوكًا ظاهرًا.
+
 **الناتج:** تقرير baseline ومفاتيح مستقلة تعمل افتراضيًا بوضع الإيقاف، وعقد موثق لهوية البيانات الجديدة.
 
 **ملفات:** قراءة `lib/core/identity/record_owner_provider.dart`، `domain/entities/child_identity_policy.dart`، `memorization_profile.dart`، stores الطفل و`lib/core/memorization/kids_hifz_feature_flags.dart`. جديد: `domain/entities/kids_enrichment_flags.dart`، `domain/entities/kids_feature_scope.dart` واختبارا `domain/kids_enrichment_flags_test.dart` و`domain/kids_feature_scope_test.dart` عند التنفيذ. لا تضف كيان نطاق مكررًا إذا كشف الفحص نوعًا قائمًا مناسبًا.
@@ -118,6 +156,8 @@
 **بوابة:** لا تبدأ تخزين بيانات شخصية جديدة قبل اجتياز اختبارات العزل. يمكن إعداد محتوى عام ومكونات عرض مستقلة أثناء ذلك.
 
 ### T0-A — تنسيق الصوت والميكروفون قبل إضافات الصوت
+
+> **مؤجل (2026-10-12):** لا يُنفذ طالما T6/T11/T12 مؤجلة.
 
 **التوقيت:** تنفذ بعد A وقبل تفعيل أي صوت جديد في T5/T6، ويعيد استخدامها T8/T9/T11/T12. يمكن عرض درس T5 نصيًا قبلها إذا استوفى الاعتماد.
 
@@ -137,6 +177,10 @@
 
 ### T1 — قوالب «أعيش ما أتعلم»
 
+> **قرار المالك 2026-10-12:** قوالب تربوية فقط، بلا نسبة دينية؛ حقل المصدر غير مطلوب. أضف قفل إرسال ضد النقر المزدوج (القسم 0، البند 2).
+>
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذ خلف مفتاح `homeMissionTemplates` (مغلق افتراضيًا). الحوار الحالي كان يحمل أصلًا 4 اقتراحات غير دينية، فصار يستقبل قائمة قوالب: عند إغلاق المفتاح تبقى الأربعة كما هي، وعند فتحه تُعرض قوالب حسب فئة عمر الطفل (6 قوالب: ثلاثة مشتركة + «شارك لعبتك» لـ5–7 + «جهّز حقيبتك» لـ8–12 + «احكِ ما تعلمته» للفئتين). لا تغيير في الـ RPC أو التخزين. أُضيف قفل ضد الإرسال المكرر في `FamilyDashboardCubit.addHomeMission` ومنع `Navigator.pop` المزدوج في الحوار. الملفات: `domain/services/kids_home_mission_templates.dart` وتعديل `home_missions_panel.dart` و`child_detail_page.dart`. اختبارات: 4 للكتالوج، و5 للّوحة، و1 للـ cubit، وشغّلت اختبارات صفحة الطفل (12) والـ cubit كاملة. لم تُجرَّب على جهاز.
+
 **يعتمد على:** T0؛ اعتماد أي إسناد شرعي قبل عرضه.
 
 **ملفات:** جديد `domain/services/kids_home_mission_templates.dart`، `presentation/widgets/home_mission_template_picker.dart`؛ تمديد `presentation/widgets/home_missions_panel.dart`. اختبار جديد `domain/kids_home_mission_templates_test.dart`، وتمديد `data/kids_home_missions_local_test.dart` و`data/kids_home_mission_child_sync_test.dart`.
@@ -151,6 +195,10 @@
 
 ### T2 — إنجازات الجهد والمراجعة
 
+> **شرط مسبق (2026-10-12):** أصلح `KidsAchievementStore.sync` ليحفظ IDs المخزنة غير المعروفة قبل إضافة أي إنجاز (القسم 0، البند 1). **أُنجز (2026-10-13).**
+>
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذ خلف مفتاح `effortAchievements` (مغلق افتراضيًا). ثلاثة إنجازات جديدة تُلحَق بنهاية `KidsAchievementId`: `firstReview` (مراجعة مكتملة) و`triedAgain` (نجاح بعد أكثر من محاولة) و`comeback` (عودة بعد ٣ أيام محلية فأكثر عبر `kidsIsReturningAfterBreak`). تُحسب بدالة pure `buildKidsEffortInputs(logs)` في `domain/services/kids_effort_achievement_inputs.dart` من `KidsSessionLog` فقط، بلا تكرار عند تكرار الـ id. `KidsAchievementCatalog.specs` لم يتغير، والجديدة في `effortSpecs` ولا تُقيَّم ولا تُعرض إلا إذا كان `KidsAchievementInputs.effort` غير null. لا تغيير في النقاط أو النجوم أو الشهادات أو التخزين. عرض ولي الأمر: يعرض فقط ما أبلغ به جهاز الطفل، بشرط تفعيل المفتاح على جهاز الأب. «إنجاز الأسرة» ما زال ينتظر T4. ملاحظة: كل السجلات المحفوظة اليوم تأتي من `awardKidsPoints` (نجاح مثبت)؛ `SaveKidsSessionLogUsecase` مسجَّل ولا يُستدعى، فلا يوجد «حدث تقني» يُستبعد. تمت مراجعة اختبارات memorization_plus كاملة (1277 ناجحًا) وanalyze نظيف؛ لم تُجرَّب على جهاز.
+
 **ملفات:** تمديد `domain/services/kids_achievements.dart`، `data/datasources/kids_achievement_store.dart`، `domain/services/kids_progress_snapshot.dart`، `presentation/widgets/kids_achievement_labels.dart`. جديد `domain/services/kids_effort_achievement_inputs.dart`. اختبارات `domain/kids_achievements_test.dart` و`data/kids_achievement_store_test.dart` و`domain/kids_effort_achievement_inputs_test.dart` الجديد.
 
 **واجهة:** دالة pure `KidsEffortAchievementInputs buildKidsEffortInputs(List<KidsSessionLog> logs)` من سجلات الطفل المحفوظة فقط. الإصدار الأول: أول مراجعة مكتملة، ونجاح بعد أكثر من محاولة. إنجاز العودة بعد انقطاع يستند لتواريخ محفوظة ومنطق `kids_return_policy.dart`. إنجاز الأسرة ينتظر إثبات T4.
@@ -163,6 +211,8 @@
 **قبول:** يرى الطفل تقديرًا مثبتًا لجهده دون أي تغيير في أعداد الحفظ أو رصيد المكافآت القديم.
 
 ### T3 — ملخص أسبوعي للأهل
+
+> **نطاق الإصدار الأول (2026-10-12):** الطفل المحلي فقط؛ الطفل البعيد يعرض «غير متاح» حتى تُضاف مفاتيح snapshot اختيارية (القسم 0، البند 3).
 
 **ملفات:** جديد `domain/services/kids_weekly_coaching.dart`، `presentation/widgets/kids_weekly_coaching_card.dart`؛ تمديد `presentation/pages/child_detail_page.dart`. جديد `domain/kids_weekly_coaching_test.dart` و`presentation/widgets/kids_weekly_coaching_card_test.dart`.
 
@@ -190,6 +240,8 @@
 
 ### T5 — «أفهم ما أحفظ»
 
+> **محجوب (2026-10-12):** لا مصدر معاني مرخص بعد؛ لا تستورد بيانات قبل دليل الترخيص.
+
 **ملفات:** جديد `domain/entities/kids_learning_lesson.dart`، `domain/repositories/kids_learning_content_repository.dart`، `domain/usecases/get_kids_learning_lesson.dart`، `data/datasources/kids_learning_content_local_source.dart`، `presentation/cubits/kids_learning_lesson_cubit.dart`، `presentation/widgets/kids_learning_lesson_panel.dart`. محتوى جديد تحت `assets/data/kids_learning/` بعد الاعتماد، وتحديث assets في `pubspec.yaml` عند الحاجة. اختبارات جديدة `domain/kids_learning_content_contract_test.dart` و`presentation/widgets/kids_learning_lesson_panel_test.dart` و`test/assets/kids_learning_content_integrity_test.dart`.
 
 **واجهة:** `Future<KidsLearningLesson?> getApprovedLesson({required int surahId, required int ayahNumber, required KidsAgeBand ageBand, required String locale})`. الدرس يحمل ID/version/source/review/license واللغة والعمر ومراجع الآيات دون نسخة بديلة لنصها. null = إخفاء الإضافة وترك الرحلة متاحة.
@@ -203,6 +255,8 @@
 **قبول:** المحتوى معتمد وله مصدر وحقوق، والطفل يستطيع تخطيه، وفشل التحميل لا يمس نتيجة الحفظ المحفوظة.
 
 ### T6 — التعليمات المسموعة لغير القارئ
+
+> **مؤجل بقرار المالك (2026-10-12).** يبقى مفتاح `guidanceAudioEnabled` مخفيًا.
 
 **ملفات:** جديد `domain/services/kids_guidance_catalog.dart`، `presentation/cubits/kids_guidance_audio_cubit.dart`، `presentation/widgets/kids_spoken_instruction_button.dart`؛ تمديد صفحة الجلسة والإعداد و`presentation/world/kids_policy_controller.dart` فقط حسب المسؤولية. ملفات صوت جديدة تحت `assets/audio/kids_guidance/` بعد اعتمادها. اختبارات جديدة `presentation/cubits/kids_guidance_audio_cubit_test.dart` و`presentation/widgets/kids_spoken_instruction_button_test.dart`.
 
@@ -244,6 +298,8 @@
 
 ### T9 — ألعاب تعليمية قصيرة
 
+> **نطاق 2026-10-12:** `listenAndChooseSurah` فقط؛ `chooseMeaning` ينتظر T5.
+
 **ملفات:** جديد `domain/entities/kids_learning_game.dart`، `domain/services/kids_learning_game_evaluator.dart`، `presentation/cubits/kids_learning_game_cubit.dart`، `presentation/pages/kids_learning_game_page.dart`؛ تمديد مستودع المحتوى T5 ومسارات محروسة. اختبارات جديدة `domain/kids_learning_game_evaluator_test.dart` و`presentation/pages/kids_learning_game_page_test.dart` واختبارات route في `test/core/router/`.
 
 **واجهة:** `KidsGameResult evaluateKidsGameAnswer({required KidsLearningGame game, required String optionId})`. أنواع البداية listenAndChooseSurah/chooseMeaning، وجولة لا تتجاوز 3 أسئلة؛ answers من محتوى معتمد محدد الإصدار.
@@ -268,6 +324,8 @@
 
 ### T11 — الحقيبة الأسبوعية دون اتصال
 
+> **مؤجل بقرار المالك (2026-10-12).**
+
 **ملفات:** جديد `domain/entities/kids_weekly_pack.dart`، `domain/repositories/kids_weekly_pack_repository.dart`، `domain/usecases/download_kids_weekly_pack.dart`، `data/repositories/kids_weekly_pack_repository_impl.dart`، `data/datasources/kids_weekly_pack_store.dart`، `presentation/cubits/kids_weekly_pack_cubit.dart` وwidget إدارة التنزيل. إعادة استخدام `AudioCacheService` ومصادر التلاوة بعد التحقق من فصل الاحتفاظ الدائم عن الكاش العام. اختبارات جديدة `data/kids_weekly_pack_repository_test.dart` و`presentation/cubits/kids_weekly_pack_cubit_test.dart`.
 
 **واجهة:** `Future<KidsWeeklyPackStatus> download(KidsWeeklyPackManifest manifest)`، `Future<KidsWeeklyPackStatus> inspect(String packId)`، `Future<void> remove(String packId)`. Manifest يحدد content/version/locale/reciter/riwayah/ayah references والملفات وأحجامها وبصماتها المعتمدة.
@@ -281,6 +339,8 @@
 **قبول:** ready تعني أن كل الموارد المطلوبة موجودة وصالحة ويمكن تشغيلها دون شبكة؛ حذف التنزيل لا يحذف حفظ الطفل.
 
 ### T12 — سجل التلاوة الشخصي
+
+> **مؤجل بقرار المالك (2026-10-12).** المفتاح يبقى مغلقًا ولا يُبدأ أي التقاط صوت.
 
 **بوابة مستقلة قبل التنفيذ:** T0 أثبت stable child scope؛ مراجعة خصوصية وموافقة ولي الأمر وحذف/احتفاظ؛ التحقيق في التقاط bytes لأن recorder الحالي مخصص للتعرف على الكلام وليس مستودع تسجيلات. لا تستنتج أن transcript أو نجاح STT يعني وجود ملف صوت.
 

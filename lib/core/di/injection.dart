@@ -39,6 +39,7 @@ import '../theme/pure_black_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
+import '../memorization/kids_enrichment_feature_flags.dart';
 import '../memorization/kids_hifz_feature_flags.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../memorization/pending_ayah_resolver.dart';
@@ -1095,6 +1096,10 @@ Future<void> configureDependencies({bool background = false}) async {
           getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
     ),
   );
+  // Rollout switches for the kids enrichment roadmap (all off by default).
+  getIt.registerLazySingleton<KidsEnrichmentFlags>(
+    () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
   // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).
   getIt.registerLazySingleton<KidsAchievementStore>(
     () => KidsAchievementStore(
@@ -1119,6 +1124,14 @@ Future<void> configureDependencies({bool background = false}) async {
         kids: true,
       ),
       achievements: (inputs) => getIt<KidsAchievementStore>().sync(inputs),
+      sessionLogs: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsSessionLogs()).fold(
+            (failure) => throw failure,
+            (logs) => logs,
+          ),
+      effortEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.effortAchievements,
+      ),
     ),
   );
   getIt.registerFactory<KidsProgressCubit>(

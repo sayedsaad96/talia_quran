@@ -7,9 +7,11 @@ import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../../home/domain/entities/activity_event.dart';
 import '../../../streak/domain/entities/streak_entity.dart';
 import '../entities/kids_progress.dart';
+import '../entities/kids_session_log.dart';
 import '../entities/remote_child_summary.dart';
 import 'kids_achievements.dart';
 import 'kids_daily_missions.dart';
+import 'kids_effort_achievement_inputs.dart';
 
 /// Everything the kids "تقدّمي" page shows, from the kids track only. The
 /// guardian's view of a child reads the same shape.
@@ -76,8 +78,12 @@ class KidsProgressSnapshotLoader {
     required Future<List<ActivityEvent>> Function() recentActivity,
     required Future<List<KidsAchievement>> Function(KidsAchievementInputs)
     achievements,
+    Future<List<KidsSessionLog>> Function()? sessionLogs,
+    bool Function()? effortEnabled,
     DateTime Function()? clock,
-  }) : _progress = progress,
+  }) : _sessionLogs = sessionLogs,
+       _effortEnabled = effortEnabled,
+       _progress = progress,
        _streak = streak,
        _pagesOn = pagesOn,
        _allPages = allPages,
@@ -98,6 +104,22 @@ class KidsProgressSnapshotLoader {
   _achievements;
   final DateTime Function() _clock;
 
+  /// Source of the child's saved session logs and the feature switch for the
+  /// effort milestones. Without both, those milestones are not evaluated.
+  final Future<List<KidsSessionLog>> Function()? _sessionLogs;
+  final bool Function()? _effortEnabled;
+
+  Future<KidsEffortAchievementInputs?> _effortInputs() async {
+    final logs = _sessionLogs;
+    if (logs == null || !(_effortEnabled?.call() ?? false)) return null;
+    try {
+      return buildKidsEffortInputs(await logs());
+    } catch (_) {
+      // Unreadable logs never unlock (or re-lock) a milestone.
+      return null;
+    }
+  }
+
   Future<KidsProgressSnapshot> load() async {
     final now = _clock();
     final progress = await _progress();
@@ -110,6 +132,7 @@ class KidsProgressSnapshotLoader {
     final certificates = [..._certificates()]
       ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
     final longestStreak = max(streak.longestStreak, streak.currentStreak);
+    final effort = await _effortInputs();
     final achievements = await _achievements(
       KidsAchievementInputs(
         memorizedAyahs: progress.ayahsCompleted,
@@ -119,6 +142,7 @@ class KidsProgressSnapshotLoader {
         readPages: allPages.length,
         longestStreak: longestStreak,
         stars: progress.starsEarned,
+        effort: effort,
       ),
     );
     final recent = await _recentActivity();
@@ -145,6 +169,7 @@ class KidsProgressSnapshotLoader {
 KidsProgressSnapshot remoteKidsProgressSnapshot(
   RemoteChildSummary summary, {
   required DateTime now,
+  bool includeEffort = false,
 }) {
   final progress = summary.progress;
   final activity = summary.activity;
@@ -173,19 +198,28 @@ KidsProgressSnapshot remoteKidsProgressSnapshot(
     longestStreak: longestStreak,
     memorizedAyahs: progress.ayahsCompleted,
     weekPages: activity?.weekReadPagesCount,
-    achievements: KidsAchievementCatalog.evaluate(
-      KidsAchievementInputs(
-        memorizedAyahs: progress.ayahsCompleted,
-        memorizedSurahs: certificates
-            .where((c) => c.type == CertificateType.surah)
-            .length,
-        readPages: activity?.readPagesCount ?? 0,
-        longestStreak: longestStreak,
-        stars: progress.starsEarned,
+    achievements: [
+      ...KidsAchievementCatalog.evaluate(
+        KidsAchievementInputs(
+          memorizedAyahs: progress.ayahsCompleted,
+          memorizedSurahs: certificates
+              .where((c) => c.type == CertificateType.surah)
+              .length,
+          readPages: activity?.readPagesCount ?? 0,
+          longestStreak: longestStreak,
+          stars: progress.starsEarned,
+        ),
+        now: now,
+        unlocked: activity?.achievements ?? const {},
       ),
-      now: now,
-      unlocked: activity?.achievements ?? const {},
-    ),
+      // The child's logs are not on this device, so effort milestones appear
+      // only once the child device reports them; never as a locked row with
+      // an invented progress.
+      if (includeEffort)
+        for (final spec in KidsAchievementCatalog.effortSpecs)
+          if (activity?.achievements[spec.id.name] case final at?)
+            KidsAchievement(spec: spec, current: spec.target, unlockedAt: at),
+    ],
     certificates: certificates,
     recentActivity: (activity?.events ?? const <ActivityEvent>[])
         .take(KidsProgressSnapshotLoader.recentLimit)

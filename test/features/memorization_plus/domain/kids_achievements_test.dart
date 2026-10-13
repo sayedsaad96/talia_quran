@@ -50,7 +50,10 @@ void main() {
 
   test('every metric has a first milestone at 1', () {
     for (final metric in KidsAchievementMetric.values) {
-      final targets = KidsAchievementCatalog.specs
+      final targets = [
+            ...KidsAchievementCatalog.specs,
+            ...KidsAchievementCatalog.effortSpecs,
+          ]
           .where((s) => s.metric == metric)
           .map((s) => s.target);
       expect(targets.reduce((a, b) => a < b ? a : b), lessThanOrEqualTo(3));

@@ -2439,6 +2439,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsAchievementStars50 => '50 stars';
 
   @override
+  String get kidsAchievementFirstReview => 'First review';
+
+  @override
+  String get kidsAchievementTriedAgain => 'Tried again and did it';
+
+  @override
+  String get kidsAchievementComeback => 'Welcome back';
+
+  @override
   String get childDetailProgressTitle =>
       'Progress, achievements and certificates';
 
@@ -6259,6 +6268,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsHomeMissionSuggestShare => 'Share your toy with someone';
+
+  @override
+  String get kidsHomeMissionSuggestLearning =>
+      'Tell your family one thing you learned today';
+
+  @override
+  String get kidsHomeMissionSuggestBag =>
+      'Get your school bag ready for tomorrow';
 
   @override
   String get kidsAyahAlreadyCompleted =>

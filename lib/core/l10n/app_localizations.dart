@@ -4484,6 +4484,24 @@ abstract class AppLocalizations {
   /// **'خمسون نجمة'**
   String get kidsAchievementStars50;
 
+  /// No description provided for @kidsAchievementFirstReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول مراجعة'**
+  String get kidsAchievementFirstReview;
+
+  /// No description provided for @kidsAchievementTriedAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاولت من جديد ونجحت'**
+  String get kidsAchievementTriedAgain;
+
+  /// No description provided for @kidsAchievementComeback.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدت من جديد'**
+  String get kidsAchievementComeback;
+
   /// No description provided for @childDetailProgressTitle.
   ///
   /// In ar, this message translates to:
@@ -10749,6 +10767,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'شارك لعبتك مع غيرك'**
   String get kidsHomeMissionSuggestShare;
+
+  /// No description provided for @kidsHomeMissionSuggestLearning.
+  ///
+  /// In ar, this message translates to:
+  /// **'احكِ لأسرتك شيئًا تعلّمته اليوم'**
+  String get kidsHomeMissionSuggestLearning;
+
+  /// No description provided for @kidsHomeMissionSuggestBag.
+  ///
+  /// In ar, this message translates to:
+  /// **'جهّز حقيبتك المدرسية لليوم التالي'**
+  String get kidsHomeMissionSuggestBag;
 
   /// No description provided for @kidsAyahAlreadyCompleted.
   ///

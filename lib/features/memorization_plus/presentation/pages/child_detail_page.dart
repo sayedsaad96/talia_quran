@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -33,6 +34,20 @@ import '../../../../core/utils/locale_number_formatter.dart';
 
 part 'child_detail_sections.dart';
 part 'child_detail_dialogs.dart';
+
+/// Age band for the educational home-mission templates, or null while the
+/// feature is off (or not wired) so the add dialog keeps its original chips.
+/// A child with no known age falls back to the 8–12 band, like every other
+/// kids surface.
+KidsAgeBand? _homeMissionTemplateAgeBand(FamilyChildEntry child) {
+  if (!getIt.isRegistered<KidsEnrichmentFlags>() ||
+      !getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.homeMissionTemplates,
+      )) {
+    return null;
+  }
+  return KidsSessionPolicy.forChildAge(child.childAge).ageBand;
+}
 
 class ChildDetailRouteArgs {
   const ChildDetailRouteArgs({required this.child, required this.cubit});
@@ -243,6 +258,7 @@ class _ChildDetailBody extends StatelessWidget {
         else
           HomeMissionsPanel(
             missions: homeMissions,
+            templateAgeBand: _homeMissionTemplateAgeBand(child),
             onAdd: (title) =>
                 context.read<FamilyDashboardCubit>().addHomeMission(
                   title,

@@ -37,6 +37,8 @@ class _FakeRepository implements MemorizationPlusRepository {
   Either<Failure, void> identityResult = const Right(null);
   final savedSettings = <ParentSettings>[];
   final remoteMissionCreates = <String>[];
+  /// When set, remote mission creation waits on it (to hold a call in flight).
+  Completer<void>? missionCreateGate;
   final remoteMissionAcks = <String>[];
   final localMissionAdds = <String>[];
   final localMissionAcks = <String>[];
@@ -98,6 +100,7 @@ class _FakeRepository implements MemorizationPlusRepository {
     required String title,
   }) async {
     remoteMissionCreates.add('$childUserId:$title');
+    await missionCreateGate?.future;
     return missionResult;
   }
 
@@ -749,6 +752,27 @@ void main() {
         expect((cubit.state as FamilyDashboardLoaded).feedback, isNull);
       },
     );
+
+    test('a repeated submit while one is in flight creates one mission', () async {
+      final (repository, cubit) = await loaded();
+      repository.missionCreateGate = Completer<void>();
+
+      final first = cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+      await Future<void>.delayed(Duration.zero);
+      await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+      repository.missionCreateGate!.complete();
+      await first;
+
+      expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
+
+      // The guard releases once the call finishes.
+      repository.missionCreateGate = null;
+      await cubit.addHomeMission('ساعد في المائدة', childId: 'c1');
+      expect(repository.remoteMissionCreates, [
+        'c1:رتّب غرفتك',
+        'c1:ساعد في المائدة',
+      ]);
+    });
 
     test('without a child id the mission goes through the local API', () async {
       final (repository, cubit) = await loaded();

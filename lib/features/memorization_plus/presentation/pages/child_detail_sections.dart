@@ -490,7 +490,15 @@ class _ChildProgressSectionState extends State<_ChildProgressSection> {
             const SizedBox(height: AppSpacing.sm),
           ],
           ChildProgressPanel(
-            snapshot: remoteKidsProgressSnapshot(summary, now: DateTime.now()),
+            snapshot: remoteKidsProgressSnapshot(
+              summary,
+              now: DateTime.now(),
+              includeEffort:
+                  getIt.isRegistered<KidsEnrichmentFlags>() &&
+                  getIt<KidsEnrichmentFlags>().isEnabled(
+                    KidsEnrichmentFeature.effortAchievements,
+                  ),
+            ),
             childName: name,
           ),
         ],
