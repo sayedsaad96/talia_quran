@@ -12,6 +12,8 @@
 
 **Status:** خطة مقترحة أعدت بطلب المستخدم؛ التنفيذ غير بدأ، والتصميم والخطة يحتاجان مراجعة قبل تعديل التطبيق. مرجع المصدر HEAD `81cf125a89b952baebcafe818ef82eda43e46f95` وشجرة العمل القائمة في 2026-10-11. كل الواجهات تحت `adult_journey` أدناه **مقترحة للإنشاء** وليست APIs موجودة.
 
+**مراجعة 2026-10-12:** قورنت الخطة بالمصدر عند HEAD نفسه. التعديلات: لا تعديل لـ `HomeCubit`/`home_state` (Task 4)، شرط بالغ مثبت (Tasks 3–5)، آلية زيارة مبسطة بكتابة يومية (Task 5)، وتقسيم التسليم إلى ثلاث مراحل. التفاصيل والأسباب في spec §10.
+
 ## Global Constraints
 
 - Adult only; no child writes or child UI changes.
@@ -40,7 +42,9 @@
 | `lib/core/identity/account_data_reset.dart` | `clearedPreferencePrefixes` والتنظيف الحالي للخروج والحذف |
 | `lib/core/journey/unified_journey_action.dart` | `UnifiedJourneyAction`, `JourneyIntent`, `UnifiedJourneyPriority` |
 | `lib/core/journey/unified_journey_engine.dart` | `evaluateAll` ومقادير `journeyActionMinutes` القائمة |
-| `lib/features/home/presentation/cubits/home_cubit.dart` و`home_state.dart` | أحدث بيانات الرئيسية وتحديثها القائم |
+| `lib/features/home/presentation/cubits/home_cubit.dart` و`home_state.dart` | قراءة فقط: `HomeLoaded.alternativeActions` (كل مخرجات `evaluateAll` بترتيبها)، `customPlan`، `microReview`، `selectedTrack`، `isKids`، `isFirstRun`؛ لا تعديل |
+| `lib/core/widgets/app_shell.dart` و`app_router.dart` | `StatefulShellRoute.indexedStack`: فرع الرئيسية index 0 لفحص الظهور في Task 5 |
+| `lib/features/home/presentation/pages/home_page.dart` | يتجاوز 500 سطر حاليًا؛ تركيب sliver واحد فقط، ويحتوي `didChangeAppLifecycleState` القائم |
 | `lib/features/home/domain/services/home_primary_action_resolver.dart` | أولوية الختمة/الإجراء الرئيسي؛ لا تعديل منطقها |
 | `lib/features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart` | `resolve()`, `MemorizationNavigationTargets.todayPlanLocation/reviewQuizLocation` |
 | `lib/features/settings/presentation/widgets/settings_hub_body.dart` | مدخل النموذج المشترك للكبار فقط |
@@ -95,6 +99,7 @@ Future<AdultJourneyPreferences> update({
 - [ ] شغّل `flutter analyze`، ثم `flutter test test/features/onboarding test/features/home test/core/journey test/core/router test/core/identity test/features/memorization_plus/presentation/navigation test/features/memorization_plus/domain/services/plan_schedule_policy_test.dart test/integration/account_switch_isolation_test.dart`.
 - [ ] سجل النتائج كخط أساس. أي فشل متعلق بالهوية أو تقدم الحفظ أو الملاحة يعالج/يحسم قبل التفعيل؛ لا تنسب فشلًا سابقًا للحزمة ولا تتجاهله.
 - [ ] راجع file map مع المصدر الحالي. إذا اختلف عقد موجود عما في الخطة حدّث الوثيقتين قبل تعديل المستهلكين.
+- [ ] سجل الملفات المعدلة محليًا وغير المحفوظة قبل البدء. في 2026-10-12 تشمل `lib/core/l10n/app_ar.arb` و`app_localizations.dart` و`app_localizations_ar.dart` واختبار `prayer_companion_settings_section_test.dart`. لا `dart format` على مجلدات كاملة؛ نسّق الملفات المعدلة في الحزمة فقط.
 
 ## Task 1: سجل التفضيلات وملكية الحساب والتنظيف
 
@@ -171,12 +176,16 @@ AdultReturnDecision evaluate({
 - [ ] اكتب widget tests عربية وإنجليزية، فاتح/داكن، width320 وtextScale2.0، وأسماء semantics وخيارات radio/زر الحفظ. افصل نص الواجهة الجديد عن أي اقتباس ديني؛ لا محتوى تعبدي جديد.
 - [ ] Run: `flutter test test/features/adult_journey/presentation/adult_journey_cubit_test.dart test/features/adult_journey/presentation/adult_journey_setup_sheet_test.dart`؛ تحقق الفشل للسلوك المفقود.
 - [ ] نفذ النموذج وCubit، مع إشعارات خطأ localized لا raw exception. تحقق profileCompleted مستقل عن HomeLoaded.isFirstRun. لا تعدل `OnboardingState.stepCount` أو أكواد skip/login/guest.
-- [ ] أضف مدخل الرئيسية والإعدادات وARB، ثم `flutter gen-l10n`؛ لا تعدل generated localizations يدويًا، ولا تستبدل تغييرات ARB السابقة.
+- [ ] اختبر شرط البالغ المثبت: `selectedTrack == adults` و`!isKids` يظهر الملحق؛ `selectedTrack == null` أو طفل أو `HomeLoaded` بملف شخصي فاشل التحميل ⇒ لا ملحق والرئيسية كما هي. واختبر أن دعوة التخصيص لا تظهر في الرئيسية مع `HomeFirstRun`، وتبقى من الإعدادات.
+- [ ] اختبر أن حفظ الهدف لا يكتب `user_primary_goal`، وأن النموذج لا يملأ مسبقًا منه.
+- [ ] أضف مدخل الرئيسية والإعدادات وARB، ثم `flutter gen-l10n`؛ لا تعدل generated localizations يدويًا، ولا تستبدل تغييرات ARB السابقة. في `home_page.dart` أضف sliver واحدًا فقط يستدعي `AdultJourneySection`. ARB: أضف المفاتيح الجديدة دون إعادة ترتيب أو تنسيق، وراجع `git diff` للملفات الثلاثة للتأكد أن فرق المالك السابق باقٍ كما هو.
 - [ ] أعد الاختبارات مع `flutter test test/features/onboarding test/features/settings test/features/adult_journey/presentation`؛ Expected PASS. استعرض فروق الترجمة/اللقطات قبل قبول أي baseline بصري. Commit المهمة.
 
 ## Task 4: وقت اليوم وربط الملاحة الحالية
 
-**Files:** Create AJ today_budget_card وapplication launch_resolver. Extend cubit بـ `setTodayMinutes(int minutes)`, `clearToday()`, `Future<String?> resolveLaunch(AdultJourneySuggestion suggestion)`. Modify HomeCubit/home_state فقط لإتاحة Context حديث من القيم الموجودة، وHomePage لتركيب section. Create AJT `application/adult_journey_launch_resolver_test.dart`, `presentation/adult_today_budget_card_test.dart`. Extend existing `test/features/home/presentation/cubits/home_cubit_test.dart`.
+**Files:** Create AJ today_budget_card وapplication launch_resolver و`presentation/adult_journey_context_adapter.dart` (تحويل `HomeLoaded` إلى `AdultJourneyContext`). Extend cubit بـ `setTodayMinutes(int minutes)`, `clearToday()`, `Future<String?> resolveLaunch(AdultJourneySuggestion suggestion)`. **لا تعديل** لـ HomeCubit/home_state؛ HomePage مركب من Task 3. Create AJT `application/adult_journey_launch_resolver_test.dart`, `presentation/adult_today_budget_card_test.dart`, `presentation/adult_journey_context_adapter_test.dart`.
+
+**تقسيم المراحل:** بطاقة وقت اليوم والمحول ضمن المرحلة أ، وتعرض الاقتراحات دون تنقل (أو بالمسار الموجود في `UnifiedJourneyAction.route` لغير الاستئناف فقط إن قررت المراجعة ذلك). محلل التنقل وخطوات الاختبار المتعلقة به هي المرحلة ب.
 
 **Interfaces:** `AdultJourneyLaunchResolver.resolve({required AdultJourneyLaunchKind kind, required String expectedOwnerId, AdultResumeDestination? resumeDestination}) -> Future<String?>`. نوع مقترح `AdultResumeDestination {memorization,quran,azkar,unknown}` يعرف بملف suggestion ويحمل في الاقتراح. المنافذ injectable closures تعيد أحدث route من مصادرها؛ memorize/review من `MemorizationNavigationResolver.resolve()`؛ reading/khatmah من بيانات Home المحدثة. resume يفتح وجهة القسم الثابتة فقط وفق spec §6، دون session URL أو معرفات من SharedPreferences. لا تنشأ دورة DI (Home لا يعتمد على Cubit الميزة).
 
@@ -186,7 +195,7 @@ AdultReturnDecision evaluate({
 - [ ] اختبر بقاء بطاقة الختمة ومراجعتها الملحة مع budget5 واختيار حفظ؛ لا تعيد كتابة اختبارات الأولوية لتوافق overlay جديدًا.
 - [ ] Run: `flutter test test/features/adult_journey/application test/features/adult_journey/presentation/adult_today_budget_card_test.dart test/features/home/domain/services/home_primary_action_resolver_test.dart`؛ تحقق الفشل الجديد قبل التنفيذ.
 - [ ] نفذ الاختيار والعرض؛ ضع «تقريبًا» في كل تقدير، وتوضيح exceedsBudget، مع زر تغيير الوقت. لا مؤقت أو إيقاف صوت أو قص نطاق الجلسة.
-- [ ] مد Context من loader الحالي بعد مراجعة جاهزية المالك والبيانات؛ تحويل HomeLoaded يتم في presentation adapter، لا استيراده في Domain. سياسة الاختيار تبقى في feature domain.
+- [ ] ابن Context عبر `adult_journey_context_adapter.dart` من `HomeLoaded` القائم (`alternativeActions` بترتيبها، `customPlan`، `microReview`، `selectedTrack`، `isKids`)؛ لا يستورد `HomeLoaded` في Domain. اختبر المحول: الترتيب محفوظ، والطفل أو غير المثبت ⇒ `isAdult=false`. إن احتجت حقلًا غير موجود فحدّث spec §6 أولًا ثم أضف getter مشتقًا فقط.
 - [ ] نفذ resolver بنقرة واحدة وlease عبر await؛ أعط null عند فشل الهوية، وfallback إلى hub/لوحة الختمة إذا غاب الهدف. لا تفتح جلسة جديدة فوق جلسة مستأنفة تلقائيًا.
 - [ ] Run: `flutter test test/features/adult_journey test/features/home test/core/journey test/features/memorization_plus/presentation/navigation test/features/memorization_plus/domain/navigation/review_ayah_location_test.dart`؛ Expected PASS مع تسجيل أي فشل سابق. Commit المهمة.
 
@@ -194,10 +203,10 @@ AdultReturnDecision evaluate({
 
 **Files:** Create AJ return_card و`presentation/widgets/adult_journey_visibility_binding.dart`. Extend usecases/cubit بواجهات `recordVisibleHomeVisit()`, `startLightReturnToday()`, `dismissReturn()`, `continueNormally()`. Modify HomePage لتركيب binding. Create AJT `presentation/adult_return_card_test.dart`, `presentation/adult_journey_visibility_binding_test.dart`.
 
-**Interfaces:** visibility binding يتلقى `isHomeVisible`, `isResumed`, `ownerReady`, `isAdult`, `ownerGeneration`؛ الأهلية اجتماع الشروط الأربعة، لا الظهور وحده. يطلق callback عند mount مؤهل، وعند false→true أو تبدل جيل المالك أثناء الأهلية. generation عداد محلي في Cubit يتغير عند إبطال lease أو تبدل المالك/الجمهور/دورة الجاهزية، وليس ownerId وحده؛ لا يتغير لمجرد refresh أو كل حدث changes. لا يعتمد على حقل barrier خاص. يستمع للراوتر/lifecycle وAccountDataBarrier.changes وتغير الجمهور، ويلغيها عند dispose. Cubit يكتب RecordHomeVisit باستخدام now injectable؛ المستودع يحسب offer والزيارة في نفس update المحمي.
+**Interfaces (مبسطة، مراجعة 2026-10-12):** binding خفيف يقيم الأهلية عند نقطتين فقط: وصول `HomeLoaded` جديد، و`AppLifecycleState.resumed`. الفحص لحظي عبر منفذ قابل للحقن `bool Function() isHomeForeground` يجمع: الفرع الحالي للـ shell = 0 (`StatefulNavigationShell.maybeOf(context)?.currentIndex`)، و`ModalRoute.of(context)?.isCurrent == true`، وحالة lifecycle resumed. ثم `AccountDataBarrier.isReady` وبالغ مثبت. لا عداد generation جديد ولا مستمع عام لكل حدث `changes`؛ تغير المالك يؤدي لتحميل Home جديد فيعاد التقييم، والـ lease الملتقط قبل الكتابة يبطل أي callback قديم. Cubit يكتب `RecordHomeVisit` باستخدام now injectable؛ المستودع يتجاهل الأمر إن كانت `lastHomeSeenAtUtc` في اليوم المحلي نفسه للمالك (كتابة واحدة يوميًا)، ويحسب offer والزيارة في نفس update المحمي.
 
-- [ ] اختبارات: Home مخفي/خلفية/طفل/حاجز مغلق ⇒ صفر زيارات؛ refresh للصفحة نفسها ⇒ لا زيارة جديدة؛ العودة من تبويب آخر ⇒ زيارة مؤهلة؛ disposal يلغي المستمع؛ baseline ترقية لا عرض؛ dayGap7 يظهر مرة، ويبقى متاحًا اليوم بعد restart حتى dismissal.
-- [ ] اختبر cold start: الرئيسية ظاهرة والحاجز مغلق ثم ownerReady=true بلا تغيير route ⇒ زيارة واحدة؛ child→adult أثناء الظهور ⇒ زيارة بالغ واحدة؛ A→B أثناء الظهور ⇒ انتظار B ready ثم زيارة B دون استكمال callback A.
+- [ ] اختبارات: Home في تبويب آخر/تحت صفحة مدفوعة/خلفية/طفل/غير مثبت/حاجز مغلق ⇒ صفر زيارات؛ عدة تحميلات في اليوم نفسه ⇒ كتابة واحدة؛ يوم جديد ⇒ كتابة جديدة؛ disposal يلغي المستمع؛ baseline ترقية لا عرض؛ dayGap7 يظهر مرة، ويبقى متاحًا اليوم بعد restart حتى dismissal.
+- [ ] اختبر cold start: الحاجز مغلق ثم يصبح جاهزًا ويصل `HomeLoaded` ⇒ زيارة واحدة؛ A→B ⇒ لا كتابة لمفتاح B بـ lease A، وزيارة B بعد تحميلها فقط؛ logout ثم login بعد غياب ⇒ خط أساس بلا دعوة عودة.
 - [ ] اختبارات أفعال العودة: light⇒today5 وlightReturn=true فقط؛ continueNormally⇒مسح today ودعوة اليوم دون حذف profile؛ اختيار وقت دون تأكيد لا يحفظ؛ no reviews⇒قراءة/وجهة محايدة دون آيات جديدة؛ المقارنة قبل/بعد لسجلات الحفظ والخطة متطابقة.
 - [ ] Run: `flutter test test/features/adult_journey/presentation/adult_return_card_test.dart test/features/adult_journey/presentation/adult_journey_visibility_binding_test.dart`؛ Expected فشل السلوك الناقص قبل التنفيذ.
 - [ ] نفذ العرض دون popup أو navigation تلقائي؛ صياغة العودة لا تدّعي أن المستخدم ترك القرآن. خزّن returnOfferLocalDate قبل استبدال lastHomeSeenAtUtc، بعملية واحدة. لا تعتمد على recentActivity أو آخر مراجعة لتاريخ الغياب.
@@ -232,6 +241,16 @@ AdultReturnDecision evaluate({
 | يوم جديد/منطقة زمنية/restart | 2 + 4 + 5 + Android |
 | لا تغيير ديني/تقدم بسبب التفضيلات | 6 snapshot + مراجعة diff |
 | إيقاف الميزة يستعيد السلوك السابق | 4 + 6 flag matrix |
+
+## Delivery phases (مراجعة 2026-10-12)
+
+| المرحلة | المهام | الخطر | شرط الإغلاق |
+|---|---|---|---|
+| أ | 0، 1، 2، 3، وبطاقة وقت اليوم والمحول من 4 | منخفض: ملفات جديدة، وسطر بادئة في reset، وتسجيلات DI، وsliver واحد، ومفاتيح ARB | اختبارات المهام PASS، `flutter analyze` نظيف، الأعلام false |
+| ب | محلل التنقل من 4 | متوسط: يعتمد على `MemorizationNavigationResolver` | اختبارات launch والمسارات القائمة PASS |
+| ج | 5 ثم 6 | متوسط إلى عال: lifecycle وظهور وتبديل حساب | اختبارات Task 5 وتكامل Task 6 PASS، ثم تجربة Android يدوية يجريها المالك |
+
+لا تبدأ مرحلة قبل إغلاق سابقتها. أي حاجة لتعديل `HomeCubit` أو المحرك أو `HomePrimaryActionResolver` توقف التنفيذ وتعود للتصميم.
 
 ## Review and execution handoff
 
