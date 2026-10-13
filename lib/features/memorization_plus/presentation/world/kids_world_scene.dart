@@ -286,8 +286,9 @@ class _ScenePainter extends CustomPainter {
       Color(0xFFF9A8D4),
       Color(0xFFFDE68A),
       Color(0xFFC4B5FD),
+      Color(0xFFFDBA74),
     ];
-    const blossomSlots = [0.12, 0.42, 0.70];
+    const blossomSlots = [0.12, 0.42, 0.70, 0.52];
     for (var i = 0; i < growth.blossoms; i++) {
       final fraction = blossomSlots[i % blossomSlots.length];
       final x = size.width * (rtl ? 1 - fraction : fraction);

@@ -34,6 +34,7 @@ import '../datasources/install_device_id.dart';
 import '../datasources/memorization_plus_local_datasource.dart';
 import '../datasources/remote_children_dashboard_cache.dart';
 import '../models/memorization_models.dart';
+import 'collaborators/kids_reading_support_sync.dart';
 import 'collaborators/memorization_cloud_gateway.dart';
 import 'collaborators/memorization_cloud_mappers.dart';
 import 'collaborators/memorization_custom_plan_service.dart';
@@ -76,6 +77,8 @@ class MemorizationPlusRepositoryImpl extends _MemorizationPlusRepositoryCore
     super.owner,
     super.onKidsPolicyChanged,
     super.familyActivityInputs,
+    super.readingSupportSync,
+    super.readingSupportEnabled,
   });
 }
 
@@ -101,9 +104,13 @@ abstract class _MemorizationPlusRepositoryCore
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
     void Function()? onKidsPolicyChanged,
     FamilyActivityInputsLoader? familyActivityInputs,
+    KidsReadingSupportSync? readingSupportSync,
+    bool Function()? readingSupportEnabled,
   }) : _metrics = metrics,
        _onKidsPolicyChanged = onKidsPolicyChanged,
        _familyActivityInputs = familyActivityInputs,
+       _readingSupportSync = readingSupportSync,
+       _readingSupportEnabled = readingSupportEnabled,
        _cloudSyncQueue = cloudSyncQueue,
        _parentPinStore = parentPinStore,
        _isar = isar,
@@ -115,6 +122,8 @@ abstract class _MemorizationPlusRepositoryCore
   final void Function()? _onKidsPolicyChanged;
 
   final FamilyActivityInputsLoader? _familyActivityInputs;
+  final KidsReadingSupportSync? _readingSupportSync;
+  final bool Function()? _readingSupportEnabled;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -194,6 +203,8 @@ abstract class _MemorizationPlusRepositoryCore
           null => null,
         },
         dashboardCache: _dashboardCache,
+        readingSupportSync: _readingSupportSync,
+        readingSupportEnabled: _readingSupportEnabled,
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(

@@ -2519,6 +2519,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذه مشاركة في التعلّم، ولا تُكمل الآية.';
 
   @override
+  String get kidsFamilyPracticeConfirm => 'للكبير: أكّد أننا تعلّمنا معًا';
+
+  @override
+  String get kidsFamilyPracticeConfirmed => 'حُفظ: تعلّمتم معًا.';
+
+  @override
+  String get kidsFamilyPracticeConfirmFailed => 'تعذّر الحفظ. حاول مرة أخرى.';
+
+  @override
+  String get kidsAchievementFamilyPractice => 'تعلّمنا معًا';
+
+  @override
   String get kidsGameTitle => 'أي سورة هذه؟';
 
   @override
@@ -2587,6 +2599,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsSupportSaveFailed => 'تعذّر حفظ الإجابة. حاول مرة أخرى.';
+
+  @override
+  String get kidsSupportLinkedNote =>
+      'يُحفظ لجهاز طفلك، ويُطبَّق بعد مزامنة ذلك الجهاز.';
+
+  @override
+  String get kidsSupportLinkedUnavailable =>
+      'هذا الإعداد غير متاح لهذا الطفل حاليًا.';
 
   @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';

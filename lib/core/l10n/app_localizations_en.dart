@@ -2536,6 +2536,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is shared practice. It does not complete the ayah.';
 
   @override
+  String get kidsFamilyPracticeConfirm =>
+      'Grown-up: confirm we practised together';
+
+  @override
+  String get kidsFamilyPracticeConfirmed => 'Saved: you practised together.';
+
+  @override
+  String get kidsFamilyPracticeConfirmFailed =>
+      'It could not be saved. Try again.';
+
+  @override
+  String get kidsAchievementFamilyPractice => 'Learned together';
+
+  @override
   String get kidsGameTitle => 'Which surah?';
 
   @override
@@ -2607,6 +2621,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsSupportSaveFailed =>
       'The answer could not be saved. Try again.';
+
+  @override
+  String get kidsSupportLinkedNote =>
+      'Saved for your child\'s device; it applies after that device syncs.';
+
+  @override
+  String get kidsSupportLinkedUnavailable =>
+      'This setting isn\'t available for this child right now.';
 
   @override
   String get childDetailProgressTitle =>

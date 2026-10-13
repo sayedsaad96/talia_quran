@@ -13,17 +13,30 @@ import '../cubits/kids_family_practice_cubit.dart';
 /// Opens «نتعلم سوا» for the ayah the child is on. The sheet is guidance
 /// only: it never starts audio or the microphone, and closing it at any
 /// step leaves the session exactly as it was.
+///
+/// With [recorder] and [verifyGuardian], a finished practice can be
+/// confirmed by the guardian (PIN on this device) into a receipt.
 Future<void> showKidsFamilyPracticeSheet(
   BuildContext context, {
   required int surahId,
   required int ayahNumber,
+  KidsFamilyPracticeRecorder? recorder,
+  Future<bool> Function(BuildContext context)? verifyGuardian,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
   builder: (_) => BlocProvider(
-    create: (_) => KidsFamilyPracticeCubit()..begin(),
-    child: KidsFamilyPracticePanel(surahId: surahId, ayahNumber: ayahNumber),
+    create: (_) => KidsFamilyPracticeCubit(
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      recorder: recorder,
+    )..begin(),
+    child: KidsFamilyPracticePanel(
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      verifyGuardian: verifyGuardian,
+    ),
   ),
 );
 
@@ -32,10 +45,14 @@ class KidsFamilyPracticePanel extends StatelessWidget {
     super.key,
     required this.surahId,
     required this.ayahNumber,
+    this.verifyGuardian,
   });
 
   final int surahId;
   final int ayahNumber;
+
+  /// Proves the guardian before a receipt is recorded; null hides confirming.
+  final Future<bool> Function(BuildContext context)? verifyGuardian;
 
   static String _stepText(
     AppLocalizations l10n,
@@ -116,6 +133,15 @@ class KidsFamilyPracticePanel extends StatelessWidget {
                       ),
                     ],
                   ),
+                if (step == null &&
+                    verifyGuardian != null &&
+                    context.read<KidsFamilyPracticeCubit>().canConfirm) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  _GuardianConfirm(
+                    confirmation: state.confirmation,
+                    verifyGuardian: verifyGuardian!,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   l10n.kidsFamilyPracticeNote,
@@ -129,7 +155,6 @@ class KidsFamilyPracticePanel extends StatelessWidget {
                     TextButton(
                       key: const ValueKey('kids-family-practice-close'),
                       onPressed: () {
-                        context.read<KidsFamilyPracticeCubit>().cancel();
                         Navigator.of(context).pop();
                       },
                       child: Text(l10n.close),
@@ -155,6 +180,82 @@ class KidsFamilyPracticePanel extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// «نعم، تعلّمنا معًا»: the guardian proves themselves (PIN) and the
+/// finished practice is recorded once. A second tap while the PIN dialog
+/// is open does nothing.
+class _GuardianConfirm extends StatefulWidget {
+  const _GuardianConfirm({
+    required this.confirmation,
+    required this.verifyGuardian,
+  });
+
+  final KidsFamilyPracticeConfirmation confirmation;
+  final Future<bool> Function(BuildContext context) verifyGuardian;
+
+  @override
+  State<_GuardianConfirm> createState() => _GuardianConfirmState();
+}
+
+class _GuardianConfirmState extends State<_GuardianConfirm> {
+  bool _verifying = false;
+
+  Future<void> _confirm() async {
+    if (_verifying) return;
+    setState(() => _verifying = true);
+    try {
+      final cubit = context.read<KidsFamilyPracticeCubit>();
+      final verified = await widget.verifyGuardian(context);
+      if (!verified || !mounted) return;
+      await cubit.confirm();
+    } finally {
+      if (mounted) setState(() => _verifying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = widget.confirmation;
+    if (c == KidsFamilyPracticeConfirmation.saved) {
+      return Row(
+        key: const ValueKey('kids-family-practice-confirmed'),
+        children: [
+          Icon(TaliaIcons.check, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              l10n.kidsFamilyPracticeConfirmed,
+              style: AppTypography.bodyMedium,
+            ),
+          ),
+        ],
+      );
+    }
+    final busy = _verifying || c == KidsFamilyPracticeConfirmation.saving;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          key: const ValueKey('kids-family-practice-confirm'),
+          onPressed: busy ? null : _confirm,
+          icon: const Icon(TaliaIcons.verified),
+          label: Text(l10n.kidsFamilyPracticeConfirm),
+        ),
+        if (c == KidsFamilyPracticeConfirmation.failed) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.kidsFamilyPracticeConfirmFailed,
+            key: const ValueKey('kids-family-practice-confirm-failed'),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -189,6 +189,7 @@ Color _metricDoor(KidsAchievementMetric metric) => switch (metric) {
   KidsAchievementMetric.reviews => AppColors.kidsDoorLeaf,
   KidsAchievementMetric.retries => AppColors.kidsDoorSky,
   KidsAchievementMetric.comebacks => AppColors.kidsDoorSun,
+  KidsAchievementMetric.family => AppColors.kidsDoorViolet,
 };
 
 /// Talia names the next step: a fresh milestone, the closest one ahead, or

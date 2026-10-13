@@ -18,6 +18,7 @@ import 'family_activity_publisher.dart';
 import 'memorization_cloud_gateway.dart';
 import 'kids_child_policy_sync.dart';
 import 'kids_home_mission_child_sync.dart';
+import 'kids_reading_support_sync.dart';
 import 'memorization_cloud_mappers.dart';
 
 /// Kids-mode cloud sync: pushes kids progress + session logs to Supabase and
@@ -33,13 +34,32 @@ class MemorizationKidsCloudSyncService {
     void Function()? onKidsPolicyChanged,
     FamilyActivityPublisher? activityPublisher,
     RemoteChildrenDashboardCache? dashboardCache,
+    KidsReadingSupportSync? readingSupportSync,
+    bool Function()? readingSupportEnabled,
   }) : _owner = owner,
        _onKidsPolicyChanged = onKidsPolicyChanged,
        _activityPublisher = activityPublisher,
-       _dashboardCache = dashboardCache;
+       _dashboardCache = dashboardCache,
+       _readingSupportSync = readingSupportSync,
+       _readingSupportEnabled = readingSupportEnabled;
 
   final FamilyActivityPublisher? _activityPublisher;
   final RemoteChildrenDashboardCache? _dashboardCache;
+
+  /// Roadmap T7 reading-answer sync; off unless both are wired and the
+  /// flag is on. Best-effort: it never fails the kids pull or push.
+  final KidsReadingSupportSync? _readingSupportSync;
+  final bool Function()? _readingSupportEnabled;
+
+  KidsReadingSupportSync? get _activeReadingSupport {
+    final sync = _readingSupportSync;
+    if (sync == null) return null;
+    try {
+      return (_readingSupportEnabled?.call() ?? false) ? sync : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   final MemorizationPlusLocalDatasource _datasource;
   final StreakReader _streakReader;
@@ -208,6 +228,18 @@ class MemorizationKidsCloudSyncService {
         return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
       },
     );
+    // T7 reading answer: same best-effort rule; never throws.
+    await _activeReadingSupport?.pull(
+      ownerId: ownerId,
+      fetch: (childUserId) async {
+        final rows = await client
+            .from('kids_child_reading_support')
+            .select()
+            .eq('child_user_id', childUserId)
+            .limit(1);
+        return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
+      },
+    );
   }
 
   Future<Either<Failure, void>> syncKidsProgressToCloud() async {
@@ -287,6 +319,28 @@ class MemorizationKidsCloudSyncService {
         casRpc: (params) =>
             client.rpc('compare_and_swap_child_policy', params: params),
       );
+      // T7 reading answer edited on this device; never throws. Only a
+      // guardian-linked child can be authorized by the RPC, so other
+      // devices skip the round-trip and keep the edit pending.
+      final readingSupport = _activeReadingSupport;
+      var childLinked = false;
+      if (readingSupport != null) {
+        try {
+          childLinked = (await _datasource.getMemorizationProfile())
+              .isGuardianLinked;
+        } catch (_) {
+          // Unreadable profile: skip this round; the edit stays pending.
+        }
+      }
+      if (readingSupport != null && childLinked) {
+        await readingSupport.pushPending(
+          ownerId: ownerId,
+          cas: (params) => client.rpc(
+            'compare_and_swap_child_reading_support',
+            params: params,
+          ),
+        );
+      }
       final hadActivityFailure = await _publishFamilyActivity(client, ownerId);
       if (hadActivityFailure) {
         return const Left(

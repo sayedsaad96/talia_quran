@@ -22,6 +22,7 @@ import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/entities/kids_learning_support_profile.dart';
+import '../../domain/repositories/kids_family_practice_repository.dart';
 import '../../domain/repositories/kids_support_profile_repository.dart';
 import '../../domain/services/kids_support_action_resolver.dart';
 import '../theme/kids_theme.dart';
@@ -101,6 +102,23 @@ bool _supportActionsEnabled() =>
     getIt<KidsEnrichmentFlags>().isEnabled(
       KidsEnrichmentFeature.supportActions,
     );
+
+/// Confirming a family practice is a guardian action, proven like manual
+/// completion: an unlinked device may create a PIN first; a linked child's
+/// remote guardian proves themselves through recovery instead. An unreadable
+/// profile is treated as linked (no PIN creation).
+Future<bool> _verifyGuardianForPractice(BuildContext context) async {
+  final isLinked = (await getIt<MemorizationPlusRepository>()
+          .getMemorizationProfile())
+      .fold((_) => true, (profile) => profile.isGuardianLinked);
+  if (!context.mounted) return false;
+  return ensureGuardianPin(
+    context,
+    confirmLabel: context.l10n.confirm,
+    allowRecovery: isLinked,
+    allowCreate: !isLinked,
+  );
+}
 
 /// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
 bool _familyPracticeEnabled() =>
@@ -316,6 +334,11 @@ class _KidsGamifiedListenView extends StatelessWidget {
                     context,
                     surahId: state.surahId,
                     ayahNumber: state.ayahNumber,
+                    recorder:
+                        getIt.isRegistered<KidsFamilyPracticeRepository>()
+                        ? getIt<KidsFamilyPracticeRepository>().record
+                        : null,
+                    verifyGuardian: _verifyGuardianForPractice,
                   )
                 : null,
             // A guardian's proactive setting implies the suggestions.

@@ -133,7 +133,13 @@ import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_family_practice_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_support_profile_store.dart';
+import '../../features/memorization_plus/data/repositories/collaborators/kids_reading_support_sync.dart';
+import '../../features/memorization_plus/data/repositories/collaborators/memorization_cloud_gateway.dart';
+import '../../features/memorization_plus/data/repositories/kids_remote_reading_support_repository_impl.dart';
+import '../../features/memorization_plus/domain/repositories/kids_remote_reading_support_repository.dart';
+import '../../features/memorization_plus/domain/repositories/kids_family_practice_repository.dart';
 import '../../features/memorization_plus/domain/repositories/kids_support_profile_repository.dart';
 import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
@@ -629,6 +635,30 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<KhatmahRepository>(
     () => KhatmahRepositoryImpl(getIt<KhatmahLocalDatasource>()),
   );
+  // Guardian's learning-support answers for the child on this device and
+  // their sync with a linked guardian (T7). Registered before the
+  // repository, which hands the sync to the kids cloud service.
+  getIt.registerLazySingleton<KidsSupportProfileStore>(
+    () => KidsSupportProfileStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<KidsSupportProfileRepository>(
+    () => getIt<KidsSupportProfileStore>(),
+  );
+  getIt.registerLazySingleton<KidsReadingSupportSync>(
+    () => KidsReadingSupportSync(
+      getIt<KidsSupportProfileStore>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<KidsRemoteReadingSupportRepository>(
+    () => KidsRemoteReadingSupportRepositoryImpl(
+      MemorizationCloudGateway(getIt<SharedPreferences>()),
+      getIt<KidsReadingSupportSync>(),
+    ),
+  );
   getIt.registerLazySingleton<MemorizationPlusRepository>(
     () => MemorizationPlusRepositoryImpl(
       getIt<MemorizationPlusLocalDatasource>(),
@@ -648,6 +678,10 @@ Future<void> configureDependencies({bool background = false}) async {
         }
       },
       familyActivityInputs: familyActivityInputsLoader(getIt),
+      readingSupportSync: getIt<KidsReadingSupportSync>(),
+      readingSupportEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.supportProfile,
+      ),
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(
@@ -1117,11 +1151,13 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
     ),
   );
-  // Guardian's learning-support answers for the child on this device (T7).
-  getIt.registerLazySingleton<KidsSupportProfileRepository>(
-    () => KidsSupportProfileStore(
+  // Guardian-confirmed «نتعلم سوا» receipts (T4).
+  getIt.registerLazySingleton<KidsFamilyPracticeRepository>(
+    () => KidsFamilyPracticeStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
+      onRecorded: () =>
+          getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
     ),
   );
   // «أي سورة هذه؟» listening game (T9, behind its route guard and flag).
@@ -1168,6 +1204,11 @@ Future<void> configureDependencies({bool background = false}) async {
         KidsEnrichmentFeature.effortAchievements,
       ),
       currentOwner: () => getIt<RecordOwnerProvider>().currentOwnerId,
+      familyPractices: () =>
+          getIt<KidsFamilyPracticeRepository>().receipts().length,
+      familyPracticeEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.familyPractice,
+      ),
     ),
   );
   getIt.registerFactory<KidsProgressCubit>(

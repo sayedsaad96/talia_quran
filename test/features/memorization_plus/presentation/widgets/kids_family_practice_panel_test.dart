@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_family_practice_receipt.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_family_practice_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_family_practice_panel.dart';
 
 void main() {
   Future<void> pumpHost(
     WidgetTester tester, {
     Locale locale = const Locale('en'),
+    KidsFamilyPracticeRecorder? recorder,
+    Future<bool> Function(BuildContext context)? verifyGuardian,
   }) => tester.pumpWidget(
     MaterialApp(
       locale: locale,
@@ -27,6 +31,8 @@ void main() {
                 context,
                 surahId: 1,
                 ayahNumber: 3,
+                recorder: recorder,
+                verifyGuardian: verifyGuardian,
               ),
               child: const Text('open'),
             ),
@@ -107,5 +113,72 @@ void main() {
 
     expect(find.byKey(const ValueKey('kids-family-practice')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('guardian confirmation', () {
+    Future<void> finish(WidgetTester tester) async {
+      for (var i = 0; i < 4; i++) {
+        await tester.tap(
+          find.byKey(const ValueKey('kids-family-practice-next')),
+        );
+        await tester.pumpAndSettle();
+      }
+    }
+
+    final confirm = find.byKey(const ValueKey('kids-family-practice-confirm'));
+
+    testWidgets('is offered only when a recorder and verifier are wired', (
+      tester,
+    ) async {
+      await pumpHost(tester);
+      await open(tester);
+      await finish(tester);
+
+      expect(confirm, findsNothing);
+    });
+
+    testWidgets('a wrong or cancelled PIN records nothing', (tester) async {
+      final saved = <KidsFamilyPracticeReceipt>[];
+      await pumpHost(
+        tester,
+        recorder: (r) async {
+          saved.add(r);
+          return true;
+        },
+        verifyGuardian: (_) async => false,
+      );
+      await open(tester);
+      await finish(tester);
+
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+
+      expect(saved, isEmpty);
+      expect(confirm, findsOneWidget);
+    });
+
+    testWidgets('a verified guardian records one receipt', (tester) async {
+      final saved = <KidsFamilyPracticeReceipt>[];
+      await pumpHost(
+        tester,
+        recorder: (r) async {
+          saved.add(r);
+          return true;
+        },
+        verifyGuardian: (_) async => true,
+      );
+      await open(tester);
+      await finish(tester);
+
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+
+      expect(saved.map((r) => (r.surahId, r.ayahNumber)), [(1, 3)]);
+      expect(
+        find.byKey(const ValueKey('kids-family-practice-confirmed')),
+        findsOneWidget,
+      );
+      expect(confirm, findsNothing);
+    });
   });
 }

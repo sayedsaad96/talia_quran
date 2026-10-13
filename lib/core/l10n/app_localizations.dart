@@ -4628,6 +4628,30 @@ abstract class AppLocalizations {
   /// **'هذه مشاركة في التعلّم، ولا تُكمل الآية.'**
   String get kidsFamilyPracticeNote;
 
+  /// No description provided for @kidsFamilyPracticeConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'للكبير: أكّد أننا تعلّمنا معًا'**
+  String get kidsFamilyPracticeConfirm;
+
+  /// No description provided for @kidsFamilyPracticeConfirmed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ: تعلّمتم معًا.'**
+  String get kidsFamilyPracticeConfirmed;
+
+  /// No description provided for @kidsFamilyPracticeConfirmFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الحفظ. حاول مرة أخرى.'**
+  String get kidsFamilyPracticeConfirmFailed;
+
+  /// No description provided for @kidsAchievementFamilyPractice.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعلّمنا معًا'**
+  String get kidsAchievementFamilyPractice;
+
   /// No description provided for @kidsGameTitle.
   ///
   /// In ar, this message translates to:
@@ -4747,6 +4771,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذّر حفظ الإجابة. حاول مرة أخرى.'**
   String get kidsSupportSaveFailed;
+
+  /// No description provided for @kidsSupportLinkedNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُحفظ لجهاز طفلك، ويُطبَّق بعد مزامنة ذلك الجهاز.'**
+  String get kidsSupportLinkedNote;
+
+  /// No description provided for @kidsSupportLinkedUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الإعداد غير متاح لهذا الطفل حاليًا.'**
+  String get kidsSupportLinkedUnavailable;
 
   /// No description provided for @childDetailProgressTitle.
   ///

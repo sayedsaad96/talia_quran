@@ -129,6 +129,36 @@ void main() {
       expect(find(KidsAchievementId.firstAyah).isUnlocked, isFalse);
     });
 
+    test('«learned together» needs a guardian-confirmed receipt', () {
+      KidsAchievement find(int receipts) => KidsAchievementCatalog.evaluate(
+        KidsAchievementInputs(
+          effort: const KidsEffortAchievementInputs(
+            completedReviews: 5,
+          ).withFamilyPractices(receipts, available: true),
+        ),
+        now: now,
+      ).singleWhere((a) => a.id == KidsAchievementId.learnedTogether);
+
+      expect(find(0).isUnlocked, isFalse);
+      expect(find(1).isUnlocked, isTrue);
+    });
+
+    test('«learned together» is not an unreachable goal without practice', () {
+      List<KidsAchievementId> ids(Map<String, DateTime> unlocked) =>
+          KidsAchievementCatalog.evaluate(
+            const KidsAchievementInputs(effort: KidsEffortAchievementInputs()),
+            now: now,
+            unlocked: unlocked,
+          ).map((a) => a.id).toList();
+
+      expect(ids(const {}), isNot(contains(KidsAchievementId.learnedTogether)));
+      // Already earned before the feature was switched off: still shown.
+      expect(
+        ids({'learnedTogether': DateTime.utc(2026, 10, 1)}),
+        contains(KidsAchievementId.learnedTogether),
+      );
+    });
+
     test('the original milestones keep their stored names and order', () {
       expect(KidsAchievementId.values.take(16).map((e) => e.name).toList(), [
         'firstAyah',

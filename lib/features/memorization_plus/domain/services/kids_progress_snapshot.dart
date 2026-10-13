@@ -81,10 +81,14 @@ class KidsProgressSnapshotLoader {
     Future<List<KidsSessionLog>> Function()? sessionLogs,
     bool Function()? effortEnabled,
     String Function()? currentOwner,
+    int Function()? familyPractices,
+    bool Function()? familyPracticeEnabled,
     DateTime Function()? clock,
   }) : _sessionLogs = sessionLogs,
        _effortEnabled = effortEnabled,
        _currentOwner = currentOwner,
+       _familyPractices = familyPractices,
+       _familyPracticeEnabled = familyPracticeEnabled,
        _progress = progress,
        _streak = streak,
        _pagesOn = pagesOn,
@@ -116,11 +120,28 @@ class KidsProgressSnapshotLoader {
   /// numbers are never written under the next account.
   final String Function()? _currentOwner;
 
+  /// Count of guardian-confirmed family practices (T4); none when null.
+  final int Function()? _familyPractices;
+  final bool Function()? _familyPracticeEnabled;
+
   Future<KidsEffortAchievementInputs?> _effortInputs() async {
     final logs = _sessionLogs;
     if (logs == null || !(_effortEnabled?.call() ?? false)) return null;
     try {
-      return buildKidsEffortInputs(await logs());
+      final inputs = buildKidsEffortInputs(await logs());
+      var practices = 0;
+      try {
+        practices = _familyPractices?.call() ?? 0;
+      } catch (_) {
+        practices = 0;
+      }
+      var available = false;
+      try {
+        available = _familyPracticeEnabled?.call() ?? false;
+      } catch (_) {
+        available = false;
+      }
+      return inputs.withFamilyPractices(practices, available: available);
     } catch (_) {
       // Unreadable logs never unlock (or re-lock) a milestone.
       return null;

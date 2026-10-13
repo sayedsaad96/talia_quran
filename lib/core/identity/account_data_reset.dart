@@ -127,6 +127,8 @@ class AccountDataReset {
     'kids_reading_receipts_',
     // Guardian's learning-support answers for the child (owner-scoped).
     'kids_support_profile_',
+    // Guardian-confirmed family-practice receipts (owner-scoped).
+    'kids_family_practice_',
     // Opt-in Prayer Companion settings are account-owned device data.
     'prayer_companion_',
   };

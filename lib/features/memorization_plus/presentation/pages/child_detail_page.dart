@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/kids_remote_reading_support_repository.dart';
 import '../../domain/repositories/kids_support_profile_repository.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
@@ -23,6 +24,7 @@ import '../widgets/child_pin_recovery_panel.dart';
 import '../widgets/child_rewards_panel.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/home_missions_panel.dart';
+import '../widgets/kids_linked_child_support_panel.dart';
 import '../widgets/kids_policy_controls.dart';
 import '../widgets/kids_support_profile_editor.dart';
 import '../widgets/kids_weekly_coaching_card.dart';
@@ -234,8 +236,22 @@ class _ChildDetailBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // The answer lives with the child on this device, where its sessions
-        // run; a linked child's device keeps its own (no cloud field yet).
+        // A linked child's answer is set here and synced to its device.
+        if (!child.isLocal &&
+            _supportProfileEnabled() &&
+            getIt.isRegistered<KidsRemoteReadingSupportRepository>()) ...[
+          _Panel(
+            title: context.l10n.kidsSupportTitle,
+            child: KidsLinkedChildSupportPanel(
+              key: ValueKey('kids-linked-support-${child.childUserId}'),
+              childUserId: child.childUserId,
+              remote: getIt<KidsRemoteReadingSupportRepository>(),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        // The child on this device: its sessions run here.
         if (child.isLocal && _supportProfileEnabled()) ...[
           _Panel(
             title: context.l10n.kidsSupportTitle,

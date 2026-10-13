@@ -68,3 +68,15 @@ KidsSupportPolicy resolveKidsSupportPolicy({
 bool kidsSupportProactiveHints(KidsLearningSupportProfile profile) =>
     profile.reading == KidsReadingAbility.withHelp ||
     profile.reading == KidsReadingAbility.notYetReading;
+
+/// A linked child's answer with the server version it was read at (the CAS
+/// base for the guardian's next save).
+class KidsRemoteReadingSupport extends Equatable {
+  const KidsRemoteReadingSupport(this.profile, this.version);
+
+  final KidsLearningSupportProfile profile;
+  final int version;
+
+  @override
+  List<Object?> get props => [profile, version];
+}

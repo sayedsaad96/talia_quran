@@ -14,6 +14,9 @@ enum KidsAchievementMetric {
   reviews,
   retries,
   comebacks,
+
+  /// Guardian-confirmed family practices (T4 receipts).
+  family,
 }
 
 /// Kids-only milestones. Names are stable storage keys: never rename one.
@@ -40,6 +43,7 @@ enum KidsAchievementId {
   firstReview,
   triedAgain,
   comeback,
+  learnedTogether,
 }
 
 class KidsAchievementSpec {
@@ -84,6 +88,7 @@ class KidsAchievementInputs extends Equatable {
     KidsAchievementMetric.reviews => effort?.completedReviews ?? 0,
     KidsAchievementMetric.retries => effort?.retriedSuccesses ?? 0,
     KidsAchievementMetric.comebacks => effort?.comebacks ?? 0,
+    KidsAchievementMetric.family => effort?.familyPractices ?? 0,
   };
 
   @override
@@ -223,6 +228,13 @@ abstract final class KidsAchievementCatalog {
       KidsAchievementMetric.comebacks,
       1,
     ),
+    // Only a guardian-confirmed receipt counts; learning alone is never
+    // required for progress.
+    KidsAchievementSpec(
+      KidsAchievementId.learnedTogether,
+      KidsAchievementMetric.family,
+      1,
+    ),
   ];
 
   /// Evaluates every milestone. [unlocked] (id name → date) keeps earlier
@@ -235,7 +247,14 @@ abstract final class KidsAchievementCatalog {
   }) => [
     for (final spec in [
       ...specs,
-      if (inputs.effort != null) ...effortSpecs,
+      if (inputs.effort case final effort?)
+        for (final spec in effortSpecs)
+          // «تعلّمنا معًا» only where the family practice can be done (or
+          // once earned), never as an unreachable 0/1 goal.
+          if (spec.id != KidsAchievementId.learnedTogether ||
+              effort.familyPracticeAvailable ||
+              unlocked.containsKey(spec.id.name))
+            spec,
     ])
       KidsAchievement(
         spec: spec,

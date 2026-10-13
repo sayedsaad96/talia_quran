@@ -12,6 +12,8 @@ class KidsEffortAchievementInputs extends Equatable {
     this.completedReviews = 0,
     this.retriedSuccesses = 0,
     this.comebacks = 0,
+    this.familyPractices = 0,
+    this.familyPracticeAvailable = false,
   });
 
   /// Review sessions (due or linked) the child completed.
@@ -23,8 +25,32 @@ class KidsEffortAchievementInputs extends Equatable {
   /// Sessions that followed a break of three or more local days.
   final int comebacks;
 
+  /// Guardian-confirmed «نتعلم سوا» receipts (never derived from logs).
+  final int familyPractices;
+
+  /// Whether «نتعلم سوا» can be done on this device (its flag is on). Off,
+  /// its milestone is shown only if it was already earned.
+  final bool familyPracticeAvailable;
+
+  KidsEffortAchievementInputs withFamilyPractices(
+    int count, {
+    bool available = false,
+  }) => KidsEffortAchievementInputs(
+    completedReviews: completedReviews,
+    retriedSuccesses: retriedSuccesses,
+    comebacks: comebacks,
+    familyPractices: count < 0 ? 0 : count,
+    familyPracticeAvailable: available,
+  );
+
   @override
-  List<Object?> get props => [completedReviews, retriedSuccesses, comebacks];
+  List<Object?> get props => [
+    completedReviews,
+    retriedSuccesses,
+    comebacks,
+    familyPractices,
+    familyPracticeAvailable,
+  ];
 }
 
 /// Pure: the same logs always give the same inputs, and a log repeated by a
