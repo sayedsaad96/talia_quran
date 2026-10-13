@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/kids_support_profile_repository.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
 import '../cubits/family_dashboard_cubit.dart';
@@ -23,6 +24,7 @@ import '../widgets/child_rewards_panel.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/home_missions_panel.dart';
 import '../widgets/kids_policy_controls.dart';
+import '../widgets/kids_support_profile_editor.dart';
 import '../widgets/kids_weekly_coaching_card.dart';
 import '../widgets/parent_support_tip.dart';
 import '../widgets/remove_child_from_family_button.dart';
@@ -57,6 +59,15 @@ bool _weeklyCoachingEnabled() =>
     getIt.isRegistered<KidsEnrichmentFlags>() &&
     getIt<KidsEnrichmentFlags>().isEnabled(
       KidsEnrichmentFeature.weeklyCoaching,
+    );
+
+/// The learning-support question shows only while its flag is on and the
+/// store is wired.
+bool _supportProfileEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt.isRegistered<KidsSupportProfileRepository>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.supportProfile,
     );
 
 class ChildDetailRouteArgs {
@@ -220,6 +231,18 @@ class _ChildDetailBody extends StatelessWidget {
 
         if (child.localData case final localData?) ...[
           _LearningSupportCard(dashboard: localData),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        // The answer lives with the child on this device, where its sessions
+        // run; a linked child's device keeps its own (no cloud field yet).
+        if (child.isLocal && _supportProfileEnabled()) ...[
+          _Panel(
+            title: context.l10n.kidsSupportTitle,
+            child: KidsSupportProfileEditor(
+              store: getIt<KidsSupportProfileRepository>(),
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
         ],
 

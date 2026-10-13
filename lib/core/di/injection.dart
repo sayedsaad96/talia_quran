@@ -133,6 +133,8 @@ import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_support_profile_store.dart';
+import '../../features/memorization_plus/domain/repositories/kids_support_profile_repository.dart';
 import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_progress_cubit.dart';
@@ -1113,6 +1115,13 @@ Future<void> configureDependencies({bool background = false}) async {
       changes: getIt<ProgressEventsBus>().changes.where(
         (reason) => reason == ProgressChangedReason.kidsProgress,
       ),
+    ),
+  );
+  // Guardian's learning-support answers for the child on this device (T7).
+  getIt.registerLazySingleton<KidsSupportProfileRepository>(
+    () => KidsSupportProfileStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
     ),
   );
   // «أي سورة هذه؟» listening game (T9, behind its route guard and flag).

@@ -4688,6 +4688,66 @@ abstract class AppLocalizations {
   /// **'للمتعة والتعلّم فقط، ولا يغيّر رحلتك.'**
   String get kidsGameNote;
 
+  /// No description provided for @kidsSupportSuggestFirstWord.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج مساعدة؟ اضغط «أعطني البداية» ثم حاول مرة أخرى.'**
+  String get kidsSupportSuggestFirstWord;
+
+  /// No description provided for @kidsSupportSuggestTryAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتربت جدًا! قُلها مرة أخرى.'**
+  String get kidsSupportSuggestTryAgain;
+
+  /// No description provided for @kidsSupportSuggestGuardian.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطلب من أحد الكبار أن يستمع إلى تلاوتك.'**
+  String get kidsSupportSuggestGuardian;
+
+  /// No description provided for @kidsSupportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مساندة التعلّم'**
+  String get kidsSupportTitle;
+
+  /// No description provided for @kidsSupportReadingQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف يقرأ طفلك؟'**
+  String get kidsSupportReadingQuestion;
+
+  /// No description provided for @kidsSupportReadingIndependent.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرأ وحده'**
+  String get kidsSupportReadingIndependent;
+
+  /// No description provided for @kidsSupportReadingWithHelp.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرأ بمساعدة'**
+  String get kidsSupportReadingWithHelp;
+
+  /// No description provided for @kidsSupportReadingNotYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يقرأ بعد'**
+  String get kidsSupportReadingNotYet;
+
+  /// No description provided for @kidsSupportReadingNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'مع القراءة بمساعدة أو عدم القراءة بعد، تقترح الجلسة المساعدة قبل أن يتعثر الطفل. يُطبَّق من الجلسة القادمة، وتبقى الحدود اليومية وعدد مرات الاستماع كما هي.'**
+  String get kidsSupportReadingNote;
+
+  /// No description provided for @kidsSupportSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر حفظ الإجابة. حاول مرة أخرى.'**
+  String get kidsSupportSaveFailed;
+
   /// No description provided for @childDetailProgressTitle.
   ///
   /// In ar, this message translates to:

@@ -2575,6 +2575,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Just for fun and learning. It doesn\'t change your journey.';
 
   @override
+  String get kidsSupportSuggestFirstWord =>
+      'Stuck? Tap «Give me the start» and try again.';
+
+  @override
+  String get kidsSupportSuggestTryAgain => 'So close! Say it once more.';
+
+  @override
+  String get kidsSupportSuggestGuardian =>
+      'Ask a grown-up to listen to you recite.';
+
+  @override
+  String get kidsSupportTitle => 'Learning support';
+
+  @override
+  String get kidsSupportReadingQuestion => 'How does your child read?';
+
+  @override
+  String get kidsSupportReadingIndependent => 'Reads on their own';
+
+  @override
+  String get kidsSupportReadingWithHelp => 'Reads with help';
+
+  @override
+  String get kidsSupportReadingNotYet => 'Not reading yet';
+
+  @override
+  String get kidsSupportReadingNote =>
+      'With help or not reading yet, the session suggests a hint before the child gets stuck. Applies from the next session; daily limits and listens stay the same.';
+
+  @override
+  String get kidsSupportSaveFailed =>
+      'The answer could not be saved. Try again.';
+
+  @override
   String get childDetailProgressTitle =>
       'Progress, achievements and certificates';
 

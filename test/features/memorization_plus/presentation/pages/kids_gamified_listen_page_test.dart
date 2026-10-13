@@ -1049,6 +1049,234 @@ void main() {
     });
   });
 
+  group('support suggestions (T8)', () {
+    Future<void> pumpSupport(
+      WidgetTester tester,
+      KidsModeLoaded state, {
+      bool enabled = true,
+      bool proactive = false,
+    }) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: state,
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onTryFromMemory: () {},
+            onRevealFirstWord: () {},
+            onRemindMe: () {},
+            onManualComplete: () {},
+            supportSuggestions: enabled,
+            proactiveSupport: proactive,
+          ),
+        ),
+      );
+    }
+
+    final engine = V2SessionEngine();
+    KidsModeLoaded reciting() => _baseState.copyWith(
+      sessionState: engine.startReciting(
+        engine.startMemorizing(engine.startLearning(_testSessionState())),
+      ),
+      currentLoop: 3,
+    );
+
+    Finder suggestion(String action) =>
+        find.byKey(ValueKey('kids-support-suggestion-$action'));
+
+    testWidgets('a miss while recalling points at «give me the start»', (
+      tester,
+    ) async {
+      await pumpSupport(
+        tester,
+        _recallState().copyWith(
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+      );
+
+      expect(suggestion('firstWord'), findsOneWidget);
+      expect(
+        tester
+            .widget<KidsChunkyButton>(
+              find.byKey(const ValueKey('kids-gamified-first-word-hint')),
+            )
+            .tone,
+        KidsButtonTone.purple,
+      );
+    });
+
+    testWidgets('a near miss says try again and never pushes «remind me»', (
+      tester,
+    ) async {
+      await pumpSupport(
+        tester,
+        reciting().copyWith(
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+        proactive: true,
+      );
+
+      expect(suggestion('tryAgain'), findsOneWidget);
+      expect(
+        tester
+            .widget<KidsChunkyButton>(
+              find.byKey(const ValueKey('kids-gamified-remind-me')),
+            )
+            .tone,
+        KidsButtonTone.soft,
+      );
+    });
+
+    testWidgets('a review before its first attempt suggests nothing', (
+      tester,
+    ) async {
+      await pumpSupport(tester, reciting(), proactive: true);
+
+      for (final action in ['firstWord', 'tryAgain', 'guardianHelp']) {
+        expect(suggestion(action), findsNothing);
+      }
+    });
+
+    testWidgets('a suggestion is announced to screen readers', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpSupport(
+        tester,
+        _recallState().copyWith(
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+      );
+
+      expect(
+        find.ancestor(
+          of: find.byKey(const ValueKey('kids-support-suggestion-firstWord')),
+          matching: find.byWidgetPredicate(
+            (w) => w is Semantics && (w.properties.liveRegion ?? false),
+          ),
+        ),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('a help the caller does not wire is never named', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: _recallState().copyWith(
+              recordingError: CubitMessageCodes.kidsRecitationMismatch,
+            ),
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onTryFromMemory: () {},
+            supportSuggestions: true,
+          ),
+        ),
+      );
+
+      expect(suggestion('firstWord'), findsNothing);
+    });
+
+    testWidgets('with the feature off the page is unchanged', (tester) async {
+      await pumpSupport(
+        tester,
+        _recallState().copyWith(
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+        enabled: false,
+      );
+
+      expect(find.byKey(const ValueKey('kids-support-suggestion-firstWord')),
+          findsNothing);
+      expect(
+        tester
+            .widget<KidsChunkyButton>(
+              find.byKey(const ValueKey('kids-gamified-first-word-hint')),
+            )
+            .tone,
+        KidsButtonTone.soft,
+      );
+    });
+
+    testWidgets('silence or a denied microphone suggests nothing', (
+      tester,
+    ) async {
+      for (final error in [
+        CubitMessageCodes.kidsRecordingNotCaptured,
+        CubitMessageCodes.kidsMicPermissionDenied,
+        CubitMessageCodes.kidsRecordingUnavailable,
+      ]) {
+        await pumpSupport(
+          tester,
+          _recallState().copyWith(recordingError: error),
+        );
+        for (final action in ['firstWord', 'tryAgain', 'guardianHelp']) {
+          expect(suggestion(action), findsNothing, reason: error);
+        }
+      }
+    });
+
+    testWidgets('a proactive setting suggests the start before any miss', (
+      tester,
+    ) async {
+      await pumpSupport(tester, _recallState(), proactive: true);
+
+      expect(suggestion('firstWord'), findsOneWidget);
+    });
+
+    testWidgets('without the setting nothing shows before a miss', (
+      tester,
+    ) async {
+      await pumpSupport(tester, _recallState());
+
+      expect(suggestion('firstWord'), findsNothing);
+    });
+
+    testWidgets('nothing is suggested while recording', (tester) async {
+      await pumpSupport(
+        tester,
+        reciting().copyWith(
+          isRecording: true,
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+        proactive: true,
+      );
+
+      for (final action in ['firstWord', 'tryAgain', 'guardianHelp']) {
+        expect(suggestion(action), findsNothing);
+      }
+    });
+
+    test('maps only a heard mismatch to a missed attempt', () {
+      final missed = kidsSupportContextFor(
+        _recallState().copyWith(
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+      );
+      final silent = kidsSupportContextFor(
+        _recallState().copyWith(
+          recordingError: CubitMessageCodes.kidsRecordingNotCaptured,
+        ),
+      );
+
+      expect(missed.lastAttemptMissed, isTrue);
+      expect(missed.technicalTrouble, isFalse);
+      expect(silent.lastAttemptMissed, isFalse);
+      expect(silent.technicalTrouble, isTrue);
+    });
+  });
+
   group('family practice entry', () {
     Future<void> pumpContent(
       WidgetTester tester,

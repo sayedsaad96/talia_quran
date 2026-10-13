@@ -11,7 +11,9 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_learning_support_profile.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/kids_support_profile_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
@@ -470,4 +472,67 @@ void main() {
       );
     });
   });
+
+  group('learning support question', () {
+    final getIt = GetIt.instance;
+
+    Future<void> unwire() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      if (getIt.isRegistered<KidsSupportProfileRepository>()) {
+        await getIt.unregister<KidsSupportProfileRepository>();
+      }
+    }
+
+    Future<void> wire({required bool on}) async {
+      await unwire();
+      getIt
+        ..registerSingleton<KidsEnrichmentFlags>(
+          KidsEnrichmentFlags(
+            (key) =>
+                on && key == KidsEnrichmentFeature.supportProfile.storageKey,
+          ),
+        )
+        ..registerSingleton<KidsSupportProfileRepository>(_MemorySupportRepo());
+    }
+
+    tearDown(unwire);
+
+    final editor = find.byKey(const ValueKey('kids-support-profile-editor'));
+
+    testWidgets('shows for the child on this device when on', (tester) async {
+      await wire(on: true);
+      await _pump(tester, _localChild(const []));
+      await _scrollTo(tester, editor);
+
+      expect(editor, findsOneWidget);
+    });
+
+    testWidgets('is hidden while the feature is off', (tester) async {
+      await wire(on: false);
+      await _pump(tester, _localChild(const []));
+
+      expect(editor, findsNothing);
+    });
+
+    testWidgets('is never shown for a linked child', (tester) async {
+      await wire(on: true);
+      await _pump(tester, _remoteChild(const []));
+      for (var i = 0; i < 20; i++) {
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+        await tester.pump();
+      }
+
+      expect(editor, findsNothing);
+    });
+  });
+}
+
+class _MemorySupportRepo implements KidsSupportProfileRepository {
+  @override
+  KidsLearningSupportProfile read() => KidsLearningSupportProfile.unknown;
+
+  @override
+  Future<bool> save(KidsLearningSupportProfile profile) async => true;
 }

@@ -2556,6 +2556,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGameNote => 'للمتعة والتعلّم فقط، ولا يغيّر رحلتك.';
 
   @override
+  String get kidsSupportSuggestFirstWord =>
+      'تحتاج مساعدة؟ اضغط «أعطني البداية» ثم حاول مرة أخرى.';
+
+  @override
+  String get kidsSupportSuggestTryAgain => 'اقتربت جدًا! قُلها مرة أخرى.';
+
+  @override
+  String get kidsSupportSuggestGuardian =>
+      'اطلب من أحد الكبار أن يستمع إلى تلاوتك.';
+
+  @override
+  String get kidsSupportTitle => 'مساندة التعلّم';
+
+  @override
+  String get kidsSupportReadingQuestion => 'كيف يقرأ طفلك؟';
+
+  @override
+  String get kidsSupportReadingIndependent => 'يقرأ وحده';
+
+  @override
+  String get kidsSupportReadingWithHelp => 'يقرأ بمساعدة';
+
+  @override
+  String get kidsSupportReadingNotYet => 'لا يقرأ بعد';
+
+  @override
+  String get kidsSupportReadingNote =>
+      'مع القراءة بمساعدة أو عدم القراءة بعد، تقترح الجلسة المساعدة قبل أن يتعثر الطفل. يُطبَّق من الجلسة القادمة، وتبقى الحدود اليومية وعدد مرات الاستماع كما هي.';
+
+  @override
+  String get kidsSupportSaveFailed => 'تعذّر حفظ الإجابة. حاول مرة أخرى.';
+
+  @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override

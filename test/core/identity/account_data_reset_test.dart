@@ -333,6 +333,14 @@ void main() {
       expect(prefs.getBool('hifz_isar_migrated'), isNull);
     });
 
+    test('clears the kids learning-support profile', () async {
+      await prefs.setString('kids_support_profile_owner-a', '{"v":1}');
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(prefs.getString('kids_support_profile_owner-a'), isNull);
+    });
+
     test('retains device preferences', () async {
       await AccountDataReset(isar, prefs).clearAccountOwnedData();
       expect(prefs.getString('theme_mode'), 'dark');

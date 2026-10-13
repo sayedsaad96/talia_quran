@@ -21,6 +21,9 @@ import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
+import '../../domain/entities/kids_learning_support_profile.dart';
+import '../../domain/repositories/kids_support_profile_repository.dart';
+import '../../domain/services/kids_support_action_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 import '../widgets/guardian_pin_dialog.dart';
@@ -34,7 +37,7 @@ import '../widgets/kids_ui.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
-class KidsGamifiedListenPage extends StatelessWidget {
+class KidsGamifiedListenPage extends StatefulWidget {
   const KidsGamifiedListenPage({
     super.key,
     required this.surahId,
@@ -49,23 +52,55 @@ class KidsGamifiedListenPage extends StatelessWidget {
   final KidsMissionType missionType;
 
   @override
+  State<KidsGamifiedListenPage> createState() => _KidsGamifiedListenPageState();
+}
+
+class _KidsGamifiedListenPageState extends State<KidsGamifiedListenPage> {
+  /// T7 — read once when the session opens, so a guardian's change applies
+  /// from the next session and never flips this one midway.
+  late final bool _proactiveSupport = _readProactiveSupport();
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<KidsModeCubit>()
-            ..load(surahId, ayahNumber, ayahText, missionType: missionType),
+      create: (_) => getIt<KidsModeCubit>()
+        ..load(
+          widget.surahId,
+          widget.ayahNumber,
+          widget.ayahText,
+          missionType: widget.missionType,
+        ),
       child: _KidsGamifiedListenView(
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-        ayahText: ayahText,
-        missionType: missionType,
+        surahId: widget.surahId,
+        ayahNumber: widget.ayahNumber,
+        ayahText: widget.ayahText,
+        missionType: widget.missionType,
+        proactiveSupport: _proactiveSupport,
       ),
     );
   }
 }
 
+bool _readProactiveSupport() {
+  if (!getIt.isRegistered<KidsEnrichmentFlags>() ||
+      !getIt.isRegistered<KidsSupportProfileRepository>() ||
+      !getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.supportProfile,
+      )) {
+    return false;
+  }
+  return kidsSupportProactiveHints(getIt<KidsSupportProfileRepository>().read());
+}
+
 /// Guards the guardian completion flow against a double tap.
 bool _guardianCompletionInFlight = false;
+
+/// T8 suggestions are off unless the rollout flag is wired and switched on.
+bool _supportActionsEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.supportActions,
+    );
 
 /// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
 bool _familyPracticeEnabled() =>
@@ -80,12 +115,14 @@ class _KidsGamifiedListenView extends StatelessWidget {
     required this.ayahNumber,
     required this.ayahText,
     required this.missionType,
+    this.proactiveSupport = false,
   });
 
   final int surahId;
   final int ayahNumber;
   final String ayahText;
   final KidsMissionType missionType;
+  final bool proactiveSupport;
 
   Future<void> _submitGuardianCompletion(BuildContext context) async {
     // A double tap would stack two PIN dialogs.
@@ -281,6 +318,9 @@ class _KidsGamifiedListenView extends StatelessWidget {
                     ayahNumber: state.ayahNumber,
                   )
                 : null,
+            // A guardian's proactive setting implies the suggestions.
+            supportSuggestions: _supportActionsEnabled() || proactiveSupport,
+            proactiveSupport: proactiveSupport,
           );
         },
       ),
@@ -335,7 +375,16 @@ class KidsGamifiedListenContent extends StatelessWidget {
     this.onRemindMe,
     this.onManualComplete,
     this.onFamilyPractice,
+    this.supportSuggestions = false,
+    this.proactiveSupport = false,
   });
+
+  /// T8 — point at one help after a missed recitation (off: unchanged page).
+  final bool supportSuggestions;
+
+  /// T7 — the guardian asked for help to be suggested before a miss too.
+  /// Fixed when the page opens, so a change mid-session never flips it.
+  final bool proactiveSupport;
 
   /// «نتعلم سوا» entry (null hides it). Shown only while the child is
   /// listening, never during recitation, recall or recording.
@@ -372,6 +421,19 @@ class KidsGamifiedListenContent extends StatelessWidget {
         state.isAwaitingRecitation ||
         state.sessionState.phase.textHidden;
     final pose = kidsTaliaPoseFor(state);
+    final resolved = supportSuggestions
+        ? resolveKidsSupportAction(
+            kidsSupportContextFor(state, proactive: proactiveSupport),
+          )
+        : KidsSupportAction.none;
+    // Never name a help whose button this caller does not wire.
+    final support = switch (resolved) {
+      KidsSupportAction.firstWord when onRevealFirstWord == null =>
+        KidsSupportAction.none,
+      KidsSupportAction.guardianHelp when onManualComplete == null =>
+        KidsSupportAction.none,
+      _ => resolved,
+    };
 
     return KidsBackground(
       animate: !calm,
@@ -450,6 +512,10 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             ),
                           ],
                           const SizedBox(height: AppSpacing.lg),
+                          if (support != KidsSupportAction.none) ...[
+                            _SupportSuggestion(action: support),
+                            const SizedBox(height: AppSpacing.md),
+                          ],
                           _KidsGamifiedAudioControls(
                             state: state,
                             onPlayPause: onPlayPause,
@@ -459,6 +525,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             onRevealFirstWord: onRevealFirstWord,
                             onRemindMe: onRemindMe,
                             onManualComplete: onManualComplete,
+                            highlight: support,
                           ),
                           if (onFamilyPractice != null &&
                               !calm &&
@@ -484,6 +551,74 @@ class KidsGamifiedListenContent extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// T8 — the session's own visible state as resolver input. A recitation the
+/// recognizer heard but did not match is a struggle; microphone, recognizer,
+/// silence and audio problems are technical and never count as one.
+@visibleForTesting
+KidsSupportContext kidsSupportContextFor(
+  KidsModeLoaded state, {
+  bool proactive = false,
+}) {
+  final error = state.recordingError;
+  return KidsSupportContext(
+    isRecording: state.isRecording,
+    isCompleted: state.isCompleted,
+    isRecallingFromMemory: state.isRecallingFromMemory,
+    isAwaitingRecitation: state.isAwaitingRecitation,
+    firstWordRevealed: state.firstWordRevealed,
+    lastAttemptMissed: error == CubitMessageCodes.kidsRecitationMismatch,
+    guardianFallbackAvailable: state.canUseGuardianFallback,
+    technicalTrouble:
+        state.audioError != null ||
+        error == CubitMessageCodes.kidsMicPermissionDenied ||
+        error == CubitMessageCodes.kidsRecordingUnavailable ||
+        error == CubitMessageCodes.kidsRecordingNotCaptured,
+    proactive: proactive,
+  );
+}
+
+/// One short line naming the suggested next step, above the session buttons.
+class _SupportSuggestion extends StatelessWidget {
+  const _SupportSuggestion({required this.action});
+
+  final KidsSupportAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = switch (action) {
+      KidsSupportAction.firstWord => l10n.kidsSupportSuggestFirstWord,
+      KidsSupportAction.tryAgain => l10n.kidsSupportSuggestTryAgain,
+      KidsSupportAction.guardianHelp => l10n.kidsSupportSuggestGuardian,
+      KidsSupportAction.none => '',
+    };
+    // Announced by screen readers when it appears (the child may not read).
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        key: ValueKey('kids-support-suggestion-${action.name}'),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: _kidsSoftCardDecoration,
+        child: Row(
+          children: [
+            const Icon(TaliaKidsIcons.idea, color: KidsTheme.reviewPurple),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: KidsTheme.inkOnParchment,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -802,7 +937,12 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     this.onRevealFirstWord,
     this.onRemindMe,
     this.onManualComplete,
+    this.highlight = KidsSupportAction.none,
   });
+
+  /// The help the session suggests right now (T8); that button is drawn in
+  /// the stronger tone. It never shows a button the phase would hide.
+  final KidsSupportAction highlight;
 
   final KidsModeLoaded state;
   final VoidCallback onPlayPause;
@@ -914,7 +1054,9 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
             onPressed: onRevealFirstWord,
             icon: TaliaKidsIcons.idea,
             label: context.l10n.kidsGamifiedGiveMeTheStart,
-            tone: KidsButtonTone.soft,
+            tone: highlight == KidsSupportAction.firstWord
+                ? KidsButtonTone.purple
+                : KidsButtonTone.soft,
             height: 56,
           ),
         ],

@@ -125,6 +125,8 @@ class AccountDataReset {
     'daily_wird_target_',
     // Kids «قرأت هذه الصفحة» receipts (owner-scoped, per day).
     'kids_reading_receipts_',
+    // Guardian's learning-support answers for the child (owner-scoped).
+    'kids_support_profile_',
     // Opt-in Prayer Companion settings are account-owned device data.
     'prayer_companion_',
   };
