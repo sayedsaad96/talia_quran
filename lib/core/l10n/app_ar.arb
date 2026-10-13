@@ -935,6 +935,46 @@
   "kidsAchievementFirstReview": "أول مراجعة",
   "kidsAchievementTriedAgain": "حاولت من جديد ونجحت",
   "kidsAchievementComeback": "عدت من جديد",
+  "kidsWeeklyCoachingTitle": "هذا الأسبوع",
+  "kidsWeeklyCoachingSessions": "الجلسات: {count}",
+  "@kidsWeeklyCoachingSessions": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingActiveDays": "أيام النشاط: {count}",
+  "@kidsWeeklyCoachingActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingReviews": "المراجعات: {count}",
+  "@kidsWeeklyCoachingReviews": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingHints": "جلسات استُخدم فيها تلميح: {count}",
+  "@kidsWeeklyCoachingHints": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingUnavailable": "الملخص الأسبوعي غير متاح لهذا الطفل بعد.",
+  "kidsWeeklyCoachingNoHistory": "لا توجد جلسات بعد. يظهر الملخص بعد الجلسة الأولى.",
+  "kidsWeeklyCoachingTipListenTogether": "استُخدمت التلميحات في كثير من الجلسات. جرّبوا الاستماع للآية معًا أولًا، ثم دعوا الطفل يحاول وحده.",
+  "kidsWeeklyCoachingTipCelebrateEffort": "حاول الطفل من جديد ونجح هذا الأسبوع. امدحوا المحاولة وليس النتيجة فقط.",
+  "kidsWeeklyCoachingTipKeepRhythm": "أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.",
+  "kidsWeeklyCoachingTipAddReview": "في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.",
+  "kidsWeeklyCoachingTipStartSmall": "أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.",
   "childDetailProgressTitle": "التقدم والإنجازات والشهادات",
   "childDetailProgressUnavailable": "لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.",
   "childDetailCertificatesEmpty": "لا توجد شهادات بعد",

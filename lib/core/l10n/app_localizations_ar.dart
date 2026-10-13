@@ -2431,6 +2431,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsAchievementComeback => 'عدت من جديد';
 
   @override
+  String get kidsWeeklyCoachingTitle => 'هذا الأسبوع';
+
+  @override
+  String kidsWeeklyCoachingSessions(String count) {
+    return 'الجلسات: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingActiveDays(String count) {
+    return 'أيام النشاط: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingReviews(String count) {
+    return 'المراجعات: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingHints(String count) {
+    return 'جلسات استُخدم فيها تلميح: $count';
+  }
+
+  @override
+  String get kidsWeeklyCoachingUnavailable =>
+      'الملخص الأسبوعي غير متاح لهذا الطفل بعد.';
+
+  @override
+  String get kidsWeeklyCoachingNoHistory =>
+      'لا توجد جلسات بعد. يظهر الملخص بعد الجلسة الأولى.';
+
+  @override
+  String get kidsWeeklyCoachingTipListenTogether =>
+      'استُخدمت التلميحات في كثير من الجلسات. جرّبوا الاستماع للآية معًا أولًا، ثم دعوا الطفل يحاول وحده.';
+
+  @override
+  String get kidsWeeklyCoachingTipCelebrateEffort =>
+      'حاول الطفل من جديد ونجح هذا الأسبوع. امدحوا المحاولة وليس النتيجة فقط.';
+
+  @override
+  String get kidsWeeklyCoachingTipKeepRhythm =>
+      'أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.';
+
+  @override
+  String get kidsWeeklyCoachingTipAddReview =>
+      'في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.';
+
+  @override
+  String get kidsWeeklyCoachingTipStartSmall =>
+      'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
+
+  @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override

@@ -4502,6 +4502,78 @@ abstract class AppLocalizations {
   /// **'عدت من جديد'**
   String get kidsAchievementComeback;
 
+  /// No description provided for @kidsWeeklyCoachingTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الأسبوع'**
+  String get kidsWeeklyCoachingTitle;
+
+  /// No description provided for @kidsWeeklyCoachingSessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجلسات: {count}'**
+  String kidsWeeklyCoachingSessions(String count);
+
+  /// No description provided for @kidsWeeklyCoachingActiveDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام النشاط: {count}'**
+  String kidsWeeklyCoachingActiveDays(String count);
+
+  /// No description provided for @kidsWeeklyCoachingReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعات: {count}'**
+  String kidsWeeklyCoachingReviews(String count);
+
+  /// No description provided for @kidsWeeklyCoachingHints.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسات استُخدم فيها تلميح: {count}'**
+  String kidsWeeklyCoachingHints(String count);
+
+  /// No description provided for @kidsWeeklyCoachingUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملخص الأسبوعي غير متاح لهذا الطفل بعد.'**
+  String get kidsWeeklyCoachingUnavailable;
+
+  /// No description provided for @kidsWeeklyCoachingNoHistory.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد جلسات بعد. يظهر الملخص بعد الجلسة الأولى.'**
+  String get kidsWeeklyCoachingNoHistory;
+
+  /// No description provided for @kidsWeeklyCoachingTipListenTogether.
+  ///
+  /// In ar, this message translates to:
+  /// **'استُخدمت التلميحات في كثير من الجلسات. جرّبوا الاستماع للآية معًا أولًا، ثم دعوا الطفل يحاول وحده.'**
+  String get kidsWeeklyCoachingTipListenTogether;
+
+  /// No description provided for @kidsWeeklyCoachingTipCelebrateEffort.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول الطفل من جديد ونجح هذا الأسبوع. امدحوا المحاولة وليس النتيجة فقط.'**
+  String get kidsWeeklyCoachingTipCelebrateEffort;
+
+  /// No description provided for @kidsWeeklyCoachingTipKeepRhythm.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.'**
+  String get kidsWeeklyCoachingTipKeepRhythm;
+
+  /// No description provided for @kidsWeeklyCoachingTipAddReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.'**
+  String get kidsWeeklyCoachingTipAddReview;
+
+  /// No description provided for @kidsWeeklyCoachingTipStartSmall.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.'**
+  String get kidsWeeklyCoachingTipStartSmall;
+
   /// No description provided for @childDetailProgressTitle.
   ///
   /// In ar, this message translates to:

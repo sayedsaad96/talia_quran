@@ -2448,6 +2448,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsAchievementComeback => 'Welcome back';
 
   @override
+  String get kidsWeeklyCoachingTitle => 'This week';
+
+  @override
+  String kidsWeeklyCoachingSessions(String count) {
+    return 'Sessions: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingActiveDays(String count) {
+    return 'Active days: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingReviews(String count) {
+    return 'Reviews: $count';
+  }
+
+  @override
+  String kidsWeeklyCoachingHints(String count) {
+    return 'Sessions with a hint: $count';
+  }
+
+  @override
+  String get kidsWeeklyCoachingUnavailable =>
+      'A weekly summary isn\'t available for this child yet.';
+
+  @override
+  String get kidsWeeklyCoachingNoHistory =>
+      'No sessions yet. The summary appears after the first session.';
+
+  @override
+  String get kidsWeeklyCoachingTipListenTogether =>
+      'Hints were used in many sessions. Try listening to the ayah together first, then let the child try alone.';
+
+  @override
+  String get kidsWeeklyCoachingTipCelebrateEffort =>
+      'The child tried again and succeeded this week. Praise the effort, not only the result.';
+
+  @override
+  String get kidsWeeklyCoachingTipKeepRhythm =>
+      'A steady week. Keep the same short time each day.';
+
+  @override
+  String get kidsWeeklyCoachingTipAddReview =>
+      'Next time, add one short review before a new ayah.';
+
+  @override
+  String get kidsWeeklyCoachingTipStartSmall =>
+      'A quiet week. A short session of a few minutes is a good way back.';
+
+  @override
   String get childDetailProgressTitle =>
       'Progress, achievements and certificates';
 

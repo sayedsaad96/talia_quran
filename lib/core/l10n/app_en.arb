@@ -919,6 +919,46 @@
   "kidsAchievementFirstReview": "First review",
   "kidsAchievementTriedAgain": "Tried again and did it",
   "kidsAchievementComeback": "Welcome back",
+  "kidsWeeklyCoachingTitle": "This week",
+  "kidsWeeklyCoachingSessions": "Sessions: {count}",
+  "@kidsWeeklyCoachingSessions": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingActiveDays": "Active days: {count}",
+  "@kidsWeeklyCoachingActiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingReviews": "Reviews: {count}",
+  "@kidsWeeklyCoachingReviews": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingHints": "Sessions with a hint: {count}",
+  "@kidsWeeklyCoachingHints": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsWeeklyCoachingUnavailable": "A weekly summary isn't available for this child yet.",
+  "kidsWeeklyCoachingNoHistory": "No sessions yet. The summary appears after the first session.",
+  "kidsWeeklyCoachingTipListenTogether": "Hints were used in many sessions. Try listening to the ayah together first, then let the child try alone.",
+  "kidsWeeklyCoachingTipCelebrateEffort": "The child tried again and succeeded this week. Praise the effort, not only the result.",
+  "kidsWeeklyCoachingTipKeepRhythm": "A steady week. Keep the same short time each day.",
+  "kidsWeeklyCoachingTipAddReview": "Next time, add one short review before a new ayah.",
+  "kidsWeeklyCoachingTipStartSmall": "A quiet week. A short session of a few minutes is a good way back.",
   "childDetailProgressTitle": "Progress, achievements and certificates",
   "childDetailProgressUnavailable": "The child's progress hasn't arrived yet. It appears after the child opens the app online.",
   "childDetailCertificatesEmpty": "No certificates yet",

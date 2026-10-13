@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -413,5 +415,59 @@ void main() {
 
     expect(repo.remotePolicies, ['c1:v2:true:3:true']);
     expect(tester.widget<SwitchListTile>(reduceMotion).onChanged, isNotNull);
+  });
+
+  group('weekly summary', () {
+    final getIt = GetIt.instance;
+
+    Future<void> withFlag(bool on) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => on && key == KidsEnrichmentFeature.weeklyCoaching.storageKey,
+        ),
+      );
+    }
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+    });
+
+    testWidgets('is hidden while the feature is off', (tester) async {
+      await withFlag(false);
+      await _pump(tester, _localChild(const []));
+
+      expect(find.text('This week'), findsNothing);
+    });
+
+    testWidgets('a local child with no sessions shows the empty line', (
+      tester,
+    ) async {
+      await withFlag(true);
+      await _pump(tester, _localChild(const []));
+      await _scrollTo(tester, find.text('This week'));
+
+      expect(
+        find.byKey(const ValueKey('kids-weekly-coaching-empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a linked child is never summarised from partial logs', (
+      tester,
+    ) async {
+      await withFlag(true);
+      await _pump(tester, _remoteChild(const []));
+      await _scrollTo(tester, find.text('This week'));
+
+      expect(
+        find.byKey(const ValueKey('kids-weekly-coaching-unavailable')),
+        findsOneWidget,
+      );
+    });
   });
 }

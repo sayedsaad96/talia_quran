@@ -213,6 +213,8 @@
 ### T3 — ملخص أسبوعي للأهل
 
 > **نطاق الإصدار الأول (2026-10-12):** الطفل المحلي فقط؛ الطفل البعيد يعرض «غير متاح» حتى تُضاف مفاتيح snapshot اختيارية (القسم 0، البند 3).
+>
+> **حالة التنفيذ (2026-10-13، غير مثبت في git):** نُفذ خلف مفتاح `weeklyCoaching` (مغلق افتراضيًا). `buildKidsWeeklyCoaching({logs, now, historyComplete})` في `domain/services/kids_weekly_coaching.dart`: نافذة ٧ أيام تقويمية محلية تشمل اليوم، تكرار الـ id يُحسب مرة، وثلاث حالات (`incompleteHistory` / `noHistory` / `ready`)، ونصيحة واحدة من كتالوج ثابت من ٥ (استماع مشترك إذا ظهر تلميح في نصف الجلسات فأكثر مع جلستين على الأقل، ثم مدح المحاولة، ثم الحفاظ على الإيقاع، ثم إضافة مراجعة، وإلا بداية صغيرة بلا لغة فقدان). `historyComplete` تكون true فقط للطفل المحلي (`child.isLocal && localData != null`)؛ الطفل المرتبط يعرض «غير متاح» ولا يُحكم عليه من سجلات قد تكون ناقصة. لا إشعارات ولا رسائل تلقائية. الواجهة: `KidsWeeklyCoachingCard` داخل `_Panel` في `child_detail_page.dart`. اختبارات: ١٥ للخدمة (حدود النافذة عند منتصف الليل، التكرار، الحالات، أولوية النصائح)، و٤ للبطاقة (منها العربية على ٣٢٠px)، و٣ على مستوى الصفحة (مغلق/محلي بلا جلسات/مرتبط). analyze نظيف واختبارات memorization_plus كاملة (١٣٠٣) ناجحة؛ لم تُجرَّب على جهاز.
 
 **ملفات:** جديد `domain/services/kids_weekly_coaching.dart`، `presentation/widgets/kids_weekly_coaching_card.dart`؛ تمديد `presentation/pages/child_detail_page.dart`. جديد `domain/kids_weekly_coaching_test.dart` و`presentation/widgets/kids_weekly_coaching_card_test.dart`.
 

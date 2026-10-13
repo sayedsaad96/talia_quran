@@ -13,6 +13,7 @@ import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
+import '../../domain/services/kids_weekly_coaching.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/child_activity_summary.dart';
 import '../widgets/child_progress_panel.dart';
@@ -22,6 +23,7 @@ import '../widgets/child_rewards_panel.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/home_missions_panel.dart';
 import '../widgets/kids_policy_controls.dart';
+import '../widgets/kids_weekly_coaching_card.dart';
 import '../widgets/parent_support_tip.dart';
 import '../widgets/remove_child_from_family_button.dart';
 import 'family_dashboard_page.dart';
@@ -48,6 +50,14 @@ KidsAgeBand? _homeMissionTemplateAgeBand(FamilyChildEntry child) {
   }
   return KidsSessionPolicy.forChildAge(child.childAge).ageBand;
 }
+
+/// Whether the weekly summary panel is switched on (off when the flags are
+/// not wired, so the page is unchanged by default).
+bool _weeklyCoachingEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.weeklyCoaching,
+    );
 
 class ChildDetailRouteArgs {
   const ChildDetailRouteArgs({required this.child, required this.cubit});
@@ -191,6 +201,22 @@ class _ChildDetailBody extends StatelessWidget {
           child: _ChildProgressSection(child: child),
         ),
         const SizedBox(height: AppSpacing.md),
+
+        if (_weeklyCoachingEnabled()) ...[
+          _Panel(
+            title: context.l10n.kidsWeeklyCoachingTitle,
+            child: KidsWeeklyCoachingCard(
+              coaching: buildKidsWeeklyCoaching(
+                logs: logs,
+                now: DateTime.now(),
+                // Only this device's own child has a complete local history;
+                // a linked child's logs may be partial.
+                historyComplete: child.isLocal && child.localData != null,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         if (child.localData case final localData?) ...[
           _LearningSupportCard(dashboard: localData),
