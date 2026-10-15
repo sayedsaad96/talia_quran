@@ -8568,11 +8568,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String kidsQuranJourneyAyahCount(String count) {
-    return '$count ayahs';
-  }
-
-  @override
   String kidsQuranJourneyJumpConfirm(String surah, String current) {
     return 'Start Surah $surah? Surah $current will wait for you.';
   }
@@ -8615,8 +8610,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSplitAyahsPerStage => 'Ayahs per stage';
 
   @override
-  String kidsSplitStageCount(int count) {
-    return '$count stages';
+  String kidsSplitStageCount(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText stages',
+      one: '$countText stage',
+    );
+    return '$_temp0';
   }
 
   @override

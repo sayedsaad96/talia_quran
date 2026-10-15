@@ -3565,8 +3565,6 @@
   ,"kidsQuranJourneyTitle": "رحلة القرآن"
   ,"kidsQuranJourneyJuz": "الجزء {number}"
   ,"@kidsQuranJourneyJuz": {"placeholders": {"number": {"type": "String"}}}
-  ,"kidsQuranJourneyAyahCount": "{count} آية"
-  ,"@kidsQuranJourneyAyahCount": {"placeholders": {"count": {"type": "String"}}}
   ,"kidsQuranJourneyJumpConfirm": "تريد أن تبدأ سورة {surah}؟ سورة {current} ستنتظرك"
   ,"@kidsQuranJourneyJumpConfirm": {"placeholders": {"surah": {"type": "String"}, "current": {"type": "String"}}}
   ,"kidsQuranJourneyJumpYes": "نبدأ"
@@ -3581,8 +3579,8 @@
   ,"kidsSplitWhole": "كاملة مرة واحدة"
   ,"kidsSplitStaged": "على مراحل"
   ,"kidsSplitAyahsPerStage": "آيات كل مرحلة"
-  ,"kidsSplitStageCount": "ستكون {count} مراحل"
-  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"kidsSplitStageCount": "{count, plural, =1{ستكون مرحلة واحدة} =2{ستكون مرحلتين} few{ستكون {countText} مراحل} many{ستكون {countText} مرحلة} other{ستكون {countText} مرحلة}}"
+  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"kidsSplitConfirm": "ابدأ"
   ,"kidsSplitChange": "غيّر طريقة الحفظ"
   ,"kidsStageTitle": "المرحلة {number}"

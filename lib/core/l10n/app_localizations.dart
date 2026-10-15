@@ -14488,12 +14488,6 @@ abstract class AppLocalizations {
   /// **'الجزء {number}'**
   String kidsQuranJourneyJuz(String number);
 
-  /// No description provided for @kidsQuranJourneyAyahCount.
-  ///
-  /// In ar, this message translates to:
-  /// **'{count} آية'**
-  String kidsQuranJourneyAyahCount(String count);
-
   /// No description provided for @kidsQuranJourneyJumpConfirm.
   ///
   /// In ar, this message translates to:
@@ -14575,8 +14569,8 @@ abstract class AppLocalizations {
   /// No description provided for @kidsSplitStageCount.
   ///
   /// In ar, this message translates to:
-  /// **'ستكون {count} مراحل'**
-  String kidsSplitStageCount(int count);
+  /// **'{count, plural, =1{ستكون مرحلة واحدة} =2{ستكون مرحلتين} few{ستكون {countText} مراحل} many{ستكون {countText} مرحلة} other{ستكون {countText} مرحلة}}'**
+  String kidsSplitStageCount(int count, String countText);
 
   /// No description provided for @kidsSplitConfirm.
   ///

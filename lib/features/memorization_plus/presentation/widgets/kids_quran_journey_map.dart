@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/services/kids_surah_house_summary_builder.dart';
 import '../theme/kids_theme.dart';
@@ -159,7 +160,7 @@ class _JuzSignpost extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         color: KidsTheme.goldStar,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: Text(
         context.l10n.kidsQuranJourneyJuz(context.numText(juz)),
@@ -189,10 +190,10 @@ class KidsSurahHouseCard extends StatelessWidget {
   final VoidCallback onTap;
 
   static IconData _icon(KidsSurahHouseStatus status) => switch (status) {
-    KidsSurahHouseStatus.completed => Icons.check_circle_rounded,
-    KidsSurahHouseStatus.needsReview => Icons.refresh_rounded,
-    KidsSurahHouseStatus.inProgress => Icons.auto_stories_rounded,
-    KidsSurahHouseStatus.notStarted => Icons.radio_button_unchecked_rounded,
+    KidsSurahHouseStatus.completed => TaliaKidsIcons.checkCircleFilled,
+    KidsSurahHouseStatus.needsReview => TaliaKidsIcons.refresh,
+    KidsSurahHouseStatus.inProgress => TaliaKidsIcons.reading,
+    KidsSurahHouseStatus.notStarted => TaliaKidsIcons.circle,
   };
 
   static Color _color(KidsSurahHouseStatus status) => switch (status) {
@@ -205,7 +206,8 @@ class KidsSurahHouseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final countText = l10n.kidsQuranJourneyAyahCount(
+    final countText = l10n.countAyahs(
+      house.ayahCount,
       context.numText(house.ayahCount),
     );
     final statusColor = _color(house.status);
@@ -282,7 +284,7 @@ class KidsSurahHouseCard extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                           child: LinearProgressIndicator(
                             value: house.progress.clamp(0.0, 1.0),
                             minHeight: 6,
@@ -294,7 +296,11 @@ class KidsSurahHouseCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  Icon(_icon(house.status), color: statusColor, size: 28),
+                  TaliaIcon(
+                    _icon(house.status),
+                    color: statusColor,
+                    size: 28,
+                  ),
                 ],
               ),
             ),

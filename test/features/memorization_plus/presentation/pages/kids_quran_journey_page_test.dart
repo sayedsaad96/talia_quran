@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/surah_names.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/utils/locale_number_formatter.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_surah_house_summary_builder.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_quran_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_quran_journey_page.dart';
@@ -30,8 +31,8 @@ KidsQuranJourneyLoaded _state({
   surahNames: {for (var id = 1; id <= 114; id++) id: 'ar$id'},
 );
 
-Widget _app(Widget child) => MaterialApp(
-  locale: const Locale('en'),
+Widget _app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
+  locale: locale,
   localizationsDelegates: const [
     AppLocalizations.delegate,
     GlobalMaterialLocalizations.delegate,
@@ -67,6 +68,7 @@ Future<void> _pump(
 
 void main() {
   _semanticsTests();
+  _ayahCountTests();
   testWidgets('builds lazily: fewer than 20 house cards in the tree for 114 '
       'houses', (tester) async {
     await _pump(tester, _state());
@@ -167,6 +169,40 @@ void main() {
       find.textContaining('You finished the whole Quran journey'),
       findsNothing,
     );
+  });
+}
+
+void _ayahCountTests() {
+  Future<void> pumpCard(WidgetTester tester, int ayahCount) async {
+    await tester.pumpWidget(
+      _app(
+        KidsSurahHouseCard(
+          house: KidsSurahHouse(
+            surahId: 108,
+            ayahCount: ayahCount,
+            juz: 30,
+            status: KidsSurahHouseStatus.notStarted,
+            completedCount: 0,
+          ),
+          name: 'ar108',
+          isCurrent: false,
+          onTap: () {},
+        ),
+        locale: const Locale('ar'),
+      ),
+    );
+  }
+
+  testWidgets('Arabic house card uses the plural ayah count', (tester) async {
+    String ar(int n) => LocaleNumberFormatter.number(n, 'ar');
+    await pumpCard(tester, 1);
+    expect(find.text('آية واحدة'), findsOneWidget);
+    await pumpCard(tester, 2);
+    expect(find.text('آيتان'), findsOneWidget);
+    await pumpCard(tester, 3);
+    expect(find.text('${ar(3)} آيات'), findsOneWidget);
+    await pumpCard(tester, 30);
+    expect(find.text('${ar(30)} آية'), findsOneWidget);
   });
 }
 

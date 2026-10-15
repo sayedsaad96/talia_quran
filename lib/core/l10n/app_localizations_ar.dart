@@ -8551,11 +8551,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String kidsQuranJourneyAyahCount(String count) {
-    return '$count آية';
-  }
-
-  @override
   String kidsQuranJourneyJumpConfirm(String surah, String current) {
     return 'تريد أن تبدأ سورة $surah؟ سورة $current ستنتظرك';
   }
@@ -8598,8 +8593,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsSplitAyahsPerStage => 'آيات كل مرحلة';
 
   @override
-  String kidsSplitStageCount(int count) {
-    return 'ستكون $count مراحل';
+  String kidsSplitStageCount(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ستكون $countText مرحلة',
+      many: 'ستكون $countText مرحلة',
+      few: 'ستكون $countText مراحل',
+      two: 'ستكون مرحلتين',
+      one: 'ستكون مرحلة واحدة',
+    );
+    return '$_temp0';
   }
 
   @override

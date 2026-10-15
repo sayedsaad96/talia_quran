@@ -129,7 +129,10 @@ class _KidsSurahSplitSheetState extends State<_KidsSurahSplitSheet> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                l10n.kidsSplitStageCount(stageCount),
+                l10n.kidsSplitStageCount(
+                  stageCount,
+                  context.numText(stageCount),
+                ),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium,
               ),

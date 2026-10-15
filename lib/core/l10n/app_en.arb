@@ -3527,8 +3527,6 @@
   ,"kidsQuranJourneyTitle": "Quran journey"
   ,"kidsQuranJourneyJuz": "Juz {number}"
   ,"@kidsQuranJourneyJuz": {"placeholders": {"number": {"type": "String"}}}
-  ,"kidsQuranJourneyAyahCount": "{count} ayahs"
-  ,"@kidsQuranJourneyAyahCount": {"placeholders": {"count": {"type": "String"}}}
   ,"kidsQuranJourneyJumpConfirm": "Start Surah {surah}? Surah {current} will wait for you."
   ,"@kidsQuranJourneyJumpConfirm": {"placeholders": {"surah": {"type": "String"}, "current": {"type": "String"}}}
   ,"kidsQuranJourneyJumpYes": "Let's start"
@@ -3543,8 +3541,8 @@
   ,"kidsSplitWhole": "All at once"
   ,"kidsSplitStaged": "In stages"
   ,"kidsSplitAyahsPerStage": "Ayahs per stage"
-  ,"kidsSplitStageCount": "{count} stages"
-  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"kidsSplitStageCount": "{count, plural, =1{{countText} stage} other{{countText} stages}}"
+  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"kidsSplitConfirm": "Start"
   ,"kidsSplitChange": "Change how to memorize"
   ,"kidsStageTitle": "Stage {number}"

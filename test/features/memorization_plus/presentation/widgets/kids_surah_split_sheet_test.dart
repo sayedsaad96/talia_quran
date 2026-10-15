@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/utils/locale_number_formatter.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_surah_split_sheet.dart';
 
 Future<void> _open(
@@ -10,6 +11,7 @@ Future<void> _open(
   int defaultStageSize = 3,
   bool initialWhole = false,
   int? initialStageSize,
+  Locale locale = const Locale('en'),
   required void Function(KidsSurahSplitChoice?) onResult,
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -17,7 +19,7 @@ Future<void> _open(
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
-      locale: const Locale('en'),
+      locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -108,6 +110,7 @@ void main() {
   });
 
   _currentChoiceTests();
+  _stageCountPluralTests();
 
   testWidgets('dismissing without choosing returns null', (tester) async {
     KidsSurahSplitChoice? result = const KidsSurahSplitChoice(whole: true);
@@ -149,5 +152,43 @@ void _currentChoiceTests() {
     await tester.tap(find.text('Start'));
     await tester.pumpAndSettle();
     expect(result, const KidsSurahSplitChoice(whole: false, stageSize: 5));
+  });
+}
+
+void _stageCountPluralTests() {
+  String ar(int n) => LocaleNumberFormatter.number(n, 'ar');
+
+  testWidgets('English stage count uses singular for one stage', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      ayahCount: 3,
+      initialStageSize: 3,
+      onResult: (_) {},
+    );
+    expect(find.text('1 stage'), findsOneWidget);
+  });
+
+  testWidgets('Arabic stage count follows the plural forms', (tester) async {
+    Future<void> openAr(int ayahCount, int size) async {
+      await tester.pumpWidget(const SizedBox());
+      await _open(
+        tester,
+        ayahCount: ayahCount,
+        initialStageSize: size,
+        locale: const Locale('ar'),
+        onResult: (_) {},
+      );
+    }
+
+    await openAr(3, 3);
+    expect(find.text('ستكون مرحلة واحدة'), findsOneWidget);
+    await openAr(6, 3);
+    expect(find.text('ستكون مرحلتين'), findsOneWidget);
+    await openAr(30, 10);
+    expect(find.text('ستكون ${ar(3)} مراحل'), findsOneWidget);
+    await openAr(30, 1);
+    expect(find.text('ستكون ${ar(30)} مرحلة'), findsOneWidget);
   });
 }
