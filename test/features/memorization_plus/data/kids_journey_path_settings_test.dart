@@ -110,15 +110,26 @@ void main() {
     await service.setKidsJourneyPath(KidsJourneyPathId.quranFromNas);
     await service.setKidsSurahSplit(103, whole: true);
 
-    final current = await datasource.getParentSettings();
+    // A default (stale) snapshot must not wipe the stored path or splits.
     await datasource.saveParentSettings(
-      ParentSettingsModel.fromEntity(current.copyWith(reminderHour: 7)),
+      ParentSettingsModel.fromEntity(const ParentSettings(reminderHour: 7)),
     );
 
     final after = await datasource.getParentSettings();
     expect(after.reminderHour, 7);
     expect(after.kidsJourneyPathId, 'quran_from_nas');
     expect(after.kidsWholeSurahIds, {103});
+  });
+
+  test('saveParentSettings cannot set a path id that is not stored', () async {
+    serviceFor('a');
+    await datasource.saveParentSettings(
+      ParentSettingsModel.fromEntity(
+        const ParentSettings(kidsJourneyPathId: 'quran_from_nas'),
+      ),
+    );
+
+    expect((await datasource.getParentSettings()).kidsJourneyPathId, isNull);
   });
 
   test('setKidsSurahSplit whole rejects a surah over 20 ayahs', () async {
