@@ -8,4 +8,11 @@ abstract final class KidsHifzFeatureFlags {
   /// rollout explicitly enables V2. Safety and privacy fixes are shared.
   static bool isEnabled(SharedPreferences prefs) =>
       prefs.getBool(enabledKey) ?? false;
+
+  /// Switch for the selectable Quran-wide kids journey; off keeps the
+  /// Juz Amma adventure.
+  static const quranJourneyKey = 'kids_quran_journey_enabled';
+
+  static bool isQuranJourneyEnabled(SharedPreferences prefs) =>
+      prefs.getBool(quranJourneyKey) ?? false;
 }
