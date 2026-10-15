@@ -849,14 +849,6 @@
   "createQr": "Create QR",
   "renew": "Renew",
   "remoteGuardianLinkInstruction": "Open the guardian dashboard on the other device and scan the code.",
-  "kidsStageTitle": "Stage {stage}",
-  "@kidsStageTitle": {
-    "placeholders": {
-      "stage": {
-        "type": "String"
-      }
-    }
-  },
   "kidsStageProgress": "Ayahs {startAyah}-{endAyah} • {completed}/{total}",
   "@kidsStageProgress": {
     "placeholders": {

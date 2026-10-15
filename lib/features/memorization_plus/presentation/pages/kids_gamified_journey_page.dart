@@ -188,13 +188,15 @@ class _KidsGamifiedJourneyContentState
     });
   }
 
-  Future<void> _openSplitSheet() async {
+  Future<void> _openSplitSheet({bool useCurrent = false}) async {
     final onChoose = widget.onChooseSplit;
     if (onChoose == null) return;
     final choice = await showKidsSurahSplitSheet(
       context,
       ayahCount: widget.state.surahAyahCount,
       defaultStageSize: widget.state.defaultStageSize,
+      initialWhole: useCurrent && widget.state.currentSplitWhole,
+      initialStageSize: useCurrent ? widget.state.currentStageSize : null,
     );
     if (choice != null) await onChoose(choice);
   }
@@ -385,7 +387,7 @@ class _KidsGamifiedJourneyContentState
     return PopupMenuButton<int>(
       key: const ValueKey('kids-journey-menu'),
       iconColor: KidsTheme.shellTextPrimary,
-      onSelected: (_) => _openSplitSheet(),
+      onSelected: (_) => _openSplitSheet(useCurrent: true),
       itemBuilder: (context) => [
         PopupMenuItem<int>(
           value: 0,

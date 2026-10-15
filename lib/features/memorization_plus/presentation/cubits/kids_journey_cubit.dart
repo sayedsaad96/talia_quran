@@ -273,6 +273,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       needsSplitChoice: split.needsChoice,
       surahAyahCount: split.ayahCount,
       defaultStageSize: split.defaultStageSize,
+      currentSplitWhole: split.currentWhole,
+      currentStageSize: split.currentStageSize,
       isReturningAfterBreak: kidsIsReturningAfterBreak(
         progressResult.fold((_) => null, (p) => p.lastSessionAt),
         _clock(),
@@ -304,13 +306,28 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   /// Whether the child still has to pick how to memorize [surahId]. Only the
   /// Quran journey asks, only before anything is memorized in the surah, and
   /// only when the settings are readable: a missing answer never blocks it.
-  Future<({bool needsChoice, int ayahCount, int defaultStageSize})> _splitInfo(
+  Future<
+    ({
+      bool needsChoice,
+      int ayahCount,
+      int defaultStageSize,
+      bool currentWhole,
+      int currentStageSize,
+    })
+  >
+  _splitInfo(
     KidsJourneyPathDefinition path,
     int surahId,
     List<KidsJourneyStage> stages,
     List<KidsSessionLog>? logs,
   ) async {
-    const none = (needsChoice: false, ayahCount: 0, defaultStageSize: 0);
+    const none = (
+      needsChoice: false,
+      ayahCount: 0,
+      defaultStageSize: 0,
+      currentWhole: false,
+      currentStageSize: 0,
+    );
     if (!path.isQuranJourney) return none;
     var ayahCount = 0;
     for (final stage in stages) {
@@ -349,6 +366,12 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       needsChoice: needsChoice,
       ayahCount: ayahCount,
       defaultStageSize: defaultStageSize,
+      currentWhole:
+          ayahCount <= kKidsWholeSurahMaxAyahsLimit &&
+          (settings?.kidsWholeSurahIds.contains(surahId) ?? false),
+      currentStageSize:
+          sanitizeKidsAyahsPerHouse(settings?.kidsHouseSizesBySurah[surahId]) ??
+          defaultStageSize,
     );
   }
 

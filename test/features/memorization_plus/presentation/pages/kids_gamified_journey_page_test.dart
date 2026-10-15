@@ -485,6 +485,43 @@ void main() {
       expect(find.text('How would you like to memorize it?'), findsOneWidget);
     });
 
+    testWidgets('change menu opens on the surah current choice', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+      final chosen = <KidsSurahSplitChoice>[];
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(
+              isQuranJourney: true,
+              surahAyahCount: 6,
+              defaultStageSize: 2,
+              currentSplitWhole: true,
+              currentStageSize: 2,
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (choice) async => chosen.add(choice),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('kids-journey-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change how to memorize'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start'));
+      await tester.pumpAndSettle();
+
+      expect(chosen.single, const KidsSurahSplitChoice(whole: true));
+    });
+
     testWidgets('adventure journey has no change-how-to-memorize menu', (
       tester,
     ) async {

@@ -186,6 +186,27 @@ void main() {
     expect(loaded().needsSplitChoice, isFalse);
   });
 
+  test('exposes the surah current choice for the change menu', () async {
+    final path = KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas);
+    settings = const ParentSettings(kidsWholeSurahIds: {103});
+    cubit = build(path: path);
+    await cubit.load(surahId: 103);
+    expect(loaded().currentSplitWhole, isTrue);
+    await cubit.close();
+
+    settings = const ParentSettings(kidsHouseSizesBySurah: {103: 2});
+    cubit = build(path: path);
+    await cubit.load(surahId: 103);
+    expect(loaded().currentSplitWhole, isFalse);
+    expect(loaded().currentStageSize, 2);
+    await cubit.close();
+
+    settings = const ParentSettings();
+    cubit = build(path: path);
+    await cubit.load(surahId: 103);
+    expect(loaded().currentStageSize, loaded().defaultStageSize);
+  });
+
   test('chooseSplit returns false and keeps state when saving fails', () async {
     cubit = build(
       path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),

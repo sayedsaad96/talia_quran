@@ -43,6 +43,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.needsSplitChoice = false,
     this.surahAyahCount = 0,
     this.defaultStageSize = 0,
+    this.currentSplitWhole = false,
+    this.currentStageSize = 0,
   });
 
   final int surahId;
@@ -86,6 +88,12 @@ class KidsJourneyLoaded extends KidsJourneyState {
 
   /// Stage size pre-selected in the split sheet; 0 off the Quran journey.
   final int defaultStageSize;
+
+  /// The surah is already memorized whole (<= 20 ayahs).
+  final bool currentSplitWhole;
+
+  /// The surah's current stage size: frozen size, else the default.
+  final int currentStageSize;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
@@ -137,6 +145,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     bool? needsSplitChoice,
     int? surahAyahCount,
     int? defaultStageSize,
+    bool? currentSplitWhole,
+    int? currentStageSize,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -159,6 +169,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     needsSplitChoice: needsSplitChoice ?? this.needsSplitChoice,
     surahAyahCount: surahAyahCount ?? this.surahAyahCount,
     defaultStageSize: defaultStageSize ?? this.defaultStageSize,
+    currentSplitWhole: currentSplitWhole ?? this.currentSplitWhole,
+    currentStageSize: currentStageSize ?? this.currentStageSize,
   );
 
   @override
@@ -180,5 +192,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     needsSplitChoice,
     surahAyahCount,
     defaultStageSize,
+    currentSplitWhole,
+    currentStageSize,
   ];
 }

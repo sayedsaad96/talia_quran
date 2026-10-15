@@ -2284,11 +2284,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
 
   @override
-  String kidsStageTitle(String number) {
-    return 'المرحلة $number';
-  }
-
-  @override
   String kidsStageProgress(
     String startAyah,
     String endAyah,
@@ -8612,6 +8607,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsSplitChange => 'غيّر طريقة الحفظ';
+
+  @override
+  String kidsStageTitle(String number) {
+    return 'المرحلة $number';
+  }
 
   @override
   String kidsReviewStageTitle(String number) {

@@ -2297,11 +2297,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open the guardian dashboard on the other device and scan the code.';
 
   @override
-  String kidsStageTitle(String number) {
-    return 'Stage $number';
-  }
-
-  @override
   String kidsStageProgress(
     String startAyah,
     String endAyah,
@@ -8629,6 +8624,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsSplitChange => 'Change how to memorize';
+
+  @override
+  String kidsStageTitle(String number) {
+    return 'Stage $number';
+  }
 
   @override
   String kidsReviewStageTitle(String number) {

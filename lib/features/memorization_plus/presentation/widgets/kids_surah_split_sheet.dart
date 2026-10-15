@@ -29,6 +29,8 @@ Future<KidsSurahSplitChoice?> showKidsSurahSplitSheet(
   BuildContext context, {
   required int ayahCount,
   required int defaultStageSize,
+  bool initialWhole = false,
+  int? initialStageSize,
 }) => showModalBottomSheet<KidsSurahSplitChoice>(
   context: context,
   isScrollControlled: true,
@@ -36,6 +38,8 @@ Future<KidsSurahSplitChoice?> showKidsSurahSplitSheet(
   builder: (_) => _KidsSurahSplitSheet(
     ayahCount: ayahCount,
     defaultStageSize: defaultStageSize,
+    initialWhole: initialWhole,
+    initialStageSize: initialStageSize,
   ),
 );
 
@@ -43,18 +47,26 @@ class _KidsSurahSplitSheet extends StatefulWidget {
   const _KidsSurahSplitSheet({
     required this.ayahCount,
     required this.defaultStageSize,
+    required this.initialWhole,
+    this.initialStageSize,
   });
 
   final int ayahCount;
   final int defaultStageSize;
+  final bool initialWhole;
+  final int? initialStageSize;
 
   @override
   State<_KidsSurahSplitSheet> createState() => _KidsSurahSplitSheetState();
 }
 
 class _KidsSurahSplitSheetState extends State<_KidsSurahSplitSheet> {
-  late bool _whole = false;
-  late int _size = sanitizeKidsAyahsPerHouse(widget.defaultStageSize) ?? 3;
+  late bool _whole =
+      widget.initialWhole && widget.ayahCount <= kKidsWholeSurahMaxAyahsLimit;
+  late int _size =
+      sanitizeKidsAyahsPerHouse(widget.initialStageSize) ??
+      sanitizeKidsAyahsPerHouse(widget.defaultStageSize) ??
+      3;
 
   bool get _canBeWhole => widget.ayahCount <= kKidsWholeSurahMaxAyahsLimit;
 

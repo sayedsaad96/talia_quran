@@ -865,14 +865,6 @@
   "createQr": "إنشاء QR",
   "renew": "تجديد",
   "remoteGuardianLinkInstruction": "افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.",
-  "kidsStageTitle": "مرحلة {stage}",
-  "@kidsStageTitle": {
-    "placeholders": {
-      "stage": {
-        "type": "String"
-      }
-    }
-  },
   "kidsStageProgress": "الآيات {startAyah}-{endAyah} • {completed}/{total}",
   "@kidsStageProgress": {
     "placeholders": {

@@ -4245,12 +4245,6 @@ abstract class AppLocalizations {
   /// **'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.'**
   String get remoteGuardianLinkInstruction;
 
-  /// No description provided for @kidsStageTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'المرحلة {number}'**
-  String kidsStageTitle(String number);
-
   /// No description provided for @kidsStageProgress.
   ///
   /// In ar, this message translates to:
@@ -14595,6 +14589,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'غيّر طريقة الحفظ'**
   String get kidsSplitChange;
+
+  /// No description provided for @kidsStageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المرحلة {number}'**
+  String kidsStageTitle(String number);
 
   /// No description provided for @kidsReviewStageTitle.
   ///

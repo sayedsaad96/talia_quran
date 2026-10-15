@@ -8,6 +8,8 @@ Future<void> _open(
   WidgetTester tester, {
   required int ayahCount,
   int defaultStageSize = 3,
+  bool initialWhole = false,
+  int? initialStageSize,
   required void Function(KidsSurahSplitChoice?) onResult,
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -31,6 +33,8 @@ Future<void> _open(
                 context,
                 ayahCount: ayahCount,
                 defaultStageSize: defaultStageSize,
+                initialWhole: initialWhole,
+                initialStageSize: initialStageSize,
               ),
             ),
             child: const Text('open'),
@@ -103,11 +107,47 @@ void main() {
     expect(result?.stageSize, isNull);
   });
 
+  _currentChoiceTests();
+
   testWidgets('dismissing without choosing returns null', (tester) async {
     KidsSurahSplitChoice? result = const KidsSurahSplitChoice(whole: true);
     await _open(tester, ayahCount: 30, onResult: (r) => result = r);
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(result, isNull);
+  });
+}
+
+void _currentChoiceTests() {
+  testWidgets('initialWhole pre-selects all-at-once', (tester) async {
+    KidsSurahSplitChoice? result;
+    await _open(
+      tester,
+      ayahCount: 3,
+      initialWhole: true,
+      onResult: (r) => result = r,
+    );
+    expect(find.byKey(const ValueKey('kids-split-size-3')), findsNothing);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(result, const KidsSurahSplitChoice(whole: true));
+  });
+
+  testWidgets('initialStageSize 5 shows 5 selected', (tester) async {
+    KidsSurahSplitChoice? result;
+    await _open(
+      tester,
+      ayahCount: 30,
+      initialStageSize: 5,
+      onResult: (r) => result = r,
+    );
+    expect(find.text('6 stages'), findsOneWidget);
+    final chip = tester.widget<ChoiceChip>(
+      find.byKey(const ValueKey('kids-split-size-5')),
+    );
+    expect(chip.selected, isTrue);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(result, const KidsSurahSplitChoice(whole: false, stageSize: 5));
   });
 }
