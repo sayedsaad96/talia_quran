@@ -3570,4 +3570,14 @@
   ,"kidsJourneyPathAdventure": "مغامرة جزء عمّ"
   ,"kidsJourneyPathFromNas": "رحلة القرآن: من الناس إلى البقرة"
   ,"kidsJourneyPathFromFatiha": "رحلة القرآن: من الفاتحة إلى الناس"
+  ,"kidsQuranJourneyTitle": "رحلة القرآن"
+  ,"kidsQuranJourneyJuz": "الجزء {number}"
+  ,"@kidsQuranJourneyJuz": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsQuranJourneyAyahCount": "{count} آية"
+  ,"@kidsQuranJourneyAyahCount": {"placeholders": {"count": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpConfirm": "تريد أن تبدأ سورة {surah}؟ سورة {current} ستنتظرك"
+  ,"@kidsQuranJourneyJumpConfirm": {"placeholders": {"surah": {"type": "String"}, "current": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpYes": "نبدأ"
+  ,"kidsQuranJourneyJumpNo": "ليس الآن"
+  ,"kidsQuranJourneyComplete": "أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم."
 }

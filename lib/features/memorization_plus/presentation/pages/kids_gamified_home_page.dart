@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_daily_missions.dart';
@@ -266,8 +267,16 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
             }),
             onJourneyTap: () => _openDestination(() async {
               if (!context.mounted) return;
+              final path = getIt.isRegistered<MemorizationPlusRepository>()
+                  ? (await getIt<MemorizationPlusRepository>()
+                            .getKidsJourneyPath())
+                        .getOrElse(() => KidsJourneyPathDefinition.adventure)
+                  : KidsJourneyPathDefinition.adventure;
+              if (!context.mounted) return;
               await context.push(
-                '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
+                path.isQuranJourney
+                    ? AppRoutes.memorizationPlusKidsQuranJourney
+                    : '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
               );
             }),
             onMissionTap: () =>

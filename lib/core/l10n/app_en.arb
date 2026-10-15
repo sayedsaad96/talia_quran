@@ -3532,4 +3532,14 @@
   ,"kidsJourneyPathAdventure": "Juz Amma adventure"
   ,"kidsJourneyPathFromNas": "Quran journey: An-Nas to Al-Baqarah"
   ,"kidsJourneyPathFromFatiha": "Quran journey: Al-Fatihah to An-Nas"
+  ,"kidsQuranJourneyTitle": "Quran journey"
+  ,"kidsQuranJourneyJuz": "Juz {number}"
+  ,"@kidsQuranJourneyJuz": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsQuranJourneyAyahCount": "{count} ayahs"
+  ,"@kidsQuranJourneyAyahCount": {"placeholders": {"count": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpConfirm": "Start Surah {surah}? Surah {current} will wait for you."
+  ,"@kidsQuranJourneyJumpConfirm": {"placeholders": {"surah": {"type": "String"}, "current": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpYes": "Let's start"
+  ,"kidsQuranJourneyJumpNo": "Not now"
+  ,"kidsQuranJourneyComplete": "You finished the whole Quran journey! Tell your guardian about this great achievement."
 }

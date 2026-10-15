@@ -14481,6 +14481,48 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'رحلة القرآن: من الفاتحة إلى الناس'**
   String get kidsJourneyPathFromFatiha;
+
+  /// No description provided for @kidsQuranJourneyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلة القرآن'**
+  String get kidsQuranJourneyTitle;
+
+  /// No description provided for @kidsQuranJourneyJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجزء {number}'**
+  String kidsQuranJourneyJuz(String number);
+
+  /// No description provided for @kidsQuranJourneyAyahCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} آية'**
+  String kidsQuranJourneyAyahCount(String count);
+
+  /// No description provided for @kidsQuranJourneyJumpConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تريد أن تبدأ سورة {surah}؟ سورة {current} ستنتظرك'**
+  String kidsQuranJourneyJumpConfirm(String surah, String current);
+
+  /// No description provided for @kidsQuranJourneyJumpYes.
+  ///
+  /// In ar, this message translates to:
+  /// **'نبدأ'**
+  String get kidsQuranJourneyJumpYes;
+
+  /// No description provided for @kidsQuranJourneyJumpNo.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس الآن'**
+  String get kidsQuranJourneyJumpNo;
+
+  /// No description provided for @kidsQuranJourneyComplete.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
+  String get kidsQuranJourneyComplete;
 }
 
 class _AppLocalizationsDelegate

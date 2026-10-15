@@ -8546,4 +8546,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsJourneyPathFromFatiha => 'رحلة القرآن: من الفاتحة إلى الناس';
+
+  @override
+  String get kidsQuranJourneyTitle => 'رحلة القرآن';
+
+  @override
+  String kidsQuranJourneyJuz(String number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String kidsQuranJourneyAyahCount(String count) {
+    return '$count آية';
+  }
+
+  @override
+  String kidsQuranJourneyJumpConfirm(String surah, String current) {
+    return 'تريد أن تبدأ سورة $surah؟ سورة $current ستنتظرك';
+  }
+
+  @override
+  String get kidsQuranJourneyJumpYes => 'نبدأ';
+
+  @override
+  String get kidsQuranJourneyJumpNo => 'ليس الآن';
+
+  @override
+  String get kidsQuranJourneyComplete =>
+      'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 }
