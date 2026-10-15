@@ -190,11 +190,7 @@ void _semanticsTests() {
     expect(data.label, contains('Not started'));
     expect(data.label, contains('You are here'));
     expect(data.hasAction(SemanticsAction.tap), isTrue);
-
-    tester.binding.rootPipelineOwner.semanticsOwner!.performAction(
-      node.id,
-      SemanticsAction.tap,
-    );
+    tester.semantics.tap(find.semantics.byLabel(RegExp('You are here')));
     await tester.pumpAndSettle();
     expect(opened, [1]);
     handle.dispose();
