@@ -1,0 +1,4 @@
+﻿Command: flutter test test/features/memorization_plus/domain test/features/memorization_plus/presentation/navigation test/features/memorization_plus/memorization_plus_repository_impl_test.dart test/features/memorization_plus/presentation/cubits/kids_mode_cubit_test.dart test/integration/kids_house_review_gate_test.dart
+Result: +442 -0 (All tests passed!)
+Failing tests: none
+
