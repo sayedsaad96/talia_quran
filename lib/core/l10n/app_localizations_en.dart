@@ -8591,4 +8591,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsQuranJourneyComplete =>
       'You finished the whole Quran journey! Tell your guardian about this great achievement.';
+
+  @override
+  String get kidsHouseStatusNotStarted => 'Not started';
+
+  @override
+  String get kidsHouseStatusInProgress => 'In progress';
+
+  @override
+  String get kidsHouseStatusNeedsReview => 'Needs review';
+
+  @override
+  String get kidsHouseStatusCompleted => 'Completed';
+
+  @override
+  String get kidsHouseCurrentMarker => 'You are here';
 }

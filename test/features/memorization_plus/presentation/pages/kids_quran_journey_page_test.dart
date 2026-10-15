@@ -1,3 +1,4 @@
+import 'dart:ui' show SemanticsAction;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,6 +66,7 @@ Future<void> _pump(
 }
 
 void main() {
+  _semanticsTests();
   testWidgets('builds lazily: fewer than 20 house cards in the tree for 114 '
       'houses', (tester) async {
     await _pump(tester, _state());
@@ -165,5 +167,41 @@ void main() {
       find.textContaining('You finished the whole Quran journey'),
       findsNothing,
     );
+  });
+}
+
+void _semanticsTests() {
+  testWidgets('house card is activatable and announces status and current', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final opened = <int>[];
+    await _pump(tester, _state(), onOpen: opened.add);
+
+    final node = tester.getSemantics(
+      find.ancestor(
+        of: find.text(SurahNames.english[1]!),
+        matching: find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.button == true,
+        ),
+      ),
+    );
+    final data = node.getSemanticsData();
+    expect(data.label, contains('Not started'));
+    expect(data.label, contains('You are here'));
+    expect(data.hasAction(SemanticsAction.tap), isTrue);
+
+    tester.binding.rootPipelineOwner.semanticsOwner!.performAction(
+      node.id,
+      SemanticsAction.tap,
+    );
+    await tester.pumpAndSettle();
+    expect(opened, [1]);
+    handle.dispose();
+  });
+
+  testWidgets('opens scrolled to the current house', (tester) async {
+    await _pump(tester, _state(current: 60));
+    expect(find.text(SurahNames.english[60]!), findsOneWidget);
   });
 }

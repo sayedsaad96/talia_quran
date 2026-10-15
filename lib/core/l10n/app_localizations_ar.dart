@@ -8574,4 +8574,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kidsQuranJourneyComplete =>
       'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
+
+  @override
+  String get kidsHouseStatusNotStarted => 'لم تبدأ بعد';
+
+  @override
+  String get kidsHouseStatusInProgress => 'جارية';
+
+  @override
+  String get kidsHouseStatusNeedsReview => 'تحتاج مراجعة';
+
+  @override
+  String get kidsHouseStatusCompleted => 'مكتملة';
+
+  @override
+  String get kidsHouseCurrentMarker => 'أنت هنا';
 }

@@ -3542,4 +3542,9 @@
   ,"kidsQuranJourneyJumpYes": "Let's start"
   ,"kidsQuranJourneyJumpNo": "Not now"
   ,"kidsQuranJourneyComplete": "You finished the whole Quran journey! Tell your guardian about this great achievement."
+  ,"kidsHouseStatusNotStarted": "Not started"
+  ,"kidsHouseStatusInProgress": "In progress"
+  ,"kidsHouseStatusNeedsReview": "Needs review"
+  ,"kidsHouseStatusCompleted": "Completed"
+  ,"kidsHouseCurrentMarker": "You are here"
 }

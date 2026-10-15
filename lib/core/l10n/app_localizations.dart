@@ -14523,6 +14523,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.'**
   String get kidsQuranJourneyComplete;
+
+  /// No description provided for @kidsHouseStatusNotStarted.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تبدأ بعد'**
+  String get kidsHouseStatusNotStarted;
+
+  /// No description provided for @kidsHouseStatusInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارية'**
+  String get kidsHouseStatusInProgress;
+
+  /// No description provided for @kidsHouseStatusNeedsReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج مراجعة'**
+  String get kidsHouseStatusNeedsReview;
+
+  /// No description provided for @kidsHouseStatusCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتملة'**
+  String get kidsHouseStatusCompleted;
+
+  /// No description provided for @kidsHouseCurrentMarker.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت هنا'**
+  String get kidsHouseCurrentMarker;
 }
 
 class _AppLocalizationsDelegate

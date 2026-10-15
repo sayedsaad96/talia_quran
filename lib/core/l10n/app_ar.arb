@@ -3580,4 +3580,9 @@
   ,"kidsQuranJourneyJumpYes": "نبدأ"
   ,"kidsQuranJourneyJumpNo": "ليس الآن"
   ,"kidsQuranJourneyComplete": "أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم."
+  ,"kidsHouseStatusNotStarted": "لم تبدأ بعد"
+  ,"kidsHouseStatusInProgress": "جارية"
+  ,"kidsHouseStatusNeedsReview": "تحتاج مراجعة"
+  ,"kidsHouseStatusCompleted": "مكتملة"
+  ,"kidsHouseCurrentMarker": "أنت هنا"
 }

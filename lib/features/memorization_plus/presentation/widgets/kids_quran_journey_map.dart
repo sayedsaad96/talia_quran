@@ -204,14 +204,27 @@ class KidsSurahHouseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final countText = context.l10n.kidsQuranJourneyAyahCount(
+    final l10n = context.l10n;
+    final countText = l10n.kidsQuranJourneyAyahCount(
       context.numText(house.ayahCount),
     );
     final statusColor = _color(house.status);
+    final statusText = switch (house.status) {
+      KidsSurahHouseStatus.completed => l10n.kidsHouseStatusCompleted,
+      KidsSurahHouseStatus.needsReview => l10n.kidsHouseStatusNeedsReview,
+      KidsSurahHouseStatus.inProgress => l10n.kidsHouseStatusInProgress,
+      KidsSurahHouseStatus.notStarted => l10n.kidsHouseStatusNotStarted,
+    };
     return Semantics(
       button: true,
       container: true,
-      label: '$name. $countText',
+      label: [
+        name,
+        countText,
+        statusText,
+        if (isCurrent) l10n.kidsHouseCurrentMarker,
+      ].join('. '),
+      onTap: onTap,
       child: ExcludeSemantics(
         child: Material(
           color: Colors.transparent,
