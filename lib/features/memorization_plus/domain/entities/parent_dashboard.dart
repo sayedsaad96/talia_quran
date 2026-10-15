@@ -78,6 +78,7 @@ class ParentSettings extends Equatable {
   final String? kidsJourneyPathId;
 
   /// Surahs (<= 20 ayahs) the guardian chose to memorize as one whole house.
+  /// Takes precedence over [kidsHouseSizesBySurah].
   final Set<int> kidsWholeSurahIds;
 
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;

@@ -175,6 +175,7 @@ class MemorizationKidsLocalService {
         logs,
         profile.childAge,
         ownerId,
+        ayahCount: totalAyahs,
       );
       final settings = await _datasource.getParentSettings();
       final blockedByEarlierSurah = await _earlierHouseUnfinished(
@@ -250,10 +251,17 @@ class MemorizationKidsLocalService {
     int surahId,
     List<KidsSessionLog> logs,
     int? age,
-    String ownerId,
-  ) async {
+    String ownerId, {
+    required int ayahCount,
+  }) async {
     final settings = await _datasource.getParentSettings();
     _ensureKidsOwner(ownerId);
+    // "Whole" is checked first, so a stray size key never overrides it and
+    // nothing is frozen for a whole surah.
+    if (settings.kidsWholeSurahIds.contains(surahId) &&
+        ayahCount <= kKidsWholeSurahMaxAyahs) {
+      return ayahCount;
+    }
     final frozen = sanitizeKidsAyahsPerHouse(
       settings.kidsHouseSizesBySurah[surahId],
     );
@@ -277,6 +285,11 @@ class MemorizationKidsLocalService {
     int? age,
     String ownerId,
   ) async {
+    final journeyPath = resolveKidsJourneyPath(
+      storedPathId: settings.kidsJourneyPathId,
+      quranJourneyEnabled: _quranJourneyEnabled(),
+    );
+    if (!journeyPath.locksAhead) return false;
     const path = KidsJourneyPath.surahIds;
     // A house the child already started stays accessible: its earned stages
     // never relock, even if an earlier house is unfinished (legacy frontier,
@@ -324,7 +337,13 @@ class MemorizationKidsLocalService {
       if (detail.ayahs.any((ayah) => !passed.contains(ayah.numberInSurah))) {
         return true;
       }
-      final size = await _houseSize(id, logs, age, ownerId);
+      final size = await _houseSize(
+        id,
+        logs,
+        age,
+        ownerId,
+        ayahCount: detail.surah.ayahCount,
+      );
       for (var start = 1; start <= detail.surah.ayahCount; start += size) {
         final range = [
           for (
