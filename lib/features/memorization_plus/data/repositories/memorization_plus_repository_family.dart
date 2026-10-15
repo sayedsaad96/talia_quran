@@ -134,6 +134,38 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
   }
 
   @override
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath() =>
+      _kidsLocal.getKidsJourneyPath();
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) async {
+    final outcome = await _kidsLocal.setKidsJourneyPath(id);
+    if (outcome.isRight()) {
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
+    }
+    return outcome;
+  }
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  }) async {
+    final outcome = await _kidsLocal.setKidsSurahSplit(
+      surahId,
+      whole: whole,
+      stageSize: stageSize,
+    );
+    if (outcome.isRight()) {
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
+    }
+    return outcome;
+  }
+
+  @override
   Future<Either<Failure, void>> saveParentSettings(
     ParentSettings settings,
   ) async {

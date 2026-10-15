@@ -5,6 +5,7 @@ import '../../../../core/sync/sync_result.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import 'memorization_cloud_repository.dart';
 import 'memorization_identity_repository.dart';
@@ -118,6 +119,18 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, ParentSettings>> getParentSettings();
   Future<Either<Failure, void>> saveParentSettings(ParentSettings settings);
   Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count);
+
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath();
+
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  );
+
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  });
   Future<Either<Failure, bool>> verifyParentPin(String pin);
   Future<Either<Failure, void>> setParentPin(String pin);
   Future<Either<Failure, void>> resetParentAccess();

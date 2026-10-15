@@ -463,6 +463,8 @@ class ParentSettingsModel extends ParentSettings {
     super.policyLinkConfirmed,
     super.kidsAyahsPerHouse,
     super.kidsHouseSizesBySurah,
+    super.kidsJourneyPathId,
+    super.kidsWholeSurahIds,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -500,6 +502,10 @@ class ParentSettingsModel extends ParentSettings {
           _intOr(json['kidsAyahsPerHouse'], 0),
         ),
         kidsHouseSizesBySurah: _houseSizes(json['kidsHouseSizesBySurah']),
+        kidsJourneyPathId: json['kidsJourneyPathId'] is String
+            ? json['kidsJourneyPathId'] as String
+            : null,
+        kidsWholeSurahIds: _wholeSurahIds(json['kidsWholeSurahIds']),
       );
 
   static bool _boolOr(Object? raw, bool fallback) =>
@@ -516,6 +522,14 @@ class ParentSettingsModel extends ParentSettings {
       }
     }
     return sizes;
+  }
+
+  static Set<int> _wholeSurahIds(Object? raw) {
+    if (raw is! List) return const {};
+    return {
+      for (final value in raw)
+        if (value is int && value >= 1 && value <= 114) value,
+    };
   }
 
   static int _intOr(Object? raw, int fallback) =>
@@ -542,6 +556,8 @@ class ParentSettingsModel extends ParentSettings {
         policyLinkConfirmed: settings.policyLinkConfirmed,
         kidsAyahsPerHouse: settings.kidsAyahsPerHouse,
         kidsHouseSizesBySurah: settings.kidsHouseSizesBySurah,
+        kidsJourneyPathId: settings.kidsJourneyPathId,
+        kidsWholeSurahIds: settings.kidsWholeSurahIds,
       );
 
   Map<String, dynamic> toJson() => {
@@ -558,6 +574,8 @@ class ParentSettingsModel extends ParentSettings {
     'kidsHouseSizesBySurah': kidsHouseSizesBySurah.map(
       (key, value) => MapEntry('$key', value),
     ),
+    'kidsJourneyPathId': kidsJourneyPathId,
+    'kidsWholeSurahIds': kidsWholeSurahIds.toList()..sort(),
     'startingSurahId': startingSurahId,
     'kidsHifzV2Enabled': kidsHifzV2Enabled,
     'kidsReduceMotion': kidsReduceMotion,

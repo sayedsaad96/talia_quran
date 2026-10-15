@@ -19,6 +19,7 @@ import '../../../../../core/security/parent_pin_secure_store.dart';
 import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
 import '../../../domain/entities/kids_home_mission.dart';
+import '../../../domain/entities/kids_journey_path_definition.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../../domain/services/kids_due_review_policy.dart';
 import '../../../domain/services/kids_house_review_policy.dart';
@@ -29,6 +30,8 @@ import '../../models/memorization_models.dart';
 /// dashboard, settings, PIN, rewards and points awarding (with per-ayah
 /// concurrency locks). All data lives in the local datasource; streaks are
 /// hydrated from [StreakReader] as the single source of truth.
+bool _quranJourneyOff() => false;
+
 class MemorizationKidsLocalService {
   MemorizationKidsLocalService(
     this._datasource,
@@ -38,6 +41,7 @@ class MemorizationKidsLocalService {
     this._cloudSyncQueue, {
     ParentPinSecureStore? parentPinStore,
     this._owner = const SupabaseRecordOwnerProvider(),
+    this._quranJourneyEnabled = _quranJourneyOff,
   }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore();
 
   final MemorizationPlusLocalDatasource _datasource;
@@ -47,6 +51,7 @@ class MemorizationKidsLocalService {
   final CloudSyncQueue? _cloudSyncQueue;
   final ParentPinSecureStore _parentPinStore;
   final RecordOwnerProvider _owner;
+  final bool Function() _quranJourneyEnabled;
 
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
@@ -61,6 +66,9 @@ class MemorizationKidsLocalService {
   /// days are real work and must show visible progress, never a dead
   /// zero-point day.
   static const kKidsReviewPoints = 5;
+
+  /// A surah of at most this many ayahs may be memorized as one whole house.
+  static const kKidsWholeSurahMaxAyahs = 20;
 
   /// Overlays [KidsProgress.currentStreak] from [StreakService] (single SSOT).
   Future<KidsProgress> _hydrateKidsStreak(KidsProgress progress) async {
@@ -378,6 +386,84 @@ class MemorizationKidsLocalService {
             for (final id in started) id: ageDefault,
             ...current.kidsHouseSizesBySurah,
           },
+        );
+      });
+      _ensureKidsOwner(ownerId);
+      return Right(next);
+    } catch (error) {
+      return Left(CacheFailure.from(error));
+    }
+  }
+
+  Future<Either<Failure, KidsJourneyPathDefinition>>
+  getKidsJourneyPath() async {
+    try {
+      final settings = await _datasource.getParentSettings();
+      return Right(
+        resolveKidsJourneyPath(
+          storedPathId: settings.kidsJourneyPathId,
+          quranJourneyEnabled: _quranJourneyEnabled(),
+        ),
+      );
+    } catch (error) {
+      return Left(CacheFailure.from(error));
+    }
+  }
+
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) async {
+    try {
+      final ownerId = _owner.currentOwnerId;
+      _ensureKidsOwner(ownerId);
+      final next = await _datasource.updateKidsHouseSettings((current) {
+        _ensureKidsOwner(ownerId);
+        return current.copyWith(kidsJourneyPathId: id.storageValue);
+      });
+      _ensureKidsOwner(ownerId);
+      return Right(next);
+    } catch (error) {
+      return Left(CacheFailure.from(error));
+    }
+  }
+
+  /// Chooses, for one surah, to memorize it as a single whole house (only up
+  /// to [kKidsWholeSurahMaxAyahs] ayahs) or in stages of [stageSize] ayahs.
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  }) async {
+    if (surahId < 1 || surahId > 114) return const Left(ValidationFailure());
+    final size = whole ? null : sanitizeKidsAyahsPerHouse(stageSize);
+    if (!whole && size == null) return const Left(ValidationFailure());
+    try {
+      final ownerId = _owner.currentOwnerId;
+      if (whole) {
+        final outcome = await _quranRepository.getSurahDetail(surahId);
+        final ayahCount = outcome.fold(
+          (failure) => throw failure,
+          (detail) => detail.surah.ayahCount,
+        );
+        if (ayahCount > kKidsWholeSurahMaxAyahs) {
+          return const Left(ValidationFailure());
+        }
+      }
+      _ensureKidsOwner(ownerId);
+      final next = await _datasource.updateKidsHouseSettings((current) {
+        _ensureKidsOwner(ownerId);
+        final sizes = {...current.kidsHouseSizesBySurah};
+        final wholeIds = {...current.kidsWholeSurahIds};
+        if (whole) {
+          wholeIds.add(surahId);
+          sizes.remove(surahId);
+        } else {
+          wholeIds.remove(surahId);
+          sizes[surahId] = size!;
+        }
+        return current.copyWith(
+          kidsHouseSizesBySurah: sizes,
+          kidsWholeSurahIds: wholeIds,
         );
       });
       _ensureKidsOwner(ownerId);

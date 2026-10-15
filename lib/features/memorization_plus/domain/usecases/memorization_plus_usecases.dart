@@ -4,6 +4,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
 import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/family_dashboard_stream_repository.dart';
 import '../repositories/memorization_plus_repository.dart';
@@ -396,6 +397,23 @@ class ParentAccessUsecase {
 
   Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count) =>
       _repository.setKidsAyahsPerHouse(count);
+
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath() =>
+      _repository.getKidsJourneyPath();
+
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) => _repository.setKidsJourneyPath(id);
+
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  }) => _repository.setKidsSurahSplit(
+    surahId,
+    whole: whole,
+    stageSize: stageSize,
+  );
 
   Future<Either<Failure, bool>> verifyPin(String pin) =>
       _repository.verifyParentPin(pin);

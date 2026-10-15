@@ -276,6 +276,9 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
           ...settings.kidsHouseSizesBySurah,
           ...current.kidsHouseSizesBySurah,
         },
+        kidsJourneyPathId: current.kidsJourneyPathId,
+        clearKidsJourneyPathId: current.kidsJourneyPathId == null,
+        kidsWholeSurahIds: current.kidsWholeSurahIds,
       );
       await _saveParentSettingsForOwner(
         ParentSettingsModel.fromEntity(merged),

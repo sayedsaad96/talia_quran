@@ -704,6 +704,9 @@ Future<void> configureDependencies({bool background = false}) async {
       },
       familyActivityInputs: familyActivityInputsLoader(getIt),
       readingSupportSync: getIt<KidsReadingSupportSync>(),
+      quranJourneyEnabled: () => KidsHifzFeatureFlags.isQuranJourneyEnabled(
+        getIt<SharedPreferences>(),
+      ),
       readingSupportEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
         KidsEnrichmentFeature.supportProfile,
       ),

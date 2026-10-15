@@ -22,6 +22,7 @@ import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/kids_inbound_repository.dart';
 import '../../domain/repositories/memorization_cloud_repository.dart';
@@ -79,8 +80,11 @@ class MemorizationPlusRepositoryImpl extends _MemorizationPlusRepositoryCore
     super.familyActivityInputs,
     super.readingSupportSync,
     super.readingSupportEnabled,
+    super.quranJourneyEnabled,
   });
 }
+
+bool _quranJourneyOff() => false;
 
 abstract class _MemorizationPlusRepositoryCore
     implements
@@ -106,6 +110,7 @@ abstract class _MemorizationPlusRepositoryCore
     this._familyActivityInputs,
     this._readingSupportSync,
     this._readingSupportEnabled,
+    this._quranJourneyEnabled = _quranJourneyOff,
   });
 
   final ParentPinSecureStore? _parentPinStore;
@@ -116,6 +121,7 @@ abstract class _MemorizationPlusRepositoryCore
   final FamilyActivityInputsLoader? _familyActivityInputs;
   final KidsReadingSupportSync? _readingSupportSync;
   final bool Function()? _readingSupportEnabled;
+  final bool Function() _quranJourneyEnabled;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -143,6 +149,7 @@ abstract class _MemorizationPlusRepositoryCore
         _cloudSyncQueue,
         parentPinStore: _parentPinStore,
         owner: _owner,
+        quranJourneyEnabled: _quranJourneyEnabled,
       );
   late final MemorizationDailyPlanService _dailyPlan =
       MemorizationDailyPlanService(

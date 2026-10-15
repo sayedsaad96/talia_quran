@@ -32,6 +32,8 @@ class ParentSettings extends Equatable {
     this.policyLinkConfirmed,
     this.kidsAyahsPerHouse,
     this.kidsHouseSizesBySurah = const {},
+    this.kidsJourneyPathId,
+    this.kidsWholeSurahIds = const {},
   });
 
   final String? pinHash;
@@ -72,6 +74,12 @@ class ParentSettings extends Equatable {
   final int? kidsAyahsPerHouse;
   final Map<int, int> kidsHouseSizesBySurah;
 
+  /// Stored journey path id; null or unknown resolves to the adventure.
+  final String? kidsJourneyPathId;
+
+  /// Surahs (<= 20 ayahs) the guardian chose to memorize as one whole house.
+  final Set<int> kidsWholeSurahIds;
+
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
   ParentSettings copyWith({
@@ -98,6 +106,9 @@ class ParentSettings extends Equatable {
     int? kidsAyahsPerHouse,
     bool clearKidsAyahsPerHouse = false,
     Map<int, int>? kidsHouseSizesBySurah,
+    String? kidsJourneyPathId,
+    bool clearKidsJourneyPathId = false,
+    Set<int>? kidsWholeSurahIds,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -124,6 +135,10 @@ class ParentSettings extends Equatable {
         ? null
         : kidsAyahsPerHouse ?? this.kidsAyahsPerHouse,
     kidsHouseSizesBySurah: kidsHouseSizesBySurah ?? this.kidsHouseSizesBySurah,
+    kidsJourneyPathId: clearKidsJourneyPathId
+        ? null
+        : kidsJourneyPathId ?? this.kidsJourneyPathId,
+    kidsWholeSurahIds: kidsWholeSurahIds ?? this.kidsWholeSurahIds,
   );
 
   @override
@@ -147,6 +162,8 @@ class ParentSettings extends Equatable {
     policyLinkConfirmed,
     kidsAyahsPerHouse,
     kidsHouseSizesBySurah,
+    kidsJourneyPathId,
+    kidsWholeSurahIds,
   ];
 }
 
