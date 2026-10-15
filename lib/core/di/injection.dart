@@ -65,6 +65,7 @@ import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_child_policy.dart';
+import '../../features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/kids_review_outcome_committer.dart';
@@ -1356,6 +1357,9 @@ Future<void> configureDependencies({bool background = false}) async {
       },
       recentReadingDaysLoader: (before) =>
           getIt<KidsReadingReceiptStore>().recentReadingDays(before),
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getMemorizationProfile();

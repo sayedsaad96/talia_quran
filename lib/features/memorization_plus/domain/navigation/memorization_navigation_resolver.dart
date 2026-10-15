@@ -5,6 +5,7 @@ import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/smart_coach_engine.dart';
 import '../../../../core/router/app_router.dart';
 import '../entities/kids_child_policy.dart';
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 import '../usecases/get_last_reviewed_surah_id_usecase.dart';
@@ -131,9 +132,11 @@ class MemorizationNavigationResolver {
     final stages = journeyResult.getOrElse(() => const <KidsJourneyStage>[]);
     final budget = await _kidsDailyBudget(at);
     const resolver = KidsNextMissionResolver();
+    final path = await _kidsJourneyPath();
     final continuation = await resolver.findContinuation(
       activeSurahId: surahId,
       stages: stages,
+      path: path,
       loadStages: (id) async => (await _repository.getKidsJourney(
         surahId: id,
       )).fold((_) => null, (stages) => stages),
@@ -145,6 +148,7 @@ class MemorizationNavigationResolver {
       now: at.toUtc(),
       budget: budget,
       continuation: continuation,
+      path: path,
     );
     final mission = resolveWith(budget);
     return (
@@ -352,6 +356,16 @@ class MemorizationNavigationResolver {
     return KidsJourneyCursor.initial.activeSurahId;
   }
 
+  /// The selected kids journey path; any failure means the adventure.
+  Future<KidsJourneyPathDefinition> _kidsJourneyPath() async {
+    try {
+      final result = await _repository.getKidsJourneyPath();
+      return result.getOrElse(() => KidsJourneyPathDefinition.adventure);
+    } catch (_) {
+      return KidsJourneyPathDefinition.adventure;
+    }
+  }
+
   /// Same age-band budget the home screen and session gate use; a log read
   Future<int?> _mandatoryKidsHouseSurah() async {
     final profile = await _profile();
@@ -368,10 +382,15 @@ class MemorizationNavigationResolver {
       (_) => null,
       (settings) => settings,
     );
-    final first = KidsJourneyPath.surahIds.indexOf(
-      settings?.startingSurahId ?? KidsJourneyPath.firstSurahId,
-    );
-    for (final id in KidsJourneyPath.surahIds.skip(first < 0 ? 0 : first)) {
+    final path = await _kidsJourneyPath();
+    // The Quran journey locks nothing ahead, so a pending house review may sit
+    // in any started surah: scan them all, with no starting-surah skip.
+    final first = path.locksAhead
+        ? KidsJourneyPath.surahIds.indexOf(
+            settings?.startingSurahId ?? KidsJourneyPath.firstSurahId,
+          )
+        : 0;
+    for (final id in path.surahIds.skip(first < 0 ? 0 : first)) {
       if (!started.contains(id)) continue;
       final stages = (await _repository.getKidsJourney(
         surahId: id,

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_budget.dart';
@@ -645,6 +646,129 @@ void main() {
 
       expect(continuation?.mission?.surahId, 114);
       expect(continuation?.mission?.ayahNumbers, const [2]);
+    });
+  });
+
+  group('selected journey path', () {
+    final quranFromNas = KidsJourneyPathDefinition.of(
+      KidsJourneyPathId.quranFromNas,
+    );
+    final quranFromFatiha = KidsJourneyPathDefinition.of(
+      KidsJourneyPathId.quranFromFatiha,
+    );
+    KidsJourneyStage done(int surahId) => KidsJourneyStage(
+      stageNumber: 1,
+      surahId: surahId,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: const [1, 2, 3],
+      status: KidsJourneyStageStatus.completed,
+    );
+    KidsJourneyStage open(int surahId) => KidsJourneyStage(
+      stageNumber: 1,
+      surahId: surahId,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: const [1],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    test(
+      'quran journey continues from 67 to 66 skipping a memorized 66',
+      () async {
+        const resolver = KidsNextMissionResolver();
+        final loaded = <int>[];
+        final continuation = await resolver.findContinuation(
+          activeSurahId: 67,
+          stages: [done(67)],
+          path: quranFromNas,
+          loadStages: (surahId) async {
+            loaded.add(surahId);
+            return switch (surahId) {
+              66 => [done(66)],
+              65 => [open(65)],
+              _ => null,
+            };
+          },
+        );
+
+        expect(loaded, [66, 65]);
+        expect(continuation?.mission?.type, KidsMissionType.newMemorization);
+        expect(continuation?.mission?.surahId, 65);
+        expect(continuation?.mission?.ayahNumbers, const [2]);
+      },
+    );
+
+    test('quran journey from Fatiha: 1 -> 2', () async {
+      const resolver = KidsNextMissionResolver();
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 1,
+        stages: [done(1)],
+        path: quranFromFatiha,
+        loadStages: (surahId) async => surahId == 2 ? [open(2)] : null,
+      );
+      final mission = resolver.resolve(
+        activeSurahId: 1,
+        stages: [done(1)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        path: quranFromFatiha,
+      );
+
+      expect(continuation?.mission?.surahId, 2);
+      expect(mission?.surahId, 2);
+      expect(mission?.ayahNumbers, const [1]);
+    });
+
+    test('adventure default is unchanged: 79 -> 78 then null', () async {
+      const resolver = KidsNextMissionResolver();
+      final mission = resolver.resolve(
+        activeSurahId: 79,
+        stages: [done(79)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+      );
+      final afterLast = resolver.resolve(
+        activeSurahId: 78,
+        stages: [done(78)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+      );
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 78,
+        stages: [done(78)],
+        loadStages: (_) async => fail('nothing follows An-Naba'),
+      );
+
+      expect(mission?.surahId, 78);
+      expect(afterLast, isNull);
+      expect(continuation?.mission, isNull);
+    });
+
+    test('due review of surah 67 still leads on the adventure path', () {
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 114,
+        stages: [open(114)],
+        reviewRecords: [
+          AyahReviewRecord(
+            surahId: 67,
+            ayahNumber: 1,
+            strengthLevel: 1,
+            intervalDays: 1,
+            lastReviewedAt: DateTime.utc(2026, 8, 30),
+            nextReviewDate: DateTime.utc(2026, 8, 31),
+            totalReviews: 1,
+            lastRating: PerformanceRating.average,
+            createdByMode: ReviewRecordCreatedByMode.kidsMode,
+          ),
+        ],
+        now: DateTime.utc(2026, 9, 1),
+        path: KidsJourneyPathDefinition.adventure,
+      );
+
+      expect(mission?.type, KidsMissionType.dueReview);
+      expect(mission?.surahId, 67);
+      expect(mission?.ayahNumbers, const [1]);
     });
   });
 

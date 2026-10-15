@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import '../services/kids_daily_budget.dart';
 import '../services/kids_due_review_policy.dart';
@@ -50,8 +51,10 @@ final class KidsNextMissionResolver {
   /// Where the path ends (An-Naba by default).
   final int lastJuzAmmaSurahId;
 
-  int? _nextSurah(int surahId) =>
-      KidsJourneyPath.nextAfter(surahId, lastSurahId: lastJuzAmmaSurahId);
+  int? _nextSurah(int surahId, KidsJourneyPathDefinition path) =>
+      path.locksAhead
+      ? KidsJourneyPath.nextAfter(surahId, lastSurahId: lastJuzAmmaSurahId)
+      : path.nextAfter(surahId);
 
   KidsNextMission? resolve({
     required int activeSurahId,
@@ -61,6 +64,7 @@ final class KidsNextMissionResolver {
     required DateTime now,
     KidsDailyBudget budget = KidsDailyBudget.unlimited,
     KidsJourneyContinuation? continuation,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) {
     final requiredHouse = _mandatoryHouseMission(stages);
     if (requiredHouse != null) return requiredHouse;
@@ -125,7 +129,7 @@ final class KidsNextMissionResolver {
 
     // Without a continuation the caller could not look ahead: keep starting
     // the next surah on the path from its first ayah.
-    final nextSurahId = _nextSurah(activeSurahId);
+    final nextSurahId = _nextSurah(activeSurahId, path);
     if (nextSurahId != null &&
         stages.isNotEmpty &&
         !stages.any((stage) => stage.status == KidsJourneyStageStatus.locked)) {
@@ -153,6 +157,7 @@ final class KidsNextMissionResolver {
     required int justCompletedAyah,
     KidsDailyBudget budget = KidsDailyBudget.unlimited,
     KidsJourneyContinuation? continuation,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) {
     return resolve(
       activeSurahId: activeSurahId,
@@ -166,6 +171,7 @@ final class KidsNextMissionResolver {
       now: now,
       budget: budget,
       continuation: continuation,
+      path: path,
     );
   }
 
@@ -194,6 +200,7 @@ final class KidsNextMissionResolver {
     required int activeSurahId,
     required List<KidsJourneyStage> stages,
     required KidsSurahStagesLoader loadStages,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) async {
     if (stages.isEmpty ||
         stages.any(_isOpen) ||
@@ -202,9 +209,9 @@ final class KidsNextMissionResolver {
       return null;
     }
     for (
-      var surahId = _nextSurah(activeSurahId);
+      var surahId = _nextSurah(activeSurahId, path);
       surahId != null;
-      surahId = _nextSurah(surahId)
+      surahId = _nextSurah(surahId, path)
     ) {
       final surahStages = await loadStages(surahId);
       if (surahStages == null || surahStages.isEmpty) {

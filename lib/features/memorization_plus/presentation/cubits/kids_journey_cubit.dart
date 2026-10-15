@@ -6,6 +6,7 @@ import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/services/kids_adventure_regions.dart';
@@ -48,6 +49,10 @@ typedef KidsChildPolicyRefresh = Future<void> Function();
 /// Pulls what the guardian sent; true when local data may have changed.
 typedef KidsInboundRefresh = Future<bool> Function({bool force});
 
+/// The selected kids journey path. When absent (or throwing) the Juz Amma
+/// adventure applies.
+typedef KidsJourneyPathLoader = Future<KidsJourneyPathDefinition> Function();
+
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
     this._getJourney,
@@ -64,6 +69,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     this._childPolicyReader,
     this._childPolicyRefresh,
     this._inboundRefresh,
+    this._pathLoader,
     this._missionResolver = const KidsNextMissionResolver(),
     this._v2Enabled = true,
     DateTime Function()? clock,
@@ -85,6 +91,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsChildPolicyReader? _childPolicyReader;
   final KidsChildPolicyRefresh? _childPolicyRefresh;
   final KidsInboundRefresh? _inboundRefresh;
+  final KidsJourneyPathLoader? _pathLoader;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -139,6 +146,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       emit(const KidsJourneyLoading());
     }
     var activeSurahId = surahId;
+    final path = await _loadPath();
     var journeyResult = await _getJourney(
       GetKidsJourneyParams(surahId: surahId),
     );
@@ -147,6 +155,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         activeSurahId: surahId,
         stages: journeyResult.getOrElse(() => const <KidsJourneyStage>[]),
         loadStages: _loadStages,
+        path: path,
       ))?.mission;
       if (frontier != null && frontier.surahId != surahId) {
         final frontierResult = await _getJourney(
@@ -195,6 +204,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
             activeSurahId: activeSurahId,
             stages: stages,
             loadStages: _loadStages,
+            path: path,
           )
         : null;
     final now = _clock().toUtc();
@@ -207,6 +217,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           now: now,
           budget: budget,
           continuation: continuation,
+          path: path,
         );
     final nextMission = _v2Enabled
         ? resolveWith(budget)
@@ -244,6 +255,15 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       ),
     );
     if (!isStale()) emit(loaded);
+  }
+
+  /// The selected path, read once per load; any failure means the adventure.
+  Future<KidsJourneyPathDefinition> _loadPath() async {
+    try {
+      return await _pathLoader?.call() ?? KidsJourneyPathDefinition.adventure;
+    } catch (_) {
+      return KidsJourneyPathDefinition.adventure;
+    }
   }
 
   /// A surah's display name, or null — a label never blocks the journey.
