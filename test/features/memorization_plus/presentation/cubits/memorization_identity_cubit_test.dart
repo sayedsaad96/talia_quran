@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 
@@ -15,6 +16,9 @@ void main() {
 
   setUp(() {
     mockRepository = MockMemorizationPlusRepository();
+    when(
+      mockRepository.setKidsJourneyPath(any),
+    ).thenAnswer((_) async => const Right(ParentSettings()));
     pathResolver = MemorizationPathResolver(mockRepository);
     cubit = MemorizationIdentityCubit(
       repository: mockRepository,
@@ -194,6 +198,69 @@ void main() {
     test('surahs outside the kids path are refused', () async {
       expect(await setupWith(startingSurahId: 2), isNull);
       expect(cubit.state, isA<MemorizationIdentityError>());
+    });
+  });
+
+  group('journey path at setup', () {
+    Future<void> setup({
+      required int startingSurahId,
+      KidsJourneyPathId? pathId,
+    }) async {
+      final selectedChild = testProfile.copyWith(
+        selectedPath: MemorizationPath.child,
+        guardianOnboardingStatus: GuardianOnboardingStatus.required,
+      );
+      when(
+        mockRepository.selectMemorizationPath(MemorizationPath.child),
+      ).thenAnswer((_) async => Right(selectedChild));
+      when(
+        mockRepository.configureChildAge(6),
+      ).thenAnswer((_) async => Right(selectedChild.copyWith(childAge: 6)));
+      when(
+        mockRepository.getParentSettings(),
+      ).thenAnswer((_) async => const Right(ParentSettings()));
+      when(
+        mockRepository.saveParentSettings(any),
+      ).thenAnswer((_) async => const Right(null));
+      if (pathId == null) {
+        await cubit.setupChild(
+          nickname: 'Maryam',
+          age: 6,
+          startingSurahId: startingSurahId,
+        );
+      } else {
+        await cubit.setupChild(
+          nickname: 'Maryam',
+          age: 6,
+          startingSurahId: startingSurahId,
+          journeyPathId: pathId,
+        );
+      }
+    }
+
+    test('rejects starting surah 2 on the adventure', () async {
+      await setup(startingSurahId: 2);
+
+      expect(cubit.state, isA<MemorizationIdentityError>());
+      verifyNever(mockRepository.setKidsJourneyPath(any));
+    });
+
+    test('accepts starting surah 2 on quranFromFatiha', () async {
+      await setup(
+        startingSurahId: 2,
+        pathId: KidsJourneyPathId.quranFromFatiha,
+      );
+
+      expect(cubit.state, isA<MemorizationIdentitySuccess>());
+    });
+
+    test('stores the chosen path', () async {
+      await setup(startingSurahId: 114, pathId: KidsJourneyPathId.quranFromNas);
+
+      expect(cubit.state, isA<MemorizationIdentitySuccess>());
+      verify(
+        mockRepository.setKidsJourneyPath(KidsJourneyPathId.quranFromNas),
+      ).called(1);
     });
   });
 

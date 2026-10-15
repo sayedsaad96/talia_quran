@@ -14457,6 +14457,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذر بدء التحديث. حاول مرة أخرى.'**
   String get appUpdateInstallFailed;
+
+  /// No description provided for @kidsJourneyPathTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الحفظ'**
+  String get kidsJourneyPathTitle;
+
+  /// No description provided for @kidsJourneyPathAdventure.
+  ///
+  /// In ar, this message translates to:
+  /// **'مغامرة جزء عمّ'**
+  String get kidsJourneyPathAdventure;
+
+  /// No description provided for @kidsJourneyPathFromNas.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلة القرآن: من الناس إلى البقرة'**
+  String get kidsJourneyPathFromNas;
+
+  /// No description provided for @kidsJourneyPathFromFatiha.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلة القرآن: من الفاتحة إلى الناس'**
+  String get kidsJourneyPathFromFatiha;
 }
 
 class _AppLocalizationsDelegate

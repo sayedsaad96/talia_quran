@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mockito/mockito.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_learning_game.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_log.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_policy.dart';
@@ -43,12 +44,38 @@ void main() {
   KidsLearningGameCubit build({
     Future<List<KidsSessionLog>> Function()? logs,
     KidsGameAudioSourceLoader? audio,
+    Future<KidsJourneyPathDefinition> Function()? pathLoader,
   }) => KidsLearningGameCubit(
     sessionLogs: logs ?? () async => [_log(114, 1), _log(113, 1), _log(112, 1)],
     audioSource: audio ?? (_, _) async => 'https://example.test/a.mp3',
+    pathLoader: pathLoader,
     player: player,
     random: Random(3),
   );
+
+  test('the game follows the stored journey path', () async {
+    final cubit = build(
+      logs: () async => [_log(67, 1)],
+      pathLoader: () async =>
+          KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+    );
+    await cubit.start();
+
+    expect(cubit.state.status, KidsLearningGameStatus.playing);
+    expect(cubit.state.round?.surahId, 67);
+    await cubit.close();
+  });
+
+  test('a failing path loader falls back to the adventure', () async {
+    final cubit = build(
+      logs: () async => [_log(67, 1)],
+      pathLoader: () async => throw StateError('prefs'),
+    );
+    await cubit.start();
+
+    expect(cubit.state.status, KidsLearningGameStatus.unavailable);
+    await cubit.close();
+  });
 
   test('no memorized ayah makes the game unavailable', () async {
     final cubit = build(logs: () async => const []);

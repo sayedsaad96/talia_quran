@@ -3566,4 +3566,8 @@
   ,"appUpdateReady": "التحديث جاهز للتثبيت."
   ,"appUpdateInstallAction": "تثبيت وإعادة التشغيل"
   ,"appUpdateInstallFailed": "تعذر بدء التحديث. حاول مرة أخرى."
+  ,"kidsJourneyPathTitle": "مسار الحفظ"
+  ,"kidsJourneyPathAdventure": "مغامرة جزء عمّ"
+  ,"kidsJourneyPathFromNas": "رحلة القرآن: من الناس إلى البقرة"
+  ,"kidsJourneyPathFromFatiha": "رحلة القرآن: من الفاتحة إلى الناس"
 }

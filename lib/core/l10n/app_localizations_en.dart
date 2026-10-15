@@ -8551,4 +8551,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appUpdateInstallFailed =>
       'The update could not start. Please try again.';
+
+  @override
+  String get kidsJourneyPathTitle => 'Memorization path';
+
+  @override
+  String get kidsJourneyPathAdventure => 'Juz Amma adventure';
+
+  @override
+  String get kidsJourneyPathFromNas => 'Quran journey: An-Nas to Al-Baqarah';
+
+  @override
+  String get kidsJourneyPathFromFatiha => 'Quran journey: Al-Fatihah to An-Nas';
 }

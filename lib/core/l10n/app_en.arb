@@ -3528,4 +3528,8 @@
   ,"appUpdateReady": "An update is ready to install."
   ,"appUpdateInstallAction": "Install and restart"
   ,"appUpdateInstallFailed": "The update could not start. Please try again."
+  ,"kidsJourneyPathTitle": "Memorization path"
+  ,"kidsJourneyPathAdventure": "Juz Amma adventure"
+  ,"kidsJourneyPathFromNas": "Quran journey: An-Nas to Al-Baqarah"
+  ,"kidsJourneyPathFromFatiha": "Quran journey: Al-Fatihah to An-Nas"
 }

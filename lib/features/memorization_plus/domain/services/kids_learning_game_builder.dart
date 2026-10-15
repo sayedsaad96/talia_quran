@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/kids_learning_game.dart';
 import '../entities/kids_session_log.dart';
 import '../entities/kids_session_policy.dart';
@@ -10,12 +11,13 @@ import '../entities/kids_session_policy.dart';
 KidsLearningGame? buildListenAndChooseSurahGame(
   Iterable<KidsSessionLog> logs, {
   required Random random,
+  KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
 }) {
   final bySurah = <int, Set<int>>{};
   for (final log in logs) {
     if (log.missionType != KidsMissionType.newMemorization ||
         log.pointsEarned <= 0 ||
-        !KidsJourneyPath.contains(log.surahId)) {
+        !path.contains(log.surahId)) {
       continue;
     }
     bySurah.putIfAbsent(log.surahId, () => {}).add(log.ayahNumber);
@@ -34,7 +36,12 @@ KidsLearningGame? buildListenAndChooseSurahGame(
       KidsGameRound(
         surahId: surahId,
         ayahNumber: ayahNumber,
-        options: _options(surahId, bySurah.keys.toSet(), random),
+        options: _options(
+          surahId,
+          bySurah.keys.toSet(),
+          random,
+          path.surahIds,
+        ),
       ),
     );
   }
@@ -43,9 +50,13 @@ KidsLearningGame? buildListenAndChooseSurahGame(
 
 /// The right surah plus distractors: other memorized surahs first, then the
 /// nearest surahs on the journey path, shuffled.
-List<int> _options(int answer, Set<int> memorized, Random random) {
+List<int> _options(
+  int answer,
+  Set<int> memorized,
+  Random random,
+  List<int> path,
+) {
   final pool = memorized.where((id) => id != answer).toList()..shuffle(random);
-  const path = KidsJourneyPath.surahIds;
   final at = path.indexOf(answer);
   for (var d = 1; pool.length < KidsLearningGame.optionsPerRound - 1; d++) {
     if (d > path.length) break;

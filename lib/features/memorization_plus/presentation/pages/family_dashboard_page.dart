@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/memorization/kids_hifz_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -19,6 +21,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../application/guardian_session_controller.dart';
 import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
@@ -27,6 +30,7 @@ import '../widgets/family_remote_status_banner.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/kids_policy_controls.dart';
 import '../widgets/kids_house_size_selector.dart';
+import '../widgets/kids_journey_path_selector.dart';
 import 'child_detail_page.dart';
 
 import '../../../../core/widgets/locale_time_picker.dart';
@@ -300,6 +304,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
     // The sheet builder's context sits above the BlocProvider.value below,
     // so the controls use the dashboard's cubit captured here.
     final dashboardCubit = context.read<FamilyDashboardCubit>();
+    var pathValue = KidsJourneyPathId.parse(settings.kidsJourneyPathId);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -332,6 +337,28 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                     },
                   ),
                   const Divider(),
+                  if (getIt.isRegistered<SharedPreferences>() &&
+                      KidsHifzFeatureFlags.isQuranJourneyEnabled(
+                        getIt<SharedPreferences>(),
+                      )) ...[
+                    StatefulBuilder(
+                      builder: (_, setPathState) {
+                        return KidsJourneyPathSelector(
+                          value: pathValue,
+                          onChanged: (id) async {
+                            final previous = pathValue;
+                            setPathState(() => pathValue = id);
+                            final saved = await dashboardCubit
+                                .setKidsJourneyPath(id);
+                            if (!saved && sheetContext.mounted) {
+                              setPathState(() => pathValue = previous);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                    const Divider(),
+                  ],
                   Text(
                     context.l10n.kidsJourneyBetaTitle,
                     style: AppTypography.titleMedium,

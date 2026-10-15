@@ -10,6 +10,7 @@ import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../auth/domain/services/account_password_verifier.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 import '../../domain/usecases/parent_reward_usecases.dart';
@@ -570,6 +571,31 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
         unawaited(
           refresh(feedback: const FamilyDashboardFeedback.houseSizeSaved()),
         );
+        return true;
+      },
+    );
+  }
+
+  Future<bool> setKidsJourneyPath(KidsJourneyPathId id) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded ||
+        !current.dashboard.children.any((child) => child.isLocal)) {
+      return false;
+    }
+    final outcome = await _parentAccess.setKidsJourneyPath(id);
+    if (isClosed) return false;
+    return outcome.fold(
+      (failure) {
+        emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
+        );
+        return false;
+      },
+      (_) {
+        unawaited(refresh());
         return true;
       },
     );

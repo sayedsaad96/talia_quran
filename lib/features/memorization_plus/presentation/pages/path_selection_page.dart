@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/surah_names.dart';
+import '../../../../core/memorization/kids_hifz_feature_flags.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_scaffold.dart';
@@ -15,9 +17,11 @@ import '../../../../core/widgets/error_info_banner.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/memorization_identity_cubit.dart';
+import '../widgets/kids_journey_path_selector.dart';
 import '../widgets/memorization_path_choice_card.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -194,7 +198,13 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => const _ChildSetupSheet(),
+      builder: (_) => _ChildSetupSheet(
+        showPathChoice:
+            getIt.isRegistered<SharedPreferences>() &&
+            KidsHifzFeatureFlags.isQuranJourneyEnabled(
+              getIt<SharedPreferences>(),
+            ),
+      ),
     );
     if (draft == null || !context.mounted) return;
     unawaited(
@@ -207,6 +217,7 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
         weeklyGoalSessions: draft.weeklyGoalSessions,
         guidanceAudioEnabled: draft.guidanceAudioEnabled,
         startingSurahId: draft.startingSurahId,
+        journeyPathId: draft.journeyPathId,
       ),
     );
   }
@@ -283,6 +294,7 @@ class _ChildSetupDraft {
     required this.weeklyGoalSessions,
     required this.guidanceAudioEnabled,
     required this.startingSurahId,
+    required this.journeyPathId,
   });
 
   final String nickname;
@@ -293,10 +305,14 @@ class _ChildSetupDraft {
   final int weeklyGoalSessions;
   final bool guidanceAudioEnabled;
   final int startingSurahId;
+  final KidsJourneyPathId journeyPathId;
 }
 
 class _ChildSetupSheet extends StatefulWidget {
-  const _ChildSetupSheet();
+  const _ChildSetupSheet({required this.showPathChoice});
+
+  /// The path choice shows only while the Quran journey flag is on.
+  final bool showPathChoice;
 
   @override
   State<_ChildSetupSheet> createState() => _ChildSetupSheetState();
@@ -310,6 +326,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
   var _reminderTime = const TimeOfDay(hour: 18, minute: 30);
   var _weeklyGoalSessions = 5;
   var _guidanceAudioEnabled = true;
+  var _journeyPathId = KidsJourneyPathId.juzAmmaAdventure;
   var _startingSurahId = KidsJourneyPath.firstSurahId;
   var _canSubmit = false;
 
@@ -445,14 +462,30 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                   },
                 ),
                 const SizedBox(height: 12),
+                if (widget.showPathChoice) ...[
+                  KidsJourneyPathSelector(
+                    value: _journeyPathId,
+                    onChanged: (id) => setState(() {
+                      _journeyPathId = id;
+                      _startingSurahId = KidsJourneyPathDefinition.of(
+                        id,
+                      ).surahIds.first;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 DropdownButtonFormField<int>(
+                  key: ValueKey(_journeyPathId),
                   initialValue: _startingSurahId,
                   decoration: InputDecoration(
                     labelText: context.l10n.kidsSetupStartingSurah,
                   ),
                   items: [
-                    // Al-Fatiha first, then Juz Amma in memorization order.
-                    for (final value in KidsJourneyPath.surahIds)
+                    // The selected path's own order (the adventure starts
+                    // with Al-Fatiha, then Juz Amma).
+                    for (final value in KidsJourneyPathDefinition.of(
+                      _journeyPathId,
+                    ).surahIds)
                       DropdownMenuItem(
                         value: value,
                         child: Text(
@@ -555,6 +588,7 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                             weeklyGoalSessions: _weeklyGoalSessions,
                             guidanceAudioEnabled: _guidanceAudioEnabled,
                             startingSurahId: _startingSurahId,
+                            journeyPathId: _journeyPathId,
                           ),
                         ),
                   child: Text(context.l10n.confirm),

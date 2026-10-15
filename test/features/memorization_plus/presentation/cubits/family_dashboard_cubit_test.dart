@@ -7,6 +7,7 @@ import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/family_dashboard_stream_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -53,6 +54,19 @@ class _FakeRepository implements MemorizationPlusRepository {
   final parentModeChanges = <bool>[];
   Either<Failure, void> revokeResult = const Right(null);
   final revoked = <String>[];
+
+  final journeyPathSaves = <KidsJourneyPathId>[];
+  Either<Failure, ParentSettings> journeyPathResult = const Right(
+    _testSettings,
+  );
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) async {
+    journeyPathSaves.add(id);
+    return journeyPathResult;
+  }
 
   @override
   Future<Either<Failure, void>> removeChild(String childUserId) async {
@@ -890,6 +904,59 @@ void main() {
       final state = cubit.state as FamilyDashboardLoaded;
       expect(state.feedback?.message, CubitMessageCodes.errorNetwork);
       expect(repository.dashboardCalls, before);
+    });
+  });
+
+  group('kids journey path', () {
+    FamilyDashboard withLocalChild() => const FamilyDashboard(
+      settings: _testSettings,
+      children: [
+        FamilyChildEntry(childUserId: 'local', displayName: 'A', isLocal: true),
+      ],
+    );
+
+    test('saves through the repository and refreshes', () async {
+      final repository = _FakeRepository(
+        dashboardResult: Right(withLocalChild()),
+      );
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await _unlockAndLoad(cubit);
+
+      final saved = await cubit.setKidsJourneyPath(
+        KidsJourneyPathId.quranFromNas,
+      );
+
+      expect(saved, isTrue);
+      expect(repository.journeyPathSaves, [KidsJourneyPathId.quranFromNas]);
+    });
+
+    test('reports false and surfaces the failure when saving fails', () async {
+      final repository = _FakeRepository(
+        dashboardResult: Right(withLocalChild()),
+      )..journeyPathResult = const Left(CacheFailure('nope'));
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await _unlockAndLoad(cubit);
+
+      expect(
+        await cubit.setKidsJourneyPath(KidsJourneyPathId.quranFromFatiha),
+        isFalse,
+      );
+      expect((cubit.state as FamilyDashboardLoaded).feedback?.message, 'nope');
+    });
+
+    test('does nothing without a local child', () async {
+      final repository = _FakeRepository();
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await _unlockAndLoad(cubit);
+
+      expect(
+        await cubit.setKidsJourneyPath(KidsJourneyPathId.quranFromNas),
+        isFalse,
+      );
+      expect(repository.journeyPathSaves, isEmpty);
     });
   });
 

@@ -1248,6 +1248,9 @@ Future<void> configureDependencies({bool background = false}) async {
             (logs) => logs,
           ),
       audioSource: AudioCacheService.instance.getAudioSource,
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
     ),
   );
   // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).

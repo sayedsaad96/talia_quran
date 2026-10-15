@@ -8534,4 +8534,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appUpdateInstallFailed => 'تعذر بدء التحديث. حاول مرة أخرى.';
+
+  @override
+  String get kidsJourneyPathTitle => 'مسار الحفظ';
+
+  @override
+  String get kidsJourneyPathAdventure => 'مغامرة جزء عمّ';
+
+  @override
+  String get kidsJourneyPathFromNas => 'رحلة القرآن: من الناس إلى البقرة';
+
+  @override
+  String get kidsJourneyPathFromFatiha => 'رحلة القرآن: من الفاتحة إلى الناس';
 }

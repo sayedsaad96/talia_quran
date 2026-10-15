@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_learning_game.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_log.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_policy.dart';
@@ -81,6 +82,37 @@ void main() {
       expect(game.rounds, hasLength(1));
       expect(game.rounds.single.options, hasLength(3));
       expect(game.rounds.single.options, contains(114));
+    });
+  });
+
+  group('follows the selected journey path', () {
+    KidsLearningGame? buildOn(
+      KidsJourneyPathDefinition path,
+      List<KidsSessionLog> logs,
+    ) => buildListenAndChooseSurahGame(logs, random: Random(1), path: path);
+
+    test('surah 67 counts on the Quran journey, not on the adventure', () {
+      final logs = [_log(67, 1)];
+
+      expect(buildOn(KidsJourneyPathDefinition.adventure, logs), isNull);
+      final game = buildOn(
+        KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+        logs,
+      )!;
+      expect(game.rounds.single.surahId, 67);
+    });
+
+    test('distractors come from the selected path', () {
+      final path = KidsJourneyPathDefinition.of(
+        KidsJourneyPathId.quranFromFatiha,
+      );
+      final game = buildOn(path, [_log(67, 1)])!;
+
+      expect(game.rounds.single.options, hasLength(3));
+      for (final id in game.rounds.single.options) {
+        expect(path.contains(id), isTrue);
+      }
+      expect(game.rounds.single.options.toSet(), {66, 67, 68});
     });
   });
 
