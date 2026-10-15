@@ -4248,8 +4248,8 @@ abstract class AppLocalizations {
   /// No description provided for @kidsStageTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مرحلة {stage}'**
-  String kidsStageTitle(String stage);
+  /// **'المرحلة {number}'**
+  String kidsStageTitle(String number);
 
   /// No description provided for @kidsStageProgress.
   ///
@@ -14553,6 +14553,54 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أنت هنا'**
   String get kidsHouseCurrentMarker;
+
+  /// No description provided for @kidsSplitTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف تحب أن تحفظها؟'**
+  String get kidsSplitTitle;
+
+  /// No description provided for @kidsSplitWhole.
+  ///
+  /// In ar, this message translates to:
+  /// **'كاملة مرة واحدة'**
+  String get kidsSplitWhole;
+
+  /// No description provided for @kidsSplitStaged.
+  ///
+  /// In ar, this message translates to:
+  /// **'على مراحل'**
+  String get kidsSplitStaged;
+
+  /// No description provided for @kidsSplitAyahsPerStage.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات كل مرحلة'**
+  String get kidsSplitAyahsPerStage;
+
+  /// No description provided for @kidsSplitStageCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستكون {count} مراحل'**
+  String kidsSplitStageCount(int count);
+
+  /// No description provided for @kidsSplitConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ'**
+  String get kidsSplitConfirm;
+
+  /// No description provided for @kidsSplitChange.
+  ///
+  /// In ar, this message translates to:
+  /// **'غيّر طريقة الحفظ'**
+  String get kidsSplitChange;
+
+  /// No description provided for @kidsReviewStageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة المرحلة {number}'**
+  String kidsReviewStageTitle(String number);
 }
 
 class _AppLocalizationsDelegate

@@ -1370,6 +1370,17 @@ Future<void> configureDependencies({bool background = false}) async {
       pathLoader: () async =>
           (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
               .getOrElse(() => KidsJourneyPathDefinition.adventure),
+      settingsLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+            (_) => null,
+            (settings) => settings,
+          ),
+      splitSaver: (surahId, {required whole, stageSize}) =>
+          getIt<MemorizationPlusRepository>().setKidsSurahSplit(
+            surahId,
+            whole: whole,
+            stageSize: stageSize,
+          ),
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getMemorizationProfile();

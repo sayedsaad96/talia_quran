@@ -39,6 +39,10 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.isReturningAfterBreak = false,
     this.dailyMissions = const [],
     this.currentRegion,
+    this.isQuranJourney = false,
+    this.needsSplitChoice = false,
+    this.surahAyahCount = 0,
+    this.defaultStageSize = 0,
   });
 
   final int surahId;
@@ -69,6 +73,19 @@ class KidsJourneyLoaded extends KidsJourneyState {
 
   /// Region progress of [surahId]; null when off the kids path or unreadable.
   final KidsRegionProgress? currentRegion;
+
+  /// The selected path is the whole-Quran journey.
+  final bool isQuranJourney;
+
+  /// Quran journey, nothing started in this surah and no split chosen yet:
+  /// the page asks «كيف تحب أن تحفظها؟».
+  final bool needsSplitChoice;
+
+  /// Ayahs in [surahId]; 0 off the Quran journey.
+  final int surahAyahCount;
+
+  /// Stage size pre-selected in the split sheet; 0 off the Quran journey.
+  final int defaultStageSize;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
@@ -116,6 +133,10 @@ class KidsJourneyLoaded extends KidsJourneyState {
     List<KidsDailyMission>? dailyMissions,
     KidsRegionProgress? currentRegion,
     bool clearCurrentRegion = false,
+    bool? isQuranJourney,
+    bool? needsSplitChoice,
+    int? surahAyahCount,
+    int? defaultStageSize,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -134,6 +155,10 @@ class KidsJourneyLoaded extends KidsJourneyState {
     currentRegion: clearCurrentRegion
         ? null
         : (currentRegion ?? this.currentRegion),
+    isQuranJourney: isQuranJourney ?? this.isQuranJourney,
+    needsSplitChoice: needsSplitChoice ?? this.needsSplitChoice,
+    surahAyahCount: surahAyahCount ?? this.surahAyahCount,
+    defaultStageSize: defaultStageSize ?? this.defaultStageSize,
   );
 
   @override
@@ -151,5 +176,9 @@ class KidsJourneyLoaded extends KidsJourneyState {
     isReturningAfterBreak,
     dailyMissions,
     currentRegion,
+    isQuranJourney,
+    needsSplitChoice,
+    surahAyahCount,
+    defaultStageSize,
   ];
 }

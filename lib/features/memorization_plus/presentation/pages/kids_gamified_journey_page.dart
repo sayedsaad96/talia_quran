@@ -21,6 +21,7 @@ import '../widgets/kids_journey_segment.dart';
 import '../widgets/kids_loading_widget.dart';
 import '../widgets/kids_progress_header.dart';
 import '../widgets/kids_region_name.dart';
+import '../widgets/kids_surah_split_sheet.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
@@ -82,6 +83,18 @@ class _KidsGamifiedJourneyView extends StatelessWidget {
                   ),
             onRefresh: () =>
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
+            onChooseSplit: (choice) async {
+              final saved = await context.read<KidsJourneyCubit>().chooseSplit(
+                surahId: state.surahId,
+                whole: choice.whole,
+                stageSize: choice.stageSize,
+              );
+              if (!saved && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(context.l10n.errorOccurred)),
+                );
+              }
+            },
             onPathSettingsTap: () =>
                 showMemorizationPathSettingsSheet(context, isDark: true),
             loadCelebrations: getIt.isRegistered<KidsMapCelebrationStore>()
@@ -115,6 +128,7 @@ class KidsGamifiedJourneyContent extends StatefulWidget {
     required this.onStageSelected,
     this.onRefresh,
     this.onPathSettingsTap,
+    this.onChooseSplit,
     this.loadCelebrations,
   });
 
@@ -123,6 +137,10 @@ class KidsGamifiedJourneyContent extends StatefulWidget {
   final ValueChanged<KidsJourneyStage> onStageSelected;
   final Future<void> Function()? onRefresh;
   final VoidCallback? onPathSettingsTap;
+
+  /// Saves the whole-or-stages choice from the split sheet. Null hides the
+  /// sheet and the «غيّر طريقة الحفظ» menu (e.g. tests).
+  final Future<void> Function(KidsSurahSplitChoice choice)? onChooseSplit;
 
   /// K37 — null means no glow (e.g. tests, or no store registered).
   final KidsCelebrationLoader? loadCelebrations;
@@ -150,6 +168,35 @@ class _KidsGamifiedJourneyContentState
     _activeStageIndex = _resolveActiveIndex(widget.state.stages);
     _scheduleAutoScroll();
     _loadCelebrations();
+    _maybePromptSplit();
+  }
+
+  /// The surah the split sheet was last offered for automatically, so a
+  /// rebuild never re-opens it; closing it unanswered asks again next visit.
+  int? _promptedSurahId;
+
+  void _maybePromptSplit() {
+    final state = widget.state;
+    if (!state.needsSplitChoice ||
+        widget.onChooseSplit == null ||
+        _promptedSurahId == state.surahId) {
+      return;
+    }
+    _promptedSurahId = state.surahId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openSplitSheet();
+    });
+  }
+
+  Future<void> _openSplitSheet() async {
+    final onChoose = widget.onChooseSplit;
+    if (onChoose == null) return;
+    final choice = await showKidsSurahSplitSheet(
+      context,
+      ayahCount: widget.state.surahAyahCount,
+      defaultStageSize: widget.state.defaultStageSize,
+    );
+    if (choice != null) await onChoose(choice);
   }
 
   Future<void> _loadCelebrations() async {
@@ -164,6 +211,7 @@ class _KidsGamifiedJourneyContentState
     super.didUpdateWidget(oldWidget);
     // Back from a house: anything finished meanwhile glows now.
     if (oldWidget.state.stages != widget.state.stages) _loadCelebrations();
+    _maybePromptSplit();
     if (oldWidget.state.surahId != widget.state.surahId) {
       _didAutoScroll = false;
       _activeStageIndex = _resolveActiveIndex(widget.state.stages);
@@ -227,6 +275,7 @@ class _KidsGamifiedJourneyContentState
                   title: context.l10n.kidsJourneyTitle,
                   subtitle: context.l10n.kidsJourneySubtitle,
                   onBack: widget.onBack,
+                  trailing: _splitMenu(context),
                 ),
                 Expanded(
                   child: RefreshIndicator(
@@ -304,6 +353,7 @@ class _KidsGamifiedJourneyContentState
                                       ),
                                     ),
                                 showSignpost: showSignpost,
+                                useStageWording: widget.state.isQuranJourney,
                                 celebrate: _celebrate.contains(
                                   stage.stageNumber,
                                 ),
@@ -324,6 +374,25 @@ class _KidsGamifiedJourneyContentState
           ),
         ],
       ),
+    );
+  }
+
+  /// «غيّر طريقة الحفظ»: the Quran journey only.
+  Widget? _splitMenu(BuildContext context) {
+    if (!widget.state.isQuranJourney || widget.onChooseSplit == null) {
+      return null;
+    }
+    return PopupMenuButton<int>(
+      key: const ValueKey('kids-journey-menu'),
+      iconColor: KidsTheme.shellTextPrimary,
+      onSelected: (_) => _openSplitSheet(),
+      itemBuilder: (context) => [
+        PopupMenuItem<int>(
+          value: 0,
+          height: 56,
+          child: Text(context.l10n.kidsSplitChange),
+        ),
+      ],
     );
   }
 

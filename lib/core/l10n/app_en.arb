@@ -3547,4 +3547,16 @@
   ,"kidsHouseStatusNeedsReview": "Needs review"
   ,"kidsHouseStatusCompleted": "Completed"
   ,"kidsHouseCurrentMarker": "You are here"
+  ,"kidsSplitTitle": "How would you like to memorize it?"
+  ,"kidsSplitWhole": "All at once"
+  ,"kidsSplitStaged": "In stages"
+  ,"kidsSplitAyahsPerStage": "Ayahs per stage"
+  ,"kidsSplitStageCount": "{count} stages"
+  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"kidsSplitConfirm": "Start"
+  ,"kidsSplitChange": "Change how to memorize"
+  ,"kidsStageTitle": "Stage {number}"
+  ,"@kidsStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsReviewStageTitle": "Stage {number} review"
+  ,"@kidsReviewStageTitle": {"placeholders": {"number": {"type": "String"}}}
 }

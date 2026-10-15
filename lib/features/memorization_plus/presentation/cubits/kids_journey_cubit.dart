@@ -1,7 +1,10 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -53,6 +56,18 @@ typedef KidsInboundRefresh = Future<bool> Function({bool force});
 /// adventure applies.
 typedef KidsJourneyPathLoader = Future<KidsJourneyPathDefinition> Function();
 
+/// The guardian settings that freeze a surah's split. When absent (or
+/// throwing) the split sheet is never offered.
+typedef KidsJourneySettingsLoader = Future<ParentSettings?> Function();
+
+/// Saves the child's whole-or-stages choice for one surah.
+typedef KidsSurahSplitSaver =
+    Future<Either<Failure, ParentSettings>> Function(
+      int surahId, {
+      required bool whole,
+      int? stageSize,
+    });
+
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
     this._getJourney,
@@ -70,6 +85,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     this._childPolicyRefresh,
     this._inboundRefresh,
     this._pathLoader,
+    this._settingsLoader,
+    this._splitSaver,
     this._missionResolver = const KidsNextMissionResolver(),
     this._v2Enabled = true,
     DateTime Function()? clock,
@@ -92,6 +109,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsChildPolicyRefresh? _childPolicyRefresh;
   final KidsInboundRefresh? _inboundRefresh;
   final KidsJourneyPathLoader? _pathLoader;
+  final KidsJourneySettingsLoader? _settingsLoader;
+  final KidsSurahSplitSaver? _splitSaver;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -236,6 +255,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           )
         : const <KidsDailyMission>[];
 
+    final split = await _splitInfo(path, activeSurahId, stages, logs);
     final loaded = KidsJourneyLoaded(
       surahId: activeSurahId,
       stages: stages,
@@ -249,12 +269,87 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           missionSurahId == null || missionSurahId == activeSurahId
           ? null
           : await _surahName(missionSurahId),
+      isQuranJourney: path.isQuranJourney,
+      needsSplitChoice: split.needsChoice,
+      surahAyahCount: split.ayahCount,
+      defaultStageSize: split.defaultStageSize,
       isReturningAfterBreak: kidsIsReturningAfterBreak(
         progressResult.fold((_) => null, (p) => p.lastSessionAt),
         _clock(),
       ),
     );
     if (!isStale()) emit(loaded);
+  }
+
+  /// Saves the child's whole-or-stages choice for [surahId], then reloads in
+  /// place so the map shows the new houses. False when it could not be saved.
+  Future<bool> chooseSplit({
+    required int surahId,
+    required bool whole,
+    int? stageSize,
+  }) async {
+    final saver = _splitSaver;
+    if (saver == null) return false;
+    try {
+      final result = await saver(surahId, whole: whole, stageSize: stageSize);
+      if (result.isLeft()) return false;
+    } catch (_) {
+      return false;
+    }
+    if (isClosed) return false;
+    await load(surahId: surahId, showLoading: false);
+    return true;
+  }
+
+  /// Whether the child still has to pick how to memorize [surahId]. Only the
+  /// Quran journey asks, only before anything is memorized in the surah, and
+  /// only when the settings are readable: a missing answer never blocks it.
+  Future<({bool needsChoice, int ayahCount, int defaultStageSize})> _splitInfo(
+    KidsJourneyPathDefinition path,
+    int surahId,
+    List<KidsJourneyStage> stages,
+    List<KidsSessionLog>? logs,
+  ) async {
+    const none = (needsChoice: false, ayahCount: 0, defaultStageSize: 0);
+    if (!path.isQuranJourney) return none;
+    var ayahCount = 0;
+    for (final stage in stages) {
+      if (stage.surahId == surahId && stage.endAyah > ayahCount) {
+        ayahCount = stage.endAyah;
+      }
+    }
+    ParentSettings? settings;
+    try {
+      settings = await _settingsLoader?.call();
+    } catch (_) {
+      settings = null;
+    }
+    KidsSessionPolicy? policy;
+    try {
+      policy = await _policyLoader?.call();
+    } catch (_) {
+      policy = null;
+    }
+    final defaultStageSize =
+        sanitizeKidsAyahsPerHouse(settings?.kidsAyahsPerHouse) ??
+        (policy ?? KidsSessionPolicy.forChildAge(null)).journeyStageSize;
+    final hasProgress = (logs ?? const <KidsSessionLog>[]).any(
+      (log) =>
+          log.surahId == surahId &&
+          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    );
+    final needsChoice =
+        settings != null &&
+        logs != null &&
+        ayahCount > 0 &&
+        !hasProgress &&
+        !settings.kidsWholeSurahIds.contains(surahId) &&
+        !settings.kidsHouseSizesBySurah.containsKey(surahId);
+    return (
+      needsChoice: needsChoice,
+      ayahCount: ayahCount,
+      defaultStageSize: defaultStageSize,
+    );
   }
 
   /// The selected path, read once per load; any failure means the adventure.

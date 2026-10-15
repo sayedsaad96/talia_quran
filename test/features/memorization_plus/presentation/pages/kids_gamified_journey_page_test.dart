@@ -10,6 +10,7 @@ import 'package:talia_quran/features/memorization_plus/domain/services/kids_adve
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_house_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_surah_split_sheet.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_policy_controller.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
@@ -366,6 +367,181 @@ void main() {
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('journey page shows the split sheet once when needsSplitChoice', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+      final chosen = <KidsSurahSplitChoice>[];
+      final state = _loadedState.copyWith(
+        isQuranJourney: true,
+        needsSplitChoice: true,
+        surahAyahCount: 6,
+        defaultStageSize: 2,
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: state,
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (choice) async => chosen.add(choice),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('How would you like to memorize it?'), findsOneWidget);
+
+      // Closing without a choice changes nothing; a rebuild does not re-open it.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.text('How would you like to memorize it?'), findsNothing);
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: state.copyWith(message: 'x'),
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (choice) async => chosen.add(choice),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('How would you like to memorize it?'), findsNothing);
+      expect(chosen, isEmpty);
+    });
+
+    testWidgets('confirming the sheet hands the choice to the page', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+      final chosen = <KidsSurahSplitChoice>[];
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(
+              isQuranJourney: true,
+              needsSplitChoice: true,
+              surahAyahCount: 6,
+              defaultStageSize: 2,
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (choice) async => chosen.add(choice),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start'));
+      await tester.pumpAndSettle();
+
+      expect(chosen.single.whole, isFalse);
+      expect(chosen.single.stageSize, 2);
+    });
+
+    testWidgets('Quran journey menu offers change-how-to-memorize', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(
+              isQuranJourney: true,
+              surahAyahCount: 6,
+              defaultStageSize: 2,
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (_) async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('How would you like to memorize it?'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('kids-journey-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change how to memorize'));
+      await tester.pumpAndSettle();
+      expect(find.text('How would you like to memorize it?'), findsOneWidget);
+    });
+
+    testWidgets('adventure journey has no change-how-to-memorize menu', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState,
+            onBack: () {},
+            onStageSelected: (_) {},
+            onChooseSplit: (_) async {},
+          ),
+        ),
+      );
+      expect(find.byKey(const ValueKey('kids-journey-menu')), findsNothing);
+    });
+
+    testWidgets('Quran journey cards say المرحلة; adventure cards keep بيت الحفظ', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState.copyWith(isQuranJourney: true),
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+      expect(find.textContaining('المرحلة'), findsWidgets);
+      expect(find.textContaining('بيت الحفظ'), findsNothing);
+
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedJourneyContent(
+            state: _loadedState,
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+      expect(find.textContaining('بيت الحفظ'), findsWidgets);
     });
 
     testWidgets('back button triggers onBack callback', (tester) async {

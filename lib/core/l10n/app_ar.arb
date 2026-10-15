@@ -3585,4 +3585,16 @@
   ,"kidsHouseStatusNeedsReview": "تحتاج مراجعة"
   ,"kidsHouseStatusCompleted": "مكتملة"
   ,"kidsHouseCurrentMarker": "أنت هنا"
+  ,"kidsSplitTitle": "كيف تحب أن تحفظها؟"
+  ,"kidsSplitWhole": "كاملة مرة واحدة"
+  ,"kidsSplitStaged": "على مراحل"
+  ,"kidsSplitAyahsPerStage": "آيات كل مرحلة"
+  ,"kidsSplitStageCount": "ستكون {count} مراحل"
+  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"kidsSplitConfirm": "ابدأ"
+  ,"kidsSplitChange": "غيّر طريقة الحفظ"
+  ,"kidsStageTitle": "المرحلة {number}"
+  ,"@kidsStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsReviewStageTitle": "مراجعة المرحلة {number}"
+  ,"@kidsReviewStageTitle": {"placeholders": {"number": {"type": "String"}}}
 }

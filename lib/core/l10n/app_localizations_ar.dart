@@ -2284,8 +2284,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
 
   @override
-  String kidsStageTitle(String stage) {
-    return 'مرحلة $stage';
+  String kidsStageTitle(String number) {
+    return 'المرحلة $number';
   }
 
   @override
@@ -8589,4 +8589,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsHouseCurrentMarker => 'أنت هنا';
+
+  @override
+  String get kidsSplitTitle => 'كيف تحب أن تحفظها؟';
+
+  @override
+  String get kidsSplitWhole => 'كاملة مرة واحدة';
+
+  @override
+  String get kidsSplitStaged => 'على مراحل';
+
+  @override
+  String get kidsSplitAyahsPerStage => 'آيات كل مرحلة';
+
+  @override
+  String kidsSplitStageCount(int count) {
+    return 'ستكون $count مراحل';
+  }
+
+  @override
+  String get kidsSplitConfirm => 'ابدأ';
+
+  @override
+  String get kidsSplitChange => 'غيّر طريقة الحفظ';
+
+  @override
+  String kidsReviewStageTitle(String number) {
+    return 'مراجعة المرحلة $number';
+  }
 }
