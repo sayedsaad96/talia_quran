@@ -9,11 +9,9 @@ part 'memorization_identity_state.dart';
 
 class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
   MemorizationIdentityCubit({
-    required MemorizationPlusRepository repository,
-    required MemorizationPathResolver pathResolver,
-  }) : _repository = repository,
-       _pathResolver = pathResolver,
-       super(const MemorizationIdentityInitial());
+    required this._repository,
+    required this._pathResolver,
+  }) : super(const MemorizationIdentityInitial());
 
   final MemorizationPlusRepository _repository;
   final MemorizationPathResolver _pathResolver;

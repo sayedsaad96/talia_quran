@@ -265,8 +265,12 @@ class _ScenePainter extends CustomPainter {
 
   void _drawGrowth(Canvas canvas, Size size) {
     final day = phase == KidsWorldPhase.day;
-    _trunkPaint.color = day ? const Color(0xFF8D6E63) : const Color(0xFF3E2C26);
-    _leafPaint.color = day ? const Color(0xFF2E8B4E) : const Color(0xFF1C5A43);
+    _trunkPaint.color = day
+        ? KidsWorldPalette.trunkDay
+        : KidsWorldPalette.trunkNight;
+    _leafPaint.color = day
+        ? KidsWorldPalette.leafDay
+        : KidsWorldPalette.leafNight;
     final unit = size.shortestSide * 0.03;
     double groundAt(double x) => _frontHillY(size, x) + unit * 0.3;
     for (var i = 0; i < growth.plants; i++) {
@@ -282,12 +286,7 @@ class _ScenePainter extends CustomPainter {
         )
         ..drawCircle(Offset(x, base - height), unit * 0.95, _leafPaint);
     }
-    const blossomColors = [
-      Color(0xFFF9A8D4),
-      Color(0xFFFDE68A),
-      Color(0xFFC4B5FD),
-      Color(0xFFFDBA74),
-    ];
+    const blossomColors = KidsWorldPalette.blossoms;
     const blossomSlots = [0.12, 0.42, 0.70, 0.52];
     for (var i = 0; i < growth.blossoms; i++) {
       final fraction = blossomSlots[i % blossomSlots.length];

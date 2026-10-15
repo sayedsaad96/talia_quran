@@ -19,11 +19,10 @@ class AdhanPreviewService {
     TargetPlatform? platform,
     MethodChannel? channel,
     AudioPlayer Function()? createIosPlayer,
-    Future<String?> Function(String)? resolveIosAsset,
+    this._resolveIosAsset,
   }) : _platform = platform ?? defaultTargetPlatform,
        _channel = channel ?? const MethodChannel('talia/adhan_preview'),
-       _createIosPlayer = createIosPlayer ?? AudioPlayer.new,
-       _resolveIosAsset = resolveIosAsset;
+       _createIosPlayer = createIosPlayer ?? AudioPlayer.new;
 
   static const String _assetPrefix = 'res/raw/';
 

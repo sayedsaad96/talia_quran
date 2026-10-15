@@ -14,11 +14,8 @@ import '../../../../core/utils/locale_number_formatter.dart';
 part 'surah_list_state.dart';
 
 class SurahListCubit extends Cubit<SurahListState> {
-  SurahListCubit(
-    this._getSurahsUsecase, {
-    MemorizationPlusRepository? memorizationRepository,
-  }) : _memorizationRepository = memorizationRepository,
-       super(const SurahListInitial());
+  SurahListCubit(this._getSurahsUsecase, {this._memorizationRepository})
+    : super(const SurahListInitial());
   final GetSurahsUsecase _getSurahsUsecase;
 
   /// Source of the per-surah memorization badges (N17). Optional: without

@@ -245,15 +245,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     this._recordReading,
     this._pauseResume,
     this._deleteKhatmah, {
-    UpdateKhatmahScheduleUsecase? updateSchedule,
-    UpdateKhatmahDedicationUsecase? updateDedication,
-    Duration shutdownTimeout = const Duration(seconds: 2),
+    this._updateSchedule,
+    this._updateDedication,
+    this._shutdownTimeout = const Duration(seconds: 2),
     DateTime Function()? now,
-  }) : _updateSchedule = updateSchedule,
-       _updateDedication = updateDedication,
-       _now = now ?? DateTime.now,
+  }) : _now = now ?? DateTime.now,
        _readingClock = now,
-       _shutdownTimeout = shutdownTimeout,
        super(const KhatmahInitial()) {
     _authority = _getActive.authority;
     _displayDate = _now();

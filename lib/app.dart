@@ -23,6 +23,8 @@ import 'features/auth/presentation/cubits/auth_cubit.dart';
 import 'features/prayer_companion/application/prayer_companion_controller.dart';
 import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
+import 'features/app_update/presentation/cubits/app_update_cubit.dart';
+import 'features/app_update/presentation/widgets/app_update_prompt_listener.dart';
 
 /// Notifier that signals when [AppInitializer] has finished.
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
@@ -63,6 +65,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Only process lifecycle events after initialization.
     if (!AppInitializer.isInitialized) return;
+    getIt<AppUpdateCubit>().setForeground(state == AppLifecycleState.resumed);
 
     if (state == AppLifecycleState.resumed) {
       final currentLocale = getIt<LocaleCubit>().state;
@@ -74,6 +77,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
           getIt.checkLazySingletonInstanceExists<KidsWorldPhaseController>()) {
         unawaited(getIt<KidsWorldPhaseController>().refresh());
       }
+      unawaited(
+        getIt<AppUpdateCubit>().checkForUpdate(canPrompt: _isCalmUpdateSurface),
+      );
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
@@ -124,7 +130,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
       // Theme, locale, and profile are already loaded during AppInitializer.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _applyLaunchNavigation(notificationService);
+        unawaited(_startPostInitializationTasks(notificationService));
       });
     }
 
@@ -136,6 +142,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<AuthCubit>()),
         BlocProvider.value(value: getIt<QuranAudioPlayerCubit>()),
+        BlocProvider.value(value: getIt<AppUpdateCubit>()),
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -187,6 +194,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                       GlobalCupertinoLocalizations.delegate,
                     ],
                     routerConfig: AppRouter.router,
+                    builder: (context, child) => AppUpdatePromptListener(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   );
                 },
               );
@@ -195,6 +205,25 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  Future<void> _startPostInitializationTasks(
+    TaliaNotificationService notificationService,
+  ) async {
+    await _applyLaunchNavigation(notificationService);
+    if (!mounted) return;
+    getIt<AppUpdateCubit>().setForeground(
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+    );
+    await getIt<AppUpdateCubit>().checkForUpdate(
+      canPrompt: _isCalmUpdateSurface,
+    );
+  }
+
+  bool _isCalmUpdateSurface() {
+    if (!mounted) return false;
+    final path = AppRouter.router.routerDelegate.currentConfiguration.uri.path;
+    return path == AppRoutes.home || path == AppRoutes.settings;
   }
 
   /// Foreground notification tap: the companion controller persists any

@@ -97,24 +97,16 @@ abstract class _MemorizationPlusRepositoryCore
     this._streakReader,
     this._progressEvents,
     this._prefs, {
-    ProgressMetricsService metrics = const ProgressMetricsService(),
-    CloudSyncQueue? cloudSyncQueue,
-    ParentPinSecureStore? parentPinStore,
-    Isar? isar,
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-    void Function()? onKidsPolicyChanged,
-    FamilyActivityInputsLoader? familyActivityInputs,
-    KidsReadingSupportSync? readingSupportSync,
-    bool Function()? readingSupportEnabled,
-  }) : _metrics = metrics,
-       _onKidsPolicyChanged = onKidsPolicyChanged,
-       _familyActivityInputs = familyActivityInputs,
-       _readingSupportSync = readingSupportSync,
-       _readingSupportEnabled = readingSupportEnabled,
-       _cloudSyncQueue = cloudSyncQueue,
-       _parentPinStore = parentPinStore,
-       _isar = isar,
-       _owner = owner;
+    this._metrics = const ProgressMetricsService(),
+    this._cloudSyncQueue,
+    this._parentPinStore,
+    this._isar,
+    this._owner = const SupabaseRecordOwnerProvider(),
+    this._onKidsPolicyChanged,
+    this._familyActivityInputs,
+    this._readingSupportSync,
+    this._readingSupportEnabled,
+  });
 
   final ParentPinSecureStore? _parentPinStore;
 

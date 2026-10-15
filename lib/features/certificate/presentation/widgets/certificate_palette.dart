@@ -115,3 +115,12 @@ abstract final class CertificatePagePalette {
   static const gold = Color(0xFFE5C158);
   static const goldMuted = Color(0xFFC9A84C);
 }
+
+/// Ink and gold of the copy laid over the certificate artwork.
+abstract final class CertificateArtworkPalette {
+  static const ink = Color(0xff173c37);
+  static const gold = Color(0xffa8802f);
+  static const goldLine = Color(0xffc9a45c);
+  static const muted = Color(0xff6b5a3c);
+  static const pillText = Color(0xfff7ecd2);
+}

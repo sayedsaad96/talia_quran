@@ -47,8 +47,8 @@ class TaliaShareMetrics {
     required this.heroInset,
     required this.medalSize,
     required this.gap,
-    required List<double> verseSizes,
-  }) : _verseSizes = verseSizes;
+    required this._verseSizes,
+  });
 
   static const double cardRadius = 24;
   static const double signatureRadius = 12;

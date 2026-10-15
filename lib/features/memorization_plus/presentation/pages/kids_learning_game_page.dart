@@ -242,9 +242,9 @@ class _OptionButton extends StatelessWidget {
     final Color? background = !answered
         ? null
         : isAnswer
-        ? const Color(0xFFD1FAE5)
+        ? KidsTheme.gameAnswerFill
         : isPicked
-        ? const Color(0xFFE5E7EB)
+        ? KidsTheme.gamePickedFill
         : null;
     return OutlinedButton(
       key: ValueKey('kids-game-option-$surahId'),

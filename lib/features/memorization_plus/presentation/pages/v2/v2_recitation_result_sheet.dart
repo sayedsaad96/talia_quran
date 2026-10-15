@@ -170,12 +170,15 @@ class _WordDiffView extends StatelessWidget {
   final RecitationWordDiffResult diff;
   final bool isDark;
 
-  Color _colorFor(RecitationWordStatus status) => switch (status) {
-    RecitationWordStatus.match => AppColors.success,
-    RecitationWordStatus.missing => AppColors.error,
-    RecitationWordStatus.wrong => AppColors.error,
-    RecitationWordStatus.extra => AppColors.warning,
-  };
+  Color _colorFor(BuildContext context, RecitationWordStatus status) =>
+      switch (status) {
+        RecitationWordStatus.match => AppColors.success,
+        RecitationWordStatus.missing => AppColors.error,
+        RecitationWordStatus.wrong => AppColors.error,
+        RecitationWordStatus.extra => AppColors.warning,
+        // A written sign with no spoken form: shown, never graded.
+        RecitationWordStatus.notRecited => context.tokens.textSecondary,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -197,8 +200,10 @@ class _WordDiffView extends StatelessWidget {
             Text(
               word.display,
               style: MemorizationAyahDisplay.textStyle().copyWith(
-                color: _colorFor(word.status),
-                fontWeight: word.status == RecitationWordStatus.match
+                color: _colorFor(context, word.status),
+                fontWeight:
+                    word.status == RecitationWordStatus.match ||
+                        word.status == RecitationWordStatus.notRecited
                     ? FontWeight.w600
                     : FontWeight.w800,
                 // Missing words get a dotted underline so gaps are visible

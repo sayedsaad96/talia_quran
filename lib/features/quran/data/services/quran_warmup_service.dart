@@ -22,10 +22,9 @@ import '../datasources/quran_local_datasource.dart';
 ///    find everything cached when the reader opens.
 class QuranWarmupService {
   QuranWarmupService({
-    required QuranLocalDatasource datasource,
-    required AppSessionService sessionService,
-  }) : _datasource = datasource,
-       _sessionService = sessionService;
+    required this._datasource,
+    required this._sessionService,
+  });
 
   /// Lets the home screen render its first frames before warm-up work starts.
   static const _initialDelay = Duration(seconds: 5);

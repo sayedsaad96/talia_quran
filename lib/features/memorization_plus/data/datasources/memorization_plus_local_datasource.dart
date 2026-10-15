@@ -195,10 +195,9 @@ class MemorizationPlusLocalDatasourceImpl
     implements MemorizationPlusLocalDatasource {
   MemorizationPlusLocalDatasourceImpl(
     this._prefs, {
-    Isar? isar,
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _isar = isar,
-       _owner = owner;
+    this._isar,
+    this._owner = const SupabaseRecordOwnerProvider(),
+  });
 
   @override
   final SharedPreferences _prefs;

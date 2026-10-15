@@ -13,9 +13,7 @@ typedef KidsChildPolicyLoader = Future<KidsChildPolicy> Function();
 /// App-lifetime DI singleton: widgets must never call `dispose()` on
 /// `getIt<KidsPolicyController>()`.
 class KidsPolicyController extends ValueNotifier<KidsChildPolicy> {
-  KidsPolicyController({required KidsChildPolicyLoader load})
-    : _load = load,
-      super(const KidsChildPolicy());
+  KidsPolicyController({required this._load}) : super(const KidsChildPolicy());
 
   final KidsChildPolicyLoader _load;
   bool _disposed = false;

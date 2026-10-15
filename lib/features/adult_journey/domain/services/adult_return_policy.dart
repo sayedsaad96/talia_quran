@@ -34,8 +34,7 @@ class AdultReturnDecision extends Equatable {
 /// Instants are converted with [toLocal] (the device's current zone by
 /// default) and compared by calendar day, never by `difference.inDays`.
 class AdultReturnPolicy {
-  const AdultReturnPolicy({DateTime Function(DateTime instant)? toLocal})
-    : _toLocal = toLocal;
+  const AdultReturnPolicy({this._toLocal});
 
   static const minimumGapDays = 7;
 

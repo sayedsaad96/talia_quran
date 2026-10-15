@@ -36,12 +36,10 @@ import 'session_state.dart';
 /// optimistic UI update and does not block the phase transition.
 final class V2SessionReviewAdapter {
   const V2SessionReviewAdapter({
-    required MemorizationPlusRepository repository,
-    required ScheduleNextReviewUsecase scheduler,
-    MarkDailyPlanAyahCompletedUsecase? markDailyPlanCompleted,
-  }) : _repository = repository,
-       _scheduler = scheduler,
-       _markDailyPlanCompleted = markDailyPlanCompleted;
+    required this._repository,
+    required this._scheduler,
+    this._markDailyPlanCompleted,
+  });
 
   final MemorizationPlusRepository _repository;
   final ScheduleNextReviewUsecase _scheduler;
@@ -199,10 +197,9 @@ final class V2SessionReviewAdapter {
 ///   - On session complete        → [clear]
 final class V2SessionProgressAdapter {
   const V2SessionProgressAdapter({
-    required V2SessionLocalDatasource datasource,
-    MemorizationAudience audience = MemorizationAudience.adult,
-  }) : _datasource = datasource,
-       _audience = audience;
+    required this._datasource,
+    this._audience = MemorizationAudience.adult,
+  });
 
   final V2SessionLocalDatasource _datasource;
   final MemorizationAudience _audience;

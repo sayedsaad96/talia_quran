@@ -9,20 +9,14 @@ import 'package:just_audio/just_audio.dart';
 /// remain ordinary [AudioPlayer] instances and are never wrapped globally.
 class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   QuranBackgroundAudioHandler({
-    required AudioPlayer player,
-    required Future<void> Function() onPlay,
-    required Future<void> Function() onPause,
-    required Future<void> Function() onStop,
-    required Future<void> Function() onNext,
-    required Future<void> Function() onPrevious,
-    required Future<void> Function(Duration position) onSeek,
-  }) : _player = player,
-       _onPlay = onPlay,
-       _onPause = onPause,
-       _onStop = onStop,
-       _onNext = onNext,
-       _onPrevious = onPrevious,
-       _onSeek = onSeek {
+    required this._player,
+    required this._onPlay,
+    required this._onPause,
+    required this._onStop,
+    required this._onNext,
+    required this._onPrevious,
+    required this._onSeek,
+  }) {
     _playbackSubscription = _player.playbackEventStream.listen(_broadcastState);
   }
 

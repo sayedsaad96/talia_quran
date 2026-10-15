@@ -45,11 +45,9 @@ class PrayerCompanionFailure extends PrayerCompanionState {
 /// always yields [PrayerCompanionFailure], never a fake confirmation.
 class PrayerCompanionCubit extends Cubit<PrayerCompanionState> {
   PrayerCompanionCubit({
-    required PrayerCompanionController controller,
-    required PrayerOccurrence occurrence,
-  }) : _controller = controller,
-       _occurrence = occurrence,
-       super(const PrayerCompanionIdle());
+    required this._controller,
+    required this._occurrence,
+  }) : super(const PrayerCompanionIdle());
 
   final PrayerCompanionController _controller;
   final PrayerOccurrence _occurrence;

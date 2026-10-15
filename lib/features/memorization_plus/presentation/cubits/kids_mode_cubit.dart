@@ -1210,11 +1210,9 @@ class KidsRecitationCaptureResult {
 class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   KidsSpeechRecitationRecorder({
     SpeechToText? speechToText,
-    Future<bool> Function()? voiceConsent,
-    @visibleForTesting Future<bool> Function()? microphonePermission,
-  }) : _speechToText = speechToText ?? SpeechToText(),
-       _voiceConsent = voiceConsent,
-       _microphonePermission = microphonePermission;
+    this._voiceConsent,
+    @visibleForTesting this._microphonePermission,
+  }) : _speechToText = speechToText ?? SpeechToText();
 
   final SpeechToText _speechToText;
 

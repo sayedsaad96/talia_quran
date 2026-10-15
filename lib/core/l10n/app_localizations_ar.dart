@@ -8525,4 +8525,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adultJourneyReturnContinue => 'أكمل كالمعتاد';
+
+  @override
+  String get appUpdateReady => 'التحديث جاهز للتثبيت.';
+
+  @override
+  String get appUpdateInstallAction => 'تثبيت وإعادة التشغيل';
+
+  @override
+  String get appUpdateInstallFailed => 'تعذر بدء التحديث. حاول مرة أخرى.';
 }

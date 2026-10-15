@@ -3525,4 +3525,7 @@
   ,"adultJourneyReturnLight": "Light start today"
   ,"adultJourneyReturnChooseTime": "Choose my time"
   ,"adultJourneyReturnContinue": "Continue as usual"
+  ,"appUpdateReady": "An update is ready to install."
+  ,"appUpdateInstallAction": "Install and restart"
+  ,"appUpdateInstallFailed": "The update could not start. Please try again."
 }

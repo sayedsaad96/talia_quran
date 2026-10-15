@@ -47,22 +47,16 @@ class AccountDataReset {
   AccountDataReset(
     this._isar,
     this._prefs, {
-    ParentPinSecureStore? parentPinStore,
-    EncryptedAccountPreferencesStore? encryptedAccountPreferences,
-    RecordOwnerProvider? owner,
-    BackgroundSyncScheduler? backgroundSyncScheduler,
-    AudioResumeStore? audioResumeStore,
-    Future<void> Function(String ownerId)? deleteBookmarksForOwner,
+    this._parentPinStore,
+    this._encryptedAccountPreferences,
+    this._owner,
+    this._backgroundSyncScheduler,
+    this._audioResumeStore,
+    this._deleteBookmarksForOwner,
     Future<Directory> Function()? documentsDirectory,
-    Future<void> Function()? cancelAccountNotifications,
-  }) : _parentPinStore = parentPinStore,
-       _encryptedAccountPreferences = encryptedAccountPreferences,
-       _owner = owner,
-       _backgroundSyncScheduler = backgroundSyncScheduler,
-       _audioResumeStore = audioResumeStore,
-       _deleteBookmarksForOwner = deleteBookmarksForOwner,
-       _documentsDirectory = documentsDirectory ?? getApplicationDocumentsDirectory,
-       _cancelAccountNotifications = cancelAccountNotifications;
+    this._cancelAccountNotifications,
+  }) : _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory;
 
   final Isar _isar;
   final SharedPreferences _prefs;
@@ -180,15 +174,13 @@ class AccountDataReset {
     );
   }
 
-
   /// Erases data attributable to a deleted account. This is deliberately
   /// separate from guest preservation: deletion must never rehome the former
   /// account's progress into a local guest identity.
-  Future<void> eraseDeletedAccountLocally({
-    required String departingOwnerId,
-  }) => AccountDataBarrier.forPreferences(_prefs).clear(
-    () => _eraseDeletedAccountLocally(departingOwnerId),
-  );
+  Future<void> eraseDeletedAccountLocally({required String departingOwnerId}) =>
+      AccountDataBarrier.forPreferences(
+        _prefs,
+      ).clear(() => _eraseDeletedAccountLocally(departingOwnerId));
 
   Future<void> _eraseDeletedAccountLocally(String ownerId) async {
     await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
@@ -205,7 +197,9 @@ class AccountDataReset {
 
   Future<void> _deleteHifzMigrationBackup() async {
     final dir = await _documentsDirectory();
-    final backup = File('${dir.path}${Platform.pathSeparator}hifz_migration_backup.json');
+    final backup = File(
+      '${dir.path}${Platform.pathSeparator}hifz_migration_backup.json',
+    );
     if (await backup.exists()) {
       await backup.delete();
     }
@@ -239,12 +233,16 @@ class AccountDataReset {
           .filter()
           .group((q) => q.ownerIdEqualTo(ownerId).or().ownerIdIsNull())
           .findAll();
-      await _isar.isarV2Sessions.deleteAll(sessions.map((row) => row.id).toList());
+      await _isar.isarV2Sessions.deleteAll(
+        sessions.map((row) => row.id).toList(),
+      );
       final queue = await _isar.cloudSyncQueueItems
           .filter()
           .ownerUserIdEqualTo(ownerId)
           .findAll();
-      await _isar.cloudSyncQueueItems.deleteAll(queue.map((row) => row.id).toList());
+      await _isar.cloudSyncQueueItems.deleteAll(
+        queue.map((row) => row.id).toList(),
+      );
       // These legacy stores contain only the active, unscoped profile. They
       // must be erased, while explicitly owner-scoped records above survive.
       await _isar.isarAyahProgress.clear();
@@ -271,14 +269,17 @@ class AccountDataReset {
         .filter()
         .ownerIdEqualTo(ownerId)
         .findAll();
-    await _isar.isarReviewEvidenceEvents.deleteAll(events.map((row) => row.id).toList());
+    await _isar.isarReviewEvidenceEvents.deleteAll(
+      events.map((row) => row.id).toList(),
+    );
     final effects = await _isar.isarReviewEffectOutboxs
         .filter()
         .ownerIdEqualTo(ownerId)
         .findAll();
-    await _isar.isarReviewEffectOutboxs.deleteAll(effects.map((row) => row.id).toList());
+    await _isar.isarReviewEffectOutboxs.deleteAll(
+      effects.map((row) => row.id).toList(),
+    );
   }
-
 
   Future<void> _clearParentPin(String? ownerId) async {
     final secureStore = _parentPinStore;

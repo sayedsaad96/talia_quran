@@ -20,14 +20,11 @@ typedef BookmarkCloudRpc =
 class BookmarkService extends ChangeNotifier {
   BookmarkService(
     this._prefs, {
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-    CloudSyncQueue? cloudSyncQueue,
-    EncryptedAccountPreferencesStore? encryptedAccountPreferences,
-    BookmarkCloudRpc? cloudRpc,
-  }) : _owner = owner,
-       _cloudSyncQueue = cloudSyncQueue,
-       _encryptedAccountPreferences = encryptedAccountPreferences,
-       _cloudRpc = cloudRpc;
+    this._owner = const SupabaseRecordOwnerProvider(),
+    this._cloudSyncQueue,
+    this._encryptedAccountPreferences,
+    this._cloudRpc,
+  });
 
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
@@ -352,7 +349,8 @@ class BookmarkService extends ChangeNotifier {
           }
         }
         if (raw == null) {
-          final prefsRaw = _prefs.getString(_storageKeyFor(ownerId)) ??
+          final prefsRaw =
+              _prefs.getString(_storageKeyFor(ownerId)) ??
               _prefs.getString(_legacyStorageKey);
           if (prefsRaw != null) {
             raw = prefsRaw;
@@ -467,8 +465,10 @@ class BookmarkService extends ChangeNotifier {
     });
   }
 
-  Future<void> eraseOwner(String ownerId) =>
-      _enqueueOwnerOperation(ownerId, () => _eraseBookmarksForOwner(this, ownerId));
+  Future<void> eraseOwner(String ownerId) => _enqueueOwnerOperation(
+    ownerId,
+    () => _eraseBookmarksForOwner(this, ownerId),
+  );
 
   Future<void> _rejectDeletedOwnerStorage(String ownerId) async {
     await _prefs.reload();
@@ -487,7 +487,10 @@ class BookmarkService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<T> _enqueueOwnerOperation<T>(String ownerId, Future<T> Function() operation) {
+  Future<T> _enqueueOwnerOperation<T>(
+    String ownerId,
+    Future<T> Function() operation,
+  ) {
     final previous = _ownerOperationTails[ownerId] ?? Future.value();
     final queued = previous.then((_) => operation());
     late final Future<void> tail;

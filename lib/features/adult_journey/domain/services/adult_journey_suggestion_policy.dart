@@ -9,9 +9,7 @@ import 'adult_local_date.dart';
 /// journey's existing actions (spec §4.2). It never creates sessions, tasks
 /// or plan changes, and never reorders the protected p1–p3 actions.
 class AdultJourneySuggestionPolicy {
-  const AdultJourneySuggestionPolicy({
-    DateTime Function(DateTime instant)? toLocal,
-  }) : _toLocal = toLocal;
+  const AdultJourneySuggestionPolicy({this._toLocal});
 
   static const maxSuggestions = 3;
 

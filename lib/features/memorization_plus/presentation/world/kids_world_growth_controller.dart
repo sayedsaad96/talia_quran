@@ -12,11 +12,9 @@ import '../../domain/services/kids_world_growth_snapshot.dart';
 class KidsWorldGrowthController extends ValueNotifier<KidsWorldGrowthSnapshot> {
   KidsWorldGrowthController({
     required Map<String, DateTime> Function() unlockedAchievements,
-    required bool Function() enabled,
-    Stream<void>? changes,
+    required this._enabled,
+    this._changes,
   }) : _unlocked = unlockedAchievements,
-       _enabled = enabled,
-       _changes = changes,
        super(KidsWorldGrowthSnapshot.none);
 
   final Map<String, DateTime> Function() _unlocked;

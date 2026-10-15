@@ -32,10 +32,9 @@ class MemorizationProductionSyncService {
     this._prefs,
     this._gateway,
     this._mappers, {
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-    ReviewEvidenceSync? evidenceSync,
-  }) : _owner = owner,
-       _evidenceSync = evidenceSync;
+    this._owner = const SupabaseRecordOwnerProvider(),
+    this._evidenceSync,
+  });
 
   final MemorizationPlusLocalDatasource _datasource;
   final SharedPreferences _prefs;

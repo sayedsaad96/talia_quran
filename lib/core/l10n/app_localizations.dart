@@ -14439,6 +14439,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أكمل كالمعتاد'**
   String get adultJourneyReturnContinue;
+
+  /// No description provided for @appUpdateReady.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحديث جاهز للتثبيت.'**
+  String get appUpdateReady;
+
+  /// No description provided for @appUpdateInstallAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تثبيت وإعادة التشغيل'**
+  String get appUpdateInstallAction;
+
+  /// No description provided for @appUpdateInstallFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر بدء التحديث. حاول مرة أخرى.'**
+  String get appUpdateInstallFailed;
 }
 
 class _AppLocalizationsDelegate

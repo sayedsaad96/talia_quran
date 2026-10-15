@@ -34,6 +34,20 @@ final class KidsWorldPalette {
   /// Cloud fill; identical in both palettes.
   static const cloud = Color(0xD8FFFFFF);
 
+  /// Growth plants (trunk and leaves) per phase.
+  static const trunkDay = Color(0xFF8D6E63);
+  static const trunkNight = Color(0xFF3E2C26);
+  static const leafDay = Color(0xFF2E8B4E);
+  static const leafNight = Color(0xFF1C5A43);
+
+  /// Growth blossoms; identical in both palettes.
+  static const blossoms = [
+    Color(0xFFF9A8D4),
+    Color(0xFFFDE68A),
+    Color(0xFFC4B5FD),
+    Color(0xFFFDBA74),
+  ];
+
   final List<Color> skyStops;
   final List<Color> hills;
   final Color onScene;

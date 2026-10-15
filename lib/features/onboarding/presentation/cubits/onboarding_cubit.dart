@@ -13,13 +13,10 @@ part 'onboarding_state.dart';
 
 class OnboardingCubit extends Cubit<OnboardingState> {
   OnboardingCubit({
-    required SharedPreferences prefs,
-    required MemorizationPlusRepository memorizationRepository,
-    required MemorizationPathResolver pathResolver,
-  }) : _prefs = prefs,
-       _memorizationRepository = memorizationRepository,
-       _pathResolver = pathResolver,
-       super(const OnboardingState());
+    required this._prefs,
+    required this._memorizationRepository,
+    required this._pathResolver,
+  }) : super(const OnboardingState());
 
   static const firstOpenKey = 'isFirstTimeAppOpen';
   static const skippedKey = 'onboarding_skipped';

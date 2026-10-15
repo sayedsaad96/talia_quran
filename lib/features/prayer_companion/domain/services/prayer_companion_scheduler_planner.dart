@@ -44,16 +44,12 @@ class ScheduledPrayerCompanionNotification extends Equatable {
 /// the scheduler layer, never here. It reads records but never writes them.
 class PrayerCompanionPlanner {
   const PrayerCompanionPlanner({
-    required PrayerTimesService prayerTimesService,
-    required PrayerCompanionPreferences preferences,
-    required PrayerCompanionRepository repository,
-    required Future<SharedPreferences> prefs,
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _prayerTimesService = prayerTimesService,
-       _preferences = preferences,
-       _repository = repository,
-       _prefs = prefs,
-       _owner = owner;
+    required this._prayerTimesService,
+    required this._preferences,
+    required this._repository,
+    required this._prefs,
+    this._owner = const SupabaseRecordOwnerProvider(),
+  });
 
   /// Check-in fires a fixed 20 minutes after the prayer.
   static const Duration checkInDelay = Duration(minutes: 20);

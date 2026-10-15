@@ -70,33 +70,20 @@ class KidsProgressSnapshot extends Equatable {
 /// Builds a [KidsProgressSnapshot] from the kids-only local stores.
 class KidsProgressSnapshotLoader {
   KidsProgressSnapshotLoader({
-    required Future<KidsProgress> Function() progress,
-    required Future<StreakEntity> Function() streak,
-    required Future<Set<int>> Function(String dayKey) pagesOn,
-    required Future<Set<int>> Function() allPages,
-    required List<CertificateAward> Function() certificates,
-    required Future<List<ActivityEvent>> Function() recentActivity,
-    required Future<List<KidsAchievement>> Function(KidsAchievementInputs)
-    achievements,
-    Future<List<KidsSessionLog>> Function()? sessionLogs,
-    bool Function()? effortEnabled,
-    String Function()? currentOwner,
-    int Function()? familyPractices,
-    bool Function()? familyPracticeEnabled,
+    required this._progress,
+    required this._streak,
+    required this._pagesOn,
+    required this._allPages,
+    required this._certificates,
+    required this._recentActivity,
+    required this._achievements,
+    this._sessionLogs,
+    this._effortEnabled,
+    this._currentOwner,
+    this._familyPractices,
+    this._familyPracticeEnabled,
     DateTime Function()? clock,
-  }) : _sessionLogs = sessionLogs,
-       _effortEnabled = effortEnabled,
-       _currentOwner = currentOwner,
-       _familyPractices = familyPractices,
-       _familyPracticeEnabled = familyPracticeEnabled,
-       _progress = progress,
-       _streak = streak,
-       _pagesOn = pagesOn,
-       _allPages = allPages,
-       _certificates = certificates,
-       _recentActivity = recentActivity,
-       _achievements = achievements,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   static const int recentLimit = 5;
 

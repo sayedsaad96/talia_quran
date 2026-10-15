@@ -28,11 +28,9 @@ class KidsStreakStore implements StreakReader {
     this._prefs,
     this._owner, {
     DateTime Function()? clock,
-    Future<KidsStreakSeed?> Function()? legacySeed,
-    Future<void> Function()? onRecorded,
-  }) : _clock = clock ?? DateTime.now,
-       _legacySeed = legacySeed,
-       _onRecorded = onRecorded;
+    this._legacySeed,
+    this._onRecorded,
+  }) : _clock = clock ?? DateTime.now;
 
   static const int retainDays = 60;
 

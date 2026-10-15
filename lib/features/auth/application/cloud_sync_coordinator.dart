@@ -16,24 +16,16 @@ import '../domain/repositories/auth_repository.dart';
 /// also kept here to make every sync entry point follow the same rules.
 class CloudSyncCoordinator {
   CloudSyncCoordinator({
-    required AuthRepository authRepository,
-    MemorizationCloudRepository? memorizationCloudRepository,
-    ProgressEventsBus? progressEvents,
-    AchievementService? achievementService,
-    CloudSyncQueue? cloudSyncQueue,
-    BookmarkService? bookmarkService,
-    void Function()? onMemorizationIdentityChanged,
-    bool syncBookmarks = true,
-    Duration localChangeDebounce = const Duration(seconds: 2),
-  }) : _authRepository = authRepository,
-       _memorizationCloudRepository = memorizationCloudRepository,
-       _progressEvents = progressEvents,
-       _achievementService = achievementService,
-       _cloudSyncQueue = cloudSyncQueue,
-       _bookmarkService = bookmarkService,
-       _onMemorizationIdentityChanged = onMemorizationIdentityChanged,
-       _syncBookmarks = syncBookmarks,
-       _localChangeDebounce = localChangeDebounce {
+    required this._authRepository,
+    this._memorizationCloudRepository,
+    this._progressEvents,
+    this._achievementService,
+    this._cloudSyncQueue,
+    this._bookmarkService,
+    this._onMemorizationIdentityChanged,
+    this._syncBookmarks = true,
+    this._localChangeDebounce = const Duration(seconds: 2),
+  }) {
     _progressSubscription = _progressEvents?.changes
         .where(ProgressEventsBus.requiresCloudPush)
         .listen(_schedulePendingPush);

@@ -6,20 +6,22 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/utils/arabic_normalizer.dart';
+import 'muqattaat_recitation.dart';
 
 /// How a single word behaved during a recitation attempt.
-enum RecitationWordStatus { match, wrong, missing, extra }
+///
+/// [notRecited] marks a written sign of the ayah with no spoken form (a
+/// standalone waqf mark, «۞» or «۩»). It keeps its place in the row so the
+/// ayah reads as written, and is neither right nor wrong.
+enum RecitationWordStatus { match, wrong, missing, extra, notRecited }
 
 /// One word of the rendered comparison row.
 final class RecitationWordDiff extends Equatable {
-  const RecitationWordDiff({
-    required this.display,
-    required this.status,
-  });
+  const RecitationWordDiff({required this.display, required this.status});
 
   /// The word as it should be shown to the learner: always the target word
-  /// (original orthography) for match/wrong/missing; the unexpected spoken
-  /// word for [extra].
+  /// (original orthography) for match/wrong/missing/notRecited; the
+  /// unexpected spoken word for [extra].
   final String display;
 
   final RecitationWordStatus status;
@@ -43,8 +45,7 @@ final class RecitationWordDiffResult extends Equatable {
   int get extraCount =>
       words.where((w) => w.status == RecitationWordStatus.extra).length;
 
-  bool get isPerfect =>
-      wrongCount == 0 && missingCount == 0 && extraCount == 0;
+  bool get isPerfect => wrongCount == 0 && missingCount == 0 && extraCount == 0;
 
   @override
   List<Object?> get props => [words];
@@ -70,42 +71,52 @@ final class RecitationWordDiffer {
     required String spokenText,
   }) {
     final targetTokens = _tokenize(targetText);
-    final spokenTokens = _tokenize(spokenText);
+    final rawSpokenTokens = _tokenize(spokenText);
+    // Disjoint letters («الٓمٓ») are recited by letter name («الف لام ميم»):
+    // merge that spoken run into one word so it aligns with the written one.
+    final spans = MuqattaatRecitation.collapseSpoken(
+      rawTargetTokens: targetTokens,
+      normalizedSpokenTokens: rawSpokenTokens.map(_normalizeWord).toList(),
+    );
+    final spokenTokens = [
+      for (final span in spans)
+        rawSpokenTokens.sublist(span.start, span.end).join(' '),
+    ];
 
     if (targetTokens.isEmpty && spokenTokens.isEmpty) {
       return const RecitationWordDiffResult(words: []);
     }
-    // Empty spoken text carries no per-word signal — the no-attempt guard in
-    // the evaluator already prevents penalties; render just the target.
-    if (spokenTokens.isEmpty) {
-      return RecitationWordDiffResult(
-        words: [
-          for (final word in targetTokens)
-            RecitationWordDiff(
-              display: word,
-              status: RecitationWordStatus.missing,
-            ),
-        ],
-      );
-    }
-    if (targetTokens.isEmpty) {
-      return RecitationWordDiffResult(
-        words: [
-          for (final word in spokenTokens)
-            RecitationWordDiff(
-              display: word,
-              status: RecitationWordStatus.extra,
-            ),
-        ],
-      );
-    }
 
-    // Compare in normalized space; render the raw (original) tokens.
-    final normalizedTarget = targetTokens.map(_normalizeWord).toList();
-    final normalizedSpoken = spokenTokens.map(_normalizeWord).toList();
+    // Compare in normalized space; render the raw (original) tokens. Written
+    // signs with no spoken form (standalone waqf marks, «۞», «۩») stay in
+    // place for display but never take part in the alignment.
+    final normalizedAll = targetTokens.map(_normalizeWord).toList();
+    final recitable = [
+      for (var i = 0; i < targetTokens.length; i++)
+        if (isRecitableWord(normalizedAll[i])) i,
+    ];
+    final normalizedTarget = [for (final i in recitable) normalizedAll[i]];
+    final normalizedSpoken = [for (final span in spans) span.token];
 
     final alignment = _align(normalizedTarget, normalizedSpoken);
     final words = <RecitationWordDiff>[];
+    var nextTargetToken = 0;
+
+    void addTargetWord(int recitableIndex, RecitationWordStatus status) {
+      final tokenIndex = recitable[recitableIndex];
+      for (; nextTargetToken < tokenIndex; nextTargetToken++) {
+        words.add(
+          RecitationWordDiff(
+            display: targetTokens[nextTargetToken],
+            status: RecitationWordStatus.notRecited,
+          ),
+        );
+      }
+      words.add(
+        RecitationWordDiff(display: targetTokens[tokenIndex], status: status),
+      );
+      nextTargetToken = tokenIndex + 1;
+    }
 
     for (final (targetIndex, spokenIndex) in alignment) {
       if (targetIndex == null) {
@@ -118,26 +129,35 @@ final class RecitationWordDiffer {
         );
       } else if (spokenIndex == null) {
         // Target word the learner did not say.
-        words.add(
-          RecitationWordDiff(
-            display: targetTokens[targetIndex],
-            status: RecitationWordStatus.missing,
-          ),
-        );
+        addTargetWord(targetIndex, RecitationWordStatus.missing);
       } else {
-        words.add(
-          RecitationWordDiff(
-            display: targetTokens[targetIndex],
-            status: normalizedTarget[targetIndex] == normalizedSpoken[spokenIndex]
-                ? RecitationWordStatus.match
-                : RecitationWordStatus.wrong,
-          ),
+        addTargetWord(
+          targetIndex,
+          normalizedTarget[targetIndex] == normalizedSpoken[spokenIndex]
+              ? RecitationWordStatus.match
+              : RecitationWordStatus.wrong,
         );
       }
+    }
+    for (; nextTargetToken < targetTokens.length; nextTargetToken++) {
+      words.add(
+        RecitationWordDiff(
+          display: targetTokens[nextTargetToken],
+          status: RecitationWordStatus.notRecited,
+        ),
+      );
     }
 
     return RecitationWordDiffResult(words: words);
   }
+
+  /// Whether a normalized token is something a reciter says aloud: it holds
+  /// at least one letter or digit. Standalone waqf marks normalize to
+  /// nothing, and «۞» / «۩» survive normalization but are symbols only.
+  static bool isRecitableWord(String normalizedToken) =>
+      _letterOrDigit.hasMatch(normalizedToken);
+
+  static final RegExp _letterOrDigit = RegExp(r'[\p{L}\p{N}]', unicode: true);
 
   /// Whitespace tokenization of the raw text — keeps original orthography
   /// for display while comparisons go through [ArabicNormalizer].
@@ -168,8 +188,9 @@ final class RecitationWordDiffer {
     );
     for (var i = 1; i <= targetLength; i++) {
       for (var j = 1; j <= spokenLength; j++) {
-        final substitutionCost =
-            targetTokens[i - 1] == spokenTokens[j - 1] ? 0 : 1;
+        final substitutionCost = targetTokens[i - 1] == spokenTokens[j - 1]
+            ? 0
+            : 1;
         dp[i][j] = _min3(
           dp[i - 1][j] + 1, // target word missing from the recitation
           dp[i][j - 1] + 1, // extra spoken word

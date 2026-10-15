@@ -69,14 +69,10 @@ class KhatmahSetupConflict extends KhatmahSetupState {
 
 // ─── Cubit ───────────────────────────────────────────────────────────────────
 class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
-  KhatmahSetupCubit(
-    this._createKhatmah, {
-    DeleteKhatmahUsecase? deleteKhatmah,
-    Uuid? uuid,
-  }) : _deleteKhatmah = deleteKhatmah,
-       _uuid = uuid ?? const Uuid(),
-       _authority = _createKhatmah.authority,
-       super(const KhatmahSetupIdle()) {
+  KhatmahSetupCubit(this._createKhatmah, {this._deleteKhatmah, Uuid? uuid})
+    : _uuid = uuid ?? const Uuid(),
+      _authority = _createKhatmah.authority,
+      super(const KhatmahSetupIdle()) {
     _changes = _createKhatmah.changes?.listen((_) {
       final authority = _authority;
       if (isClosed || authority is! AccountDataLease) return;

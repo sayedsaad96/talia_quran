@@ -25,10 +25,9 @@ class AdultJourneyRepositoryImpl implements AdultJourneyRepository {
   AdultJourneyRepositoryImpl(
     this._prefs,
     this._owner, {
-    AdultJourneyPreferencesCodec codec = const AdultJourneyPreferencesCodec(),
-    AdultJourneyUpdateReducer reducer = const AdultJourneyUpdateReducer(),
-  }) : _codec = codec,
-       _reducer = reducer;
+    this._codec = const AdultJourneyPreferencesCodec(),
+    this._reducer = const AdultJourneyUpdateReducer(),
+  });
 
   static const keyPrefix = 'adult_journey_v1_';
 

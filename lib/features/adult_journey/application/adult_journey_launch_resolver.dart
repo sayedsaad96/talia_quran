@@ -30,13 +30,11 @@ class AdultMemorizationDestinations {
 /// moved during the lookup, or the current profile is a child.
 class AdultJourneyLaunchResolver {
   AdultJourneyLaunchResolver({
-    required RecordOwnerProvider owner,
-    required AccountDataLease Function() captureLease,
+    required this._owner,
+    required this._captureLease,
     required Future<AdultMemorizationDestinations> Function()
     memorizationDestinations,
-  }) : _owner = owner,
-       _captureLease = captureLease,
-       _memorization = memorizationDestinations;
+  }) : _memorization = memorizationDestinations;
 
   final RecordOwnerProvider _owner;
   final AccountDataLease Function() _captureLease;

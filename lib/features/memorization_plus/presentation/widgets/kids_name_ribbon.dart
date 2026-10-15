@@ -58,7 +58,7 @@ class KidsNameRibbon extends StatelessWidget {
                         name,
                         maxLines: 1,
                         style: lettering.copyWith(
-                          color: const Color(0xCC1E1B4B),
+                          color: KidsRibbonPalette.letteringShadow,
                         ),
                       ),
                     ),
@@ -67,11 +67,7 @@ class KidsNameRibbon extends StatelessWidget {
                       shaderCallback: (bounds) => const LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFFFF3B0),
-                          Color(0xFFFBBF24),
-                          Color(0xFFD97706),
-                        ],
+                        colors: KidsRibbonPalette.letteringGold,
                       ).createShader(bounds),
                       child: Text(
                         name,
@@ -124,7 +120,7 @@ class _RibbonPainter extends CustomPainter {
     const gold = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFFFFF3B0), Color(0xFFF59E0B), Color(0xFFB45309)],
+      colors: KidsRibbonPalette.edgeGold,
     );
     const fullRect = Rect.fromLTWH(0, 0, _gridWidth, _gridHeight);
     final goldPaint = Paint()
@@ -148,7 +144,7 @@ class _RibbonPainter extends CustomPainter {
           ..shader = const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF14B8A6), Color(0xFF3B5BDB)],
+            colors: KidsRibbonPalette.tails,
           ).createShader(fullRect),
       );
       canvas.drawPath(tail, goldPaint..strokeWidth = 1.1);
@@ -158,7 +154,7 @@ class _RibbonPainter extends CustomPainter {
       band,
       Paint()
         ..shader = const LinearGradient(
-          colors: [Color(0xFF2F55D4), Color(0xFF6D3FC9), Color(0xFFA23AB8)],
+          colors: KidsRibbonPalette.band,
         ).createShader(fullRect),
     );
     // Satin highlight along the upper half of the band.
@@ -206,7 +202,7 @@ class _RibbonPainter extends CustomPainter {
       }
     }
     path.close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFFFFF3B0));
+    canvas.drawPath(path, Paint()..color = KidsRibbonPalette.sparkle);
   }
 
   @override

@@ -24,10 +24,9 @@ class MemorizationFamilyService {
     this._kidsLocal,
     this._kidsCloudSync,
     this._mappers, {
-    RemoteChildrenDashboardCache? dashboardCache,
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _dashboardCache = dashboardCache,
-       _owner = owner;
+    this._dashboardCache,
+    this._owner = const SupabaseRecordOwnerProvider(),
+  });
 
   final MemorizationPlusLocalDatasource _datasource;
   final MemorizationProfileService _profile;

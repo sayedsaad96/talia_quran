@@ -43,20 +43,16 @@ final class V2ReviewOutcomeCommitResult {
 final class V2ReviewOutcomeCommitter {
   V2ReviewOutcomeCommitter({
     required Isar isar,
-    required RecordOwnerProvider owner,
-    required ScheduleNextReviewUsecase scheduler,
+    required this._owner,
+    required this._scheduler,
     DateTime Function()? now,
     String Function()? idGenerator,
-    ActivityEventRecorder? activityRecorder,
-    ProgressEventsBus? progressEvents,
+    this._activityRecorder,
+    this._progressEvents,
   }) : _isar = isar,
-       _owner = owner,
-       _scheduler = scheduler,
        _now = now ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? V2ReviewOutcomeCommitSupport.newOpaqueId,
-       _effects = ReviewEffectOutboxWriter(isar),
-       _activityRecorder = activityRecorder,
-       _progressEvents = progressEvents;
+       _effects = ReviewEffectOutboxWriter(isar);
 
   final Isar _isar;
   final RecordOwnerProvider _owner;

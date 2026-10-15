@@ -28,20 +28,14 @@ typedef PrayerSerenityMomentCallback = Future<void> Function();
 ///   watcher keeps running.
 class PrayerSerenityWatcher {
   PrayerSerenityWatcher({
-    required Future<Map<String, DateTime>?> Function() prayerTimesProvider,
-    required Future<void> Function() pauseAudio,
-    required Future<void> Function() showSerenityMoment,
-    required Future<bool> Function() isEnabled,
-    PrayerSerenityPolicy policy = const PrayerSerenityPolicy(),
+    required this._prayerTimesProvider,
+    required this._pauseAudio,
+    required this._showSerenityMoment,
+    required this._isEnabled,
+    this._policy = const PrayerSerenityPolicy(),
     DateTime Function()? now,
-    Duration tickInterval = const Duration(seconds: 30),
-  }) : _prayerTimesProvider = prayerTimesProvider,
-       _pauseAudio = pauseAudio,
-       _showSerenityMoment = showSerenityMoment,
-       _isEnabled = isEnabled,
-       _policy = policy,
-       _now = now ?? DateTime.now,
-       _tickInterval = tickInterval;
+    this._tickInterval = const Duration(seconds: 30),
+  }) : _now = now ?? DateTime.now;
 
   static const enabledKey = 'prayer_serenity_enabled';
 

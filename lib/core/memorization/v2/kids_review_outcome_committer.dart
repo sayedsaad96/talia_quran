@@ -30,17 +30,13 @@ import 'session_state.dart';
 /// receipts for every event of the owner (no audience filter).
 final class KidsReviewOutcomeCommitter {
   KidsReviewOutcomeCommitter({
-    required Isar isar,
-    required RecordOwnerProvider owner,
-    required ScheduleNextReviewUsecase scheduler,
-    CloudSyncQueue? cloudSyncQueue,
+    required this._isar,
+    required this._owner,
+    required this._scheduler,
+    this._cloudSyncQueue,
     DateTime Function()? now,
     String Function()? idGenerator,
-  }) : _isar = isar,
-       _owner = owner,
-       _scheduler = scheduler,
-       _cloudSyncQueue = cloudSyncQueue,
-       _now = now ?? (() => DateTime.now().toUtc()),
+  }) : _now = now ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? V2ReviewOutcomeCommitSupport.newOpaqueId;
 
   final Isar _isar;

@@ -27,6 +27,9 @@ abstract final class KidsTheme {
   static const Color reviewAmber = Color(0xFFFBBF24);
   static const Color lockedSlate = Color(0xFF4B5563);
   static const Color inkOnParchment = Color(0xFF1F2937);
+  // Learning game: the right answer and a wrong pick, once answered.
+  static const Color gameAnswerFill = Color(0xFFD1FAE5);
+  static const Color gamePickedFill = Color(0xFFE5E7EB);
   static const Color successGreen = AppColors.success;
   static const Color errorRed = AppColors.error;
 
@@ -157,4 +160,26 @@ abstract final class KidsTheme {
     BoxShadow(color: Color(0x771ABC9C), blurRadius: 24, spreadRadius: 3),
     BoxShadow(color: Color(0x44F59E0B), blurRadius: 14, spreadRadius: 1),
   ];
+}
+
+/// Fixed colours of the drawn name ribbon (`KidsNameRibbon`).
+abstract final class KidsRibbonPalette {
+  static const Color letteringShadow = Color(0xCC1E1B4B);
+  static const List<Color> letteringGold = [
+    Color(0xFFFFF3B0),
+    Color(0xFFFBBF24),
+    Color(0xFFD97706),
+  ];
+  static const List<Color> edgeGold = [
+    Color(0xFFFFF3B0),
+    Color(0xFFF59E0B),
+    Color(0xFFB45309),
+  ];
+  static const List<Color> tails = [Color(0xFF14B8A6), Color(0xFF3B5BDB)];
+  static const List<Color> band = [
+    Color(0xFF2F55D4),
+    Color(0xFF6D3FC9),
+    Color(0xFFA23AB8),
+  ];
+  static const Color sparkle = Color(0xFFFFF3B0);
 }

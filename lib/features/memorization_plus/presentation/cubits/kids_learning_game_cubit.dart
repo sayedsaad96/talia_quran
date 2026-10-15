@@ -84,13 +84,11 @@ typedef KidsGameAudioSourceLoader =
 /// learning only and is never written as memorization.
 class KidsLearningGameCubit extends Cubit<KidsLearningGameState> {
   KidsLearningGameCubit({
-    required Future<List<KidsSessionLog>> Function() sessionLogs,
-    required KidsGameAudioSourceLoader audioSource,
+    required this._sessionLogs,
+    required this._audioSource,
     AudioPlayer? player,
     Random? random,
-  }) : _sessionLogs = sessionLogs,
-       _audioSource = audioSource,
-       _player = player ?? AudioPlayer(),
+  }) : _player = player ?? AudioPlayer(),
        _random = random ?? Random(),
        super(const KidsLearningGameState()) {
     AudioLifecycleManager.instance.register(_player);

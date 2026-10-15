@@ -13,9 +13,8 @@ class KidsReadingReceiptStore {
     this._prefs,
     this._owner, {
     DateTime Function()? clock,
-    Future<void> Function()? onRecorded,
-  }) : _clock = clock ?? DateTime.now,
-       _onRecorded = onRecorded;
+    this._onRecorded,
+  }) : _clock = clock ?? DateTime.now;
 
   static const int retainDays = 60;
   static const int _lastPage = 604;

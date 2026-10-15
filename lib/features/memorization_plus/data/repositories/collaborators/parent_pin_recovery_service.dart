@@ -12,12 +12,10 @@ typedef PinRecoveryRpc =
 /// request, approve and consume; this only shapes calls and results.
 class ParentPinRecoveryService implements ParentPinRecoveryRepository {
   ParentPinRecoveryService({
-    required Either<Failure, PinRecoveryRpc> Function() rpc,
-    required Future<String> Function() deviceId,
-    required Future<Either<Failure, void>> Function(String pin) setPin,
-  }) : _rpc = rpc,
-       _deviceId = deviceId,
-       _setPin = setPin;
+    required this._rpc,
+    required this._deviceId,
+    required this._setPin,
+  });
 
   final Either<Failure, PinRecoveryRpc> Function() _rpc;
   final Future<String> Function() _deviceId;

@@ -77,7 +77,7 @@ class KhatmDuaData {
 }
 
 class KhatmDuaDatasource {
-  KhatmDuaDatasource({AssetBundle? bundle}) : _bundle = bundle;
+  KhatmDuaDatasource({this._bundle});
 
   final AssetBundle? _bundle;
   KhatmDuaData? _cached;

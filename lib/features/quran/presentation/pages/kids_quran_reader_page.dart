@@ -125,13 +125,11 @@ bool kidsReaderCanConfirmPage(
 @visibleForTesting
 class KidsReaderConfirmation extends ChangeNotifier {
   KidsReaderConfirmation({
-    required Future<bool> Function(int pageNumber) confirmRead,
-    required KidsReadingReceiptStore store,
+    required this._confirmRead,
+    required this._store,
     DateTime Function()? clock,
     this.toastDuration = const Duration(seconds: 2),
-  }) : _confirmRead = confirmRead,
-       _store = store,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   final Future<bool> Function(int pageNumber) _confirmRead;
   final KidsReadingReceiptStore _store;

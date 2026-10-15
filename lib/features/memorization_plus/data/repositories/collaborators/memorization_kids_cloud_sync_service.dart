@@ -30,18 +30,13 @@ class MemorizationKidsCloudSyncService {
     this._streakReader,
     this._gateway,
     this._mappers, {
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-    void Function()? onKidsPolicyChanged,
-    FamilyActivityPublisher? activityPublisher,
-    RemoteChildrenDashboardCache? dashboardCache,
-    KidsReadingSupportSync? readingSupportSync,
-    bool Function()? readingSupportEnabled,
-  }) : _owner = owner,
-       _onKidsPolicyChanged = onKidsPolicyChanged,
-       _activityPublisher = activityPublisher,
-       _dashboardCache = dashboardCache,
-       _readingSupportSync = readingSupportSync,
-       _readingSupportEnabled = readingSupportEnabled;
+    this._owner = const SupabaseRecordOwnerProvider(),
+    this._onKidsPolicyChanged,
+    this._activityPublisher,
+    this._dashboardCache,
+    this._readingSupportSync,
+    this._readingSupportEnabled,
+  });
 
   final FamilyActivityPublisher? _activityPublisher;
   final RemoteChildrenDashboardCache? _dashboardCache;
@@ -326,8 +321,8 @@ class MemorizationKidsCloudSyncService {
       var childLinked = false;
       if (readingSupport != null) {
         try {
-          childLinked = (await _datasource.getMemorizationProfile())
-              .isGuardianLinked;
+          childLinked =
+              (await _datasource.getMemorizationProfile()).isGuardianLinked;
         } catch (_) {
           // Unreadable profile: skip this round; the edit stays pending.
         }

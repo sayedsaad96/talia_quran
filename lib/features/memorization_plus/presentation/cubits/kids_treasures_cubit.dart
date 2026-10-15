@@ -110,15 +110,11 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
   KidsTreasuresCubit(
     this._memorizationRepository,
     this._quranRepository, {
-    required KidsCertificatesLoader certificatesLoader,
-    ParentRewardUsecase? rewards,
-    KidsHomeMissionsUsecase? homeMissions,
-    bool Function()? homeMissionsEnabled,
-  }) : _certificatesLoader = certificatesLoader,
-       _rewards = rewards,
-       _homeMissions = homeMissions,
-       _homeMissionsEnabled = homeMissionsEnabled,
-       super(const KidsTreasuresLoading());
+    required this._certificatesLoader,
+    this._rewards,
+    this._homeMissions,
+    this._homeMissionsEnabled,
+  }) : super(const KidsTreasuresLoading());
 
   final MemorizationPlusRepository _memorizationRepository;
   final QuranRepository _quranRepository;

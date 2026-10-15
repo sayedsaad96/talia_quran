@@ -42,10 +42,9 @@ class KidsFamilyPracticeCubit extends Cubit<KidsFamilyPracticeState> {
   KidsFamilyPracticeCubit({
     this.surahId = 0,
     this.ayahNumber = 0,
-    KidsFamilyPracticeRecorder? recorder,
+    this._recorder,
     DateTime Function()? clock,
-  }) : _recorder = recorder,
-       _clock = clock ?? DateTime.now,
+  }) : _clock = clock ?? DateTime.now,
        super(const KidsFamilyPracticeState());
 
   final int surahId;

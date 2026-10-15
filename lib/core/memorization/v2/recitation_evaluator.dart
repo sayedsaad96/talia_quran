@@ -1,6 +1,8 @@
 // lib/core/memorization/v2/recitation_evaluator.dart
 
 import '../../../core/utils/arabic_normalizer.dart';
+import 'muqattaat_recitation.dart';
+import 'recitation_word_diff.dart';
 
 /// V2 recitation evaluation — Product Rules §14.2 & §14.7
 ///
@@ -53,8 +55,15 @@ final class V2RecitationEvaluator {
     required String targetText,
     required String spokenText,
   }) {
-    final normalizedTarget = ArabicNormalizer.normalize(targetText);
-    final normalizedSpoken = ArabicNormalizer.normalize(spokenText);
+    // Written signs with no spoken form («۞», «۩») survive normalization;
+    // they are not words the reciter says, so they never count as missing.
+    final normalizedTarget = ArabicNormalizer.normalize(
+      targetText,
+    ).split(' ').where(RecitationWordDiffer.isRecitableWord).join(' ');
+    final normalizedSpoken = _collapseMuqattaat(
+      targetText,
+      ArabicNormalizer.normalize(spokenText),
+    );
 
     // No-attempt guard — do not count empty STT as failure.
     if (normalizedSpoken.isEmpty) {
@@ -96,6 +105,17 @@ final class V2RecitationEvaluator {
       targetWordCount: targetWordCount,
       matchedWordCount: matchedWordCount,
     );
+  }
+
+  /// Disjoint letters («الٓمٓ») are recited by letter name («الف لام ميم»);
+  /// count that spoken run as the written token before comparing.
+  static String _collapseMuqattaat(String targetText, String normalizedSpoken) {
+    if (normalizedSpoken.isEmpty) return normalizedSpoken;
+    final spans = MuqattaatRecitation.collapseSpoken(
+      rawTargetTokens: targetText.split(RegExp(r'\s+')),
+      normalizedSpokenTokens: normalizedSpoken.split(' '),
+    );
+    return spans.map((span) => span.token).join(' ');
   }
 
   static int _wordCount(String text) =>

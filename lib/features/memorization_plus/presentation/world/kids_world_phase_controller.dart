@@ -14,10 +14,9 @@ typedef KidsWorldPrayerTimesLoader =
 /// arms a timer for the next boundary, and can be refreshed on app resume.
 class KidsWorldPhaseController extends ValueNotifier<KidsWorldPhase> {
   KidsWorldPhaseController({
-    required KidsWorldPrayerTimesLoader prayerTimes,
+    required this._prayerTimes,
     DateTime Function() clock = DateTime.now,
-  }) : _prayerTimes = prayerTimes,
-       _clock = clock,
+  }) : _clock = clock,
        // Seed synchronously with the fallback rule so a cold launch never paints
        // the wrong phase before the async prayer-time refresh corrects it.
        super(kidsWorldPhaseAt(clock()));

@@ -8,8 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// so every speech path calls [ensure] first. A declined disclosure leaves
 /// the microphone untouched and the caller falls back to self-grading.
 class RecitationVoiceConsent {
-  RecitationVoiceConsent(this._prefs, {required Future<bool> Function() ask})
-    : _ask = ask;
+  RecitationVoiceConsent(this._prefs, {required this._ask});
 
   /// Bump the version when the disclosure text changes materially, so users
   /// see the new wording once.

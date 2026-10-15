@@ -38,10 +38,9 @@ final class HifzMigrationService {
   HifzMigrationService({
     required HifzRepository hifzRepository,
     required MemorizationPlusRepository memPlusRepository,
-    required SharedPreferences prefs,
+    required this._prefs,
   }) : _hifzRepo = hifzRepository,
-       _memPlusRepo = memPlusRepository,
-       _prefs = prefs;
+       _memPlusRepo = memPlusRepository;
 
   final HifzRepository _hifzRepo;
   final MemorizationPlusRepository _memPlusRepo;

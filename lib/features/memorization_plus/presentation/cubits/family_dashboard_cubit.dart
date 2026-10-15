@@ -21,15 +21,11 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     this._parentAccess,
     this._remoteLink,
     this._getFamilyDashboard, {
-    AccountPasswordVerifier? accountVerifier,
-    ParentRewardUsecase? rewards,
-    bool Function()? guardianSessionActive,
-    Future<bool> Function()? pinOptional,
-  }) : _accountVerifier = accountVerifier,
-       _rewards = rewards,
-       _guardianSessionActive = guardianSessionActive,
-       _pinOptional = pinOptional,
-       super(const FamilyDashboardInitial());
+    this._accountVerifier,
+    this._rewards,
+    this._guardianSessionActive,
+    this._pinOptional,
+  }) : super(const FamilyDashboardInitial());
 
   /// True on the guardian's own (adult) phone: the dashboard opens without a
   /// PIN unless the guardian chose to lock it. The child's device always

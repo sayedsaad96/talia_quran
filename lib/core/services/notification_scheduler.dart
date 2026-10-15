@@ -95,22 +95,15 @@ class NotificationScheduler {
 
   NotificationScheduler(
     this._service, {
-    KidsSessionDatesLoader? kidsSessionDatesLoader,
-    GetAyahOfDayUsecase? getAyahOfDay,
-    StreakRiskEvaluator streakRiskEvaluator = const StreakRiskEvaluator(),
-    PrayerTimesService? prayerTimesService,
-    GetActiveKhatmahUsecase? getActiveKhatmah,
-    PrayerCompanionPlanner? prayerCompanionPlanner,
-    PrayerCompanionPreferences? prayerCompanionPreferences,
+    this._kidsSessionDatesLoader,
+    this._getAyahOfDay,
+    this._streakRiskEvaluator = const StreakRiskEvaluator(),
+    this._prayerTimesService,
+    this._getActiveKhatmah,
+    this._prayerCompanionPlanner,
+    this._prayerCompanionPreferences,
     PrayerDeliveryCoordinator? prayerDeliveryCoordinator,
-  }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
-       _getAyahOfDay = getAyahOfDay,
-       _streakRiskEvaluator = streakRiskEvaluator,
-       _prayerTimesService = prayerTimesService,
-       _getActiveKhatmah = getActiveKhatmah,
-       _prayerCompanionPlanner = prayerCompanionPlanner,
-       _prayerCompanionPreferences = prayerCompanionPreferences,
-       _prayerDeliveryCoordinator =
+  }) : _prayerDeliveryCoordinator =
            prayerDeliveryCoordinator ??
            (Platform.isAndroid
                ? PrayerDeliveryCoordinator(AndroidPrayerDeliveryScheduler())

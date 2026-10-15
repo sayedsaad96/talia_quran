@@ -7,8 +7,8 @@ import 'adult_return_policy.dart';
 /// command changes nothing, so no write happens.
 class AdultJourneyUpdateReducer {
   const AdultJourneyUpdateReducer({
-    AdultReturnPolicy returnPolicy = const AdultReturnPolicy(),
-  }) : _returnPolicy = returnPolicy;
+    this._returnPolicy = const AdultReturnPolicy(),
+  });
 
   final AdultReturnPolicy _returnPolicy;
 

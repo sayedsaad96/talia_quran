@@ -52,10 +52,7 @@ class SmartWird extends Equatable {
 /// moment. The composer only re-orders and groups existing approved records —
 /// it never generates, edits, or paraphrases religious text.
 class ComposeSmartWirdUsecase {
-  ComposeSmartWirdUsecase(
-    this._repository, {
-    AzkarPrayerWindowSource? windowSource,
-  }) : _windowSource = windowSource;
+  ComposeSmartWirdUsecase(this._repository, {this._windowSource});
 
   final AzkarRepository _repository;
   final AzkarPrayerWindowSource? _windowSource;

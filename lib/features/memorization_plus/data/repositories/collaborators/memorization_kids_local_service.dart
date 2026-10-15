@@ -37,9 +37,8 @@ class MemorizationKidsLocalService {
     this._progressEvents,
     this._cloudSyncQueue, {
     ParentPinSecureStore? parentPinStore,
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore(),
-       _owner = owner;
+    this._owner = const SupabaseRecordOwnerProvider(),
+  }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore();
 
   final MemorizationPlusLocalDatasource _datasource;
   final QuranRepository _quranRepository;

@@ -9,8 +9,8 @@ import '../models/isar_v2_session.dart';
 class V2SessionLocalDatasource {
   const V2SessionLocalDatasource(
     this._isar, {
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _owner = owner;
+    this._owner = const SupabaseRecordOwnerProvider(),
+  });
 
   final Isar _isar;
   final RecordOwnerProvider _owner;

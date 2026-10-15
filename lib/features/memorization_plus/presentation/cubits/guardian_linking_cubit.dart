@@ -9,9 +9,8 @@ import 'guardian_linking_state.dart';
 class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
   GuardianLinkingCubit(
     this._repository, {
-    Duration initialLoadTimeout = const Duration(seconds: 12),
-  }) : _initialLoadTimeout = initialLoadTimeout,
-       super(const GuardianLinkingInitial());
+    this._initialLoadTimeout = const Duration(seconds: 12),
+  }) : super(const GuardianLinkingInitial());
 
   final MemorizationPlusRepository _repository;
   final Duration _initialLoadTimeout;

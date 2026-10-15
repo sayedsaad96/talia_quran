@@ -17,11 +17,8 @@ class HomeOccasionContext {
 }
 
 class HomeOccasionService {
-  const HomeOccasionService({
-    DateTime Function()? now,
-    int Function()? hijriOffsetDays,
-  }) : _now = now ?? DateTime.now,
-       _hijriOffsetDays = hijriOffsetDays;
+  const HomeOccasionService({DateTime Function()? now, this._hijriOffsetDays})
+    : _now = now ?? DateTime.now;
 
   final DateTime Function() _now;
 
@@ -52,7 +49,9 @@ class HomeOccasionService {
   }
 
   HomeOccasion _occasion(DateTime now, HijriCalendar hijri) {
-    if (hijri.hMonth == 9 && hijri.hDay >= 21) return HomeOccasion.lastTenNights;
+    if (hijri.hMonth == 9 && hijri.hDay >= 21) {
+      return HomeOccasion.lastTenNights;
+    }
     if (hijri.hMonth == 9) return HomeOccasion.ramadan;
     if (now.weekday == DateTime.friday) return HomeOccasion.friday;
     return HomeOccasion.none;

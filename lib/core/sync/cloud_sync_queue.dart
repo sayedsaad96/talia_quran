@@ -30,10 +30,9 @@ class CloudSyncQueue {
   CloudSyncQueue(
     this._isar,
     this._owner, {
-    Future<void> Function(String ownerId)? scheduleBackgroundDelivery,
+    this._scheduleBackgroundDelivery,
     DateTime Function()? now,
-  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery,
-       _now = now ?? (() => DateTime.now().toUtc());
+  }) : _now = now ?? (() => DateTime.now().toUtc());
 
   static const maxAttempts = 8;
   static const baseBackoffSeconds = 30;

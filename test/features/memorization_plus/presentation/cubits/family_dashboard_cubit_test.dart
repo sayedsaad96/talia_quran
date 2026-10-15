@@ -22,21 +22,19 @@ FamilyDashboard _dashboard() =>
 
 class _FakeRepository implements MemorizationPlusRepository {
   _FakeRepository({
-    Either<Failure, ParentSettings> settingsResult = const Right(_testSettings),
-    Either<Failure, bool> verifyPinResult = const Right(true),
+    this._settingsResult = const Right(_testSettings),
     Either<Failure, FamilyDashboard>? dashboardResult,
-  }) : _settingsResult = settingsResult,
-       _verifyPinResult = verifyPinResult,
-       dashboardResult = dashboardResult ?? Right(_dashboard());
+  }) : dashboardResult = dashboardResult ?? Right(_dashboard());
 
   Either<Failure, ParentSettings> _settingsResult;
-  final Either<Failure, bool> _verifyPinResult;
+  final Either<Failure, bool> _verifyPinResult = const Right(true);
   Either<Failure, FamilyDashboard> dashboardResult;
   int resetCalls = 0;
   final identityUpdates = <String>[];
   Either<Failure, void> identityResult = const Right(null);
   final savedSettings = <ParentSettings>[];
   final remoteMissionCreates = <String>[];
+
   /// When set, remote mission creation waits on it (to hold a call in flight).
   Completer<void>? missionCreateGate;
   final remoteMissionAcks = <String>[];
@@ -753,26 +751,29 @@ void main() {
       },
     );
 
-    test('a repeated submit while one is in flight creates one mission', () async {
-      final (repository, cubit) = await loaded();
-      repository.missionCreateGate = Completer<void>();
+    test(
+      'a repeated submit while one is in flight creates one mission',
+      () async {
+        final (repository, cubit) = await loaded();
+        repository.missionCreateGate = Completer<void>();
 
-      final first = cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
-      await Future<void>.delayed(Duration.zero);
-      await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
-      repository.missionCreateGate!.complete();
-      await first;
+        final first = cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+        await Future<void>.delayed(Duration.zero);
+        await cubit.addHomeMission('رتّب غرفتك', childId: 'c1');
+        repository.missionCreateGate!.complete();
+        await first;
 
-      expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
+        expect(repository.remoteMissionCreates, ['c1:رتّب غرفتك']);
 
-      // The guard releases once the call finishes.
-      repository.missionCreateGate = null;
-      await cubit.addHomeMission('ساعد في المائدة', childId: 'c1');
-      expect(repository.remoteMissionCreates, [
-        'c1:رتّب غرفتك',
-        'c1:ساعد في المائدة',
-      ]);
-    });
+        // The guard releases once the call finishes.
+        repository.missionCreateGate = null;
+        await cubit.addHomeMission('ساعد في المائدة', childId: 'c1');
+        expect(repository.remoteMissionCreates, [
+          'c1:رتّب غرفتك',
+          'c1:ساعد في المائدة',
+        ]);
+      },
+    );
 
     test('without a child id the mission goes through the local API', () async {
       final (repository, cubit) = await loaded();

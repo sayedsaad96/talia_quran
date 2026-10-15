@@ -13,6 +13,10 @@ import '../router/app_router.dart';
 import '../services/app_session_service.dart';
 import '../widgets/recitation_voice_disclosure_dialog.dart';
 import '../services/app_version_service.dart';
+import '../../features/app_update/data/repositories/google_play_app_update_repository.dart';
+import '../../features/app_update/domain/repositories/app_update_repository.dart';
+import '../../features/app_update/domain/usecases/google_play_update_usecase.dart';
+import '../../features/app_update/presentation/cubits/app_update_cubit.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
 import '../services/notification_scheduler.dart';
@@ -329,6 +333,20 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<AppVersionInfoProvider>(
     () => const PackageInfoAppVersionInfoProvider(),
+  );
+  getIt.registerLazySingleton<AppUpdateRepository>(
+    GooglePlayAppUpdateRepository.new,
+  );
+  getIt.registerLazySingleton<GooglePlayUpdateUseCase>(
+    () => GooglePlayUpdateUseCase(getIt<AppUpdateRepository>()),
+  );
+  getIt.registerLazySingleton<AppUpdateCubit>(
+    () => AppUpdateCubit(
+      getIt<GooglePlayUpdateUseCase>(),
+      getIt<SharedPreferences>(),
+      getIt<AppVersionInfoProvider>(),
+    ),
+    dispose: (cubit) => cubit.close(),
   );
   getIt.registerLazySingleton<TaliaNotificationService>(
     TaliaNotificationService.new,

@@ -94,16 +94,13 @@ final class SupabaseReviewEvidenceTransport implements ReviewEvidenceTransport {
 ///   idempotent, so the overlap costs only bandwidth.
 final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
   ReviewEvidenceSyncService({
-    required ReviewEvidenceLocalDatasource local,
-    required RecordOwnerProvider owner,
+    required this._local,
+    required this._owner,
     required SharedPreferences prefs,
-    required ReviewEvidenceTransport transport,
+    required this._transport,
     AccountDataBarrier? barrier,
     DateTime Function()? now,
-  }) : _local = local,
-       _owner = owner,
-       _prefs = prefs,
-       _transport = transport,
+  }) : _prefs = prefs,
        _barrier = barrier ?? AccountDataBarrier.forPreferences(prefs),
        _now = now ?? DateTime.now;
 

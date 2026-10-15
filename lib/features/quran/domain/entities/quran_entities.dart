@@ -34,9 +34,9 @@ class Ayah extends Equatable {
     required this.numberInSurah,
     this.juz,
     this.page,
-    String? canonicalText,
+    this._canonicalText,
     this.leadingBasmalah,
-  }) : _canonicalText = canonicalText;
+  });
 
   final int number; // global ayah number
   final int surahId;

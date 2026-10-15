@@ -21,18 +21,13 @@ import '../../services/streak_day.dart';
 /// pending until the cloud evidence collaborator receives server acceptance.
 final class V2ReviewEffectOutboxProcessor {
   V2ReviewEffectOutboxProcessor({
-    required Isar isar,
-    required RecordOwnerProvider owner,
-    required MarkDailyPlanAyahCompletedUsecase markDailyPlanCompleted,
-    required AchievementService achievements,
-    required ProgressEventsBus progressEvents,
+    required this._isar,
+    required this._owner,
+    required this._markDailyPlanCompleted,
+    required this._achievements,
+    required this._progressEvents,
     DateTime Function()? now,
-  }) : _isar = isar,
-       _owner = owner,
-       _markDailyPlanCompleted = markDailyPlanCompleted,
-       _achievements = achievements,
-       _progressEvents = progressEvents,
-       _now = now ?? (() => DateTime.now().toUtc());
+  }) : _now = now ?? (() => DateTime.now().toUtc());
 
   final Isar _isar;
   final RecordOwnerProvider _owner;

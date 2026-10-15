@@ -27,11 +27,8 @@ abstract interface class ListeningRecitationCapture {
 }
 
 class SpeechToTextListeningCapture implements ListeningRecitationCapture {
-  SpeechToTextListeningCapture({
-    SpeechToText? speech,
-    Future<bool> Function()? voiceConsent,
-  }) : _speech = speech ?? SpeechToText(),
-       _voiceConsent = voiceConsent;
+  SpeechToTextListeningCapture({SpeechToText? speech, this._voiceConsent})
+    : _speech = speech ?? SpeechToText();
 
   /// How long [stop] waits for the recognizer's final result.
   static const _finalResultWait = Duration(milliseconds: 1200);

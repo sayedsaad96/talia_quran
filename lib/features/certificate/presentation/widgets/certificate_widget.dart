@@ -241,11 +241,11 @@ class CertificateWidget extends StatelessWidget {
   }
 }
 
-const _ink = Color(0xff173c37);
-const _gold = Color(0xffa8802f);
-const _goldLine = Color(0xffc9a45c);
-const _muted = Color(0xff6b5a3c);
-const _pillText = Color(0xfff7ecd2);
+const _ink = CertificateArtworkPalette.ink;
+const _gold = CertificateArtworkPalette.gold;
+const _goldLine = CertificateArtworkPalette.goldLine;
+const _muted = CertificateArtworkPalette.muted;
+const _pillText = CertificateArtworkPalette.pillText;
 
 /// Lays the copy over the artwork. Positions are fractions of the canvas, so
 /// the preview and the 3x export match exactly; every band shrinks its text

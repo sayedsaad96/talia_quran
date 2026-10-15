@@ -54,31 +54,30 @@ class AzkarHubState extends Equatable {
     bool? smartWirdCompletedToday,
     int? smartWirdSessionCountToday,
     String? error,
-  }) =>
-      AzkarHubState(
-        status: status ?? this.status,
-        counts: counts ?? this.counts,
-        completion: completion ?? this.completion,
-        tasbeehTally: tasbeehTally ?? this.tasbeehTally,
-        period: period ?? this.period,
-        smartWirdCompletedToday:
-            smartWirdCompletedToday ?? this.smartWirdCompletedToday,
-        smartWirdSessionCountToday:
-            smartWirdSessionCountToday ?? this.smartWirdSessionCountToday,
-        error: error,
-      );
+  }) => AzkarHubState(
+    status: status ?? this.status,
+    counts: counts ?? this.counts,
+    completion: completion ?? this.completion,
+    tasbeehTally: tasbeehTally ?? this.tasbeehTally,
+    period: period ?? this.period,
+    smartWirdCompletedToday:
+        smartWirdCompletedToday ?? this.smartWirdCompletedToday,
+    smartWirdSessionCountToday:
+        smartWirdSessionCountToday ?? this.smartWirdSessionCountToday,
+    error: error,
+  );
 
   @override
   List<Object?> get props => [
-        status,
-        counts,
-        completion,
-        tasbeehTally,
-        period,
-        smartWirdCompletedToday,
-        smartWirdSessionCountToday,
-        error,
-      ];
+    status,
+    counts,
+    completion,
+    tasbeehTally,
+    period,
+    smartWirdCompletedToday,
+    smartWirdSessionCountToday,
+    error,
+  ];
 }
 
 /// Single source of truth for the Azkar Hub: loads counts and live completion
@@ -89,12 +88,10 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
     this._completionStore,
     this._prefsStore, {
     DateTime Function()? now,
-    SmartWirdProgressStore? smartWirdStore,
-    AzkarPrayerWindowSource? windowSource,
-  })  : _now = now ?? DateTime.now,
-        _smartWirdStore = smartWirdStore,
-        _windowSource = windowSource,
-        super(const AzkarHubState(status: AzkarHubStatus.loading));
+    this._smartWirdStore,
+    this._windowSource,
+  }) : _now = now ?? DateTime.now,
+       super(const AzkarHubState(status: AzkarHubStatus.loading));
 
   final AzkarRepository _repository;
   final AzkarCompletionStore _completionStore;
@@ -111,13 +108,10 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
     var failed = false;
     var failureMessage = '';
     final corpus = <AzkarCategory, List<Zikr>>{};
-    result.fold(
-      (failure) {
-        failed = true;
-        failureMessage = failure.message;
-      },
-      (data) => corpus.addAll(data),
-    );
+    result.fold((failure) {
+      failed = true;
+      failureMessage = failure.message;
+    }, (data) => corpus.addAll(data));
     if (failed) {
       emit(state.copyWith(status: AzkarHubStatus.error, error: failureMessage));
       return;
@@ -164,14 +158,11 @@ class AzkarHubCubit extends Cubit<AzkarHubState> {
     );
   }
 
-  String _dayPrefix(DateTime time) =>
-      '${time.year}-${time.month}-${time.day}';
+  String _dayPrefix(DateTime time) => '${time.year}-${time.month}-${time.day}';
 
   /// Re-reads the daily tasbeeh tally after the sheet reports activity.
   void refreshTasbeehTally() {
     if (isClosed) return;
-    emit(
-      state.copyWith(tasbeehTally: _prefsStore.getTasbeehTally(_now())),
-    );
+    emit(state.copyWith(tasbeehTally: _prefsStore.getTasbeehTally(_now())));
   }
 }

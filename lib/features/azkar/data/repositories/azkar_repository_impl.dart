@@ -7,8 +7,7 @@ import '../datasources/azkar_alias_registry.dart';
 import '../datasources/azkar_local_datasource.dart';
 
 class AzkarRepositoryImpl implements AzkarRepository {
-  AzkarRepositoryImpl(this._datasource, {AzkarAliasRegistry? aliasRegistry})
-    : _aliasRegistry = aliasRegistry;
+  AzkarRepositoryImpl(this._datasource, {this._aliasRegistry});
   final AzkarLocalDatasource _datasource;
   final AzkarAliasRegistry? _aliasRegistry;
 
@@ -33,11 +32,10 @@ class AzkarRepositoryImpl implements AzkarRepository {
       final result = await getAzkar(category);
       var list = const <Zikr>[];
       var failed = false;
-      result.fold(
-        (_) => failed = true,
-        (items) => list = items,
-      );
-      if (failed) return const Left(CacheFailure('Failed to load azkar corpus'));
+      result.fold((_) => failed = true, (items) => list = items);
+      if (failed) {
+        return const Left(CacheFailure('Failed to load azkar corpus'));
+      }
       results[category] = list;
     }
     return Right(results);

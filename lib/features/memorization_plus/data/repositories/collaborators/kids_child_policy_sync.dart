@@ -19,11 +19,7 @@ typedef KidsPolicyCasRpc =
 /// Supabase client. [onPolicyChanged] runs after every local policy write
 /// (the app reloads `KidsPolicyController` there).
 class KidsChildPolicySync {
-  KidsChildPolicySync(
-    this._datasource,
-    this._owner, {
-    void Function()? onPolicyChanged,
-  }) : _onPolicyChanged = onPolicyChanged;
+  KidsChildPolicySync(this._datasource, this._owner, {this._onPolicyChanged});
 
   final MemorizationPlusLocalDatasource _datasource;
   final RecordOwnerProvider _owner;

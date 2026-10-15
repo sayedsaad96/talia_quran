@@ -25,14 +25,11 @@ class PrayerCompanionResponseOutcome {
 /// startup, then the route is resolved.
 class PrayerCompanionController {
   const PrayerCompanionController({
-    required ApplyPrayerCompanionCommand applyCommand,
-    required NotificationScheduler scheduler,
-    required Locale Function() locale,
-    Future<DateTime?> Function()? nextPrayerAt,
-  }) : _applyCommand = applyCommand,
-       _scheduler = scheduler,
-       _locale = locale,
-       _nextPrayerAt = nextPrayerAt;
+    required this._applyCommand,
+    required this._scheduler,
+    required this._locale,
+    this._nextPrayerAt,
+  });
 
   final ApplyPrayerCompanionCommand _applyCommand;
   final NotificationScheduler _scheduler;

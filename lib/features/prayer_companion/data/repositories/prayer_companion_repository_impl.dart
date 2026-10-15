@@ -6,8 +6,8 @@ import '../datasources/prayer_companion_local_datasource.dart';
 class PrayerCompanionRepositoryImpl implements PrayerCompanionRepository {
   const PrayerCompanionRepositoryImpl(
     this._datasource, {
-    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _owner = owner;
+    this._owner = const SupabaseRecordOwnerProvider(),
+  });
 
   final PrayerCompanionLocalDatasource _datasource;
   final RecordOwnerProvider _owner;

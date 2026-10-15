@@ -8541,4 +8541,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adultJourneyReturnContinue => 'Continue as usual';
+
+  @override
+  String get appUpdateReady => 'An update is ready to install.';
+
+  @override
+  String get appUpdateInstallAction => 'Install and restart';
+
+  @override
+  String get appUpdateInstallFailed =>
+      'The update could not start. Please try again.';
 }

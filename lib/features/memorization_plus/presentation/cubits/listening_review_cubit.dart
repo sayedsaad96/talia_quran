@@ -18,20 +18,14 @@ import 'listening_review_state.dart';
 /// records, the outcome committer, XP or sync, so it cannot change SRS.
 class ListeningReviewCubit extends Cubit<ListeningReviewState> {
   ListeningReviewCubit({
-    required ListeningQuizSource source,
-    required ListeningAudio audio,
-    required ListeningRecitationCapture capture,
-    required ListeningReviewStatsStore stats,
-    ListeningQuizEngine engine = const ListeningQuizEngine(),
-    V2RecitationEvaluator evaluator = const V2RecitationEvaluator(),
+    required this._source,
+    required this._audio,
+    required this._capture,
+    required this._stats,
+    this._engine = const ListeningQuizEngine(),
+    this._evaluator = const V2RecitationEvaluator(),
     Random? random,
-  }) : _source = source,
-       _audio = audio,
-       _capture = capture,
-       _stats = stats,
-       _engine = engine,
-       _evaluator = evaluator,
-       _random = random ?? Random(),
+  }) : _random = random ?? Random(),
        super(const ListeningReviewLoading());
 
   final ListeningQuizSource _source;

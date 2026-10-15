@@ -3563,4 +3563,7 @@
   ,"adultJourneyReturnLight": "بداية خفيفة اليوم"
   ,"adultJourneyReturnChooseTime": "اختر وقتي"
   ,"adultJourneyReturnContinue": "أكمل كالمعتاد"
+  ,"appUpdateReady": "التحديث جاهز للتثبيت."
+  ,"appUpdateInstallAction": "تثبيت وإعادة التشغيل"
+  ,"appUpdateInstallFailed": "تعذر بدء التحديث. حاول مرة أخرى."
 }

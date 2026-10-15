@@ -91,14 +91,11 @@ class ContinuousPlaybackState {
 /// near-gapless) playback automatically.
 class QuranContinuousPlayerService {
   QuranContinuousPlayerService({
-    required QuranRepository quranRepository,
-    required QuranReciterService reciterService,
+    required this._quranRepository,
+    required this._reciterService,
     AudioPlayer? player,
-    bool enableBackgroundAudioIntegration = false,
-  }) : _quranRepository = quranRepository,
-       _reciterService = reciterService,
-       _enableBackgroundAudioIntegration = enableBackgroundAudioIntegration,
-       _player = player ?? AudioPlayer() {
+    this._enableBackgroundAudioIntegration = false,
+  }) : _player = player ?? AudioPlayer() {
     AudioLifecycleManager.instance.register(
       _player,
       shouldPause: () => !_isBackgroundPlaybackEnabled,
