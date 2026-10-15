@@ -39,9 +39,10 @@ final class KidsSurahHouse extends Equatable {
 /// Mirrors the per-surah rules of `getKidsJourney` (the journey page is the
 /// source of truth): completion comes from canonical reward logs by
 /// `log.ayahNumber` only (`kidsMemorizedSurahIds` also adds `log.ayahNumbers`;
-/// that set is for region unlocking, not house status), a finished stage is
-/// `needsReview` on a pending house review or a due kids record inside that
-/// stage, and the stage size follows the whole-set precedence rule.
+/// that set is for region unlocking, not house status), a house is
+/// `needsReview` when any finished stage has a pending house review or when
+/// any due kids record exists anywhere in the surah (spec 4.2, R11), and the
+/// stage size follows the whole-set precedence rule.
 ///
 /// [kidsRecords] must already be kids records (`ReviewRecordFilters
 /// .isKidsSource`); the caller filters. Surahs missing from [surahs] are
@@ -96,12 +97,12 @@ List<KidsSurahHouse> buildKidsSurahHouses({
       if (!range.every(completed.contains)) continue;
       if (KidsHouseReviewPolicy.pendingAyahs(surahLogs, id, range).isNotEmpty) {
         needsReview = true;
-      } else {
-        needsReview = range.any((a) {
-          final record = records[a];
-          return record != null && KidsDueReviewPolicy.isDue(record, now);
-        });
       }
+    }
+    if (!needsReview) {
+      needsReview = records.values.any(
+        (record) => KidsDueReviewPolicy.isDue(record, now),
+      );
     }
 
     final status = needsReview

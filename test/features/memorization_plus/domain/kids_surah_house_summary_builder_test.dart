@@ -153,6 +153,19 @@ void main() {
     expect(_house(due, 114).status, KidsSurahHouseStatus.needsReview);
   });
 
+  test('needsReview when a due record is in an unfinished stage', () {
+    final houses = _build(
+      defaultSize: 3,
+      logs: [
+        for (var a = 1; a <= 3; a++) _log(114, a),
+        for (var a = 1; a <= 3; a++)
+          _houseReview(114, a, DateTime.utc(2026, 10, 2)),
+      ],
+      records: [_record(114, 5, next: DateTime.utc(2026, 10, 10))],
+    );
+    expect(_house(houses, 114).status, KidsSurahHouseStatus.needsReview);
+  });
+
   test('whole 103 is completed after its 3 ayahs plus their house review', () {
     final base = [for (var a = 1; a <= 3; a++) _log(103, a)];
     final pending = _build(
