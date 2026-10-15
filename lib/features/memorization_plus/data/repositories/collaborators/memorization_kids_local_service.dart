@@ -68,7 +68,7 @@ class MemorizationKidsLocalService {
   static const kKidsReviewPoints = 5;
 
   /// A surah of at most this many ayahs may be memorized as one whole house.
-  static const kKidsWholeSurahMaxAyahs = 20;
+  static const kKidsWholeSurahMaxAyahs = kKidsWholeSurahMaxAyahsLimit;
 
   /// Overlays [KidsProgress.currentStreak] from [StreakService] (single SSOT).
   Future<KidsProgress> _hydrateKidsStreak(KidsProgress progress) async {

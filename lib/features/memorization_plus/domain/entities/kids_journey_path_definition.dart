@@ -1,5 +1,8 @@
 import 'kids_session_policy.dart';
 
+/// A surah of at most this many ayahs may be memorized as one whole house.
+const kKidsWholeSurahMaxAyahsLimit = 20;
+
 enum KidsJourneyPathId {
   juzAmmaAdventure('fatiha_then_juz_amma'),
   quranFromNas('quran_from_nas'),
