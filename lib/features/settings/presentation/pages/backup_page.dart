@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/backup/backup_after_restore.dart';
 import '../../../../core/backup/backup_collector.dart';
 import '../../../../core/backup/backup_file_format.dart';
 import '../../../../core/backup/backup_restorer.dart';
@@ -17,6 +18,8 @@ import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/presentation/widgets/guardian_pin_dialog.dart';
 import '../widgets/settings_subpage_scaffold.dart';
 
 /// Which message a failed backup step maps to.
@@ -37,19 +40,73 @@ BackupErrorKind backupDecodeErrorKind(BackupDecodeError error) =>
 typedef BackupFileExporter =
     Future<void> Function(String fileName, List<int> bytes);
 
-/// Lets the user pick a backup file; null when cancelled.
+/// Lets the user pick a backup file; null when cancelled. Throws
+/// [BackupFileTooLarge] for a file no valid backup can be.
 typedef BackupFilePicker = Future<List<int>?> Function();
 
-Future<void> _shareBackupFile(String fileName, List<int> bytes) async {
-  final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}${Platform.pathSeparator}$fileName');
-  await file.writeAsBytes(bytes, flush: true);
-  await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
+/// Asks for the guardian PIN when this device has one; false cancels.
+typedef BackupGuardianGate = Future<bool> Function(BuildContext context);
+
+/// The picked file is larger than [kBackupMaxBytes].
+class BackupFileTooLarge implements Exception {
+  const BackupFileTooLarge();
 }
 
-Future<List<int>?> _pickBackupFile() async {
-  final picked = await FilePicker.pickFile();
-  return picked?.readAsBytes();
+/// Writes [bytes] to [fileName] in [dir], hands the path to [share], and
+/// deletes the file afterwards (best effort) whether sharing succeeded or not.
+@visibleForTesting
+Future<void> shareBackupFileFrom(
+  Directory dir,
+  String fileName,
+  List<int> bytes,
+  Future<void> Function(String path) share,
+) async {
+  final file = File('${dir.path}${Platform.pathSeparator}$fileName');
+  await file.writeAsBytes(bytes, flush: true);
+  try {
+    await share(file.path);
+  } finally {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (e, st) {
+      TaliaLogger.w('Backup temp file cleanup failed', e, st);
+    }
+  }
+}
+
+Future<void> _shareBackupFile(String fileName, List<int> bytes) async =>
+    shareBackupFileFrom(
+      await getTemporaryDirectory(),
+      fileName,
+      bytes,
+      (path) => SharePlus.instance.share(ShareParams(files: [XFile(path)])),
+    );
+
+/// The picked file's bytes, or null when nothing was picked. The size is
+/// checked before reading, so an oversized file is never loaded.
+@visibleForTesting
+Future<List<int>?> readPickedBackup(PlatformFile? picked) async {
+  if (picked == null) return null;
+  final size = picked.lengthSync() ?? await picked.length();
+  if (size != null && size > kBackupMaxBytes) throw const BackupFileTooLarge();
+  return picked.readAsBytes();
+}
+
+Future<List<int>?> _pickBackupFile() async =>
+    readPickedBackup(await FilePicker.pickFile());
+
+/// With a parent PIN on this device (or unreadable parent settings) the
+/// guardian must enter it; a PIN is never created here.
+Future<bool> _guardianPinGate(BuildContext context) async {
+  final hasPin = (await getIt<MemorizationPlusRepository>().getParentSettings())
+      .fold((_) => true, (settings) => settings.hasPin);
+  if (!hasPin) return true;
+  if (!context.mounted) return false;
+  return ensureGuardianPin(
+    context,
+    confirmLabel: context.l10n.backupConfirm,
+    allowCreate: false,
+  );
 }
 
 /// Export and restore of the local backup file. Restore replaces this
@@ -62,6 +119,8 @@ class BackupPage extends StatefulWidget {
     this.restore,
     this.pickFile,
     this.exportFile,
+    this.guardianGate,
+    this.afterRestore,
   });
 
   final bool Function()? isSignedIn;
@@ -69,6 +128,8 @@ class BackupPage extends StatefulWidget {
   final Future<BackupRestoreResult> Function(BackupPayload payload)? restore;
   final BackupFilePicker? pickFile;
   final BackupFileExporter? exportFile;
+  final BackupGuardianGate? guardianGate;
+  final Future<void> Function()? afterRestore;
 
   @override
   State<BackupPage> createState() => _BackupPageState();
@@ -115,7 +176,13 @@ class _BackupPageState extends State<BackupPage> {
     final l10n = context.l10n;
     setState(() => _busy = true);
     try {
-      final bytes = await (widget.pickFile ?? _pickBackupFile)();
+      final List<int>? bytes;
+      try {
+        bytes = await (widget.pickFile ?? _pickBackupFile)();
+      } on BackupFileTooLarge {
+        _snack(l10n.backupErrorInvalid);
+        return;
+      }
       if (bytes == null) return;
       final decoded = decodeBackup(bytes);
       final payload = decoded.payload;
@@ -145,10 +212,18 @@ class _BackupPageState extends State<BackupPage> {
         ),
       );
       if (confirmed != true || !mounted) return;
+      // An account may have been signed into while the dialog was open.
+      if (_signedIn) {
+        _snack(l10n.backupImportSignedIn);
+        return;
+      }
+      final gate = widget.guardianGate ?? _guardianPinGate;
+      if (!await gate(context) || !mounted || _signedIn) return;
       final restore = widget.restore ?? getIt<BackupRestorer>().restore;
       final result = await restore(payload);
       switch (result) {
         case BackupRestoreResult.restored:
+          await (widget.afterRestore ?? afterBackupRestore)();
           _snack(l10n.backupDone);
           if (mounted) context.go(AppRoutes.splash);
         case BackupRestoreResult.invalidSections:
