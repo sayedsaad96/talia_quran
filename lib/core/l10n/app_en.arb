@@ -3555,4 +3555,14 @@
   ,"@kidsStageTitle": {"placeholders": {"number": {"type": "String"}}}
   ,"kidsReviewStageTitle": "Stage {number} review"
   ,"@kidsReviewStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"readerRepeatTitle": "Repeat and sleep timer"
+  ,"readerRepeatPerAyah": "Repeat each ayah"
+  ,"readerRepeatRange": "Repeat the passage"
+  ,"readerRepeatInfinite": "Non-stop"
+  ,"readerRepeatSpeed": "Recitation speed"
+  ,"readerSleepTimer": "Sleep timer"
+  ,"readerSleepOff": "Off"
+  ,"readerSleepMinutes": "{countText} min"
+  ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
+  ,"readerSleepEndOfSurah": "End of surah"
 }

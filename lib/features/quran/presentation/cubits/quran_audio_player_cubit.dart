@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
+import '../../../../core/services/reader_repeat_plan.dart';
+import '../../../../core/services/sleep_timer.dart';
 import '../../domain/entities/quran_entities.dart';
 
 class QuranAudioPlayerState extends Equatable {
@@ -17,6 +19,8 @@ class QuranAudioPlayerState extends Equatable {
     this.errorMessage,
     this.hasNext = false,
     this.hasPrevious = false,
+    this.repeat = const ReaderRepeatSettings(),
+    this.sleepChoice = SleepTimerChoice.off,
   });
 
   final PlaybackStatus status;
@@ -29,6 +33,8 @@ class QuranAudioPlayerState extends Equatable {
   final String? errorMessage;
   final bool hasNext;
   final bool hasPrevious;
+  final ReaderRepeatSettings repeat;
+  final SleepTimerChoice sleepChoice;
 
   bool get isIdle => status == PlaybackStatus.idle;
   bool get isLoading => status == PlaybackStatus.loading;
@@ -49,6 +55,8 @@ class QuranAudioPlayerState extends Equatable {
       errorMessage: s.errorMessage,
       hasNext: s.hasNext,
       hasPrevious: s.hasPrevious,
+      repeat: s.repeat,
+      sleepChoice: s.sleepChoice,
     );
   }
 
@@ -64,6 +72,8 @@ class QuranAudioPlayerState extends Equatable {
         errorMessage,
         hasNext,
         hasPrevious,
+        repeat,
+        sleepChoice,
       ];
 }
 
@@ -128,6 +138,13 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
   Future<void> previousAyah() => _playerService.previousAyah();
 
   Future<void> stop() => _playerService.stop();
+
+  /// Session-only repeat/speed settings (never persisted).
+  Future<void> setRepeat(ReaderRepeatSettings settings) =>
+      _playerService.setRepeat(settings);
+
+  Future<void> setSleepTimer(SleepTimerChoice choice) =>
+      _playerService.setSleepTimer(choice);
 
   Future<void> changeReciter(QuranReciter reciter) =>
       _playerService.changeReciter(reciter);

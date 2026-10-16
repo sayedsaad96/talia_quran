@@ -8653,4 +8653,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String kidsReviewStageTitle(String number) {
     return 'Stage $number review';
   }
+
+  @override
+  String get readerRepeatTitle => 'Repeat and sleep timer';
+
+  @override
+  String get readerRepeatPerAyah => 'Repeat each ayah';
+
+  @override
+  String get readerRepeatRange => 'Repeat the passage';
+
+  @override
+  String get readerRepeatInfinite => 'Non-stop';
+
+  @override
+  String get readerRepeatSpeed => 'Recitation speed';
+
+  @override
+  String get readerSleepTimer => 'Sleep timer';
+
+  @override
+  String get readerSleepOff => 'Off';
+
+  @override
+  String readerSleepMinutes(String countText) {
+    return '$countText min';
+  }
+
+  @override
+  String get readerSleepEndOfSurah => 'End of surah';
 }

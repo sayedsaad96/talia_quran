@@ -3593,4 +3593,14 @@
   ,"@kidsStageTitle": {"placeholders": {"number": {"type": "String"}}}
   ,"kidsReviewStageTitle": "مراجعة المرحلة {number}"
   ,"@kidsReviewStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"readerRepeatTitle": "التكرار ومؤقت النوم"
+  ,"readerRepeatPerAyah": "تكرار كل آية"
+  ,"readerRepeatRange": "تكرار المقطع"
+  ,"readerRepeatInfinite": "بلا توقف"
+  ,"readerRepeatSpeed": "سرعة التلاوة"
+  ,"readerSleepTimer": "مؤقت النوم"
+  ,"readerSleepOff": "إيقاف"
+  ,"readerSleepMinutes": "{countText} دقيقة"
+  ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
+  ,"readerSleepEndOfSurah": "حتى نهاية السورة"
 }

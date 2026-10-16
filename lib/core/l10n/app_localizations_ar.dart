@@ -8639,4 +8639,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String kidsReviewStageTitle(String number) {
     return 'مراجعة المرحلة $number';
   }
+
+  @override
+  String get readerRepeatTitle => 'التكرار ومؤقت النوم';
+
+  @override
+  String get readerRepeatPerAyah => 'تكرار كل آية';
+
+  @override
+  String get readerRepeatRange => 'تكرار المقطع';
+
+  @override
+  String get readerRepeatInfinite => 'بلا توقف';
+
+  @override
+  String get readerRepeatSpeed => 'سرعة التلاوة';
+
+  @override
+  String get readerSleepTimer => 'مؤقت النوم';
+
+  @override
+  String get readerSleepOff => 'إيقاف';
+
+  @override
+  String readerSleepMinutes(String countText) {
+    return '$countText دقيقة';
+  }
+
+  @override
+  String get readerSleepEndOfSurah => 'حتى نهاية السورة';
 }

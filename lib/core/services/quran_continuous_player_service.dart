@@ -9,6 +9,8 @@ import '../utils/talia_logger.dart';
 import 'audio_lifecycle_manager.dart';
 import 'quran_background_audio_handler.dart';
 import 'quran_audio_service.dart';
+import 'reader_repeat_plan.dart';
+import 'sleep_timer.dart';
 import 'quran_reciter.dart';
 import 'quran_reciter_service.dart';
 import '../../features/quran/domain/entities/quran_entities.dart';
@@ -30,6 +32,8 @@ class ContinuousPlaybackState {
     this.errorMessage,
     this.hasNext = false,
     this.hasPrevious = false,
+    this.repeat = const ReaderRepeatSettings(),
+    this.sleepChoice = SleepTimerChoice.off,
   });
 
   final PlaybackStatus status;
@@ -42,6 +46,8 @@ class ContinuousPlaybackState {
   final String? errorMessage;
   final bool hasNext;
   final bool hasPrevious;
+  final ReaderRepeatSettings repeat;
+  final SleepTimerChoice sleepChoice;
 
   bool get isIdle => status == PlaybackStatus.idle;
   bool get isLoading => status == PlaybackStatus.loading;
@@ -64,6 +70,8 @@ class ContinuousPlaybackState {
     String? errorMessage,
     bool? hasNext,
     bool? hasPrevious,
+    ReaderRepeatSettings? repeat,
+    SleepTimerChoice? sleepChoice,
   }) {
     return ContinuousPlaybackState(
       status: status ?? this.status,
@@ -76,6 +84,8 @@ class ContinuousPlaybackState {
       errorMessage: errorMessage ?? this.errorMessage,
       hasNext: hasNext ?? this.hasNext,
       hasPrevious: hasPrevious ?? this.hasPrevious,
+      repeat: repeat ?? this.repeat,
+      sleepChoice: sleepChoice ?? this.sleepChoice,
     );
   }
 }
@@ -96,6 +106,12 @@ class QuranContinuousPlayerService {
     AudioPlayer? player,
     this._enableBackgroundAudioIntegration = false,
   }) : _player = player ?? AudioPlayer() {
+    _sleepTimer = SleepTimer(
+      setVolume: (volume) {
+        unawaited(_player.setVolume(volume));
+      },
+      stop: stop,
+    );
     AudioLifecycleManager.instance.register(
       _player,
       shouldPause: () => !_isBackgroundPlaybackEnabled,
@@ -141,7 +157,16 @@ class QuranContinuousPlayerService {
   ValueListenable<ContinuousPlaybackState> get stateNotifier => _stateNotifier;
   ContinuousPlaybackState get state => _stateNotifier.value;
 
+  /// The ayahs of the scope that started playback, without repeats.
+  List<Ayah> _baseQueue = [];
+
+  /// [_baseQueue] expanded by [_repeat]; player indexes map into this list.
   List<Ayah> _queue = [];
+  ReaderRepeatSettings _repeat = const ReaderRepeatSettings();
+  SleepTimerChoice _sleepChoice = SleepTimerChoice.off;
+  int? _sleepSurahId;
+  late final SleepTimer _sleepTimer;
+  bool _playerSettingsTouched = false;
   int _currentIndex = -1;
   PlayScope _activeScope = PlayScope.surah;
   int? _activeSurahId;
@@ -158,8 +183,21 @@ class QuranContinuousPlayerService {
     _currentIndexSub = _player.currentIndexStream.listen((index) {
       if (index == null || index < 0 || index >= _queue.length) return;
       if (index == _currentIndex) return;
+      final previous = (_currentIndex >= 0 && _currentIndex < _queue.length)
+          ? _queue[_currentIndex]
+          : null;
       _currentIndex = index;
       final ayah = _queue[index];
+      if (_sleepChoice == SleepTimerChoice.endOfSurah &&
+          _sleepSurahId != null &&
+          (ayah.surahId != _sleepSurahId ||
+              (previous != null &&
+                  previous.surahId == ayah.surahId &&
+                  ayah.numberInSurah < previous.numberInSurah))) {
+        // The surah that was playing when the choice was made has ended.
+        unawaited(stop());
+        return;
+      }
       _emitState(
         _stateNotifier.value.copyWith(
           currentAyah: ayah,
@@ -201,7 +239,26 @@ class QuranContinuousPlayerService {
   }
 
   void _emitState(ContinuousPlaybackState newState) {
-    _stateNotifier.value = newState;
+    _stateNotifier.value = newState.copyWith(
+      repeat: _repeat,
+      sleepChoice: _sleepChoice,
+    );
+  }
+
+  int get _perAyah => _repeat.perAyah.clamp(1, 10);
+
+  bool get _hasRepeats => _perAyah > 1 || _repeat.rangeTimes > 1;
+
+  void _setQueueFromBase(List<Ayah> base) {
+    _baseQueue = List<Ayah>.from(base);
+    _queue = expandRepeatQueue<Ayah>(_baseQueue, _repeat);
+  }
+
+  Future<void> _applyPlayerSettings() async {
+    await _player.setLoopMode(
+      _repeat.rangeTimes == 0 ? LoopMode.all : LoopMode.off,
+    );
+    await _player.setSpeed(_repeat.normalizedSpeed);
   }
 
   QuranReciter _resolveReciter(QuranReciter? reciter) {
@@ -245,9 +302,10 @@ class QuranContinuousPlayerService {
       return;
     }
 
-    _queue = List<Ayah>.from(surahDetail.ayahs);
-    var startIndex = _queue.indexWhere((a) => a.numberInSurah == startAyah);
+    _setQueueFromBase(surahDetail.ayahs);
+    var startIndex = _baseQueue.indexWhere((a) => a.numberInSurah == startAyah);
     if (startIndex < 0) startIndex = 0;
+    startIndex *= _perAyah;
 
     await _loadPlaylistAndPlay(
       startIndex: startIndex,
@@ -287,8 +345,9 @@ class QuranContinuousPlayerService {
       return;
     }
 
-    _queue = List<Ayah>.from(pageDetail.ayahs);
-    final clampedStart = startAyahIndex.clamp(0, _queue.length - 1);
+    _setQueueFromBase(pageDetail.ayahs);
+    final clampedStart =
+        startAyahIndex.clamp(0, _baseQueue.length - 1) * _perAyah;
 
     await _loadPlaylistAndPlay(
       startIndex: clampedStart,
@@ -347,7 +406,7 @@ class QuranContinuousPlayerService {
         return;
       }
 
-      _queue = [ayah];
+      _setQueueFromBase([ayah]);
       await _loadPlaylistAndPlay(startIndex: 0, activeReciter: activeReciter);
       return;
     }
@@ -407,8 +466,8 @@ class QuranContinuousPlayerService {
           currentPageNumber: firstAyah.page,
           reciter: activeReciter,
           scope: _activeScope,
-          hasNext: startIndex < _queue.length - 1,
-          hasPrevious: startIndex > 0,
+          hasNext: _hasNextAyah(),
+          hasPrevious: _hasPreviousAyah(),
         ),
       );
 
@@ -420,6 +479,11 @@ class QuranContinuousPlayerService {
         initialIndex: startIndex,
         initialPosition: Duration.zero,
       );
+
+      if (_playerSettingsTouched || !_repeat.isDefault) {
+        _playerSettingsTouched = true;
+        await _applyPlayerSettings();
+      }
 
       // Call play() and immediately emit playing status.
       // Do NOT rely solely on the playerStateStream here: setAudioSources
@@ -475,15 +539,106 @@ class QuranContinuousPlayerService {
   // ---------------------------------------------------------------------------
 
   Future<void> nextAyah() async {
+    if (_hasRepeats) {
+      final target = nextDistinctIndex<Ayah>(_queue, _currentIndex);
+      if (target != null) await _player.seek(Duration.zero, index: target);
+      return;
+    }
     if (_currentIndex + 1 < _queue.length) {
       await _player.seekToNext();
     }
   }
 
   Future<void> previousAyah() async {
+    if (_hasRepeats) {
+      final target = previousDistinctIndex<Ayah>(_queue, _currentIndex);
+      if (target != null) await _player.seek(Duration.zero, index: target);
+      return;
+    }
     if (_currentIndex > 0) {
       await _player.seekToPrevious();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Repeat, speed and sleep timer (session-only, never persisted)
+  // ---------------------------------------------------------------------------
+
+  ReaderRepeatSettings get repeatSettings => _repeat;
+
+  SleepTimerChoice get sleepChoice => _sleepChoice;
+
+  /// Applies repeat/speed settings. When the repeat counts change during
+  /// playback the queue is rebuilt from the current ayah to the end of the
+  /// scope that started playback.
+  Future<void> setRepeat(ReaderRepeatSettings settings) async {
+    final previous = _repeat;
+    if (settings == previous) return;
+    _repeat = settings;
+    final needsRebuild =
+        previous.perAyah != settings.perAyah ||
+        previous.rangeTimes != settings.rangeTimes;
+    final hasQueue =
+        _queue.isNotEmpty && _currentIndex >= 0 && _currentIndex < _queue.length;
+
+    if (!hasQueue) {
+      _emitState(_stateNotifier.value);
+      return;
+    }
+
+    try {
+      if (needsRebuild) {
+        final current = _queue[_currentIndex];
+        var baseIndex = _baseQueue.indexOf(current);
+        if (baseIndex < 0) baseIndex = 0;
+        final wasPaused = _stateNotifier.value.isPaused;
+        _queue = expandRepeatQueue<Ayah>(
+          _baseQueue.sublist(baseIndex),
+          _repeat,
+        );
+        await _loadPlaylistAndPlay(
+          startIndex: 0,
+          activeReciter: _resolveReciter(_stateNotifier.value.reciter),
+        );
+        if (wasPaused) await pause();
+      } else {
+        _playerSettingsTouched = true;
+        await _player.setSpeed(_repeat.normalizedSpeed);
+        _emitState(_stateNotifier.value);
+      }
+    } catch (e, stack) {
+      TaliaLogger.w('Continuous player setRepeat failed', e, stack);
+    }
+  }
+
+  /// Starts, replaces or cancels the sleep timer. [SleepTimerChoice.endOfSurah]
+  /// stops after the last ayah of the surah playing right now.
+  Future<void> setSleepTimer(SleepTimerChoice choice) async {
+    _sleepTimer.cancel();
+    _sleepSurahId = null;
+    switch (choice) {
+      case SleepTimerChoice.off:
+        break;
+      case SleepTimerChoice.min15:
+        _sleepTimer.start(const Duration(minutes: 15));
+      case SleepTimerChoice.min30:
+        _sleepTimer.start(const Duration(minutes: 30));
+      case SleepTimerChoice.min60:
+        _sleepTimer.start(const Duration(minutes: 60));
+      case SleepTimerChoice.endOfSurah:
+        _sleepSurahId = _stateNotifier.value.currentSurahId;
+        if (_sleepSurahId == null) choice = SleepTimerChoice.off;
+    }
+    _sleepChoice = choice;
+    _emitState(_stateNotifier.value);
+  }
+
+  void _resetSession() {
+    _sleepTimer.cancel();
+    _sleepChoice = SleepTimerChoice.off;
+    _sleepSurahId = null;
+    _repeat = const ReaderRepeatSettings();
+    _baseQueue = [];
   }
 
   // ---------------------------------------------------------------------------
@@ -527,7 +682,13 @@ class QuranContinuousPlayerService {
   Future<void> stop() async {
     try {
       await _player.stop();
+      if (_playerSettingsTouched) {
+        _playerSettingsTouched = false;
+        await _player.setLoopMode(LoopMode.off);
+        await _player.setSpeed(1.0);
+      }
     } catch (_) {}
+    _resetSession();
     _queue = [];
     _currentIndex = -1;
     _backgroundAudioHandler?.clearQueue();
@@ -549,6 +710,7 @@ class QuranContinuousPlayerService {
 
   void dispose() {
     AudioLifecycleManager.instance.unregister(_player);
+    if (_sleepChoice != SleepTimerChoice.off) _sleepTimer.cancel();
     _currentIndexSub?.cancel();
     _playerStateSub?.cancel();
     unawaited(_backgroundAudioHandler?.disposeHandler());
@@ -600,12 +762,18 @@ class QuranContinuousPlayerService {
   // ---------------------------------------------------------------------------
 
   bool _hasNextAyah() {
-    return _activeScope != PlayScope.singleAyah &&
-        _currentIndex >= 0 &&
-        _currentIndex < _queue.length - 1;
+    if (_activeScope == PlayScope.singleAyah || _currentIndex < 0) return false;
+    if (_hasRepeats) {
+      return nextDistinctIndex<Ayah>(_queue, _currentIndex) != null;
+    }
+    return _currentIndex < _queue.length - 1;
   }
 
   bool _hasPreviousAyah() {
-    return _activeScope != PlayScope.singleAyah && _currentIndex > 0;
+    if (_activeScope == PlayScope.singleAyah || _currentIndex <= 0) return false;
+    if (_hasRepeats) {
+      return previousDistinctIndex<Ayah>(_queue, _currentIndex) != null;
+    }
+    return true;
   }
 }

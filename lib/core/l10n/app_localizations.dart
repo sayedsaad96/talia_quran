@@ -14631,6 +14631,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مراجعة المرحلة {number}'**
   String kidsReviewStageTitle(String number);
+
+  /// No description provided for @readerRepeatTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التكرار ومؤقت النوم'**
+  String get readerRepeatTitle;
+
+  /// No description provided for @readerRepeatPerAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار كل آية'**
+  String get readerRepeatPerAyah;
+
+  /// No description provided for @readerRepeatRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار المقطع'**
+  String get readerRepeatRange;
+
+  /// No description provided for @readerRepeatInfinite.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلا توقف'**
+  String get readerRepeatInfinite;
+
+  /// No description provided for @readerRepeatSpeed.
+  ///
+  /// In ar, this message translates to:
+  /// **'سرعة التلاوة'**
+  String get readerRepeatSpeed;
+
+  /// No description provided for @readerSleepTimer.
+  ///
+  /// In ar, this message translates to:
+  /// **'مؤقت النوم'**
+  String get readerSleepTimer;
+
+  /// No description provided for @readerSleepOff.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف'**
+  String get readerSleepOff;
+
+  /// No description provided for @readerSleepMinutes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{countText} دقيقة'**
+  String readerSleepMinutes(String countText);
+
+  /// No description provided for @readerSleepEndOfSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى نهاية السورة'**
+  String get readerSleepEndOfSurah;
 }
 
 class _AppLocalizationsDelegate
