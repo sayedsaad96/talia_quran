@@ -144,6 +144,14 @@ abstract class AppRoutes {
   static const String khatmahHistory = '/khatmah/history';
 }
 
+/// Trust center is reachable only while its flag is on; otherwise (flag off,
+/// or flags not registered) it leads back to settings.
+@visibleForTesting
+String? trustCenterRedirect(ExperienceFlags? flags) =>
+    flags != null && flags.isEnabled(ExperienceFeature.trustCenter)
+    ? null
+    : AppRoutes.settings;
+
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
 /// re-evaluates its [redirect] automatically whenever auth state changes.
 class _AuthNotifier extends ChangeNotifier {
@@ -685,11 +693,9 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.trustCenter,
         // Flag off: the page does not exist; lead back to settings.
-        redirect: (context, state) =>
-            getIt.isRegistered<ExperienceFlags>() &&
-                getIt<ExperienceFlags>().isEnabled(ExperienceFeature.trustCenter)
-            ? null
-            : AppRoutes.settings,
+        redirect: (context, state) => trustCenterRedirect(
+          getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
+        ),
         builder: (context, state) => const TrustCenterPage(),
       ),
       GoRoute(

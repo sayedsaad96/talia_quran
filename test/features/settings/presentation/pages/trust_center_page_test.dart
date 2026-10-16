@@ -50,6 +50,7 @@ Widget _app(Widget home, {List<GoRoute> extra = const []}) {
 }
 
 void main() {
+  redirectTests();
   setUp(() async {
     await getIt.reset();
     SharedPreferences.setMockInitialValues({});
@@ -91,6 +92,22 @@ void main() {
     await tester.tap(find.text('Privacy policy'));
     await tester.pumpAndSettle();
     expect(find.text('privacy-page'), findsOneWidget);
+  });
+
+  testWidgets('meta line uses the singular form for one source', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        TrustCenterPage(
+          summaryFuture: Future.value(
+            const ContentManifestSummary(datasetVersion: 'v9', sourceCount: 1),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Data version v9 • 1 source'), findsOneWidget);
   });
 
   testWidgets('meta line hidden when summary is null', (tester) async {
@@ -144,3 +161,20 @@ void main() {
 
 bool _off(String key) => false;
 bool _on(String key) => key == ExperienceFeature.trustCenter.storageKey;
+
+void redirectTests() {
+  group('trustCenterRedirect', () {
+    test('flag off leads to settings', () {
+      expect(
+        trustCenterRedirect(const ExperienceFlags(_off)),
+        AppRoutes.settings,
+      );
+    });
+    test('flags unregistered leads to settings', () {
+      expect(trustCenterRedirect(null), AppRoutes.settings);
+    });
+    test('flag on allows the route', () {
+      expect(trustCenterRedirect(const ExperienceFlags(_on)), isNull);
+    });
+  });
+}

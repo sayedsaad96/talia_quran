@@ -45,6 +45,7 @@ class _TrustCenterPageState extends State<TrustCenterPage> {
                   ? null
                   : l10n.trustSourcesMeta(
                       version,
+                      summary.sourceCount,
                       context.numText(summary.sourceCount),
                     ),
               actionLabel: l10n.trustViewSources,

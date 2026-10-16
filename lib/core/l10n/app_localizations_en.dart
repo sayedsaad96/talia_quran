@@ -8694,8 +8694,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Talia contains no generated religious text. Every text has a source and a reference.';
 
   @override
-  String trustSourcesMeta(String version, String countText) {
-    return 'Data version $version • $countText sources';
+  String trustSourcesMeta(String version, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText sources',
+      one: '1 source',
+    );
+    return 'Data version $version • $_temp0';
   }
 
   @override

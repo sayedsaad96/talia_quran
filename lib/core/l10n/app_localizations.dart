@@ -14707,8 +14707,8 @@ abstract class AppLocalizations {
   /// No description provided for @trustSourcesMeta.
   ///
   /// In ar, this message translates to:
-  /// **'إصدار البيانات {version} • {countText} مصادر'**
-  String trustSourcesMeta(String version, String countText);
+  /// **'إصدار البيانات {version} • {count, plural, =1{مصدر واحد} =2{مصدران} few{{countText} مصادر} many{{countText} مصدرًا} other{{countText} مصدرًا}}'**
+  String trustSourcesMeta(String version, int count, String countText);
 
   /// No description provided for @trustVoiceTitle.
   ///

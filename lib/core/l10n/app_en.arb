@@ -3568,8 +3568,8 @@
   ,"trustCenterTitle": "How we protect content and your privacy"
   ,"trustSourcesTitle": "Verified sources"
   ,"trustSourcesBody": "Talia contains no generated religious text. Every text has a source and a reference."
-  ,"trustSourcesMeta": "Data version {version} • {countText} sources"
-  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "countText": {"type": "String"}}}
+  ,"trustSourcesMeta": "Data version {version} • {count, plural, =1{1 source} other{{countText} sources}}"
+  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"trustVoiceTitle": "Your voice"
   ,"trustVoiceBody": "Talia does not record, store or upload your voice. Speech recognition is done by your device's system service."
   ,"trustDataTitle": "Your data"

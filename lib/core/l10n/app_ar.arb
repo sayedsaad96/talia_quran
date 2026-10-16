@@ -3606,8 +3606,8 @@
   ,"trustCenterTitle": "كيف نحفظ المحتوى وخصوصيتك"
   ,"trustSourcesTitle": "مصادر موثّقة"
   ,"trustSourcesBody": "لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع."
-  ,"trustSourcesMeta": "إصدار البيانات {version} • {countText} مصادر"
-  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "countText": {"type": "String"}}}
+  ,"trustSourcesMeta": "إصدار البيانات {version} • {count, plural, =1{مصدر واحد} =2{مصدران} few{{countText} مصادر} many{{countText} مصدرًا} other{{countText} مصدرًا}}"
+  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"trustVoiceTitle": "صوتك"
   ,"trustVoiceBody": "تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك."
   ,"trustDataTitle": "بياناتك"

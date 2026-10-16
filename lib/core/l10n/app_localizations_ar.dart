@@ -8680,8 +8680,17 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.';
 
   @override
-  String trustSourcesMeta(String version, String countText) {
-    return 'إصدار البيانات $version • $countText مصادر';
+  String trustSourcesMeta(String version, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText مصدرًا',
+      many: '$countText مصدرًا',
+      few: '$countText مصادر',
+      two: 'مصدران',
+      one: 'مصدر واحد',
+    );
+    return 'إصدار البيانات $version • $_temp0';
   }
 
   @override
