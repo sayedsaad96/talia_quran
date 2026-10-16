@@ -64,4 +64,43 @@ void main() {
     await prefs.setString('ramadan_tarawih|a', 'not json');
     expect(await storeFor('a').entries(), isEmpty);
   });
+
+  test(
+    'an account switch mid-write never lands in the new owner key',
+    () async {
+      final owner = _SwitchAfterFirstRead('a', 'b');
+      final store = TarawihLogStore(prefs, owner);
+      await store.upsert(
+        const TarawihEntry(nightKey: '2027-02-10', fromPage: 1, toPage: 5),
+      );
+      expect(prefs.getString('ramadan_tarawih|b'), isNull);
+      expect(prefs.getString('ramadan_tarawih|a'), contains('2027-02-10'));
+    },
+  );
+
+  test('concurrent upserts do not lose updates', () async {
+    final store = storeFor('a');
+    await Future.wait([
+      store.upsert(
+        const TarawihEntry(nightKey: '2027-02-10', fromPage: 1, toPage: 2),
+      ),
+      store.upsert(
+        const TarawihEntry(nightKey: '2027-02-11', fromPage: 3, toPage: 4),
+      ),
+    ]);
+    expect(await store.entries(), hasLength(2));
+  });
+}
+
+class _SwitchAfterFirstRead implements RecordOwnerProvider {
+  _SwitchAfterFirstRead(this._first, this._then);
+  final String _first;
+  final String _then;
+  int _reads = 0;
+
+  @override
+  String get currentOwnerId => _reads++ == 0 ? _first : _then;
+
+  @override
+  bool get isSignedIn => true;
 }

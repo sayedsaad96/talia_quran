@@ -18,6 +18,14 @@ void main() {
     );
   });
 
+  Future<void> settle(WidgetTester tester) async {
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+  }
+
   Future<void> open(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -42,7 +50,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   testWidgets('saves tonight with Arabic digits, then deletes', (tester) async {
@@ -50,14 +58,14 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('tarawih_from')), '٣');
     await tester.enterText(find.byKey(const ValueKey('tarawih_to')), '٧');
     await tester.tap(find.byKey(const ValueKey('tarawih_save')));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(await store.entries(), const [
       TarawihEntry(nightKey: '2027-02-10', fromPage: 3, toPage: 7),
     ]);
 
     await open(tester);
     await tester.tap(find.byKey(const ValueKey('tarawih_delete')));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(await store.entries(), isEmpty);
   });
 

@@ -49,10 +49,14 @@ class TarawihLogStore {
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
 
+  Future<void> _queue = Future<void>.value();
+
   String get _key => '$_base|${_owner.currentOwnerId}';
 
-  Future<List<TarawihEntry>> entries() async {
-    final raw = _prefs.getString(_key);
+  Future<List<TarawihEntry>> entries() => _read(_key);
+
+  Future<List<TarawihEntry>> _read(String key) async {
+    final raw = _prefs.getString(key);
     if (raw == null || raw.isEmpty) return const [];
     try {
       final decoded = jsonDecode(raw);
@@ -69,20 +73,36 @@ class TarawihLogStore {
     }
   }
 
+  /// Runs [action] after earlier writes finish, so concurrent calls cannot
+  /// lose updates. The owner key is captured by the caller before queueing.
+  Future<void> _serialized(Future<void> Function() action) {
+    final next = _queue.then((_) => action());
+    _queue = next.catchError((_) {});
+    return next;
+  }
+
   /// Throws [ArgumentError] for a range outside 1 <= from <= to <= 604.
-  Future<void> upsert(TarawihEntry entry) async {
+  Future<void> upsert(TarawihEntry entry) {
     if (!entry.isValid) {
       throw ArgumentError.value(entry, 'entry', 'Invalid page range');
     }
-    final all =
-        (await entries()).where((e) => e.nightKey != entry.nightKey).toList()
-          ..add(entry);
-    await _write(all);
+    final key = _key;
+    return _serialized(() async {
+      final all = (await _read(
+        key,
+      )).where((e) => e.nightKey != entry.nightKey).toList()..add(entry);
+      await _write(key, all);
+    });
   }
 
-  Future<void> remove(String nightKey) async {
-    final all = (await entries()).where((e) => e.nightKey != nightKey).toList();
-    await _write(all);
+  Future<void> remove(String nightKey) {
+    final key = _key;
+    return _serialized(() async {
+      final all = (await _read(
+        key,
+      )).where((e) => e.nightKey != nightKey).toList();
+      await _write(key, all);
+    });
   }
 
   /// Distinct pages across [entries]; overlapping ranges count once.
@@ -96,6 +116,6 @@ class TarawihLogStore {
     return pages.length;
   }
 
-  Future<void> _write(List<TarawihEntry> all) =>
-      _prefs.setString(_key, jsonEncode(all.map((e) => e.toJson()).toList()));
+  Future<void> _write(String key, List<TarawihEntry> all) =>
+      _prefs.setString(key, jsonEncode(all.map((e) => e.toJson()).toList()));
 }

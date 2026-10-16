@@ -1194,14 +1194,14 @@ Future<void> configureDependencies({bool background = false}) async {
           getIt<ExperienceFlags>().isEnabled(ExperienceFeature.clarityMode),
     ),
   );
-  // Adult journey package 1: owner-scoped preferences and rollout switches
-  // (all off by default). Home does not depend on these.
   getIt.registerLazySingleton<TarawihLogStore>(
     () => TarawihLogStore(
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
     ),
   );
+  // Adult journey package 1: owner-scoped preferences and rollout switches
+  // (all off by default). Home does not depend on these.
   getIt.registerLazySingleton<AdultJourneyFlags>(
     () => AdultJourneyFlags.fromPreferences(getIt<SharedPreferences>()),
   );
