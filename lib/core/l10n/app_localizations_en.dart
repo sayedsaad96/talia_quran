@@ -6349,6 +6349,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tarawihTitle => 'What the imam recited tonight';
+
+  @override
+  String get tarawihFromPage => 'From page';
+
+  @override
+  String get tarawihToPage => 'To page';
+
+  @override
+  String tarawihTotal(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You heard $countText pages this month',
+      one: 'You heard $countText page this month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tarawihInvalidRange =>
+      'Pages must be between 1 and 604, and the start must not come after the end';
+
+  @override
   String streakDaysUnit(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

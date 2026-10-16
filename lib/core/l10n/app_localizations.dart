@@ -10888,6 +10888,36 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{{countText} آية} =1{آية واحدة} =2{آيتان} few{{countText} آيات} many{{countText} آية} other{{countText} آية}}'**
   String countAyahs(int count, String countText);
 
+  /// No description provided for @tarawihTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما قرأه الإمام الليلة'**
+  String get tarawihTitle;
+
+  /// No description provided for @tarawihFromPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'من صفحة'**
+  String get tarawihFromPage;
+
+  /// No description provided for @tarawihToPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى صفحة'**
+  String get tarawihToPage;
+
+  /// No description provided for @tarawihTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{سمعتَ {countText} صفحة هذا الشهر} =1{سمعتَ صفحة واحدة هذا الشهر} =2{سمعتَ صفحتين هذا الشهر} few{سمعتَ {countText} صفحات هذا الشهر} many{سمعتَ {countText} صفحة هذا الشهر} other{سمعتَ {countText} صفحة هذا الشهر}}'**
+  String tarawihTotal(int count, String countText);
+
+  /// No description provided for @tarawihInvalidRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكد أن الصفحتين بين ١ و٦٠٤ وأن البداية قبل النهاية'**
+  String get tarawihInvalidRange;
+
   /// No description provided for @streakDaysUnit.
   ///
   /// In ar, this message translates to:

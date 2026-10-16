@@ -6318,6 +6318,34 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get tarawihTitle => 'ما قرأه الإمام الليلة';
+
+  @override
+  String get tarawihFromPage => 'من صفحة';
+
+  @override
+  String get tarawihToPage => 'إلى صفحة';
+
+  @override
+  String tarawihTotal(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سمعتَ $countText صفحة هذا الشهر',
+      many: 'سمعتَ $countText صفحة هذا الشهر',
+      few: 'سمعتَ $countText صفحات هذا الشهر',
+      two: 'سمعتَ صفحتين هذا الشهر',
+      one: 'سمعتَ صفحة واحدة هذا الشهر',
+      zero: 'سمعتَ $countText صفحة هذا الشهر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tarawihInvalidRange =>
+      'تأكد أن الصفحتين بين ١ و٦٠٤ وأن البداية قبل النهاية';
+
+  @override
   String streakDaysUnit(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

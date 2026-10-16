@@ -127,6 +127,8 @@ class AccountDataReset {
     'adult_journey_v1_',
     // Opt-in Prayer Companion settings are account-owned device data.
     'prayer_companion_',
+    // Ramadan self-log (tarawih pages heard), owner-scoped, local only.
+    'ramadan_',
   };
 
   /// Device-level preferences that must survive a logout.

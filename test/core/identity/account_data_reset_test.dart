@@ -353,6 +353,14 @@ void main() {
       expect(prefs.getString('locale'), 'ar');
     });
 
+    test('clears ramadan tarawih log keys', () async {
+      await prefs.setString('ramadan_tarawih|owner-a', '[]');
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(prefs.getString('ramadan_tarawih|owner-a'), isNull);
+    });
+
     test('retains device preferences', () async {
       await AccountDataReset(isar, prefs).clearAccountOwnedData();
       expect(prefs.getString('theme_mode'), 'dark');

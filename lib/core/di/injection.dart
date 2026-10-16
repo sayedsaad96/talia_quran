@@ -45,6 +45,7 @@ import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../../features/seasons/data/tarawih_log_store.dart';
 import '../accessibility/clarity_mode.dart';
 import '../experience/experience_feature_flags.dart';
 import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
@@ -1195,6 +1196,12 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   // Adult journey package 1: owner-scoped preferences and rollout switches
   // (all off by default). Home does not depend on these.
+  getIt.registerLazySingleton<TarawihLogStore>(
+    () => TarawihLogStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerLazySingleton<AdultJourneyFlags>(
     () => AdultJourneyFlags.fromPreferences(getIt<SharedPreferences>()),
   );
