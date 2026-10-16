@@ -14,6 +14,19 @@ class RecordingPlayer extends ControlledAudioPlayer {
   final List<double> speeds = [];
   final List<double> volumes = [];
   List<AudioSource> lastSources = const [];
+  List<AudioSource> sources = [];
+  final List<(int, int)> removedRanges = [];
+
+  @override
+  Future<void> removeAudioSourceRange(int start, int end) async {
+    removedRanges.add((start, end));
+    sources = sources.sublist(0, start) + sources.sublist(end);
+  }
+
+  @override
+  Future<void> addAudioSources(List<AudioSource> audioSources) async {
+    sources = [...sources, ...audioSources];
+  }
 
   @override
   Future<void> setLoopMode(LoopMode mode) async => loopModes.add(mode);
@@ -33,6 +46,7 @@ class RecordingPlayer extends ControlledAudioPlayer {
     ShuffleOrder? shuffleOrder,
   }) {
     lastSources = sources;
+    this.sources = List<AudioSource>.of(sources);
     return super.setAudioSources(
       sources,
       initialIndex: initialIndex,
@@ -152,16 +166,74 @@ void main() {
     expect(player.speeds.last, 1.0);
   });
 
-  test('endOfSurah stops after the last ayah of the current surah', () async {
-    await service.playPage(2); // s1:7, s2:1, s2:2 -> choice made on surah 1
+  test(
+    'endOfSurah truncates the playlist and ends after the last ayah',
+    () async {
+      await service.playPage(2); // s1:7, s2:1, s2:2 -> choice made on surah 1
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+      expect(service.state.sleepChoice, SleepTimerChoice.endOfSurah);
+      expect(player.sources.length, 1);
+      expect(player.removedRanges, [(1, 3)]);
+
+      player.finishCurrentTrack();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(service.state.isIdle, isTrue);
+      expect(service.state.sleepChoice, SleepTimerChoice.off);
+    },
+  );
+
+  test('previous while endOfSurah is active does not stop playback', () async {
+    await service.playPage(2);
+    player.advanceToIndex(1);
+    await Future<void>.delayed(Duration.zero);
     await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+    await service.previousAyah();
+    await Future<void>.delayed(Duration.zero);
+    expect(service.state.isIdle, isFalse);
+    expect(service.state.currentSurahId, 1);
     expect(service.state.sleepChoice, SleepTimerChoice.endOfSurah);
+  });
 
-    player.advanceToIndex(1); // first ayah of the next surah
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+  test(
+    'a new play call re-anchors endOfSurah to the surah that starts',
+    () async {
+      await service.playPage(2);
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah); // anchored: s1
+      await service.playPage(2, startAyahIndex: 1); // now anchored: s2
+      expect(service.state.sleepChoice, SleepTimerChoice.endOfSurah);
+      expect(player.sources.length, 3);
+      player.advanceToIndex(2);
+      await Future<void>.delayed(Duration.zero);
+      expect(service.state.isIdle, isFalse);
+      expect(service.state.currentAyahNumber, 2);
+    },
+  );
 
-    expect(service.state.isIdle, isTrue);
-    expect(service.state.sleepChoice, SleepTimerChoice.off);
+  test(
+    'choosing off after endOfSurah restores the tail and loop mode',
+    () async {
+      await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 0));
+      await service.playPage(2);
+      expect(player.loopModes.last, LoopMode.all);
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+      expect(player.sources.length, 1);
+      expect(player.loopModes.last, LoopMode.off);
+
+      await service.setSleepTimer(SleepTimerChoice.off);
+      expect(player.sources.length, 3);
+      expect(service.state.hasNext, isTrue);
+      expect(player.loopModes.last, LoopMode.all);
+    },
+  );
+
+  test('repeat change while paused does not call play()', () async {
+    await service.playPage(1);
+    await service.pause();
+    final plays = player.playCallCount;
+    await service.setRepeat(const ReaderRepeatSettings(perAyah: 2));
+    expect(player.playCallCount, plays);
+    expect(service.state.status, PlaybackStatus.paused);
+    expect(player.lastSources.length, 4);
   });
 
   test('endOfSurah keeps playing inside the same surah', () async {

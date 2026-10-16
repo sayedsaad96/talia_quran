@@ -110,7 +110,7 @@ class ReaderRepeatSheet extends StatelessWidget {
                       for (final s in ReaderRepeatSettings.allowedSpeeds)
                         _Choice(
                           key: ValueKey('repeat-speed-$s'),
-                          label: '${s}x',
+                          label: '${context.digitText(s.toString())}x',
                           selected: repeat.normalizedSpeed == s,
                           onSelected: () => cubit.setRepeat(
                             ReaderRepeatSettings(

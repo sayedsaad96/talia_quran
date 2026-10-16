@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
@@ -60,6 +62,47 @@ void main() {
     await build();
     await tester.pumpWidget(host(flag: false));
     expect(find.byKey(const ValueKey('reader-repeat-button')), findsNothing);
+  });
+
+  Widget hostDefault() => MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: BlocProvider<QuranAudioPlayerCubit>.value(
+      value: cubit,
+      child: const Scaffold(body: ReaderDockedAudioBar()),
+    ),
+  );
+
+  testWidgets('registered flags with readerRepeat missing hide the button', (
+    tester,
+  ) async {
+    await build();
+    getIt.registerSingleton<ExperienceFlags>(ExperienceFlags((_) => null));
+    addTearDown(() => getIt.unregister<ExperienceFlags>());
+    await tester.pumpWidget(hostDefault());
+    await settle(tester);
+    expect(find.byKey(const ValueKey('reader-repeat-button')), findsNothing);
+  });
+
+  testWidgets('registered flag on shows the button; speeds use Arabic digits', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await build();
+    getIt.registerSingleton<ExperienceFlags>(
+      ExperienceFlags(
+        (key) => key == ExperienceFeature.readerRepeat.storageKey,
+      ),
+    );
+    addTearDown(() => getIt.unregister<ExperienceFlags>());
+    await tester.pumpWidget(hostDefault());
+    await tester.tap(find.byKey(const ValueKey('reader-repeat-button')));
+    await settle(tester);
+    expect(find.text('١.٥x'), findsOneWidget);
+    expect(find.text('1.5x'), findsNothing);
   });
 
   testWidgets('button opens the sheet and choices change the cubit state', (
