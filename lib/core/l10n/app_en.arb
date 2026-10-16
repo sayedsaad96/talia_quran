@@ -3594,5 +3594,18 @@
   ,"ramadanTemplateDays": "{count, plural, =1{{countText} day remaining} other{{countText} days remaining}}"
   ,"@ramadanTemplateDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"ramadanPortion": "After {prayer}: pages {from}–{to}"
-  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}}
+  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "ramadanInviteTitle": "Get ready for Ramadan",
+  "ramadanInviteBody": "Pick your khatmah plan before the month starts",
+  "ramadanDayTitle": "Day {day} of Ramadan",
+  "@ramadanDayTitle": {"placeholders": {"day": {"type": "String"}}},
+  "ramadanLastTen": "The last ten nights",
+  "ramadanSummaryTitle": "Your Ramadan",
+  "ramadanSummaryNights": "{count, plural, =1{You logged tarawih on {countText} night} other{You logged tarawih on {countText} nights}}",
+  "@ramadanSummaryNights": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanSummaryKhatmah": "{count, plural, =1{You completed {countText} khatmah in Ramadan} other{You completed {countText} khatmahs in Ramadan}}",
+  "@ramadanSummaryKhatmah": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanLogTarawih": "Log tarawih",
+  "ramadanDismiss": "Hide",
+  "ramadanOpenKhatmah": "Khatmah"
 }

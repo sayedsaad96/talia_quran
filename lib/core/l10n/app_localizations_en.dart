@@ -8793,4 +8793,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String ramadanPortion(String prayer, String from, String to) {
     return 'After $prayer: pages $from–$to';
   }
+
+  @override
+  String get ramadanInviteTitle => 'Get ready for Ramadan';
+
+  @override
+  String get ramadanInviteBody =>
+      'Pick your khatmah plan before the month starts';
+
+  @override
+  String ramadanDayTitle(String day) {
+    return 'Day $day of Ramadan';
+  }
+
+  @override
+  String get ramadanLastTen => 'The last ten nights';
+
+  @override
+  String get ramadanSummaryTitle => 'Your Ramadan';
+
+  @override
+  String ramadanSummaryNights(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You logged tarawih on $countText nights',
+      one: 'You logged tarawih on $countText night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanSummaryKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You completed $countText khatmahs in Ramadan',
+      one: 'You completed $countText khatmah in Ramadan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLogTarawih => 'Log tarawih';
+
+  @override
+  String get ramadanDismiss => 'Hide';
+
+  @override
+  String get ramadanOpenKhatmah => 'Khatmah';
 }

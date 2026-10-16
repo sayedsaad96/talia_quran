@@ -8789,4 +8789,59 @@ class AppLocalizationsAr extends AppLocalizations {
   String ramadanPortion(String prayer, String from, String to) {
     return 'بعد $prayer: صفحات $from–$to';
   }
+
+  @override
+  String get ramadanInviteTitle => 'استعد لرمضان';
+
+  @override
+  String get ramadanInviteBody => 'اختر خطة ختمتك قبل أن يبدأ الشهر';
+
+  @override
+  String ramadanDayTitle(String day) {
+    return 'اليوم $day من رمضان';
+  }
+
+  @override
+  String get ramadanLastTen => 'العشر الأواخر';
+
+  @override
+  String get ramadanSummaryTitle => 'حصاد رمضان';
+
+  @override
+  String ramadanSummaryNights(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سجّلت التراويح في $countText ليلة',
+      many: 'سجّلت التراويح في $countText ليلة',
+      few: 'سجّلت التراويح في $countText ليالٍ',
+      two: 'سجّلت التراويح في ليلتين',
+      one: 'سجّلت التراويح في ليلة واحدة',
+      zero: 'سجّلت التراويح في $countText ليلة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanSummaryKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أتممتَ $countText ختمة في رمضان',
+      many: 'أتممتَ $countText ختمة في رمضان',
+      few: 'أتممتَ $countText ختمات في رمضان',
+      two: 'أتممتَ ختمتين في رمضان',
+      one: 'أتممتَ ختمة واحدة في رمضان',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLogTarawih => 'سجّل التراويح';
+
+  @override
+  String get ramadanDismiss => 'إخفاء';
+
+  @override
+  String get ramadanOpenKhatmah => 'الختمة';
 }

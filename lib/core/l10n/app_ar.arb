@@ -3633,5 +3633,18 @@
   ,"ramadanTemplateDays": "{count, plural, =0{{countText} يوم متبقٍ} =1{يوم واحد متبقٍ} =2{يومان متبقيان} few{{countText} أيام متبقية} many{{countText} يومًا متبقية} other{{countText} يومًا متبقيًا}}"
   ,"@ramadanTemplateDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"ramadanPortion": "بعد {prayer}: صفحات {from}–{to}"
-  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}}
+  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "ramadanInviteTitle": "استعد لرمضان",
+  "ramadanInviteBody": "اختر خطة ختمتك قبل أن يبدأ الشهر",
+  "ramadanDayTitle": "اليوم {day} من رمضان",
+  "@ramadanDayTitle": {"placeholders": {"day": {"type": "String"}}},
+  "ramadanLastTen": "العشر الأواخر",
+  "ramadanSummaryTitle": "حصاد رمضان",
+  "ramadanSummaryNights": "{count, plural, =0{سجّلت التراويح في {countText} ليلة} =1{سجّلت التراويح في ليلة واحدة} =2{سجّلت التراويح في ليلتين} few{سجّلت التراويح في {countText} ليالٍ} many{سجّلت التراويح في {countText} ليلة} other{سجّلت التراويح في {countText} ليلة}}",
+  "@ramadanSummaryNights": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanSummaryKhatmah": "{count, plural, =1{أتممتَ ختمة واحدة في رمضان} =2{أتممتَ ختمتين في رمضان} few{أتممتَ {countText} ختمات في رمضان} many{أتممتَ {countText} ختمة في رمضان} other{أتممتَ {countText} ختمة في رمضان}}",
+  "@ramadanSummaryKhatmah": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanLogTarawih": "سجّل التراويح",
+  "ramadanDismiss": "إخفاء",
+  "ramadanOpenKhatmah": "الختمة"
 }

@@ -38,6 +38,7 @@ import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 import '../widgets/staggered_fade_slide.dart';
 import '../../../../core/router/open_location.dart';
+import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.requestDailyAyahShare = false});
@@ -289,6 +290,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 snapshot: widget.state.prayerSnapshot,
               ),
             ),
+            SliverToBoxAdapter(child: HomeRamadanCard(skin: widget.skin)),
             if (journeyEnabled &&
                 widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(

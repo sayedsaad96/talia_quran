@@ -14841,6 +14841,66 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'بعد {prayer}: صفحات {from}–{to}'**
   String ramadanPortion(String prayer, String from, String to);
+
+  /// No description provided for @ramadanInviteTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعد لرمضان'**
+  String get ramadanInviteTitle;
+
+  /// No description provided for @ramadanInviteBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر خطة ختمتك قبل أن يبدأ الشهر'**
+  String get ramadanInviteBody;
+
+  /// No description provided for @ramadanDayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم {day} من رمضان'**
+  String ramadanDayTitle(String day);
+
+  /// No description provided for @ramadanLastTen.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر الأواخر'**
+  String get ramadanLastTen;
+
+  /// No description provided for @ramadanSummaryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حصاد رمضان'**
+  String get ramadanSummaryTitle;
+
+  /// No description provided for @ramadanSummaryNights.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{سجّلت التراويح في {countText} ليلة} =1{سجّلت التراويح في ليلة واحدة} =2{سجّلت التراويح في ليلتين} few{سجّلت التراويح في {countText} ليالٍ} many{سجّلت التراويح في {countText} ليلة} other{سجّلت التراويح في {countText} ليلة}}'**
+  String ramadanSummaryNights(int count, String countText);
+
+  /// No description provided for @ramadanSummaryKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{أتممتَ ختمة واحدة في رمضان} =2{أتممتَ ختمتين في رمضان} few{أتممتَ {countText} ختمات في رمضان} many{أتممتَ {countText} ختمة في رمضان} other{أتممتَ {countText} ختمة في رمضان}}'**
+  String ramadanSummaryKhatmah(int count, String countText);
+
+  /// No description provided for @ramadanLogTarawih.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل التراويح'**
+  String get ramadanLogTarawih;
+
+  /// No description provided for @ramadanDismiss.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء'**
+  String get ramadanDismiss;
+
+  /// No description provided for @ramadanOpenKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة'**
+  String get ramadanOpenKhatmah;
 }
 
 class _AppLocalizationsDelegate
