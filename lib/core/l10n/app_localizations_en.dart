@@ -8842,4 +8842,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ramadanOpenKhatmah => 'Khatmah';
+
+  @override
+  String get backupTitle => 'Backup';
+
+  @override
+  String get backupExport => 'Export a backup';
+
+  @override
+  String get backupImport => 'Restore from a file';
+
+  @override
+  String get backupImportSignedIn =>
+      'Restore is only available without an account. Your data is saved in your account.';
+
+  @override
+  String get backupIncludes =>
+      'Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress and the child\'s progress';
+
+  @override
+  String get backupExcludes =>
+      'Excludes: bookmarks, device settings and notifications, and the guardian PIN';
+
+  @override
+  String get backupConfirmTitle => 'Replace current data?';
+
+  @override
+  String get backupConfirmBody =>
+      'Your current data on this device will be replaced by the file\'s data.';
+
+  @override
+  String get backupConfirm => 'Replace';
+
+  @override
+  String get backupErrorInvalid => 'This file is not a valid Talia backup.';
+
+  @override
+  String get backupErrorNewer =>
+      'This backup is from a newer app version. Update the app first.';
+
+  @override
+  String get backupErrorCorrupt =>
+      'The file is damaged and cannot be restored.';
+
+  @override
+  String get backupDone => 'Restore complete';
 }

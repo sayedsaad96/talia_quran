@@ -8844,4 +8844,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ramadanOpenKhatmah => 'الختمة';
+
+  @override
+  String get backupTitle => 'النسخة الاحتياطية';
+
+  @override
+  String get backupExport => 'تصدير نسخة احتياطية';
+
+  @override
+  String get backupImport => 'استعادة من ملف';
+
+  @override
+  String get backupImportSignedIn =>
+      'الاستعادة متاحة فقط دون حساب. بياناتك محفوظة في حسابك.';
+
+  @override
+  String get backupIncludes =>
+      'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل';
+
+  @override
+  String get backupExcludes =>
+      'لا يشمل: العلامات المرجعية، إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر';
+
+  @override
+  String get backupConfirmTitle => 'استبدال البيانات الحالية؟';
+
+  @override
+  String get backupConfirmBody =>
+      'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف.';
+
+  @override
+  String get backupConfirm => 'استبدال';
+
+  @override
+  String get backupErrorInvalid =>
+      'هذا الملف ليس نسخة احتياطية صالحة من تالية.';
+
+  @override
+  String get backupErrorNewer =>
+      'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.';
+
+  @override
+  String get backupErrorCorrupt => 'الملف تالف ولا يمكن استعادته.';
+
+  @override
+  String get backupDone => 'تمت الاستعادة';
 }

@@ -3608,4 +3608,17 @@
   "ramadanLogTarawih": "Log tarawih",
   "ramadanDismiss": "Hide",
   "ramadanOpenKhatmah": "Khatmah"
+  ,"backupTitle": "Backup"
+  ,"backupExport": "Export a backup"
+  ,"backupImport": "Restore from a file"
+  ,"backupImportSignedIn": "Restore is only available without an account. Your data is saved in your account."
+  ,"backupIncludes": "Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress and the child's progress"
+  ,"backupExcludes": "Excludes: bookmarks, device settings and notifications, and the guardian PIN"
+  ,"backupConfirmTitle": "Replace current data?"
+  ,"backupConfirmBody": "Your current data on this device will be replaced by the file's data."
+  ,"backupConfirm": "Replace"
+  ,"backupErrorInvalid": "This file is not a valid Talia backup."
+  ,"backupErrorNewer": "This backup is from a newer app version. Update the app first."
+  ,"backupErrorCorrupt": "The file is damaged and cannot be restored."
+  ,"backupDone": "Restore complete"
 }

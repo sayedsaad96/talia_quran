@@ -72,6 +72,7 @@ import '../../features/auth/presentation/pages/update_password_page.dart';
 import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../../features/settings/presentation/pages/labs_flags_page.dart';
+import '../../features/settings/presentation/pages/backup_page.dart';
 import '../../features/settings/presentation/pages/trust_center_page.dart';
 import '../../features/settings/presentation/pages/sources_licenses_page.dart';
 import '../services/achievement_service.dart';
@@ -137,6 +138,7 @@ abstract class AppRoutes {
   static const String sourcesLicenses = '/settings/sources-licenses';
   static const String labsFlags = '/settings/labs';
   static const String trustCenter = '/settings/trust-center';
+  static const String backup = '/settings/backup';
   static const String khatmahSetup = '/khatmah/setup';
   static const String khatmahDashboard = '/khatmah/dashboard';
   static const String khatmDua = '/quran/khatm-dua';
@@ -149,6 +151,14 @@ abstract class AppRoutes {
 @visibleForTesting
 String? trustCenterRedirect(ExperienceFlags? flags) =>
     flags != null && flags.isEnabled(ExperienceFeature.trustCenter)
+    ? null
+    : AppRoutes.settings;
+
+/// Backup is reachable only while its flag is on; otherwise (flag off, or
+/// flags not registered) it leads back to settings.
+@visibleForTesting
+String? backupRedirect(ExperienceFlags? flags) =>
+    flags != null && flags.isEnabled(ExperienceFeature.localBackup)
     ? null
     : AppRoutes.settings;
 
@@ -698,6 +708,15 @@ abstract class AppRouter {
           getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
         ),
         builder: (context, state) => const TrustCenterPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.backup,
+        // Flag off: the page does not exist; lead back to settings.
+        redirect: (context, state) => backupRedirect(
+          getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
+        ),
+        builder: (context, state) => const BackupPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

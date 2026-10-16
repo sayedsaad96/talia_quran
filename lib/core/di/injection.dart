@@ -47,6 +47,8 @@ import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
 import '../../features/seasons/data/tarawih_log_store.dart';
 import '../accessibility/clarity_mode.dart';
+import '../backup/backup_collector.dart';
+import '../backup/backup_restorer.dart';
 import '../experience/experience_feature_flags.dart';
 import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
@@ -1186,6 +1188,21 @@ Future<void> configureDependencies({bool background = false}) async {
   // Roadmap batch A rollout switches (all off by default).
   getIt.registerLazySingleton<ExperienceFlags>(
     () => ExperienceFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<BackupCollector>(
+    () => BackupCollector(
+      getIt<Isar>(),
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<BackupRestorer>(
+    () => BackupRestorer(
+      getIt<Isar>(),
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+      events: getIt<ProgressEventsBus>(),
+    ),
   );
   getIt.registerLazySingleton<ClarityModeController>(
     () => ClarityModeController(

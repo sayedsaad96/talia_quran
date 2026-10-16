@@ -14901,6 +14901,84 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الختمة'**
   String get ramadanOpenKhatmah;
+
+  /// No description provided for @backupTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة الاحتياطية'**
+  String get backupTitle;
+
+  /// No description provided for @backupExport.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصدير نسخة احتياطية'**
+  String get backupExport;
+
+  /// No description provided for @backupImport.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة من ملف'**
+  String get backupImport;
+
+  /// No description provided for @backupImportSignedIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاستعادة متاحة فقط دون حساب. بياناتك محفوظة في حسابك.'**
+  String get backupImportSignedIn;
+
+  /// No description provided for @backupIncludes.
+  ///
+  /// In ar, this message translates to:
+  /// **'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل'**
+  String get backupIncludes;
+
+  /// No description provided for @backupExcludes.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يشمل: العلامات المرجعية، إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر'**
+  String get backupExcludes;
+
+  /// No description provided for @backupConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استبدال البيانات الحالية؟'**
+  String get backupConfirmTitle;
+
+  /// No description provided for @backupConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف.'**
+  String get backupConfirmBody;
+
+  /// No description provided for @backupConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'استبدال'**
+  String get backupConfirm;
+
+  /// No description provided for @backupErrorInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الملف ليس نسخة احتياطية صالحة من تالية.'**
+  String get backupErrorInvalid;
+
+  /// No description provided for @backupErrorNewer.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.'**
+  String get backupErrorNewer;
+
+  /// No description provided for @backupErrorCorrupt.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف تالف ولا يمكن استعادته.'**
+  String get backupErrorCorrupt;
+
+  /// No description provided for @backupDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت الاستعادة'**
+  String get backupDone;
 }
 
 class _AppLocalizationsDelegate

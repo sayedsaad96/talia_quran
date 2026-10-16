@@ -7,6 +7,7 @@ import '../../../../../core/experience/experience_feature_flags.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/router/app_router.dart';
+import '../../widgets/settings_backup_tile.dart';
 import '../../widgets/settings_group.dart';
 import '../../widgets/settings_info_tiles.dart';
 import '../../widgets/settings_section.dart';
@@ -37,6 +38,13 @@ class AboutSettingsPage extends StatelessWidget {
                   ExperienceFeature.trustCenter,
                 )) ...[
               const TrustCenterTile(),
+              SettingsDivider(isDark: isDark),
+            ],
+            if (getIt.isRegistered<ExperienceFlags>() &&
+                getIt<ExperienceFlags>().isEnabled(
+                  ExperienceFeature.localBackup,
+                )) ...[
+              const BackupTile(),
               SettingsDivider(isDark: isDark),
             ],
             PrivacyPolicyTile(isDark: isDark),
