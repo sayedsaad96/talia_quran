@@ -402,7 +402,7 @@ void main() {
   });
 
   test('parent settings and profile lose PIN, link state and foreign ids, '
-      'on collect and on restore', () async {
+      'on collect and on restore to a device without its own', () async {
     final isarA = await openIsar('sanitize_a');
     final payload = await collectA(isarA, await freshPrefs(ownerAPrefs()));
     final text = utf8.decode(gzip.decode(encodeBackup(payload)));
@@ -443,6 +443,8 @@ void main() {
           jsonDecode(prefsB.getString('mem_plus_parent_settings|user-b')!)
               as Map<String, dynamic>;
       final settings = ParentSettingsModel.fromJson(settingsJson);
+      // Target device had no parent settings: nothing of the file's PIN or
+      // link state is taken (a device PIN is kept, see the group below).
       expect(settings.hasPin, isFalse);
       expect(settings.remoteLinkEnabled, isFalse);
       expect(settings.policySyncedVersion, 0);
@@ -829,6 +831,138 @@ void main() {
     ]) {
       expect(env.prefs.get(key), env.snap[key], reason: key);
     }
+  });
+
+  group('device PIN and link state survive a restore', () {
+    final deviceSettings = jsonEncode({
+      'pinHash': 'device-pin-marker',
+      'reminderHour': 20,
+      'remoteLinkEnabled': true,
+      'policyVersion': 2,
+      'policySyncedVersion': 2,
+      'policyLinkConfirmed': false,
+    });
+    final deviceProfile = jsonEncode({
+      'schemaVersion': 1,
+      'selectedPath': 'child',
+      'guardianLinkStatus': 'linked',
+      'guardianOnboardingStatus': 'completed',
+      'guardianId': 'device-guardian',
+      'isParentGuardian': false,
+      'childAge': 6,
+    });
+
+    Future<SharedPreferences> pinnedDevice({String owner = 'user-b'}) =>
+        freshPrefs({
+          'mem_plus_parent_settings|$owner': deviceSettings,
+          'mem_plus_profile': deviceProfile,
+          'mem_plus_is_parent_mode': false,
+          'read_pages': '[600]',
+        });
+
+    Future<BackupRestoreResult> restoreAs(
+      SharedPreferences prefs,
+      BackupPayload payload, {
+      String owner = 'user-b',
+    }) async => BackupRestorer(
+      await openIsar('pin_${prefs.hashCode}'),
+      prefs,
+      FixedRecordOwnerProvider(owner),
+    ).restore(payload);
+
+    test('backup with parent settings and profile: device fields kept, '
+        'backed-up fields restored', () async {
+      final prefs = await pinnedDevice();
+      final result = await restoreAs(prefs, await ownerAPayload());
+      expect(result, BackupRestoreResult.restored);
+
+      final settings = ParentSettingsModel.fromJson(
+        jsonDecode(prefs.getString('mem_plus_parent_settings|user-b')!)
+            as Map<String, dynamic>,
+      );
+      expect(settings.hasPin, isTrue);
+      expect(settings.pinHash, 'device-pin-marker');
+      expect(settings.remoteLinkEnabled, isTrue);
+      expect(settings.policySyncedVersion, 2);
+      expect(settings.policyLinkConfirmed, isFalse);
+      // From the file.
+      expect(settings.reminderHour, 7);
+      expect(settings.localChildNickname, 'Zaid');
+      expect(settings.policyVersion, 4);
+
+      final profile = MemorizationProfileModel.fromJson(
+        jsonDecode(prefs.getString('mem_plus_profile')!)
+            as Map<String, dynamic>,
+      );
+      expect(profile.guardianLinkStatus, GuardianLinkStatus.linked);
+      expect(profile.guardianId, 'device-guardian');
+      expect(profile.linkedChildId, isNull);
+      expect(
+        profile.guardianOnboardingStatus,
+        GuardianOnboardingStatus.completed,
+      );
+      expect(profile.isParentGuardian, isFalse);
+      // From the file.
+      expect(profile.childAge, 8);
+      expect(prefs.getBool('mem_plus_is_parent_mode'), isFalse);
+      expect(prefs.getString('read_pages'), '[1,2]');
+    });
+
+    test('backup without parent settings or profile leaves the device '
+        'values untouched', () async {
+      final payload = mutate(await ownerAPayload(), (s) {
+        final prefs = {...(s[BackupSections.prefs]! as Map)};
+        prefs.remove('mem_plus_parent_settings|{owner}');
+        prefs.remove('mem_plus_profile');
+        s[BackupSections.prefs] = prefs;
+      });
+      final prefs = await pinnedDevice();
+      expect(await restoreAs(prefs, payload), BackupRestoreResult.restored);
+      expect(
+        prefs.getString('mem_plus_parent_settings|user-b'),
+        deviceSettings,
+      );
+      expect(prefs.getString('mem_plus_profile'), deviceProfile);
+      expect(prefs.getString('read_pages'), '[1,2]');
+    });
+
+    test('guest owner: the legacy unscoped PIN is carried into the restored '
+        'scoped settings', () async {
+      final prefs = await freshPrefs({
+        'mem_plus_parent_settings': deviceSettings,
+      });
+      expect(
+        await restoreAs(prefs, await ownerAPayload(), owner: 'local'),
+        BackupRestoreResult.restored,
+      );
+      final settings = ParentSettingsModel.fromJson(
+        jsonDecode(prefs.getString('mem_plus_parent_settings|local')!)
+            as Map<String, dynamic>,
+      );
+      expect(settings.pinHash, 'device-pin-marker');
+      expect(settings.reminderHour, 7);
+    });
+
+    test('parent-mode flag is device-local: never collected, and an older '
+        'file carrying it is restored without it', () async {
+      final isarA = await openIsar('mode_a');
+      final payload = await collectA(
+        isarA,
+        await freshPrefs({...ownerAPrefs(), 'mem_plus_is_parent_mode': true}),
+      );
+      final prefsSection = payload.sections[BackupSections.prefs]! as Map;
+      expect(prefsSection.containsKey('mem_plus_is_parent_mode'), isFalse);
+
+      final older = mutate(payload, (s) {
+        s[BackupSections.prefs] = {
+          ...(s[BackupSections.prefs]! as Map),
+          'mem_plus_is_parent_mode': {'t': 'b', 'v': true},
+        };
+      });
+      final prefs = await pinnedDevice();
+      expect(await restoreAs(prefs, older), BackupRestoreResult.restored);
+      expect(prefs.getBool('mem_plus_is_parent_mode'), isFalse);
+    });
   });
 
   test('owner switch before the write: writeFailed and nothing written for '

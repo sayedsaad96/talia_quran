@@ -62,6 +62,9 @@ class _IsarScopeSnapshot {
 /// collections and this owner's state derived from them are replaced. The
 /// parent PIN, bookmarks, Prayer Companion data, the activity feed, other
 /// owners' rows, playback/resume state and device settings are untouched.
+/// The device's PIN marker and guardian/child link state inside the parent
+/// settings and memorization profile are kept (merged into the restored
+/// values, or the device value left in place when the file lacks the key).
 ///
 /// Isar is replaced in one transaction. If anything fails after it, the
 /// result is [BackupRestoreResult.writeFailed]; while the owner is unchanged
@@ -279,9 +282,20 @@ class BackupRestorer {
     ParsedBackupSections parsed,
     String ownerId,
   ) async {
+    // The device's PIN marker and guardian/child link state are never taken
+    // from a file: read them before anything is removed.
+    final deviceState = {
+      for (final key in parsed.prefs.keys)
+        if (BackupPreferencePolicy.keepsDeviceState(key))
+          key: _deviceStateValue(key, ownerId),
+    };
     final stale = [
       ..._prefs.getKeys().where(
-        (k) => BackupPreferencePolicy.backupKeyFor(k, ownerId) != null,
+        (k) =>
+            BackupPreferencePolicy.backupKeyFor(k, ownerId) != null &&
+            // A backup without these keeps the device's value.
+            (parsed.prefs.containsKey(k) ||
+                !BackupPreferencePolicy.keepsDeviceState(k)),
       ),
       ...derivedPreferenceKeys.where(_prefs.containsKey),
     ];
@@ -292,7 +306,15 @@ class BackupRestorer {
     }
 
     for (final entry in parsed.prefs.entries) {
-      if (!await _setTyped(entry.key, entry.value)) {
+      final restored = entry.value;
+      final value = restored is String && deviceState.containsKey(entry.key)
+          ? BackupPreferencePolicy.mergeDeviceState(
+              entry.key,
+              restored,
+              deviceState[entry.key],
+            )
+          : restored;
+      if (!await _setTyped(entry.key, value)) {
         throw StateError('Failed to write ${entry.key}');
       }
     }
@@ -305,6 +327,24 @@ class BackupRestorer {
         throw StateError('Failed to write $_khatmahOwnerKey');
       }
     }
+  }
+
+  /// The device's current value of a [BackupPreferencePolicy.keepsDeviceState]
+  /// key, read the way its owner reads it: the guest owner's parent settings
+  /// fall back to the unscoped legacy key, which the restored scoped key
+  /// would otherwise shadow.
+  String? _deviceStateValue(String key, String ownerId) {
+    try {
+      final current = _prefs.getString(key);
+      if (current != null) return current;
+      final base = key.split('|').first;
+      if (base != key && ownerId == ReviewRecordIdentity.localOwnerId) {
+        return _prefs.getString(base);
+      }
+    } catch (e, st) {
+      TaliaLogger.w('Backup restore: unreadable device value of $key', e, st);
+    }
+    return null;
   }
 
   Future<bool> _setTyped(String key, Object value) => switch (value) {

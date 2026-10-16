@@ -108,8 +108,32 @@ abstract final class BackupPreferencePolicy {
     'mem_plus_pairing_session',
   ];
 
+  /// Device-local keys inside an allowlisted prefix. They are never collected
+  /// and never removed or written by a restore; a file that still carries
+  /// one has it skipped, not rejected.
+  static const deviceLocalKeys = {'mem_plus_is_parent_mode'};
+
   static const _parentSettingsBase = 'mem_plus_parent_settings';
   static const _profileBase = 'mem_plus_profile';
+
+  /// Fields of the parent settings that belong to this device (PIN marker,
+  /// link and link-sync state). A restore keeps the device's values.
+  static const parentSettingsDeviceFields = [
+    'pinHash',
+    'remoteLinkEnabled',
+    'policySyncedVersion',
+    'policyLinkConfirmed',
+  ];
+
+  /// Fields of the memorization profile that belong to this device (guardian
+  /// role, link and link onboarding). A restore keeps the device's values.
+  static const profileDeviceFields = [
+    'guardianId',
+    'linkedChildId',
+    'guardianLinkStatus',
+    'guardianOnboardingStatus',
+    'isParentGuardian',
+  ];
 
   static String _ownerForm(String prefix, String ownerId) =>
       prefix == 'adult_journey_v1_' ? Uri.encodeComponent(ownerId) : ownerId;
@@ -121,6 +145,7 @@ abstract final class BackupPreferencePolicy {
   /// [ownerId] (not allowlisted, excluded, corrupt, or another owner's).
   static String? backupKeyFor(String key, String ownerId) {
     if (key.contains(kBackupOwnerToken)) return null;
+    if (deviceLocalKeys.contains(key)) return null;
     final String tokenized;
     if (key.contains('|')) {
       final parts = key.split('|');
@@ -206,6 +231,46 @@ abstract final class BackupPreferencePolicy {
       }
     }
     return jsonEncode(json);
+  }
+
+  /// Whether [key] (a real key) holds device-local PIN or link fields that a
+  /// restore must keep: the restored value is merged with the device's
+  /// ([mergeDeviceState]), and a backup without the key leaves the device's
+  /// value in place.
+  static bool keepsDeviceState(String key) {
+    final base = key.split('|').first;
+    return base == _parentSettingsBase || base == _profileBase;
+  }
+
+  /// The [restored] (sanitized) value of [key] with this device's PIN and
+  /// link fields from [device] put back; a field the device lacks is
+  /// dropped. Without a readable device value the restored one is returned.
+  static String mergeDeviceState(String key, String restored, String? device) {
+    if (device == null) return restored;
+    final Map<String, dynamic> target;
+    final Map<String, dynamic> source;
+    try {
+      final r = jsonDecode(restored);
+      final d = jsonDecode(device);
+      if (r is! Map<String, dynamic> || d is! Map<String, dynamic>) {
+        return restored;
+      }
+      target = Map<String, dynamic>.of(r);
+      source = d;
+    } on FormatException {
+      return restored;
+    }
+    final fields = key.split('|').first == _parentSettingsBase
+        ? parentSettingsDeviceFields
+        : profileDeviceFields;
+    for (final field in fields) {
+      if (source.containsKey(field)) {
+        target[field] = source[field];
+      } else {
+        target.remove(field);
+      }
+    }
+    return jsonEncode(target);
   }
 
   /// `{"t": "s|i|d|b|l", "v": value}`; null for unsupported values.
@@ -607,6 +672,7 @@ class ParsedBackupSections {
     final prefs = <String, Object>{};
     final rawPrefs = _map(sections[BackupSections.prefs], 'prefs');
     for (final entry in rawPrefs.entries) {
+      if (BackupPreferencePolicy.deviceLocalKeys.contains(entry.key)) continue;
       final key = BackupPreferencePolicy.restoreKeyFor(entry.key, ownerId);
       if (key == null) {
         throw BackupSectionInvalid('prefs key ${entry.key}');
