@@ -68,6 +68,12 @@ void main() {
     expect(previousDistinctIndex(q, 0), isNull);
   });
 
+  test('wrapped queue: next and previous cross range passes', () {
+    final q = ['a', 'a', 'b', 'b', 'a', 'a', 'b', 'b'];
+    expect(nextDistinctIndex(q, 3), 4);
+    expect(previousDistinctIndex(q, 4), 2);
+  });
+
   test('custom same predicate is honoured', () {
     final q = ['a', 'A', 'b'];
     expect(

@@ -31,7 +31,9 @@ class SleepTimer {
   }
 
   void start(Duration d) {
+    final wasActive = _end != null;
     _cancelTimers();
+    if (wasActive) _setVolume(1.0);
     _end = _clock().add(d);
     _expiry = Timer(d, _expire);
     _ticker = Timer.periodic(_tick, (_) => _onTick());
@@ -59,7 +61,12 @@ class SleepTimer {
 
   Future<void> _expire() async {
     _cancelTimers();
-    await _stop();
-    _setVolume(1.0);
+    try {
+      await _stop();
+    } catch (_) {
+      // Stopping failed; still restore the volume below.
+    } finally {
+      _setVolume(1.0);
+    }
   }
 }

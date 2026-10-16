@@ -42,6 +42,59 @@ void main() {
     });
   });
 
+  test('fade reaches near zero and does not begin before the window', () {
+    fakeAsync((async) {
+      final origin = DateTime(2026);
+      final volumes = <double>[];
+      final t = SleepTimer(
+        setVolume: volumes.add,
+        stop: () async {},
+        clock: () => origin.add(async.elapsed),
+      );
+      t.start(const Duration(seconds: 30));
+      async.elapse(const Duration(seconds: 19, milliseconds: 900));
+      expect(volumes, isEmpty);
+      async.elapse(const Duration(seconds: 10));
+      final fading = volumes.where((v) => v < 1.0).toList();
+      expect(fading.reduce((a, b) => a < b ? a : b), lessThanOrEqualTo(0.05));
+    });
+  });
+
+  test('restarting mid-fade restores volume', () {
+    fakeAsync((async) {
+      final origin = DateTime(2026);
+      final volumes = <double>[];
+      final t = SleepTimer(
+        setVolume: volumes.add,
+        stop: () async {},
+        clock: () => origin.add(async.elapsed),
+      );
+      t.start(const Duration(seconds: 30));
+      async.elapse(const Duration(seconds: 25));
+      expect(volumes.last, lessThan(1.0));
+      t.start(const Duration(seconds: 60));
+      expect(volumes.last, 1.0);
+      expect(t.isActive, isTrue);
+    });
+  });
+
+  test('a throwing stop still restores volume without escaping', () {
+    fakeAsync((async) {
+      final origin = DateTime(2026);
+      final volumes = <double>[];
+      final t = SleepTimer(
+        setVolume: volumes.add,
+        stop: () async => throw StateError('boom'),
+        clock: () => origin.add(async.elapsed),
+      );
+      t.start(const Duration(seconds: 5));
+      async.elapse(const Duration(seconds: 6));
+      async.flushMicrotasks();
+      expect(volumes.last, 1.0);
+      expect(t.isActive, isFalse);
+    });
+  });
+
   test('cancel restores volume and stops timers', () {
     fakeAsync((async) {
       final origin = DateTime(2026);
