@@ -122,7 +122,11 @@ class BackupCollector {
     for (final key in _prefs.getKeys()) {
       final backupKey = BackupPreferencePolicy.backupKeyFor(key, ownerId);
       if (backupKey == null) continue;
-      final encoded = BackupPreferencePolicy.encodeValue(_prefs.get(key));
+      final raw = _prefs.get(key);
+      final value = raw == null
+          ? null
+          : BackupPreferencePolicy.sanitize(backupKey, raw);
+      final encoded = BackupPreferencePolicy.encodeValue(value);
       if (encoded != null) out[backupKey] = encoded;
     }
     return out;

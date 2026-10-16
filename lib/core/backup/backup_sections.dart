@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -43,10 +45,11 @@ class BackupSectionInvalid implements Exception {
 /// Which SharedPreferences keys a backup carries, and how owner ids inside
 /// keys are replaced by [kBackupOwnerToken] and back.
 abstract final class BackupPreferencePolicy {
+  /// Bookmarks are deliberately absent: in production they live in encrypted
+  /// account storage, which v1 backups do not carry.
   static const fixedKeys = {
     'user_profile',
     'read_pages',
-    'quran_bookmarks',
     'khatmah_active_plan',
     'khatmah_history',
     'earned_certificates_v2',
@@ -58,24 +61,36 @@ abstract final class BackupPreferencePolicy {
     'hifz_',
     'daily_read_pages_',
     'daily_wird_target_',
-    'adult_journey_v1_',
     'azkar_counter_',
+    // The day stamps that make the counters above mean "today".
+    'azkar_date_',
+    'azkar_all_done_',
     'azkar_smart_wird_',
-    'kids_reading_receipts_',
-    'kids_support_profile_',
-    'kids_family_practice_',
     'ramadan_',
-    'quran_bookmarks_owner_',
   };
 
-  /// Prefixes whose remainder is the owner id itself (no `|` separator).
+  /// Prefixes whose remainder is the owner id itself (no `|` separator),
+  /// optionally followed by a suffix matching the pattern.
   /// `adult_journey_v1_` stores `Uri.encodeComponent(ownerId)`.
-  static const ownerSuffixPrefixes = {
-    'quran_bookmarks_owner_',
-    'kids_reading_receipts_',
-    'kids_support_profile_',
-    'kids_family_practice_',
-    'adult_journey_v1_',
+  static final Map<String, RegExp?> ownerSuffixPrefixes = {
+    'kids_reading_receipts_': null,
+    'kids_support_profile_': null,
+    'kids_family_practice_': null,
+    'kids_streak_': null,
+    'kids_achievements_': null,
+    'kids_map_seen_completed_': RegExp(r'^_\d+$'),
+    'adult_journey_v1_': null,
+  };
+
+  /// Kids bases stored as `base|<owner>`. Their unscoped (pre-owner legacy)
+  /// form is never exported.
+  static const ownerScopedKidsBases = {
+    'mem_plus_kids_progress',
+    'mem_plus_kids_legacy_cloud_floor',
+    'mem_plus_kids_session_logs',
+    'mem_plus_parent_settings',
+    'mem_plus_parent_rewards',
+    'mem_plus_home_missions',
   };
 
   /// Substrings that exclude a key: sync bookkeeping, PINs, identity-claim
@@ -93,8 +108,14 @@ abstract final class BackupPreferencePolicy {
     'mem_plus_pairing_session',
   ];
 
+  static const _parentSettingsBase = 'mem_plus_parent_settings';
+  static const _profileBase = 'mem_plus_profile';
+
   static String _ownerForm(String prefix, String ownerId) =>
       prefix == 'adult_journey_v1_' ? Uri.encodeComponent(ownerId) : ownerId;
+
+  static String? _familyOf(String key) =>
+      ownerSuffixPrefixes.keys.where(key.startsWith).firstOrNull;
 
   /// The key as stored in a backup, or null when [key] is not backed up for
   /// [ownerId] (not allowlisted, excluded, corrupt, or another owner's).
@@ -106,23 +127,23 @@ abstract final class BackupPreferencePolicy {
       // `base|owner|corrupt` and every other shape are excluded.
       if (parts.length != 2 || parts[1] != ownerId) return null;
       final base = parts[0];
-      if (ownerSuffixPrefixes.any(base.startsWith)) return null;
+      if (_familyOf(base) != null) return null;
       if (!_allowlisted(base)) return null;
       tokenized = '$base|$kBackupOwnerToken';
     } else {
-      final family = ownerSuffixPrefixes.where(key.startsWith).firstOrNull;
+      final family = _familyOf(key);
       if (family != null) {
         final rest = key.substring(family.length);
         final form = _ownerForm(family, ownerId);
-        if (rest == form) {
-          tokenized = '$family$kBackupOwnerToken';
-        } else if (family == 'quran_bookmarks_owner_' &&
-            rest == '${form}_migrated') {
-          tokenized = '$family${kBackupOwnerToken}_migrated';
-        } else {
+        if (!rest.startsWith(form)) return null;
+        final suffix = rest.substring(form.length);
+        final pattern = ownerSuffixPrefixes[family];
+        if (suffix.isNotEmpty &&
+            (pattern == null || !pattern.hasMatch(suffix))) {
           return null;
         }
-      } else if (_allowlisted(key)) {
+        tokenized = '$family$kBackupOwnerToken$suffix';
+      } else if (_allowlisted(key) && !ownerScopedKidsBases.contains(key)) {
         tokenized = key;
       } else {
         return null;
@@ -141,9 +162,7 @@ abstract final class BackupPreferencePolicy {
     } else if (backupKey.contains('|')) {
       key = backupKey.replaceFirst(kBackupOwnerToken, ownerId);
     } else {
-      final family = ownerSuffixPrefixes
-          .where(backupKey.startsWith)
-          .firstOrNull;
+      final family = _familyOf(backupKey);
       if (family == null) return null;
       key = backupKey.replaceFirst(
         kBackupOwnerToken,
@@ -155,6 +174,39 @@ abstract final class BackupPreferencePolicy {
 
   static bool _allowlisted(String key) =>
       fixedKeys.contains(key) || prefixes.any(key.startsWith);
+
+  /// Strips account-link and PIN state from values that carry it, so a
+  /// backup never moves a PIN hash, a guardian/child link or link-sync state
+  /// to another account or device. Returns null when such a value cannot be
+  /// read (it is then dropped on collect and rejected on restore). Every
+  /// other value is returned unchanged.
+  static Object? sanitize(String backupKey, Object value) {
+    final base = backupKey.split('|').first;
+    if (base != _parentSettingsBase && base != _profileBase) return value;
+    if (value is! String) return null;
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(value);
+    } on FormatException {
+      return null;
+    }
+    if (decoded is! Map<String, dynamic>) return null;
+    final json = Map<String, dynamic>.of(decoded);
+    if (base == _parentSettingsBase) {
+      json.remove('pinHash');
+      json['remoteLinkEnabled'] = false;
+      json['policySyncedVersion'] = 0;
+      json.remove('policyLinkConfirmed');
+    } else {
+      json.remove('guardianId');
+      json.remove('linkedChildId');
+      final status = json['guardianLinkStatus'];
+      if (status == 'linked' || status == 'pending') {
+        json['guardianLinkStatus'] = 'none';
+      }
+    }
+    return jsonEncode(json);
+  }
 
   /// `{"t": "s|i|d|b|l", "v": value}`; null for unsupported values.
   static Map<String, Object?>? encodeValue(Object? value) => switch (value) {
@@ -294,6 +346,11 @@ abstract final class ReviewRecordBackupMapper {
           ? null
           : ReviewRecordIdentity.audienceFromName(row.audience!);
       if (named != null) return named;
+    } else {
+      final parsed = ReviewRecordIdentity.tryParse(row.compositeKey);
+      if (parsed != null) {
+        return parsed.ownerUserId == ownerId ? parsed.audience : null;
+      }
     }
     if (ReviewRecordAudienceScope.isAudiencePrefixedCompositeKey(
       row.compositeKey,
@@ -487,7 +544,8 @@ abstract final class DailyActivityBackupMapper {
     final m = _map(raw, 'dailyActivity');
     final dayKey = _int(m, 'dayKey');
     final y = dayKey ~/ 10000, mo = dayKey ~/ 100 % 100, d = dayKey % 100;
-    if (y < 1900 || y > 9999 || mo < 1 || mo > 12 || d < 1 || d > 31) {
+    final date = DateTime.utc(y, mo, d);
+    if (y < 1900 || y > 9999 || date.month != mo || date.day != d) {
       throw BackupSectionInvalid('dayKey $dayKey');
     }
     return DailyActivityIsar()
@@ -553,7 +611,12 @@ class ParsedBackupSections {
       if (key == null) {
         throw BackupSectionInvalid('prefs key ${entry.key}');
       }
-      prefs[key] = BackupPreferencePolicy.decodeValue(entry.value);
+      final value = BackupPreferencePolicy.sanitize(
+        entry.key,
+        BackupPreferencePolicy.decodeValue(entry.value),
+      );
+      if (value == null) throw BackupSectionInvalid('prefs value ${entry.key}');
+      prefs[key] = value;
     }
 
     return ParsedBackupSections._(

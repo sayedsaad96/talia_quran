@@ -1,27 +1,47 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:talia_quran/core/backup/backup_collector.dart';
 import 'package:talia_quran/core/backup/backup_file_format.dart';
 import 'package:talia_quran/core/backup/backup_restorer.dart';
 import 'package:talia_quran/core/backup/backup_sections.dart';
-import 'package:talia_quran/core/identity/account_data_reset.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
+import 'package:talia_quran/core/security/parent_pin_secure_store.dart';
 import 'package:talia_quran/core/storage/app_isar.dart';
+import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
+import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_store.dart';
+import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/ayah_review_record.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_profile.dart';
+import 'package:talia_quran/features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import 'package:talia_quran/features/streak/data/models/daily_activity_isar.dart';
 import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
 
 import '../../helpers/isar_test_core.dart';
+
+/// Owner whose id the test can change at any moment.
+class _MutableOwner implements RecordOwnerProvider {
+  _MutableOwner(this.currentOwnerId);
+
+  @override
+  String currentOwnerId;
+
+  @override
+  bool get isSignedIn => true;
+}
 
 /// Returns [first] on the first read and [later] on every read after it.
 class _SwitchingOwner implements RecordOwnerProvider {
@@ -35,6 +55,41 @@ class _SwitchingOwner implements RecordOwnerProvider {
 
   @override
   bool get isSignedIn => true;
+}
+
+/// In-memory prefs store that lets a test fail or observe single writes.
+class _HookStore extends InMemorySharedPreferencesStore {
+  _HookStore.withData(super.data) : super.withData();
+
+  /// Return false to make the write fail.
+  bool Function(String key)? onSet;
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    final hook = onSet;
+    if (hook != null && !hook(key.substring('flutter.'.length))) return false;
+    return super.setValue(valueType, key, value);
+  }
+}
+
+class _MemoryPinStore implements ParentPinSecureStore {
+  final verifiers = <String, String>{};
+
+  @override
+  Future<String?> readVerifier(String ownerId) async => verifiers[ownerId];
+  @override
+  Future<void> writeVerifier(String ownerId, String verifier) async =>
+      verifiers[ownerId] = verifier;
+  @override
+  Future<void> clearVerifier(String ownerId) async => verifiers.remove(ownerId);
+  @override
+  Future<DateTime?> readBlockedUntil(String ownerId) async => null;
+  @override
+  Future<void> writeBlockedUntil(String ownerId, DateTime? until) async {}
+  @override
+  Future<int> readFailureCount(String ownerId) async => 0;
+  @override
+  Future<void> writeFailureCount(String ownerId, int count) async {}
 }
 
 IsarAyahReviewRecord _review({
@@ -72,6 +127,16 @@ IsarAyahReviewRecord _review({
   ..cloudDirty = false
   ..lastSyncedAt = DateTime.utc(2026, 9, 2);
 
+CloudSyncQueueItem _queue(String kind, String owner) => CloudSyncQueueItem()
+  ..kind = kind
+  ..ownerUserId = owner
+  ..nextRetryAt = DateTime.utc(2026, 9, 1)
+  ..createdAt = DateTime.utc(2026, 9, 1);
+
+Map<String, Object?> _prefsMap(SharedPreferences prefs) => {
+  for (final k in prefs.getKeys()) k: prefs.get(k),
+};
+
 void main() {
   late Directory dir;
   final opened = <Isar>[];
@@ -103,6 +168,17 @@ void main() {
   Future<SharedPreferences> freshPrefs(Map<String, Object> values) async {
     SharedPreferences.setMockInitialValues(values);
     return SharedPreferences.getInstance();
+  }
+
+  Future<({SharedPreferences prefs, _HookStore store})> hookedPrefs(
+    Map<String, Object> values,
+  ) async {
+    final store = _HookStore.withData({
+      for (final e in values.entries) 'flutter.${e.key}': e.value,
+    });
+    SharedPreferencesStorePlatform.instance = store;
+    SharedPreferences.resetStatic();
+    return (prefs: await SharedPreferences.getInstance(), store: store);
   }
 
   Future<void> seedOwnerA(Isar isar) async {
@@ -137,6 +213,8 @@ void main() {
           surah: 1,
           ayah: 2,
         ),
+        // Null owner but an identity key of another owner: skipped.
+        _review(key: 'user-z|adult|1|3', owner: null, surah: 1, ayah: 3),
         // Pre-identity legacy row: exported as the current owner's.
         _review(key: '3_4', owner: null, surah: 3, ayah: 4, strength: 2)
           ..createdByModeIndex = null,
@@ -169,33 +247,57 @@ void main() {
     });
   }
 
-  const ownerAPrefs = <String, Object>{
+  final parentSettingsA = jsonEncode({
+    'pinHash': 'pin-hash-secret',
+    'reminderHour': 7,
+    'remoteLinkEnabled': true,
+    'policyVersion': 4,
+    'policySyncedVersion': 4,
+    'policyLinkConfirmed': true,
+    'localChildNickname': 'Zaid',
+  });
+  final profileA = jsonEncode({
+    'schemaVersion': 1,
+    'selectedPath': 'kids',
+    'guardianLinkStatus': 'linked',
+    'linkedChildId': 'child-id-secret',
+    'guardianId': 'guardian-id-secret',
+    'isParentGuardian': true,
+    'childAge': 8,
+  });
+
+  Map<String, Object> ownerAPrefs() => {
     'read_pages': '[1,2]',
     'user_profile': 'Ahmad',
     'khatmah_active_plan': '{"id":"p1"}',
     'mem_plus_kids_progress|user-a': '{"stars":3}',
     'mem_plus_home_missions|user-a': '[{"id":"m1"}]',
+    'mem_plus_parent_settings|user-a': parentSettingsA,
+    'mem_plus_profile': profileA,
     'ramadan_tarawih|user-a': '[{"night":1}]',
     'ramadan_card_dismissed_start_1448|user-a': true,
     'kids_reading_receipts_user-a': '{"2026-09-08":[12]}',
+    'kids_streak_user-a': '{"current":3}',
+    'kids_achievements_user-a': '{"first":"2026-09-01"}',
+    'kids_map_seen_completed_user-a_67': true,
     'adult_journey_v1_user-a': '{"v":1}',
-    'quran_bookmarks_owner_user-a': '[{"s":1}]',
-    'quran_bookmarks_owner_user-a_migrated': true,
     'daily_wird_target_2026-09-08': 12,
     'hifz_pace': 1.5,
     'mem_plus_track_list': <String>['a', 'b'],
   };
 
+  Future<BackupPayload> collectA(Isar isar, SharedPreferences prefs) =>
+      BackupCollector(
+        isar,
+        prefs,
+        const FixedRecordOwnerProvider('user-a'),
+      ).collect(DateTime.utc(2026, 10, 17));
+
   test('collect → encode → decode → restore under ANOTHER owner reproduces '
       'records with the new owner', () async {
     final isarA = await openIsar('a');
     await seedOwnerA(isarA);
-    final prefsA = await freshPrefs(ownerAPrefs);
-    final payload = await BackupCollector(
-      isarA,
-      prefsA,
-      const FixedRecordOwnerProvider('user-a'),
-    ).collect(DateTime.utc(2026, 10, 17));
+    final payload = await collectA(isarA, await freshPrefs(ownerAPrefs()));
 
     final bytes = encodeBackup(payload);
     final decoded = decodeBackup(bytes);
@@ -203,15 +305,13 @@ void main() {
 
     final isarB = await openIsar('b');
     final prefsB = await freshPrefs({});
-    const ownerB = FixedRecordOwnerProvider('user-b');
     final events = ProgressEventsBus();
     final reasons = <ProgressChangedReason>[];
     final sub = events.changes.listen(reasons.add);
     final result = await BackupRestorer(
       isarB,
       prefsB,
-      ownerB,
-      AccountDataReset(isarB, prefsB, owner: ownerB),
+      const FixedRecordOwnerProvider('user-b'),
       events: events,
     ).restore(decoded.payload!);
     await Future<void>.delayed(Duration.zero);
@@ -284,15 +384,81 @@ void main() {
       prefsB.getString('kids_reading_receipts_user-b'),
       '{"2026-09-08":[12]}',
     );
+    expect(prefsB.getString('kids_streak_user-b'), '{"current":3}');
+    expect(
+      prefsB.getString('kids_achievements_user-b'),
+      '{"first":"2026-09-01"}',
+    );
+    expect(prefsB.getBool('kids_map_seen_completed_user-b_67'), true);
     expect(prefsB.getString('adult_journey_v1_user-b'), '{"v":1}');
-    expect(prefsB.getString('quran_bookmarks_owner_user-b'), '[{"s":1}]');
-    expect(prefsB.getBool('quran_bookmarks_owner_user-b_migrated'), true);
     expect(prefsB.get('daily_wird_target_2026-09-08'), isA<int>());
     expect(prefsB.getInt('daily_wird_target_2026-09-08'), 12);
     expect(prefsB.get('hifz_pace'), isA<double>());
     expect(prefsB.getDouble('hifz_pace'), 1.5);
     expect(prefsB.getStringList('mem_plus_track_list'), ['a', 'b']);
     expect(prefsB.getKeys().where((k) => k.contains('user-a')), isEmpty);
+  });
+
+  test('parent settings and profile lose PIN, link state and foreign ids, '
+      'on collect and on restore', () async {
+    final isarA = await openIsar('sanitize_a');
+    final payload = await collectA(isarA, await freshPrefs(ownerAPrefs()));
+    final text = utf8.decode(gzip.decode(encodeBackup(payload)));
+    for (final secret in [
+      'pin-hash-secret',
+      'pinHash',
+      'child-id-secret',
+      'guardian-id-secret',
+      'policyLinkConfirmed',
+    ]) {
+      expect(text.contains(secret), isFalse, reason: secret);
+    }
+
+    // A crafted file that still carries them is sanitized on restore too.
+    final crafted = BackupPayload(
+      schemaVersion: payload.schemaVersion,
+      createdAt: payload.createdAt,
+      sections: {
+        ...payload.sections,
+        BackupSections.prefs: {
+          ...(payload.sections[BackupSections.prefs]! as Map),
+          'mem_plus_parent_settings|{owner}': {'t': 's', 'v': parentSettingsA},
+          'mem_plus_profile': {'t': 's', 'v': profileA},
+        },
+      },
+    );
+    for (final p in [payload, crafted]) {
+      final isarB = await openIsar('sanitize_b');
+      final prefsB = await freshPrefs({});
+      final result = await BackupRestorer(
+        isarB,
+        prefsB,
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(p);
+      expect(result, BackupRestoreResult.restored);
+
+      final settingsJson =
+          jsonDecode(prefsB.getString('mem_plus_parent_settings|user-b')!)
+              as Map<String, dynamic>;
+      final settings = ParentSettingsModel.fromJson(settingsJson);
+      expect(settings.hasPin, isFalse);
+      expect(settings.remoteLinkEnabled, isFalse);
+      expect(settings.policySyncedVersion, 0);
+      expect(settings.policyLinkConfirmed, isNull);
+      expect(settings.reminderHour, 7);
+      expect(settings.localChildNickname, 'Zaid');
+      expect(settingsJson.containsKey('pinHash'), isFalse);
+
+      final profile = MemorizationProfileModel.fromJson(
+        jsonDecode(prefsB.getString('mem_plus_profile')!)
+            as Map<String, dynamic>,
+      );
+      expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+      expect(profile.guardianId, isNull);
+      expect(profile.linkedChildId, isNull);
+      expect(profile.isParentGuardian, isTrue);
+      expect(profile.childAge, 8);
+    }
   });
 
   test('payload over 64 KB round trips through multi-chunk gzip', () async {
@@ -314,12 +480,10 @@ void main() {
     final noise = String.fromCharCodes([
       for (var i = 0; i < 120 * 1024; i++) 33 + random.nextInt(90),
     ]);
-    final prefsA = await freshPrefs({'mem_plus_blob|user-a': noise});
-    final payload = await BackupCollector(
+    final payload = await collectA(
       isarA,
-      prefsA,
-      const FixedRecordOwnerProvider('user-a'),
-    ).collect(DateTime.utc(2026, 10, 17));
+      await freshPrefs({'mem_plus_blob|user-a': noise}),
+    );
     final bytes = encodeBackup(payload);
     expect(bytes.length, greaterThan(64 * 1024));
     final decoded = decodeBackup(bytes);
@@ -328,12 +492,10 @@ void main() {
 
     final isarB = await openIsar('big_b');
     final prefsB = await freshPrefs({});
-    const ownerB = FixedRecordOwnerProvider('user-b');
     final result = await BackupRestorer(
       isarB,
       prefsB,
-      ownerB,
-      AccountDataReset(isarB, prefsB, owner: ownerB),
+      const FixedRecordOwnerProvider('user-b'),
     ).restore(decoded.payload!);
     expect(result, BackupRestoreResult.restored);
     expect(await isarB.isarAyahReviewRecords.count(), 286);
@@ -345,7 +507,7 @@ void main() {
     final isar = await openIsar('excl');
     await seedOwnerA(isar);
     final prefs = await freshPrefs({
-      ...ownerAPrefs,
+      ...ownerAPrefs(),
       // Other owners.
       'mem_plus_kids_progress|user-b': '{}',
       'ramadan_card_dismissed_end_1447|user-b': true,
@@ -353,9 +515,18 @@ void main() {
       'kids_reading_receipts_user-b': '{}',
       'kids_support_profile_user-b': '{}',
       'kids_family_practice_user-b': '{}',
+      'kids_streak_user-ab': '{}',
+      'kids_map_seen_completed_user-b_3': true,
+      'kids_map_seen_completed_user-ab_3': true,
       'adult_journey_v1_user-b': '{}',
-      'quran_bookmarks_owner_user-b': '[]',
-      'quran_bookmarks_owner_user-ab': '[]',
+      // Bookmarks are not part of a v1 backup.
+      'quran_bookmarks': '[]',
+      'quran_bookmarks_owner_user-a': '[]',
+      'quran_bookmarks_owner_user-a_migrated': true,
+      // Unscoped legacy kids bases.
+      'mem_plus_kids_progress': '{}',
+      'mem_plus_parent_settings': '{}',
+      'mem_plus_home_missions': '[]',
       // Quarantined corrupt payloads.
       'mem_plus_kids_progress|user-a|corrupt': 'garbage',
       'hifz_isar_migration_quarantine_1': 'garbage',
@@ -382,11 +553,7 @@ void main() {
       'clarity_mode_on': true,
       'bookmarks': '[]',
     });
-    final payload = await BackupCollector(
-      isar,
-      prefs,
-      const FixedRecordOwnerProvider('user-a'),
-    ).collect(DateTime.utc(2026, 10, 17));
+    final payload = await collectA(isar, prefs);
 
     expect(payload.sections.keys.toSet(), BackupSections.all);
     final prefsSection = payload.sections[BackupSections.prefs]! as Map;
@@ -396,12 +563,15 @@ void main() {
       'khatmah_active_plan',
       'mem_plus_kids_progress|{owner}',
       'mem_plus_home_missions|{owner}',
+      'mem_plus_parent_settings|{owner}',
+      'mem_plus_profile',
       'ramadan_tarawih|{owner}',
       'ramadan_card_dismissed_start_1448|{owner}',
       'kids_reading_receipts_{owner}',
+      'kids_streak_{owner}',
+      'kids_achievements_{owner}',
+      'kids_map_seen_completed_{owner}_67',
       'adult_journey_v1_{owner}',
-      'quran_bookmarks_owner_{owner}',
-      'quran_bookmarks_owner_{owner}_migrated',
       'daily_wird_target_2026-09-08',
       'hifz_pace',
       'mem_plus_track_list',
@@ -421,19 +591,25 @@ void main() {
       reviews.cast<Map>().map((r) => '${r['surahId']}:${r['ayahNumber']}'),
       unorderedEquals(['2:255', '114:6', '3:4']),
     );
-    final json = encodeBackup(payload);
-    final text = String.fromCharCodes(gzip.decode(json));
-    expect(text.contains('user-a'), isFalse);
-    expect(text.contains('user-b'), isFalse);
+    final text = utf8.decode(gzip.decode(encodeBackup(payload)));
+    for (final id in ['user-a', 'user-b', 'user-z']) {
+      expect(text.contains(id), isFalse, reason: id);
+    }
   });
 
+  /// user-b's device: own data, plus data a restore must never touch.
   Future<
-    ({Isar isar, SharedPreferences prefs, BackupRestorer restorer, Map snap})
+    ({
+      Isar isar,
+      SharedPreferences prefs,
+      _HookStore? store,
+      Map<String, Object?> snap,
+    })
   >
-  ownerBWithData(String tag) async {
+  ownerBDevice(String tag, {bool hooked = false}) async {
     final isar = await openIsar(tag);
     await isar.writeTxn(() async {
-      await isar.isarAyahReviewRecords.put(
+      await isar.isarAyahReviewRecords.putAll([
         _review(
           key: 'user-b|adult|5|5',
           owner: 'user-b',
@@ -441,38 +617,62 @@ void main() {
           surah: 5,
           ayah: 5,
         ),
-      );
+        _review(
+          key: 'user-c|adult|1|1',
+          owner: 'user-c',
+          audience: 'adult',
+          surah: 1,
+          ayah: 1,
+        ),
+      ]);
       await isar.xpIsars.put(XpIsar()..totalXp = 99);
+      await isar.cloudSyncQueueItems.putAll([
+        _queue('review_push', 'user-b'),
+        _queue('review_push', 'user-c'),
+      ]);
+      await isar.prayerCompanionRecordIsars.put(
+        PrayerCompanionRecordIsar()
+          ..occurrenceKey = 'user-b|2026-09-01|fajr'
+          ..ownerId = 'user-b'
+          ..localDayKey = 20260901
+          ..prayerKeyIndex = 0
+          ..scheduledAt = DateTime.utc(2026, 9, 1, 4)
+          ..statusIndex = 0
+          ..statusUpdatedAt = DateTime.utc(2026, 9, 1, 4)
+          ..createdAt = DateTime.utc(2026, 9, 1, 4)
+          ..updatedAt = DateTime.utc(2026, 9, 1, 4),
+      );
     });
-    final prefs = await freshPrefs({
+    final values = <String, Object>{
       'read_pages': '[600]',
       'azkar_counter_morning_z1': 3,
       'ramadan_tarawih|user-b': '[{"night":9}]',
+      'ayah_review_pull_cursor': '2026-08-01',
+      'ayah_review_pull_cursor_pulled_at': '2026-08-01',
+      'quran_bookmarks': '[{"legacy":1}]',
+      'quran_bookmarks_owner_user-b': '[{"s":2}]',
+      'prayer_companion_enabled': true,
+      'audio_resume_position': '{"surahId":67}',
+      'last_restorable_location': '/quran/67',
+      'ramadan_tarawih|user-c': '[{"night":2}]',
       'theme_mode': 'dark',
-    });
-    const owner = FixedRecordOwnerProvider('user-b');
-    return (
-      isar: isar,
-      prefs: prefs,
-      restorer: BackupRestorer(
-        isar,
-        prefs,
-        owner,
-        AccountDataReset(isar, prefs, owner: owner),
-      ),
-      snap: {for (final k in prefs.getKeys()) k: prefs.get(k)},
-    );
+    };
+    _HookStore? store;
+    final SharedPreferences prefs;
+    if (hooked) {
+      final h = await hookedPrefs(values);
+      prefs = h.prefs;
+      store = h.store;
+    } else {
+      prefs = await freshPrefs(values);
+    }
+    return (isar: isar, prefs: prefs, store: store, snap: _prefsMap(prefs));
   }
 
   Future<BackupPayload> ownerAPayload() async {
     final isarA = await openIsar('src');
     await seedOwnerA(isarA);
-    final prefsA = await freshPrefs(ownerAPrefs);
-    return BackupCollector(
-      isarA,
-      prefsA,
-      const FixedRecordOwnerProvider('user-a'),
-    ).collect(DateTime.utc(2026, 10, 17));
+    return collectA(isarA, await freshPrefs(ownerAPrefs()));
   }
 
   BackupPayload mutate(
@@ -489,6 +689,26 @@ void main() {
     );
   }
 
+  Future<void> expectDeviceUntouched(
+    ({
+      Isar isar,
+      SharedPreferences prefs,
+      _HookStore? store,
+      Map<String, Object?> snap,
+    })
+    env, {
+    String? reason,
+  }) async {
+    final reviews = await env.isar.isarAyahReviewRecords.where().findAll();
+    expect(reviews.map((r) => r.compositeKey).toSet(), {
+      'user-b|adult|5|5',
+      'user-c|adult|1|1',
+    }, reason: reason);
+    expect((await env.isar.xpIsars.get(1))!.totalXp, 99, reason: reason);
+    expect(await env.isar.cloudSyncQueueItems.count(), 2, reason: reason);
+    expect(_prefsMap(env.prefs), env.snap, reason: reason);
+  }
+
   test(
     'invalid section (surah 115) → invalidSections and existing data untouched',
     () async {
@@ -503,6 +723,10 @@ void main() {
                   as Map)['ayahNumber'] =
               8;
         }),
+        'impossible dayKey': mutate(good, (s) {
+          ((s[BackupSections.dailyActivity]! as List).first as Map)['dayKey'] =
+              20260231;
+        }),
         'negative xp': mutate(good, (s) {
           (s[BackupSections.xp]! as Map)['totalXp'] = -1;
         }),
@@ -510,6 +734,12 @@ void main() {
           (s[BackupSections.prefs]! as Map)['theme_mode'] = {
             't': 's',
             'v': 'light',
+          };
+        }),
+        'bookmark key in prefs': mutate(good, (s) {
+          (s[BackupSections.prefs]! as Map)['quran_bookmarks'] = {
+            't': 's',
+            'v': '[]',
           };
         }),
         'raw owner id in prefs key': mutate(good, (s) {
@@ -522,71 +752,170 @@ void main() {
       };
 
       for (final entry in invalid.entries) {
-        final env = await ownerBWithData('inv_${entry.key.hashCode}');
-        final result = await env.restorer.restore(entry.value);
+        final env = await ownerBDevice('inv_${entry.key.hashCode}');
+        final result = await BackupRestorer(
+          env.isar,
+          env.prefs,
+          const FixedRecordOwnerProvider('user-b'),
+        ).restore(entry.value);
         expect(result, BackupRestoreResult.invalidSections, reason: entry.key);
-        final reviews = await env.isar.isarAyahReviewRecords.where().findAll();
-        expect(reviews.map((r) => r.compositeKey), [
-          'user-b|adult|5|5',
-        ], reason: entry.key);
-        expect((await env.isar.xpIsars.get(1))!.totalXp, 99);
-        expect(
-          {for (final k in env.prefs.getKeys()) k: env.prefs.get(k)},
-          env.snap,
-          reason: entry.key,
-        );
+        await expectDeviceUntouched(env, reason: entry.key);
       }
     },
   );
 
-  test(
-    'restore replaces: data present before restore that is not in the backup '
-    'is gone',
-    () async {
-      final payload = await ownerAPayload();
-      final env = await ownerBWithData('replace');
-      final result = await env.restorer.restore(payload);
-      expect(result, BackupRestoreResult.restored);
+  test('restore replaces this owner\'s backed-up data and leaves PIN, '
+      'bookmarks, prayer companion, other owners and device data', () async {
+    final payload = await ownerAPayload();
+    final env = await ownerBDevice('replace');
+    final pins = _MemoryPinStore()..verifiers['user-b'] = 'verifier-b';
+    final result = await BackupRestorer(
+      env.isar,
+      env.prefs,
+      const FixedRecordOwnerProvider('user-b'),
+    ).restore(payload);
+    expect(result, BackupRestoreResult.restored);
 
-      final keys = (await env.isar.isarAyahReviewRecords.where().findAll())
-          .map((r) => r.compositeKey)
-          .toSet();
-      expect(keys, isNot(contains('user-b|adult|5|5')));
-      expect(keys, contains('user-b|adult|2|255'));
-      expect((await env.isar.xpIsars.get(1))!.totalXp, 1234);
-      expect(env.prefs.getString('read_pages'), '[1,2]');
-      expect(env.prefs.containsKey('azkar_counter_morning_z1'), isFalse);
-      expect(env.prefs.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
-      // Device settings survive a restore.
-      expect(env.prefs.getString('theme_mode'), 'dark');
-    },
-  );
+    // Replaced.
+    final keys = (await env.isar.isarAyahReviewRecords.where().findAll())
+        .map((r) => r.compositeKey)
+        .toSet();
+    expect(keys, isNot(contains('user-b|adult|5|5')));
+    expect(keys, contains('user-b|adult|2|255'));
+    expect((await env.isar.xpIsars.get(1))!.totalXp, 1234);
+    expect(env.prefs.getString('read_pages'), '[1,2]');
+    expect(env.prefs.containsKey('azkar_counter_morning_z1'), isFalse);
+    expect(env.prefs.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
+    expect(env.prefs.containsKey('ayah_review_pull_cursor'), isFalse);
+    expect(env.prefs.containsKey('ayah_review_pull_cursor_pulled_at'), isFalse);
+    final queue = await env.isar.cloudSyncQueueItems.where().findAll();
+    expect(queue.map((q) => q.ownerUserId), ['user-c']);
 
-  test(
-    'owner switch during restore: the owner is captured once at the start',
-    () async {
-      final payload = await ownerAPayload();
-      final isar = await openIsar('switch');
-      final prefs = await freshPrefs({});
-      final owner = _SwitchingOwner('user-b', 'user-c');
-      final result = await BackupRestorer(
-        isar,
-        prefs,
-        owner,
-        AccountDataReset(isar, prefs, owner: owner),
-      ).restore(payload);
-      expect(result, BackupRestoreResult.restored);
-      expect(owner.reads, 1);
+    // Untouched.
+    expect(keys, contains('user-c|adult|1|1'));
+    expect(await env.isar.prayerCompanionRecordIsars.count(), 1);
+    expect(await pins.readVerifier('user-b'), 'verifier-b');
+    for (final key in [
+      'quran_bookmarks',
+      'quran_bookmarks_owner_user-b',
+      'prayer_companion_enabled',
+      'audio_resume_position',
+      'last_restorable_location',
+      'ramadan_tarawih|user-c',
+      'theme_mode',
+    ]) {
+      expect(env.prefs.get(key), env.snap[key], reason: key);
+    }
+  });
 
-      final reviews = await isar.isarAyahReviewRecords.where().findAll();
-      expect(reviews.every((r) => r.ownerUserId == 'user-b'), isTrue);
-      expect(
-        reviews.every((r) => r.compositeKey.startsWith('user-b|')),
-        isTrue,
-      );
-      expect(prefs.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
-      expect(prefs.getString('khatmah_owner'), 'user-b');
-      expect(prefs.getKeys().where((k) => k.contains('user-c')), isEmpty);
-    },
-  );
+  test('owner switch before the write: writeFailed and nothing written for '
+      'either owner', () async {
+    final payload = await ownerAPayload();
+    final env = await ownerBDevice('switch_before');
+    final owner = _SwitchingOwner('user-b', 'user-c');
+    final result = await BackupRestorer(
+      env.isar,
+      env.prefs,
+      owner,
+    ).restore(payload);
+    expect(result, BackupRestoreResult.writeFailed);
+    await expectDeviceUntouched(env);
+  });
+
+  test('owner switch mid-restore with barrier owner set: writeFailed and the '
+      'previous data is back', () async {
+    final payload = await ownerAPayload();
+    final env = await ownerBDevice('switch_mid', hooked: true);
+    final owner = _MutableOwner('user-b');
+    AccountDataBarrier.forPreferences(env.prefs).owner = owner;
+    env.store!.onSet = (key) {
+      if (key == 'read_pages') owner.currentOwnerId = 'user-c';
+      return true;
+    };
+    final events = ProgressEventsBus();
+    final reasons = <ProgressChangedReason>[];
+    final sub = events.changes.listen(reasons.add);
+    final result = await BackupRestorer(
+      env.isar,
+      env.prefs,
+      owner,
+      events: events,
+    ).restore(payload);
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+    expect(result, BackupRestoreResult.writeFailed);
+    expect(reasons, [ProgressChangedReason.cloudPull]);
+    await expectDeviceUntouched(env);
+  });
+
+  test('prefs write failure mid-restore: writeFailed and original data '
+      'back', () async {
+    final payload = await ownerAPayload();
+    final env = await ownerBDevice('prefs_fail', hooked: true);
+    var failed = false;
+    env.store!.onSet = (key) {
+      if (key == 'ramadan_tarawih|user-b' && !failed) {
+        failed = true;
+        return false;
+      }
+      return true;
+    };
+    final events = ProgressEventsBus();
+    final reasons = <ProgressChangedReason>[];
+    final sub = events.changes.listen(reasons.add);
+    final result = await BackupRestorer(
+      env.isar,
+      env.prefs,
+      const FixedRecordOwnerProvider('user-b'),
+      events: events,
+    ).restore(payload);
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+    expect(failed, isTrue);
+    expect(result, BackupRestoreResult.writeFailed);
+    expect(reasons, [ProgressChangedReason.cloudPull]);
+    await expectDeviceUntouched(env);
+    // The store, not just the in-memory cache, holds the original values.
+    final stored = await env.store!.getAll();
+    expect(stored['flutter.read_pages'], '[600]');
+    expect(stored['flutter.ramadan_tarawih|user-b'], '[{"night":9}]');
+    expect(stored.containsKey('flutter.khatmah_active_plan'), isFalse);
+  });
+
+  test('azkar counters travel with their day stamp: a yesterday backup reads '
+      'as zero today', () async {
+    final today = DateTime(2026, 10, 17, 9);
+    final yesterday = DateTime(2026, 10, 16, 9);
+    final isarA = await openIsar('azkar_a');
+    final prefsA = await freshPrefs({});
+    final storeA = AzkarCompletionStore(prefsA, now: () => yesterday);
+    await storeA.prepareForToday(AzkarCategory.morning);
+    await storeA.setCount(
+      category: AzkarCategory.morning,
+      zikrId: 'z1',
+      count: 3,
+    );
+    expect(storeA.countFor(AzkarCategory.morning, 'z1'), 3);
+    final payload = await collectA(isarA, prefsA);
+
+    final isarB = await openIsar('azkar_b');
+    final prefsB = await freshPrefs({});
+    final storeB = AzkarCompletionStore(prefsB, now: () => today);
+    await storeB.prepareForToday(AzkarCategory.morning);
+    expect(storeB.isToday(AzkarCategory.morning), isTrue);
+    final result = await BackupRestorer(
+      isarB,
+      prefsB,
+      const FixedRecordOwnerProvider('user-b'),
+    ).restore(payload);
+    expect(result, BackupRestoreResult.restored);
+    expect(storeB.countFor(AzkarCategory.morning, 'z1'), 0);
+    expect(
+      AzkarCompletionStore(
+        prefsB,
+        now: () => yesterday,
+      ).countFor(AzkarCategory.morning, 'z1'),
+      3,
+    );
+  });
 }
