@@ -17,9 +17,13 @@ class RecordingPlayer extends ControlledAudioPlayer {
   List<AudioSource> lastSources = const [];
   List<AudioSource> sources = [];
   final List<(int, int)> removedRanges = [];
+  final List<String> calls = [];
+  bool failRemove = false;
 
   @override
   Future<void> removeAudioSourceRange(int start, int end) async {
+    calls.add('remove');
+    if (failRemove) throw StateError('remove failed');
     removedRanges.add((start, end));
     sources = sources.sublist(0, start) + sources.sublist(end);
   }
@@ -30,7 +34,10 @@ class RecordingPlayer extends ControlledAudioPlayer {
   }
 
   @override
-  Future<void> setLoopMode(LoopMode mode) async => loopModes.add(mode);
+  Future<void> setLoopMode(LoopMode mode) async {
+    calls.add('loop:${mode.name}');
+    loopModes.add(mode);
+  }
 
   @override
   Future<void> setSpeed(double speed) async => speeds.add(speed);
@@ -130,7 +137,7 @@ void main() {
 
   test('nextAyah with repeats jumps to the next distinct ayah', () async {
     await service.setRepeat(const ReaderRepeatSettings(perAyah: 3));
-    await service.playPage(2);
+    await service.playPage(2, applyReaderSettings: true);
     expect(player.lastSources.length, 9);
     expect(service.state.hasPrevious, isFalse);
 
@@ -200,7 +207,11 @@ void main() {
     () async {
       await service.playPage(2);
       await service.setSleepTimer(SleepTimerChoice.endOfSurah); // anchored: s1
-      await service.playPage(2, startAyahIndex: 1); // now anchored: s2
+      await service.playPage(
+        2,
+        startAyahIndex: 1,
+        applyReaderSettings: true,
+      ); // now anchored: s2
       expect(service.state.sleepChoice, SleepTimerChoice.endOfSurah);
       expect(player.sources.length, 3);
       player.advanceToIndex(2);
@@ -214,7 +225,7 @@ void main() {
     'choosing off after endOfSurah restores the tail and loop mode',
     () async {
       await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 0));
-      await service.playPage(2);
+      await service.playPage(2, applyReaderSettings: true);
       expect(player.loopModes.last, LoopMode.all);
       await service.setSleepTimer(SleepTimerChoice.endOfSurah);
       expect(player.sources.length, 1);
@@ -294,4 +305,53 @@ void main() {
     expect(player.loopModes.last, LoopMode.off);
     expect(player.speeds.last, 1.0);
   });
+
+  test('a fresh playSurah loading state already reports hasNext', () async {
+    final loadingStates = <ContinuousPlaybackState>[];
+    service.stateNotifier.addListener(() {
+      if (service.state.isLoading) loadingStates.add(service.state);
+    });
+    await service.playSurah(1);
+    expect(loadingStates, isNotEmpty);
+    expect(loadingStates.last.hasNext, isTrue);
+    expect(loadingStates.last.hasPrevious, isFalse);
+  });
+
+  test('endOfSurah turns the loop off before removing the tail', () async {
+    await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 0));
+    await service.playPage(2, applyReaderSettings: true);
+    player.calls.clear();
+    await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+    expect(player.calls.take(2), ['loop:off', 'remove']);
+  });
+
+  test('a failed tail removal restores the loop mode', () async {
+    await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 0));
+    await service.playPage(2, applyReaderSettings: true);
+    player.failRemove = true;
+    await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+    expect(player.loopModes.last, LoopMode.all);
+    expect(player.sources.length, 3);
+  });
+
+  test(
+    'repeat, speed and sleep apply only to playback from the reader',
+    () async {
+      await service.setRepeat(
+        const ReaderRepeatSettings(perAyah: 3, speed: 1.5),
+      );
+      await service.playPage(2, applyReaderSettings: true);
+      expect(player.lastSources.length, 9);
+      expect(player.speeds.last, 1.5);
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+
+      player.speeds.clear();
+      await service.playPage(2); // another surface: no reader settings
+      expect(player.lastSources.length, 3);
+      expect(service.state.repeat.isDefault, isTrue);
+      expect(service.state.sleepChoice, SleepTimerChoice.off);
+      expect(player.speeds.every((s) => s == 1.0), isTrue);
+      expect(player.loopModes.last, LoopMode.off);
+    },
+  );
 }

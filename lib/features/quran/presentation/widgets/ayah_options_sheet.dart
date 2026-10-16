@@ -57,7 +57,11 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
         cubit.state.currentAyahNumber == widget.ayah.numberInSurah) {
       await cubit.pause();
     } else {
-      await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
+      await cubit.playAyah(
+        widget.ayah.surahId,
+        widget.ayah.numberInSurah,
+        applyReaderSettings: true,
+      );
     }
   }
 

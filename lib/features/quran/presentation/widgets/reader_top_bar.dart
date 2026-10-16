@@ -108,7 +108,10 @@ class ReaderTopBar extends StatelessWidget {
               return IconButton(
                 onPressed: () {
                   HapticFeedback.selectionClick();
-                  context.read<QuranAudioPlayerCubit>().playPage(pageNumber);
+                  context.read<QuranAudioPlayerCubit>().playPage(
+                    pageNumber,
+                    applyReaderSettings: true,
+                  );
                 },
                 tooltip: isPlaying
                     ? context.l10n.pauseRecitation

@@ -93,6 +93,7 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
     int surahId, {
     int startAyah = 1,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
     // If already actively playing/paused for this Surah, toggle play/pause
     if (state.currentSurahId == surahId &&
@@ -101,13 +102,19 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
       await togglePlayPause();
       return;
     }
-    await _playerService.playSurah(surahId, startAyah: startAyah, reciter: reciter);
+    await _playerService.playSurah(
+      surahId,
+      startAyah: startAyah,
+      reciter: reciter,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> playPage(
     int pageNumber, {
     int startAyahIndex = 0,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
     if (state.currentPageNumber == pageNumber &&
         state.scope == PlayScope.page &&
@@ -115,7 +122,12 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
       await togglePlayPause();
       return;
     }
-    await _playerService.playPage(pageNumber, startAyahIndex: startAyahIndex, reciter: reciter);
+    await _playerService.playPage(
+      pageNumber,
+      startAyahIndex: startAyahIndex,
+      reciter: reciter,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> playAyah(
@@ -123,8 +135,15 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
     int ayahNumber, {
     QuranReciter? reciter,
     PlayScope scope = PlayScope.singleAyah,
+    bool applyReaderSettings = false,
   }) async {
-    await _playerService.playAyah(surahId, ayahNumber, reciter: reciter, scope: scope);
+    await _playerService.playAyah(
+      surahId,
+      ayahNumber,
+      reciter: reciter,
+      scope: scope,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> pause() => _playerService.pause();

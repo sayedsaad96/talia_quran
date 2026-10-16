@@ -274,11 +274,17 @@ class QuranContinuousPlayerService {
   // ---------------------------------------------------------------------------
 
   /// Plays an entire Surah starting from [startAyah].
+  ///
+  /// Repeat, speed and the sleep choice belong to the adult reader. Playback
+  /// from any other surface leaves [applyReaderSettings] false, which resets
+  /// them to their defaults before loading.
   Future<void> playSurah(
     int surahId, {
     int startAyah = 1,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
+    if (!applyReaderSettings) await _resetReaderSettings();
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.surah;
     _activeSurahId = surahId;
@@ -322,7 +328,9 @@ class QuranContinuousPlayerService {
     int pageNumber, {
     int startAyahIndex = 0,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
+    if (!applyReaderSettings) await _resetReaderSettings();
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.page;
     _activeSurahId = null;
@@ -369,7 +377,9 @@ class QuranContinuousPlayerService {
     int ayahNumber, {
     QuranReciter? reciter,
     PlayScope scope = PlayScope.singleAyah,
+    bool applyReaderSettings = false,
   }) async {
+    final wasReset = !applyReaderSettings && await _resetReaderSettings();
     if (scope == PlayScope.singleAyah) {
       final activeReciter = _resolveReciter(reciter);
       _activeScope = PlayScope.singleAyah;
@@ -416,7 +426,8 @@ class QuranContinuousPlayerService {
     }
 
     // Surah continuation mode: if same surah is already queued, jump directly.
-    if (_activeScope == PlayScope.surah &&
+    if (!wasReset &&
+        _activeScope == PlayScope.surah &&
         _activeSurahId == surahId &&
         _queue.isNotEmpty) {
       final index = _queue.indexWhere((a) => a.numberInSurah == ayahNumber);
@@ -427,7 +438,12 @@ class QuranContinuousPlayerService {
         return;
       }
     }
-    await playSurah(surahId, startAyah: ayahNumber, reciter: reciter);
+    await playSurah(
+      surahId,
+      startAyah: ayahNumber,
+      reciter: reciter,
+      applyReaderSettings: true, // already reset above when it was needed
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -690,23 +706,37 @@ class QuranContinuousPlayerService {
   Future<void> _truncateAtSurahEnd() async {
     final surahId = _queue[_currentIndex].surahId;
     final last = _lastIndexOfSurahRun(_currentIndex, surahId);
+    final loopWasAll = _repeat.rangeTimes == 0;
+    var loopSet = false;
     if (last + 1 < _queue.length) {
       final previousQueue = _queue;
       final previousTail = _tail;
       _tail = _queue.sublist(last + 1);
       _queue = _queue.sublist(0, last + 1);
       try {
+        // Loop off first: with LoopMode.all the last item could wrap to
+        // index 0 while the tail is being removed.
+        if (loopWasAll) {
+          _playerSettingsTouched = true;
+          await _player.setLoopMode(LoopMode.off);
+          loopSet = true;
+        }
         await _player.removeAudioSourceRange(last + 1, previousQueue.length);
       } catch (_) {
         _queue = previousQueue;
         _tail = previousTail;
+        if (loopWasAll) {
+          try {
+            await _player.setLoopMode(LoopMode.all);
+          } catch (_) {}
+        }
         rethrow;
       }
       _backgroundAudioHandler?.setQueueItems(
         _buildMediaItems(_activeReciterOrDefault()),
       );
     }
-    if (_repeat.rangeTimes == 0) {
+    if (loopWasAll && !loopSet) {
       _playerSettingsTouched = true;
       await _player.setLoopMode(LoopMode.off);
     }
@@ -750,6 +780,26 @@ class QuranContinuousPlayerService {
 
   QuranReciter _activeReciterOrDefault() =>
       _resolveReciter(_stateNotifier.value.reciter);
+
+  /// Returns repeat, speed, loop and the sleep choice to their defaults when a
+  /// non-reader surface starts playback. Returns false (and does nothing)
+  /// while nothing was changed.
+  Future<bool> _resetReaderSettings() async {
+    if (_repeat.isDefault &&
+        _sleepChoice == SleepTimerChoice.off &&
+        !_playerSettingsTouched) {
+      return false;
+    }
+    _resetSession();
+    if (_playerSettingsTouched) {
+      _playerSettingsTouched = false;
+      try {
+        await _player.setLoopMode(LoopMode.off);
+        await _player.setSpeed(1.0);
+      } catch (_) {}
+    }
+    return true;
+  }
 
   void _resetSession() {
     _sleepTimer.cancel();
