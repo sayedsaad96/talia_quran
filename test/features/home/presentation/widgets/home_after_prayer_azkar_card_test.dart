@@ -137,24 +137,95 @@ void main() {
     expect(find.byKey(cardKey), findsNothing);
   });
 
-  testWidgets(
-    'shows in the window; tapping opens the subcategory and hides the card',
-    (tester) async {
-      flag(true);
-      await tester.pumpWidget(harness());
-      await tester.pumpAndSettle();
-      expect(find.byKey(cardKey), findsOneWidget);
-      expect(find.text('After Dhuhr prayer'), findsOneWidget);
+  testWidgets('shows in the window; Start opens the subcategory and the card '
+      'stays', (tester) async {
+    flag(true);
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsOneWidget);
+    expect(find.text('After Dhuhr prayer'), findsOneWidget);
 
-      await tester.tap(find.text('Start'));
-      await tester.pumpAndSettle();
-      expect(find.text('azkar-page'), findsOneWidget);
-      expect(openedSub, afterPrayerAzkarSubcategory);
-      expect(prefs.getBool('after_prayer_azkar_done_2026-10-16_dhuhr'), isTrue);
-    },
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(find.text('azkar-page'), findsOneWidget);
+    expect(openedSub, afterPrayerAzkarSubcategory);
+    expect(
+      prefs.getKeys().where((k) => k.startsWith('after_prayer_azkar_done_')),
+      isEmpty,
+    );
+
+    // Back on home the card is still offered.
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsOneWidget);
+  });
+
+  testWidgets('Done hides the card for this prayer', (tester) async {
+    flag(true);
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsNothing);
+    expect(prefs.getBool('after_prayer_azkar_done_2026-10-16_dhuhr'), isTrue);
+  });
+
+  PrayerTimesSnapshot lateIsha(int day) => PrayerTimesSnapshot(
+    city: city,
+    nextName: 'isha',
+    nextTime: DateTime(2026, 10, day, 23, 20),
+    minutesUntil: 1,
+    fajr: DateTime(2026, 10, day, 5, 0),
+    dhuhr: DateTime(2026, 10, day, 12, 0),
+    asr: DateTime(2026, 10, day, 15, 30),
+    maghrib: DateTime(2026, 10, day, 18, 0),
+    isha: DateTime(2026, 10, day, 23, 20),
   );
 
-  testWidgets('done state hides the card for this prayer', (tester) async {
+  testWidgets('isha done before midnight stays hidden after midnight', (
+    tester,
+  ) async {
+    flag(true);
+    await prefs.setBool('after_prayer_azkar_done_2026-10-16_isha', true);
+    await tester.pumpWidget(
+      harness(snap: lateIsha(16), now: DateTime(2026, 10, 17, 0, 10)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsNothing);
+  });
+
+  testWidgets('done after midnight belongs to the previous night isha', (
+    tester,
+  ) async {
+    flag(true);
+    await tester.pumpWidget(
+      harness(snap: lateIsha(16), now: DateTime(2026, 10, 17, 0, 10)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsOneWidget);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(prefs.getBool('after_prayer_azkar_done_2026-10-16_isha'), isTrue);
+    expect(prefs.containsKey('after_prayer_azkar_done_2026-10-17_isha'), false);
+
+    await tester.pumpWidget(
+      harness(snap: lateIsha(17), now: DateTime(2026, 10, 17, 23, 40)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsOneWidget);
+  });
+
+  testWidgets('offset preference is clamped below the window length', (
+    tester,
+  ) async {
+    flag(true);
+    await prefs.setInt('after_prayer_azkar_offset_min', 999);
+    await tester.pumpWidget(harness(now: at(12, 59)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(cardKey), findsOneWidget);
+  });
+
+  testWidgets('stored done key hides the card for this prayer', (tester) async {
     flag(true);
     await prefs.setBool('after_prayer_azkar_done_2026-10-16_dhuhr', true);
     await tester.pumpWidget(harness());
@@ -167,7 +238,7 @@ void main() {
     await prefs.setBool('after_prayer_azkar_done_2026-10-15_isha', true);
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(prefs.containsKey('after_prayer_azkar_done_2026-10-15_isha'), false);
   });

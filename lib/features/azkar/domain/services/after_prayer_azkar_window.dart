@@ -14,16 +14,21 @@ enum PrayerSlot { fajr, dhuhr, asr, maghrib, isha }
 final class AfterPrayerWindow extends Equatable {
   const AfterPrayerWindow({
     required this.prayer,
+    required this.prayerAt,
     required this.from,
     required this.until,
   });
 
   final PrayerSlot prayer;
+
+  /// The prayer instant itself (its date identifies the prayer even after
+  /// midnight).
+  final DateTime prayerAt;
   final DateTime from;
   final DateTime until;
 
   @override
-  List<Object?> get props => [prayer, from, until];
+  List<Object?> get props => [prayer, prayerAt, from, until];
 }
 
 /// The window right after the most recent prayer:
@@ -46,6 +51,7 @@ AfterPrayerWindow? activeAfterPrayerWindow({
     if (!now.isBefore(from) && now.isBefore(until)) {
       return AfterPrayerWindow(
         prayer: entries[i].key,
+        prayerAt: entries[i].value,
         from: from,
         until: until,
       );

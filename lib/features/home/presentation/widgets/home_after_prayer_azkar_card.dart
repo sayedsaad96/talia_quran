@@ -124,26 +124,32 @@ class _HomeAfterPrayerAzkarCardState extends State<HomeAfterPrayerAzkarCard> {
     super.dispose();
   }
 
-  Future<void> _open(AfterPrayerWindow window) async {
-    final prefs = _prefs;
-    final now = _now;
-    if (prefs != null) {
-      final today = afterPrayerAzkarDoneKey(now, window.prayer);
-      for (final key in prefs.getKeys().toList()) {
-        if (key.startsWith(afterPrayerAzkarDonePrefix) &&
-            !key.startsWith(_dayPrefix(now))) {
-          await prefs.remove(key);
-        }
-      }
-      await prefs.setBool(today, true);
-    }
-    if (!mounted) return;
-    setState(() {});
+  void _open() {
     unawaited(
       context.push(
         '/azkar/general?sub=${Uri.encodeQueryComponent(afterPrayerAzkarSubcategory)}',
       ),
     );
+  }
+
+  Future<void> _markDone(AfterPrayerWindow window) async {
+    final prefs = _prefs;
+    if (prefs != null) {
+      // Keyed by the prayer's own date, so an isha window that crosses
+      // midnight keeps belonging to the night it started.
+      final prayerDay = _dayPrefix(window.prayerAt);
+      for (final key in prefs.getKeys().toList()) {
+        if (key.startsWith(afterPrayerAzkarDonePrefix) &&
+            key.compareTo(prayerDay) < 0) {
+          await prefs.remove(key);
+        }
+      }
+      await prefs.setBool(
+        afterPrayerAzkarDoneKey(window.prayerAt, window.prayer),
+        true,
+      );
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -159,7 +165,10 @@ class _HomeAfterPrayerAzkarCardState extends State<HomeAfterPrayerAzkarCard> {
     );
     if (window == null) return const SizedBox.shrink();
     final done =
-        _prefs?.getBool(afterPrayerAzkarDoneKey(now, window.prayer)) ?? false;
+        _prefs?.getBool(
+          afterPrayerAzkarDoneKey(window.prayerAt, window.prayer),
+        ) ??
+        false;
     if (done) return const SizedBox.shrink();
 
     final l10n = context.l10n;
@@ -204,7 +213,18 @@ class _HomeAfterPrayerAzkarCardState extends State<HomeAfterPrayerAzkarCard> {
               label: l10n.afterPrayerAzkarOpen,
               size: AppButtonSize.small,
               variant: AppButtonVariant.goldPrimary,
-              onPressed: () => unawaited(_open(window)),
+              onPressed: _open,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            TextButton(
+              key: const ValueKey('home_after_prayer_azkar_done'),
+              onPressed: () => unawaited(_markDone(window)),
+              child: Text(
+                l10n.afterPrayerAzkarDone,
+                style: AppTypography.labelSmall.copyWith(
+                  color: skin.textOnHeroMuted,
+                ),
+              ),
             ),
           ],
         ),
@@ -212,5 +232,8 @@ class _HomeAfterPrayerAzkarCardState extends State<HomeAfterPrayerAzkarCard> {
     );
   }
 
-  int _offsetMinutes() => _prefs?.getInt('after_prayer_azkar_offset_min') ?? 10;
+  int _offsetMinutes() {
+    final raw = _prefs?.getInt('after_prayer_azkar_offset_min') ?? 10;
+    return raw.clamp(0, 59);
+  }
 }
