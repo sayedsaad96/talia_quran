@@ -13,6 +13,8 @@ import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
+import '../memorization/review_record_identity.dart';
+import '../sync/cloud_sync_queue.dart';
 import '../sync/cloud_sync_queue_item.dart';
 import '../utils/talia_logger.dart';
 import 'backup_file_format.dart';
@@ -61,9 +63,11 @@ class _IsarScopeSnapshot {
 /// parent PIN, bookmarks, Prayer Companion data, the activity feed, other
 /// owners' rows, playback/resume state and device settings are untouched.
 ///
-/// Isar is replaced in one transaction. If anything fails after it (prefs
-/// write, owner switch), the replaced Isar rows and the touched preferences
-/// are put back best-effort and the result is [BackupRestoreResult.writeFailed].
+/// Isar is replaced in one transaction. If anything fails after it, the
+/// result is [BackupRestoreResult.writeFailed]; while the owner is unchanged
+/// the replaced Isar rows and touched preferences are put back best-effort
+/// inside the barrier work (before any reset or writer queued behind it).
+/// After an owner switch nothing is put back: the switch's reset cleans up.
 class BackupRestorer {
   BackupRestorer(this._isar, this._prefs, this._owner, {this._events});
 
@@ -79,6 +83,15 @@ class BackupRestorer {
   };
 
   static const _khatmahOwnerKey = 'khatmah_owner';
+
+  /// Queue kinds tied to the replaced review/production data. Bookmark,
+  /// certificate, auth and kids work of this owner stays queued.
+  static const replacedQueueKinds = {
+    CloudSyncQueueKind.productionPull,
+    CloudSyncQueueKind.productionPush,
+    CloudSyncQueueKind.reviewEvidencePull,
+    CloudSyncQueueKind.reviewEvidencePush,
+  };
 
   /// Validates every section first (types, ranges, surah 1..114, ayah >= 1)
   /// and writes nothing on failure.
@@ -99,21 +112,35 @@ class BackupRestorer {
       return BackupRestoreResult.invalidSections;
     }
 
-    Map<String, Object?>? prefsSnapshot;
-    _IsarScopeSnapshot? isarSnapshot;
     try {
       _ensureOwner(ownerId);
-      await AccountDataBarrier.forPreferences(_prefs).run((_) async {
-        _ensureOwner(ownerId);
-        prefsSnapshot = _snapshotPreferences(parsed, ownerId);
-        isarSnapshot = await _replaceIsar(parsed, ownerId);
-        _ensureOwner(ownerId);
-        await _replacePreferences(parsed, ownerId);
-        _ensureOwner(ownerId);
+      await AccountDataBarrier.forPreferences(_prefs).run((lease) async {
+        Map<String, Object?>? prefsSnapshot;
+        _IsarScopeSnapshot? isarSnapshot;
+        try {
+          _ensureOwner(ownerId);
+          prefsSnapshot = _snapshotPreferences(parsed, ownerId);
+          isarSnapshot = await _replaceIsar(parsed, ownerId);
+          _ensureOwner(ownerId);
+          lease.check();
+          await _replacePreferences(parsed, ownerId);
+          _ensureOwner(ownerId);
+        } catch (_) {
+          // Rolled back inside the barrier work, so it completes before any
+          // reset queued behind this restore. After an owner switch there is
+          // no rollback: putting the previous owner's unscoped data back
+          // would hand it to the new account, and the switch's queued reset
+          // owns the cleanup.
+          if (_owner.currentOwnerId == ownerId) {
+            await _rollback(ownerId, prefsSnapshot, isarSnapshot);
+          }
+          rethrow;
+        }
       });
     } catch (e, st) {
+      // Also reached when the work succeeded but the final lease check failed
+      // (owner switch or reset queued meanwhile): no rollback then either.
       TaliaLogger.e('Backup restore failed while writing', e, st);
-      await _rollback(ownerId, prefsSnapshot, isarSnapshot);
       _events?.notify(ProgressChangedReason.cloudPull);
       return BackupRestoreResult.writeFailed;
     }
@@ -165,21 +192,45 @@ class BackupRestorer {
       final xp = parsed.xp;
       if (xp != null) await _isar.xpIsars.put(xp);
       await _isar.dailyActivityIsars.putAll(parsed.dailyActivity);
+      // Restored rows are dirty; queue their upload like a local write would
+      // (`CloudSyncQueue.enqueue` never queues for the local owner).
+      if (ownerId != ReviewRecordIdentity.localOwnerId) {
+        final now = DateTime.now().toUtc();
+        await _isar.cloudSyncQueueItems.put(
+          CloudSyncQueueItem()
+            ..kind = CloudSyncQueueKind.productionPush
+            ..ownerUserId = ownerId
+            ..attemptCount = 0
+            ..nextRetryAt = now
+            ..createdAt = now,
+        );
+      }
     });
     return snapshot;
   }
 
   /// Rows the restore replaces: this owner's (and legacy null-owner) review
-  /// rows and V2 sessions, this owner's evidence, outbox and sync queue, and
-  /// the unscoped single-profile collections in full.
+  /// rows and V2 sessions, this owner's evidence, outbox and review/production
+  /// queue items, and the unscoped single-profile collections in full. A
+  /// null-owner review row whose identity key names another owner is not
+  /// this owner's (collect skips it too) and is kept.
   Future<_IsarScopeSnapshot> _readScope(String ownerId) async =>
       _IsarScopeSnapshot(
-        reviews: await _isar.isarAyahReviewRecords
-            .filter()
-            .group(
-              (q) => q.ownerUserIdEqualTo(ownerId).or().ownerUserIdIsNull(),
-            )
-            .findAll(),
+        reviews: [
+          for (final row
+              in await _isar.isarAyahReviewRecords
+                  .filter()
+                  .group(
+                    (q) =>
+                        q.ownerUserIdEqualTo(ownerId).or().ownerUserIdIsNull(),
+                  )
+                  .findAll())
+            if (row.ownerUserId != null ||
+                (ReviewRecordIdentity.tryParse(row.compositeKey)?.ownerUserId ??
+                        ownerId) ==
+                    ownerId)
+              row,
+        ],
         progress: await _isar.isarAyahProgress.where().findAll(),
         streaks: await _isar.streakIsars.where().findAll(),
         xps: await _isar.xpIsars.where().findAll(),
@@ -196,10 +247,14 @@ class BackupRestorer {
             .filter()
             .ownerIdEqualTo(ownerId)
             .findAll(),
-        queue: await _isar.cloudSyncQueueItems
-            .filter()
-            .ownerUserIdEqualTo(ownerId)
-            .findAll(),
+        queue: [
+          for (final item
+              in await _isar.cloudSyncQueueItems
+                  .filter()
+                  .ownerUserIdEqualTo(ownerId)
+                  .findAll())
+            if (replacedQueueKinds.contains(item.kind)) item,
+        ],
       );
 
   Future<void> _clearScope(_IsarScopeSnapshot s) async {

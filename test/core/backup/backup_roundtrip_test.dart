@@ -11,11 +11,13 @@ import 'package:talia_quran/core/backup/backup_file_format.dart';
 import 'package:talia_quran/core/backup/backup_restorer.dart';
 import 'package:talia_quran/core/backup/backup_sections.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/security/parent_pin_secure_store.dart';
 import 'package:talia_quran/core/storage/app_isar.dart';
+import 'package:talia_quran/core/sync/cloud_sync_queue.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
@@ -624,11 +626,16 @@ void main() {
           surah: 1,
           ayah: 1,
         ),
+        // Null owner, identity key of another owner: not user-b's.
+        _review(key: 'user-c|adult|1|4', owner: null, surah: 1, ayah: 4),
       ]);
       await isar.xpIsars.put(XpIsar()..totalXp = 99);
       await isar.cloudSyncQueueItems.putAll([
-        _queue('review_push', 'user-b'),
-        _queue('review_push', 'user-c'),
+        _queue(CloudSyncQueueKind.productionPush, 'user-b')..attemptCount = 3,
+        _queue(CloudSyncQueueKind.reviewEvidencePull, 'user-b'),
+        _queue(CloudSyncQueueKind.bookmarkPush, 'user-b'),
+        _queue(CloudSyncQueueKind.certificatePush, 'user-b'),
+        _queue(CloudSyncQueueKind.productionPush, 'user-c'),
       ]);
       await isar.prayerCompanionRecordIsars.put(
         PrayerCompanionRecordIsar()
@@ -703,9 +710,17 @@ void main() {
     expect(reviews.map((r) => r.compositeKey).toSet(), {
       'user-b|adult|5|5',
       'user-c|adult|1|1',
+      'user-c|adult|1|4',
     }, reason: reason);
     expect((await env.isar.xpIsars.get(1))!.totalXp, 99, reason: reason);
-    expect(await env.isar.cloudSyncQueueItems.count(), 2, reason: reason);
+    final queue = await env.isar.cloudSyncQueueItems.where().findAll();
+    expect(queue.map((q) => '${q.ownerUserId}/${q.kind}/${q.attemptCount}'), {
+      'user-b/${CloudSyncQueueKind.productionPush}/3',
+      'user-b/${CloudSyncQueueKind.reviewEvidencePull}/0',
+      'user-b/${CloudSyncQueueKind.bookmarkPush}/0',
+      'user-b/${CloudSyncQueueKind.certificatePush}/0',
+      'user-c/${CloudSyncQueueKind.productionPush}/0',
+    }, reason: reason);
     expect(_prefsMap(env.prefs), env.snap, reason: reason);
   }
 
@@ -788,11 +803,19 @@ void main() {
     expect(env.prefs.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
     expect(env.prefs.containsKey('ayah_review_pull_cursor'), isFalse);
     expect(env.prefs.containsKey('ayah_review_pull_cursor_pulled_at'), isFalse);
+    // Review/production queue work is replaced by one fresh production push
+    // for the dirty restored rows; other kinds and owners stay queued.
     final queue = await env.isar.cloudSyncQueueItems.where().findAll();
-    expect(queue.map((q) => q.ownerUserId), ['user-c']);
+    expect(queue.map((q) => '${q.ownerUserId}/${q.kind}/${q.attemptCount}'), {
+      'user-b/${CloudSyncQueueKind.productionPush}/0',
+      'user-b/${CloudSyncQueueKind.bookmarkPush}/0',
+      'user-b/${CloudSyncQueueKind.certificatePush}/0',
+      'user-c/${CloudSyncQueueKind.productionPush}/0',
+    });
 
     // Untouched.
     expect(keys, contains('user-c|adult|1|1'));
+    expect(keys, contains('user-c|adult|1|4'));
     expect(await env.isar.prayerCompanionRecordIsars.count(), 1);
     expect(await pins.readVerifier('user-b'), 'verifier-b');
     for (final key in [
@@ -822,14 +845,21 @@ void main() {
     await expectDeviceUntouched(env);
   });
 
-  test('owner switch mid-restore with barrier owner set: writeFailed and the '
-      'previous data is back', () async {
+  test('owner switch mid-restore with the switch reset queued: no rollback, '
+      'and user-c sees none of user-b data', () async {
     final payload = await ownerAPayload();
     final env = await ownerBDevice('switch_mid', hooked: true);
     final owner = _MutableOwner('user-b');
     AccountDataBarrier.forPreferences(env.prefs).owner = owner;
+    final reset = AccountDataReset(env.isar, env.prefs, owner: owner);
+    Future<void>? switchReset;
     env.store!.onSet = (key) {
-      if (key == 'read_pages') owner.currentOwnerId = 'user-c';
+      // The account switch lands mid-restore and queues its reset, as
+      // AuthCubit does through resolveOwnerChange.
+      if (switchReset == null) {
+        owner.currentOwnerId = 'user-c';
+        switchReset = reset.clearAccountOwnedData(departingOwnerId: 'user-b');
+      }
       return true;
     };
     final events = ProgressEventsBus();
@@ -841,11 +871,79 @@ void main() {
       owner,
       events: events,
     ).restore(payload);
+    await switchReset;
     await Future<void>.delayed(Duration.zero);
     await sub.cancel();
     expect(result, BackupRestoreResult.writeFailed);
     expect(reasons, [ProgressChangedReason.cloudPull]);
-    await expectDeviceUntouched(env);
+
+    for (final key in [
+      'read_pages',
+      'user_profile',
+      'khatmah_active_plan',
+      'khatmah_owner',
+      'mem_plus_profile',
+      'mem_plus_kids_progress|user-b',
+      'ramadan_tarawih|user-b',
+      'hifz_pace',
+      'daily_wird_target_2026-09-08',
+      'ayah_review_pull_cursor',
+      // Not owned by AccountDataReset: only "no rollback" keeps it away.
+      'azkar_counter_morning_z1',
+    ]) {
+      expect(env.prefs.containsKey(key), isFalse, reason: key);
+    }
+    final stored = await env.store!.getAll();
+    expect(stored.containsKey('flutter.read_pages'), isFalse);
+    expect(stored.containsKey('flutter.khatmah_active_plan'), isFalse);
+    expect(await env.isar.isarAyahProgress.count(), 0);
+    expect(await env.isar.streakIsars.count(), 0);
+    expect(await env.isar.xpIsars.count(), 0);
+    expect(await env.isar.dailyActivityIsars.count(), 0);
+    final reviews = await env.isar.isarAyahReviewRecords.where().findAll();
+    expect(
+      reviews.where((r) => r.ownerUserId == 'user-b' || r.ownerUserId == null),
+      isEmpty,
+    );
+  });
+
+  test('a barrier writer queued behind a failing restore is not undone by '
+      'the rollback', () async {
+    final payload = await ownerAPayload();
+    final env = await ownerBDevice('queued_writer', hooked: true);
+    final barrier = AccountDataBarrier.forPreferences(env.prefs);
+    Future<void>? writer;
+    env.store!.onSet = (key) {
+      if (key == 'ramadan_tarawih|user-b' && writer == null) {
+        writer = barrier.run((_) async {
+          await env.prefs.setString('read_pages', '[777]');
+          await env.isar.writeTxn(
+            () => env.isar.xpIsars.put(XpIsar()..totalXp = 555),
+          );
+        });
+        return false;
+      }
+      return true;
+    };
+    final result = await BackupRestorer(
+      env.isar,
+      env.prefs,
+      const FixedRecordOwnerProvider('user-b'),
+    ).restore(payload);
+    await writer;
+    expect(result, BackupRestoreResult.writeFailed);
+    expect(env.prefs.getString('read_pages'), '[777]');
+    expect((await env.store!.getAll())['flutter.read_pages'], '[777]');
+    expect((await env.isar.xpIsars.get(1))!.totalXp, 555);
+    // Everything else is rolled back.
+    expect(env.prefs.getString('ramadan_tarawih|user-b'), '[{"night":9}]');
+    expect(env.prefs.containsKey('khatmah_active_plan'), isFalse);
+    final reviews = await env.isar.isarAyahReviewRecords.where().findAll();
+    expect(reviews.map((r) => r.compositeKey).toSet(), {
+      'user-b|adult|5|5',
+      'user-c|adult|1|1',
+      'user-c|adult|1|4',
+    });
   });
 
   test('prefs write failure mid-restore: writeFailed and original data '
