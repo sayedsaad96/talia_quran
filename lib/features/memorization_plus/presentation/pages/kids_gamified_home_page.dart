@@ -11,7 +11,7 @@ import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
-import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/kids_split_choice.dart';
 import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/kids_journey_cubit.dart';
@@ -70,11 +70,6 @@ String kidsQuranReaderLocation(
     '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId'
     '${pageNumber == null ? '' : '&pageNumber=$pageNumber'}'
     '${ayahNumber == null ? '' : '&ayahNumber=$ayahNumber'}';
-
-@visibleForTesting
-String kidsMissionLocation(KidsNextMission mission) =>
-    '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
-    '&ayahNumber=${mission.startAyah}&missionType=${mission.type.name}';
 
 class _KidsGamifiedHomeView extends StatefulWidget {
   const _KidsGamifiedHomeView({required this.surahId, this.childName});
@@ -356,7 +351,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
       );
     } else {
       if (!context.mounted) return;
-      await context.push(kidsMissionLocation(mission));
+      await context.push(
+        kidsMissionLocation(
+          mission,
+          needsSplitChoice: state.nextMissionNeedsSplitChoice,
+        ),
+      );
     }
 
     if (context.mounted) {

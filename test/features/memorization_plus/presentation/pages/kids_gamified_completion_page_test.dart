@@ -1,14 +1,23 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
+import 'package:talia_quran/core/router/app_router.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
 
 void main() {
+  _nextRouteTests();
   group('KidsGamifiedCompletionPage', () {
     testWidgets('renders rewards and navigation actions', (tester) async {
       tester.view.devicePixelRatio = 1;
@@ -405,6 +414,131 @@ AyahReviewRecord _dueReviewRecord({
   lastRating: PerformanceRating.excellent,
   createdByMode: ReviewRecordCreatedByMode.kidsMode,
 );
+
+void _nextRouteTests() {
+  group('Next on the Quran journey (spec 4.4)', () {
+    setUp(() async => getIt.reset());
+    tearDown(() async => getIt.reset());
+
+    Future<void> finishSurah67(
+      WidgetTester tester, {
+      required ParentSettings settings,
+    }) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1400);
+      addTearDown(tester.view.reset);
+      getIt.registerSingleton<MemorizationPlusRepository>(
+        _CompletionRepository(settings),
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const KidsGamifiedCompletionPage(
+              surahId: 67,
+              completedAyahNumber: 3,
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.memorizationPlusKidsJourney,
+            builder: (_, state) => Text(
+              'journey ${state.uri.queryParameters['surahId']}',
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.memorizationPlusKids,
+            builder: (_, state) => Text(
+              'session ${state.uri.queryParameters['surahId']}',
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('en'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('Start mission'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('a new surah opens its journey page to ask first', (
+      tester,
+    ) async {
+      await finishSurah67(tester, settings: const ParentSettings());
+      expect(find.text('journey 66'), findsOneWidget);
+    });
+
+    testWidgets('a surah with a chosen split goes straight to the session', (
+      tester,
+    ) async {
+      await finishSurah67(
+        tester,
+        settings: const ParentSettings(kidsHouseSizesBySurah: {66: 3}),
+      );
+      expect(find.text('session 66'), findsOneWidget);
+    });
+  });
+}
+
+class _CompletionRepository implements MemorizationPlusRepository {
+  _CompletionRepository(this.settings);
+
+  final ParentSettings settings;
+
+  @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  }) async => Right([
+    KidsJourneyStage(
+      stageNumber: 1,
+      surahId: surahId,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: surahId == 67 ? const [1, 2, 3] : const [],
+      status: surahId == 67
+          ? KidsJourneyStageStatus.completed
+          : KidsJourneyStageStatus.current,
+    ),
+  ]);
+
+  @override
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async => const Right([]);
+
+  @override
+  Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async =>
+      const Right([]);
+
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      Right(settings);
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
+      const Left(CacheFailure('No profile'));
+
+  @override
+  Future<Either<Failure, KidsJourneyPathDefinition>>
+  getKidsJourneyPath() async =>
+      Right(KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child, this.locale = const Locale('en')});

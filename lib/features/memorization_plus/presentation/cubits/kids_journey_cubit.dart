@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_failure.dart';
-import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -12,6 +11,7 @@ import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/kids_split_choice.dart';
 import '../../domain/services/kids_adventure_regions.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_daily_missions.dart';
@@ -271,6 +271,13 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           : await _surahName(missionSurahId),
       isQuranJourney: path.isQuranJourney,
       needsSplitChoice: split.needsChoice,
+      nextMissionNeedsSplitChoice: await _missionNeedsSplitChoice(
+        path,
+        nextMission,
+        activeSurahId,
+        split.needsChoice,
+        logs,
+      ),
       surahAyahCount: split.ayahCount,
       defaultStageSize: split.defaultStageSize,
       currentSplitWhole: split.currentWhole,
@@ -329,18 +336,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       currentStageSize: 0,
     );
     if (!path.isQuranJourney) return none;
-    var ayahCount = 0;
-    for (final stage in stages) {
-      if (stage.surahId == surahId && stage.endAyah > ayahCount) {
-        ayahCount = stage.endAyah;
-      }
-    }
-    ParentSettings? settings;
-    try {
-      settings = await _settingsLoader?.call();
-    } catch (_) {
-      settings = null;
-    }
+    final ayahCount = kidsAyahCountFromStages(surahId, stages);
+    final settings = await _readSettings();
     KidsSessionPolicy? policy;
     try {
       policy = await _policyLoader?.call();
@@ -350,18 +347,13 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     final defaultStageSize =
         sanitizeKidsAyahsPerHouse(settings?.kidsAyahsPerHouse) ??
         (policy ?? KidsSessionPolicy.forChildAge(null)).journeyStageSize;
-    final hasProgress = (logs ?? const <KidsSessionLog>[]).any(
-      (log) =>
-          log.surahId == surahId &&
-          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    final needsChoice = kidsSurahNeedsSplitChoice(
+      path: path,
+      surahId: surahId,
+      ayahCount: ayahCount,
+      settings: settings,
+      logs: logs,
     );
-    final needsChoice =
-        settings != null &&
-        logs != null &&
-        ayahCount > 0 &&
-        !hasProgress &&
-        !settings.kidsWholeSurahIds.contains(surahId) &&
-        !settings.kidsHouseSizesBySurah.containsKey(surahId);
     return (
       needsChoice: needsChoice,
       ayahCount: ayahCount,
@@ -373,6 +365,44 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           sanitizeKidsAyahsPerHouse(settings?.kidsHouseSizesBySurah[surahId]) ??
           defaultStageSize,
     );
+  }
+
+  /// Whether opening [mission] must first ask its surah's split question.
+  /// [activeNeedsChoice] is the already computed answer for [activeSurahId].
+  Future<bool> _missionNeedsSplitChoice(
+    KidsJourneyPathDefinition path,
+    KidsNextMission? mission,
+    int activeSurahId,
+    bool activeNeedsChoice,
+    List<KidsSessionLog>? logs,
+  ) async {
+    // Reviews and empty missions never ask, whatever the surah.
+    if (!kidsMissionNeedsSplitChoice(mission, surahNeedsChoice: (_) => true)) {
+      return false;
+    }
+    final surahId = mission!.surahId;
+    if (surahId == activeSurahId) return activeNeedsChoice;
+    try {
+      final stages = await _loadStages(surahId) ?? const <KidsJourneyStage>[];
+      return kidsSurahNeedsSplitChoice(
+        path: path,
+        surahId: surahId,
+        ayahCount: kidsAyahCountFromStages(surahId, stages),
+        settings: await _readSettings(),
+        logs: logs,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// The guardian settings, or null when unavailable or unreadable.
+  Future<ParentSettings?> _readSettings() async {
+    try {
+      return await _settingsLoader?.call();
+    } catch (_) {
+      return null;
+    }
   }
 
   /// The selected path, read once per load; any failure means the adventure.

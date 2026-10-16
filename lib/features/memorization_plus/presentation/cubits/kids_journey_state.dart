@@ -41,6 +41,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.currentRegion,
     this.isQuranJourney = false,
     this.needsSplitChoice = false,
+    this.nextMissionNeedsSplitChoice = false,
     this.surahAyahCount = 0,
     this.defaultStageSize = 0,
     this.currentSplitWhole = false,
@@ -82,6 +83,10 @@ class KidsJourneyLoaded extends KidsJourneyState {
   /// Quran journey, nothing started in this surah and no split chosen yet:
   /// the page asks «كيف تحب أن تحفظها؟».
   final bool needsSplitChoice;
+
+  /// [nextMission] starts a surah whose split is not chosen yet: the home
+  /// card opens that surah's journey page to ask first (spec §4.4).
+  final bool nextMissionNeedsSplitChoice;
 
   /// Ayahs in [surahId]; 0 off the Quran journey.
   final int surahAyahCount;
@@ -143,6 +148,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     bool clearCurrentRegion = false,
     bool? isQuranJourney,
     bool? needsSplitChoice,
+    bool? nextMissionNeedsSplitChoice,
     int? surahAyahCount,
     int? defaultStageSize,
     bool? currentSplitWhole,
@@ -167,6 +173,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
         : (currentRegion ?? this.currentRegion),
     isQuranJourney: isQuranJourney ?? this.isQuranJourney,
     needsSplitChoice: needsSplitChoice ?? this.needsSplitChoice,
+    nextMissionNeedsSplitChoice:
+        nextMissionNeedsSplitChoice ?? this.nextMissionNeedsSplitChoice,
     surahAyahCount: surahAyahCount ?? this.surahAyahCount,
     defaultStageSize: defaultStageSize ?? this.defaultStageSize,
     currentSplitWhole: currentSplitWhole ?? this.currentSplitWhole,
@@ -190,6 +198,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     currentRegion,
     isQuranJourney,
     needsSplitChoice,
+    nextMissionNeedsSplitChoice,
     surahAyahCount,
     defaultStageSize,
     currentSplitWhole,

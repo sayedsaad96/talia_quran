@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/kids_split_choice.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../widgets/kids_reward_dialog.dart';
@@ -45,6 +46,7 @@ class _KidsGamifiedCompletionPageState
   KidsNextMission? _nextMission;
   int? _dailyGoalCap;
   bool _sessionGoalReached = false;
+  bool _needsSplitChoice = false;
 
   @override
   void initState() {
@@ -72,6 +74,7 @@ class _KidsGamifiedCompletionPageState
       _nextMission = outcome.mission;
       _dailyGoalCap = outcome.dailyGoalCap;
       _sessionGoalReached = outcome.sessionGoalReached;
+      _needsSplitChoice = outcome.needsSplitChoice;
     });
   }
 
@@ -96,10 +99,10 @@ class _KidsGamifiedCompletionPageState
       return;
     }
 
+    // A new surah on the Quran journey asks "whole or stages?" on its journey
+    // page before the first session (spec §4.4).
     context.pushReplacement(
-      '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
-      '&ayahNumber=${mission.startAyah}'
-      '&missionType=${mission.type.name}',
+      kidsMissionLocation(mission, needsSplitChoice: _needsSplitChoice),
     );
   }
 

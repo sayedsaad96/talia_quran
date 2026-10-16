@@ -208,6 +208,20 @@ void main() {
     expect(loaded().currentStageSize, loaded().defaultStageSize);
   });
 
+  test('the home mission asks the split question first (spec 4.4)', () async {
+    cubit = build(
+      path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+    );
+    await cubit.load(surahId: 103);
+    expect(loaded().nextMission?.type, KidsMissionType.newMemorization);
+    expect(loaded().nextMissionNeedsSplitChoice, isTrue);
+    await cubit.close();
+
+    cubit = build();
+    await cubit.load(surahId: 103);
+    expect(loaded().nextMissionNeedsSplitChoice, isFalse);
+  });
+
   group('next mission follows the path (F7)', () {
     KidsJourneyStage stage(int surahId, {required bool done}) =>
         KidsJourneyStage(

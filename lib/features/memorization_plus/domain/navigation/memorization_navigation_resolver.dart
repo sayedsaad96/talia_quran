@@ -13,6 +13,7 @@ import '../services/kids_daily_budget.dart';
 import '../services/kids_due_review_policy.dart';
 import '../services/plan_schedule_policy.dart';
 import 'kids_next_mission_resolver.dart';
+import 'kids_split_choice.dart';
 
 /// The completion screen's "Next" outcome: the mission to open, or — when
 /// none is left because today's new-ayah quota is used up — that quota, so
@@ -23,6 +24,9 @@ typedef KidsMissionAfterCompletion = ({
   KidsNextMission? mission,
   int? dailyGoalCap,
   bool sessionGoalReached,
+
+  /// [mission] starts a surah whose split is not chosen yet (spec §4.4).
+  bool needsSplitChoice,
 });
 
 class MemorizationNavigationTargets {
@@ -161,7 +165,40 @@ class MemorizationNavigationResolver {
       sessionGoalReached: budget.sessionGoalReached(
         await _kidsSessionGoalMinutes(),
       ),
+      needsSplitChoice: await _missionNeedsSplitChoice(path, mission),
     );
+  }
+
+  /// Whether "Next" must open [mission]'s journey page to ask the split
+  /// question first; any read failure means it does not ask.
+  Future<bool> _missionNeedsSplitChoice(
+    KidsJourneyPathDefinition path,
+    KidsNextMission? mission,
+  ) async {
+    if (!kidsMissionNeedsSplitChoice(mission, surahNeedsChoice: (_) => true)) {
+      return false;
+    }
+    final surahId = mission!.surahId;
+    try {
+      final stages = (await _repository.getKidsJourney(
+        surahId: surahId,
+      )).getOrElse(() => const <KidsJourneyStage>[]);
+      return kidsSurahNeedsSplitChoice(
+        path: path,
+        surahId: surahId,
+        ayahCount: kidsAyahCountFromStages(surahId, stages),
+        settings: (await _repository.getParentSettings()).fold(
+          (_) => null,
+          (settings) => settings,
+        ),
+        logs: (await _repository.getKidsSessionLogs()).fold(
+          (_) => null,
+          (logs) => logs,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
   }
 
   /// The parent's session goal (1..60), else the age band's default (K36).

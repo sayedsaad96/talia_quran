@@ -258,7 +258,7 @@ void main() {
 
   test('setKidsSurahSplit fails when the loaded surah is not the requested '
       'one', () async {
-    final provider = FixedRecordOwnerProvider('a');
+    const provider = FixedRecordOwnerProvider('a');
     datasource = MemorizationPlusLocalDatasourceImpl(prefs, owner: provider);
     final service = MemorizationKidsLocalService(
       datasource,

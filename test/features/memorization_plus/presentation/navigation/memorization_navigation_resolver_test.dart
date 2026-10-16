@@ -480,6 +480,52 @@ void main() {
         expect(outcome.mission?.startAyah, 2);
       });
 
+      test('Next asks nothing once the split is chosen or on the '
+          'adventure', () async {
+        KidsJourneyStage stage(int surahId, {required bool done}) =>
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: surahId,
+              startAyah: 1,
+              endAyah: 3,
+              completedAyahs: done ? const [1, 2, 3] : const [],
+              status: done
+                  ? KidsJourneyStageStatus.completed
+                  : KidsJourneyStageStatus.current,
+            );
+        Future<KidsMissionAfterCompletion> outcome({
+          required KidsJourneyPathDefinition path,
+          ParentSettings settings = const ParentSettings(),
+        }) => MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsPath: path,
+            parentSettings: settings,
+            kidsStagesBySurah: {
+              67: [stage(67, done: true)],
+              66: [stage(66, done: false)],
+            },
+          ),
+        ).kidsMissionAfterCompletion(surahId: 67, completedAyah: 3);
+
+        final nas = KidsJourneyPathDefinition.of(
+          KidsJourneyPathId.quranFromNas,
+        );
+        final fresh = await outcome(path: nas);
+        expect(fresh.mission?.surahId, 66);
+        expect(fresh.needsSplitChoice, isTrue);
+
+        final chosen = await outcome(
+          path: nas,
+          settings: const ParentSettings(kidsHouseSizesBySurah: {66: 3}),
+        );
+        expect(chosen.needsSplitChoice, isFalse);
+
+        final adventure = await outcome(
+          path: KidsJourneyPathDefinition.adventure,
+        );
+        expect(adventure.needsSplitChoice, isFalse);
+      });
+
       test('a review started on the Quran journey still binds the adventure '
           '(R9)', () async {
         final resolver = MemorizationNavigationResolver(
