@@ -21,7 +21,7 @@ void main() {
     );
     expect(p.targetDays, 30);
     expect(p.pagesPerDay, 21);
-    expect(p.wirdUnit, KhatmahWirdUnit.juz);
+    expect(p.wirdUnit, KhatmahWirdUnit.pages);
     expect(p.portionsPerDay, 1);
   });
 
@@ -101,4 +101,40 @@ void main() {
       ]);
     },
   );
+
+  test('every template uses the pages unit', () {
+    for (final t in RamadanKhatmahTemplate.values) {
+      final p = paramsFor(t, info(first, 30, RamadanPhase.ramadan), first);
+      expect(p.wirdUnit, KhatmahWirdUnit.pages);
+    }
+  });
+
+  test('preview range equals the plan daily target (day 1 and mid-month)', () {
+    for (final entry in [(first, 1), (DateTime(2027, 2, 17), 282)]) {
+      final today = entry.$1;
+      final startPage = entry.$2;
+      final p = paramsFor(
+        RamadanKhatmahTemplate.splitByPrayers,
+        info(first, 30, RamadanPhase.ramadan),
+        today,
+      );
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: 't',
+        startPage: startPage,
+        targetPagesPerDay: p.pagesPerDay,
+        targetDays: p.targetDays,
+        startDate: today,
+        expectedEndDate: today,
+        wirdUnit: p.wirdUnit,
+      );
+      final target = plan.dailyTargetFor(today);
+      final wird = ramadanDailyWird(p, startPage);
+      expect(wird.startPage, target.startPage);
+      expect(wird.endPage, target.endPage);
+      final parts = splitPagesIntoPortions(wird.startPage, wird.endPage, 5);
+      expect(parts.first.from, target.startPage);
+      expect(parts.last.to, target.endPage);
+    }
+  });
 }

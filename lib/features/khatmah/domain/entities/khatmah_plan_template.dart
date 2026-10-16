@@ -64,7 +64,7 @@ KhatmahTemplateParams paramsFor(
       return KhatmahTemplateParams(
         targetDays: days,
         pagesPerDay: (total / days).ceil(),
-        wirdUnit: KhatmahWirdUnit.juz,
+        wirdUnit: KhatmahWirdUnit.pages,
         portionsPerDay: t == RamadanKhatmahTemplate.splitByPrayers ? 5 : 1,
       );
     case RamadanKhatmahTemplate.twoInMonth:
@@ -76,6 +76,17 @@ KhatmahTemplateParams paramsFor(
         portionsPerDay: 1,
       );
   }
+}
+
+/// Today's wird for a new plan with [params] starting at [startPage]: the
+/// range the plan itself assigns (`KhatmahPlan.dailyTargetFor` resolves to
+/// the same engine call for a pages-unit plan with nothing completed).
+({int startPage, int endPage}) ramadanDailyWird(
+  KhatmahTemplateParams params,
+  int startPage,
+) {
+  final first = startPage.clamp(1, KhatmahSchedulingEngine.totalPages);
+  return KhatmahSchedulingEngine.todaysWird(first - 1, params.pagesPerDay);
 }
 
 /// Splits pages [from]..[to] (inclusive) into at most [count] contiguous,

@@ -8747,7 +8747,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countText يوم متبقية',
+      other: '$countText يومًا متبقيًا',
       many: '$countText يومًا متبقية',
       few: '$countText أيام متبقية',
       two: 'يومان متبقيان',

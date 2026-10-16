@@ -13,6 +13,7 @@ import '../../../../core/seasons/season_calendar.dart';
 import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
@@ -73,7 +74,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   RamadanKhatmahTemplate? _template;
   KhatmahTemplateParams? _templateParams;
 
-  static RamadanInfo? _resolveRamadan(DateTime now) {
+  static RamadanInfo? _resolveRamadan(DateTime now, RamadanInfo? override) {
     try {
       if (!getIt.isRegistered<ExperienceFlags>() ||
           !getIt<ExperienceFlags>().isEnabled(
@@ -81,11 +82,13 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
           )) {
         return null;
       }
+      if (override != null) return override;
       final adjustment = getIt.isRegistered<HijriDateAdjustment>()
           ? getIt<HijriDateAdjustment>().days
           : 0;
       return ramadanInfoAt(now, adjustmentDays: adjustment);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      TaliaLogger.w('Ramadan khatmah templates unavailable', error, stackTrace);
       return null;
     }
   }
@@ -93,8 +96,10 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   @override
   void initState() {
     super.initState();
-    final info =
-        widget.ramadanInfo ?? _resolveRamadan(widget.now ?? DateTime.now());
+    final info = _resolveRamadan(
+      widget.now ?? DateTime.now(),
+      widget.ramadanInfo,
+    );
     if (info != null &&
         (info.phase == RamadanPhase.invite ||
             info.phase == RamadanPhase.ramadan ||
@@ -269,14 +274,14 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
         .clamp(1, KhatmahSchedulingEngine.totalPages);
     final portions = _template == RamadanKhatmahTemplate.splitByPrayers &&
             params != null
-        ? splitPagesIntoPortions(
-            startPage,
-            (startPage + params.pagesPerDay - 1).clamp(
-              startPage,
-              KhatmahSchedulingEngine.totalPages,
-            ),
-            params.portionsPerDay,
-          )
+        ? () {
+            final wird = ramadanDailyWird(params, startPage);
+            return splitPagesIntoPortions(
+              wird.startPage,
+              wird.endPage,
+              params.portionsPerDay,
+            );
+          }()
         : const <({int from, int to})>[];
     return Container(
       key: const Key('khatmah_setup_ramadan_templates'),
