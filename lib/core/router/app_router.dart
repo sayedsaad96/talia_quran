@@ -70,6 +70,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/update_password_page.dart';
 import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
+import '../../features/settings/presentation/pages/labs_flags_page.dart';
 import '../../features/settings/presentation/pages/sources_licenses_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
@@ -132,6 +133,7 @@ abstract class AppRoutes {
   static const String tutorialGuide = '/tutorial-guide';
   static const String privacyPolicy = '/settings/privacy-policy';
   static const String sourcesLicenses = '/settings/sources-licenses';
+  static const String labsFlags = '/settings/labs';
   static const String khatmahSetup = '/khatmah/setup';
   static const String khatmahDashboard = '/khatmah/dashboard';
   static const String khatmDua = '/quran/khatm-dua';
@@ -675,6 +677,14 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.sourcesLicenses,
         builder: (context, state) => const SourcesLicensesPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.labsFlags,
+        // Developer page: outside debug builds the route leads back to settings.
+        redirect: (context, state) => kDebugMode ? null : AppRoutes.settings,
+        builder: (context, state) =>
+            LabsFlagsPage(prefs: getIt<SharedPreferences>()),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

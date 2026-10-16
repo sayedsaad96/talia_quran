@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/icons/talia_icons.dart';
+import '../../../../../core/router/app_router.dart';
 import '../../widgets/settings_group.dart';
 import '../../widgets/settings_info_tiles.dart';
 import '../../widgets/settings_section.dart';
@@ -30,6 +34,15 @@ class AboutSettingsPage extends StatelessWidget {
             // The Tanzil licence requires the attribution and tanzil.net link
             // to stay reachable in the app.
             const SourcesLicensesTile(),
+            if (kDebugMode) ...[
+              SettingsDivider(isDark: isDark),
+              // Developer-only rollout switches; absent from release builds.
+              ListTile(
+                leading: const Icon(TaliaIcons.tune),
+                title: const Text('Labs (debug)'),
+                onTap: () => context.push(AppRoutes.labsFlags),
+              ),
+            ],
           ],
         ),
         SettingsGroup(

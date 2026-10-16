@@ -45,6 +45,7 @@ import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../experience/experience_feature_flags.dart';
 import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/adult_journey/application/adult_journey_usecases.dart';
@@ -1167,6 +1168,10 @@ Future<void> configureDependencies({bool background = false}) async {
   // Rollout switches for the kids enrichment roadmap (all off by default).
   getIt.registerLazySingleton<KidsEnrichmentFlags>(
     () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  // Roadmap batch A rollout switches (all off by default).
+  getIt.registerLazySingleton<ExperienceFlags>(
+    () => ExperienceFlags.fromPreferences(getIt<SharedPreferences>()),
   );
   // Adult journey package 1: owner-scoped preferences and rollout switches
   // (all off by default). Home does not depend on these.
