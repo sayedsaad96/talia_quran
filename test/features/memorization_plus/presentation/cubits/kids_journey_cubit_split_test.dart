@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
@@ -205,6 +206,60 @@ void main() {
     cubit = build(path: path);
     await cubit.load(surahId: 103);
     expect(loaded().currentStageSize, loaded().defaultStageSize);
+  });
+
+  group('next mission follows the path (F7)', () {
+    KidsJourneyStage stage(int surahId, {required bool done}) =>
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: surahId,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: done ? const [1, 2, 3] : const [],
+          status: done
+              ? KidsJourneyStageStatus.completed
+              : KidsJourneyStageStatus.current,
+        );
+
+    setUp(() {
+      when(getJourney(any)).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as GetKidsJourneyParams;
+        return Right([stage(params.surahId, done: params.surahId == 67)]);
+      });
+      when(quran.getSurahDetail(any)).thenAnswer(
+        (_) async => const Right(SurahDetail(surah: surah, ayahs: [])),
+      );
+    });
+
+    test('Quran journey from An-Nas moves from a finished 67 to 66', () async {
+      cubit = build(
+        path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+      );
+      await cubit.load(surahId: 67);
+      expect(loaded().nextMission?.surahId, 66);
+    });
+
+    test('a throwing path loader behaves exactly like the adventure', () async {
+      cubit = build();
+      await cubit.load(surahId: 67);
+      final adventureMission = loaded().nextMission;
+      await cubit.close();
+
+      cubit = KidsJourneyCubit(
+        getJourney,
+        getProgress,
+        quran,
+        sessionLogsLoader: () async => logs,
+        pathLoader: () async => throw StateError('prefs'),
+        policyLoader: () async => KidsSessionPolicy.forAge(8),
+        settingsLoader: () async => settings,
+      );
+      await cubit.load(surahId: 67);
+      expect(loaded().isQuranJourney, isFalse);
+      expect(loaded().nextMission, adventureMission);
+      expect(loaded().nextMission?.surahId, isNot(66));
+    });
   });
 
   test('chooseSplit returns false and keeps state when saving fails', () async {
