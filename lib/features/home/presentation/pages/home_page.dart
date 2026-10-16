@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -318,6 +319,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
+            if (!ClarityModeController.isActive)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 240),
@@ -369,6 +371,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                   ),
                 ),
               ),
+            if (!ClarityModeController.isActive)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 400),

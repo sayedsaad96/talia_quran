@@ -8723,4 +8723,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trustViewPrivacy => 'Privacy policy';
+
+  @override
+  String get clarityModeTitle => 'Clarity mode';
+
+  @override
+  String get clarityModeSubtitle =>
+      'Larger text, higher contrast and a simpler home';
 }

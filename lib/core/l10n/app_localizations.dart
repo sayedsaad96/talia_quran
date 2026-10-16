@@ -14745,6 +14745,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'سياسة الخصوصية'**
   String get trustViewPrivacy;
+
+  /// No description provided for @clarityModeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وضع الوضوح'**
+  String get clarityModeTitle;
+
+  /// No description provided for @clarityModeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خط أكبر، تباين أعلى، ورئيسية أبسط'**
+  String get clarityModeSubtitle;
 }
 
 class _AppLocalizationsDelegate

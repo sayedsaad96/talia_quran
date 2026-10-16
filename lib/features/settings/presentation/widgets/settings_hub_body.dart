@@ -16,6 +16,7 @@ import '../pages/subpages/prayer_settings_page.dart';
 import '../pages/subpages/quran_settings_page.dart';
 import 'settings_account_tiles.dart';
 import 'settings_appearance_tiles.dart';
+import 'settings_clarity_tile.dart';
 import 'settings_group.dart';
 import 'settings_nav_tile.dart';
 import 'settings_section.dart';
@@ -91,6 +92,7 @@ class SettingsHubBody extends StatelessWidget {
           title: l10n.theme,
         ),
         ThemeSettingTile(isDark: isDark),
+        const ClaritySettingTile(),
       ],
     );
   }

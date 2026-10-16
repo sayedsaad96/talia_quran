@@ -5,6 +5,7 @@ import 'package:qcf_quran_plus/src/services/get_page.dart';
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/widgets/bsmallah_widget.dart' as qcf_widgets;
 
+import '../../../../core/accessibility/clarity_mode.dart';
 import 'mushaf_page_flip_physics.dart';
 import 'quran_page_font_guard.dart';
 import '../../domain/services/quran_page_order_policy.dart';
@@ -160,24 +161,26 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
                       pageNumber: pageNum,
                       isDark: widget.isDarkMode,
                       child: RepaintBoundary(
-                        child: MushafZoomablePage(
-                          onZoomChanged: (zoomed) {
-                            if (mounted && _pageZoomed != zoomed) {
-                              setState(() => _pageZoomed = zoomed);
-                            }
-                          },
-                          child: qcf.QuranSinglePageWidget(
-                            key: ValueKey('page_content_$pageNum'),
-                            isTajweed: widget.isTajweed,
-                            page: _pages[pageNum - 1],
-                            pageIndex: pageNum,
-                            highlights: widget.highlights,
-                            onLongPress: widget.onLongPress,
-                            pageController: widget.pageController,
-                            surahHeaderBuilder: widget.surahHeaderBuilder,
-                            basmallahBuilder: widget.basmallahBuilder,
-                            ayahStyle: widget.ayahStyle,
-                            isDark: widget.isDarkMode,
+                        child: SystemTextScale(
+                          child: MushafZoomablePage(
+                            onZoomChanged: (zoomed) {
+                              if (mounted && _pageZoomed != zoomed) {
+                                setState(() => _pageZoomed = zoomed);
+                              }
+                            },
+                            child: qcf.QuranSinglePageWidget(
+                              key: ValueKey('page_content_$pageNum'),
+                              isTajweed: widget.isTajweed,
+                              page: _pages[pageNum - 1],
+                              pageIndex: pageNum,
+                              highlights: widget.highlights,
+                              onLongPress: widget.onLongPress,
+                              pageController: widget.pageController,
+                              surahHeaderBuilder: widget.surahHeaderBuilder,
+                              basmallahBuilder: widget.basmallahBuilder,
+                              ayahStyle: widget.ayahStyle,
+                              isDark: widget.isDarkMode,
+                            ),
                           ),
                         ),
                       ),

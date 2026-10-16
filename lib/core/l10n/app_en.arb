@@ -3576,4 +3576,6 @@
   ,"trustDataBody": "You can use Talia without an account. Sync is optional, and each account's data is kept separate."
   ,"trustViewSources": "View sources and licenses"
   ,"trustViewPrivacy": "Privacy policy"
+  ,"clarityModeTitle": "Clarity mode"
+  ,"clarityModeSubtitle": "Larger text, higher contrast and a simpler home"
 }

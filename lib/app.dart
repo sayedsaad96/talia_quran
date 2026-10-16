@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/accessibility/clarity_mode.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
@@ -30,6 +31,8 @@ import 'features/app_update/presentation/widgets/app_update_prompt_listener.dart
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
 /// into the full BlocProvider tree + GoRouter.
 final ValueNotifier<bool> appInitializedNotifier = ValueNotifier<bool>(false);
+/// Never notifies; stands in when no clarity controller is registered.
+final ChangeNotifier _noClarityChanges = ChangeNotifier();
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -176,27 +179,39 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
               return BlocBuilder<ThemeCubit, ThemeMode>(
                 builder: (context, themeMode) {
                   final pureBlack = context.watch<PureBlackCubit>().state;
-                  return MaterialApp.router(
-                    onGenerateTitle: (context) =>
-                        AppLocalizations.of(context).appName,
-                    debugShowCheckedModeBanner: false,
-                    scaffoldMessengerKey: rootScaffoldMessengerKey,
-                    themeMode: themeMode,
-                    theme: AppTheme.light,
-                    darkTheme: pureBlack ? AppTheme.oled : AppTheme.dark,
-                    locale: locale,
-                    supportedLocales: AppLocalizations.supportedLocales,
-                    localizationsDelegates: const [
-                      AppLocalizations.delegate,
-                      DigitMaterialLocalizations.delegate,
-                      GlobalMaterialLocalizations.delegate,
-                      GlobalWidgetsLocalizations.delegate,
-                      GlobalCupertinoLocalizations.delegate,
-                    ],
-                    routerConfig: AppRouter.router,
-                    builder: (context, child) => AppUpdatePromptListener(
-                      child: child ?? const SizedBox.shrink(),
-                    ),
+                  final clarity = ClarityModeController.maybeInstance();
+                  return ListenableBuilder(
+                    listenable: clarity ?? _noClarityChanges,
+                    builder: (context, _) {
+                      final clarityOn = clarity?.isOn ?? false;
+                      return MaterialApp.router(
+                        onGenerateTitle: (context) =>
+                            AppLocalizations.of(context).appName,
+                        debugShowCheckedModeBanner: false,
+                        scaffoldMessengerKey: rootScaffoldMessengerKey,
+                        themeMode: themeMode,
+                        theme: AppTheme.lightFor(highContrast: clarityOn),
+                        darkTheme: pureBlack
+                            ? AppTheme.oledFor(highContrast: clarityOn)
+                            : AppTheme.darkFor(highContrast: clarityOn),
+                        locale: locale,
+                        supportedLocales: AppLocalizations.supportedLocales,
+                        localizationsDelegates: const [
+                          AppLocalizations.delegate,
+                          DigitMaterialLocalizations.delegate,
+                          GlobalMaterialLocalizations.delegate,
+                          GlobalWidgetsLocalizations.delegate,
+                          GlobalCupertinoLocalizations.delegate,
+                        ],
+                        routerConfig: AppRouter.router,
+                        builder: (context, child) => ClarityTextScaleScope(
+                          on: clarityOn,
+                          child: AppUpdatePromptListener(
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               );

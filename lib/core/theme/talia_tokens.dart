@@ -141,6 +141,26 @@ class TaliaTokens extends ThemeExtension<TaliaTokens> {
     glassGradient: AppColors.surfaceGlassDark,
   );
 
+  /// Highest-contrast text, hint and divider colors for clarity mode.
+  ///
+  /// Surfaces and brand colors are untouched; only text and borders move
+  /// toward pure black (light) or pure white (dark / OLED).
+  TaliaTokens toHighContrast({required bool dark}) {
+    return dark
+        ? copyWith(
+            textPrimary: const Color(0xFFFFFFFF),
+            textSecondary: const Color(0xFFE3E8EF),
+            textHint: const Color(0xFFC9D0DA),
+            divider: const Color(0xFF8FB0A8),
+          )
+        : copyWith(
+            textPrimary: const Color(0xFF000000),
+            textSecondary: const Color(0xFF2E2620),
+            textHint: const Color(0xFF4A4036),
+            divider: const Color(0xFF6B5E4E),
+          );
+  }
+
   /// Fallback for widgets pumped without `AppTheme` (e.g. bare widget tests).
   static TaliaTokens of(BuildContext context) {
     final theme = Theme.of(context);

@@ -15,7 +15,11 @@ import '../constants/app_spacing.dart';
 /// `context.tokens`.
 abstract class AppTheme {
   // ─── Light Theme ─────────────────────────────────────────────────────────────
-  static ThemeData get light => _build(
+  static ThemeData get light => lightFor();
+
+  /// Light theme; [highContrast] is clarity mode's variant.
+  static ThemeData lightFor({bool highContrast = false}) => _build(
+    highContrast: highContrast,
     colorScheme: const ColorScheme(
       brightness: Brightness.light,
       primary: AppColors.primary,
@@ -45,11 +49,19 @@ abstract class AppTheme {
   );
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────────
-  static ThemeData get dark =>
-      _build(colorScheme: _darkScheme, tokens: TaliaTokens.dark);
+  static ThemeData get dark => darkFor();
+
+  static ThemeData darkFor({bool highContrast = false}) => _build(
+    colorScheme: _darkScheme,
+    tokens: TaliaTokens.dark,
+    highContrast: highContrast,
+  );
 
   // ─── OLED (pure black) Theme ─────────────────────────────────────────────────
-  static ThemeData get oled => _build(
+  static ThemeData get oled => oledFor();
+
+  static ThemeData oledFor({bool highContrast = false}) => _build(
+    highContrast: highContrast,
     colorScheme: _darkScheme.copyWith(
       surface: AppColors.oledSurface,
       surfaceContainerHighest: AppColors.oledSurfaceVariant,
@@ -87,8 +99,17 @@ abstract class AppTheme {
     required ColorScheme colorScheme,
     required TaliaTokens tokens,
     double chipSelectedAlpha = 0.2,
+    bool highContrast = false,
   }) {
     final isDark = colorScheme.brightness == Brightness.dark;
+    if (highContrast) {
+      tokens = tokens.toHighContrast(dark: isDark);
+      colorScheme = colorScheme.copyWith(
+        onSurface: tokens.textPrimary,
+        onSurfaceVariant: tokens.textSecondary,
+        outline: tokens.divider,
+      );
+    }
     final primary = colorScheme.primary;
     final textTheme = AppTypography.buildTextTheme(
       tokens.textPrimary,

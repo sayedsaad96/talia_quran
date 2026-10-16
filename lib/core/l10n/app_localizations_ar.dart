@@ -8712,4 +8712,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trustViewPrivacy => 'سياسة الخصوصية';
+
+  @override
+  String get clarityModeTitle => 'وضع الوضوح';
+
+  @override
+  String get clarityModeSubtitle => 'خط أكبر، تباين أعلى، ورئيسية أبسط';
 }
