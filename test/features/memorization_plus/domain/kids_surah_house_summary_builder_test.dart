@@ -208,6 +208,24 @@ void main() {
       expect(currentKidsSurahHouse(houses, const []), 1);
     });
 
+    test('the guardian starting surah with no logs', () {
+      final houses = _build(
+        path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+      );
+      expect(
+        currentKidsSurahHouse(houses, const [], startingSurahId: 67),
+        67,
+      );
+    });
+
+    test('a starting surah off the houses falls back to the first', () {
+      final houses = _build(path: KidsJourneyPathDefinition.adventure);
+      expect(
+        currentKidsSurahHouse(houses, const [], startingSurahId: 67),
+        1,
+      );
+    });
+
     test('last started when not completed', () {
       final logs = [
         _log(114, 1, at: DateTime.utc(2026, 10, 1)),

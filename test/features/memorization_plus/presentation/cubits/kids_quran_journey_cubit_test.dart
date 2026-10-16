@@ -66,6 +66,16 @@ void main() {
     await cubit.close();
   });
 
+  test('a new child opens on the guardian starting surah', () async {
+    when(() => repo.getParentSettings()).thenAnswer(
+      (_) async => const Right(ParentSettings(startingSurahId: 67)),
+    );
+    final cubit = KidsQuranJourneyCubit(repo, quran);
+    await cubit.load();
+    expect((cubit.state as KidsQuranJourneyLoaded).currentSurahId, 67);
+    await cubit.close();
+  });
+
   test('load emits Error when surahs cannot be read', () async {
     when(
       () => quran.getSurahs(),

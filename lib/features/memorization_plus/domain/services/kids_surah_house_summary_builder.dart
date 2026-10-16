@@ -145,11 +145,13 @@ int _stageSize({
 /// The house the map opens on: the surah of the most recent canonical reward
 /// log if it is not completed; otherwise the next non-completed house after
 /// it in path order (falling back to the first non-completed house, then the
-/// first house); with no such logs, the first house of the path.
+/// first house); with no such logs, the guardian's [startingSurahId] when it
+/// is one of the houses, else the first house of the path.
 int currentKidsSurahHouse(
   List<KidsSurahHouse> houses,
-  List<KidsSessionLog> logs,
-) {
+  List<KidsSessionLog> logs, {
+  int? startingSurahId,
+}) {
   if (houses.isEmpty) return KidsJourneyPath.surahIds.first;
   final inPath = {for (final h in houses) h.surahId};
   KidsSessionLog? last;
@@ -160,7 +162,11 @@ int currentKidsSurahHouse(
     }
     if (last == null || log.completedAt.isAfter(last.completedAt)) last = log;
   }
-  if (last == null) return houses.first.surahId;
+  if (last == null) {
+    return startingSurahId != null && inPath.contains(startingSurahId)
+        ? startingSurahId
+        : houses.first.surahId;
+  }
   final index = houses.indexWhere((h) => h.surahId == last!.surahId);
   if (houses[index].status != KidsSurahHouseStatus.completed) {
     return houses[index].surahId;

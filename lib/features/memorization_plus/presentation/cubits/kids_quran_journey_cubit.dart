@@ -106,7 +106,11 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
         generation,
         KidsQuranJourneyLoaded(
           houses: houses,
-          currentSurahId: currentKidsSurahHouse(houses, logs),
+          currentSurahId: currentKidsSurahHouse(
+            houses,
+            logs,
+            startingSurahId: settings.startingSurahId,
+          ),
           surahNames: {for (final s in surahs) s.id: s.nameAr},
         ),
       );
