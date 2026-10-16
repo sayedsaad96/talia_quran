@@ -14781,6 +14781,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تمّت'**
   String get afterPrayerAzkarDone;
+
+  /// No description provided for @ramadanTemplateOne.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة في رمضان'**
+  String get ramadanTemplateOne;
+
+  /// No description provided for @ramadanTemplateTwo.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمتان في رمضان'**
+  String get ramadanTemplateTwo;
+
+  /// No description provided for @ramadanTemplateSplit.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد مقسّم على الصلوات'**
+  String get ramadanTemplateSplit;
+
+  /// No description provided for @ramadanTemplateDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{{countText} يوم متبقٍ} =1{يوم واحد متبقٍ} =2{يومان متبقيان} few{{countText} أيام متبقية} many{{countText} يومًا متبقية} other{{countText} يوم متبقية}}'**
+  String ramadanTemplateDays(int count, String countText);
+
+  /// No description provided for @ramadanPortion.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعد {prayer}: صفحات {from}–{to}'**
+  String ramadanPortion(String prayer, String from, String to);
 }
 
 class _AppLocalizationsDelegate

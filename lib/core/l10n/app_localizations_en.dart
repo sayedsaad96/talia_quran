@@ -8744,4 +8744,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get afterPrayerAzkarDone => 'Done';
+
+  @override
+  String get ramadanTemplateOne => 'One khatmah in Ramadan';
+
+  @override
+  String get ramadanTemplateTwo => 'Two khatmahs in Ramadan';
+
+  @override
+  String get ramadanTemplateSplit => 'Daily wird split over the prayers';
+
+  @override
+  String ramadanTemplateDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days remaining',
+      one: '$countText day remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanPortion(String prayer, String from, String to) {
+    return 'After $prayer: pages $from–$to';
+  }
 }

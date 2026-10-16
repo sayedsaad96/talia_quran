@@ -3621,4 +3621,11 @@
   ,"@afterPrayerAzkarSubtitle": {"placeholders": {"prayer": {"type": "String"}}}
   ,"afterPrayerAzkarOpen": "ابدأ"
   ,"afterPrayerAzkarDone": "تمّت"
+  ,"ramadanTemplateOne": "ختمة في رمضان"
+  ,"ramadanTemplateTwo": "ختمتان في رمضان"
+  ,"ramadanTemplateSplit": "ورد مقسّم على الصلوات"
+  ,"ramadanTemplateDays": "{count, plural, =0{{countText} يوم متبقٍ} =1{يوم واحد متبقٍ} =2{يومان متبقيان} few{{countText} أيام متبقية} many{{countText} يومًا متبقية} other{{countText} يوم متبقية}}"
+  ,"@ramadanTemplateDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
+  ,"ramadanPortion": "بعد {prayer}: صفحات {from}–{to}"
+  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}}
 }

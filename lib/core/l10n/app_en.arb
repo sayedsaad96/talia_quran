@@ -3582,4 +3582,11 @@
   ,"afterPrayerAzkarSubtitle": "After {prayer} prayer"
   ,"afterPrayerAzkarOpen": "Start"
   ,"afterPrayerAzkarDone": "Done"
+  ,"ramadanTemplateOne": "One khatmah in Ramadan"
+  ,"ramadanTemplateTwo": "Two khatmahs in Ramadan"
+  ,"ramadanTemplateSplit": "Daily wird split over the prayers"
+  ,"ramadanTemplateDays": "{count, plural, =1{{countText} day remaining} other{{countText} days remaining}}"
+  ,"@ramadanTemplateDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
+  ,"ramadanPortion": "After {prayer}: pages {from}–{to}"
+  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}}
 }

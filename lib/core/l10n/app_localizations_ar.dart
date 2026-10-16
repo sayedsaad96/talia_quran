@@ -8732,4 +8732,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get afterPrayerAzkarDone => 'تمّت';
+
+  @override
+  String get ramadanTemplateOne => 'ختمة في رمضان';
+
+  @override
+  String get ramadanTemplateTwo => 'ختمتان في رمضان';
+
+  @override
+  String get ramadanTemplateSplit => 'ورد مقسّم على الصلوات';
+
+  @override
+  String ramadanTemplateDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوم متبقية',
+      many: '$countText يومًا متبقية',
+      few: '$countText أيام متبقية',
+      two: 'يومان متبقيان',
+      one: 'يوم واحد متبقٍ',
+      zero: '$countText يوم متبقٍ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanPortion(String prayer, String from, String to) {
+    return 'بعد $prayer: صفحات $from–$to';
+  }
 }

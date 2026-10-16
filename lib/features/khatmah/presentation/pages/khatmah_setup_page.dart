@@ -5,14 +5,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/seasons/season_calendar.dart';
+import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_plan_template.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../khatmah_localizations.dart';
 import '../khatmah_setup_prefill.dart';
@@ -20,7 +24,20 @@ import '../cubits/khatmah_setup_cubit.dart';
 import '../widgets/khatmah_dedication_form.dart';
 
 class KhatmahSetupPage extends StatefulWidget {
-  const KhatmahSetupPage({super.key, this.cubit, this.prefill});
+  const KhatmahSetupPage({
+    super.key,
+    this.cubit,
+    this.prefill,
+    this.ramadanInfo,
+    this.now,
+  });
+
+  /// Season snapshot override (tests). When null it is resolved from the
+  /// Ramadan experience flag and the user's Hijri adjustment.
+  final RamadanInfo? ramadanInfo;
+
+  /// Clock override (tests).
+  final DateTime? now;
 
   final KhatmahSetupCubit? cubit;
 
@@ -51,9 +68,39 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   final TextEditingController _startPageController = TextEditingController();
   String? _languageCode;
 
+  /// Ramadan templates are offered only while this is non-null.
+  RamadanInfo? _ramadan;
+  RamadanKhatmahTemplate? _template;
+  KhatmahTemplateParams? _templateParams;
+
+  static RamadanInfo? _resolveRamadan(DateTime now) {
+    try {
+      if (!getIt.isRegistered<ExperienceFlags>() ||
+          !getIt<ExperienceFlags>().isEnabled(
+            ExperienceFeature.seasonalRamadan,
+          )) {
+        return null;
+      }
+      final adjustment = getIt.isRegistered<HijriDateAdjustment>()
+          ? getIt<HijriDateAdjustment>().days
+          : 0;
+      return ramadanInfoAt(now, adjustmentDays: adjustment);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    final info =
+        widget.ramadanInfo ?? _resolveRamadan(widget.now ?? DateTime.now());
+    if (info != null &&
+        (info.phase == RamadanPhase.invite ||
+            info.phase == RamadanPhase.ramadan ||
+            info.phase == RamadanPhase.lastTen)) {
+      _ramadan = info;
+    }
     if (widget.cubit != null) {
       _cubit = widget.cubit!;
     } else {
@@ -101,8 +148,28 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     }
   }
 
+  void _onTemplateSelected(RamadanKhatmahTemplate template) {
+    final info = _ramadan;
+    if (info == null) return;
+    final today = widget.now ?? DateTime.now();
+    final params = paramsFor(template, info, today);
+    setState(() {
+      _template = template;
+      _templateParams = params;
+      _selectedDays = params.targetDays;
+      _selectedPages = params.pagesPerDay;
+      _customController.clear();
+    });
+  }
+
+  void _clearTemplate() {
+    _template = null;
+    _templateParams = null;
+  }
+
   void _onDurationSelected(int days) {
     setState(() {
+      _clearTemplate();
       _selectedDays = days;
       _selectedPages = (KhatmahSchedulingEngine.totalPages / days).ceil();
       _customController.clear();
@@ -111,6 +178,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
 
   void _onPresetSelected(int pages) {
     setState(() {
+      _clearTemplate();
       _selectedDays = null;
       _selectedPages = pages;
       _customController.clear();
@@ -123,6 +191,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
         parsed > 0 &&
         parsed <= KhatmahSchedulingEngine.totalPages) {
       setState(() {
+        _clearTemplate();
         _selectedDays = null;
         _selectedPages = parsed;
       });
@@ -136,9 +205,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
       targetDays: _selectedDays,
       startPage: parseKhatmahPageInput(_startPageController.text) ?? 1,
       // Ramadan: one juz a day, ending on the juz boundary.
-      wirdUnit: _selectedDays == 30
-          ? KhatmahWirdUnit.juz
-          : KhatmahWirdUnit.pages,
+      wirdUnit:
+          _templateParams?.wirdUnit ??
+          (_selectedDays == 30 ? KhatmahWirdUnit.juz : KhatmahWirdUnit.pages),
     );
   }
 
@@ -169,6 +238,91 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
             ),
             child: Text(l10n.khatmahEndPlanAction),
           ),
+        ],
+      ),
+    );
+  }
+
+  String _prayerName(int index) {
+    final l10n = context.l10n;
+    return switch (index) {
+      0 => l10n.prayerFajr,
+      1 => l10n.prayerDhuhr,
+      2 => l10n.prayerAsr,
+      3 => l10n.prayerMaghrib,
+      _ => l10n.prayerIsha,
+    };
+  }
+
+  Widget _buildRamadanTemplates(BuildContext context) {
+    final l10n = context.l10n;
+    final info = _ramadan!;
+    final today = widget.now ?? DateTime.now();
+    final remaining = ramadanDaysRemaining(info, today);
+    final labels = {
+      RamadanKhatmahTemplate.oneInMonth: l10n.ramadanTemplateOne,
+      RamadanKhatmahTemplate.twoInMonth: l10n.ramadanTemplateTwo,
+      RamadanKhatmahTemplate.splitByPrayers: l10n.ramadanTemplateSplit,
+    };
+    final params = _templateParams;
+    final startPage = (parseKhatmahPageInput(_startPageController.text) ?? 1)
+        .clamp(1, KhatmahSchedulingEngine.totalPages);
+    final portions = _template == RamadanKhatmahTemplate.splitByPrayers &&
+            params != null
+        ? splitPagesIntoPortions(
+            startPage,
+            (startPage + params.pagesPerDay - 1).clamp(
+              startPage,
+              KhatmahSchedulingEngine.totalPages,
+            ),
+            params.portionsPerDay,
+          )
+        : const <({int from, int to})>[];
+    return Container(
+      key: const Key('khatmah_setup_ramadan_templates'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              for (final entry in labels.entries)
+                ChoiceChip(
+                  key: Key('khatmah_setup_ramadan_${entry.key.name}'),
+                  label: Text(entry.value),
+                  selected: _template == entry.key,
+                  selectedColor: AppColors.gold.withValues(alpha: 0.25),
+                  onSelected: (_) => _onTemplateSelected(entry.key),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.ramadanTemplateDays(remaining, context.numText(remaining)),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.tokens.textSecondary,
+            ),
+          ),
+          for (var i = 0; i < portions.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                l10n.ramadanPortion(
+                  _prayerName(i),
+                  context.numText(portions[i].from),
+                  context.numText(portions[i].to),
+                ),
+                key: Key('khatmah_setup_ramadan_portion_$i'),
+                style: AppTypography.bodyMedium,
+              ),
+            ),
         ],
       ),
     );
@@ -317,6 +471,11 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
+                    ],
+
+                    if (_ramadan != null) ...[
+                      _buildRamadanTemplates(context),
+                      const SizedBox(height: AppSpacing.md),
                     ],
 
                     // Daily pages selector card
