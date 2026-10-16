@@ -8698,7 +8698,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trustVoiceBody =>
-      'تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك.';
+      'تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته.';
 
   @override
   String get trustDataTitle => 'بياناتك';

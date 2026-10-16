@@ -8709,7 +8709,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trustVoiceBody =>
-      'Talia does not record, store or upload your voice. Speech recognition is done by your device\'s system service.';
+      'Talia does not keep a recording of your voice or send it to Talia\'s servers. Speech recognition uses your device\'s system service (such as Google), which may send the audio to its provider under its own policies.';
 
   @override
   String get trustDataTitle => 'Your data';

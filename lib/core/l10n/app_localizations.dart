@@ -14719,7 +14719,7 @@ abstract class AppLocalizations {
   /// No description provided for @trustVoiceBody.
   ///
   /// In ar, this message translates to:
-  /// **'تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك.'**
+  /// **'تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته.'**
   String get trustVoiceBody;
 
   /// No description provided for @trustDataTitle.

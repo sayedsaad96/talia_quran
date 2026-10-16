@@ -3571,7 +3571,7 @@
   ,"trustSourcesMeta": "Data version {version} • {count, plural, =1{1 source} other{{countText} sources}}"
   ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"trustVoiceTitle": "Your voice"
-  ,"trustVoiceBody": "Talia does not record, store or upload your voice. Speech recognition is done by your device's system service."
+  ,"trustVoiceBody": "Talia does not keep a recording of your voice or send it to Talia's servers. Speech recognition uses your device's system service (such as Google), which may send the audio to its provider under its own policies."
   ,"trustDataTitle": "Your data"
   ,"trustDataBody": "You can use Talia without an account. Sync is optional, and each account's data is kept separate."
   ,"trustViewSources": "View sources and licenses"
