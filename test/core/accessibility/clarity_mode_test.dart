@@ -82,6 +82,7 @@ void main() {
             _contrast(t.textSecondary, t.background),
             greaterThanOrEqualTo(4.5),
           );
+          expect(_contrast(t.textHint, t.surface), greaterThanOrEqualTo(4.5));
           expect(_contrast(t.textPrimary, t.surface), greaterThanOrEqualTo(7));
           expect(
             _contrast(t.textPrimary, t.surface),

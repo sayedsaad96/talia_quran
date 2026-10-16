@@ -36,12 +36,14 @@ void main() {
     }
   });
 
-  Future<void> pumpHome(WidgetTester tester, {required bool clarity}) async {
+  Future<ClarityModeController> pumpHome(
+    WidgetTester tester, {
+    required bool clarity,
+  }) async {
     SharedPreferences.setMockInitialValues({'clarity_mode_on': clarity});
     final prefs = await SharedPreferences.getInstance();
-    getIt.registerSingleton<ClarityModeController>(
-      ClarityModeController(prefs, flagEnabled: () => true),
-    );
+    final controller = ClarityModeController(prefs, flagEnabled: () => true);
+    getIt.registerSingleton<ClarityModeController>(controller);
     await tester.binding.setSurfaceSize(const Size(390, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -127,7 +129,22 @@ void main() {
     );
     await tester.pump();
     await tester.pumpAndSettle();
+    return controller;
   }
+
+  testWidgets('home reacts when clarity is toggled at runtime', (tester) async {
+    final controller = await pumpHome(tester, clarity: false);
+    expect(find.byType(HomeUnifiedProgress), findsOneWidget);
+    await controller.setOn(true);
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeUnifiedProgress), findsNothing);
+    expect(find.byType(HomeActivityFeed), findsNothing);
+    await controller.setOn(false);
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeUnifiedProgress), findsOneWidget);
+    expect(find.byType(HomeActivityFeed), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+  });
 
   testWidgets('home hides progress and activity feed when clarity is on', (
     tester,

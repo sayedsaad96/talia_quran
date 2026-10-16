@@ -204,6 +204,9 @@ class HomeLoadedView extends StatefulWidget {
   State<HomeLoadedView> createState() => _HomeLoadedViewState();
 }
 
+/// Never notifies; stands in when no clarity controller is registered.
+final ChangeNotifier _noClarityChanges = ChangeNotifier();
+
 class _HomeLoadedViewState extends State<HomeLoadedView> {
   final _scrollController = ScrollController();
 
@@ -215,6 +218,16 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: ClarityModeController.maybeInstance() ?? _noClarityChanges,
+      builder: (context, _) => _buildLoaded(
+        context,
+        clarityOn: ClarityModeController.isActive,
+      ),
+    );
+  }
+
+  Widget _buildLoaded(BuildContext context, {required bool clarityOn}) {
     final isDark = widget.skin.isDark;
     final journeyEnabled =
         JourneyFeatureFlags.unifiedJourneyEnabled && widget.state.unifiedJourneyEnabled;
@@ -319,7 +332,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
-            if (!ClarityModeController.isActive)
+            if (!clarityOn)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 240),
@@ -371,7 +384,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                   ),
                 ),
               ),
-            if (!ClarityModeController.isActive)
+            if (!clarityOn)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 400),

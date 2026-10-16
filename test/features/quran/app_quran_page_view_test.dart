@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/services/get_page.dart';
+import 'package:talia_quran/core/accessibility/clarity_mode.dart';
 import 'package:talia_quran/features/quran/domain/services/quran_page_order_policy.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_view.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_page_font_guard.dart';
@@ -128,6 +129,63 @@ void main() {
     expect(changedPages, [604, 603]);
   });
 
+  testWidgets('Mushaf page keeps the system text scale under clarity', (
+    tester,
+  ) async {
+    final controller = PageController();
+    addTearDown(controller.dispose);
+    double? barScale;
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(1.1)),
+        child: ClarityTextScaleScope(
+          on: true,
+          child: MaterialApp(
+            home: AppQuranPageView(
+              pageController: controller,
+              highlights: const [],
+              isDarkMode: false,
+              topBar: Builder(
+                builder: (context) {
+                  barScale = MediaQuery.textScalerOf(context).scale(1);
+                  return const SizedBox(height: 10);
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(barScale, kClarityTextScale);
+
+    // The font guard shows a placeholder until the QCF font loads, so mount
+    // the real per-page subtree the view builds under the same clarity scope.
+    final pageView = tester.widget<PageView>(find.byType(PageView));
+    final delegate = pageView.childrenDelegate as SliverChildBuilderDelegate;
+    final built = delegate.builder(tester.element(find.byType(PageView)), 0)!;
+    final scaled = (((built as Column).children.last as Expanded).child
+            as QuranPageFontGuard)
+        .child as RepaintBoundary;
+
+    double? pageScale;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(1.1)),
+        child: ClarityTextScaleScope(
+          on: true,
+          child: MaterialApp(home: scaled),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    final page = find.byType(qcf.QuranSinglePageWidget);
+    expect(page, findsOneWidget);
+    pageScale = MediaQuery.textScalerOf(tester.element(page)).scale(1);
+    expect(pageScale, 1.1);
+  });
+
   testWidgets('uses canonical order by default for adult readers', (tester) async {
     final controller = PageController();
     final changedPages = <int>[];
@@ -163,6 +221,7 @@ _singlePageContent(Widget page) {
   final expanded = column.children.single as Expanded;
   final guard = expanded.child as QuranPageFontGuard;
   final repaintBoundary = guard.child as RepaintBoundary;
-  final zoomablePage = repaintBoundary.child as MushafZoomablePage;
+  final scale = repaintBoundary.child as SystemTextScale;
+  final zoomablePage = scale.child as MushafZoomablePage;
   return (guard: guard, quranPage: zoomablePage.child as qcf.QuranSinglePageWidget);
 }
