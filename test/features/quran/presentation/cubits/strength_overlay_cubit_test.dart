@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/strength_band.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
@@ -144,6 +147,29 @@ void main() {
     expect(prefs.getBool(key), isFalse);
     await second.close();
   });
+
+  test(
+    'off then on during an in-flight reload ends enabled with bands',
+    () async {
+      SharedPreferences.setMockInitialValues({key: true});
+      final cubit = build(await SharedPreferences.getInstance());
+      await cubit.init();
+      final gate = Completer<Either<Failure, List<AyahReviewRecord>>>();
+      when(
+        () => repo.getAllReviewRecords(scope: any(named: 'scope')),
+      ).thenAnswer((_) => gate.future);
+      bus.notify(ProgressChangedReason.reviewRecord);
+      await _pump();
+      await cubit.setEnabled(false);
+      await cubit.setEnabled(true);
+      gate.complete(Right([_rec(2, 1, 6)]));
+      await _pump();
+      await _pump();
+      expect(cubit.state.enabled, isTrue);
+      expect(cubit.bandsForPage(2), isNotEmpty);
+      await cubit.close();
+    },
+  );
 
   test('close cancels the bus subscription', () async {
     SharedPreferences.setMockInitialValues({key: true});

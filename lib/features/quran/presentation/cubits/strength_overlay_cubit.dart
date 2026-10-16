@@ -32,17 +32,13 @@ class StrengthOverlayState extends Equatable {
 /// Memorization-strength overlay of the adult reader. Adult records only.
 class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
   StrengthOverlayCubit({
-    required MemorizationPlusRepository repository,
+    required this._repository,
     required ProgressEventsBus events,
-    required StrengthOverlaySource source,
-    required SharedPreferences prefs,
+    required this._source,
+    required this._prefs,
     DateTime Function()? clock,
-    String Function()? currentOwnerId,
-  }) : _repository = repository,
-       _source = source,
-       _prefs = prefs,
-       _clock = clock ?? DateTime.now,
-       _currentOwnerId = currentOwnerId,
+    this._currentOwnerId,
+  }) : _clock = clock ?? DateTime.now,
        super(const StrengthOverlayState()) {
     _sub = events.changes.listen((reason) {
       if (reason == ProgressChangedReason.reviewRecord ||
@@ -63,6 +59,11 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
 
   String? _loadedOwner;
   bool _reloading = false;
+  bool _rerun = false;
+
+  /// The latest explicit [setEnabled] request; the last request always wins,
+  /// even over a reload that was already in flight.
+  bool? _requested;
 
   String? _owner() {
     try {
@@ -81,6 +82,7 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
 
   Future<void> setEnabled(bool on) async {
     await _prefs.setBool(prefsKey, on);
+    _requested = on;
     if (on) {
       await _reload(enable: true);
     } else {
@@ -104,7 +106,11 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
   }
 
   Future<void> _reload({bool enable = false}) async {
-    if (isClosed || _reloading) return;
+    if (isClosed) return;
+    if (_reloading) {
+      _rerun = true;
+      return;
+    }
     if (!enable && !state.enabled) return;
     _reloading = true;
     try {
@@ -113,6 +119,7 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
         scope: ReviewRecordReadScope.adult,
       );
       if (isClosed) return;
+      if (_requested == false) return; // switched off while loading
       // A failed read keeps the previous bands and does not emit, so a
       // rebuild-triggered retry can never loop.
       final records = result.fold((_) => null, (r) => r);
@@ -124,7 +131,7 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
       _loadedOwner = owner;
       emit(
         state.copyWith(
-          enabled: enable ? true : state.enabled,
+          enabled: _requested ?? (enable ? true : state.enabled),
           revision: state.revision + 1,
         ),
       );
@@ -132,6 +139,10 @@ class StrengthOverlayCubit extends Cubit<StrengthOverlayState> {
       // Overlay is decorative; keep the previous bands on failure.
     } finally {
       _reloading = false;
+      if (_rerun && !isClosed) {
+        _rerun = false;
+        if (_requested != false) unawaited(_reload(enable: _requested == true));
+      }
     }
   }
 

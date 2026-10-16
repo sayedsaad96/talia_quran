@@ -8,8 +8,7 @@ typedef PageAyahRanges =
 /// Pure per-page strength lookup for the reader overlay. Holds no Flutter or
 /// qcf dependency; the page-range provider is injected.
 class StrengthOverlaySource {
-  StrengthOverlaySource({required PageAyahRanges pageRanges})
-    : _pageRanges = pageRanges;
+  StrengthOverlaySource({required this._pageRanges});
 
   final PageAyahRanges _pageRanges;
   final Map<String, AyahReviewRecord> _records = {};
