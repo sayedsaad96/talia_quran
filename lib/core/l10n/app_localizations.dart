@@ -920,6 +920,42 @@ abstract class AppLocalizations {
   /// **'تلوين أحكام التجويد في صفحة المصحف'**
   String get readerTajweedColorsHint;
 
+  /// No description provided for @strengthOverlayToggle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار قوة الحفظ'**
+  String get strengthOverlayToggle;
+
+  /// No description provided for @strengthLegendDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستحقة'**
+  String get strengthLegendDue;
+
+  /// No description provided for @strengthLegendWeak.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضعيفة'**
+  String get strengthLegendWeak;
+
+  /// No description provided for @strengthLegendBuilding.
+  ///
+  /// In ar, this message translates to:
+  /// **'تتقوّى'**
+  String get strengthLegendBuilding;
+
+  /// No description provided for @strengthLegendSolid.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثابتة'**
+  String get strengthLegendSolid;
+
+  /// No description provided for @reviewThisAyahNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع هذه الآية الآن'**
+  String get reviewThisAyahNow;
+
   /// No description provided for @surahInProgressBadge.
   ///
   /// In ar, this message translates to:

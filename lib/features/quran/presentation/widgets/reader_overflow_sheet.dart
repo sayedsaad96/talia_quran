@@ -22,6 +22,8 @@ class ReaderOverflowSheet extends StatefulWidget {
     required this.onOpenNavigation,
     required this.tajweedEnabled,
     required this.onTajweedChanged,
+    this.strengthOverlayEnabled,
+    this.onStrengthOverlayChanged,
   });
 
   final VoidCallback onEnterFocus;
@@ -33,12 +35,18 @@ class ReaderOverflowSheet extends StatefulWidget {
   final bool tajweedEnabled;
   final ValueChanged<bool> onTajweedChanged;
 
+  /// Memorization-strength overlay switch; shown only when both are non-null.
+  final bool? strengthOverlayEnabled;
+  final ValueChanged<bool>? onStrengthOverlayChanged;
+
   static Future<void> show(
     BuildContext context, {
     required VoidCallback onEnterFocus,
     required VoidCallback onOpenNavigation,
     required bool tajweedEnabled,
     required ValueChanged<bool> onTajweedChanged,
+    bool? strengthOverlayEnabled,
+    ValueChanged<bool>? onStrengthOverlayChanged,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -49,6 +57,8 @@ class ReaderOverflowSheet extends StatefulWidget {
         onOpenNavigation: onOpenNavigation,
         tajweedEnabled: tajweedEnabled,
         onTajweedChanged: onTajweedChanged,
+        strengthOverlayEnabled: strengthOverlayEnabled,
+        onStrengthOverlayChanged: onStrengthOverlayChanged,
       ),
     );
   }
@@ -59,6 +69,7 @@ class ReaderOverflowSheet extends StatefulWidget {
 
 class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
   late bool _tajweed = widget.tajweedEnabled;
+  late bool _strength = widget.strengthOverlayEnabled ?? false;
 
   Widget _leadingIcon(IconData icon, Color primary) => Container(
     width: 44,
@@ -169,6 +180,27 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
                   widget.onTajweedChanged(value);
                 },
               ),
+              if (widget.strengthOverlayEnabled != null &&
+                  widget.onStrengthOverlayChanged != null)
+                SwitchListTile(
+                  key: const Key('reader-strength-toggle'),
+                  secondary: _leadingIcon(TaliaIcons.palette, primary),
+                  title: Text(
+                    context.l10n.strengthOverlayToggle,
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  value: _strength,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  onChanged: (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _strength = value);
+                    widget.onStrengthOverlayChanged!(value);
+                  },
+                ),
               _actionTile(
                 icon: TaliaIcons.fullscreen,
                 title: context.l10n.enterFocusMode,

@@ -431,6 +431,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readerTajweedColorsHint => 'تلوين أحكام التجويد في صفحة المصحف';
 
   @override
+  String get strengthOverlayToggle => 'إظهار قوة الحفظ';
+
+  @override
+  String get strengthLegendDue => 'مستحقة';
+
+  @override
+  String get strengthLegendWeak => 'ضعيفة';
+
+  @override
+  String get strengthLegendBuilding => 'تتقوّى';
+
+  @override
+  String get strengthLegendSolid => 'ثابتة';
+
+  @override
+  String get reviewThisAyahNow => 'راجع هذه الآية الآن';
+
+  @override
   String get surahInProgressBadge => 'قيد الحفظ';
 
   @override

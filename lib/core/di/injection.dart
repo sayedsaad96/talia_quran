@@ -91,6 +91,9 @@ import '../../features/quran/domain/usecases/search_quran_usecase.dart';
 import '../../features/quran/presentation/cubits/surah_list_cubit.dart';
 import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
+import '../../features/quran/presentation/cubits/strength_overlay_cubit.dart';
+import '../../features/quran/presentation/services/qcf_page_ayah_ranges.dart';
+import '../../features/quran/presentation/services/strength_overlay_source.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
@@ -982,6 +985,15 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerFactory<SurahDetailCubit>(
     () => SurahDetailCubit(getIt<GetSurahDetailUsecase>()),
+  );
+  getIt.registerFactory<StrengthOverlayCubit>(
+    () => StrengthOverlayCubit(
+      repository: getIt<MemorizationPlusRepository>(),
+      events: getIt<ProgressEventsBus>(),
+      source: StrengthOverlaySource(pageRanges: qcfPageAyahRanges),
+      prefs: getIt<SharedPreferences>(),
+      currentOwnerId: () => getIt<RecordOwnerProvider>().currentOwnerId,
+    ),
   );
   getIt.registerFactory<QuranPageCubit>(
     () => QuranPageCubit(

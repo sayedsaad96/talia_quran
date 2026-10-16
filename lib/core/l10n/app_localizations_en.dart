@@ -435,6 +435,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Color the tajweed rules on the Mushaf page';
 
   @override
+  String get strengthOverlayToggle => 'Show memorization strength';
+
+  @override
+  String get strengthLegendDue => 'Due';
+
+  @override
+  String get strengthLegendWeak => 'Weak';
+
+  @override
+  String get strengthLegendBuilding => 'Building';
+
+  @override
+  String get strengthLegendSolid => 'Solid';
+
+  @override
+  String get reviewThisAyahNow => 'Review this ayah now';
+
+  @override
   String get surahInProgressBadge => 'Memorizing';
 
   @override

@@ -10,10 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/strength_band.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/talia_tokens.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/closing_moment.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -24,6 +28,7 @@ import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/quran_page_cubit.dart';
+import '../cubits/strength_overlay_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
 import '../services/quran_read_confirmation_gate.dart';
 import '../../data/services/quran_warmup_service.dart';
@@ -36,10 +41,27 @@ import '../widgets/reader_docked_audio_bar.dart';
 import '../widgets/reader_footer.dart';
 import '../widgets/reader_overflow_sheet.dart';
 import '../widgets/reader_top_bar.dart';
+import '../widgets/strength_overlay_legend.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
+
+const Map<StrengthBand, Color> _defaultStrengthColors = {
+  StrengthBand.due: AppColors.warning,
+  StrengthBand.weak: AppColors.error,
+  StrengthBand.building: AppColors.info,
+  StrengthBand.solid: AppColors.success,
+};
+
+/// Strength overlay colours from the active theme tokens.
+Map<StrengthBand, Color> strengthColorsFor(TaliaTokens tokens) => {
+  StrengthBand.due: tokens.warning,
+  StrengthBand.weak: tokens.error,
+  StrengthBand.building: tokens.info,
+  StrengthBand.solid: tokens.success,
+};
 
 /// Highlights drawn on the reader page (N15).
 ///
@@ -53,8 +75,23 @@ List<qcf.HighlightVerse> readerHighlights({
   required List<BookmarkEntry> bookmarks,
   ({int surah, int ayah, int page})? audio,
   ({int surah, int ayah})? selected,
+  Map<({int surah, int ayah}), StrengthBand> strengthBands = const {},
+  Map<StrengthBand, Color>? strengthColors,
 }) {
+  final palette = strengthColors ?? _defaultStrengthColors;
   return [
+    // Strength first: qcf paints the last highlight of an ayah, so the
+    // audio / bookmark / selection marks below override it.
+    for (final entry in strengthBands.entries)
+      if (palette[entry.value] != null)
+        qcf.HighlightVerse(
+          surah: entry.key.surah,
+          verseNumber: entry.key.ayah,
+          page: page,
+          color: palette[entry.value]!.withValues(
+            alpha: entry.value == StrengthBand.due ? 0.45 : 0.40,
+          ),
+        ),
     if (audio != null)
       qcf.HighlightVerse(
         surah: audio.surah,
@@ -110,6 +147,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   List<BookmarkEntry> _pageBookmarks = const [];
 
   late final QuranPageCubit _quranPageCubit;
+
+  /// Memorization-strength overlay; null unless the experience flag is on.
+  StrengthOverlayCubit? _strengthCubit;
+  final _strengthLegendDismissed = ValueNotifier<bool>(false);
   KhatmahCubit? _khatmahCubit;
   PageController? _pageController;
   SurahDetailCubit? _surahDetailCubit;
@@ -185,10 +226,51 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     } else if (widget.surahId != null) {
       _surahDetailCubit = getIt<SurahDetailCubit>()..loadSurah(widget.surahId!);
     }
+    _initStrengthOverlay();
     unawaited(_loadLongPressHintState());
     final bookmarkService = getIt<BookmarkService>();
     unawaited(bookmarkService.ensureLoaded());
     bookmarkService.addListener(_onBookmarksChanged);
+  }
+
+  bool get _strengthFlagOn {
+    try {
+      return getIt.isRegistered<ExperienceFlags>() &&
+          getIt<ExperienceFlags>().isEnabled(ExperienceFeature.strengthOverlay);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _initStrengthOverlay() {
+    if (!_strengthFlagOn) return;
+    try {
+      final cubit = getIt<StrengthOverlayCubit>();
+      unawaited(cubit.init());
+      _strengthCubit = cubit;
+    } catch (_) {
+      _strengthCubit = null;
+    }
+  }
+
+  /// True when the ayah has an adult review record and the strength flag is on
+  /// (gates the "review this ayah now" action).
+  Future<bool> _hasAdultReviewRecord(int surah, int ayah) async {
+    if (!_strengthFlagOn || !getIt.isRegistered<MemorizationPlusRepository>()) {
+      return false;
+    }
+    try {
+      final result = await getIt<MemorizationPlusRepository>()
+          .getAllReviewRecords(scope: ReviewRecordReadScope.adult);
+      final found = result.fold<bool>(
+        (_) => false,
+        (records) =>
+            records.any((r) => r.surahId == surah && r.ayahNumber == ayah),
+      );
+      return found;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -211,6 +293,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     _pageController?.dispose();
     _surahDetailCubit?.close();
     _quranPageCubit.close();
+    unawaited(_strengthCubit?.close());
+    _strengthLegendDismissed.dispose();
     if (widget.khatmahCubit == null) {
       _khatmahCubit?.close();
     }
@@ -538,6 +622,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     unawaited(HapticFeedback.lightImpact());
     final ayah = await _resolveAyah(surahNumber, verseNumber);
     if (!mounted || !context.mounted || ayah == null) return;
+    final canReview = await _hasAdultReviewRecord(surahNumber, verseNumber);
+    if (!mounted || !context.mounted) return;
 
     setState(() => _selectedAyah = (surah: surahNumber, ayah: verseNumber));
     await showModalBottomSheet(
@@ -549,6 +635,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         child: AyahOptionsSheet(
           ayah: ayah,
           surahName: qcf.getSurahNameArabic(surahNumber),
+          showReviewNow: canReview,
         ),
       ),
     );
@@ -703,7 +790,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
             // Audio highlights — isolated BlocBuilder so only the PageView
             // highlights list changes, not the full Scaffold.
-            return BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
+            Widget audioLayer() => BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
               builder: (context, audioState) {
                 final isAudioActive =
                     audioState.hasActiveAudio &&
@@ -723,6 +810,9 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                         )
                       : null,
                   selected: _selectedAyah,
+                  strengthBands:
+                      _strengthCubit?.bandsForPage(pageNumber) ?? const {},
+                  strengthColors: strengthColorsFor(context.tokens),
                 );
 
                 return Scaffold(
@@ -799,6 +889,22 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                                     ),
                                                 tajweedEnabled: _tajweed,
                                                 onTajweedChanged: _setTajweed,
+                                                strengthOverlayEnabled:
+                                                    _strengthCubit
+                                                        ?.state
+                                                        .enabled,
+                                                onStrengthOverlayChanged:
+                                                    _strengthCubit == null
+                                                    ? null
+                                                    : (on) {
+                                                        _strengthLegendDismissed
+                                                                .value =
+                                                            false;
+                                                        unawaited(
+                                                          _strengthCubit!
+                                                              .setEnabled(on),
+                                                        );
+                                                      },
                                                 onEnterFocus: () {
                                                   HapticFeedback.selectionClick();
                                                   _isFocusModeNotifier.value =
@@ -806,6 +912,22 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                                 },
                                               ),
                                         ),
+                                        if (_strengthCubit?.state.enabled ?? false)
+                                          ValueListenableBuilder<bool>(
+                                            valueListenable:
+                                                _strengthLegendDismissed,
+                                            builder: (context, dismissed, _) {
+                                              if (dismissed) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              return StrengthOverlayLegend(
+                                                onDismiss: () =>
+                                                    _strengthLegendDismissed
+                                                            .value =
+                                                        true,
+                                              );
+                                            },
+                                          ),
                                         // Laid out below the header (not
                                         // pinned at a fixed offset) so the
                                         // taller khatmah header stays
@@ -902,6 +1024,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                   ),
                 );
               },
+            );
+
+            final strengthCubit = _strengthCubit;
+            if (strengthCubit == null) return audioLayer();
+            return BlocBuilder<StrengthOverlayCubit, StrengthOverlayState>(
+              bloc: strengthCubit,
+              builder: (context, _) => audioLayer(),
             );
           },
         ),

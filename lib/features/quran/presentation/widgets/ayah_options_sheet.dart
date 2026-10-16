@@ -34,10 +34,15 @@ class AyahOptionsSheet extends StatefulWidget {
     super.key,
     required this.ayah,
     required this.surahName,
+    this.showReviewNow = false,
   });
 
   final Ayah ayah;
   final String surahName;
+
+  /// Offers "review this ayah now"; the reader sets it only when the strength
+  /// flag is on and an adult review record exists for the ayah.
+  final bool showReviewNow;
 
   @override
   State<AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -56,7 +61,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
     }
   }
 
-  void _startLearning() {
+  void _startLearning({LearningIntent intent = LearningIntent.memorize}) {
     final router = GoRouter.of(context);
     final location = Uri(
       path: AppRoutes.memorizationV2Session,
@@ -65,7 +70,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
           surahId: widget.ayah.surahId,
           ayahNumber: widget.ayah.numberInSurah,
         ),
-        intent: LearningIntent.memorize,
+        intent: intent,
         origin: LearningOrigin.quranReader,
       ).toRouteQuery(),
     ).toString();
@@ -185,6 +190,15 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     color: primary,
                     onTap: _startLearning,
                   ),
+                  if (widget.showReviewNow)
+                    AyahOptionButton(
+                      key: const Key('ayah-review-now'),
+                      icon: TaliaIcons.refresh,
+                      label: context.l10n.reviewThisAyahNow,
+                      color: primary,
+                      onTap: () =>
+                          _startLearning(intent: LearningIntent.review),
+                    ),
                   BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
                     builder: (context, audioState) {
                       final isPlayingThisAyah =
