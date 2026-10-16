@@ -352,8 +352,13 @@ class MemorizationNavigationResolver {
       (_) => null,
       (settings) => settings.startingSurahId,
     );
-    if (_isValidSurahId(configuredStart)) return configuredStart;
-    return KidsJourneyCursor.initial.activeSurahId;
+    // A start left over from another path is stale (R10): use the active
+    // path's first surah instead.
+    final path = await _kidsJourneyPath();
+    if (_isValidSurahId(configuredStart) && path.contains(configuredStart!)) {
+      return configuredStart;
+    }
+    return path.surahIds.first;
   }
 
   /// The selected kids journey path; any failure means the adventure.
@@ -366,7 +371,7 @@ class MemorizationNavigationResolver {
     }
   }
 
-  /// Same age-band budget the home screen and session gate use; a log read
+  /// The first started surah with a pending house review, if any.
   Future<int?> _mandatoryKidsHouseSurah() async {
     final profile = await _profile();
     if (profile?.isChild != true) return null;
@@ -390,7 +395,16 @@ class MemorizationNavigationResolver {
             settings?.startingSurahId ?? KidsJourneyPath.firstSurahId,
           )
         : 0;
-    for (final id in path.surahIds.skip(first < 0 ? 0 : first)) {
+    final candidates = [
+      ...path.surahIds.skip(first < 0 ? 0 : first),
+      // A house review left pending on the Quran journey still binds the
+      // child after switching back to the adventure (R9). With no off-path
+      // logs this adds nothing and the adventure is unchanged.
+      if (path.locksAhead)
+        ...(started.where((id) => !KidsJourneyPath.contains(id)).toList()
+          ..sort()),
+    ];
+    for (final id in candidates) {
       if (!started.contains(id)) continue;
       final stages = (await _repository.getKidsJourney(
         surahId: id,
@@ -403,6 +417,7 @@ class MemorizationNavigationResolver {
     return null;
   }
 
+  /// Same age-band budget the home screen and session gate use; a log read
   /// failure is unlimited (fail-open).
   Future<KidsDailyBudget> _kidsDailyBudget(DateTime now) async {
     final logsResult = await _repository.getKidsSessionLogs();

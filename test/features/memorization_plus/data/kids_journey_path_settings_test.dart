@@ -42,6 +42,29 @@ class _FakeQuranRepository implements QuranRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Answers any request with a short surah whose id is always 112.
+class _WrongSurahQuranRepository implements QuranRepository {
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async =>
+      const Right(
+        SurahDetail(
+          surah: Surah(
+            id: 112,
+            nameAr: 'سورة',
+            nameEn: 'Surah',
+            ayahCount: 4,
+            juz: 30,
+            type: 'meccan',
+            page: 1,
+          ),
+          ayahs: [],
+        ),
+      );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeStreakReader implements StreakReader {
   @override
   Future<StreakEntity> getStreak() async =>
@@ -195,6 +218,62 @@ void main() {
       expect(path.id, KidsJourneyPathId.quranFromNas);
     },
   );
+
+  test('setKidsJourneyPath keeps a starting surah the new path contains '
+      '(R10)', () async {
+    final service = serviceFor('a', journeyEnabled: true);
+    await datasource.saveParentSettings(
+      ParentSettingsModel.fromEntity(
+        const ParentSettings(startingSurahId: 113),
+      ),
+    );
+
+    final next = settingsOf(
+      await service.setKidsJourneyPath(KidsJourneyPathId.quranFromFatiha),
+    );
+
+    expect(next.startingSurahId, 113);
+    expect((await datasource.getParentSettings()).startingSurahId, 113);
+  });
+
+  test('setKidsJourneyPath resets a starting surah the new path lacks '
+      '(R10)', () async {
+    final service = serviceFor('a', journeyEnabled: true);
+    await service.setKidsJourneyPath(KidsJourneyPathId.quranFromFatiha);
+    await datasource.saveParentSettings(
+      ParentSettingsModel.fromEntity(
+        (await datasource.getParentSettings()).copyWith(startingSurahId: 2),
+      ),
+    );
+    expect((await datasource.getParentSettings()).startingSurahId, 2);
+
+    final next = settingsOf(
+      await service.setKidsJourneyPath(KidsJourneyPathId.juzAmmaAdventure),
+    );
+
+    expect(next.startingSurahId, 1);
+    expect(next.kidsJourneyPathId, 'fatiha_then_juz_amma');
+    expect((await datasource.getParentSettings()).startingSurahId, 1);
+  });
+
+  test('setKidsSurahSplit fails when the loaded surah is not the requested '
+      'one', () async {
+    final provider = FixedRecordOwnerProvider('a');
+    datasource = MemorizationPlusLocalDatasourceImpl(prefs, owner: provider);
+    final service = MemorizationKidsLocalService(
+      datasource,
+      _WrongSurahQuranRepository(),
+      _FakeStreakReader(),
+      _FakeProgressEventsBus(),
+      null,
+      owner: provider,
+    );
+
+    final result = await service.setKidsSurahSplit(103, whole: true);
+
+    expect(result.isLeft(), isTrue);
+    expect((await datasource.getParentSettings()).kidsWholeSurahIds, isEmpty);
+  });
 
   test('settings written for owner A are not visible to owner B', () async {
     final a = serviceFor('a', journeyEnabled: true);

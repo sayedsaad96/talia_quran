@@ -26,12 +26,12 @@ import '../../../domain/services/kids_house_review_policy.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 
+bool _quranJourneyOff() => false;
+
 /// Kids-mode local domain: progress, journey stages, session logs, parent
 /// dashboard, settings, PIN, rewards and points awarding (with per-ayah
 /// concurrency locks). All data lives in the local datasource; streaks are
 /// hydrated from [StreakReader] as the single source of truth.
-bool _quranJourneyOff() => false;
-
 class MemorizationKidsLocalService {
   MemorizationKidsLocalService(
     this._datasource,
@@ -294,7 +294,10 @@ class MemorizationKidsLocalService {
     // A house the child already started stays accessible: its earned stages
     // never relock, even if an earlier house is unfinished (legacy frontier,
     // or a guardian moving the starting surah). Pending house recitations
-    // elsewhere are still enforced by the mandatory-mission routing.
+    // elsewhere are still enforced by the mandatory-mission routing
+    // (MemorizationNavigationResolver._mandatoryKidsHouseSurah): the Quran
+    // journey scans its whole path; the adventure scans its own order from
+    // the starting surah, then started surahs off the adventure path.
     final targetAlreadyStarted = logs.any(
       (log) =>
           log.surahId == target &&
@@ -435,9 +438,18 @@ class MemorizationKidsLocalService {
     try {
       final ownerId = _owner.currentOwnerId;
       _ensureKidsOwner(ownerId);
+      final def = KidsJourneyPathDefinition.of(id);
       final next = await _datasource.updateKidsHouseSettings((current) {
         _ensureKidsOwner(ownerId);
-        return current.copyWith(kidsJourneyPathId: id.storageValue);
+        // A start the new path lacks would be stale (R10): restart at the
+        // new path's first surah.
+        final keepStart = def.contains(current.startingSurahId);
+        return current.copyWith(
+          kidsJourneyPathId: id.storageValue,
+          startingSurahId: keepStart
+              ? current.startingSurahId
+              : def.surahIds.first,
+        );
       });
       _ensureKidsOwner(ownerId);
       return Right(next);
@@ -460,10 +472,9 @@ class MemorizationKidsLocalService {
       final ownerId = _owner.currentOwnerId;
       if (whole) {
         final outcome = await _quranRepository.getSurahDetail(surahId);
-        final ayahCount = outcome.fold(
-          (failure) => throw failure,
-          (detail) => detail.surah.ayahCount,
-        );
+        final detail = outcome.fold((failure) => throw failure, (d) => d);
+        if (detail.surah.id != surahId) return const Left(CacheFailure());
+        final ayahCount = detail.surah.ayahCount;
         if (ayahCount > kKidsWholeSurahMaxAyahs) {
           return const Left(ValidationFailure());
         }

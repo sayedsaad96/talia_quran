@@ -3,20 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/memorization/kids_hifz_feature_flags.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/domain/services/account_password_verifier.dart';
 import 'package:talia_quran/features/memorization_plus/application/guardian_session_controller.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/child_detail_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/family_dashboard_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_journey_path_selector.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -210,6 +214,36 @@ void main() {
 
       expect(usecases.policySaves.single.maxDailySuggestions, 1);
       expect(usecases.policySaves.single.version, 2);
+    });
+
+    testWidgets('a saved path change closes the settings sheet (R10)', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        KidsHifzFeatureFlags.quranJourneyKey: true,
+      });
+      getIt.registerSingleton<SharedPreferences>(
+        await SharedPreferences.getInstance(),
+      );
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2')
+        ..dashboard = _dashboard();
+
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1234');
+      await tester.tap(find.text('Enter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(TaliaIcons.settings));
+      await tester.pumpAndSettle();
+
+      final nas = find.byKey(const Key('kids_journey_path_quran_from_nas'));
+      await tester.ensureVisible(nas);
+      await tester.tap(nas);
+      await tester.pumpAndSettle();
+
+      expect(usecases.pathSaves, [KidsJourneyPathId.quranFromNas]);
+      expect(find.byType(KidsJourneyPathSelector), findsNothing);
     });
 
     testWidgets('a policy conflict shows the conflict message', (tester) async {
@@ -855,6 +889,7 @@ class _FakeUsecases {
   final identityUpdates = <String>[];
   Either<Failure, void> acceptResult = const Right(null);
   final policySaves = <KidsChildPolicy>[];
+  final pathSaves = <KidsJourneyPathId>[];
   Either<Failure, KidsChildPolicy> policyResult = const Right(
     KidsChildPolicy(),
   );
@@ -916,6 +951,14 @@ class _FakeParentAccess implements ParentAccessUsecase {
   ) async {
     _owner.policySaves.add(policy);
     return _owner.policyResult;
+  }
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) async {
+    _owner.pathSaves.add(id);
+    return Right(_owner.settings);
   }
 
   @override

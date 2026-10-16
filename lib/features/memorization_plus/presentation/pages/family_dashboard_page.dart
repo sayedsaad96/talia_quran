@@ -350,7 +350,13 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                             setPathState(() => pathValue = id);
                             final saved = await dashboardCubit
                                 .setKidsJourneyPath(id);
-                            if (!saved && sheetContext.mounted) {
+                            if (!sheetContext.mounted) return;
+                            if (saved) {
+                              // The save may also move the starting surah
+                              // (R10); closing keeps later saves in this
+                              // sheet from writing back a stale snapshot.
+                              Navigator.pop(sheetContext);
+                            } else {
                               setPathState(() => pathValue = previous);
                             }
                           },
