@@ -75,6 +75,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Verified sources'), findsOneWidget);
       expect(find.text('Your voice'), findsOneWidget);
+      expect(
+        find.textContaining('may send the audio to its provider'),
+        findsOneWidget,
+      );
       expect(find.text('Your data'), findsOneWidget);
       expect(find.text('Data version v9 • 4 sources'), findsOneWidget);
 
@@ -88,6 +92,8 @@ void main() {
     await tester.pumpWidget(
       _app(TrustCenterPage(summaryFuture: Future.value(null))),
     );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Privacy policy'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Privacy policy'));
     await tester.pumpAndSettle();
