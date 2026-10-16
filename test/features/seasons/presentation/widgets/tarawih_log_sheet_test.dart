@@ -26,7 +26,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> open(WidgetTester tester) async {
+  Future<void> open(WidgetTester tester, {DateTime? at}) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
@@ -42,7 +42,7 @@ void main() {
             onPressed: () => showTarawihLogSheet(
               context,
               store,
-              now: () => DateTime(2027, 2, 10, 22),
+              now: () => at ?? DateTime(2027, 2, 10, 22),
             ),
             child: const Text('open'),
           ),
@@ -67,6 +67,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('tarawih_delete')));
     await settle(tester);
     expect(await store.entries(), isEmpty);
+  });
+
+  test('night key: before 04:00 local is the previous civil date', () {
+    expect(tarawihNightKeyAt(DateTime(2027, 2, 11, 0, 30)), '2027-02-10');
+    expect(tarawihNightKeyAt(DateTime(2027, 2, 10, 21)), '2027-02-10');
+    expect(tarawihNightKeyAt(DateTime(2027, 2, 11, 3, 59)), '2027-02-10');
+    expect(tarawihNightKeyAt(DateTime(2027, 2, 11, 4)), '2027-02-11');
+    expect(tarawihNightKeyAt(DateTime(2027, 3, 1, 0, 30)), '2027-02-28');
+  });
+
+  testWidgets('a log at 00:30 is saved under the night that began the '
+      'previous evening', (tester) async {
+    await open(tester, at: DateTime(2027, 2, 11, 0, 30));
+    await tester.enterText(find.byKey(const ValueKey('tarawih_from')), '1');
+    await tester.enterText(find.byKey(const ValueKey('tarawih_to')), '4');
+    await tester.tap(find.byKey(const ValueKey('tarawih_save')));
+    await settle(tester);
+    expect(await store.entries(), const [
+      TarawihEntry(nightKey: '2027-02-10', fromPage: 1, toPage: 4),
+    ]);
   });
 
   testWidgets('invalid range shows an error and saves nothing', (tester) async {

@@ -15,6 +15,18 @@ String tarawihNightKey(DateTime now) {
   return '${d.year.toString().padLeft(4, '0')}-${two(d.month)}-${two(d.day)}';
 }
 
+/// Local hour before which a log belongs to the previous evening's night.
+const kTarawihNightEndHour = 4;
+
+/// Key of the night [now] falls in: before [kTarawihNightEndHour] local time
+/// it is the previous civil date (the night that began that evening).
+String tarawihNightKeyAt(DateTime now) {
+  final d = now.toLocal();
+  return tarawihNightKey(
+    d.hour < kTarawihNightEndHour ? DateTime(d.year, d.month, d.day - 1) : d,
+  );
+}
+
 /// Opens the tonight's-tarawih entry sheet. Self-log only; never feeds the
 /// khatmah. [now] is injectable for tests.
 Future<void> showTarawihLogSheet(
@@ -44,7 +56,7 @@ class TarawihLogSheet extends StatefulWidget {
 class _TarawihLogSheetState extends State<TarawihLogSheet> {
   final _from = TextEditingController();
   final _to = TextEditingController();
-  late final String _night = tarawihNightKey(widget.now());
+  late final String _night = tarawihNightKeyAt(widget.now());
   bool _hasEntry = false;
   bool _invalid = false;
   bool _loaded = false;
