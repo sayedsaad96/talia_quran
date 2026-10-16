@@ -8682,4 +8682,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerSleepEndOfSurah => 'End of surah';
+
+  @override
+  String get trustCenterTitle => 'How we protect content and your privacy';
+
+  @override
+  String get trustSourcesTitle => 'Verified sources';
+
+  @override
+  String get trustSourcesBody =>
+      'Talia contains no generated religious text. Every text has a source and a reference.';
+
+  @override
+  String trustSourcesMeta(String version, String countText) {
+    return 'Data version $version • $countText sources';
+  }
+
+  @override
+  String get trustVoiceTitle => 'Your voice';
+
+  @override
+  String get trustVoiceBody =>
+      'Talia does not record, store or upload your voice. Speech recognition is done by your device\'s system service.';
+
+  @override
+  String get trustDataTitle => 'Your data';
+
+  @override
+  String get trustDataBody =>
+      'You can use Talia without an account. Sync is optional, and each account\'s data is kept separate.';
+
+  @override
+  String get trustViewSources => 'View sources and licenses';
+
+  @override
+  String get trustViewPrivacy => 'Privacy policy';
 }

@@ -8668,4 +8668,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get readerSleepEndOfSurah => 'حتى نهاية السورة';
+
+  @override
+  String get trustCenterTitle => 'كيف نحفظ المحتوى وخصوصيتك';
+
+  @override
+  String get trustSourcesTitle => 'مصادر موثّقة';
+
+  @override
+  String get trustSourcesBody =>
+      'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.';
+
+  @override
+  String trustSourcesMeta(String version, String countText) {
+    return 'إصدار البيانات $version • $countText مصادر';
+  }
+
+  @override
+  String get trustVoiceTitle => 'صوتك';
+
+  @override
+  String get trustVoiceBody =>
+      'تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك.';
+
+  @override
+  String get trustDataTitle => 'بياناتك';
+
+  @override
+  String get trustDataBody =>
+      'يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره.';
+
+  @override
+  String get trustViewSources => 'عرض المصادر والتراخيص';
+
+  @override
+  String get trustViewPrivacy => 'سياسة الخصوصية';
 }

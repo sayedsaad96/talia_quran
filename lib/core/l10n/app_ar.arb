@@ -3603,4 +3603,15 @@
   ,"readerSleepMinutes": "{countText} دقيقة"
   ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
   ,"readerSleepEndOfSurah": "حتى نهاية السورة"
+  ,"trustCenterTitle": "كيف نحفظ المحتوى وخصوصيتك"
+  ,"trustSourcesTitle": "مصادر موثّقة"
+  ,"trustSourcesBody": "لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع."
+  ,"trustSourcesMeta": "إصدار البيانات {version} • {countText} مصادر"
+  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "countText": {"type": "String"}}}
+  ,"trustVoiceTitle": "صوتك"
+  ,"trustVoiceBody": "تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك."
+  ,"trustDataTitle": "بياناتك"
+  ,"trustDataBody": "يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره."
+  ,"trustViewSources": "عرض المصادر والتراخيص"
+  ,"trustViewPrivacy": "سياسة الخصوصية"
 }

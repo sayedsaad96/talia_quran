@@ -14685,6 +14685,66 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حتى نهاية السورة'**
   String get readerSleepEndOfSurah;
+
+  /// No description provided for @trustCenterTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف نحفظ المحتوى وخصوصيتك'**
+  String get trustCenterTitle;
+
+  /// No description provided for @trustSourcesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصادر موثّقة'**
+  String get trustSourcesTitle;
+
+  /// No description provided for @trustSourcesBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.'**
+  String get trustSourcesBody;
+
+  /// No description provided for @trustSourcesMeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'إصدار البيانات {version} • {countText} مصادر'**
+  String trustSourcesMeta(String version, String countText);
+
+  /// No description provided for @trustVoiceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوتك'**
+  String get trustVoiceTitle;
+
+  /// No description provided for @trustVoiceBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تالية لا تسجّل صوتك ولا تحفظه ولا ترفعه. التعرّف على الكلام تقوم به خدمة النظام في جهازك.'**
+  String get trustVoiceBody;
+
+  /// No description provided for @trustDataTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بياناتك'**
+  String get trustDataTitle;
+
+  /// No description provided for @trustDataBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره.'**
+  String get trustDataBody;
+
+  /// No description provided for @trustViewSources.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض المصادر والتراخيص'**
+  String get trustViewSources;
+
+  /// No description provided for @trustViewPrivacy.
+  ///
+  /// In ar, this message translates to:
+  /// **'سياسة الخصوصية'**
+  String get trustViewPrivacy;
 }
 
 class _AppLocalizationsDelegate

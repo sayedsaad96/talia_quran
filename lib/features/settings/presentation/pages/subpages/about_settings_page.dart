@@ -2,12 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../core/di/injection.dart';
+import '../../../../../core/experience/experience_feature_flags.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../widgets/settings_group.dart';
 import '../../widgets/settings_info_tiles.dart';
 import '../../widgets/settings_section.dart';
+import '../../widgets/settings_trust_tile.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
 
 /// Help, privacy, and about Talia as three separate groups.
@@ -29,6 +32,13 @@ class AboutSettingsPage extends StatelessWidget {
         SettingsGroup(
           title: l10n.settingsSectionPrivacySecurity,
           children: [
+            if (getIt.isRegistered<ExperienceFlags>() &&
+                getIt<ExperienceFlags>().isEnabled(
+                  ExperienceFeature.trustCenter,
+                )) ...[
+              const TrustCenterTile(),
+              SettingsDivider(isDark: isDark),
+            ],
             PrivacyPolicyTile(isDark: isDark),
             SettingsDivider(isDark: isDark),
             // The Tanzil licence requires the attribution and tanzil.net link

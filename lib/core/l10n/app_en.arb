@@ -3565,4 +3565,15 @@
   ,"readerSleepMinutes": "{countText} min"
   ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
   ,"readerSleepEndOfSurah": "End of surah"
+  ,"trustCenterTitle": "How we protect content and your privacy"
+  ,"trustSourcesTitle": "Verified sources"
+  ,"trustSourcesBody": "Talia contains no generated religious text. Every text has a source and a reference."
+  ,"trustSourcesMeta": "Data version {version} • {countText} sources"
+  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "countText": {"type": "String"}}}
+  ,"trustVoiceTitle": "Your voice"
+  ,"trustVoiceBody": "Talia does not record, store or upload your voice. Speech recognition is done by your device's system service."
+  ,"trustDataTitle": "Your data"
+  ,"trustDataBody": "You can use Talia without an account. Sync is optional, and each account's data is kept separate."
+  ,"trustViewSources": "View sources and licenses"
+  ,"trustViewPrivacy": "Privacy policy"
 }
