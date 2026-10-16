@@ -8730,4 +8730,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clarityModeSubtitle =>
       'Larger text, higher contrast and a simpler home';
+
+  @override
+  String get afterPrayerAzkarTitle => 'After-prayer adhkar';
+
+  @override
+  String afterPrayerAzkarSubtitle(String prayer) {
+    return 'After $prayer prayer';
+  }
+
+  @override
+  String get afterPrayerAzkarOpen => 'Start';
+
+  @override
+  String get afterPrayerAzkarDone => 'Done';
 }

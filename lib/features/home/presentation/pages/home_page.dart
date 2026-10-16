@@ -23,6 +23,7 @@ import '../../domain/services/home_primary_action_resolver.dart';
 import '../theme/home_skin.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/home_activity_feed.dart';
+import '../widgets/home_after_prayer_azkar_card.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
@@ -280,6 +281,12 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 0),
                 child: _PrimaryAction(state: widget.state, skin: widget.skin),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: HomeAfterPrayerAzkarCard(
+                skin: widget.skin,
+                snapshot: widget.state.prayerSnapshot,
               ),
             ),
             if (journeyEnabled &&

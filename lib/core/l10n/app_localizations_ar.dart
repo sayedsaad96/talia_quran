@@ -8718,4 +8718,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clarityModeSubtitle => 'خط أكبر، تباين أعلى، ورئيسية أبسط';
+
+  @override
+  String get afterPrayerAzkarTitle => 'أذكار بعد الصلاة';
+
+  @override
+  String afterPrayerAzkarSubtitle(String prayer) {
+    return 'بعد صلاة $prayer';
+  }
+
+  @override
+  String get afterPrayerAzkarOpen => 'ابدأ';
+
+  @override
+  String get afterPrayerAzkarDone => 'تمّت';
 }

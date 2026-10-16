@@ -669,6 +669,7 @@ abstract class AppRouter {
               category: category == 'duas'
                   ? AzkarCategory.duas
                   : AzkarCategory.general,
+              initialSubcategory: state.uri.queryParameters['sub'],
             );
           }
           return AzkarCategoryPage(category: category);

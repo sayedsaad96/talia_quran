@@ -3616,4 +3616,9 @@
   ,"trustViewPrivacy": "سياسة الخصوصية"
   ,"clarityModeTitle": "وضع الوضوح"
   ,"clarityModeSubtitle": "خط أكبر، تباين أعلى، ورئيسية أبسط"
+  ,"afterPrayerAzkarTitle": "أذكار بعد الصلاة"
+  ,"afterPrayerAzkarSubtitle": "بعد صلاة {prayer}"
+  ,"@afterPrayerAzkarSubtitle": {"placeholders": {"prayer": {"type": "String"}}}
+  ,"afterPrayerAzkarOpen": "ابدأ"
+  ,"afterPrayerAzkarDone": "تمّت"
 }

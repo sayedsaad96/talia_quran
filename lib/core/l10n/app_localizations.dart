@@ -14757,6 +14757,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'خط أكبر، تباين أعلى، ورئيسية أبسط'**
   String get clarityModeSubtitle;
+
+  /// No description provided for @afterPrayerAzkarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار بعد الصلاة'**
+  String get afterPrayerAzkarTitle;
+
+  /// No description provided for @afterPrayerAzkarSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعد صلاة {prayer}'**
+  String afterPrayerAzkarSubtitle(String prayer);
+
+  /// No description provided for @afterPrayerAzkarOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ'**
+  String get afterPrayerAzkarOpen;
+
+  /// No description provided for @afterPrayerAzkarDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمّت'**
+  String get afterPrayerAzkarDone;
 }
 
 class _AppLocalizationsDelegate

@@ -3578,4 +3578,8 @@
   ,"trustViewPrivacy": "Privacy policy"
   ,"clarityModeTitle": "Clarity mode"
   ,"clarityModeSubtitle": "Larger text, higher contrast and a simpler home"
+  ,"afterPrayerAzkarTitle": "After-prayer adhkar"
+  ,"afterPrayerAzkarSubtitle": "After {prayer} prayer"
+  ,"afterPrayerAzkarOpen": "Start"
+  ,"afterPrayerAzkarDone": "Done"
 }
