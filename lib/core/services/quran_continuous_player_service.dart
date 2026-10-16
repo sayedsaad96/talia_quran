@@ -167,6 +167,7 @@ class QuranContinuousPlayerService {
 
   /// Queue items removed after the surah end while endOfSurah is active.
   List<Ayah> _tail = [];
+  Future<void> _sleepOps = Future<void>.value();
   late final SleepTimer _sleepTimer;
   bool _playerSettingsTouched = false;
   int _currentIndex = -1;
@@ -245,8 +246,7 @@ class QuranContinuousPlayerService {
 
   bool get _endOfSurahActive => _sleepChoice == SleepTimerChoice.endOfSurah;
 
-  LoopMode get _loopMode =>
-      _repeat.rangeTimes == 0 && !_endOfSurahActive
+  LoopMode get _loopMode => _repeat.rangeTimes == 0 && !_endOfSurahActive
       ? LoopMode.all
       : LoopMode.off;
 
@@ -602,7 +602,9 @@ class QuranContinuousPlayerService {
         previous.perAyah != settings.perAyah ||
         previous.rangeTimes != settings.rangeTimes;
     final hasQueue =
-        _queue.isNotEmpty && _currentIndex >= 0 && _currentIndex < _queue.length;
+        _queue.isNotEmpty &&
+        _currentIndex >= 0 &&
+        _currentIndex < _queue.length;
 
     if (!hasQueue) {
       _emitState(_stateNotifier.value);
@@ -636,7 +638,14 @@ class QuranContinuousPlayerService {
 
   /// Starts, replaces or cancels the sleep timer. [SleepTimerChoice.endOfSurah]
   /// stops after the last ayah of the surah playing right now.
-  Future<void> setSleepTimer(SleepTimerChoice choice) async {
+  Future<void> setSleepTimer(SleepTimerChoice choice) {
+    // Serialized: queue edits for quick consecutive choices must not interleave.
+    final run = _sleepOps.then((_) => _applySleepChoice(choice));
+    _sleepOps = run.then((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  Future<void> _applySleepChoice(SleepTimerChoice choice) async {
     final wasEndOfSurah = _endOfSurahActive;
     _sleepTimer.cancel();
     switch (choice) {
@@ -652,7 +661,9 @@ class QuranContinuousPlayerService {
         break;
     }
     final hasQueue =
-        _queue.isNotEmpty && _currentIndex >= 0 && _currentIndex < _queue.length;
+        _queue.isNotEmpty &&
+        _currentIndex >= 0 &&
+        _currentIndex < _queue.length;
     if (choice == SleepTimerChoice.endOfSurah && !hasQueue) {
       choice = SleepTimerChoice.off;
     }
@@ -664,20 +675,33 @@ class QuranContinuousPlayerService {
         await _restoreTail();
       }
     } catch (e, stack) {
-      TaliaLogger.w('Continuous player sleep timer queue update failed', e, stack);
+      TaliaLogger.w(
+        'Continuous player sleep timer queue update failed',
+        e,
+        stack,
+      );
     }
-    if (choice != SleepTimerChoice.endOfSurah)    _emitState(_stateNotifier.value);
+    _emitState(_stateNotifier.value);
   }
 
   /// Cuts the playlist after the last item of the surah playing now, so the
   /// player completes exactly at the surah end (no next-surah ayah starts).
+  /// The queue is cut before the first await and rolled back on failure.
   Future<void> _truncateAtSurahEnd() async {
     final surahId = _queue[_currentIndex].surahId;
     final last = _lastIndexOfSurahRun(_currentIndex, surahId);
     if (last + 1 < _queue.length) {
-      await _player.removeAudioSourceRange(last + 1, _queue.length);
+      final previousQueue = _queue;
+      final previousTail = _tail;
       _tail = _queue.sublist(last + 1);
       _queue = _queue.sublist(0, last + 1);
+      try {
+        await _player.removeAudioSourceRange(last + 1, previousQueue.length);
+      } catch (_) {
+        _queue = previousQueue;
+        _tail = previousTail;
+        rethrow;
+      }
       _backgroundAudioHandler?.setQueueItems(
         _buildMediaItems(_activeReciterOrDefault()),
       );
@@ -697,14 +721,21 @@ class QuranContinuousPlayerService {
   Future<void> _restoreTail() async {
     if (_tail.isNotEmpty) {
       final reciter = _activeReciterOrDefault();
-      final tail = _tail;
+      final previousQueue = _queue;
+      final previousTail = _tail;
+      final offset = previousQueue.length;
+      _queue = [...previousQueue, ...previousTail];
       _tail = [];
-      final offset = _queue.length;
-      _queue = [..._queue, ...tail];
-      final items = _buildMediaItems(reciter);
-      final sources = _buildAudioSources(reciter, items);
-      await _player.addAudioSources(sources.sublist(offset));
-      _backgroundAudioHandler?.setQueueItems(items);
+      try {
+        final items = _buildMediaItems(reciter);
+        final sources = _buildAudioSources(reciter, items);
+        await _player.addAudioSources(sources.sublist(offset));
+        _backgroundAudioHandler?.setQueueItems(items);
+      } catch (_) {
+        _queue = previousQueue;
+        _tail = previousTail;
+        rethrow;
+      }
     }
     if (_repeat.rangeTimes == 0) {
       await _player.setLoopMode(LoopMode.all);
@@ -788,9 +819,15 @@ class QuranContinuousPlayerService {
     if (_stateNotifier.value.reciter == reciter) return;
     _emitState(_stateNotifier.value.copyWith(reciter: reciter));
     if (_stateNotifier.value.hasActiveAudio && _currentIndex >= 0) {
+      // Rejoin an endOfSurah tail first; the reload cuts it again.
+      if (_tail.isNotEmpty) {
+        _queue = [..._queue, ..._tail];
+        _tail = [];
+      }
       await _loadPlaylistAndPlay(
         startIndex: _currentIndex,
         activeReciter: reciter,
+        play: !_stateNotifier.value.isPaused,
       );
     }
   }
@@ -857,7 +894,9 @@ class QuranContinuousPlayerService {
   }
 
   bool _hasPreviousAyah() {
-    if (_activeScope == PlayScope.singleAyah || _currentIndex <= 0) return false;
+    if (_activeScope == PlayScope.singleAyah || _currentIndex <= 0) {
+      return false;
+    }
     if (_hasRepeats) {
       return previousDistinctIndex<Ayah>(_queue, _currentIndex) != null;
     }

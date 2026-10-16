@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
+import 'package:talia_quran/core/services/quran_reciter.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/reader_repeat_plan.dart';
 import 'package:talia_quran/core/services/sleep_timer.dart';
@@ -223,6 +224,40 @@ void main() {
       expect(player.sources.length, 3);
       expect(service.state.hasNext, isTrue);
       expect(player.loopModes.last, LoopMode.all);
+    },
+  );
+
+  test('changeReciter keeps the endOfSurah tail so Off restores it', () async {
+    await service.playPage(2); // s1:7, s2:1, s2:2
+    await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+    expect(player.sources.length, 1);
+
+    await service.changeReciter(QuranReciter.abdulbasit);
+    expect(player.lastSources.length, 1);
+
+    await service.setSleepTimer(SleepTimerChoice.off);
+    expect(player.sources.length, 3);
+  });
+
+  test('changeReciter keeps a paused session paused', () async {
+    await service.playPage(1);
+    await service.pause();
+    final plays = player.playCallCount;
+    await service.changeReciter(QuranReciter.abdulbasit);
+    expect(player.playCallCount, plays);
+    expect(service.state.status, PlaybackStatus.paused);
+  });
+
+  test(
+    'endOfSurah immediately followed by Off ends with the full list',
+    () async {
+      await service.playPage(2);
+      final first = service.setSleepTimer(SleepTimerChoice.endOfSurah);
+      final second = service.setSleepTimer(SleepTimerChoice.off);
+      await Future.wait([first, second]);
+      expect(service.state.sleepChoice, SleepTimerChoice.off);
+      expect(player.sources.length, 3);
+      expect(service.state.hasNext, isTrue);
     },
   );
 
