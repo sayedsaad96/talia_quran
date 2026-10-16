@@ -228,11 +228,16 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
       case RamadanPhase.afterEid:
         if (!_summaryLoaded) return const SizedBox.shrink();
         title = l10n.ramadanSummaryTitle;
+        // Nothing logged and nothing completed: no card rather than "0 nights".
+        if (_nights == 0 && _pages == 0 && _khatmahs == 0) {
+          return const SizedBox.shrink();
+        }
         body = [
-          l10n.ramadanSummaryNights(
-            _nights,
-            LocaleNumberFormatter.number(_nights, lang),
-          ),
+          if (_nights > 0)
+            l10n.ramadanSummaryNights(
+              _nights,
+              LocaleNumberFormatter.number(_nights, lang),
+            ),
           if (_pages > 0)
             l10n.tarawihTotal(
               _pages,
