@@ -61,14 +61,14 @@ void main() {
     expect(order.sublist(3), [5, 3]);
   });
 
-  test('strength colours use the specified alphas', () {
+  test('strength colours share one alpha', () {
     Color colorFor(StrengthBand band) => readerHighlights(
       page: 2,
       accent: accent,
       bookmarks: const [],
       strengthBands: {(surah: 2, ayah: 1): band},
     ).single.color;
-    expect(colorFor(StrengthBand.due).a, closeTo(0.45, 0.01));
+    expect(colorFor(StrengthBand.due).a, closeTo(0.40, 0.01));
     expect(colorFor(StrengthBand.weak).a, closeTo(0.40, 0.01));
     expect(colorFor(StrengthBand.building).a, closeTo(0.40, 0.01));
     expect(colorFor(StrengthBand.solid).a, closeTo(0.40, 0.01));

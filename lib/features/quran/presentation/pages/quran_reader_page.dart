@@ -88,9 +88,9 @@ List<qcf.HighlightVerse> readerHighlights({
           surah: entry.key.surah,
           verseNumber: entry.key.ayah,
           page: page,
-          color: palette[entry.value]!.withValues(
-            alpha: entry.value == StrengthBand.due ? 0.45 : 0.40,
-          ),
+          // qcf repaints highlights at a fixed opacity, so one alpha for all
+          // bands; the bands differ by colour only.
+          color: palette[entry.value]!.withValues(alpha: 0.40),
         ),
     if (audio != null)
       qcf.HighlightVerse(
