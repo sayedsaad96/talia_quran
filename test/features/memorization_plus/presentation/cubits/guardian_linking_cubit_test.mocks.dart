@@ -1118,6 +1118,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
     int? attemptCount = 1,
     int? hintCount = 0,
     _i6.PerformanceRating? masteryRating = _i6.PerformanceRating.excellent,
+    bool? firstTryBonusEligible = true,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#awardKidsPoints, [], {
@@ -1132,6 +1133,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
               #attemptCount: attemptCount,
               #hintCount: hintCount,
               #masteryRating: masteryRating,
+              #firstTryBonusEligible: firstTryBonusEligible,
             }),
             returnValue:
                 _i4.Future<
@@ -1151,6 +1153,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                       #attemptCount: attemptCount,
                       #hintCount: hintCount,
                       #masteryRating: masteryRating,
+                      #firstTryBonusEligible: firstTryBonusEligible,
                     }),
                   ),
                 ),

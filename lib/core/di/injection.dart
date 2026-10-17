@@ -722,6 +722,11 @@ Future<void> configureDependencies({bool background = false}) async {
       readingSupportEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
         KidsEnrichmentFeature.supportProfile,
       ),
+      promiseEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianPromise,
+          ),
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(

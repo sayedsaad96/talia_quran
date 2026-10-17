@@ -217,6 +217,7 @@ abstract class MemorizationPlusRepository
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   });
 
   // ─── Custom memorization plan ──────────────────────────────────────────────

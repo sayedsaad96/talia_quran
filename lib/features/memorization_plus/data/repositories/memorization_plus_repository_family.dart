@@ -365,6 +365,7 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) => _kidsLocal.awardKidsPoints(
     completionAuthorized: completionAuthorized,
     sessionId: sessionId,
@@ -377,6 +378,7 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     attemptCount: attemptCount,
     hintCount: hintCount,
     masteryRating: masteryRating,
+    firstTryBonusEligible: firstTryBonusEligible,
   );
 
   // ─── Custom memorization plan ──────────────────────────────────────────────

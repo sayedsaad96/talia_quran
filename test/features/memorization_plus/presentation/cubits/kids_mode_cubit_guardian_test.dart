@@ -261,9 +261,10 @@ void main() {
 
     await cubit.submitGuardianAssessment(PerformanceRating.excellent);
 
-    // Same award inputs as the existing manual completion: the hint count
-    // stays 1, so the first-try excellence bonus is never granted.
-    expect(repository.lastHintCount, 1);
+    // The real tracked hint is logged (none here) and the first-try bonus is
+    // switched off explicitly for any guardian grade.
+    expect(repository.lastHintCount, 0);
+    expect(repository.lastBonusEligible, isFalse);
     expect(repository.lastMissionType, KidsMissionType.newMemorization);
   });
 
@@ -318,6 +319,7 @@ void main() {
 
       expect(await committedRating(), PerformanceRating.average);
       expect(repository.lastMasteryRating, PerformanceRating.average);
+      expect(repository.lastHintCount, 1, reason: 'the real hint is logged');
     });
 
     test('a clean ayah with «excellent» commits excellent', () async {
@@ -327,7 +329,8 @@ void main() {
       await cubit.submitGuardianAssessment(PerformanceRating.excellent);
 
       expect(await committedRating(), PerformanceRating.excellent);
-      expect(repository.lastHintCount, 1, reason: 'no first-try bonus');
+      expect(repository.lastHintCount, 0);
+      expect(repository.lastBonusEligible, isFalse);
     });
 
     group('mandatory house review', () {
@@ -403,6 +406,7 @@ class _FakeRepository implements MemorizationPlusRepository {
   int markCalls = 0;
   PerformanceRating? lastMasteryRating;
   int? lastHintCount;
+  bool? lastBonusEligible;
   KidsMissionType? lastMissionType;
   String? lastSessionId;
   List<KidsJourneyStage> journey = const [
@@ -438,8 +442,10 @@ class _FakeRepository implements MemorizationPlusRepository {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) async {
     awardCalls++;
+    lastBonusEligible = firstTryBonusEligible;
     lastSessionId = sessionId;
     lastMasteryRating = masteryRating;
     lastHintCount = hintCount;

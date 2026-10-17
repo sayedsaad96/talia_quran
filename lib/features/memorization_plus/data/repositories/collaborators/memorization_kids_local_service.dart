@@ -28,6 +28,8 @@ import '../../models/memorization_models.dart';
 
 bool _quranJourneyOff() => false;
 
+bool _promiseOn() => true;
+
 /// Kids-mode local domain: progress, journey stages, session logs, parent
 /// dashboard, settings, PIN, rewards and points awarding (with per-ayah
 /// concurrency locks). All data lives in the local datasource; streaks are
@@ -42,6 +44,7 @@ class MemorizationKidsLocalService {
     ParentPinSecureStore? parentPinStore,
     this._owner = const SupabaseRecordOwnerProvider(),
     this._quranJourneyEnabled = _quranJourneyOff,
+    this._promiseEnabled = _promiseOn,
   }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore();
 
   final MemorizationPlusLocalDatasource _datasource;
@@ -52,6 +55,11 @@ class MemorizationKidsLocalService {
   final ParentPinSecureStore _parentPinStore;
   final RecordOwnerProvider _owner;
   final bool Function() _quranJourneyEnabled;
+
+  /// Whether surah-linked gifts keep their condition. With the feature off a
+  /// milestone gift behaves as a plain gift, so it can never be stranded
+  /// locked with no way to open it.
+  final bool Function() _promiseEnabled;
 
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
@@ -946,6 +954,7 @@ class MemorizationKidsLocalService {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) {
     final ownerId = _owner.currentOwnerId;
     if (missionType == KidsMissionType.newMemorization &&
@@ -1026,6 +1035,7 @@ class MemorizationKidsLocalService {
         // perfect first-try recitation earns an excellence bonus on top of the
         // base reward so early mastery is visibly celebrated.
         final excellence =
+            firstTryBonusEligible &&
             attemptCount <= 1 &&
             hintCount == 0 &&
             masteryRating == PerformanceRating.excellent;
@@ -1285,9 +1295,10 @@ class MemorizationKidsLocalService {
       now.month,
       now.day,
     ).subtract(Duration(days: now.weekday - 1));
+    final promiseOn = _promiseEnabled();
     final alreadyUnlockedThisWeek = rewards.any(
       (reward) =>
-          reward.milestoneSurahId == null &&
+          (!promiseOn || reward.milestoneSurahId == null) &&
           reward.unlockedAt != null &&
           !reward.unlockedAt!.toUtc().isBefore(weekStart),
     );
@@ -1306,7 +1317,7 @@ class MemorizationKidsLocalService {
       // A surah promise opens only when its surah is completed.
       if (!unlockedOne &&
           reward.status == ParentRewardStatus.locked &&
-          reward.milestoneSurahId == null) {
+          (!promiseOn || reward.milestoneSurahId == null)) {
         unlockedOne = true;
         return ParentRewardModel.fromEntity(
           reward.copyWith(

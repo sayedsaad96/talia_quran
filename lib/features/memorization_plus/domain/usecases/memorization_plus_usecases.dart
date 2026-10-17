@@ -266,6 +266,7 @@ class AwardKidsPointsParams {
     this.attemptCount = 1,
     this.hintCount = 0,
     this.masteryRating = PerformanceRating.excellent,
+    this.firstTryBonusEligible = true,
   });
   final bool completionAuthorized;
   final String? sessionId;
@@ -278,6 +279,10 @@ class AwardKidsPointsParams {
   final int attemptCount;
   final int hintCount;
   final PerformanceRating masteryRating;
+
+  /// False when the grade came from a guardian: the child's first-try
+  /// excellence bonus is never granted for a guardian-assessed ayah.
+  final bool firstTryBonusEligible;
 }
 
 class AwardKidsPointsUsecase
@@ -300,6 +305,7 @@ class AwardKidsPointsUsecase
     attemptCount: params.attemptCount,
     hintCount: params.hintCount,
     masteryRating: params.masteryRating,
+    firstTryBonusEligible: params.firstTryBonusEligible,
   );
 }
 

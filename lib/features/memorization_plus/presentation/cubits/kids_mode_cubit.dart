@@ -1109,6 +1109,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           awardSessionId,
         );
       }
+      final awardHint = guardianRating != null ? trackedHint : effectiveHint;
       final result = await _awardPoints(
         AwardKidsPointsParams(
           completionAuthorized: true,
@@ -1120,8 +1121,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           ayahNumbers: [st.ayahNumber],
           durationSeconds: durationSeconds,
           attemptCount: failureCount + 1,
-          hintCount: effectiveHint == V2HintLevel.none ? 0 : 1,
+          // A guardian grade logs the real tracked hint (the manual full-ayah
+          // fallback would inflate coaching's "sessions with hints") and
+          // never earns the first-try bonus.
+          hintCount: awardHint == V2HintLevel.none ? 0 : 1,
           masteryRating: masteryRating,
+          firstTryBonusEligible: guardianRating == null,
         ),
       );
 

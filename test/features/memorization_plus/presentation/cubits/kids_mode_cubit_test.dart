@@ -2339,6 +2339,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) async {
     expect(completionAuthorized, isTrue);
     expect(surahId, 114);

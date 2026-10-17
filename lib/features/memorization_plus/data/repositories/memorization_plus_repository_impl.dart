@@ -81,10 +81,13 @@ class MemorizationPlusRepositoryImpl extends _MemorizationPlusRepositoryCore
     super.readingSupportSync,
     super.readingSupportEnabled,
     super.quranJourneyEnabled,
+    super.promiseEnabled,
   });
 }
 
 bool _quranJourneyOff() => false;
+
+bool _promiseOn() => true;
 
 abstract class _MemorizationPlusRepositoryCore
     implements
@@ -111,6 +114,7 @@ abstract class _MemorizationPlusRepositoryCore
     this._readingSupportSync,
     this._readingSupportEnabled,
     this._quranJourneyEnabled = _quranJourneyOff,
+    this._promiseEnabled = _promiseOn,
   });
 
   final ParentPinSecureStore? _parentPinStore;
@@ -122,6 +126,7 @@ abstract class _MemorizationPlusRepositoryCore
   final KidsReadingSupportSync? _readingSupportSync;
   final bool Function()? _readingSupportEnabled;
   final bool Function() _quranJourneyEnabled;
+  final bool Function() _promiseEnabled;
 
   late final MemorizationCloudGateway _gateway = MemorizationCloudGateway(
     _prefs,
@@ -150,6 +155,7 @@ abstract class _MemorizationPlusRepositoryCore
         parentPinStore: _parentPinStore,
         owner: _owner,
         quranJourneyEnabled: _quranJourneyEnabled,
+        promiseEnabled: _promiseEnabled,
       );
   late final MemorizationDailyPlanService _dailyPlan =
       MemorizationDailyPlanService(
