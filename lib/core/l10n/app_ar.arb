@@ -1059,8 +1059,6 @@
   "childDetailProgressUnavailable": "لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.",
   "childDetailCertificatesEmpty": "لا توجد شهادات بعد",
   "childDetailCertificateOpenHint": "اضغط على الشهادة لطباعتها أو مشاركتها",
-  "childCertificatesTitle": "شهادات طفلك",
-  "childCertificatesEmpty": "لا شهادات بعد. تُمنح الشهادة عند إتمام سورة أو جزء.",
   "dailyPlanRatingWeakDesc": "احتجت للمصحف",
   "dailyPlanRatingAverageDesc": "أخطاء بسيطة",
   "dailyPlanRatingExcellentDesc": "بدون خطأ",

@@ -18,7 +18,6 @@ import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/child_activity_summary.dart';
-import '../widgets/child_certificates_section.dart';
 import '../widgets/child_progress_panel.dart';
 import '../widgets/family_child_name.dart';
 import '../widgets/child_pin_recovery_panel.dart';
@@ -215,14 +214,6 @@ class _ChildDetailBody extends StatelessWidget {
           child: _ChildProgressSection(child: child),
         ),
         const SizedBox(height: AppSpacing.md),
-
-        if (ChildCertificatesSection.isEnabled()) ...[
-          ChildCertificatesSection(
-            child: child,
-            childName: child.shownName(context.l10n),
-          ),
-          const SizedBox(height: AppSpacing.md),
-        ],
 
         if (_weeklyCoachingEnabled()) ...[
           _Panel(
