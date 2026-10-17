@@ -63,14 +63,14 @@ void main() {
   test('nextAfter for a surah outside the path is null', () {
     expect(KidsJourneyPathDefinition.adventure.nextAfter(50), isNull);
   });
-  test('quran journey flag defaults to false', () async {
+  test('quran journey flag defaults to true and can be switched off', () async {
     SharedPreferences.setMockInitialValues({});
     var prefs = await SharedPreferences.getInstance();
-    expect(KidsHifzFeatureFlags.isQuranJourneyEnabled(prefs), isFalse);
+    expect(KidsHifzFeatureFlags.isQuranJourneyEnabled(prefs), isTrue);
     SharedPreferences.setMockInitialValues({
-      'kids_quran_journey_enabled': true,
+      'kids_quran_journey_enabled': false,
     });
     prefs = await SharedPreferences.getInstance();
-    expect(KidsHifzFeatureFlags.isQuranJourneyEnabled(prefs), isTrue);
+    expect(KidsHifzFeatureFlags.isQuranJourneyEnabled(prefs), isFalse);
   });
 }

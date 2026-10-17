@@ -35,6 +35,10 @@ class _LabsFlagsPageState extends State<LabsFlagsPage> {
     ],
   };
 
+  /// Keys whose flag reads `true` when unset, so the switch shows the real
+  /// effective state.
+  static const _defaultOn = {KidsHifzFeatureFlags.quranJourneyKey};
+
   Future<void> _set(String key, bool value) async {
     await widget.prefs.setBool(key, value);
     if (mounted) setState(() {});
@@ -61,7 +65,7 @@ class _LabsFlagsPageState extends State<LabsFlagsPage> {
                   key: ValueKey('labs_flag_$key'),
                   title: Text(label),
                   subtitle: Text(key),
-                  value: widget.prefs.getBool(key) ?? false,
+                  value: widget.prefs.getBool(key) ?? _defaultOn.contains(key),
                   onChanged: (v) => _set(key, v),
                 ),
             ],

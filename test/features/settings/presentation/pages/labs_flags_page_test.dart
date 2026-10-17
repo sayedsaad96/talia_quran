@@ -36,8 +36,15 @@ void main() {
       await toggle('kids_enrichment_homeMissionTemplates');
       expect(prefs.getBool('kids_enrichment_homeMissionTemplates'), isTrue);
 
+      // The Quran journey is on by default, so the switch starts on.
+      final journeyTile = tester.widget<SwitchListTile>(
+        find.byKey(
+          const ValueKey('labs_flag_${KidsHifzFeatureFlags.quranJourneyKey}'),
+        ),
+      );
+      expect(journeyTile.value, isTrue);
       await toggle(KidsHifzFeatureFlags.quranJourneyKey);
-      expect(prefs.getBool(KidsHifzFeatureFlags.quranJourneyKey), isTrue);
+      expect(prefs.getBool(KidsHifzFeatureFlags.quranJourneyKey), isFalse);
 
       await toggle(ExperienceFeature.strengthOverlay.storageKey);
       expect(prefs.getBool('experience_flag_strengthOverlay'), isTrue);

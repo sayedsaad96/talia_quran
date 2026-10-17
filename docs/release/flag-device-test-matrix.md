@@ -11,7 +11,7 @@
 3. تعرض الصفحة أربع مجموعات، لكل علم مفتاح تشغيل واحد يكتب مباشرة في التخزين المحلي باسم المفتاح المعروض تحته:
    - `KidsEnrichmentFeature` (مفاتيح `kids_enrichment_...`)
    - `AdultJourneyFeature` (مفاتيح `adult_journey_flag_...`)
-   - `KidsHifzFeatureFlags` (`kids_hifz_v2_enabled` و`kids_quran_journey_enabled`)
+   - `KidsHifzFeatureFlags` (`kids_hifz_v2_enabled` و`kids_quran_journey_enabled`). ملاحظة: `kids_quran_journey_enabled` **مشغَّل افتراضياً** منذ 2026-10-18، ولاختبار ق1 أطفئه يدوياً من هذه الصفحة.
    - `ExperienceFeature` (مفاتيح `experience_flag_...`)
 4. بعد تبديل مفتاح: اخرج من الصفحة وادخل الشاشة المعنية من جديد. بعض الشاشات تقرأ العلم عند بنائها فقط، فإن لم يظهر التغيير فأغلق التطبيق بالكامل وافتحه.
 5. سجّل النتيجة في عمود «النتيجة» بإحدى القيم: نجح / فشل (مع لقطة شاشة) / لم يُختبر.
