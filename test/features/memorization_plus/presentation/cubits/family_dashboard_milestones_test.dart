@@ -118,13 +118,208 @@ void main() {
 
   test('the switch off shows nothing and never touches the store', () async {
     enabled = false;
+    final spy = _ThrowingStore(prefs);
     repo.dashboard = _localChild([_log(1), _log(2)]);
-    final cubit = build();
+    final cubit = FamilyDashboardCubit(
+      ParentAccessUsecase(repo),
+      ParentRemoteLinkUsecase(repo),
+      GetFamilyDashboardUsecase(repo),
+      guardianSessionActive: () => true,
+      milestoneStore: spy,
+      milestonesEnabled: () => enabled,
+      ayahCounts: () async => {114: 2},
+    );
     addTearDown(cubit.close);
 
     await cubit.refresh();
 
     expect(news(cubit), isEmpty);
+    expect(spy.calls, 0);
     expect(prefs.getKeys(), isEmpty);
   });
+
+  group('linked children', () {
+    test('details still loading: skipped and not marked seen', () async {
+      repo.dashboard = _dashboardOf([
+        _remote('c1', [_log(1), _log(2)], loading: true),
+      ]);
+      final cubit = build();
+      addTearDown(cubit.close);
+
+      await cubit.refresh();
+
+      expect(news(cubit), isEmpty);
+      expect(await store.hasRecord('c1'), isFalse);
+    });
+
+    test('no logs at all: skipped and not marked seen', () async {
+      repo.dashboard = _dashboardOf([
+        const FamilyChildEntry(
+          childUserId: 'local-id',
+          displayName: 'Noor',
+          isLocal: true,
+        ),
+        const FamilyChildEntry(
+          childUserId: 'c1',
+          displayName: 'Sami',
+          isLocal: false,
+        ),
+      ]);
+      final cubit = build();
+      addTearDown(cubit.close);
+
+      await cubit.refresh();
+
+      expect(news(cubit), isEmpty);
+      expect(await store.hasRecord('local'), isFalse);
+      expect(await store.hasRecord('c1'), isFalse);
+    });
+
+    test(
+      'first load marks complete data seen; later news is keyed by id',
+      () async {
+        repo.dashboard = _dashboardOf([
+          _remote('c1', [_log(1), _log(2)]),
+        ]);
+        final cubit = build();
+        addTearDown(cubit.close);
+
+        await cubit.refresh();
+        expect(news(cubit), isEmpty);
+        expect(await store.seen('c1'), {'surah:114'});
+
+        repo.dashboard = _dashboardOf([
+          _remote(
+            'c1',
+            [_log(1), _log(2)],
+            certs: [
+              RemoteCertificateAward(
+                certId: 'cert_surah_114',
+                titleAr: 'شهادة',
+                certType: 'surah',
+                earnedAt: DateTime.utc(2026, 10, 14),
+              ),
+            ],
+          ),
+        ]);
+        await cubit.refresh();
+
+        final item = news(cubit).single;
+        expect(item.childKey, 'c1');
+        expect(item.milestone.id, 'cert:cert_surah_114');
+
+        await cubit.dismissNews();
+        expect(await store.seen('c1'), {'surah:114', 'cert:cert_surah_114'});
+      },
+    );
+
+    test('a child that throws does not affect the others', () async {
+      final spy = _SpyStore(prefs)..failFor = 'bad';
+      repo.dashboard = _dashboardOf([
+        _remote('bad', [_log(1)]),
+        _remote('good', [_log(1)]),
+      ]);
+      final cubit = FamilyDashboardCubit(
+        ParentAccessUsecase(repo),
+        ParentRemoteLinkUsecase(repo),
+        GetFamilyDashboardUsecase(repo),
+        guardianSessionActive: () => true,
+        milestoneStore: spy,
+        milestonesEnabled: () => true,
+        ayahCounts: () async => {114: 2},
+        clock: () => DateTime.utc(2026, 10, 14, 10),
+      );
+      addTearDown(cubit.close);
+      await cubit.refresh();
+
+      repo.dashboard = _dashboardOf([
+        _remote('bad', [_log(1), _log(2)]),
+        _remote('good', [_log(1), _log(2)]),
+      ]);
+      await cubit.refresh();
+
+      expect(news(cubit).map((n) => n.childKey), ['good']);
+    });
+  });
+}
+
+FamilyDashboard _dashboardOf(List<FamilyChildEntry> children) =>
+    FamilyDashboard(
+      settings: const ParentSettings(weeklyGoalSessions: 99),
+      children: children,
+    );
+
+FamilyChildEntry _remote(
+  String id,
+  List<KidsSessionLog> logs, {
+  bool loading = false,
+  List<RemoteCertificateAward> certs = const [],
+}) => FamilyChildEntry(
+  childUserId: id,
+  displayName: 'Child $id',
+  isLocal: false,
+  remoteSummary: RemoteChildSummary(
+    childUserId: id,
+    displayName: 'Child $id',
+    progress: const KidsProgress.initial(),
+    logs: logs,
+    rewards: const [],
+    detailsLoading: loading,
+    production: certs.isEmpty
+        ? null
+        : RemoteChildProductionSummary(
+            totalMemorizedAyahs: 0,
+            totalAyahsTracked: 0,
+            completionPercent: 0,
+            reviewsCompleted: 0,
+            reviewsOverdue: 0,
+            dailyPlanTotal: 0,
+            dailyPlanCompleted: 0,
+            activeDaysLast30: 0,
+            certificates: certs,
+          ),
+  ),
+);
+
+/// Fails any store access, so a read that writes nothing is caught too.
+class _ThrowingStore extends GuardianMilestoneSeenStore {
+  _ThrowingStore(SharedPreferences prefs)
+    : super(prefs, const FixedRecordOwnerProvider('owner'));
+  int calls = 0;
+
+  @override
+  Future<bool> hasRecord(String childKey) async {
+    calls++;
+    throw StateError('store read');
+  }
+
+  @override
+  Future<Set<String>> seen(String childKey) async {
+    calls++;
+    throw StateError('store read');
+  }
+
+  @override
+  Future<Set<String>> unseen(String childKey, Iterable<String> detected) async {
+    calls++;
+    throw StateError('store read');
+  }
+
+  @override
+  Future<void> markSeen(String childKey, Iterable<String> ids) async {
+    calls++;
+    throw StateError('store write');
+  }
+}
+
+class _SpyStore extends GuardianMilestoneSeenStore {
+  _SpyStore(SharedPreferences prefs)
+    : super(prefs, const FixedRecordOwnerProvider('owner'));
+  String? failFor;
+
+  @override
+  Future<Set<String>> unseen(String childKey, Iterable<String> detected) {
+    if (childKey == failFor) throw StateError('boom');
+    return super.unseen(childKey, detected);
+  }
 }

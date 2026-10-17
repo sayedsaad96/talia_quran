@@ -361,6 +361,24 @@ void main() {
       expect(prefs.getString('ramadan_tarawih|owner-a'), isNull);
     });
 
+    test('clears the guardian what\'s-new seen ids', () async {
+      await prefs.setString(
+        'guardian_milestones_seen|owner-a|child-1',
+        '["surah:1"]',
+      );
+      await prefs.setString(
+        'guardian_milestones_seen|owner-a|local',
+        '["cert:x"]',
+      );
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(
+        prefs.getKeys().where((k) => k.startsWith('guardian_milestones_seen')),
+        isEmpty,
+      );
+    });
+
     test('retains device preferences', () async {
       await AccountDataReset(isar, prefs).clearAccountOwnedData();
       expect(prefs.getString('theme_mode'), 'dark');

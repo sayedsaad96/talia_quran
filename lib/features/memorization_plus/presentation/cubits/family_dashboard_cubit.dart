@@ -210,30 +210,32 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       return;
     }
     final items = <GuardianNewsItem>[];
+    final Map<int, int>? counts;
     try {
-      final counts = await _ayahCounts?.call();
-      if (counts == null || counts.isEmpty) {
-        _emitNews(latest, const []);
-        return;
-      }
-      final now = _clock();
-      // A linked child's policy carries no weekly goal, so every child is
-      // measured against this device's weekly goal.
-      final goal = latest.dashboard.settings.weeklyGoalSessions;
-      for (final entry in latest.dashboard.children) {
+      counts = await _ayahCounts?.call();
+    } catch (error, stack) {
+      TaliaLogger.w('Milestone ayah counts unreadable', error, stack);
+      _emitNews(latest, const []);
+      return;
+    }
+    if (counts == null || counts.isEmpty) {
+      _emitNews(latest, const []);
+      return;
+    }
+    final now = _clock();
+    // A linked child's policy carries no weekly goal, so every child is
+    // measured against this device's weekly goal.
+    final goal = latest.dashboard.settings.weeklyGoalSessions;
+    for (final entry in latest.dashboard.children) {
+      // One child failing must not hide the others.
+      try {
         final summary = entry.remoteSummary;
         if (summary?.detailsLoading ?? false) continue;
         final logs = entry.isLocal ? entry.localData?.logs : summary?.logs;
         if (logs == null) continue;
-        List<CertificateAward> certificates;
-        try {
-          certificates = entry.isLocal
-              ? (_localCertificates?.call() ?? const [])
-              : remoteKidsProgressSnapshot(summary!, now: now).certificates;
-        } catch (error, stack) {
-          TaliaLogger.w('Milestone certificates unreadable', error, stack);
-          continue;
-        }
+        final certificates = entry.isLocal
+            ? (_localCertificates?.call() ?? const <CertificateAward>[])
+            : remoteKidsProgressSnapshot(summary!, now: now).certificates;
         final detected = detectGuardianMilestones(
           logs: logs,
           ayahCountBySurah: counts,
@@ -242,13 +244,12 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
           now: now,
         );
         final childKey = entry.isLocal ? 'local' : entry.childUserId;
-        if (!await store.hasRecord(childKey)) {
-          await store.markSeen(childKey, detected.map((m) => m.id));
-          continue;
-        }
-        final seen = await store.seen(childKey);
+        final fresh = await store.unseen(
+          childKey,
+          detected.map((m) => m.id),
+        );
         for (final milestone in detected) {
-          if (seen.contains(milestone.id)) continue;
+          if (!fresh.contains(milestone.id)) continue;
           items.add(
             GuardianNewsItem(
               childKey: childKey,
@@ -257,10 +258,9 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
             ),
           );
         }
+      } catch (error, stack) {
+        TaliaLogger.w('Guardian milestones not detected', error, stack);
       }
-    } catch (error, stack) {
-      TaliaLogger.w('Guardian milestones not detected', error, stack);
-      items.clear();
     }
     if (isClosed || generation != _refreshGeneration) return;
     final current = state;

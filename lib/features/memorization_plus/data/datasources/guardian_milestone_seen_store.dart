@@ -30,10 +30,26 @@ class GuardianMilestoneSeenStore {
   Future<Set<String>> seen(String childKey) async =>
       _read(_key(_owner.currentOwnerId, childKey));
 
+  /// What of [detected] the guardian has not seen for [childKey]. A child
+  /// with no record yet (first load) has all of [detected] marked seen and
+  /// gets an empty result, so old progress is never shown as news. The owner
+  /// is read once, so the check and the marking use the same account.
+  Future<Set<String>> unseen(String childKey, Iterable<String> detected) async {
+    final key = _key(_owner.currentOwnerId, childKey);
+    final ids = detected.toSet();
+    if (!_prefs.containsKey(key)) {
+      await _write(key, ids);
+      return <String>{};
+    }
+    return ids.difference(_read(key));
+  }
+
   /// Adds [ids] to the seen set. An empty [ids] still creates the record.
   Future<void> markSeen(String childKey, Iterable<String> ids) async {
-    final key = _key(_owner.currentOwnerId, childKey);
-    final additions = ids.toSet();
+    await _write(_key(_owner.currentOwnerId, childKey), ids.toSet());
+  }
+
+  Future<void> _write(String key, Set<String> additions) async {
     try {
       await AccountDataBarrier.forPreferences(_prefs).run((lease) async {
         final next = {..._read(key), ...additions}.toList()..sort();
