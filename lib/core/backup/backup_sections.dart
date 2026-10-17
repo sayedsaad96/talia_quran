@@ -17,6 +17,7 @@ import '../../features/xp/data/models/xp_isar.dart';
 import '../constants/surah_names.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/review_record_identity.dart';
+import '../utils/talia_logger.dart';
 
 /// Section names of a v1 backup. A v1 payload must carry exactly these.
 abstract final class BackupSections {
@@ -341,20 +342,14 @@ abstract final class BackupPreferencePolicy {
     'user_profile': _string(_mapOf(UserProfile.fromJson)),
     'read_pages': _string(_pages),
     'khatmah_active_plan': _string(_mapOf(KhatmahPlanModel.fromJson)),
-    'khatmah_history': _string(_listOf(KhatmahHistoryModel.fromJson)),
-    'earned_certificates_v2': _string(_listOf(CertificateAward.fromJson)),
-    'earned_certificates_v2_kids': _string(_listOf(CertificateAward.fromJson)),
+    for (final entry in _listItemModels.entries)
+      entry.key: _string(_listOf(entry.value)),
     _profileBase: _string(_mapOf(MemorizationProfileModel.fromJson)),
     _parentSettingsBase: _string(_mapOf(ParentSettingsModel.fromJson)),
-    'mem_plus_parent_rewards': _string(_listOf(ParentRewardModel.fromJson)),
     'mem_plus_kids_progress': _string(_mapOf(KidsProgressModel.fromJson)),
     'mem_plus_kids_legacy_cloud_floor': _string(
       _mapOf(KidsProgressModel.fromJson),
     ),
-    'mem_plus_kids_session_logs': _string(
-      _listOf(KidsSessionLogModel.fromJson),
-    ),
-    'mem_plus_home_missions': _string(_listOf(KidsHomeMission.fromJson)),
     'mem_plus_daily_plan': _string(_mapOf(DailyPlanModel.fromJson)),
     'mem_plus_custom_plan': _string(
       _mapOf(CustomMemorizationPlanModel.fromJson),
@@ -367,6 +362,50 @@ abstract final class BackupPreferencePolicy {
     'ramadan_tarawih': _string(_jsonList),
     'azkar_smart_wird_history': _string(_jsonList),
   };
+
+  /// List values whose items are checked one by one by their model.
+  static final Map<String, Object Function(Map<String, dynamic> json)>
+  _listItemModels = {
+    'khatmah_history': KhatmahHistoryModel.fromJson,
+    'earned_certificates_v2': CertificateAward.fromJson,
+    'earned_certificates_v2_kids': CertificateAward.fromJson,
+    'mem_plus_parent_rewards': ParentRewardModel.fromJson,
+    'mem_plus_kids_session_logs': KidsSessionLogModel.fromJson,
+    'mem_plus_home_missions': KidsHomeMission.fromJson,
+  };
+
+  /// Drops the items of a model-checked JSON list that their model rejects
+  /// and keeps the rest, so one corrupt item never costs the whole list (the
+  /// app's readers salvage item by item too). Unchanged when nothing is
+  /// dropped, when [backupKey] is not such a list, or when the value is not
+  /// a JSON list at all ([validate] rejects that).
+  static Object dropInvalidListItems(String backupKey, Object value) {
+    final parse = _listItemModels[backupKey.split('|').first];
+    if (parse == null || value is! String) return value;
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(value);
+    } on FormatException {
+      return value;
+    }
+    if (decoded is! List) return value;
+    final kept = <Object?>[];
+    for (final item in decoded) {
+      if (item is! Map<String, dynamic>) continue;
+      try {
+        parse(item);
+        kept.add(item);
+      } catch (_) {
+        // Dropped below.
+      }
+    }
+    if (kept.length == decoded.length) return value;
+    TaliaLogger.w(
+      'Backup dropped ${decoded.length - kept.length} invalid item(s) of '
+      '$backupKey',
+    );
+    return jsonEncode(kept);
+  }
 
   /// Checked in order; the first matching prefix wins.
   static final Map<String, void Function(Object value)> _prefixSpecs = {
@@ -855,8 +894,12 @@ class ParsedBackupSections {
         BackupPreferencePolicy.decodeValue(entry.value),
       );
       if (value == null) throw BackupSectionInvalid('prefs value ${entry.key}');
-      BackupPreferencePolicy.validate(entry.key, value);
-      prefs[key] = value;
+      final cleaned = BackupPreferencePolicy.dropInvalidListItems(
+        entry.key,
+        value,
+      );
+      BackupPreferencePolicy.validate(entry.key, cleaned);
+      prefs[key] = cleaned;
     }
 
     return ParsedBackupSections._(

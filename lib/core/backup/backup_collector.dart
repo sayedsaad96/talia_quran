@@ -148,10 +148,14 @@ class BackupCollector {
       final backupKey = BackupPreferencePolicy.backupKeyFor(key, ownerId);
       if (backupKey == null) continue;
       final raw = _prefs.get(key);
-      final value = raw == null
+      final sanitized = raw == null
           ? null
           : BackupPreferencePolicy.sanitize(backupKey, raw);
-      if (value == null) continue;
+      if (sanitized == null) continue;
+      final value = BackupPreferencePolicy.dropInvalidListItems(
+        backupKey,
+        sanitized,
+      );
       // A value the restorer would reject is skipped, so one corrupt local
       // value can never make the whole backup unrestorable.
       try {

@@ -1222,9 +1222,9 @@ void main() {
           't': 's',
           'v': 'not json',
         }),
-        'khatmah history wrong item': withPref('khatmah_history', {
+        'khatmah history not a list': withPref('khatmah_history', {
           't': 's',
-          'v': '[{"id":1}]',
+          'v': '{"id":"h1"}',
         }),
         'read_pages as int wrapper': withPref('read_pages', {'t': 'i', 'v': 3}),
         'read_pages as plain string': withPref('read_pages', {
@@ -1243,10 +1243,14 @@ void main() {
           'mem_plus_parent_settings|{owner}',
           {'t': 's', 'v': '{"reminderHour":"seven"}'},
         ),
-        'parent rewards bad item': withPref('mem_plus_parent_rewards|{owner}', {
-          't': 's',
-          'v': '[{"id":"r1"}]',
-        }),
+        'parent rewards not a list': withPref(
+          'mem_plus_parent_rewards|{owner}',
+          {'t': 's', 'v': '{"id":"r1"}'},
+        ),
+        'session logs not JSON': withPref(
+          'mem_plus_kids_session_logs|{owner}',
+          {'t': 's', 'v': 'garbage'},
+        ),
         'azkar counter as string': withPref('azkar_counter_morning_z1', {
           't': 's',
           'v': '3',
@@ -1283,6 +1287,66 @@ void main() {
         const FixedRecordOwnerProvider('user-b'),
       ).restore(payload);
       expect(result, BackupRestoreResult.restored);
+    });
+
+    String log(String id) => jsonEncode({
+      'id': id,
+      'surahId': 112,
+      'ayahNumber': 1,
+      'repeatsCompleted': 3,
+      'pointsEarned': 10,
+      'completedAt': '2026-09-01T00:00:00.000Z',
+    });
+    String reward(String id) => jsonEncode({
+      'id': id,
+      'title': 'Gift $id',
+      'status': 0,
+      'createdAt': '2026-09-01T00:00:00.000Z',
+    });
+
+    test('A2 review: collect drops a corrupt session log item and keeps the '
+        'good ones', () async {
+      final isar = await openIsar('a2_items_collect');
+      final payload = await collectA(
+        isar,
+        await freshPrefs({
+          ...ownerAPrefs(),
+          'mem_plus_kids_session_logs|user-a':
+              '[${log('l1')},{"id":"bad"},${log('l3')}]',
+        }),
+      );
+      final prefsSection = payload.sections[BackupSections.prefs]! as Map;
+      final value =
+          (prefsSection['mem_plus_kids_session_logs|{owner}'] as Map)['v']
+              as String;
+      final ids = [
+        for (final item in jsonDecode(value) as List) (item as Map)['id'],
+      ];
+      expect(ids, ['l1', 'l3']);
+    });
+
+    test('A2 review: restore keeps the good rewards of a list with one bad '
+        'item', () async {
+      final payload = mutate(await ownerAPayload(), (s) {
+        s[BackupSections.prefs] = {
+          ...(s[BackupSections.prefs]! as Map),
+          'mem_plus_parent_rewards|{owner}': {
+            't': 's',
+            'v': '[${reward('r1')},{"id":"bad"},${reward('r3')}]',
+          },
+        };
+      });
+      final prefsB = await freshPrefs({});
+      final result = await BackupRestorer(
+        await openIsar('a2_items_restore'),
+        prefsB,
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(payload);
+      expect(result, BackupRestoreResult.restored);
+      final rewards =
+          jsonDecode(prefsB.getString('mem_plus_parent_rewards|user-b')!)
+              as List;
+      expect([for (final r in rewards) (r as Map)['id']], ['r1', 'r3']);
     });
 
     test('A3: a linked child profile restored to a device without a profile '
