@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -15,6 +17,7 @@ import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/kids_remote_reading_support_repository.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/repositories/kids_support_profile_repository.dart';
+import '../../domain/services/kids_monthly_report.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
 import '../cubits/family_dashboard_cubit.dart';
@@ -33,6 +36,7 @@ import '../widgets/kids_weekly_coaching_card.dart';
 import '../widgets/parent_support_tip.dart';
 import '../widgets/remove_child_from_family_button.dart';
 import 'family_dashboard_page.dart';
+import 'kids_monthly_report_page.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
@@ -64,6 +68,12 @@ bool _weeklyCoachingEnabled() =>
     getIt<KidsEnrichmentFlags>().isEnabled(
       KidsEnrichmentFeature.weeklyCoaching,
     );
+
+/// Whether the monthly report button is switched on (off when the flags are
+/// not wired).
+bool _monthlyReportEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.monthlyReport);
 
 /// The learning-support question shows only while its flag is on and the
 /// store is wired.
@@ -268,6 +278,29 @@ class _ChildDetailBody extends StatelessWidget {
                 // Only this device's own child has a complete local history;
                 // a linked child's logs may be partial.
                 historyComplete: child.isLocal && child.localData != null,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        if (_monthlyReportEnabled()) ...[
+          OutlinedButton.icon(
+            key: const ValueKey('child-monthly-report-button'),
+            icon: const Icon(TaliaIcons.calendarRange),
+            label: Text(context.l10n.monthlyReportTitle),
+            onPressed: () => context.push(
+              AppRoutes.childMonthlyReport,
+              extra: KidsMonthlyReportRouteArgs(
+                report: buildKidsMonthlyReport(
+                  logs: logs,
+                  ayahCountBySurah: {
+                    for (var id = 1; id <= 114; id++)
+                      id: SurahNames.ayahCount(id),
+                  },
+                  now: DateTime.now(),
+                ),
+                childName: child.shownName(context.l10n),
               ),
             ),
           ),

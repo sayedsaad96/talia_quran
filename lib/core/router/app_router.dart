@@ -64,6 +64,8 @@ import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_pa
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
 import '../../features/memorization_plus/presentation/pages/family_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/child_detail_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_monthly_report_page.dart';
+import '../../features/memorization_plus/presentation/widgets/guardian_session_scope.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
@@ -124,6 +126,8 @@ abstract class AppRoutes {
 
   static const String familyDashboard = '/family-dashboard';
   static const String childDetail = '/family-dashboard/child';
+  static const String childMonthlyReport =
+      '/family-dashboard/child/monthly-report';
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
   static const String memorizationPlusDailyPlan =
@@ -1025,6 +1029,24 @@ abstract class AppRouter {
         redirect: (context, state) =>
             MemorizationRouteGuard.parentDashboardRedirect(),
         builder: (context, state) => ChildDetailPage.forRoute(state.extra),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.childMonthlyReport,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.parentDashboardRedirect(),
+        builder: (context, state) {
+          final args = state.extra;
+          if (args is! KidsMonthlyReportRouteArgs) {
+            return const FamilyDashboardPage();
+          }
+          return GuardianSessionScope(
+            child: KidsMonthlyReportPage(
+              report: args.report,
+              childName: args.childName,
+            ),
+          );
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

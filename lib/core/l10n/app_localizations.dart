@@ -4604,6 +4604,96 @@ abstract class AppLocalizations {
   /// **'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.'**
   String get kidsWeeklyCoachingTipStartSmall;
 
+  /// No description provided for @monthlyReportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقرير الشهر'**
+  String get monthlyReportTitle;
+
+  /// No description provided for @monthlyReportPeriod.
+  ///
+  /// In ar, this message translates to:
+  /// **'من {from} إلى {to}'**
+  String monthlyReportPeriod(String from, String to);
+
+  /// No description provided for @monthlyReportSessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا جلسات} =1{جلسة واحدة} =2{جلستان} few{{countText} جلسات} many{{countText} جلسة} other{{countText} جلسة}}'**
+  String monthlyReportSessions(int count, String countText);
+
+  /// No description provided for @monthlyReportActiveDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا أيام نشطة} =1{يوم نشط واحد} =2{يومان نشطان} few{{countText} أيام نشطة} many{{countText} يومًا نشطًا} other{{countText} يوم نشط}}'**
+  String monthlyReportActiveDays(int count, String countText);
+
+  /// No description provided for @monthlyReportNewAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا آيات جديدة} =1{آية جديدة واحدة} =2{آيتان جديدتان} few{{countText} آيات جديدة} many{{countText} آية جديدة} other{{countText} آية جديدة}}'**
+  String monthlyReportNewAyahs(int count, String countText);
+
+  /// No description provided for @monthlyReportReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا مراجعات} =1{مراجعة واحدة} =2{مراجعتان} few{{countText} مراجعات} many{{countText} مراجعة} other{{countText} مراجعة}}'**
+  String monthlyReportReviews(int count, String countText);
+
+  /// No description provided for @monthlyReportCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'سور أتمّها'**
+  String get monthlyReportCompleted;
+
+  /// No description provided for @monthlyReportNeedsSupport.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات تحتاج دعماً'**
+  String get monthlyReportNeedsSupport;
+
+  /// No description provided for @monthlyReportNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة ولي الأمر'**
+  String get monthlyReportNote;
+
+  /// No description provided for @monthlyReportNoteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة تشجيع تظهر في الصورة فقط ولا تُحفظ'**
+  String get monthlyReportNoteHint;
+
+  /// No description provided for @monthlyReportEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا جلسات في هذا الشهر'**
+  String get monthlyReportEmpty;
+
+  /// No description provided for @monthlyReportSavePdf.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ PDF'**
+  String get monthlyReportSavePdf;
+
+  /// No description provided for @monthlyReportShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة'**
+  String get monthlyReportShare;
+
+  /// No description provided for @monthlyReportShareText.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقرير تالية للشهر'**
+  String get monthlyReportShareText;
+
+  /// No description provided for @monthlyReportAyahRef.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah} · آية {ayah}'**
+  String monthlyReportAyahRef(String surah, String ayah);
+
   /// No description provided for @kidsFamilyPracticeAction.
   ///
   /// In ar, this message translates to:

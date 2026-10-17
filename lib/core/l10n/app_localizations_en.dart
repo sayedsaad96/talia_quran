@@ -2512,6 +2512,92 @@ class AppLocalizationsEn extends AppLocalizations {
       'A quiet week. A short session of a few minutes is a good way back.';
 
   @override
+  String get monthlyReportTitle => 'Monthly report';
+
+  @override
+  String monthlyReportPeriod(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String monthlyReportSessions(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText sessions',
+      one: '1 session',
+      zero: 'No sessions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportActiveDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText active days',
+      one: '1 active day',
+      zero: 'No active days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportNewAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText new ayahs',
+      one: '1 new ayah',
+      zero: 'No new ayahs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportReviews(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText reviews',
+      one: '1 review',
+      zero: 'No reviews',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get monthlyReportCompleted => 'Surahs completed';
+
+  @override
+  String get monthlyReportNeedsSupport => 'Ayahs that need support';
+
+  @override
+  String get monthlyReportNote => 'Guardian note';
+
+  @override
+  String get monthlyReportNoteHint =>
+      'An encouraging word shown in the image only, not saved';
+
+  @override
+  String get monthlyReportEmpty => 'No sessions this month';
+
+  @override
+  String get monthlyReportSavePdf => 'Save PDF';
+
+  @override
+  String get monthlyReportShare => 'Share';
+
+  @override
+  String get monthlyReportShareText => 'Talia monthly report';
+
+  @override
+  String monthlyReportAyahRef(String surah, String ayah) {
+    return '$surah · ayah $ayah';
+  }
+
+  @override
   String get kidsFamilyPracticeAction => 'Learn together';
 
   @override

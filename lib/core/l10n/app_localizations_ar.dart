@@ -2495,6 +2495,103 @@ class AppLocalizationsAr extends AppLocalizations {
       'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
 
   @override
+  String get monthlyReportTitle => 'تقرير الشهر';
+
+  @override
+  String monthlyReportPeriod(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String monthlyReportSessions(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText جلسة',
+      many: '$countText جلسة',
+      few: '$countText جلسات',
+      two: 'جلستان',
+      one: 'جلسة واحدة',
+      zero: 'لا جلسات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportActiveDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوم نشط',
+      many: '$countText يومًا نشطًا',
+      few: '$countText أيام نشطة',
+      two: 'يومان نشطان',
+      one: 'يوم نشط واحد',
+      zero: 'لا أيام نشطة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportNewAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية جديدة',
+      many: '$countText آية جديدة',
+      few: '$countText آيات جديدة',
+      two: 'آيتان جديدتان',
+      one: 'آية جديدة واحدة',
+      zero: 'لا آيات جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportReviews(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText مراجعة',
+      many: '$countText مراجعة',
+      few: '$countText مراجعات',
+      two: 'مراجعتان',
+      one: 'مراجعة واحدة',
+      zero: 'لا مراجعات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get monthlyReportCompleted => 'سور أتمّها';
+
+  @override
+  String get monthlyReportNeedsSupport => 'آيات تحتاج دعماً';
+
+  @override
+  String get monthlyReportNote => 'ملاحظة ولي الأمر';
+
+  @override
+  String get monthlyReportNoteHint => 'كلمة تشجيع تظهر في الصورة فقط ولا تُحفظ';
+
+  @override
+  String get monthlyReportEmpty => 'لا جلسات في هذا الشهر';
+
+  @override
+  String get monthlyReportSavePdf => 'حفظ PDF';
+
+  @override
+  String get monthlyReportShare => 'مشاركة';
+
+  @override
+  String get monthlyReportShareText => 'تقرير تالية للشهر';
+
+  @override
+  String monthlyReportAyahRef(String surah, String ayah) {
+    return '$surah · آية $ayah';
+  }
+
+  @override
   String get kidsFamilyPracticeAction => 'نتعلم سوا';
 
   @override

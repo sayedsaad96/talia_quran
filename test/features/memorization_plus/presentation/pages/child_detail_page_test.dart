@@ -445,6 +445,53 @@ void main() {
     expect(tester.widget<SwitchListTile>(reduceMotion).onChanged, isNotNull);
   });
 
+  group('monthly report button', () {
+    final getIt = GetIt.instance;
+
+    Future<void> withFlag(bool on) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => on && key == KidsEnrichmentFeature.monthlyReport.storageKey,
+        ),
+      );
+    }
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+    });
+
+    testWidgets('is hidden while the feature is off', (tester) async {
+      await withFlag(false);
+      await _pump(tester, _localChild(const []));
+
+      expect(
+        find.byKey(const ValueKey('child-monthly-report-button')),
+        findsNothing,
+      );
+    });
+
+    for (final local in [true, false]) {
+      testWidgets('shows for a ${local ? 'local' : 'linked'} child when on', (
+        tester,
+      ) async {
+        await withFlag(true);
+        await _pump(
+          tester,
+          local ? _localChild(const []) : _remoteChild(const []),
+        );
+        final button = find.byKey(const ValueKey('child-monthly-report-button'));
+        await _scrollTo(tester, button);
+
+        expect(button, findsOneWidget);
+      });
+    }
+  });
+
   group('weekly summary', () {
     final getIt = GetIt.instance;
 
