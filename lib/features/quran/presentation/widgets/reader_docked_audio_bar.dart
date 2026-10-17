@@ -166,7 +166,8 @@ class ReaderDockedAudioBar extends StatelessWidget {
                   ),
                 ),
               ),
-              if (_repeatEnabled)
+              // A bedtime surah queue owns its own timer and settings.
+              if (_repeatEnabled && !state.isSurahQueue)
                 IconButton(
                   key: const ValueKey('reader-repeat-button'),
                   icon: Icon(

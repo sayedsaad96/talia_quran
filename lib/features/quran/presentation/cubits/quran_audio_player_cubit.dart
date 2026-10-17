@@ -21,6 +21,7 @@ class QuranAudioPlayerState extends Equatable {
     this.hasPrevious = false,
     this.repeat = const ReaderRepeatSettings(),
     this.sleepChoice = SleepTimerChoice.off,
+    this.isSurahQueue = false,
   });
 
   final PlaybackStatus status;
@@ -35,6 +36,10 @@ class QuranAudioPlayerState extends Equatable {
   final bool hasPrevious;
   final ReaderRepeatSettings repeat;
   final SleepTimerChoice sleepChoice;
+
+  /// True while a kids bedtime surah queue owns playback; the reader's
+  /// repeat and sleep controls must not act on it.
+  final bool isSurahQueue;
 
   bool get isIdle => status == PlaybackStatus.idle;
   bool get isLoading => status == PlaybackStatus.loading;
@@ -57,6 +62,7 @@ class QuranAudioPlayerState extends Equatable {
       hasPrevious: s.hasPrevious,
       repeat: s.repeat,
       sleepChoice: s.sleepChoice,
+      isSurahQueue: s.isSurahQueue,
     );
   }
 
@@ -74,6 +80,7 @@ class QuranAudioPlayerState extends Equatable {
         hasPrevious,
         repeat,
         sleepChoice,
+        isSurahQueue,
       ];
 }
 
@@ -158,12 +165,19 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
 
   Future<void> stop() => _playerService.stop();
 
-  /// Session-only repeat/speed settings (never persisted).
-  Future<void> setRepeat(ReaderRepeatSettings settings) =>
-      _playerService.setRepeat(settings);
+  /// Session-only repeat/speed settings (never persisted). A no-op while a
+  /// bedtime surah queue owns playback.
+  Future<void> setRepeat(ReaderRepeatSettings settings) async {
+    if (_playerService.state.isSurahQueue) return;
+    await _playerService.setRepeat(settings);
+  }
 
-  Future<void> setSleepTimer(SleepTimerChoice choice) =>
-      _playerService.setSleepTimer(choice);
+  /// A no-op while a bedtime surah queue owns playback: its timer belongs to
+  /// the bedtime session.
+  Future<void> setSleepTimer(SleepTimerChoice choice) async {
+    if (_playerService.state.isSurahQueue) return;
+    await _playerService.setSleepTimer(choice);
+  }
 
   Future<void> changeReciter(QuranReciter reciter) =>
       _playerService.changeReciter(reciter);

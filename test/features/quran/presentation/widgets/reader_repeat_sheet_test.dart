@@ -146,4 +146,44 @@ void main() {
       const ReaderRepeatSettings(perAyah: 3, rangeTimes: 0, speed: 1.5),
     );
   });
+
+  group('while a bedtime surah queue owns playback', () {
+    testWidgets('the cubit state carries isSurahQueue', (tester) async {
+      await build();
+      expect(cubit.state.isSurahQueue, isFalse);
+      await service.playSurahQueue([1]);
+      await tester.pump();
+      expect(cubit.state.isSurahQueue, isTrue);
+      expect(cubit.state.hasActiveAudio, isTrue);
+    });
+
+    testWidgets('the repeat button is hidden', (tester) async {
+      await build();
+      await service.playSurahQueue([1]);
+      await tester.pumpWidget(host(flag: true));
+      await tester.pump();
+      expect(cubit.state.hasActiveAudio, isTrue);
+      expect(find.byKey(const ValueKey('reader-repeat-button')), findsNothing);
+    });
+
+    testWidgets('cubit setSleepTimer and setRepeat never reach the service', (
+      tester,
+    ) async {
+      await build();
+      await service.playSurahQueue([1], sleep: SleepTimerChoice.min15);
+      await tester.pump();
+      expect(service.sleepChoice, SleepTimerChoice.min15);
+
+      await cubit.setSleepTimer(SleepTimerChoice.off);
+      await cubit.setRepeat(
+        const ReaderRepeatSettings(perAyah: 3, rangeTimes: 0, speed: 1.5),
+      );
+      await tester.pump();
+
+      expect(service.sleepChoice, SleepTimerChoice.min15);
+      expect(service.repeatSettings.isDefault, isTrue);
+      expect(cubit.state.sleepChoice, SleepTimerChoice.min15);
+      await service.stop(); // cancels the bedtime timer
+    });
+  });
 }
