@@ -376,7 +376,14 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     }
   }
 
-  Future<void> addReward(String title, {String? childId}) async {
+  /// [milestoneSurahId] (open the gift when that surah is completed) applies
+  /// to the child on this device only; a linked child's gift is cloud-owned
+  /// and never carries it.
+  Future<void> addReward(
+    String title, {
+    String? childId,
+    int? milestoneSurahId,
+  }) async {
     final current = state;
     if (current is! FamilyDashboardLoaded) return;
     if (title.trim().isEmpty) return;
@@ -400,7 +407,10 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       );
     } else {
       // Global/Local reward
-      final result = await _parentAccess.saveReward(title.trim());
+      final result = await _parentAccess.saveReward(
+        title.trim(),
+        milestoneSurahId: milestoneSurahId,
+      );
       await result.fold(
         (failure) async => emit(
           current.copyWith(

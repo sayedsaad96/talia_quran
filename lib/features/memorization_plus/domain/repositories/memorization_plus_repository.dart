@@ -134,7 +134,10 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, bool>> verifyParentPin(String pin);
   Future<Either<Failure, void>> setParentPin(String pin);
   Future<Either<Failure, void>> resetParentAccess();
-  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title);
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  });
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id);
 
   // Home missions (guardian-assigned real-life tasks).

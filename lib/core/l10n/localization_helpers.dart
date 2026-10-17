@@ -210,6 +210,8 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.parentRewardErrorTitleRequired,
       CubitMessageCodes.parentRewardLimitReached =>
         l10n.parentRewardErrorLimitReached,
+      CubitMessageCodes.parentRewardTitleTooLong =>
+        l10n.parentRewardErrorTitleTooLong,
       CubitMessageCodes.parentRewardUnavailable =>
         l10n.parentRewardErrorUnavailable,
       CubitMessageCodes.childNicknameInvalid => l10n.childErrorNicknameInvalid(

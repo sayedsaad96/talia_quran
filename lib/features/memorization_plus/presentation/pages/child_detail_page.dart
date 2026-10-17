@@ -13,6 +13,7 @@ import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/kids_remote_reading_support_repository.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/repositories/kids_support_profile_repository.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
@@ -20,6 +21,7 @@ import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/child_activity_summary.dart';
 import '../widgets/child_progress_panel.dart';
 import '../widgets/family_child_name.dart';
+import '../widgets/guardian_promise_dialog.dart';
 import '../widgets/child_pin_recovery_panel.dart';
 import '../widgets/child_rewards_panel.dart';
 import '../widgets/guardian_session_scope.dart';
@@ -71,6 +73,31 @@ bool _supportProfileEnabled() =>
     getIt<KidsEnrichmentFlags>().isEnabled(
       KidsEnrichmentFeature.supportProfile,
     );
+
+/// The surahs a guardian can tie a gift to, for the child on this device.
+/// Empty (no condition picker) while the promise feature is off, for a linked
+/// child, or when the path cannot be read.
+Future<List<int>> _promiseSurahChoices(FamilyChildEntry child) async {
+  if (!child.isLocal ||
+      !getIt.isRegistered<KidsEnrichmentFlags>() ||
+      !getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.guardianPromise,
+      ) ||
+      !getIt.isRegistered<MemorizationPlusRepository>()) {
+    return const [];
+  }
+  try {
+    final result = await getIt<MemorizationPlusRepository>()
+        .getKidsJourneyPath();
+    final ids = result.fold<List<int>>(
+      (_) => const [],
+      (path) => path.surahIds,
+    );
+    return ids;
+  } catch (_) {
+    return const [];
+  }
+}
 
 class ChildDetailRouteArgs {
   const ChildDetailRouteArgs({required this.child, required this.cubit});
@@ -152,6 +179,21 @@ class ChildDetailPage extends StatelessWidget {
     BuildContext context,
     FamilyChildEntry child,
   ) async {
+    final surahIds = await _promiseSurahChoices(child);
+    if (!context.mounted) return;
+    if (surahIds.isNotEmpty) {
+      final draft = await showDialog<GuardianPromiseDraft>(
+        context: context,
+        builder: (_) => GuardianPromiseDialog(surahIds: surahIds),
+      );
+      if (draft != null && context.mounted) {
+        await context.read<FamilyDashboardCubit>().addReward(
+          draft.title,
+          milestoneSurahId: draft.milestoneSurahId,
+        );
+      }
+      return;
+    }
     final title = await showDialog<String>(
       context: context,
       builder: (_) => _TextInputDialog(

@@ -1478,6 +1478,21 @@
   "kidsGiftRequested": "Request sent, waiting for your grown-up",
   "kidsGiftClaimed": "Received, well done!",
   "kidsGiftRequestAction": "I want it!",
+  "promiseExample1": "A trip to the park",
+  "promiseExample2": "A new book",
+  "promiseExample3": "A meal of their choice",
+  "promiseLinkSurah": "When a surah is completed",
+  "promiseNoCondition": "No condition",
+  "promiseProgress": "{doneText} of {total, plural, =1{1 ayah} other{{totalText} ayahs}}",
+  "@promiseProgress": {
+    "placeholders": {
+      "doneText": {"type": "String"},
+      "total": {"type": "int"},
+      "totalText": {"type": "String"}
+    }
+  },
+  "promiseUnlockedByMilestone": "Promise kept!",
+  "parentRewardErrorTitleTooLong": "Write a promise of at most 80 characters.",
   "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
   "@childErrorNicknameInvalid": {
     "placeholders": {

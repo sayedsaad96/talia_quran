@@ -3628,6 +3628,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGiftRequestAction => 'أريدها!';
 
   @override
+  String get promiseExample1 => 'نزهة في الحديقة';
+
+  @override
+  String get promiseExample2 => 'كتاب جديد';
+
+  @override
+  String get promiseExample3 => 'وجبة يختارها';
+
+  @override
+  String get promiseLinkSurah => 'عند إتمام سورة';
+
+  @override
+  String get promiseNoCondition => 'بدون شرط';
+
+  @override
+  String promiseProgress(String doneText, int total, String totalText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText آية',
+      few: '$totalText آيات',
+      two: 'آيتين',
+      one: 'آية واحدة',
+    );
+    return '$doneText من $_temp0';
+  }
+
+  @override
+  String get promiseUnlockedByMilestone => 'تحقق الوعد!';
+
+  @override
+  String get parentRewardErrorTitleTooLong => 'اكتب وعداً لا يتجاوز ٨٠ حرفاً.';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'اكتب اسماً من حرف واحد إلى $max حرفاً.';
   }

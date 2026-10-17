@@ -217,8 +217,10 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
       _kidsLocal.resetParentAccess();
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title) =>
-      _kidsLocal.saveParentReward(title);
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  }) => _kidsLocal.saveParentReward(title, milestoneSurahId: milestoneSurahId);
 
   @override
   Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() =>

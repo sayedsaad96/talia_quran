@@ -1569,6 +1569,21 @@
   "kidsGiftRequested": "أرسلنا طلبك، بانتظار ولي أمرك",
   "kidsGiftClaimed": "استلمتها، مبارك!",
   "kidsGiftRequestAction": "أريدها!",
+  "promiseExample1": "نزهة في الحديقة",
+  "promiseExample2": "كتاب جديد",
+  "promiseExample3": "وجبة يختارها",
+  "promiseLinkSurah": "عند إتمام سورة",
+  "promiseNoCondition": "بدون شرط",
+  "promiseProgress": "{doneText} من {total, plural, =1{آية واحدة} =2{آيتين} few{{totalText} آيات} other{{totalText} آية}}",
+  "@promiseProgress": {
+    "placeholders": {
+      "doneText": {"type": "String"},
+      "total": {"type": "int"},
+      "totalText": {"type": "String"}
+    }
+  },
+  "promiseUnlockedByMilestone": "تحقق الوعد!",
+  "parentRewardErrorTitleTooLong": "اكتب وعداً لا يتجاوز ٨٠ حرفاً.",
   "childErrorNicknameInvalid": "اكتب اسماً من حرف واحد إلى {max} حرفاً.",
   "@childErrorNicknameInvalid": {
     "placeholders": {

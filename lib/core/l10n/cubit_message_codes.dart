@@ -32,6 +32,7 @@ abstract final class CubitMessageCodes {
   static const guardianSameAccount = '@guardian/same_account';
   static const parentRewardTitleRequired = '@guardian/reward_title_required';
   static const parentRewardLimitReached = '@guardian/reward_limit_reached';
+  static const parentRewardTitleTooLong = '@guardian/reward_title_too_long';
   static const parentRewardUnavailable = '@guardian/reward_unavailable';
   static const childNicknameInvalid = '@guardian/child_nickname_invalid';
   static const childAgeInvalid = '@guardian/child_age_invalid';

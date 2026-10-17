@@ -873,17 +873,26 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>> saveParentReward(
-    String? title,
-  ) =>
+    String? title, {
+    int? milestoneSurahId,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#saveParentReward, [title]),
+            Invocation.method(
+              #saveParentReward,
+              [title],
+              {#milestoneSurahId: milestoneSurahId},
+            ),
             returnValue:
                 _i5.Future<
                   _i2.Either<_i6.Failure, List<_i11.ParentReward>>
                 >.value(
                   _FakeEither_0<_i6.Failure, List<_i11.ParentReward>>(
                     this,
-                    Invocation.method(#saveParentReward, [title]),
+                    Invocation.method(
+                      #saveParentReward,
+                      [title],
+                      {#milestoneSurahId: milestoneSurahId},
+                    ),
                   ),
                 ),
           )

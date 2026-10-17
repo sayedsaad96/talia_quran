@@ -88,6 +88,30 @@ Set<int> kidsMemorizedSurahIds(
   return memorized;
 }
 
+/// How many distinct ayahs (1..count) of each surah the canonical reward logs
+/// cover. A surah is memorized exactly when its entry equals its count (same
+/// rule as [kidsMemorizedSurahIds]). Surahs missing from [ayahCountBySurah]
+/// are left out.
+Map<int, int> kidsMemorizedAyahCounts(
+  List<KidsSessionLog> logs,
+  Map<int, int> ayahCountBySurah,
+) {
+  final covered = <int, Set<int>>{};
+  for (final log in logs) {
+    if (!KidsSessionLogsCloudMerge.isCanonicalRewardLog(log)) continue;
+    final set = covered.putIfAbsent(log.surahId, () => <int>{});
+    set.add(log.ayahNumber);
+    set.addAll(log.ayahNumbers);
+  }
+  return {
+    for (final entry in covered.entries)
+      if ((ayahCountBySurah[entry.key] ?? 0) > 0)
+        entry.key: entry.value
+            .where((a) => a >= 1 && a <= ayahCountBySurah[entry.key]!)
+            .length,
+  };
+}
+
 final class KidsRegionProgress extends Equatable {
   const KidsRegionProgress(this.region, this.memorized);
 

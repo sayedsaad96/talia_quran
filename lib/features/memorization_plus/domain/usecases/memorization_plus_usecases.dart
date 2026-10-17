@@ -427,8 +427,10 @@ class ParentAccessUsecase {
     bool value,
   ) => _repository.setParentGuardianMode(value);
 
-  Future<Either<Failure, List<ParentReward>>> saveReward(String title) =>
-      _repository.saveParentReward(title);
+  Future<Either<Failure, List<ParentReward>>> saveReward(
+    String title, {
+    int? milestoneSurahId,
+  }) => _repository.saveParentReward(title, milestoneSurahId: milestoneSurahId);
 
   Future<Either<Failure, List<ParentReward>>> claimReward(String id) =>
       _repository.claimParentReward(id);

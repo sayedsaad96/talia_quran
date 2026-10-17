@@ -1388,6 +1388,11 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
       homeMissionsEnabled: () =>
           getIt<KidsPolicyController>().value.homeMissionsEnabled,
+      promiseEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianPromise,
+          ),
     ),
   );
   // App lifetime, so the resume throttle survives the kids home being rebuilt.

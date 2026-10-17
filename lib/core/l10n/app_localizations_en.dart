@@ -3658,6 +3658,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGiftRequestAction => 'I want it!';
 
   @override
+  String get promiseExample1 => 'A trip to the park';
+
+  @override
+  String get promiseExample2 => 'A new book';
+
+  @override
+  String get promiseExample3 => 'A meal of their choice';
+
+  @override
+  String get promiseLinkSurah => 'When a surah is completed';
+
+  @override
+  String get promiseNoCondition => 'No condition';
+
+  @override
+  String promiseProgress(String doneText, int total, String totalText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText ayahs',
+      one: '1 ayah',
+    );
+    return '$doneText of $_temp0';
+  }
+
+  @override
+  String get promiseUnlockedByMilestone => 'Promise kept!';
+
+  @override
+  String get parentRewardErrorTitleTooLong =>
+      'Write a promise of at most 80 characters.';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'Enter a name of 1 to $max characters.';
   }

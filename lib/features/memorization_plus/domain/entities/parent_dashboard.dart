@@ -177,7 +177,15 @@ class ParentReward extends Equatable {
     this.unlockedAt,
     this.requestedAt,
     this.claimedAt,
+    this.milestoneSurahId,
   });
+
+  /// Longest gift title a guardian can write.
+  static const int titleMaxLength = 80;
+
+  /// A valid surah number for [milestoneSurahId].
+  static bool isValidMilestoneSurahId(int? surahId) =>
+      surahId != null && surahId >= 1 && surahId <= 114;
 
   final String id;
   final String title;
@@ -186,6 +194,10 @@ class ParentReward extends Equatable {
   final DateTime? unlockedAt;
   final DateTime? requestedAt;
   final DateTime? claimedAt;
+
+  /// Local-only promise: the gift opens by itself once the child completes
+  /// this surah. Never sent to the cloud.
+  final int? milestoneSurahId;
 
   ParentReward copyWith({
     String? title,
@@ -201,6 +213,7 @@ class ParentReward extends Equatable {
     unlockedAt: unlockedAt ?? this.unlockedAt,
     requestedAt: requestedAt ?? this.requestedAt,
     claimedAt: claimedAt ?? this.claimedAt,
+    milestoneSurahId: milestoneSurahId,
   );
 
   @override
@@ -212,6 +225,7 @@ class ParentReward extends Equatable {
     unlockedAt,
     requestedAt,
     claimedAt,
+    milestoneSurahId,
   ];
 }
 

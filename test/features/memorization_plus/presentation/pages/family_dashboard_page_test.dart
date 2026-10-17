@@ -934,8 +934,10 @@ class _FakeParentAccess implements ParentAccessUsecase {
   }
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveReward(String title) async =>
-      const Right([]);
+  Future<Either<Failure, List<ParentReward>>> saveReward(
+    String title, {
+    int? milestoneSurahId,
+  }) async => const Right([]);
 
   @override
   Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(

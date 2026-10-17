@@ -596,6 +596,7 @@ class ParentRewardModel extends ParentReward {
     super.unlockedAt,
     super.requestedAt,
     super.claimedAt,
+    super.milestoneSurahId,
   });
 
   factory ParentRewardModel.fromJson(Map<String, dynamic> json) {
@@ -610,6 +611,7 @@ class ParentRewardModel extends ParentReward {
       unlockedAt: _optionalDate(json['unlockedAt']),
       requestedAt: _optionalDate(json['requestedAt']),
       claimedAt: _optionalDate(json['claimedAt']),
+      milestoneSurahId: _optionalSurahId(json['milestoneSurahId']),
     );
   }
 
@@ -622,7 +624,13 @@ class ParentRewardModel extends ParentReward {
         unlockedAt: reward.unlockedAt,
         requestedAt: reward.requestedAt,
         claimedAt: reward.claimedAt,
+        milestoneSurahId: reward.milestoneSurahId,
       );
+
+  static int? _optionalSurahId(Object? value) =>
+      value is int && ParentReward.isValidMilestoneSurahId(value)
+      ? value
+      : null;
 
   static DateTime? _optionalDate(Object? value) =>
       value == null ? null : DateTime.parse(value as String);
@@ -635,6 +643,7 @@ class ParentRewardModel extends ParentReward {
     'unlockedAt': unlockedAt?.toIso8601String(),
     'requestedAt': requestedAt?.toIso8601String(),
     'claimedAt': claimedAt?.toIso8601String(),
+    'milestoneSurahId': milestoneSurahId,
   };
 }
 

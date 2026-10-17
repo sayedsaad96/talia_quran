@@ -36,6 +36,8 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     this.childName,
     this.rewardMessage,
     this.rewardMessageId = 0,
+    this.milestoneProgress = const {},
+    this.promiseUnlockedIds = const {},
   });
 
   final List<KidsRegionProgress> regions;
@@ -63,6 +65,12 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
   /// Grows with every new [rewardMessage] so the same code shows again.
   final int rewardMessageId;
 
+  /// Saved ayahs of the surah a still-locked gift waits for, by surah id.
+  final Map<int, ({int done, int total})> milestoneProgress;
+
+  /// Gifts that opened on this load because their surah was completed.
+  final Set<String> promiseUnlockedIds;
+
   KidsTreasuresLoaded copyWith({
     List<ParentReward>? rewards,
     List<KidsHomeMission>? homeMissions,
@@ -78,6 +86,8 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     childName: childName,
     rewardMessage: rewardMessage,
     rewardMessageId: rewardMessageId ?? this.rewardMessageId,
+    milestoneProgress: milestoneProgress,
+    promiseUnlockedIds: promiseUnlockedIds,
   );
 
   @override
@@ -91,6 +101,8 @@ final class KidsTreasuresLoaded extends KidsTreasuresState {
     childName,
     rewardMessage,
     rewardMessageId,
+    milestoneProgress,
+    promiseUnlockedIds,
   ];
 }
 
@@ -114,6 +126,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
     this._rewards,
     this._homeMissions,
     this._homeMissionsEnabled,
+    this._promiseEnabled,
   }) : super(const KidsTreasuresLoading());
 
   final MemorizationPlusRepository _memorizationRepository;
@@ -124,6 +137,9 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
 
   /// The guardian policy switch; missing means on.
   final bool Function()? _homeMissionsEnabled;
+
+  /// The guardian-promise rollout switch; missing means off.
+  final bool Function()? _promiseEnabled;
   final _requesting = <String>{};
 
   /// A failed read only hides the badge.
@@ -170,7 +186,21 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
         for (final surah in surahs) surah.id: surah.ayahCount,
       });
       final certificates = _certificatesLoader();
-      final rewards = await _loadRewards();
+      var rewards = await _loadRewards();
+      var promiseUnlockedIds = const <String>{};
+      var milestoneProgress = const <int, ({int done, int total})>{};
+      if (_promiseOn()) {
+        final ayahCounts = {
+          for (final surah in surahs) surah.id: surah.ayahCount,
+        };
+        promiseUnlockedIds = await _keepPromises(rewards, memorized);
+        if (promiseUnlockedIds.isNotEmpty) rewards = await _loadRewards();
+        milestoneProgress = _milestoneProgress(
+          rewards,
+          kidsMemorizedAyahCounts(logs, ayahCounts),
+          ayahCounts,
+        );
+      }
       final paused = !_missionsEnabled();
       final missions = paused
           ? const <KidsHomeMission>[]
@@ -187,6 +217,8 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
           homeMissionsPaused: paused,
           guardianLinked: guardianLinked,
           childName: childName,
+          milestoneProgress: milestoneProgress,
+          promiseUnlockedIds: promiseUnlockedIds,
         ),
       );
     } catch (_) {
@@ -195,6 +227,57 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
       }
     }
   }
+
+  bool _promiseOn() {
+    try {
+      return _promiseEnabled?.call() ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Opens, locally and without a PIN, every locked gift whose surah is now
+  /// memorized (the condition is the guardian's own promise, already met).
+  /// Gifts without a surah, and the guardian's cloud-owned gifts (which never
+  /// carry one), are left alone. A refused step just leaves the gift locked.
+  Future<Set<String>> _keepPromises(
+    List<ParentReward> rewards,
+    Set<int> memorized,
+  ) async {
+    final unlock = _rewards;
+    final opened = <String>{};
+    if (unlock == null) return opened;
+    for (final reward in rewards) {
+      final surahId = reward.milestoneSurahId;
+      if (reward.status != ParentRewardStatus.locked ||
+          surahId == null ||
+          !memorized.contains(surahId)) {
+        continue;
+      }
+      try {
+        final result = await unlock.unlock(reward.id);
+        if (result.isRight()) opened.add(reward.id);
+      } catch (_) {
+        // The gift stays locked; the next load tries again.
+      }
+    }
+    return opened;
+  }
+
+  Map<int, ({int done, int total})> _milestoneProgress(
+    List<ParentReward> rewards,
+    Map<int, int> doneBySurah,
+    Map<int, int> totalBySurah,
+  ) => {
+    for (final reward in rewards)
+      if (reward.status == ParentRewardStatus.locked &&
+          reward.milestoneSurahId != null &&
+          (totalBySurah[reward.milestoneSurahId] ?? 0) > 0)
+        reward.milestoneSurahId!: (
+          done: doneBySurah[reward.milestoneSurahId] ?? 0,
+          total: totalBySurah[reward.milestoneSurahId]!,
+        ),
+  };
 
   /// The child asks the guardian for an unlocked gift.
   Future<void> requestReward(String rewardId) async {

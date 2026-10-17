@@ -6528,6 +6528,54 @@ abstract class AppLocalizations {
   /// **'أريدها!'**
   String get kidsGiftRequestAction;
 
+  /// No description provided for @promiseExample1.
+  ///
+  /// In ar, this message translates to:
+  /// **'نزهة في الحديقة'**
+  String get promiseExample1;
+
+  /// No description provided for @promiseExample2.
+  ///
+  /// In ar, this message translates to:
+  /// **'كتاب جديد'**
+  String get promiseExample2;
+
+  /// No description provided for @promiseExample3.
+  ///
+  /// In ar, this message translates to:
+  /// **'وجبة يختارها'**
+  String get promiseExample3;
+
+  /// No description provided for @promiseLinkSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'عند إتمام سورة'**
+  String get promiseLinkSurah;
+
+  /// No description provided for @promiseNoCondition.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون شرط'**
+  String get promiseNoCondition;
+
+  /// No description provided for @promiseProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{doneText} من {total, plural, =1{آية واحدة} =2{آيتين} few{{totalText} آيات} other{{totalText} آية}}'**
+  String promiseProgress(String doneText, int total, String totalText);
+
+  /// No description provided for @promiseUnlockedByMilestone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقق الوعد!'**
+  String get promiseUnlockedByMilestone;
+
+  /// No description provided for @parentRewardErrorTitleTooLong.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب وعداً لا يتجاوز ٨٠ حرفاً.'**
+  String get parentRewardErrorTitleTooLong;
+
   /// No description provided for @childErrorNicknameInvalid.
   ///
   /// In ar, this message translates to:

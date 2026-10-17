@@ -263,6 +263,107 @@ void main() {
     });
   });
 
+  group('guardian promise', () {
+    late _FakeRewardRepo rewardRepo;
+    var enabled = true;
+    var ayahsDone = 6;
+
+    ParentReward promise(String id, int? surahId, {ParentRewardStatus? status}) =>
+        ParentReward(
+          id: id,
+          title: 'وعد $id',
+          status: status ?? ParentRewardStatus.locked,
+          createdAt: DateTime.utc(2026, 10, 1),
+          milestoneSurahId: surahId,
+        );
+
+    setUp(() {
+      enabled = true;
+      ayahsDone = 6;
+      rewardRepo = _FakeRewardRepo([promise('p1', 114)]);
+      when(() => memRepo.getKidsSessionLogs()).thenAnswer(
+        (_) async => Right([for (var a = 1; a <= ayahsDone; a++) _log(114, a)]),
+      );
+      when(
+        () => quranRepo.getSurahs(),
+      ).thenAnswer((_) async => Right([_surah(114, 6)]));
+    });
+
+    KidsTreasuresCubit buildPromise() => KidsTreasuresCubit(
+      memRepo,
+      quranRepo,
+      certificatesLoader: () => const [],
+      rewards: ParentRewardUsecase(rewardRepo),
+      promiseEnabled: () => enabled,
+    );
+
+    test('opens the gift once its surah is memorized, locally', () async {
+      final cubit = buildPromise();
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      final state = cubit.state as KidsTreasuresLoaded;
+      expect(state.rewards.single.status, ParentRewardStatus.unlocked);
+      expect(rewardRepo.unlocks, [('p1', null)]);
+      expect(state.promiseUnlockedIds, {'p1'});
+    });
+
+    test('keeps the gift locked before the surah is done', () async {
+      ayahsDone = 5;
+      final cubit = buildPromise();
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      final state = cubit.state as KidsTreasuresLoaded;
+      expect(state.rewards.single.status, ParentRewardStatus.locked);
+      expect(rewardRepo.unlocks, isEmpty);
+      expect(state.promiseUnlockedIds, isEmpty);
+      expect(state.milestoneProgress[114], (done: 5, total: 6));
+    });
+
+    test('does nothing while the feature flag is off', () async {
+      enabled = false;
+      final cubit = buildPromise();
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      final state = cubit.state as KidsTreasuresLoaded;
+      expect(state.rewards.single.status, ParentRewardStatus.locked);
+      expect(rewardRepo.unlocks, isEmpty);
+      expect(state.milestoneProgress, isEmpty);
+    });
+
+    test('leaves gifts without a condition and later states alone', () async {
+      rewardRepo.rewards = [
+        promise('plain', null),
+        promise('asked', 114, status: ParentRewardStatus.requested),
+        promise('open', 114, status: ParentRewardStatus.unlocked),
+      ];
+      final cubit = buildPromise();
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      expect(rewardRepo.unlocks, isEmpty);
+      final state = cubit.state as KidsTreasuresLoaded;
+      expect(state.rewards.map((r) => r.status), [
+        ParentRewardStatus.locked,
+        ParentRewardStatus.requested,
+        ParentRewardStatus.unlocked,
+      ]);
+    });
+
+    test('a refused unlock keeps the page and the gift locked', () async {
+      rewardRepo.unlockFailure = const CacheFailure();
+      final cubit = buildPromise();
+      addTearDown(cubit.close);
+      await cubit.load();
+
+      final state = cubit.state as KidsTreasuresLoaded;
+      expect(state.rewards.single.status, ParentRewardStatus.locked);
+      expect(state.promiseUnlockedIds, isEmpty);
+    });
+  });
+
   group('home missions', () {
     var enabled = true;
 
@@ -386,6 +487,8 @@ class _FakeRewardRepo implements ParentRewardRepository {
   List<ParentReward> rewards;
   Failure? readFailure;
   Failure? requestFailure;
+  Failure? unlockFailure;
+  final unlocks = <(String, String?)>[];
   int requests = 0;
 
   @override
@@ -409,7 +512,15 @@ class _FakeRewardRepo implements ParentRewardRepository {
   Future<Either<Failure, List<ParentReward>>> unlockParentReward(
     String id, {
     String? childUserId,
-  }) => throw UnimplementedError();
+  }) async {
+    unlocks.add((id, childUserId));
+    if (unlockFailure != null) return Left(unlockFailure!);
+    rewards = [
+      for (final r in rewards)
+        r.id == id ? r.copyWith(status: ParentRewardStatus.unlocked) : r,
+    ];
+    return Right(rewards);
+  }
 
   @override
   Future<Either<Failure, List<ParentReward>>> approveParentReward(

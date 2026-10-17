@@ -79,6 +79,8 @@ class _KidsTreasuresView extends StatelessWidget {
             :final homeMissionsPaused,
             :final guardianLinked,
             :final childName,
+            :final milestoneProgress,
+            :final promiseUnlockedIds,
           ) =>
             KidsTreasuresContent(
               regions: regions,
@@ -88,6 +90,8 @@ class _KidsTreasuresView extends StatelessWidget {
               homeMissionsPaused: homeMissionsPaused,
               guardianLinked: guardianLinked,
               childName: childName,
+              milestoneProgress: milestoneProgress,
+              promiseUnlockedIds: promiseUnlockedIds,
               onRequestReward: context.read<KidsTreasuresCubit>().requestReward,
               onReportHomeMission: context
                   .read<KidsTreasuresCubit>()
@@ -154,6 +158,8 @@ class KidsTreasuresContent extends StatelessWidget {
     this.homeMissionsPaused = false,
     this.guardianLinked = false,
     this.childName,
+    this.milestoneProgress = const {},
+    this.promiseUnlockedIds = const {},
     this.onRequestReward,
     this.onReportHomeMission,
   });
@@ -166,6 +172,8 @@ class KidsTreasuresContent extends StatelessWidget {
   final bool homeMissionsPaused;
   final bool guardianLinked;
   final String? childName;
+  final Map<int, ({int done, int total})> milestoneProgress;
+  final Set<String> promiseUnlockedIds;
   final void Function(String rewardId)? onRequestReward;
   final void Function(String missionId)? onReportHomeMission;
 
@@ -242,6 +250,11 @@ class KidsTreasuresContent extends StatelessWidget {
                       for (final reward in rewards) ...[
                         KidsGiftCard(
                           reward: reward,
+                          milestoneProgress:
+                              milestoneProgress[reward.milestoneSurahId],
+                          promiseJustKept: promiseUnlockedIds.contains(
+                            reward.id,
+                          ),
                           onRequest: onRequestReward == null
                               ? null
                               : () => onRequestReward!(reward.id),

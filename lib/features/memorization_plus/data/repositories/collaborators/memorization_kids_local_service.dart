@@ -702,13 +702,19 @@ class MemorizationKidsLocalService {
   }
 
   Future<Either<Failure, List<ParentReward>>> saveParentReward(
-    String title,
-  ) async {
+    String title, {
+    int? milestoneSurahId,
+  }) async {
     try {
       final trimmed = title.trim();
       if (trimmed.isEmpty) {
         return const Left(
           CacheFailure(CubitMessageCodes.parentRewardTitleRequired),
+        );
+      }
+      if (trimmed.length > ParentReward.titleMaxLength) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardTitleTooLong),
         );
       }
       final rewards = await _datasource.getParentRewards();
@@ -722,6 +728,9 @@ class MemorizationKidsLocalService {
         title: trimmed,
         status: ParentRewardStatus.locked,
         createdAt: DateTime.now(),
+        milestoneSurahId: ParentReward.isValidMilestoneSurahId(milestoneSurahId)
+            ? milestoneSurahId
+            : null,
       );
       final next = [...rewards, reward];
       await _datasource.saveParentRewards(next);
@@ -1293,7 +1302,10 @@ class MemorizationKidsLocalService {
 
     var unlockedOne = false;
     final next = rewards.map((reward) {
-      if (!unlockedOne && reward.status == ParentRewardStatus.locked) {
+      // A surah promise opens only when its surah is completed.
+      if (!unlockedOne &&
+          reward.status == ParentRewardStatus.locked &&
+          reward.milestoneSurahId == null) {
         unlockedOne = true;
         return ParentRewardModel.fromEntity(
           reward.copyWith(

@@ -8,9 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_learning_support_profile.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/kids_support_profile_repository.dart';
@@ -76,6 +78,30 @@ class _Repo implements MemorizationPlusRepository {
   final localAcks = <String>[];
   final remotePolicies = <String>[];
   Completer<void>? policyGate;
+  final savedRewards = <String>[];
+  final remoteRewards = <String>[];
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  }) async {
+    savedRewards.add('$title:$milestoneSurahId');
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
+    required String childUserId,
+    required String title,
+  }) async {
+    remoteRewards.add('$childUserId:$title');
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, KidsJourneyPathDefinition>>
+  getKidsJourneyPath() async => const Right(KidsJourneyPathDefinition.adventure);
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
@@ -525,6 +551,90 @@ void main() {
       }
 
       expect(editor, findsNothing);
+    });
+  });
+
+  group('guardian promise', () {
+    final getIt = GetIt.instance;
+    const pickerKey = ValueKey('guardian-promise-surah');
+
+    Future<_Repo> openDialog(
+      WidgetTester tester,
+      FamilyChildEntry child, {
+      required bool flag,
+    }) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) =>
+              flag && key == KidsEnrichmentFeature.guardianPromise.storageKey,
+        ),
+      );
+      final repo = await _pump(tester, child);
+      if (getIt.isRegistered<MemorizationPlusRepository>()) {
+        await getIt.unregister<MemorizationPlusRepository>();
+      }
+      getIt.registerSingleton<MemorizationPlusRepository>(repo);
+      await tester.tap(find.byIcon(TaliaIcons.gift));
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      if (getIt.isRegistered<MemorizationPlusRepository>()) {
+        await getIt.unregister<MemorizationPlusRepository>();
+      }
+    });
+
+    testWidgets('the child on this device can link a gift to a surah', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _localChild(const []),
+        flag: true,
+      );
+
+      expect(find.byKey(pickerKey), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Park');
+      await tester.tap(find.byKey(pickerKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Al-Ikhlas').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('guardian-promise-save')));
+      await tester.pumpAndSettle();
+
+      expect(repo.savedRewards, ['Park:112']);
+    });
+
+    testWidgets('a linked child gets no condition picker', (tester) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: true,
+      );
+
+      expect(find.byKey(pickerKey), findsNothing);
+      await tester.enterText(find.byType(TextField), 'Park');
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(repo.remoteRewards, ['c1:Park']);
+      expect(repo.savedRewards, isEmpty);
+    });
+
+    testWidgets('the picker stays hidden while the feature is off', (
+      tester,
+    ) async {
+      await openDialog(tester, _localChild(const []), flag: false);
+
+      expect(find.byKey(pickerKey), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }
