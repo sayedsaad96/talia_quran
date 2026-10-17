@@ -2659,6 +2659,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap a certificate to print or share it';
 
   @override
+  String get childCertificatesTitle => 'Your child\'s certificates';
+
+  @override
+  String get childCertificatesEmpty =>
+      'No certificates yet. A certificate is earned by completing a surah or juz.';
+
+  @override
   String get dailyPlanRatingWeakDesc => 'Needed the Mushaf';
 
   @override

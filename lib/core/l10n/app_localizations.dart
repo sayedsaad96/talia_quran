@@ -4838,6 +4838,18 @@ abstract class AppLocalizations {
   /// **'اضغط على الشهادة لطباعتها أو مشاركتها'**
   String get childDetailCertificateOpenHint;
 
+  /// No description provided for @childCertificatesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادات طفلك'**
+  String get childCertificatesTitle;
+
+  /// No description provided for @childCertificatesEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا شهادات بعد. تُمنح الشهادة عند إتمام سورة أو جزء.'**
+  String get childCertificatesEmpty;
+
   /// No description provided for @dailyPlanRatingWeakDesc.
   ///
   /// In ar, this message translates to:

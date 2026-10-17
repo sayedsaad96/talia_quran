@@ -1043,6 +1043,8 @@
   "childDetailProgressUnavailable": "The child's progress hasn't arrived yet. It appears after the child opens the app online.",
   "childDetailCertificatesEmpty": "No certificates yet",
   "childDetailCertificateOpenHint": "Tap a certificate to print or share it",
+  "childCertificatesTitle": "Your child's certificates",
+  "childCertificatesEmpty": "No certificates yet. A certificate is earned by completing a surah or juz.",
   "dailyPlanRatingWeakDesc": "Needed the Mushaf",
   "dailyPlanRatingAverageDesc": "Small mistakes",
   "dailyPlanRatingExcellentDesc": "No mistakes",

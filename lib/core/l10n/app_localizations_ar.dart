@@ -2636,6 +2636,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'اضغط على الشهادة لطباعتها أو مشاركتها';
 
   @override
+  String get childCertificatesTitle => 'شهادات طفلك';
+
+  @override
+  String get childCertificatesEmpty =>
+      'لا شهادات بعد. تُمنح الشهادة عند إتمام سورة أو جزء.';
+
+  @override
   String get dailyPlanRatingWeakDesc => 'احتجت للمصحف';
 
   @override
