@@ -6663,7 +6663,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentRewardErrorTitleTooLong.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب وعداً لا يتجاوز ٨٠ حرفاً.'**
+  /// **'عنوان الهدية طويل جداً'**
   String get parentRewardErrorTitleTooLong;
 
   /// No description provided for @childErrorNicknameInvalid.

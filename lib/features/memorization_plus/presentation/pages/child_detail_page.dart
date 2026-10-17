@@ -75,6 +75,14 @@ bool _monthlyReportEnabled() =>
     getIt.isRegistered<KidsEnrichmentFlags>() &&
     getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.monthlyReport);
 
+/// Whether the guardian promise feature is switched on (off when the flags
+/// are not wired).
+bool _guardianPromiseEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.guardianPromise,
+    );
+
 /// The learning-support question shows only while its flag is on and the
 /// store is wired.
 bool _supportProfileEnabled() =>
@@ -210,7 +218,11 @@ class ChildDetailPage extends StatelessWidget {
         title: context.l10n.parentDashboardRemoteRewardTitle,
         hintText: context.l10n.parentDashboardRewardHint,
         actionLabel: context.l10n.save,
-        limit: ParentReward.titleMaxLength,
+        // The longer 80-character limit belongs to the promise feature; with
+        // it off the dialog keeps its previous 50.
+        limit: _guardianPromiseEnabled()
+            ? ParentReward.titleMaxLength
+            : _TextInputDialog.maxLength,
       ),
     );
     if (title != null && title.isNotEmpty && context.mounted) {

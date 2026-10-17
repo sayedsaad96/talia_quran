@@ -3773,8 +3773,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promiseUnlockedByMilestone => 'Promise kept!';
 
   @override
-  String get parentRewardErrorTitleTooLong =>
-      'Write a promise of at most 80 characters.';
+  String get parentRewardErrorTitleTooLong => 'The gift title is too long';
 
   @override
   String childErrorNicknameInvalid(String max) {

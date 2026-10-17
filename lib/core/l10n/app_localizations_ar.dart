@@ -3756,7 +3756,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get promiseUnlockedByMilestone => 'تحقق الوعد!';
 
   @override
-  String get parentRewardErrorTitleTooLong => 'اكتب وعداً لا يتجاوز ٨٠ حرفاً.';
+  String get parentRewardErrorTitleTooLong => 'عنوان الهدية طويل جداً';
 
   @override
   String childErrorNicknameInvalid(String max) {

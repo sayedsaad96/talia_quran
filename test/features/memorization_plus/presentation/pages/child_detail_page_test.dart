@@ -675,6 +675,39 @@ void main() {
       expect(repo.savedRewards, isEmpty);
     });
 
+    testWidgets('a 60-character gift title saves with the feature on', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: true,
+      );
+
+      await tester.enterText(find.byType(TextField), 'a' * 60);
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(repo.remoteRewards, ['c1:${'a' * 60}']);
+    });
+
+    testWidgets('the gift title keeps the 50 limit with the feature off', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: false,
+      );
+
+      await tester.enterText(find.byType(TextField), 'a' * 60);
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      // The field itself stops at 50 characters.
+      expect(repo.remoteRewards, ['c1:${'a' * 50}']);
+    });
+
     testWidgets('the picker stays hidden while the feature is off', (
       tester,
     ) async {

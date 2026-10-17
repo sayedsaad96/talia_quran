@@ -1513,7 +1513,7 @@
     }
   },
   "promiseUnlockedByMilestone": "Promise kept!",
-  "parentRewardErrorTitleTooLong": "Write a promise of at most 80 characters.",
+  "parentRewardErrorTitleTooLong": "The gift title is too long",
   "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
   "@childErrorNicknameInvalid": {
     "placeholders": {

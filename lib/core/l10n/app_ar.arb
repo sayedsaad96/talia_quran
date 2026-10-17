@@ -1604,7 +1604,7 @@
     }
   },
   "promiseUnlockedByMilestone": "تحقق الوعد!",
-  "parentRewardErrorTitleTooLong": "اكتب وعداً لا يتجاوز ٨٠ حرفاً.",
+  "parentRewardErrorTitleTooLong": "عنوان الهدية طويل جداً",
   "childErrorNicknameInvalid": "اكتب اسماً من حرف واحد إلى {max} حرفاً.",
   "@childErrorNicknameInvalid": {
     "placeholders": {
