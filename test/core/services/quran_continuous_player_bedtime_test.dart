@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/services/audio_resume_store.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
@@ -262,4 +264,113 @@ void main() {
     await service.playSurahQueue([999]);
     expect(service.state.isError, isTrue);
   });
+
+  group('racing play requests: the latest request wins', () {
+    late _GatedRepository gatedRepo;
+    late _LoadLogPlayer logPlayer;
+    late QuranContinuousPlayerService racing;
+
+    setUp(() {
+      gatedRepo = _GatedRepository()
+        ..surahDetails[113] = _surah(113, 5, 6222)
+        ..surahDetails[114] = _surah(114, 6, 6231);
+      logPlayer = _LoadLogPlayer();
+      racing = QuranContinuousPlayerService(
+        quranRepository: gatedRepo,
+        reciterService: QuranReciterService(prefs),
+        player: logPlayer,
+      );
+    });
+
+    tearDown(() async {
+      racing.dispose();
+      await logPlayer.closeControllers();
+    });
+
+    test('reader fetch finishing first never plays under the queue', () async {
+      final reader = racing.playSurah(113, applyReaderSettings: true);
+      final queue = racing.playSurahQueue([
+        114,
+      ], sleep: SleepTimerChoice.min15);
+      gatedRepo.release(113);
+      await reader;
+      gatedRepo.release(114);
+      await queue;
+
+      expect(logPlayer.loads, hasLength(1));
+      expect(_ids(logPlayer.loads.single).first, '114_1');
+      expect(racing.state.isSurahQueue, isTrue);
+      expect(racing.state.isPlaying, isTrue);
+      expect(racing.sleepChoice, SleepTimerChoice.min15);
+    });
+
+    test('queue finishing first is not replaced by the older reader fetch',
+        () async {
+      final reader = racing.playSurah(113, applyReaderSettings: true);
+      final queue = racing.playSurahQueue([
+        114,
+      ], sleep: SleepTimerChoice.min15);
+      gatedRepo.release(114);
+      await queue;
+      gatedRepo.release(113);
+      await reader;
+
+      expect(logPlayer.loads, hasLength(1));
+      expect(_ids(logPlayer.loads.single).first, '114_1');
+      expect(racing.state.isSurahQueue, isTrue);
+      expect(racing.state.currentSurahId, 114);
+      expect(racing.sleepChoice, SleepTimerChoice.min15);
+    });
+
+    test('two reader requests: the later one wins', () async {
+      final first = racing.playSurah(113, applyReaderSettings: true);
+      final second = racing.playSurah(114, applyReaderSettings: true);
+      gatedRepo.release(114);
+      await second;
+      gatedRepo.release(113);
+      await first;
+
+      expect(logPlayer.loads, hasLength(1));
+      expect(_ids(logPlayer.loads.single).first, '114_1');
+      expect(racing.state.currentSurahId, 114);
+      expect(racing.state.isPlaying, isTrue);
+    });
+  });
+}
+
+/// Holds each getSurahDetail until the test releases that surah.
+class _GatedRepository extends FakeQuranRepository {
+  final Map<int, Completer<void>> _gates = {};
+
+  Completer<void> _gate(int surahId) =>
+      _gates.putIfAbsent(surahId, Completer<void>.new);
+
+  void release(int surahId) => _gate(surahId).complete();
+
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
+    await _gate(surahId).future;
+    return super.getSurahDetail(surahId);
+  }
+}
+
+/// Records every playlist handed to the player.
+class _LoadLogPlayer extends RecordingPlayer {
+  final List<List<AudioSource>> loads = [];
+
+  @override
+  Future<Duration?> setAudioSources(
+    List<AudioSource> sources, {
+    bool preload = true,
+    int? initialIndex,
+    Duration? initialPosition,
+    ShuffleOrder? shuffleOrder,
+  }) {
+    loads.add(List<AudioSource>.of(sources));
+    return super.setAudioSources(
+      sources,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+    );
+  }
 }

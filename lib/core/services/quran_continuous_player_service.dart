@@ -185,8 +185,10 @@ class QuranContinuousPlayerService {
   /// carry over to the reader, and endOfSurah means the end of the queue.
   bool _surahQueueMode = false;
 
-  /// Bumped by every playlist load and every [stop]; an older load that sees
-  /// a newer value never starts playback.
+  /// Claimed by every public play request before its first await, and bumped
+  /// by every other playlist load and every [stop]; a request or load that
+  /// sees a newer value never touches the session again, so the latest
+  /// request always wins.
   int _playbackGeneration = 0;
 
   StreamSubscription<int?>? _currentIndexSub;
@@ -318,7 +320,9 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
+    if (generation != _playbackGeneration) return;
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.surah;
     _activeSurahId = surahId;
@@ -334,6 +338,7 @@ class QuranContinuousPlayerService {
     );
 
     final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
+    if (generation != _playbackGeneration) return;
     final surahDetail = surahDetailResult.fold((_) => null, (d) => d);
 
     if (surahDetail == null || surahDetail.ayahs.isEmpty) {
@@ -354,6 +359,7 @@ class QuranContinuousPlayerService {
     await _loadPlaylistAndPlay(
       startIndex: startIndex,
       activeReciter: activeReciter,
+      generation: generation,
     );
   }
 
@@ -365,10 +371,10 @@ class QuranContinuousPlayerService {
     List<int> surahIds, {
     SleepTimerChoice sleep = SleepTimerChoice.off,
   }) async {
+    final generation = ++_playbackGeneration;
     await _prepareSession(false);
-    // Owner check after the await: a newer play call clears the flag.
+    if (generation != _playbackGeneration) return;
     _surahQueueMode = true;
-    final generation = _playbackGeneration;
     final activeReciter = _resolveReciter(null);
     _activeScope = PlayScope.surah;
     _activeSurahId = null;
@@ -406,8 +412,14 @@ class QuranContinuousPlayerService {
     final started = await _loadPlaylistAndPlay(
       startIndex: 0,
       activeReciter: activeReciter,
+      generation: generation,
     );
-    if (!started || !_surahQueueMode || _stateNotifier.value.isError) return;
+    if (!started ||
+        generation != _playbackGeneration ||
+        !_surahQueueMode ||
+        _stateNotifier.value.isError) {
+      return;
+    }
     if (sleep != SleepTimerChoice.off) await setSleepTimer(sleep);
   }
 
@@ -418,7 +430,9 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
+    if (generation != _playbackGeneration) return;
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.page;
     _activeSurahId = null;
@@ -433,6 +447,7 @@ class QuranContinuousPlayerService {
     );
 
     final pageDetailResult = await _quranRepository.getQuranPage(pageNumber);
+    if (generation != _playbackGeneration) return;
     final pageDetail = pageDetailResult.fold((_) => null, (d) => d);
 
     if (pageDetail == null || pageDetail.ayahs.isEmpty) {
@@ -452,6 +467,7 @@ class QuranContinuousPlayerService {
     await _loadPlaylistAndPlay(
       startIndex: clampedStart,
       activeReciter: activeReciter,
+      generation: generation,
     );
   }
 
@@ -467,7 +483,9 @@ class QuranContinuousPlayerService {
     PlayScope scope = PlayScope.singleAyah,
     bool applyReaderSettings = false,
   }) async {
+    final generation = ++_playbackGeneration;
     final wasReset = await _prepareSession(applyReaderSettings);
+    if (generation != _playbackGeneration) return;
     if (scope == PlayScope.singleAyah) {
       final activeReciter = _resolveReciter(reciter);
       _activeScope = PlayScope.singleAyah;
@@ -484,6 +502,7 @@ class QuranContinuousPlayerService {
       );
 
       final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
+      if (generation != _playbackGeneration) return;
       final surahDetail = surahDetailResult.fold((_) => null, (d) => d);
       if (surahDetail == null) {
         _emitState(
@@ -509,7 +528,11 @@ class QuranContinuousPlayerService {
       }
 
       _setQueueFromBase([ayah]);
-      await _loadPlaylistAndPlay(startIndex: 0, activeReciter: activeReciter);
+      await _loadPlaylistAndPlay(
+        startIndex: 0,
+        activeReciter: activeReciter,
+        generation: generation,
+      );
       return;
     }
 
@@ -543,12 +566,31 @@ class QuranContinuousPlayerService {
   ///
   /// Returns false when the load failed or was superseded by a newer load or
   /// a [stop] while it was waiting; such a load never calls play().
+  ///
+  /// A public play request passes the [generation] it claimed; other reloads
+  /// (repeat, reciter) claim a new one here.
   Future<bool> _loadPlaylistAndPlay({
     required int startIndex,
     required QuranReciter activeReciter,
     bool play = true,
+    int? generation,
   }) async {
-    final generation = ++_playbackGeneration;
+    final claimed = generation ?? ++_playbackGeneration;
+    if (claimed != _playbackGeneration) return false;
+    return _loadClaimedPlaylist(
+      generation: claimed,
+      startIndex: startIndex,
+      activeReciter: activeReciter,
+      play: play,
+    );
+  }
+
+  Future<bool> _loadClaimedPlaylist({
+    required int generation,
+    required int startIndex,
+    required QuranReciter activeReciter,
+    required bool play,
+  }) async {
     try {
       // A new queue always starts complete; endOfSurah re-anchors to the
       // surah of the ayah that starts and cuts the queue after its last item.
