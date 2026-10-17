@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_child_policy.dart';
@@ -166,17 +167,34 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     }
     var activeSurahId = surahId;
     final path = await _loadPath();
+    final logs = await _loadSessionLogs();
     var journeyResult = await _getJourney(
       GetKidsJourneyParams(surahId: surahId),
     );
+    if (followFrontier && _v2Enabled && !path.locksAhead) {
+      // The Quran journey lets the child pick any surah, so the home follows
+      // the surah last memorized in, not the one it was opened with (which
+      // may be the path's untouched first surah).
+      final latest = _latestMemorizedSurah(logs, path);
+      if (latest != null && latest != surahId) {
+        final latestResult = await _getJourney(
+          GetKidsJourneyParams(surahId: latest),
+        );
+        if (latestResult.isRight()) {
+          activeSurahId = latest;
+          journeyResult = latestResult;
+        }
+      }
+    }
     if (followFrontier && _v2Enabled) {
+      final startSurahId = activeSurahId;
       final frontier = (await _missionResolver.findContinuation(
-        activeSurahId: surahId,
+        activeSurahId: startSurahId,
         stages: journeyResult.getOrElse(() => const <KidsJourneyStage>[]),
         loadStages: _loadStages,
         path: path,
       ))?.mission;
-      if (frontier != null && frontier.surahId != surahId) {
+      if (frontier != null && frontier.surahId != startSurahId) {
         final frontierResult = await _getJourney(
           GetKidsJourneyParams(surahId: frontier.surahId),
         );
@@ -214,7 +232,6 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         // A corrupt or unavailable resume row must not block today's mission.
       }
     }
-    final logs = await _loadSessionLogs();
     final budget = _v2Enabled
         ? await _loadDailyBudget(logs)
         : KidsDailyBudget.unlimited;
@@ -465,6 +482,27 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       }
     }
     return null;
+  }
+
+  /// The path surah of the newest new-memorization log (the same evidence
+  /// the kids entry route resolves from); null without one. Reviews never
+  /// move the frontier back (K17).
+  static int? _latestMemorizedSurah(
+    List<KidsSessionLog>? logs,
+    KidsJourneyPathDefinition path,
+  ) {
+    KidsSessionLog? latest;
+    for (final log in logs ?? const <KidsSessionLog>[]) {
+      if (!KidsSessionLogsCloudMerge.isCanonicalRewardLog(log) ||
+          !path.contains(log.surahId)) {
+        continue;
+      }
+      if (latest == null ||
+          log.completedAt.toUtc().isAfter(latest.completedAt.toUtc())) {
+        latest = log;
+      }
+    }
+    return latest?.surahId;
   }
 
   Future<List<KidsSessionLog>?> _loadSessionLogs() async {

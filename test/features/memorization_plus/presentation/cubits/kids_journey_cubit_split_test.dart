@@ -276,6 +276,77 @@ void main() {
     });
   });
 
+  group('the home follows the surah last memorized in', () {
+    KidsSessionLog log(
+      String id,
+      int surahId,
+      KidsMissionType type,
+      DateTime at,
+    ) => KidsSessionLog(
+      id: id,
+      surahId: surahId,
+      ayahNumber: 1,
+      repeatsCompleted: 3,
+      pointsEarned: 10,
+      completedAt: at,
+      missionType: type,
+    );
+
+    setUp(() {
+      // Al-Fatiha untouched; Al-Ikhlas started (ayah 1 memorized).
+      when(getJourney(any)).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as GetKidsJourneyParams;
+        return Right([
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: params.surahId,
+            startAyah: 1,
+            endAyah: 4,
+            completedAyahs: params.surahId == 112 ? const [1] : const [],
+            status: KidsJourneyStageStatus.current,
+          ),
+        ]);
+      });
+      when(quran.getSurahDetail(any)).thenAnswer(
+        (_) async => const Right(SurahDetail(surah: surah, ayahs: [])),
+      );
+      settings = const ParentSettings(kidsWholeSurahIds: {1, 112});
+      logs = [
+        log('new', 112, KidsMissionType.newMemorization, DateTime.utc(2026)),
+        // A later review elsewhere never pulls the home back (K17).
+        log('rev', 1, KidsMissionType.linkedReview, DateTime.utc(2026, 2)),
+      ];
+    });
+
+    test(
+      'Quran journey opened on Al-Fatiha shows the Al-Ikhlas mission',
+      () async {
+        cubit = build(
+          path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+        );
+        await cubit.load(surahId: 1, followFrontier: true);
+        expect(loaded().surahId, 112);
+        expect(loaded().nextMission?.surahId, 112);
+        expect(loaded().nextMission?.ayahNumbers, [2]);
+      },
+    );
+
+    test('without followFrontier (the map) the opened surah stays', () async {
+      cubit = build(
+        path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+      );
+      await cubit.load(surahId: 1);
+      expect(loaded().surahId, 1);
+    });
+
+    test('the adventure keeps its own frontier rule', () async {
+      cubit = build();
+      await cubit.load(surahId: 1, followFrontier: true);
+      expect(loaded().surahId, 1);
+    });
+  });
+
   test('chooseSplit returns false and keeps state when saving fails', () async {
     cubit = build(
       path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
