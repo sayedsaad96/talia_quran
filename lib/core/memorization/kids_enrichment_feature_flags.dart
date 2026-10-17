@@ -43,7 +43,7 @@ enum KidsEnrichmentFeature {
   /// T12 — personal recitation portfolio (deferred).
   recitationPortfolio,
 
-  /// البند 23 من خارطة التميّز
+  /// البند 23 — مُغطّى بـ ChildProgressPanel (قائمة الشهادات القابلة للطباعة والمشاركة)؛ لا يقرؤه شيء
   guardianCertificates,
 
   /// البند 24 من خارطة التميّز
