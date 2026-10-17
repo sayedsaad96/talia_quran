@@ -93,6 +93,12 @@ void main() {
       expect(saved.getOrElse(() => []).single.milestoneSurahId, isNull);
     });
 
+    test('the limit counts graphemes, so a vowelled title fits', () async {
+      final title = 'بَ' * 80; // 160 code points, 80 graphemes
+      final ok = await repository.saveParentReward(title);
+      expect(ok.isRight(), isTrue);
+    });
+
     test('the title is limited to 80 characters', () async {
       final ok = await repository.saveParentReward('ا' * 80);
       expect(ok.isRight(), isTrue);

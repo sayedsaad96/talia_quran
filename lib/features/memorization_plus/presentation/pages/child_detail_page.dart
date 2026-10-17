@@ -200,6 +200,7 @@ class ChildDetailPage extends StatelessWidget {
         title: context.l10n.parentDashboardRemoteRewardTitle,
         hintText: context.l10n.parentDashboardRewardHint,
         actionLabel: context.l10n.save,
+        limit: ParentReward.titleMaxLength,
       ),
     );
     if (title != null && title.isNotEmpty && context.mounted) {

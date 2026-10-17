@@ -6,9 +6,13 @@ class _TextInputDialog extends StatefulWidget {
     required this.hintText,
     required this.actionLabel,
     this.initialText = '',
+    this.limit = maxLength,
   });
 
   static const int maxLength = 50;
+
+  /// Longest accepted text; defaults to [maxLength].
+  final int limit;
 
   final String title;
   final String hintText;
@@ -38,10 +42,10 @@ class _TextInputDialogState extends State<_TextInputDialog> {
   String? _validate(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return context.l10n.fieldRequired;
-    if (trimmed.length > _TextInputDialog.maxLength) {
+    if (trimmed.characters.length > widget.limit) {
       return context.l10n.fieldTooLong(
         LocaleNumberFormatter.format(
-          (_TextInputDialog.maxLength).toString(),
+          widget.limit.toString(),
           context.l10n.localeName,
         ),
       );
@@ -66,7 +70,7 @@ class _TextInputDialogState extends State<_TextInputDialog> {
         child: TextField(
           controller: _controller,
           autofocus: true,
-          maxLength: _TextInputDialog.maxLength,
+          maxLength: widget.limit,
           decoration: InputDecoration(
             hintText: widget.hintText,
             errorText: _errorText,

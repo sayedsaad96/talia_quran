@@ -712,7 +712,7 @@ class MemorizationKidsLocalService {
           CacheFailure(CubitMessageCodes.parentRewardTitleRequired),
         );
       }
-      if (trimmed.length > ParentReward.titleMaxLength) {
+      if (ParentReward.titleLength(trimmed) > ParentReward.titleMaxLength) {
         return const Left(
           CacheFailure(CubitMessageCodes.parentRewardTitleTooLong),
         );
@@ -1287,6 +1287,7 @@ class MemorizationKidsLocalService {
     ).subtract(Duration(days: now.weekday - 1));
     final alreadyUnlockedThisWeek = rewards.any(
       (reward) =>
+          reward.milestoneSurahId == null &&
           reward.unlockedAt != null &&
           !reward.unlockedAt!.toUtc().isBefore(weekStart),
     );
@@ -1316,6 +1317,7 @@ class MemorizationKidsLocalService {
       }
       return reward;
     }).toList();
+    if (!unlockedOne) return;
     await _datasource.saveParentRewards(next);
   }
 }

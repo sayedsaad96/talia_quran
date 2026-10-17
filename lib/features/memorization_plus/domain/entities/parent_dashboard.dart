@@ -183,6 +183,15 @@ class ParentReward extends Equatable {
   /// Longest gift title a guardian can write.
   static const int titleMaxLength = 80;
 
+  /// Title length as the text field counts it: combining marks (Arabic
+  /// tashkeel, accents) join their base letter instead of adding to the count.
+  static int titleLength(String title) => title.runes.where((r) {
+    return !((r >= 0x0300 && r <= 0x036F) ||
+        (r >= 0x064B && r <= 0x065F) ||
+        r == 0x0670 ||
+        (r >= 0x06D6 && r <= 0x06ED));
+  }).length;
+
   /// A valid surah number for [milestoneSurahId].
   static bool isValidMilestoneSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
