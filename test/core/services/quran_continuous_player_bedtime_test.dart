@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/services/audio_resume_store.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/reader_repeat_plan.dart';
@@ -37,16 +40,40 @@ List<String> _ids(List<AudioSource> sources) => [
   for (final s in sources) ((s as UriAudioSource).tag as MediaItem).id,
 ];
 
+/// Holds setAudioSources until the test releases [gate].
+class _GatedPlayer extends RecordingPlayer {
+  Completer<void>? gate;
+  final reached = Completer<void>();
+
+  @override
+  Future<Duration?> setAudioSources(
+    List<AudioSource> sources, {
+    bool preload = true,
+    int? initialIndex,
+    Duration? initialPosition,
+    ShuffleOrder? shuffleOrder,
+  }) async {
+    if (!reached.isCompleted) reached.complete();
+    await gate?.future;
+    return super.setAudioSources(
+      sources,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+    );
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late QuranContinuousPlayerService service;
   late FakeQuranRepository repository;
   late RecordingPlayer player;
+  late SharedPreferences prefs;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
     repository = FakeQuranRepository();
     repository.surahDetails[113] = _surah(113, 5, 6222);
     repository.surahDetails[114] = _surah(114, 6, 6231);
@@ -93,7 +120,7 @@ void main() {
   test('playSurahQueue from a clean player calls no setSpeed', () async {
     await service.playSurahQueue([114, 113], sleep: SleepTimerChoice.min30);
     expect(player.speeds, isEmpty);
-    expect(player.loopModes.every((m) => m == LoopMode.off), isTrue);
+    expect(player.loopModes, isEmpty);
   });
 
   test('playSurahQueue applies the sleep timer', () async {
@@ -154,6 +181,81 @@ void main() {
     await service.playPage(604, applyReaderSettings: true);
     await service.setSleepTimer(SleepTimerChoice.endOfSurah);
     expect(player.removedRanges, [(1, 3)]);
+  });
+
+  group('leaving a queue session', () {
+    setUp(() {
+      repository.pageDetails[604] = QuranPageDetail(
+        pageNumber: 604,
+        surahs: const [],
+        ayahs: [_ayah(113, 5, 6226), _ayah(114, 1, 6231), _ayah(114, 2, 6232)],
+      );
+    });
+
+    test('a reader page after a queue cuts endOfSurah at the surah', () async {
+      await service.playSurahQueue([114, 113]);
+      await service.playPage(604, applyReaderSettings: true);
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+      expect(player.removedRanges, [(1, 3)]);
+    });
+
+    test('stop then a reader page cuts endOfSurah at the surah', () async {
+      await service.playSurahQueue([114, 113]);
+      await service.stop();
+      await service.playPage(604, applyReaderSettings: true);
+      await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+      expect(player.removedRanges, [(1, 3)]);
+    });
+  });
+
+  group('audio resume position', () {
+    test(
+      'a queue session never saves; a reader playSurah still does',
+      () async {
+        final store = AudioResumeStore(prefs)..attach(service);
+        addTearDown(store.detach);
+
+        expect(service.state.isSurahQueue, isFalse);
+        await service.playSurahQueue([114, 113]);
+        expect(service.state.isSurahQueue, isTrue);
+        player.advanceToIndex(7);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        expect(prefs.getString('audio_resume_position'), isNull);
+
+        await service.playSurah(114, applyReaderSettings: true);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        expect(service.state.isSurahQueue, isFalse);
+        expect(prefs.getString('audio_resume_position'), isNotNull);
+        expect(store.position?.surahId, 114);
+      },
+    );
+  });
+
+  test('stop while the queue playlist is loading prevents playback', () async {
+    final gated = _GatedPlayer()..gate = Completer<void>();
+    final gatedService = QuranContinuousPlayerService(
+      quranRepository: repository,
+      reciterService: QuranReciterService(prefs),
+      player: gated,
+    );
+    addTearDown(() async {
+      gatedService.dispose();
+      await gated.closeControllers();
+    });
+
+    final playing = gatedService.playSurahQueue([
+      114,
+      113,
+    ], sleep: SleepTimerChoice.min15);
+    await gated.reached.future;
+    await gatedService.stop();
+    gated.gate!.complete();
+    await playing;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(gated.playCallCount, 0);
+    expect(gatedService.state.isIdle, isTrue);
+    expect(gatedService.state.sleepChoice, SleepTimerChoice.off);
   });
 
   test('playSurahQueue with nothing loadable reports an error', () async {

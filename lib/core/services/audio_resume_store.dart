@@ -118,6 +118,8 @@ class AudioResumeStore {
   void _onPlayerChanged() {
     final state = _player?.state;
     if (state == null || !state.hasActiveAudio) return;
+    // Kids bedtime queues never move the adult home's resume position.
+    if (state.isSurahQueue) return;
     final surahId = state.currentSurahId;
     final ayahNumber = state.currentAyahNumber;
     if (surahId == null || ayahNumber == null) return;

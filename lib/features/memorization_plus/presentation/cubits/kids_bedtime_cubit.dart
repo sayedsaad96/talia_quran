@@ -137,9 +137,23 @@ class KidsBedtimeCubit extends Cubit<KidsBedtimeState> {
     emit(state.copyWith(timer: choice));
   }
 
-  Future<void> start() async {
+  /// The running [start], so [stop] can wait for it: a stop that lands while
+  /// the playlist is still loading must not be overtaken by that load.
+  Future<void>? _pendingStart;
+
+  Future<void> start() {
     final queue = state.queue;
-    if (queue.isEmpty || state.playing) return;
+    if (queue.isEmpty || state.playing || _pendingStart != null) {
+      return Future<void>.value();
+    }
+    final run = _start(queue);
+    _pendingStart = run;
+    return run.whenComplete(() {
+      if (identical(_pendingStart, run)) _pendingStart = null;
+    });
+  }
+
+  Future<void> _start(List<int> queue) async {
     emit(state.copyWith(playing: true));
     try {
       await _play(queue, state.timer);
@@ -154,6 +168,12 @@ class KidsBedtimeCubit extends Cubit<KidsBedtimeState> {
 
   Future<void> stop() async {
     if (!isClosed) emit(state.copyWith(playing: false));
+    final pending = _pendingStart;
+    if (pending != null) {
+      try {
+        await pending;
+      } catch (_) {}
+    }
     try {
       await _stop();
     } catch (_) {}

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -38,11 +40,22 @@ Surah _surah(int id, int count) => Surah(
   page: 600,
 );
 
-final _surahs = [_surah(1, 7), _surah(112, 4), _surah(113, 5), _surah(114, 6)];
+final _surahs = [
+  _surah(1, 7),
+  _surah(18, 2),
+  _surah(36, 3),
+  _surah(112, 4),
+  _surah(113, 5),
+  _surah(114, 6),
+];
 
 class _Calls {
   final plays = <(List<int>, SleepTimerChoice)>[];
   int stops = 0;
+  final events = <String>[];
+
+  /// When set, play() completes only once the test completes it.
+  Completer<void>? playGate;
 }
 
 KidsBedtimeCubit _cubit({
@@ -56,8 +69,15 @@ KidsBedtimeCubit _cubit({
     sessionLogs: () async => logs,
     surahs: () async => _surahs,
     pathLoader: () async => path,
-    play: (ids, sleep) async => c.plays.add((ids, sleep)),
-    stop: () async => c.stops++,
+    play: (ids, sleep) async {
+      c.plays.add((ids, sleep));
+      await c.playGate?.future;
+      c.events.add('played');
+    },
+    stop: () async {
+      c.stops++;
+      c.events.add('stopped');
+    },
     playback: playback,
   );
 }
@@ -100,6 +120,31 @@ void main() {
       );
       await cubit.load();
       expect(cubit.state.surahs.map((s) => s.id), [1, 113, 114]);
+      await cubit.close();
+    });
+
+    test('memorized surahs off the current path follow, ascending', () async {
+      final cubit = _cubit(
+        logs: [..._whole(36, 3), ...memorizedLogs, ..._whole(18, 2)],
+      );
+      await cubit.load();
+      expect(cubit.state.surahs.map((s) => s.id), [1, 114, 113, 18, 36]);
+      await cubit.close();
+    });
+
+    test('stop during a pending start waits for it, then stops', () async {
+      final calls = _Calls()..playGate = Completer<void>();
+      final cubit = _cubit(logs: _whole(114, 6), calls: calls);
+      await cubit.load();
+
+      final starting = cubit.start();
+      final stopping = cubit.stop();
+      expect(cubit.state.playing, isFalse);
+      calls.playGate!.complete();
+      await Future.wait([starting, stopping]);
+
+      expect(calls.events, ['played', 'stopped']);
+      expect(cubit.state.playing, isFalse);
       await cubit.close();
     });
 
