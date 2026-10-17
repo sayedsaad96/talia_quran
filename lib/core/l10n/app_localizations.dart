@@ -7792,6 +7792,12 @@ abstract class AppLocalizations {
   /// **'تم تحديث التذكير'**
   String get parentDashboardReminderSaved;
 
+  /// No description provided for @parentDashboardSettingsSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ الإعدادات'**
+  String get parentDashboardSettingsSaved;
+
   /// No description provided for @guardianLinkingSlowHint.
   ///
   /// In ar, this message translates to:

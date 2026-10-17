@@ -4503,6 +4503,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardReminderSaved => 'Reminder updated';
 
   @override
+  String get parentDashboardSettingsSaved => 'Settings saved';
+
+  @override
   String get guardianLinkingSlowHint =>
       'This is taking longer than expected. You can continue and link later.';
 

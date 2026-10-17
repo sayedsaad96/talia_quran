@@ -1867,6 +1867,7 @@
   "parentDashboardRemoteRewardAdded": "Reward sent to child",
   "parentDashboardChildLinked": "Child linked successfully",
   "parentDashboardReminderSaved": "Reminder updated",
+  "parentDashboardSettingsSaved": "Settings saved",
   "guardianLinkingSlowHint": "This is taking longer than expected. You can continue and link later.",
   "bookmarkSaveError": "Failed to save bookmark",
   "longPressToUndo": "Long-press to undo",

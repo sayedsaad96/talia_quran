@@ -211,10 +211,59 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('kids-policy-max-1')));
       await tester.pumpAndSettle();
+      // Nothing is written until the guardian saves.
+      expect(usecases.policySaves, isEmpty);
+      await _tapSettingsSave(tester);
 
       expect(usecases.policySaves.single.maxDailySuggestions, 1);
       expect(usecases.policySaves.single.version, 2);
     });
+
+    testWidgets(
+      'several edits stay in the open sheet and one save writes them all',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        getIt.registerSingleton<SharedPreferences>(
+          await SharedPreferences.getInstance(),
+        );
+        final usecases = _FakeUsecases()
+          ..settings = const ParentSettings(pinHash: 'secure-v2')
+          ..dashboard = _dashboard();
+
+        await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField).first, '1234');
+        await tester.tap(find.text('Enter'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(TaliaIcons.settings));
+        await tester.pumpAndSettle();
+
+        final saveButton = find.byKey(const ValueKey('family-settings-save'));
+        expect(tester.widget<FilledButton>(saveButton).onPressed, isNull);
+
+        final nas = find.byKey(const Key('kids_journey_path_quran_from_nas'));
+        await tester.ensureVisible(nas);
+        await tester.tap(nas);
+        await tester.pumpAndSettle();
+        final reduceMotion = find.byKey(
+          const ValueKey('kids-policy-reduce-motion'),
+        );
+        await tester.ensureVisible(reduceMotion);
+        await tester.tap(reduceMotion);
+        await tester.pumpAndSettle();
+
+        // The sheet is still open and nothing has been written yet.
+        expect(find.byType(KidsJourneyPathSelector), findsOneWidget);
+        expect(usecases.pathSaves, isEmpty);
+        expect(usecases.policySaves, isEmpty);
+
+        await _tapSettingsSave(tester);
+
+        expect(usecases.pathSaves, [KidsJourneyPathId.quranFromNas]);
+        expect(usecases.policySaves.single.reduceMotion, isTrue);
+        expect(find.byType(KidsJourneyPathSelector), findsNothing);
+      },
+    );
 
     testWidgets('a saved path change closes the settings sheet (R10)', (
       tester,
@@ -241,6 +290,7 @@ void main() {
       await tester.ensureVisible(nas);
       await tester.tap(nas);
       await tester.pumpAndSettle();
+      await _tapSettingsSave(tester);
 
       expect(usecases.pathSaves, [KidsJourneyPathId.quranFromNas]);
       expect(find.byType(KidsJourneyPathSelector), findsNothing);
@@ -264,8 +314,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('kids-policy-reduce-motion')));
       await tester.pumpAndSettle();
+      await _tapSettingsSave(tester);
 
       expect(find.text('Settings changed on another device'), findsOneWidget);
+      // A failed save keeps the sheet open with the edits.
+      expect(
+        find.byKey(const ValueKey('family-settings-save')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dashboard shows the family summary and children grid', (
@@ -875,6 +931,13 @@ FamilyDashboard _dashboardWithChildren(List<FamilyChildEntry> children) {
     settings: const ParentSettings(pinHash: 'secure-v2'),
     children: children,
   );
+}
+
+Future<void> _tapSettingsSave(WidgetTester tester) async {
+  final save = find.byKey(const ValueKey('family-settings-save'));
+  await tester.ensureVisible(save);
+  await tester.tap(save);
+  await tester.pumpAndSettle();
 }
 
 class _FakeUsecases {

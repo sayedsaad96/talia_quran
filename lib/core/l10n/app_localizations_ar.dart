@@ -4512,6 +4512,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardReminderSaved => 'تم تحديث التذكير';
 
   @override
+  String get parentDashboardSettingsSaved => 'تم حفظ الإعدادات';
+
+  @override
   String get guardianLinkingSlowHint =>
       'تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.';
 

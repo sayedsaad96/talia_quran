@@ -960,6 +960,74 @@ void main() {
     });
   });
 
+  group('saving the local child settings sheet', () {
+    FamilyDashboard withLocalChild() => const FamilyDashboard(
+      settings: _testSettings,
+      children: [
+        FamilyChildEntry(childUserId: 'local', displayName: 'A', isLocal: true),
+      ],
+    );
+
+    test('writes only the edited parts, on fresh settings, then refreshes '
+        'once', () async {
+      // Stored settings moved on after the sheet opened (house size 4).
+      final repository = _FakeRepository(
+        settingsResult: Right(_testSettings.copyWith(kidsAyahsPerHouse: 4)),
+        dashboardResult: Right(withLocalChild()),
+      );
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await _unlockAndLoad(cubit);
+      const original = _testSettings;
+      final draft = original.copyWith(
+        kidsHifzV2Enabled: true,
+        kidsJourneyPathId: KidsJourneyPathId.quranFromNas.storageValue,
+      );
+
+      final saved = await cubit.saveLocalChildSettings(
+        original: original,
+        draft: draft,
+        policy: KidsChildPolicy.fromSettings(original),
+      );
+
+      expect(saved, isTrue);
+      final written = repository.savedSettings.single;
+      expect(written.kidsHifzV2Enabled, isTrue);
+      // The stale snapshot did not roll the newer stored value back.
+      expect(written.kidsAyahsPerHouse, 4);
+      expect(repository.journeyPathSaves, [KidsJourneyPathId.quranFromNas]);
+      expect(repository.localPolicySaves, isEmpty);
+      expect(
+        (cubit.state as FamilyDashboardLoaded).feedback?.type,
+        FamilyDashboardFeedbackType.settingsSaved,
+      );
+    });
+
+    test('stops at the first failure and reports it', () async {
+      final repository = _FakeRepository(
+        dashboardResult: Right(withLocalChild()),
+      )..journeyPathResult = const Left(CacheFailure('nope'));
+      final cubit = _buildCubit(repository);
+      addTearDown(cubit.close);
+      await _unlockAndLoad(cubit);
+      const original = _testSettings;
+
+      final saved = await cubit.saveLocalChildSettings(
+        original: original,
+        draft: original.copyWith(
+          kidsJourneyPathId: KidsJourneyPathId.quranFromFatiha.storageValue,
+        ),
+        policy: KidsChildPolicy.fromSettings(
+          original,
+        ).copyWith(reduceMotion: !original.kidsReduceMotion),
+      );
+
+      expect(saved, isFalse);
+      expect(repository.localPolicySaves, isEmpty);
+      expect((cubit.state as FamilyDashboardLoaded).feedback?.message, 'nope');
+    });
+  });
+
   group('gift steps', () {
     Future<(_FakeRepository, _FakeRewardSteps, FamilyDashboardCubit)>
     loaded() async {

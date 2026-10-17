@@ -1958,6 +1958,7 @@
   "parentDashboardRemoteRewardAdded": "تم إرسال المكافأة للطفل",
   "parentDashboardChildLinked": "تم ربط الطفل بنجاح",
   "parentDashboardReminderSaved": "تم تحديث التذكير",
+  "parentDashboardSettingsSaved": "تم حفظ الإعدادات",
   "guardianLinkingSlowHint": "تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.",
   "bookmarkSaveError": "حدث خطأ أثناء حفظ العلامة المرجعية",
   "longPressToUndo": "اضغط مطولاً للتراجع",

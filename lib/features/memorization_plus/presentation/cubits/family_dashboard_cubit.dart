@@ -244,10 +244,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
           now: now,
         );
         final childKey = entry.isLocal ? 'local' : entry.childUserId;
-        final fresh = await store.unseen(
-          childKey,
-          detected.map((m) => m.id),
-        );
+        final fresh = await store.unseen(childKey, detected.map((m) => m.id));
         for (final milestone in detected) {
           if (!fresh.contains(milestone.id)) continue;
           items.add(
@@ -747,6 +744,67 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
         return true;
       },
     );
+  }
+
+  /// Saves every local-child setting the guardian edited in the settings
+  /// sheet, comparing [draft] with [original] (the snapshot the sheet
+  /// opened with) so untouched values are not written. Whole-settings
+  /// fields are applied to a fresh read, never to the snapshot, and run
+  /// before the targeted writes (house size, path, policy), so no step rolls
+  /// back another. Stops at the first failure; true when all saved.
+  Future<bool> saveLocalChildSettings({
+    required ParentSettings original,
+    required ParentSettings draft,
+    required KidsChildPolicy policy,
+  }) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded ||
+        !current.dashboard.children.any((child) => child.isLocal)) {
+      return false;
+    }
+    final steps = <Future<Either<Failure, Object?>> Function()>[
+      if (draft.kidsHifzV2Enabled != original.kidsHifzV2Enabled ||
+          draft.reminderEnabled != original.reminderEnabled ||
+          draft.reminderHour != original.reminderHour ||
+          draft.reminderMinute != original.reminderMinute)
+        () async {
+          final fresh = await _parentAccess.getSettings();
+          return fresh.fold(
+            Left.new,
+            (stored) => _parentAccess.saveSettings(
+              stored.copyWith(
+                kidsHifzV2Enabled: draft.kidsHifzV2Enabled,
+                reminderEnabled: draft.reminderEnabled,
+                reminderHour: draft.reminderHour,
+                reminderMinute: draft.reminderMinute,
+              ),
+            ),
+          );
+        },
+      if (draft.kidsAyahsPerHouse != original.kidsAyahsPerHouse)
+        () => _parentAccess.setKidsAyahsPerHouse(draft.kidsAyahsPerHouse),
+      if (KidsJourneyPathId.parse(draft.kidsJourneyPathId) !=
+          KidsJourneyPathId.parse(original.kidsJourneyPathId))
+        () => _parentAccess.setKidsJourneyPath(
+          KidsJourneyPathId.parse(draft.kidsJourneyPathId),
+        ),
+      if (policy != KidsChildPolicy.fromSettings(original))
+        () => _parentAccess.saveChildPolicy(policy),
+    ];
+    for (final step in steps) {
+      final failure = (await step()).fold((f) => f, (_) => null);
+      if (isClosed) return false;
+      if (failure != null) {
+        await refresh(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+        );
+        return false;
+      }
+    }
+    if (steps.isNotEmpty && !isClosed) {
+      await refresh(feedback: const FamilyDashboardFeedback.settingsSaved());
+    }
+    return true;
   }
 
   bool _isValidPin(String pin) => pin.length == 4 && int.tryParse(pin) != null;
