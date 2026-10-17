@@ -838,4 +838,37 @@ Recommended:
 The actual memorization engine remains identical.
 
 
+## 14.10 Guardian-Assessed Recitation (Approved)
+
+Arabic name: «التسميع على ولي الأمر». A kids-only mode in which a guardian
+listens to the child and grades the recitation instead of speech-to-text.
+
+### Entry And Session
+
+* The guardian PIN is required on every entry into the mode.
+* The verification is bound to one session, which is one ayah. It does not
+  carry over to another ayah or session.
+* The microphone stays off for the whole mode.
+* The text show/hide toggle is for the guardian only. It is not PIN-gated
+  inside the mode.
+
+### Grading
+
+* The guardian grade is capped by the session evidence. The guardian may
+  lower the evidence-derived rating but never raise it.
+* One remind-me (first-word hint) counts as one failure and caps the grade at
+  average.
+* Two or more failures, or a full-ayah hint, cap the grade at weak.
+
+### Mandatory House Review
+
+* A guardian grade that is not weak, after the cap above, may satisfy a
+  mandatory house review without an STT fault.
+
+### Reward
+
+* The reward uses the same inputs as the manual completion path, with the
+  real tracked hint logged in the session record.
+* A guardian-graded ayah never earns the first-try excellence bonus.
+
 End of Document
