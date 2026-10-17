@@ -8889,4 +8889,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupDone => 'تمت الاستعادة';
+
+  @override
+  String get kidsBedtimeTitle => 'استماع قبل النوم';
+
+  @override
+  String get kidsBedtimeStart => 'ابدأ';
+
+  @override
+  String get kidsBedtimeStop => 'إيقاف';
+
+  @override
+  String get kidsBedtimeTimer => 'يتوقف بعد';
+
+  @override
+  String get kidsBedtimeEmpty => 'احفظ سورة أولاً لتستمع إليها قبل النوم';
+
+  @override
+  String get kidsBedtimeCard => 'حان وقت الهدوء: استمع لسورك قبل النوم';
 }

@@ -164,6 +164,7 @@ import '../../features/memorization_plus/domain/repositories/kids_support_profil
 import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_progress_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_bedtime_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_learning_game_cubit.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
@@ -1287,6 +1288,27 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
       onRecorded: () =>
           getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
+    ),
+  );
+  // «استماع قبل النوم» (behind its route guard and flag): listening only.
+  getIt.registerFactory<KidsBedtimeCubit>(
+    () => KidsBedtimeCubit(
+      sessionLogs: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsSessionLogs()).fold(
+            (failure) => throw failure,
+            (logs) => logs,
+          ),
+      surahs: () async => (await getIt<QuranRepository>().getSurahs()).fold(
+        (failure) => throw failure,
+        (surahs) => surahs,
+      ),
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
+      play: (surahIds, sleep) => getIt<QuranContinuousPlayerService>()
+          .playSurahQueue(surahIds, sleep: sleep),
+      stop: () => getIt<QuranContinuousPlayerService>().stop(),
+      playback: getIt<QuranContinuousPlayerService>().stateNotifier,
     ),
   );
   // «أي سورة هذه؟» listening game (T9, behind its route guard and flag).

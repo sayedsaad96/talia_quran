@@ -29,6 +29,7 @@ import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
+import 'kids_bedtime_listen_page.dart';
 
 /// The listening game chip shows only while its rollout flag is on.
 bool _learningGamesEnabled() =>
@@ -301,6 +302,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
                     await context.push(AppRoutes.memorizationPlusKidsGame);
                   })
                 : null,
+            onBedtimeTap: kidsBedtimeListeningEnabled()
+                ? () => _openDestination(() async {
+                    if (!context.mounted) return;
+                    await context.push(AppRoutes.memorizationPlusKidsBedtime);
+                  })
+                : null,
           );
         },
       ),
@@ -385,6 +392,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onTreasuresTap,
     this.onProgressTap,
     this.onGameTap,
+    this.onBedtimeTap,
     this.onHomeMissionReport,
     this.taliaHappy = false,
   });
@@ -406,6 +414,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   /// Opens the listening game; null hides its chip (flag off).
   final VoidCallback? onGameTap;
+
+  /// Opens bedtime listening; null hides its chip and night card (flag off).
+  final VoidCallback? onBedtimeTap;
 
   /// «أنجزتها!» on the home-mission card.
   final void Function(String missionId)? onHomeMissionReport;
@@ -441,6 +452,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onTreasuresTap: onTreasuresTap,
                         onProgressTap: onProgressTap,
                         onGameTap: onGameTap,
+                        onBedtimeTap: onBedtimeTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       if (taliaHappy)
@@ -455,6 +467,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           moment: kidsHomeTaliaMoment(state),
                         ),
                       const SizedBox(height: AppSpacing.lg),
+                      // Night phase only; the card hides itself by day.
+                      if (onBedtimeTap != null)
+                        KidsBedtimeCard(onTap: onBedtimeTap!),
                       // K33: a warm welcome after a few days away.
                       if (state.isReturningAfterBreak) ...[
                         const KidsWelcomeBackCard(),

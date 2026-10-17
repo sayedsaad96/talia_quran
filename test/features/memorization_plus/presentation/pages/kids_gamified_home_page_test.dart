@@ -90,6 +90,73 @@ void main() {
       },
     );
 
+    testWidgets(
+      'bedtime chip and night card appear only with a callback (flag on)',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1600);
+        addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+        var taps = 0;
+        Widget content({VoidCallback? onBedtimeTap}) => _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: _loadedState,
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+            onBedtimeTap: onBedtimeTap,
+          ),
+        );
+
+        // No phase controller registered: the kids world is at night.
+        await tester.pumpWidget(content());
+        expect(find.byKey(const ValueKey('kids-home-bedtime')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('kids-bedtime-card')),
+          findsNothing,
+        );
+
+        await tester.pumpWidget(content(onBedtimeTap: () => taps++));
+        expect(find.byKey(const ValueKey('kids-bedtime-card')), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('kids-home-bedtime')));
+        expect(taps, 1);
+      },
+    );
+
+    testWidgets('the bedtime card hides by day while the chip stays', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      final controller = KidsWorldPhaseController(
+        prayerTimes: () async => null,
+        clock: () => DateTime(2026, 10, 2, 12),
+      );
+      getIt.registerSingleton<KidsWorldPhaseController>(controller);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: _loadedState,
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+            onBedtimeTap: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('kids-bedtime-card')), findsNothing);
+      expect(find.byKey(const ValueKey('kids-home-bedtime')), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      getIt.unregister<KidsWorldPhaseController>();
+    });
+
     testWidgets('renders progress, mission, and in-page navigation cards', (
       tester,
     ) async {

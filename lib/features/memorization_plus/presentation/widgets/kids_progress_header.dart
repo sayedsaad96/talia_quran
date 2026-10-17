@@ -22,6 +22,7 @@ class KidsProgressHeader extends StatelessWidget {
     this.onTreasuresTap,
     this.onProgressTap,
     this.onGameTap,
+    this.onBedtimeTap,
   });
 
   final KidsProgress progress;
@@ -37,6 +38,9 @@ class KidsProgressHeader extends StatelessWidget {
 
   /// Opens the «أي سورة هذه؟» listening game. No chip when null.
   final VoidCallback? onGameTap;
+
+  /// Opens «استماع قبل النوم». No chip when null (flag off).
+  final VoidCallback? onBedtimeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +181,8 @@ class KidsProgressHeader extends StatelessWidget {
               ),
               if (onTreasuresTap != null ||
                   onProgressTap != null ||
-                  onGameTap != null) ...[
+                  onGameTap != null ||
+                  onBedtimeTap != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
@@ -205,6 +210,13 @@ class KidsProgressHeader extends StatelessWidget {
                           icon: TaliaKidsIcons.listen,
                           label: l10n.kidsGameTitle,
                           onTap: onGameTap!,
+                        ),
+                      if (onBedtimeTap != null)
+                        _HeaderChip(
+                          key: const ValueKey('kids-home-bedtime'),
+                          icon: TaliaKidsIcons.moon,
+                          label: l10n.kidsBedtimeTitle,
+                          onTap: onBedtimeTap!,
                         ),
                     ],
                   ),

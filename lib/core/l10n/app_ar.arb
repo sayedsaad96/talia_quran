@@ -3660,4 +3660,10 @@
   ,"backupErrorNewer": "هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً."
   ,"backupErrorCorrupt": "الملف تالف ولا يمكن استعادته."
   ,"backupDone": "تمت الاستعادة"
+  ,"kidsBedtimeTitle": "استماع قبل النوم"
+  ,"kidsBedtimeStart": "ابدأ"
+  ,"kidsBedtimeStop": "إيقاف"
+  ,"kidsBedtimeTimer": "يتوقف بعد"
+  ,"kidsBedtimeEmpty": "احفظ سورة أولاً لتستمع إليها قبل النوم"
+  ,"kidsBedtimeCard": "حان وقت الهدوء: استمع لسورك قبل النوم"
 }

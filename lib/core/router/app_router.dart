@@ -51,6 +51,7 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_journe
 import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_quran_journey_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_bedtime_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_learning_game_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_progress_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_treasures_page.dart';
@@ -118,6 +119,8 @@ abstract class AppRoutes {
   static const String memorizationPlusKidsProgress =
       '/memorization-plus/kids-progress';
   static const String memorizationPlusKidsGame = '/memorization-plus/kids-game';
+  static const String memorizationPlusKidsBedtime =
+      '/memorization-plus/kids-bedtime';
 
   static const String familyDashboard = '/family-dashboard';
   static const String childDetail = '/family-dashboard/child';
@@ -317,6 +320,19 @@ class MemorizationRouteGuard {
         getIt.isRegistered<KidsEnrichmentFlags>() &&
         getIt<KidsEnrichmentFlags>().isEnabled(
           KidsEnrichmentFeature.learningGames,
+        );
+    return enabled ? null : AppRoutes.memorizationPlusKidsHome;
+  }
+
+  /// Bedtime listening is kids-only and exists only while its rollout flag
+  /// is on; a stale link with the flag off returns to the kids home.
+  static Future<String?> kidsBedtimeRedirect() async {
+    final audienceRedirect = await kidsOnlyRedirect();
+    if (audienceRedirect != null) return audienceRedirect;
+    final enabled =
+        getIt.isRegistered<KidsEnrichmentFlags>() &&
+        getIt<KidsEnrichmentFlags>().isEnabled(
+          KidsEnrichmentFeature.bedtimeListening,
         );
     return enabled ? null : AppRoutes.memorizationPlusKidsHome;
   }
@@ -927,6 +943,13 @@ abstract class AppRouter {
         redirect: (context, state) =>
             MemorizationRouteGuard.kidsLearningGameRedirect(),
         builder: (context, state) => const KidsLearningGamePage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsBedtime,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.kidsBedtimeRedirect(),
+        builder: (context, state) => const KidsBedtimeListenPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

@@ -278,6 +278,43 @@ void main() {
     });
   });
 
+  group('kidsBedtimeRedirect', () {
+    void registerFlag({required bool on}) => getIt
+        .registerSingleton<KidsEnrichmentFlags>(
+          KidsEnrichmentFlags(
+            (key) =>
+                on && key == KidsEnrichmentFeature.bedtimeListening.storageKey,
+          ),
+        );
+
+    test('a child with the flag on may open bedtime listening', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      registerFlag(on: true);
+
+      expect(await MemorizationRouteGuard.kidsBedtimeRedirect(), isNull);
+    });
+
+    test('with the flag off a stale link returns to the kids home', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      registerFlag(on: false);
+
+      expect(
+        await MemorizationRouteGuard.kidsBedtimeRedirect(),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+
+    test('an adult is sent to the memorization hub even when on', () async {
+      registerProfile(_profile(MemorizationPath.adult));
+      registerFlag(on: true);
+
+      expect(
+        await MemorizationRouteGuard.kidsBedtimeRedirect(),
+        AppRoutes.memorizationPlus,
+      );
+    });
+  });
+
   group('kids treasures route', () {
     test('is kids-only: adults are redirected, children allowed', () async {
       registerAuth(const AuthInitial());

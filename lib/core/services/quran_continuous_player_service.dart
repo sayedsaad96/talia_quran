@@ -174,6 +174,10 @@ class QuranContinuousPlayerService {
   PlayScope _activeScope = PlayScope.surah;
   int? _activeSurahId;
 
+  /// True while a [playSurahQueue] session owns the player. Its settings never
+  /// carry over to the reader, and endOfSurah means the end of the queue.
+  bool _surahQueueMode = false;
+
   StreamSubscription<int?>? _currentIndexSub;
   StreamSubscription<PlayerState>? _playerStateSub;
 
@@ -260,6 +264,22 @@ class QuranContinuousPlayerService {
     return last;
   }
 
+  /// Last index endOfSurah may play when anchored at [from]: the end of the
+  /// current surah run, or the end of the whole queue in [playSurahQueue].
+  int _endOfSurahLastIndex(int from) {
+    if (_surahQueueMode) return _queue.length - 1;
+    return _lastIndexOfSurahRun(from, _queue[from].surahId);
+  }
+
+  /// Resets reader settings when [applyReaderSettings] is false, or when a
+  /// [playSurahQueue] session's settings would otherwise leak into this one.
+  Future<bool> _prepareSession(bool applyReaderSettings) async {
+    final leavingQueue = _surahQueueMode;
+    _surahQueueMode = false;
+    if (applyReaderSettings && !leavingQueue) return false;
+    return _resetReaderSettings();
+  }
+
   Future<void> _applyPlayerSettings() async {
     await _player.setLoopMode(_loopMode);
     await _player.setSpeed(_repeat.normalizedSpeed);
@@ -284,7 +304,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
-    if (!applyReaderSettings) await _resetReaderSettings();
+    await _prepareSession(applyReaderSettings);
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.surah;
     _activeSurahId = surahId;
@@ -323,6 +343,55 @@ class QuranContinuousPlayerService {
     );
   }
 
+  /// Plays [surahIds] in order (each whole surah), resetting reader repeat and
+  /// speed, then applies [sleep]. [SleepTimerChoice.endOfSurah] here means the
+  /// end of the LAST surah, i.e. the end of the queue. The session's settings
+  /// are never inherited by later reader playback.
+  Future<void> playSurahQueue(
+    List<int> surahIds, {
+    SleepTimerChoice sleep = SleepTimerChoice.off,
+  }) async {
+    await _prepareSession(false);
+    // Owner check after the await: a newer play call clears the flag.
+    _surahQueueMode = true;
+    final activeReciter = _resolveReciter(null);
+    _activeScope = PlayScope.surah;
+    _activeSurahId = null;
+
+    _emitState(
+      ContinuousPlaybackState(
+        status: PlaybackStatus.loading,
+        currentSurahId: surahIds.isEmpty ? null : surahIds.first,
+        currentAyahNumber: 1,
+        reciter: activeReciter,
+        scope: PlayScope.surah,
+      ),
+    );
+
+    final ayahs = <Ayah>[];
+    for (final surahId in surahIds) {
+      final result = await _quranRepository.getSurahDetail(surahId);
+      final detail = result.fold((_) => null, (d) => d);
+      if (detail != null) ayahs.addAll(detail.ayahs);
+    }
+    if (!_surahQueueMode) return; // superseded while loading
+
+    if (ayahs.isEmpty) {
+      _emitState(
+        _stateNotifier.value.copyWith(
+          status: PlaybackStatus.error,
+          errorMessage: 'تعذر تحميل آيات السورة',
+        ),
+      );
+      return;
+    }
+
+    _setQueueFromBase(ayahs);
+    await _loadPlaylistAndPlay(startIndex: 0, activeReciter: activeReciter);
+    if (!_surahQueueMode || _stateNotifier.value.isError) return;
+    if (sleep != SleepTimerChoice.off) await setSleepTimer(sleep);
+  }
+
   /// Plays all ayahs on a Mushaf page [pageNumber] in sequence.
   Future<void> playPage(
     int pageNumber, {
@@ -330,7 +399,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
-    if (!applyReaderSettings) await _resetReaderSettings();
+    await _prepareSession(applyReaderSettings);
     final activeReciter = _resolveReciter(reciter);
     _activeScope = PlayScope.page;
     _activeSurahId = null;
@@ -379,7 +448,7 @@ class QuranContinuousPlayerService {
     PlayScope scope = PlayScope.singleAyah,
     bool applyReaderSettings = false,
   }) async {
-    final wasReset = !applyReaderSettings && await _resetReaderSettings();
+    final wasReset = await _prepareSession(applyReaderSettings);
     if (scope == PlayScope.singleAyah) {
       final activeReciter = _resolveReciter(reciter);
       _activeScope = PlayScope.singleAyah;
@@ -462,8 +531,7 @@ class QuranContinuousPlayerService {
       // surah of the ayah that starts and cuts the queue after its last item.
       _tail = [];
       if (_endOfSurahActive && startIndex >= 0 && startIndex < _queue.length) {
-        final surahId = _queue[startIndex].surahId;
-        final last = _lastIndexOfSurahRun(startIndex, surahId);
+        final last = _endOfSurahLastIndex(startIndex);
         _tail = _queue.sublist(last + 1);
         _queue = _queue.sublist(0, last + 1);
       }
@@ -653,7 +721,8 @@ class QuranContinuousPlayerService {
   }
 
   /// Starts, replaces or cancels the sleep timer. [SleepTimerChoice.endOfSurah]
-  /// stops after the last ayah of the surah playing right now.
+  /// stops after the last ayah of the surah playing right now (in a
+  /// [playSurahQueue] session: after the last ayah of the queue).
   Future<void> setSleepTimer(SleepTimerChoice choice) {
     // Serialized: queue edits for quick consecutive choices must not interleave.
     final run = _sleepOps.then((_) => _applySleepChoice(choice));
@@ -704,8 +773,7 @@ class QuranContinuousPlayerService {
   /// player completes exactly at the surah end (no next-surah ayah starts).
   /// The queue is cut before the first await and rolled back on failure.
   Future<void> _truncateAtSurahEnd() async {
-    final surahId = _queue[_currentIndex].surahId;
-    final last = _lastIndexOfSurahRun(_currentIndex, surahId);
+    final last = _endOfSurahLastIndex(_currentIndex);
     final loopWasAll = _repeat.rangeTimes == 0;
     var loopSet = false;
     if (last + 1 < _queue.length) {
@@ -857,6 +925,7 @@ class QuranContinuousPlayerService {
       }
     } catch (_) {}
     _resetSession();
+    _surahQueueMode = false;
     _queue = [];
     _currentIndex = -1;
     _backgroundAudioHandler?.clearQueue();

@@ -8887,4 +8887,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupDone => 'Restore complete';
+
+  @override
+  String get kidsBedtimeTitle => 'Bedtime listening';
+
+  @override
+  String get kidsBedtimeStart => 'Start';
+
+  @override
+  String get kidsBedtimeStop => 'Stop';
+
+  @override
+  String get kidsBedtimeTimer => 'Stops after';
+
+  @override
+  String get kidsBedtimeEmpty =>
+      'Memorize a surah first to listen to it before bed';
+
+  @override
+  String get kidsBedtimeCard => 'Quiet time: listen to your surahs before bed';
 }

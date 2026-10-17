@@ -3621,4 +3621,10 @@
   ,"backupErrorNewer": "This backup is from a newer app version. Update the app first."
   ,"backupErrorCorrupt": "The file is damaged and cannot be restored."
   ,"backupDone": "Restore complete"
+  ,"kidsBedtimeTitle": "Bedtime listening"
+  ,"kidsBedtimeStart": "Start"
+  ,"kidsBedtimeStop": "Stop"
+  ,"kidsBedtimeTimer": "Stops after"
+  ,"kidsBedtimeEmpty": "Memorize a surah first to listen to it before bed"
+  ,"kidsBedtimeCard": "Quiet time: listen to your surahs before bed"
 }

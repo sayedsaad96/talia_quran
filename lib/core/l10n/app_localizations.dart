@@ -14979,6 +14979,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تمت الاستعادة'**
   String get backupDone;
+
+  /// No description provided for @kidsBedtimeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استماع قبل النوم'**
+  String get kidsBedtimeTitle;
+
+  /// No description provided for @kidsBedtimeStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ'**
+  String get kidsBedtimeStart;
+
+  /// No description provided for @kidsBedtimeStop.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف'**
+  String get kidsBedtimeStop;
+
+  /// No description provided for @kidsBedtimeTimer.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتوقف بعد'**
+  String get kidsBedtimeTimer;
+
+  /// No description provided for @kidsBedtimeEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ سورة أولاً لتستمع إليها قبل النوم'**
+  String get kidsBedtimeEmpty;
+
+  /// No description provided for @kidsBedtimeCard.
+  ///
+  /// In ar, this message translates to:
+  /// **'حان وقت الهدوء: استمع لسورك قبل النوم'**
+  String get kidsBedtimeCard;
 }
 
 class _AppLocalizationsDelegate
