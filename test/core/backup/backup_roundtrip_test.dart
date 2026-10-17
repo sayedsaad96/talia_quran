@@ -23,6 +23,7 @@ import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_sto
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/ayah_review_record.dart';
@@ -268,12 +269,24 @@ void main() {
     'childAge': 8,
   });
 
+  const userProfileA = '{"name":"Ahmad","age":30}';
+  const khatmahPlanA =
+      '{"id":"p1","title":"Khatmah","targetPagesPerDay":20,"targetDays":30,'
+      '"startDate":"2026-09-01T00:00:00.000Z",'
+      '"expectedEndDate":"2026-09-30T00:00:00.000Z"}';
+  const kidsProgressA =
+      '{"totalPoints":30,"currentLevel":1,"currentStreak":2,'
+      '"starsEarned":3,"ayahsCompleted":4}';
+  const homeMissionsA =
+      '[{"id":"m1","title":"Tidy","status":"assigned",'
+      '"createdAt":"2026-09-01T00:00:00.000Z"}]';
+
   Map<String, Object> ownerAPrefs() => {
     'read_pages': '[1,2]',
-    'user_profile': 'Ahmad',
-    'khatmah_active_plan': '{"id":"p1"}',
-    'mem_plus_kids_progress|user-a': '{"stars":3}',
-    'mem_plus_home_missions|user-a': '[{"id":"m1"}]',
+    'user_profile': userProfileA,
+    'khatmah_active_plan': khatmahPlanA,
+    'mem_plus_kids_progress|user-a': kidsProgressA,
+    'mem_plus_home_missions|user-a': homeMissionsA,
     'mem_plus_parent_settings|user-a': parentSettingsA,
     'mem_plus_profile': profileA,
     'ramadan_tarawih|user-a': '[{"night":1}]',
@@ -281,7 +294,7 @@ void main() {
     'kids_reading_receipts_user-a': '{"2026-09-08":[12]}',
     'kids_streak_user-a': '{"current":3}',
     'kids_achievements_user-a': '{"first":"2026-09-01"}',
-    'kids_map_seen_completed_user-a_67': true,
+    'kids_map_seen_completed_user-a_67': <String>['1', '2'],
     'adult_journey_v1_user-a': '{"v":1}',
     'daily_wird_target_2026-09-08': 12,
     'hifz_pace': 1.5,
@@ -375,11 +388,11 @@ void main() {
     expect(daily.single.activityCount, 17);
 
     expect(prefsB.getString('read_pages'), '[1,2]');
-    expect(prefsB.getString('user_profile'), 'Ahmad');
-    expect(prefsB.getString('khatmah_active_plan'), '{"id":"p1"}');
+    expect(prefsB.getString('user_profile'), userProfileA);
+    expect(prefsB.getString('khatmah_active_plan'), khatmahPlanA);
     expect(prefsB.getString('khatmah_owner'), 'user-b');
-    expect(prefsB.getString('mem_plus_kids_progress|user-b'), '{"stars":3}');
-    expect(prefsB.getString('mem_plus_home_missions|user-b'), '[{"id":"m1"}]');
+    expect(prefsB.getString('mem_plus_kids_progress|user-b'), kidsProgressA);
+    expect(prefsB.getString('mem_plus_home_missions|user-b'), homeMissionsA);
     expect(prefsB.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
     expect(prefsB.getBool('ramadan_card_dismissed_start_1448|user-b'), true);
     expect(
@@ -391,7 +404,10 @@ void main() {
       prefsB.getString('kids_achievements_user-b'),
       '{"first":"2026-09-01"}',
     );
-    expect(prefsB.getBool('kids_map_seen_completed_user-b_67'), true);
+    expect(prefsB.getStringList('kids_map_seen_completed_user-b_67'), [
+      '1',
+      '2',
+    ]);
     expect(prefsB.getString('adult_journey_v1_user-b'), '{"v":1}');
     expect(prefsB.get('daily_wird_target_2026-09-08'), isA<int>());
     expect(prefsB.getInt('daily_wird_target_2026-09-08'), 12);
@@ -460,7 +476,7 @@ void main() {
       expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
       expect(profile.guardianId, isNull);
       expect(profile.linkedChildId, isNull);
-      expect(profile.isParentGuardian, isTrue);
+      expect(profile.isParentGuardian, isFalse);
       expect(profile.childAge, 8);
     }
   });
@@ -582,7 +598,7 @@ void main() {
     });
     expect(prefsSection['mem_plus_kids_progress|{owner}'], {
       't': 's',
-      'v': '{"stars":3}',
+      'v': kidsProgressA,
     });
     final reviews = payload.sections[BackupSections.reviewRecords]! as List;
     expect(reviews, hasLength(3));
@@ -1149,5 +1165,159 @@ void main() {
       ).countFor(AzkarCategory.morning, 'z1'),
       3,
     );
+  });
+
+  group('external review fixes (group A)', () {
+    final validPlan = jsonEncode({
+      'id': 'p1',
+      'title': 'Khatmah',
+      'startPage': 1,
+      'completedPages': [1, 2],
+      'targetPagesPerDay': 20,
+      'targetDays': 30,
+      'startDate': '2026-09-01T00:00:00.000Z',
+      'expectedEndDate': '2026-09-30T00:00:00.000Z',
+    });
+
+    test('A1: a reset that lands while collecting invalidates the backup: '
+        'collect throws and yields no payload', () async {
+      final isar = await openIsar('a1');
+      await seedOwnerA(isar);
+      final prefs = await freshPrefs(ownerAPrefs());
+      final reset = AccountDataReset(isar, prefs);
+      final collect = BackupCollector(
+        isar,
+        prefs,
+        const FixedRecordOwnerProvider('user-a'),
+      ).collect(DateTime.utc(2026, 10, 17));
+      final cleared = reset.clearAccountOwnedData();
+      Object? error;
+      BackupPayload? payload;
+      try {
+        payload = await collect;
+      } catch (e) {
+        error = e;
+      }
+      await cleared;
+      expect(payload, isNull);
+      expect(error, isA<AccountDataUnavailableException>());
+    });
+
+    test('A2: malformed domain JSON or a wrong wrapper type → '
+        'invalidSections and nothing written', () async {
+      final good = await ownerAPayload();
+      BackupPayload withPref(String key, Map<String, Object?> value) =>
+          mutate(good, (s) {
+            s[BackupSections.prefs] = {
+              ...(s[BackupSections.prefs]! as Map),
+              key: value,
+            };
+          });
+      final invalid = <String, BackupPayload>{
+        'khatmah plan missing fields': withPref('khatmah_active_plan', {
+          't': 's',
+          'v': '{"id":"p1"}',
+        }),
+        'khatmah plan not JSON': withPref('khatmah_active_plan', {
+          't': 's',
+          'v': 'not json',
+        }),
+        'khatmah history wrong item': withPref('khatmah_history', {
+          't': 's',
+          'v': '[{"id":1}]',
+        }),
+        'read_pages as int wrapper': withPref('read_pages', {'t': 'i', 'v': 3}),
+        'read_pages as plain string': withPref('read_pages', {
+          't': 's',
+          'v': 'pages',
+        }),
+        'user_profile wrong age type': withPref('user_profile', {
+          't': 's',
+          'v': '{"name":"A","age":"x"}',
+        }),
+        'mem_plus_profile wrong field type': withPref('mem_plus_profile', {
+          't': 's',
+          'v': '{"isParentGuardian":"yes"}',
+        }),
+        'parent settings wrong field type': withPref(
+          'mem_plus_parent_settings|{owner}',
+          {'t': 's', 'v': '{"reminderHour":"seven"}'},
+        ),
+        'parent rewards bad item': withPref('mem_plus_parent_rewards|{owner}', {
+          't': 's',
+          'v': '[{"id":"r1"}]',
+        }),
+        'azkar counter as string': withPref('azkar_counter_morning_z1', {
+          't': 's',
+          'v': '3',
+        }),
+      };
+      for (final entry in invalid.entries) {
+        final env = await ownerBDevice('a2_${entry.key.hashCode}');
+        await env.prefs.setString('khatmah_active_plan', validPlan);
+        final snap = _prefsMap(env.prefs);
+        final result = await BackupRestorer(
+          env.isar,
+          env.prefs,
+          const FixedRecordOwnerProvider('user-b'),
+        ).restore(entry.value);
+        expect(result, BackupRestoreResult.invalidSections, reason: entry.key);
+        expect(env.prefs.getString('khatmah_active_plan'), validPlan);
+        expect(_prefsMap(env.prefs), snap, reason: entry.key);
+      }
+    });
+
+    test('A2: collect skips a corrupt local value instead of producing an '
+        'unrestorable backup', () async {
+      final isar = await openIsar('a2_collect');
+      final payload = await collectA(
+        isar,
+        await freshPrefs({...ownerAPrefs(), 'khatmah_history': 'garbage'}),
+      );
+      final prefsSection = payload.sections[BackupSections.prefs]! as Map;
+      expect(prefsSection.containsKey('khatmah_history'), isFalse);
+      expect(prefsSection.containsKey('khatmah_active_plan'), isTrue);
+      final result = await BackupRestorer(
+        await openIsar('a2_collect_b'),
+        await freshPrefs({}),
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(payload);
+      expect(result, BackupRestoreResult.restored);
+    });
+
+    test('A3: a linked child profile restored to a device without a profile '
+        'needs guardian onboarding again', () async {
+      final linkedChild = jsonEncode({
+        'schemaVersion': 1,
+        'selectedPath': 'child',
+        'guardianLinkStatus': 'linked',
+        'guardianOnboardingStatus': 'completed',
+        'guardianId': 'guardian-id-secret',
+        'linkedChildId': 'child-id-secret',
+        'isParentGuardian': true,
+        'childAge': 7,
+      });
+      final isarA = await openIsar('a3_a');
+      final payload = await collectA(
+        isarA,
+        await freshPrefs({...ownerAPrefs(), 'mem_plus_profile': linkedChild}),
+      );
+      final prefsB = await freshPrefs({});
+      final result = await BackupRestorer(
+        await openIsar('a3_b'),
+        prefsB,
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(payload);
+      expect(result, BackupRestoreResult.restored);
+      final datasource = MemorizationPlusLocalDatasourceImpl(
+        prefsB,
+        owner: const FixedRecordOwnerProvider('user-b'),
+      );
+      final profile = await datasource.getMemorizationProfile();
+      expect(profile.isChild, isTrue);
+      expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+      expect(profile.isParentGuardian, isFalse);
+      expect(profile.needsGuardianOnboarding, isTrue);
+    });
   });
 }

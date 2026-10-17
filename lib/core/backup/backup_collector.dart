@@ -6,6 +6,7 @@ import '../../features/memorization_plus/data/models/isar_ayah_review_record.dar
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
+import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
 import '../memorization/review_record_identity.dart';
 import '../utils/talia_logger.dart';
@@ -23,35 +24,59 @@ class BackupCollector {
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
 
+  /// Runs inside the [AccountDataBarrier], so an account reset or owner
+  /// switch cannot interleave with the reads: a reset queued meanwhile
+  /// invalidates the lease and the collect throws
+  /// [AccountDataUnavailableException] instead of returning a partial (yet
+  /// validly checksummed) backup. Isar is read in one transaction for a
+  /// consistent snapshot.
   Future<BackupPayload> collect(DateTime now) async {
     final ownerId = _owner.currentOwnerId;
+    return AccountDataBarrier.forPreferences(_prefs).run((lease) async {
+      _ensureOwner(ownerId);
+      final rows = await _isar.txn(
+        () async => (
+          reviews: await _isar.isarAyahReviewRecords.where().findAll(),
+          progress: await _isar.isarAyahProgress.where().findAll(),
+          streak: await _isar.streakIsars.get(1),
+          xp: await _isar.xpIsars.get(1),
+          daily: await _isar.dailyActivityIsars.where().findAll(),
+        ),
+      );
+      lease.check();
+      _ensureOwner(ownerId);
+      final prefs = _preferences(ownerId);
 
-    final reviewRows = await _isar.isarAyahReviewRecords.where().findAll();
-    final progressRows = await _isar.isarAyahProgress.where().findAll();
-    final streak = await _isar.streakIsars.get(1);
-    final xp = await _isar.xpIsars.get(1);
-    final dailyRows = await _isar.dailyActivityIsars.where().findAll();
+      final payload = BackupPayload(
+        schemaVersion: kBackupSchemaVersion,
+        createdAt: now.toUtc(),
+        sections: {
+          BackupSections.reviewRecords: _reviews(rows.reviews, ownerId),
+          BackupSections.ayahProgress: _valid('ayahProgress', [
+            for (final p in rows.progress) AyahProgressBackupMapper.toJson(p),
+          ], AyahProgressBackupMapper.fromJson),
+          BackupSections.streak: _valid('streak', [
+            if (rows.streak != null) StreakBackupMapper.toJson(rows.streak!),
+          ], StreakBackupMapper.fromJson).firstOrNull,
+          BackupSections.xp: _valid('xp', [
+            if (rows.xp != null) XpBackupMapper.toJson(rows.xp!),
+          ], XpBackupMapper.fromJson).firstOrNull,
+          BackupSections.dailyActivity: _valid('dailyActivity', [
+            for (final d in rows.daily) DailyActivityBackupMapper.toJson(d),
+          ], DailyActivityBackupMapper.fromJson),
+          BackupSections.prefs: prefs,
+        },
+      );
+      lease.check();
+      _ensureOwner(ownerId);
+      return payload;
+    });
+  }
 
-    return BackupPayload(
-      schemaVersion: kBackupSchemaVersion,
-      createdAt: now.toUtc(),
-      sections: {
-        BackupSections.reviewRecords: _reviews(reviewRows, ownerId),
-        BackupSections.ayahProgress: _valid('ayahProgress', [
-          for (final p in progressRows) AyahProgressBackupMapper.toJson(p),
-        ], AyahProgressBackupMapper.fromJson),
-        BackupSections.streak: _valid('streak', [
-          if (streak != null) StreakBackupMapper.toJson(streak),
-        ], StreakBackupMapper.fromJson).firstOrNull,
-        BackupSections.xp: _valid('xp', [
-          if (xp != null) XpBackupMapper.toJson(xp),
-        ], XpBackupMapper.fromJson).firstOrNull,
-        BackupSections.dailyActivity: _valid('dailyActivity', [
-          for (final d in dailyRows) DailyActivityBackupMapper.toJson(d),
-        ], DailyActivityBackupMapper.fromJson),
-        BackupSections.prefs: _preferences(ownerId),
-      },
-    );
+  void _ensureOwner(String ownerId) {
+    if (_owner.currentOwnerId != ownerId) {
+      throw const AccountDataUnavailableException();
+    }
   }
 
   /// Current-owner rows. Identity-keyed rows win over a legacy (pre-identity)
@@ -126,6 +151,15 @@ class BackupCollector {
       final value = raw == null
           ? null
           : BackupPreferencePolicy.sanitize(backupKey, raw);
+      if (value == null) continue;
+      // A value the restorer would reject is skipped, so one corrupt local
+      // value can never make the whole backup unrestorable.
+      try {
+        BackupPreferencePolicy.validate(backupKey, value);
+      } on BackupSectionInvalid catch (e) {
+        TaliaLogger.w('Backup skipped an invalid preference: ${e.message}');
+        continue;
+      }
       final encoded = BackupPreferencePolicy.encodeValue(value);
       if (encoded != null) out[backupKey] = encoded;
     }

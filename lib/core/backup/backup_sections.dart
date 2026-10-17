@@ -1,9 +1,16 @@
 import 'dart:convert';
 
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
+import '../../features/certificate/domain/entities/certificate_award.dart';
 import '../../features/hifz/domain/entities/hifz_entities.dart';
+import '../../features/khatmah/data/models/khatmah_history_model.dart';
+import '../../features/khatmah/data/models/khatmah_plan_model.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import '../../features/memorization_plus/data/models/memorization_models.dart';
 import '../../features/memorization_plus/domain/entities/ayah_review_record.dart';
+import '../../features/memorization_plus/domain/entities/kids_home_mission.dart';
+import '../../features/memorization_plus/domain/entities/memorization_profile.dart';
+import '../../features/settings/data/user_profile.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
@@ -223,11 +230,26 @@ abstract final class BackupPreferencePolicy {
       json['policySyncedVersion'] = 0;
       json.remove('policyLinkConfirmed');
     } else {
-      json.remove('guardianId');
-      json.remove('linkedChildId');
+      var unlinked = false;
+      for (final field in const ['guardianId', 'linkedChildId']) {
+        if (json.remove(field) != null) unlinked = true;
+      }
       final status = json['guardianLinkStatus'];
-      if (status == 'linked' || status == 'pending') {
-        json['guardianLinkStatus'] = 'none';
+      if (status == GuardianLinkStatus.linked.name ||
+          status == GuardianLinkStatus.pending.name ||
+          status == GuardianLinkStatus.linked.index ||
+          status == GuardianLinkStatus.pending.index) {
+        json['guardianLinkStatus'] = GuardianLinkStatus.none.name;
+        unlinked = true;
+      }
+      // An unlinked child must go through guardian onboarding again, or the
+      // routes that offer linking are skipped.
+      final path = json['selectedPath'];
+      if (unlinked &&
+          (path == MemorizationPath.child.name ||
+              path == MemorizationPath.child.index)) {
+        json['guardianOnboardingStatus'] =
+            GuardianOnboardingStatus.required.name;
       }
     }
     return jsonEncode(json);
@@ -244,25 +266,34 @@ abstract final class BackupPreferencePolicy {
 
   /// The [restored] (sanitized) value of [key] with this device's PIN and
   /// link fields from [device] put back; a field the device lacks is
-  /// dropped. Without a readable device value the restored one is returned.
+  /// dropped. Without a readable device value the restored parent settings
+  /// are returned as they are, and the restored profile loses the guardian
+  /// role (it belongs to the device that held it).
   static String mergeDeviceState(String key, String restored, String? device) {
-    if (device == null) return restored;
     final Map<String, dynamic> target;
-    final Map<String, dynamic> source;
     try {
       final r = jsonDecode(restored);
-      final d = jsonDecode(device);
-      if (r is! Map<String, dynamic> || d is! Map<String, dynamic>) {
-        return restored;
-      }
+      if (r is! Map<String, dynamic>) return restored;
       target = Map<String, dynamic>.of(r);
-      source = d;
     } on FormatException {
       return restored;
     }
-    final fields = key.split('|').first == _parentSettingsBase
-        ? parentSettingsDeviceFields
-        : profileDeviceFields;
+    final isProfile = key.split('|').first == _profileBase;
+    Map<String, dynamic>? source;
+    if (device != null) {
+      try {
+        final d = jsonDecode(device);
+        if (d is Map<String, dynamic>) source = d;
+      } on FormatException {
+        source = null;
+      }
+    }
+    if (source == null) {
+      if (!isProfile) return restored;
+      target['isParentGuardian'] = false;
+      return jsonEncode(target);
+    }
+    final fields = isProfile ? profileDeviceFields : parentSettingsDeviceFields;
     for (final field in fields) {
       if (source.containsKey(field)) {
         target[field] = source[field];
@@ -272,6 +303,148 @@ abstract final class BackupPreferencePolicy {
     }
     return jsonEncode(target);
   }
+
+  /// Checks a (sanitized) value against the type its store writes and, for
+  /// JSON values with a model, decodes it through the model the app reads
+  /// it with. Throws [BackupSectionInvalid]. Keys without a known spec (an
+  /// allowlisted prefix the policy does not describe) pass unchecked.
+  static void validate(String backupKey, Object value) {
+    final spec = _specFor(backupKey);
+    if (spec == null) return;
+    try {
+      spec(value);
+    } on BackupSectionInvalid catch (e) {
+      throw BackupSectionInvalid('prefs value $backupKey: ${e.message}');
+    } catch (e) {
+      // A model parser's TypeError/FormatException/ArgumentError.
+      throw BackupSectionInvalid('prefs value $backupKey: $e');
+    }
+  }
+
+  static void Function(Object value)? _specFor(String backupKey) {
+    final base = backupKey.split('|').first;
+    final exact = _exactSpecs[base];
+    if (exact != null) return exact;
+    final family = _familyOf(base);
+    if (family != null) {
+      if (family == 'kids_map_seen_completed_') return _intStringList;
+      if (family == 'adult_journey_v1_') return _string();
+      return _string(_anyJson);
+    }
+    for (final entry in _prefixSpecs.entries) {
+      if (base.startsWith(entry.key)) return entry.value;
+    }
+    return null;
+  }
+
+  static final Map<String, void Function(Object value)> _exactSpecs = {
+    'user_profile': _string(_mapOf(UserProfile.fromJson)),
+    'read_pages': _string(_pages),
+    'khatmah_active_plan': _string(_mapOf(KhatmahPlanModel.fromJson)),
+    'khatmah_history': _string(_listOf(KhatmahHistoryModel.fromJson)),
+    'earned_certificates_v2': _string(_listOf(CertificateAward.fromJson)),
+    'earned_certificates_v2_kids': _string(_listOf(CertificateAward.fromJson)),
+    _profileBase: _string(_mapOf(MemorizationProfileModel.fromJson)),
+    _parentSettingsBase: _string(_mapOf(ParentSettingsModel.fromJson)),
+    'mem_plus_parent_rewards': _string(_listOf(ParentRewardModel.fromJson)),
+    'mem_plus_kids_progress': _string(_mapOf(KidsProgressModel.fromJson)),
+    'mem_plus_kids_legacy_cloud_floor': _string(
+      _mapOf(KidsProgressModel.fromJson),
+    ),
+    'mem_plus_kids_session_logs': _string(
+      _listOf(KidsSessionLogModel.fromJson),
+    ),
+    'mem_plus_home_missions': _string(_listOf(KidsHomeMission.fromJson)),
+    'mem_plus_daily_plan': _string(_mapOf(DailyPlanModel.fromJson)),
+    'mem_plus_custom_plan': _string(
+      _mapOf(CustomMemorizationPlanModel.fromJson),
+    ),
+    'mem_plus_smart_settings': _string(
+      _mapOf(SmartMemorizationSettingsModel.fromJson),
+    ),
+    'mem_plus_track': _string(),
+    'hifz_path_mode': _string(),
+    'ramadan_tarawih': _string(_jsonList),
+    'azkar_smart_wird_history': _string(_jsonList),
+  };
+
+  /// Checked in order; the first matching prefix wins.
+  static final Map<String, void Function(Object value)> _prefixSpecs = {
+    'daily_read_pages_': _string(_pages),
+    'daily_wird_target_': _int,
+    'azkar_counter_': _int,
+    'azkar_date_': _string(),
+    'azkar_all_done_': _bool,
+    'azkar_smart_wird_active': _string(_jsonMap),
+    'azkar_smart_wird_xp': _string(),
+    'ramadan_card_dismissed_': _bool,
+  };
+
+  static void Function(Object value) _string([
+    void Function(Object? decoded)? check,
+  ]) => (value) {
+    if (value is! String) throw const BackupSectionInvalid('not a string');
+    if (check == null) return;
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(value);
+    } on FormatException {
+      throw const BackupSectionInvalid('not JSON');
+    }
+    check(decoded);
+  };
+
+  static void _int(Object value) {
+    if (value is! int) throw const BackupSectionInvalid('not an int');
+  }
+
+  static void _bool(Object value) {
+    if (value is! bool) throw const BackupSectionInvalid('not a bool');
+  }
+
+  static void _intStringList(Object value) {
+    if (value is! List ||
+        value.any((e) => e is! String || int.tryParse(e) == null)) {
+      throw const BackupSectionInvalid('not a list of numbers');
+    }
+  }
+
+  static void _anyJson(Object? decoded) {}
+
+  static void _jsonList(Object? decoded) {
+    if (decoded is! List) throw const BackupSectionInvalid('not a list');
+  }
+
+  static void _jsonMap(Object? decoded) {
+    if (decoded is! Map) throw const BackupSectionInvalid('not an object');
+  }
+
+  static void _pages(Object? decoded) {
+    if (decoded is! List || decoded.any((p) => p is! int || p < 1 || p > 604)) {
+      throw const BackupSectionInvalid('not a list of pages');
+    }
+  }
+
+  static void Function(Object? decoded) _mapOf(
+    Object Function(Map<String, dynamic> json) fromJson,
+  ) => (decoded) {
+    if (decoded is! Map<String, dynamic>) {
+      throw const BackupSectionInvalid('not an object');
+    }
+    fromJson(decoded);
+  };
+
+  static void Function(Object? decoded) _listOf(
+    Object Function(Map<String, dynamic> json) fromJson,
+  ) => (decoded) {
+    if (decoded is! List) throw const BackupSectionInvalid('not a list');
+    for (final item in decoded) {
+      if (item is! Map<String, dynamic>) {
+        throw const BackupSectionInvalid('list item is not an object');
+      }
+      fromJson(item);
+    }
+  };
 
   /// `{"t": "s|i|d|b|l", "v": value}`; null for unsupported values.
   static Map<String, Object?>? encodeValue(Object? value) => switch (value) {
@@ -682,6 +855,7 @@ class ParsedBackupSections {
         BackupPreferencePolicy.decodeValue(entry.value),
       );
       if (value == null) throw BackupSectionInvalid('prefs value ${entry.key}');
+      BackupPreferencePolicy.validate(entry.key, value);
       prefs[key] = value;
     }
 
