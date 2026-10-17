@@ -223,7 +223,6 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
         if (info.phase == RamadanPhase.lastTen) body = l10n.ramadanLastTen;
         actions
           ..add(_button(l10n.ramadanOpenKhatmah, _openKhatmah, 'khatmah'))
-          ..add(const SizedBox(width: AppSpacing.xs))
           ..add(_button(l10n.ramadanLogTarawih, _logTarawih, 'tarawih'));
       case RamadanPhase.afterEid:
         if (!_summaryLoaded) return const SizedBox.shrink();
@@ -292,10 +291,12 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
-            Row(
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ...actions,
-                const Spacer(),
                 TextButton(
                   key: const ValueKey('home_ramadan_dismiss'),
                   onPressed: () => unawaited(_dismiss()),
@@ -314,13 +315,11 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     );
   }
 
-  Widget _button(String label, VoidCallback onPressed, String id) => Flexible(
-    child: AppButton(
-      key: ValueKey('home_ramadan_$id'),
-      label: label,
-      size: AppButtonSize.small,
-      variant: AppButtonVariant.goldPrimary,
-      onPressed: onPressed,
-    ),
+  Widget _button(String label, VoidCallback onPressed, String id) => AppButton(
+    key: ValueKey('home_ramadan_$id'),
+    label: label,
+    size: AppButtonSize.small,
+    variant: AppButtonVariant.goldPrimary,
+    onPressed: onPressed,
   );
 }

@@ -91,6 +91,7 @@ void main() {
     TarawihLogStore? tarawihStore,
     bool active = false,
     bool routed = false,
+    Locale locale = const Locale('ar'),
   }) async {
     final body = Scaffold(
       body: SingleChildScrollView(
@@ -115,7 +116,7 @@ void main() {
     await tester.pumpWidget(
       routed
           ? MaterialApp.router(
-              locale: const Locale('ar'),
+              locale: locale,
               localizationsDelegates: delegates,
               supportedLocales: AppLocalizations.supportedLocales,
               routerConfig: GoRouter(
@@ -133,7 +134,7 @@ void main() {
               ),
             )
           : MaterialApp(
-              locale: const Locale('ar'),
+              locale: locale,
               localizationsDelegates: delegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: body,
@@ -146,6 +147,35 @@ void main() {
   }
 
   final card = find.byKey(const ValueKey('home_ramadan_card'));
+
+  for (final width in [320.0, 390.0]) {
+    for (final locale in const [Locale('ar'), Locale('en')]) {
+      testWidgets('every phase fits $width px in ${locale.languageCode}', (
+        tester,
+      ) async {
+        flag(true);
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        for (final i in [
+          info(RamadanPhase.invite),
+          info(RamadanPhase.ramadan, day: 5),
+          info(RamadanPhase.lastTen, day: 25),
+          info(RamadanPhase.afterEid),
+        ]) {
+          await pump(
+            tester,
+            i,
+            locale: locale,
+            completions: () async => [DateTime(2027, 2, 20)],
+          );
+          expect(card, findsOneWidget, reason: '${i.phase}');
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(tester.takeException(), isNull, reason: '${i.phase}');
+        }
+      });
+    }
+  }
 
   testWidgets('each phase renders its card; none and flag off render nothing', (
     tester,

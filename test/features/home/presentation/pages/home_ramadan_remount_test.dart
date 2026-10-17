@@ -107,7 +107,7 @@ void main() {
   testWidgets('a new day remounts the Ramadan card with the new phase', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    await tester.binding.setSurfaceSize(const Size(390, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAt(tester, DateTime(2027, 2, 7, 12));
     expect(find.text('استعد لرمضان'), findsOneWidget);
@@ -120,7 +120,7 @@ void main() {
   testWidgets('changing the Hijri adjustment remounts the Ramadan card', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    await tester.binding.setSurfaceSize(const Size(390, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final day = DateTime(2027, 2, 7, 12);
     await pumpAt(tester, day);
