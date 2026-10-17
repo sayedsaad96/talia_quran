@@ -359,3 +359,93 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
     );
   }
 }
+
+// ─── What's new ───────────────────────────────────────────────────────────────
+
+/// «ما الجديد»: milestones of the children the guardian has not seen yet.
+/// Tapping a line opens that child's details; «تم» marks everything seen.
+class _GuardianNewsSection extends StatelessWidget {
+  const _GuardianNewsSection({required this.news});
+
+  final List<GuardianNewsItem> news;
+
+  String _line(BuildContext context, GuardianNewsItem item) {
+    final l10n = context.l10n;
+    final name = item.child.shownName(l10n);
+    return switch (item.milestone) {
+      SurahCompletedMilestone(:final surahId) => l10n.guardianNewsSurah(
+        name,
+        context.localizedSurahName(surahId),
+      ),
+      CertificateEarnedMilestone(:final titleAr, :final titleEn) =>
+        l10n.guardianNewsCertificate(
+          name,
+          l10n.localeName == 'ar' ? titleAr : (titleEn ?? titleAr),
+        ),
+      WeekCompletedMilestone() => l10n.guardianNewsWeek(name),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      key: const ValueKey('guardian-news-section'),
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        AppSpacing.md,
+        AppSpacing.pagePadding,
+        0,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: context.tokens.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(TaliaIcons.celebrate, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l10n.guardianNewsTitle,
+                  style: AppTypography.titleMedium,
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('guardian-news-dismiss'),
+                onPressed: () =>
+                    context.read<FamilyDashboardCubit>().dismissNews(),
+                child: Text(l10n.guardianNewsDismiss),
+              ),
+            ],
+          ),
+          for (final item in news)
+            InkWell(
+              onTap: () => context.push(
+                AppRoutes.childDetail,
+                extra: ChildDetailRouteArgs(
+                  child: item.child,
+                  cubit: context.read<FamilyDashboardCubit>(),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    _line(context, item),
+                    style: AppTypography.bodyMedium,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

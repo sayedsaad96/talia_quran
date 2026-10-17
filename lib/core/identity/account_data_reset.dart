@@ -129,6 +129,8 @@ class AccountDataReset {
     'prayer_companion_',
     // Ramadan self-log (tarawih pages heard), owner-scoped, local only.
     'ramadan_',
+    // Guardian «ما الجديد» seen ids, per owner and child (local only).
+    'guardian_milestones_seen',
   };
 
   /// Device-level preferences that must survive a logout.

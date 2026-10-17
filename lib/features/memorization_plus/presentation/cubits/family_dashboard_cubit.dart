@@ -7,11 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../auth/domain/services/account_password_verifier.dart';
+import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../data/datasources/guardian_milestone_seen_store.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/services/guardian_milestone_detector.dart';
+import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 import '../../domain/usecases/parent_reward_usecases.dart';
 
@@ -26,7 +31,27 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     this._rewards,
     this._guardianSessionActive,
     this._pinOptional,
-  }) : super(const FamilyDashboardInitial());
+    this._milestoneStore,
+    this._milestonesEnabled,
+    this._ayahCounts,
+    this._localCertificates,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now,
+       super(const FamilyDashboardInitial());
+
+  /// «ما الجديد» (R1: in-app only, found on open and refresh, no background
+  /// pull). Without the store, the switch, or the ayah counts nothing is
+  /// detected and the store is never read.
+  final GuardianMilestoneSeenStore? _milestoneStore;
+  final bool Function()? _milestonesEnabled;
+
+  /// Ayah count per surah, needed to know when a surah is complete.
+  final Future<Map<int, int>> Function()? _ayahCounts;
+
+  /// Certificates of the child on this device (a linked child's come with the
+  /// dashboard).
+  final List<CertificateAward> Function()? _localCertificates;
+  final DateTime Function() _clock;
 
   /// True on the guardian's own (adult) phone: the dashboard opens without a
   /// PIN unless the guardian chose to lock it. The child's device always
@@ -154,9 +179,121 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
             dashboard: dashboard,
             feedback: latest.feedback,
             feedbackEventId: latest.feedbackEventId,
+            news: latest.news,
           ),
         ),
       );
+    }
+    if (isClosed || generation != _refreshGeneration) return;
+    await _refreshNews(generation);
+  }
+
+  bool _newsEnabled() {
+    try {
+      return _milestoneStore != null && (_milestonesEnabled?.call() ?? false);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Finds what is new for each child. A child never looked at before has
+  /// everything it already has marked seen without being shown, so old
+  /// progress does not arrive as a flood. A child whose data is incomplete
+  /// (details still loading, certificates or ayah counts unreadable) is left
+  /// alone, so it is not marked seen on partial data.
+  Future<void> _refreshNews(int generation) async {
+    final latest = state;
+    if (latest is! FamilyDashboardLoaded) return;
+    final store = _milestoneStore;
+    if (store == null || !_newsEnabled()) {
+      _emitNews(latest, const []);
+      return;
+    }
+    final items = <GuardianNewsItem>[];
+    try {
+      final counts = await _ayahCounts?.call();
+      if (counts == null || counts.isEmpty) {
+        _emitNews(latest, const []);
+        return;
+      }
+      final now = _clock();
+      // A linked child's policy carries no weekly goal, so every child is
+      // measured against this device's weekly goal.
+      final goal = latest.dashboard.settings.weeklyGoalSessions;
+      for (final entry in latest.dashboard.children) {
+        final summary = entry.remoteSummary;
+        if (summary?.detailsLoading ?? false) continue;
+        final logs = entry.isLocal ? entry.localData?.logs : summary?.logs;
+        if (logs == null) continue;
+        List<CertificateAward> certificates;
+        try {
+          certificates = entry.isLocal
+              ? (_localCertificates?.call() ?? const [])
+              : remoteKidsProgressSnapshot(summary!, now: now).certificates;
+        } catch (error, stack) {
+          TaliaLogger.w('Milestone certificates unreadable', error, stack);
+          continue;
+        }
+        final detected = detectGuardianMilestones(
+          logs: logs,
+          ayahCountBySurah: counts,
+          certificates: certificates,
+          weeklyGoalSessions: goal,
+          now: now,
+        );
+        final childKey = entry.isLocal ? 'local' : entry.childUserId;
+        if (!await store.hasRecord(childKey)) {
+          await store.markSeen(childKey, detected.map((m) => m.id));
+          continue;
+        }
+        final seen = await store.seen(childKey);
+        for (final milestone in detected) {
+          if (seen.contains(milestone.id)) continue;
+          items.add(
+            GuardianNewsItem(
+              childKey: childKey,
+              child: entry,
+              milestone: milestone,
+            ),
+          );
+        }
+      }
+    } catch (error, stack) {
+      TaliaLogger.w('Guardian milestones not detected', error, stack);
+      items.clear();
+    }
+    if (isClosed || generation != _refreshGeneration) return;
+    final current = state;
+    if (current is FamilyDashboardLoaded) _emitNews(current, items);
+  }
+
+  void _emitNews(FamilyDashboardLoaded current, List<GuardianNewsItem> news) {
+    if (current.news == news) return;
+    emit(
+      current.copyWith(
+        feedback: current.feedback,
+        feedbackEventId: current.feedbackEventId,
+        news: news,
+      ),
+    );
+  }
+
+  /// «تم»: everything shown now is remembered as seen.
+  Future<void> dismissNews() async {
+    final current = state;
+    final store = _milestoneStore;
+    if (current is! FamilyDashboardLoaded ||
+        store == null ||
+        current.news.isEmpty) {
+      return;
+    }
+    final byChild = <String, List<String>>{};
+    for (final item in current.news) {
+      byChild.putIfAbsent(item.childKey, () => []).add(item.milestone.id);
+    }
+    _emitNews(current, const []);
+    for (final entry in byChild.entries) {
+      await store.markSeen(entry.key, entry.value);
     }
   }
 
@@ -187,6 +324,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
           dashboard: dashboard,
           feedback: feedback,
           feedbackEventId: feedback != null ? _nextFeedbackEventId() : 0,
+          news: previous is FamilyDashboardLoaded ? previous.news : const [],
         ),
       ),
     );

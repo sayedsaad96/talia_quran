@@ -2506,6 +2506,47 @@
       }
     }
   },
+  "guardianNewsTitle": "ما الجديد",
+  "@guardianNewsTitle": {
+    "description": "Family dashboard section: new milestones of the children"
+  },
+  "guardianNewsSurah": "{child} أتمّ سورة {surah}",
+  "@guardianNewsSurah": {
+    "description": "What's new: a child completed a surah",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      },
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsCertificate": "{child} حصل على شهادة: {title}",
+  "@guardianNewsCertificate": {
+    "description": "What's new: a child earned a certificate",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsWeek": "{child} أكمل هدف الأسبوع",
+  "@guardianNewsWeek": {
+    "description": "What's new: a child met the weekly goal",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsDismiss": "تم",
+  "@guardianNewsDismiss": {
+    "description": "What's new: mark everything shown as seen"
+  },
 
   "familyDashboardChildNoActivity": "لا نشاط اليوم",
   "@familyDashboardChildNoActivity": { "description": "No activity today label on child card" },

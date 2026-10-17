@@ -5923,6 +5923,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get guardianNewsTitle => 'ما الجديد';
+
+  @override
+  String guardianNewsSurah(String child, String surah) {
+    return '$child أتمّ سورة $surah';
+  }
+
+  @override
+  String guardianNewsCertificate(String child, String title) {
+    return '$child حصل على شهادة: $title';
+  }
+
+  @override
+  String guardianNewsWeek(String child) {
+    return '$child أكمل هدف الأسبوع';
+  }
+
+  @override
+  String get guardianNewsDismiss => 'تم';
+
+  @override
   String get familyDashboardChildNoActivity => 'لا نشاط اليوم';
 
   @override

@@ -10234,6 +10234,36 @@ abstract class AppLocalizations {
   /// **'{points} نقطة اليوم'**
   String familyDashboardChildActiveToday(String points);
 
+  /// Family dashboard section: new milestones of the children
+  ///
+  /// In ar, this message translates to:
+  /// **'ما الجديد'**
+  String get guardianNewsTitle;
+
+  /// What's new: a child completed a surah
+  ///
+  /// In ar, this message translates to:
+  /// **'{child} أتمّ سورة {surah}'**
+  String guardianNewsSurah(String child, String surah);
+
+  /// What's new: a child earned a certificate
+  ///
+  /// In ar, this message translates to:
+  /// **'{child} حصل على شهادة: {title}'**
+  String guardianNewsCertificate(String child, String title);
+
+  /// What's new: a child met the weekly goal
+  ///
+  /// In ar, this message translates to:
+  /// **'{child} أكمل هدف الأسبوع'**
+  String guardianNewsWeek(String child);
+
+  /// What's new: mark everything shown as seen
+  ///
+  /// In ar, this message translates to:
+  /// **'تم'**
+  String get guardianNewsDismiss;
+
   /// No activity today label on child card
   ///
   /// In ar, this message translates to:

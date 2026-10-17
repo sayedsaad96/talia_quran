@@ -24,6 +24,7 @@ import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/services/guardian_milestone_detector.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/family_child_name.dart';
 import '../widgets/family_remote_status_banner.dart';
@@ -190,7 +191,10 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
             );
           }
           if (state is FamilyDashboardLoaded) {
-            return _FamilyLoadedBody(dashboard: state.dashboard);
+            return _FamilyLoadedBody(
+              dashboard: state.dashboard,
+              news: state.news,
+            );
           }
           return const SizedBox.shrink();
         },
@@ -504,8 +508,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
 // ─── Loaded body ──────────────────────────────────────────────────────────────
 
 class _FamilyLoadedBody extends StatelessWidget {
-  const _FamilyLoadedBody({required this.dashboard});
+  const _FamilyLoadedBody({required this.dashboard, this.news = const []});
   final FamilyDashboard dashboard;
+  final List<GuardianNewsItem> news;
 
   @override
   Widget build(BuildContext context) {
@@ -528,6 +533,9 @@ class _FamilyLoadedBody extends StatelessWidget {
             SliverToBoxAdapter(
               child: _FamilySummaryBanner(dashboard: dashboard),
             ),
+
+          if (news.isNotEmpty)
+            SliverToBoxAdapter(child: _GuardianNewsSection(news: news)),
 
           // ─── Section label ───────────────────────────────────────────────
           SliverToBoxAdapter(

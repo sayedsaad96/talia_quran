@@ -5956,6 +5956,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get guardianNewsTitle => 'What\'s new';
+
+  @override
+  String guardianNewsSurah(String child, String surah) {
+    return '$child completed Surah $surah';
+  }
+
+  @override
+  String guardianNewsCertificate(String child, String title) {
+    return '$child earned a certificate: $title';
+  }
+
+  @override
+  String guardianNewsWeek(String child) {
+    return '$child completed the weekly goal';
+  }
+
+  @override
+  String get guardianNewsDismiss => 'Done';
+
+  @override
   String get familyDashboardChildNoActivity => 'No activity today';
 
   @override

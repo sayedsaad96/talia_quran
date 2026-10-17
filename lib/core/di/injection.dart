@@ -154,6 +154,7 @@ import '../../features/memorization_plus/data/datasources/kids_map_celebration_s
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_family_practice_store.dart';
+import '../../features/memorization_plus/data/datasources/guardian_milestone_seen_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_support_profile_store.dart';
 import '../../features/memorization_plus/data/repositories/collaborators/kids_reading_support_sync.dart';
 import '../../features/memorization_plus/data/repositories/collaborators/memorization_cloud_gateway.dart';
@@ -1498,6 +1499,12 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
 
+  getIt.registerLazySingleton<GuardianMilestoneSeenStore>(
+    () => GuardianMilestoneSeenStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerFactory<FamilyDashboardCubit>(
     () => FamilyDashboardCubit(
       getIt<ParentAccessUsecase>(),
@@ -1510,6 +1517,21 @@ Future<void> configureDependencies({bool background = false}) async {
       pinOptional: () async =>
           (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
               .fold((_) => false, (profile) => !profile.isChild),
+      milestoneStore: getIt<GuardianMilestoneSeenStore>(),
+      milestonesEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianMilestones,
+          ),
+      ayahCounts: () async => {
+        for (final surah in (await getIt<QuranRepository>().getSurahs()).fold(
+          (failure) => throw failure,
+          (surahs) => surahs,
+        ))
+          surah.id: surah.ayahCount,
+      },
+      localCertificates: () =>
+          getIt<AchievementService>().getEarnedCertificates(isKids: true),
     ),
   );
   getIt.registerFactory<MemorizationSessionCubit>(
