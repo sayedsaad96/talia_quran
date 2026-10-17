@@ -83,6 +83,12 @@ class KidsBedtimeCubit extends Cubit<KidsBedtimeState> {
   final Future<void> Function() _stop;
   final ValueListenable<ContinuousPlaybackState>? _playback;
 
+  /// True while the shared player is running a bedtime surah queue.
+  bool _playerOwnsBedtime() {
+    final playback = _playback?.value;
+    return playback != null && playback.isSurahQueue && playback.hasActiveAudio;
+  }
+
   Future<void> load() async {
     emit(const KidsBedtimeState());
     try {
@@ -117,6 +123,7 @@ class KidsBedtimeCubit extends Cubit<KidsBedtimeState> {
               : KidsBedtimeStatus.ready,
           surahs: list,
           selected: {for (final surah in list) surah.id},
+          playing: _playerOwnsBedtime(),
         ),
       );
     } catch (_) {
@@ -183,10 +190,9 @@ class KidsBedtimeCubit extends Cubit<KidsBedtimeState> {
   /// again.
   void _onPlayback() {
     final playback = _playback?.value;
-    if (playback == null || isClosed || !state.playing) return;
-    if (playback.isIdle || playback.isError) {
-      emit(state.copyWith(playing: false));
-    }
+    if (playback == null || isClosed) return;
+    final playing = playback.isSurahQueue && playback.hasActiveAudio;
+    if (playing != state.playing) emit(state.copyWith(playing: playing));
   }
 
   @override

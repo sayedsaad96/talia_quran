@@ -196,12 +196,54 @@ void main() {
       await cubit.start();
       playback.value = const ContinuousPlaybackState(
         status: PlaybackStatus.playing,
+        isSurahQueue: true,
       );
       expect(cubit.state.playing, isTrue);
       playback.value = const ContinuousPlaybackState(
         status: PlaybackStatus.idle,
       );
       expect(cubit.state.playing, isFalse);
+      await cubit.close();
+      playback.dispose();
+    });
+
+    test('returning while bedtime audio plays shows Stop', () async {
+      final playback = ValueNotifier(
+        const ContinuousPlaybackState(
+          status: PlaybackStatus.playing,
+          isSurahQueue: true,
+        ),
+      );
+      final cubit = _cubit(logs: _whole(114, 6), playback: playback);
+      await cubit.load();
+      expect(cubit.state.playing, isTrue);
+      await cubit.close();
+      playback.dispose();
+    });
+
+    test('a superseded idle does not leave Start once playing resumes', () async {
+      final playback = ValueNotifier(
+        const ContinuousPlaybackState(
+          status: PlaybackStatus.playing,
+          isSurahQueue: true,
+        ),
+      );
+      final cubit = _cubit(logs: _whole(114, 6), playback: playback);
+      await cubit.load();
+      expect(cubit.state.playing, isTrue);
+      playback.value = const ContinuousPlaybackState(
+        status: PlaybackStatus.idle,
+      );
+      playback.value = const ContinuousPlaybackState(
+        status: PlaybackStatus.loading,
+        isSurahQueue: true,
+      );
+      expect(cubit.state.playing, isTrue);
+      playback.value = const ContinuousPlaybackState(
+        status: PlaybackStatus.playing,
+        isSurahQueue: true,
+      );
+      expect(cubit.state.playing, isTrue);
       await cubit.close();
       playback.dispose();
     });
