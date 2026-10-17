@@ -41,7 +41,25 @@ enum KidsEnrichmentFeature {
   weeklyPack,
 
   /// T12 — personal recitation portfolio (deferred).
-  recitationPortfolio;
+  recitationPortfolio,
+
+  /// البند 23 من خارطة التميّز
+  guardianCertificates,
+
+  /// البند 24 من خارطة التميّز
+  bedtimeListening,
+
+  /// البند 21 من خارطة التميّز
+  guardianPromise,
+
+  /// البند 20 من خارطة التميّز
+  guardianRecitation,
+
+  /// البند 25 من خارطة التميّز
+  guardianMilestones,
+
+  /// البند 27 من خارطة التميّز
+  monthlyReport;
 
   String get storageKey => '${KidsEnrichmentFlags.keyPrefix}$name';
 }
