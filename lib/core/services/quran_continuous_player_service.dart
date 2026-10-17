@@ -1003,16 +1003,22 @@ class QuranContinuousPlayerService {
     }
   }
 
+  /// Ends the session. Its sleep timer and settings end at once; the rest is
+  /// cleared after the player stops, unless a play request started meanwhile
+  /// (that request owns the session now and keeps its state).
   Future<void> stop() async {
-    _playbackGeneration++;
+    final generation = ++_playbackGeneration;
+    _resetSession();
     try {
       await _player.stop();
+      if (generation != _playbackGeneration) return;
       if (_playerSettingsTouched) {
         _playerSettingsTouched = false;
         await _player.setLoopMode(LoopMode.off);
         await _player.setSpeed(1.0);
       }
     } catch (_) {}
+    if (generation != _playbackGeneration) return;
     _resetSession();
     _surahQueueMode = false;
     _queue = [];

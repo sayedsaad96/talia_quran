@@ -265,6 +265,38 @@ void main() {
     expect(service.state.isError, isTrue);
   });
 
+  test('a queue started while stop() awaits the player keeps its state',
+      () async {
+    final gated = _StopGatedPlayer();
+    final gatedService = QuranContinuousPlayerService(
+      quranRepository: repository,
+      reciterService: QuranReciterService(prefs),
+      player: gated,
+    );
+    addTearDown(() async {
+      gatedService.dispose();
+      await gated.closeControllers();
+    });
+
+    gated.stopGate = Completer<void>();
+    final stopping = gatedService.stop();
+    final queue = gatedService.playSurahQueue([
+      114,
+      113,
+    ], sleep: SleepTimerChoice.min15);
+    await queue;
+    gated.stopGate!.complete();
+    await stopping;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(gated.lastSources.length, 11);
+    expect(gatedService.state.isSurahQueue, isTrue);
+    expect(gatedService.state.isPlaying, isTrue);
+    expect(gatedService.state.currentSurahId, 114);
+    expect(gatedService.sleepChoice, SleepTimerChoice.min15);
+    await gatedService.stop(); // cancels the bedtime timer
+  });
+
   group('racing play requests: the latest request wins', () {
     late _GatedRepository gatedRepo;
     late _LoadLogPlayer logPlayer;
@@ -351,6 +383,22 @@ class _GatedRepository extends FakeQuranRepository {
   Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
     await _gate(surahId).future;
     return super.getSurahDetail(surahId);
+  }
+}
+
+/// Holds the first player.stop() after [stopGate] is armed until released.
+class _StopGatedPlayer extends RecordingPlayer {
+  Completer<void>? stopGate;
+  bool _gateUsed = false;
+
+  @override
+  Future<void> stop() async {
+    final gate = stopGate;
+    if (gate != null && !_gateUsed) {
+      _gateUsed = true;
+      await gate.future;
+    }
+    return super.stop();
   }
 }
 
