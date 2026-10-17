@@ -234,6 +234,14 @@ class ChildDetailPage extends StatelessWidget {
   }
 }
 
+/// Remote summaries carry only the latest [_remoteLogCap] logs, so a linked
+/// child's report is incomplete once the cap is reached. A local child always
+/// has the full history.
+const int _remoteLogCap = 30;
+
+bool _reportHistoryComplete(FamilyChildEntry child, int logCount) =>
+    child.isLocal || logCount < _remoteLogCap;
+
 class _ChildDetailBody extends StatelessWidget {
   const _ChildDetailBody({required this.child});
   final FamilyChildEntry child;
@@ -313,6 +321,7 @@ class _ChildDetailBody extends StatelessWidget {
                   now: DateTime.now(),
                 ),
                 childName: child.shownName(context.l10n),
+                historyComplete: _reportHistoryComplete(child, logs.length),
               ),
             ),
           ),

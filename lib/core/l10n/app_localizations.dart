@@ -4670,6 +4670,12 @@ abstract class AppLocalizations {
   /// **'لا جلسات في هذا الشهر'**
   String get monthlyReportEmpty;
 
+  /// No description provided for @monthlyReportIncompleteHistory.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي'**
+  String get monthlyReportIncompleteHistory;
+
   /// No description provided for @monthlyReportSavePdf.
   ///
   /// In ar, this message translates to:

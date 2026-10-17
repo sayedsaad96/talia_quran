@@ -1044,6 +1044,7 @@ abstract class AppRouter {
             child: KidsMonthlyReportPage(
               report: args.report,
               childName: args.childName,
+              historyComplete: args.historyComplete,
             ),
           );
         },

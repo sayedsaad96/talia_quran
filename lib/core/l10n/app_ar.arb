@@ -989,6 +989,7 @@
   "monthlyReportNote": "ملاحظة ولي الأمر",
   "monthlyReportNoteHint": "كلمة تشجيع تظهر في الصورة فقط ولا تُحفظ",
   "monthlyReportEmpty": "لا جلسات في هذا الشهر",
+  "monthlyReportIncompleteHistory": "قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي",
   "monthlyReportSavePdf": "حفظ PDF",
   "monthlyReportShare": "مشاركة",
   "monthlyReportShareText": "تقرير تالية للشهر",

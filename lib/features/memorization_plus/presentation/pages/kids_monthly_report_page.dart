@@ -29,16 +29,42 @@ typedef KidsReportSavePdf =
 /// A4 at 96 dpi, the canvas the report is captured on.
 const Size kidsReportCanvasSize = Size(794, 1123);
 
+/// The fixed A4 canvas the report is captured on. Ignores the app text scale
+/// and scales tall content down instead of overflowing or clipping it.
+@visibleForTesting
+class KidsReportCaptureCanvas extends StatelessWidget {
+  const KidsReportCaptureCanvas({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.noScaling),
+      child: ColoredBox(
+        color: Colors.white,
+        child: SizedBox.fromSize(
+          size: kidsReportCanvasSize,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.topCenter,
+            child: SizedBox(width: kidsReportCanvasSize.width, child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 Future<Uint8List> _defaultCapture(Widget view, BuildContext context) {
   return ScreenshotController().captureFromWidget(
     Directionality(
       textDirection: context.textDirection,
       child: Localizations.override(
         context: context,
-        child: SizedBox(
-          width: kidsReportCanvasSize.width,
-          child: Align(alignment: Alignment.topCenter, child: view),
-        ),
+        child: KidsReportCaptureCanvas(child: view),
       ),
     ),
     context: context,
@@ -77,10 +103,15 @@ Future<void> _defaultSavePdf(Uint8List bytes, String fileName) async {
 
 /// Route payload for [KidsMonthlyReportPage].
 class KidsMonthlyReportRouteArgs {
-  const KidsMonthlyReportRouteArgs({required this.report, this.childName});
+  const KidsMonthlyReportRouteArgs({
+    required this.report,
+    this.childName,
+    this.historyComplete = true,
+  });
 
   final KidsMonthlyReport report;
   final String? childName;
+  final bool historyComplete;
 }
 
 /// The guardian's monthly report with an optional note (not stored) and image
@@ -90,6 +121,7 @@ class KidsMonthlyReportPage extends StatefulWidget {
     super.key,
     required this.report,
     this.childName,
+    this.historyComplete = true,
     this.captureView = _defaultCapture,
     this.onShareImage = _defaultShare,
     this.onSavePdf = _defaultSavePdf,
@@ -97,6 +129,7 @@ class KidsMonthlyReportPage extends StatefulWidget {
 
   final KidsMonthlyReport report;
   final String? childName;
+  final bool historyComplete;
   final KidsReportCapture captureView;
   final KidsReportShareImage onShareImage;
   final KidsReportSavePdf onSavePdf;
@@ -122,6 +155,7 @@ class _KidsMonthlyReportPageState extends State<KidsMonthlyReportPage> {
     report: widget.report,
     note: _note.text,
     childName: widget.childName,
+    historyComplete: widget.historyComplete,
   );
 
   String get _stamp {

@@ -2584,6 +2584,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyReportEmpty => 'No sessions this month';
 
   @override
+  String get monthlyReportIncompleteHistory =>
+      'These numbers may not include every session because the linked child\'s history from another device is partial';
+
+  @override
   String get monthlyReportSavePdf => 'Save PDF';
 
   @override

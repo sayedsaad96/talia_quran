@@ -10,6 +10,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
 import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
@@ -197,10 +198,14 @@ class HomeLoadedView extends StatefulWidget {
     super.key,
     required this.state,
     required this.skin,
+    this.clock,
   });
 
   final HomeLoaded state;
   final HomeSkin skin;
+
+  /// Injectable clock for the day-sensitive Ramadan card; defaults to now.
+  final DateTime Function()? clock;
 
   @override
   State<HomeLoadedView> createState() => _HomeLoadedViewState();
@@ -226,6 +231,20 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
         context,
         clarityOn: ClarityModeController.isActive,
       ),
+    );
+  }
+
+  /// The card computes its phase once per mount, so a new local day or a
+  /// changed Hijri adjustment must remount it.
+  Widget _ramadanCard() {
+    final now = (widget.clock ?? DateTime.now)();
+    final adjustment = getIt.isRegistered<HijriDateAdjustment>()
+        ? getIt<HijriDateAdjustment>().days
+        : 0;
+    return HomeRamadanCard(
+      key: ValueKey('ramadan-${now.year}-${now.month}-${now.day}|$adjustment'),
+      skin: widget.skin,
+      now: widget.clock,
     );
   }
 
@@ -290,7 +309,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 snapshot: widget.state.prayerSnapshot,
               ),
             ),
-            SliverToBoxAdapter(child: HomeRamadanCard(skin: widget.skin)),
+            SliverToBoxAdapter(child: _ramadanCard()),
             if (journeyEnabled &&
                 widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(

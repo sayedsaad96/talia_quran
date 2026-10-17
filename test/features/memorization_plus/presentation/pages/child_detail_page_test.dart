@@ -6,10 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
@@ -20,6 +22,7 @@ import 'package:talia_quran/features/memorization_plus/domain/repositories/memor
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/child_detail_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_monthly_report_page.dart';
 
 const _settings = ParentSettings(pinHash: 'hash');
 
@@ -202,6 +205,68 @@ Future<_Repo> _pump(
   }
   return repo;
 }
+
+/// Opens the child page inside a router so the monthly-report route can be
+/// followed.
+Future<void> _pumpRouted(WidgetTester tester, FamilyChildEntry child) async {
+  final repo = _Repo(child);
+  final cubit = FamilyDashboardCubit(
+    ParentAccessUsecase(repo),
+    ParentRemoteLinkUsecase(repo),
+    GetFamilyDashboardUsecase(repo),
+  );
+  addTearDown(cubit.close);
+  await cubit.load();
+  await cubit.unlock('1234');
+  await tester.pumpWidget(
+    MaterialApp.router(
+      locale: const Locale('en'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => BlocProvider<FamilyDashboardCubit>.value(
+              value: cubit,
+              child: ChildDetailPage(child: child),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.childMonthlyReport,
+            builder: (_, state) {
+              final args = state.extra! as KidsMonthlyReportRouteArgs;
+              return KidsMonthlyReportPage(
+                report: args.report,
+                childName: args.childName,
+                historyComplete: args.historyComplete,
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+List<KidsSessionLog> _logs(int count) => [
+  for (var i = 0; i < count; i++)
+    KidsSessionLog(
+      id: 'l$i',
+      surahId: 112,
+      ayahNumber: 1 + i % 4,
+      ayahNumbers: [1 + i % 4],
+      repeatsCompleted: 3,
+      pointsEarned: 1,
+      completedAt: DateTime.now().subtract(Duration(hours: i)),
+    ),
+];
 
 /// Scrolls the lazily built page until [finder] matches at least once (it
 /// may match several widgets), then brings the first match into view.
@@ -490,6 +555,89 @@ void main() {
         expect(button, findsOneWidget);
       });
     }
+  });
+
+  group('monthly report completeness', () {
+    final getIt = GetIt.instance;
+
+    setUp(() {
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => key == KidsEnrichmentFeature.monthlyReport.storageKey,
+        ),
+      );
+    });
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+    });
+
+    Future<void> openReport(WidgetTester tester, FamilyChildEntry child) async {
+      await _pumpRouted(tester, child);
+      final button = find.byKey(const ValueKey('child-monthly-report-button'));
+      await _scrollTo(tester, button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+    }
+
+    FamilyChildEntry remote(int logs) => FamilyChildEntry(
+      childUserId: 'c1',
+      displayName: 'Fatima',
+      isLocal: false,
+      remoteSummary: RemoteChildSummary(
+        childUserId: 'c1',
+        displayName: 'Fatima',
+        progress: const KidsProgress.initial(),
+        logs: _logs(logs),
+        rewards: const [],
+        homeMissions: const [],
+      ),
+    );
+
+    testWidgets('a linked child at the log cap is marked incomplete', (
+      tester,
+    ) async {
+      await openReport(tester, remote(30));
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsOneWidget,
+      );
+      expect(find.text('Surahs completed'), findsNothing);
+    });
+
+    testWidgets('a linked child under the cap has no notice', (tester) async {
+      await openReport(tester, remote(5));
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a local child has no notice', (tester) async {
+      final local = FamilyChildEntry(
+        childUserId: 'local-child',
+        displayName: 'Talia',
+        isLocal: true,
+        localData: ParentDashboard(
+          progress: const KidsProgress.initial(),
+          stages: const [],
+          logs: _logs(40),
+          rewards: const [],
+          settings: _settings,
+          homeMissions: const [],
+        ),
+      );
+      await openReport(tester, local);
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsNothing,
+      );
+    });
   });
 
   group('weekly summary', () {

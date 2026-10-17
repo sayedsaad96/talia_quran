@@ -973,6 +973,7 @@
   "monthlyReportNote": "Guardian note",
   "monthlyReportNoteHint": "An encouraging word shown in the image only, not saved",
   "monthlyReportEmpty": "No sessions this month",
+  "monthlyReportIncompleteHistory": "These numbers may not include every session because the linked child's history from another device is partial",
   "monthlyReportSavePdf": "Save PDF",
   "monthlyReportShare": "Share",
   "monthlyReportShareText": "Talia monthly report",

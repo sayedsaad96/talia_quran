@@ -2578,6 +2578,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get monthlyReportEmpty => 'لا جلسات في هذا الشهر';
 
   @override
+  String get monthlyReportIncompleteHistory =>
+      'قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي';
+
+  @override
   String get monthlyReportSavePdf => 'حفظ PDF';
 
   @override

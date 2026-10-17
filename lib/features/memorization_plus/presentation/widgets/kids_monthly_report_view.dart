@@ -16,9 +16,15 @@ class KidsMonthlyReportView extends StatelessWidget {
     required this.report,
     this.note = '',
     this.childName,
+    this.historyComplete = true,
   });
 
   final KidsMonthlyReport report;
+
+  /// False when the logs behind [report] may be partial (a linked child's
+  /// capped remote history). The numbers then carry a notice and the
+  /// completed-surahs section, which needs the full history, is hidden.
+  final bool historyComplete;
 
   /// Free guardian text, shown only when not blank. Never stored.
   final String note;
@@ -101,7 +107,15 @@ class KidsMonthlyReportView extends StatelessWidget {
                   context.numText(report.reviews),
                 ),
               ),
-              if (report.completedSurahIds.isNotEmpty) ...[
+              if (!historyComplete) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.monthlyReportIncompleteHistory,
+                  key: const ValueKey('monthly-report-incomplete'),
+                  style: AppTypography.bodySmall.copyWith(color: _muted),
+                ),
+              ],
+              if (historyComplete && report.completedSurahIds.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
                 _heading(l10n.monthlyReportCompleted),
                 for (final id in report.completedSurahIds)
