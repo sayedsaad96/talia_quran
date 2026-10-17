@@ -1362,6 +1362,7 @@ void main() {
       VoidCallback? onGuardianRecitation,
       ValueChanged<PerformanceRating>? onGuardianGrade,
       VoidCallback? onGuardianRetry,
+      VoidCallback? onGuardianExit,
       VoidCallback? onRecord,
     }) async {
       tester.view.devicePixelRatio = 1;
@@ -1379,6 +1380,7 @@ void main() {
             onGuardianRecitation: onGuardianRecitation,
             onGuardianGrade: onGuardianGrade,
             onGuardianRetry: onGuardianRetry,
+            onGuardianExit: onGuardianExit,
           ),
         ),
       );
@@ -1494,6 +1496,59 @@ void main() {
       expect(grades, [PerformanceRating.excellent, PerformanceRating.average]);
       expect(retried, 1);
       expect(recorded, isFalse);
+    });
+
+    testWidgets('the guardian text is hidden by default and toggles', (
+      tester,
+    ) async {
+      // The cubit always opens the mode in recall (ayah hidden).
+      final assessing = _recallState().copyWith(isGuardianAssessing: true);
+      final text = find.byKey(const ValueKey('kids-guardian-recitation-text'));
+      final toggle = find.byKey(const ValueKey('kids-guardian-text-toggle'));
+      await pumpContent(
+        tester,
+        assessing,
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+      );
+
+      expect(text, findsNothing);
+      expect(find.byType(MemorizationAyahDisplay), findsNothing);
+      expect(find.text('Show the text to the guardian'), findsOneWidget);
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pump();
+      expect(text, findsOneWidget);
+      expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
+      expect(find.text('Hide the text'), findsOneWidget);
+
+      // Leaving and re-entering the mode hides it again.
+      await pumpContent(tester, listened);
+      await pumpContent(
+        tester,
+        assessing,
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+      );
+      expect(text, findsNothing);
+    });
+
+    testWidgets('the guardian can end the mode', (tester) async {
+      var exited = false;
+      await pumpContent(
+        tester,
+        listened.copyWith(isGuardianAssessing: true),
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+        onGuardianExit: () => exited = true,
+      );
+
+      final exit = find.byKey(const ValueKey('kids-guardian-recitation-exit'));
+      expect(find.text('End'), findsOneWidget);
+      await tester.ensureVisible(exit);
+      await tester.tap(exit);
+      expect(exited, isTrue);
     });
 
     testWidgets('fits a 320px Arabic screen', (tester) async {

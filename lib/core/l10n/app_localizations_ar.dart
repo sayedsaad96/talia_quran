@@ -8956,4 +8956,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianRecitationHint => 'اطلب من ولي أمرك أن يستمع ويقيّم';
+
+  @override
+  String get guardianRecitationShowText => 'اعرض النص لولي الأمر';
+
+  @override
+  String get guardianRecitationHideText => 'إخفاء النص';
+
+  @override
+  String get guardianRecitationExit => 'إنهاء التسميع';
 }

@@ -60,6 +60,7 @@ class _KidsGamifiedListenPageState extends State<KidsGamifiedListenPage> {
   /// T7 — read once when the session opens, so a guardian's change applies
   /// from the next session and never flips this one midway.
   late final bool _proactiveSupport = _readProactiveSupport();
+  final _guardianEntryGuard = _GuardianRecitationEntryGuard();
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +77,7 @@ class _KidsGamifiedListenPageState extends State<KidsGamifiedListenPage> {
         ayahNumber: widget.ayahNumber,
         ayahText: widget.ayahText,
         missionType: widget.missionType,
+        guardianEntryGuard: _guardianEntryGuard,
         proactiveSupport: _proactiveSupport,
       ),
     );
@@ -129,26 +131,57 @@ bool kidsGuardianRecitationEnabled() =>
       KidsEnrichmentFeature.guardianRecitation,
     );
 
-/// Guards the guardian recitation entry against a double tap.
-bool _guardianRecitationInFlight = false;
-
-/// Item 20 — the guardian proves themselves first ([verifyGuardian], the
-/// same PIN check as family practice); a failed or cancelled check changes
-/// nothing. Only then does the session enter the guardian-assessed mode.
+/// Item 20 — the guardian proves themselves first: [acquirePin] runs the
+/// same PIN flow as manual completion and the cubit verifies the PIN. A
+/// cancelled (null) or wrong PIN changes nothing.
 @visibleForTesting
 Future<bool> startKidsGuardianRecitation(
   KidsModeCubit cubit,
-  Future<bool> Function() verifyGuardian,
+  Future<String?> Function() acquirePin,
 ) async {
-  if (_guardianRecitationInFlight) return false;
-  _guardianRecitationInFlight = true;
-  try {
-    if (!await verifyGuardian()) return false;
-    if (cubit.isClosed) return false;
-    return await cubit.enterGuardianRecitation();
-  } finally {
-    _guardianRecitationInFlight = false;
+  final pin = await acquirePin();
+  if (pin == null || cubit.isClosed) return false;
+  return cubit.enterGuardianRecitation(guardianPin: pin);
+}
+
+/// Per-page double-tap guard for the guardian recitation entry, so a second
+/// tap never stacks another PIN dialog.
+class _GuardianRecitationEntryGuard {
+  bool inFlight = false;
+}
+
+/// Asks for the guardian PIN, as confirming completion does. The PIN is
+/// optional at child setup, so on an unlinked device a guardian without one
+/// creates it here first. A linked child's guardian is remote, and an
+/// unreadable setting asks for the existing PIN. Null when cancelled.
+Future<String?> _acquireGuardianPin(BuildContext context) async {
+  final repository = getIt<MemorizationPlusRepository>();
+  final settings = (await repository.getParentSettings()).fold(
+    (_) => null,
+    (settings) => settings,
+  );
+  final isLinked = (await repository.getMemorizationProfile()).fold(
+    (_) => true,
+    (profile) => profile.isGuardianLinked,
+  );
+  if (!context.mounted) return null;
+  if (settings != null && !settings.hasPin && !isLinked) {
+    return createGuardianPin(context);
   }
+  if (settings != null && !settings.hasPin) {
+    // A linked child without a PIN: the remote guardian sets one through
+    // recovery first, then it is entered below.
+    final recovered = await verifyGuardianPin(
+      context,
+      confirmLabel: context.l10n.confirm,
+      allowRecovery: true,
+    );
+    if (!recovered || !context.mounted) return null;
+  }
+  return showDialog<String>(
+    context: context,
+    builder: (_) => const _GuardianPinConfirmationDialog(),
+  );
 }
 
 /// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
@@ -164,9 +197,11 @@ class _KidsGamifiedListenView extends StatelessWidget {
     required this.ayahNumber,
     required this.ayahText,
     required this.missionType,
+    required this.guardianEntryGuard,
     this.proactiveSupport = false,
   });
 
+  final _GuardianRecitationEntryGuard guardianEntryGuard;
   final int surahId;
   final int ayahNumber;
   final String ayahText;
@@ -186,39 +221,8 @@ class _KidsGamifiedListenView extends StatelessWidget {
 
   Future<void> _runGuardianCompletion(BuildContext context) async {
     final cubit = context.read<KidsModeCubit>();
-    // Confirming completion is a guardian action. The PIN is optional at
-    // child setup, so on an unlinked device a guardian without one creates it
-    // here first. A linked child's guardian is remote, and an unreadable
-    // setting asks for the existing PIN.
-    final repository = getIt<MemorizationPlusRepository>();
-    final settings = (await repository.getParentSettings()).fold(
-      (_) => null,
-      (settings) => settings,
-    );
-    final isLinked = (await repository.getMemorizationProfile()).fold(
-      (_) => true,
-      (profile) => profile.isGuardianLinked,
-    );
-    if (!context.mounted) return;
-    final String? pin;
-    if (settings != null && !settings.hasPin && !isLinked) {
-      pin = await createGuardianPin(context);
-    } else {
-      if (settings != null && !settings.hasPin) {
-        // A linked child without a PIN: the remote guardian sets one through
-        // recovery first, then it is entered below.
-        final recovered = await verifyGuardianPin(
-          context,
-          confirmLabel: context.l10n.confirm,
-          allowRecovery: true,
-        );
-        if (!recovered || !context.mounted) return;
-      }
-      pin = await showDialog<String>(
-        context: context,
-        builder: (_) => const _GuardianPinConfirmationDialog(),
-      );
-    }
+    // Confirming completion is a guardian action.
+    final pin = await _acquireGuardianPin(context);
     if (pin == null || !context.mounted) return;
 
     final accepted = await cubit.submitManualCompletion(guardianPin: pin);
@@ -229,6 +233,27 @@ class _KidsGamifiedListenView extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
       );
+    }
+  }
+
+  Future<void> _startGuardianRecitation(BuildContext context) async {
+    if (guardianEntryGuard.inFlight) return;
+    guardianEntryGuard.inFlight = true;
+    try {
+      var pinEntered = false;
+      final cubit = context.read<KidsModeCubit>();
+      final started = await startKidsGuardianRecitation(cubit, () async {
+        final pin = await _acquireGuardianPin(context);
+        pinEntered = pin != null;
+        return pin;
+      });
+      if (!started && pinEntered && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
+        );
+      }
+    } finally {
+      guardianEntryGuard.inFlight = false;
     }
   }
 
@@ -373,18 +398,15 @@ class _KidsGamifiedListenView extends StatelessWidget {
                   )
                 : null,
             onGuardianRecitation: kidsGuardianRecitationEnabled()
-                ? () => unawaited(
-                    startKidsGuardianRecitation(
-                      context.read<KidsModeCubit>(),
-                      () => _verifyGuardianForPractice(context),
-                    ),
-                  )
+                ? () => unawaited(_startGuardianRecitation(context))
                 : null,
             onGuardianGrade: (rating) => unawaited(
               context.read<KidsModeCubit>().submitGuardianAssessment(rating),
             ),
             onGuardianRetry: () =>
                 context.read<KidsModeCubit>().retryGuardianRecitation(),
+            onGuardianExit: () =>
+                context.read<KidsModeCubit>().exitGuardianRecitation(),
             // A guardian's proactive setting implies the suggestions.
             supportSuggestions: _supportActionsEnabled() || proactiveSupport,
             proactiveSupport: proactiveSupport,
@@ -445,6 +467,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
     this.onGuardianRecitation,
     this.onGuardianGrade,
     this.onGuardianRetry,
+    this.onGuardianExit,
     this.supportSuggestions = false,
     this.proactiveSupport = false,
   });
@@ -458,6 +481,9 @@ class KidsGamifiedListenContent extends StatelessWidget {
 
   /// Item 20 — «لنعد»: try again, nothing saved.
   final VoidCallback? onGuardianRetry;
+
+  /// Item 20 — «إنهاء التسميع»: leave the mode, nothing saved.
+  final VoidCallback? onGuardianExit;
 
   /// T8 — point at one help after a missed recitation (off: unchanged page).
   final bool supportSuggestions;
@@ -598,8 +624,10 @@ class KidsGamifiedListenContent extends StatelessWidget {
                           ],
                           if (state.isGuardianAssessing && !state.isCompleted)
                             _GuardianRecitationPanel(
+                              state: state,
                               onGrade: onGuardianGrade,
                               onRetry: onGuardianRetry,
+                              onExit: onGuardianExit,
                             )
                           else
                             _KidsGamifiedAudioControls(
@@ -1213,15 +1241,36 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
 
 /// Item 20 — the guardian listens to the child and grades by ear: «متقن»,
 /// «تحتاج مراجعة», or «لنعد» (try again, nothing saved). No microphone here.
-class _GuardianRecitationPanel extends StatelessWidget {
-  const _GuardianRecitationPanel({this.onGrade, this.onRetry});
+///
+/// The guardian may reveal the ayah for themselves. That toggle is UI only
+/// (no engine hint, the canonical text is shown untouched) and starts hidden
+/// each time the mode opens, because the panel leaves the tree on exit.
+class _GuardianRecitationPanel extends StatefulWidget {
+  const _GuardianRecitationPanel({
+    required this.state,
+    this.onGrade,
+    this.onRetry,
+    this.onExit,
+  });
 
+  final KidsModeLoaded state;
   final ValueChanged<PerformanceRating>? onGrade;
   final VoidCallback? onRetry;
+  final VoidCallback? onExit;
+
+  @override
+  State<_GuardianRecitationPanel> createState() =>
+      _GuardianRecitationPanelState();
+}
+
+class _GuardianRecitationPanelState extends State<_GuardianRecitationPanel> {
+  bool _showText = false;
 
   @override
   Widget build(BuildContext context) {
-    final grade = onGrade;
+    final grade = widget.onGrade;
+    final onRetry = widget.onRetry;
+    final state = widget.state;
     return Container(
       key: const ValueKey('kids-guardian-recitation-panel'),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -1246,6 +1295,31 @@ class _GuardianRecitationPanel extends StatelessWidget {
               letterSpacing: 0,
             ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+          Center(
+            child: TextButton.icon(
+              key: const ValueKey('kids-guardian-text-toggle'),
+              onPressed: () => setState(() => _showText = !_showText),
+              icon: Icon(_showText ? TaliaKidsIcons.hide : TaliaKidsIcons.show),
+              label: Text(
+                _showText
+                    ? context.l10n.guardianRecitationHideText
+                    : context.l10n.guardianRecitationShowText,
+              ),
+            ),
+          ),
+          if (_showText) ...[
+            const SizedBox(height: AppSpacing.sm),
+            MemorizationAyahDisplay(
+              key: const ValueKey('kids-guardian-recitation-text'),
+              text: state.ayahText,
+              surahId: state.surahId,
+              ayahNumber: state.ayahNumber,
+              textColor: KidsTheme.nightSkyDark,
+              decorationColor: KidsTheme.houseBrown.withValues(alpha: 0.5),
+              referenceColor: KidsTheme.forestGreen,
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           KidsChunkyButton(
             key: const ValueKey('kids-guardian-grade-excellent'),
@@ -1277,6 +1351,16 @@ class _GuardianRecitationPanel extends StatelessWidget {
             tone: KidsButtonTone.soft,
             height: 56,
           ),
+          if (widget.onExit != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Center(
+              child: TextButton(
+                key: const ValueKey('kids-guardian-recitation-exit'),
+                onPressed: widget.onExit,
+                child: Text(context.l10n.guardianRecitationExit),
+              ),
+            ),
+          ],
         ],
       ),
     );

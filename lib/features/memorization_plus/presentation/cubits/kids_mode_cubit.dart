@@ -154,6 +154,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   bool _requiresHouseReview = false;
   String? _guardianAuditionSessionId;
 
+  /// Item 20 — the session whose guardian recitation mode was entered with
+  /// a verified PIN; a grade for any other session is refused.
+  String? _guardianRecitationSessionId;
+
   // Recording timer
   Timer? _recordingTimer;
   Completer<KidsRecitationCaptureResult>? _recordingCompleter;
@@ -172,6 +176,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     emit(const KidsModeLoading());
     _requiresHouseReview = false;
     _guardianAuditionSessionId = null;
+    _guardianRecitationSessionId = null;
 
     final journeyResult = await _getKidsJourney(
       GetKidsJourneyParams(surahId: surahId),
@@ -821,18 +826,29 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
 
-  /// Item 20 — the child recites the hidden ayah to a guardian, who has
-  /// already proven themselves with the guardian PIN (the page verifies it
-  /// before calling this). Needs the required listens first; moves the
+  /// Item 20 — the child recites the hidden ayah to a guardian, who proves
+  /// themselves with [guardianPin], verified here exactly like
+  /// [submitManualCompletion]. Needs the required listens first; moves the
   /// session into hidden recall through the same engine steps as
   /// [tryFromMemory]. Returns whether the mode is now on.
-  Future<bool> enterGuardianRecitation() async {
+  Future<bool> enterGuardianRecitation({required String guardianPin}) async {
     if (state is! KidsModeLoaded) return false;
-    final st = state as KidsModeLoaded;
-    if (st.isCompleted) return false;
-    if (st.isGuardianAssessing) return true;
+    final before = state as KidsModeLoaded;
+    final requestedSessionId = _sessionId;
+    if (before.isCompleted || before.isGuardianAssessing) return false;
     if (_loopCount < maxLoops) {
-      _flagListenFirst(st);
+      _flagListenFirst(before);
+      return false;
+    }
+    final verifier = _guardianPinVerifier;
+    if (verifier == null || guardianPin.length != 4) return false;
+    if (!await verifier(guardianPin)) return false;
+    // The check above awaited; act on the current state, not a snapshot.
+    if (isClosed || state is! KidsModeLoaded) return false;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted ||
+        st.isGuardianAssessing ||
+        _sessionId != requestedSessionId) {
       return false;
     }
     if (st.isRecording) {
@@ -850,7 +866,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (st.isPlaying) await stopAudio();
     if (isClosed || state is! KidsModeLoaded) return false;
     final current = state as KidsModeLoaded;
-    if (current.isCompleted) return false;
+    if (current.isCompleted || _sessionId != requestedSessionId) return false;
+    _guardianRecitationSessionId = requestedSessionId;
     final session = switch (current.sessionState.phase) {
       V2SessionPhase.learning => _sessionEngine.startMemorizing(
         current.sessionState,
@@ -885,14 +902,30 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     emit(st.copyWith(clearRecordingError: true));
   }
 
+  /// Item 20 — «إنهاء التسميع»: leaves the mode without grading or saving;
+  /// the child is back at the normal recall controls.
+  void exitGuardianRecitation() {
+    _guardianRecitationSessionId = null;
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing) return;
+    emit(st.copyWith(isGuardianAssessing: false, clearRecordingError: true));
+  }
+
   /// Item 20 — the guardian's grade: «متقن» ([PerformanceRating.excellent])
   /// or «تحتاج مراجعة» ([PerformanceRating.average]). Saved through the
   /// existing manual completion path (`commitPass(manuallyAssessed: true)`),
   /// once per ayah: [markCompleted]'s completed and in-flight guards apply.
+  /// The grade is capped by the session's hints and missed recalls, and is
+  /// refused unless this session entered the mode with a verified PIN.
   Future<bool> submitGuardianAssessment(PerformanceRating rating) async {
     if (state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;
     if (!st.isGuardianAssessing || st.isCompleted) return false;
+    // Only a mode entered through the PIN-verified path of this session.
+    if (_sessionId == null || _guardianRecitationSessionId != _sessionId) {
+      return false;
+    }
     if (rating != PerformanceRating.excellent &&
         rating != PerformanceRating.average) {
       return false;
@@ -994,8 +1027,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           _requiresHouseReview &&
           _sessionId != null &&
           _guardianAuditionSessionId == _sessionId;
+      // A guardian may lower the evidence-derived rating, never raise it:
+      // hints and missed recalls cap the grade exactly as on the STT path.
       final masteryRating = guardianRating != null && manualGrade
-          ? guardianRating
+          ? _lowerRating(
+              guardianRating,
+              _masteryRatingFor(
+                failureCount: failureCount,
+                hintLevel: trackedHint,
+              ),
+            )
           : guardianAudition
           ? PerformanceRating.average
           : _masteryRatingFor(
@@ -1174,6 +1215,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return PerformanceRating.average;
     }
     return PerformanceRating.excellent;
+  }
+
+  /// The weaker of two ratings (weak < average < excellent).
+  static PerformanceRating _lowerRating(
+    PerformanceRating a,
+    PerformanceRating b,
+  ) {
+    const order = [
+      PerformanceRating.weak,
+      PerformanceRating.average,
+      PerformanceRating.excellent,
+    ];
+    return order.indexOf(a) <= order.indexOf(b) ? a : b;
   }
 
   Future<void> _recordSessionActivity({int? surahId, int? ayahNumber}) async {

@@ -3647,4 +3647,7 @@
   ,"guardianRecitationReview": "Needs review"
   ,"guardianRecitationRetry": "Let's try again"
   ,"guardianRecitationHint": "Ask your guardian to listen and grade"
+  ,"guardianRecitationShowText": "Show the text to the guardian"
+  ,"guardianRecitationHideText": "Hide the text"
+  ,"guardianRecitationExit": "End"
 }

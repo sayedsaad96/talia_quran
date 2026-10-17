@@ -15093,6 +15093,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اطلب من ولي أمرك أن يستمع ويقيّم'**
   String get guardianRecitationHint;
+
+  /// No description provided for @guardianRecitationShowText.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعرض النص لولي الأمر'**
+  String get guardianRecitationShowText;
+
+  /// No description provided for @guardianRecitationHideText.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء النص'**
+  String get guardianRecitationHideText;
+
+  /// No description provided for @guardianRecitationExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء التسميع'**
+  String get guardianRecitationExit;
 }
 
 class _AppLocalizationsDelegate

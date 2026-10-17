@@ -3686,4 +3686,7 @@
   ,"guardianRecitationReview": "تحتاج مراجعة"
   ,"guardianRecitationRetry": "لنعد"
   ,"guardianRecitationHint": "اطلب من ولي أمرك أن يستمع ويقيّم"
+  ,"guardianRecitationShowText": "اعرض النص لولي الأمر"
+  ,"guardianRecitationHideText": "إخفاء النص"
+  ,"guardianRecitationExit": "إنهاء التسميع"
 }

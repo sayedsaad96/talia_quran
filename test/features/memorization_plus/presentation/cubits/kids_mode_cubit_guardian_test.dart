@@ -29,6 +29,8 @@ import '../../../../helpers/isar_test_core.dart';
 
 /// Item 20 — guardian-assessed recitation feeds the existing kids commit
 /// path (`commitPass(manuallyAssessed: true)`), never new engine logic.
+const _pin = '1234';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -116,9 +118,14 @@ void main() {
   test('a wrong or cancelled PIN enters no mode and saves nothing', () async {
     final cubit = await loadedAfterListens();
 
-    final started = await startKidsGuardianRecitation(cubit, () async => false);
+    final cancelled = await startKidsGuardianRecitation(
+      cubit,
+      () async => null,
+    );
+    final wrong = await startKidsGuardianRecitation(cubit, () async => '9999');
 
-    expect(started, isFalse);
+    expect(cancelled, isFalse);
+    expect(wrong, isFalse);
     expect((cubit.state as KidsModeLoaded).isGuardianAssessing, isFalse);
     expect(
       await cubit.submitGuardianAssessment(PerformanceRating.excellent),
@@ -131,7 +138,7 @@ void main() {
   test('a verified guardian opens the mode with the ayah hidden', () async {
     final cubit = await loadedAfterListens();
 
-    expect(await startKidsGuardianRecitation(cubit, () async => true), isTrue);
+    expect(await startKidsGuardianRecitation(cubit, () async => _pin), isTrue);
 
     final state = cubit.state as KidsModeLoaded;
     expect(state.isGuardianAssessing, isTrue);
@@ -144,13 +151,13 @@ void main() {
     final cubit = build();
     await cubit.load(114, 1, 'ayah text');
 
-    expect(await cubit.enterGuardianRecitation(), isFalse);
+    expect(await cubit.enterGuardianRecitation(guardianPin: _pin), isFalse);
     expect((cubit.state as KidsModeLoaded).isGuardianAssessing, isFalse);
   });
 
   test('«excellent» saves once, manually assessed, as excellent', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     expect(
       await cubit.submitGuardianAssessment(PerformanceRating.excellent),
@@ -173,7 +180,7 @@ void main() {
 
   test('«needs review» saves as average', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     await cubit.submitGuardianAssessment(PerformanceRating.average);
 
@@ -184,7 +191,7 @@ void main() {
 
   test('only excellent or average are accepted', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     expect(
       await cubit.submitGuardianAssessment(PerformanceRating.weak),
@@ -196,7 +203,7 @@ void main() {
 
   test('«let us retry» saves nothing and keeps the mode', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     cubit.retryGuardianRecitation();
 
@@ -209,7 +216,7 @@ void main() {
 
   test('a double tap saves once', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     await Future.wait([
       cubit.submitGuardianAssessment(PerformanceRating.excellent),
@@ -224,7 +231,7 @@ void main() {
 
   test('the microphone never starts in the mode', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     await cubit.startRecording();
 
@@ -234,7 +241,7 @@ void main() {
 
   test('the saved record is a kids record, never an adult one', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     await cubit.submitGuardianAssessment(PerformanceRating.excellent);
 
@@ -250,7 +257,7 @@ void main() {
 
   test('a guardian grade earns the manual-path reward, no bonus', () async {
     final cubit = await loadedAfterListens();
-    await cubit.enterGuardianRecitation();
+    await cubit.enterGuardianRecitation(guardianPin: _pin);
 
     await cubit.submitGuardianAssessment(PerformanceRating.excellent);
 
@@ -258,6 +265,136 @@ void main() {
     // stays 1, so the first-try excellence bonus is never granted.
     expect(repository.lastHintCount, 1);
     expect(repository.lastMissionType, KidsMissionType.newMemorization);
+  });
+
+  group('fix round 1', () {
+    Future<PerformanceRating> committedRating() async =>
+        PerformanceRating.values[(await isar.isarReviewEvidenceEvents
+                .where()
+                .findAll())
+            .single
+            .ratingIndex!];
+
+    test('exit clears the mode and commits nothing', () async {
+      final cubit = await loadedAfterListens();
+      await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+      cubit.exitGuardianRecitation();
+
+      final state = cubit.state as KidsModeLoaded;
+      expect(state.isGuardianAssessing, isFalse);
+      expect(state.isCompleted, isFalse);
+      // Back to the normal recall controls.
+      expect(state.isRecallingFromMemory, isTrue);
+      expect(
+        await cubit.submitGuardianAssessment(PerformanceRating.excellent),
+        isFalse,
+      );
+      expect(repository.awardCalls, 0);
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+    });
+
+    test('the cubit API without a verified PIN commits nothing', () async {
+      final cubit = await loadedAfterListens();
+
+      expect(await cubit.enterGuardianRecitation(guardianPin: '9999'), isFalse);
+      expect(await cubit.enterGuardianRecitation(guardianPin: ''), isFalse);
+      expect((cubit.state as KidsModeLoaded).isGuardianAssessing, isFalse);
+      expect(
+        await cubit.submitGuardianAssessment(PerformanceRating.excellent),
+        isFalse,
+      );
+      expect(repository.awardCalls, 0);
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+    });
+
+    test('a first-word hint caps «excellent» at average', () async {
+      final cubit = await loadedAfterListens();
+      await cubit.tryFromMemory();
+      await cubit.revealFirstWord();
+      await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+      await cubit.submitGuardianAssessment(PerformanceRating.excellent);
+
+      expect(await committedRating(), PerformanceRating.average);
+      expect(repository.lastMasteryRating, PerformanceRating.average);
+    });
+
+    test('a clean ayah with «excellent» commits excellent', () async {
+      final cubit = await loadedAfterListens();
+      await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+      await cubit.submitGuardianAssessment(PerformanceRating.excellent);
+
+      expect(await committedRating(), PerformanceRating.excellent);
+      expect(repository.lastHintCount, 1, reason: 'no first-try bonus');
+    });
+
+    group('mandatory house review', () {
+      setUp(() {
+        repository.journey = const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 114,
+            startAyah: 1,
+            endAyah: 2,
+            completedAyahs: [1, 2],
+            status: KidsJourneyStageStatus.needsReview,
+            requiresHouseReview: true,
+            pendingHouseReviewAyahs: [1, 2],
+          ),
+        ];
+      });
+
+      for (final rating in [
+        PerformanceRating.excellent,
+        PerformanceRating.average,
+      ]) {
+        test('${rating.name} produces the house-review proof', () async {
+          final cubit = build();
+          await cubit.load(114, 1, 'ayah text');
+          await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+          await cubit.submitGuardianAssessment(rating);
+
+          expect(await committedRating(), rating);
+          expect(repository.lastMissionType, KidsMissionType.linkedReview);
+          expect(
+            repository.lastSessionId,
+            startsWith('kids_house_review_114_1_'),
+          );
+        });
+      }
+
+      test('"remind me" then «excellent» commits average', () async {
+        final cubit = build();
+        await cubit.load(114, 1, 'ayah text');
+        await cubit.remindMe();
+        await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+        await cubit.submitGuardianAssessment(PerformanceRating.excellent);
+
+        expect(await committedRating(), PerformanceRating.average);
+      });
+
+      test('two missed recalls cap any grade at weak, with no proof', () async {
+        final cubit = build();
+        await cubit.load(114, 1, 'ayah text');
+        recorder.words = 'different words';
+        await cubit.startRecording();
+        await cubit.startRecording();
+        await cubit.enterGuardianRecitation(guardianPin: _pin);
+
+        await cubit.submitGuardianAssessment(PerformanceRating.excellent);
+
+        expect(await committedRating(), PerformanceRating.weak);
+        expect(repository.lastMasteryRating, PerformanceRating.weak);
+        expect(
+          repository.lastSessionId,
+          isNot(startsWith('kids_house_review_')),
+        );
+      });
+    });
   });
 }
 
@@ -267,15 +404,8 @@ class _FakeRepository implements MemorizationPlusRepository {
   PerformanceRating? lastMasteryRating;
   int? lastHintCount;
   KidsMissionType? lastMissionType;
-
-  @override
-  Future<Either<Failure, KidsProgress>> getKidsProgress() async =>
-      const Right(KidsProgress.initial());
-
-  @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
-    required int surahId,
-  }) async => const Right([
+  String? lastSessionId;
+  List<KidsJourneyStage> journey = const [
     KidsJourneyStage(
       stageNumber: 1,
       surahId: 114,
@@ -284,7 +414,16 @@ class _FakeRepository implements MemorizationPlusRepository {
       completedAyahs: [],
       status: KidsJourneyStageStatus.current,
     ),
-  ]);
+  ];
+
+  @override
+  Future<Either<Failure, KidsProgress>> getKidsProgress() async =>
+      const Right(KidsProgress.initial());
+
+  @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  }) async => Right(journey);
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
@@ -301,6 +440,7 @@ class _FakeRepository implements MemorizationPlusRepository {
     PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
     awardCalls++;
+    lastSessionId = sessionId;
     lastMasteryRating = masteryRating;
     lastHintCount = hintCount;
     lastMissionType = missionType;
@@ -353,13 +493,14 @@ class _FakeStreakService implements KidsStreakStore {
 
 class _CountingRecorder implements KidsRecitationRecorder {
   int captureCalls = 0;
+  String words = 'ayah text';
 
   @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async {
     captureCalls++;
-    return const KidsRecitationCaptureResult.captured(words: 'ayah text');
+    return KidsRecitationCaptureResult.captured(words: words);
   }
 
   @override

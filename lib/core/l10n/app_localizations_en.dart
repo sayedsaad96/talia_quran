@@ -8954,4 +8954,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianRecitationHint => 'Ask your guardian to listen and grade';
+
+  @override
+  String get guardianRecitationShowText => 'Show the text to the guardian';
+
+  @override
+  String get guardianRecitationHideText => 'Hide the text';
+
+  @override
+  String get guardianRecitationExit => 'End';
 }
