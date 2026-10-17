@@ -8939,4 +8939,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsBedtimeCard => 'Quiet time: listen to your surahs before bed';
+
+  @override
+  String get guardianRecitationTitle => 'Recite to your guardian';
+
+  @override
+  String get guardianRecitationExcellent => 'Mastered';
+
+  @override
+  String get guardianRecitationReview => 'Needs review';
+
+  @override
+  String get guardianRecitationRetry => 'Let\'s try again';
+
+  @override
+  String get guardianRecitationHint => 'Ask your guardian to listen and grade';
 }

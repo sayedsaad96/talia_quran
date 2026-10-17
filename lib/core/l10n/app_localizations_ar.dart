@@ -8941,4 +8941,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsBedtimeCard => 'حان وقت الهدوء: استمع لسورك قبل النوم';
+
+  @override
+  String get guardianRecitationTitle => 'التسميع على ولي الأمر';
+
+  @override
+  String get guardianRecitationExcellent => 'متقن';
+
+  @override
+  String get guardianRecitationReview => 'تحتاج مراجعة';
+
+  @override
+  String get guardianRecitationRetry => 'لنعد';
+
+  @override
+  String get guardianRecitationHint => 'اطلب من ولي أمرك أن يستمع ويقيّم';
 }

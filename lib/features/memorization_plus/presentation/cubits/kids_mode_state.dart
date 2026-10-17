@@ -48,6 +48,7 @@ class KidsModeLoaded extends KidsModeState {
     this.silentAttempts = 0,
     this.isReview = false,
     this.recalledWords,
+    this.isGuardianAssessing = false,
   });
 
   final int surahId;
@@ -101,6 +102,10 @@ class KidsModeLoaded extends KidsModeState {
   /// K32 — after a missed recitation, one flag per ayah word: recited right
   /// or not. Null when there is nothing to show. Never the spoken text.
   final List<bool>? recalledWords;
+
+  /// Item 20 — the child recites to a PIN-verified guardian, who grades the
+  /// recitation; the microphone stays off while this is true.
+  final bool isGuardianAssessing;
 
   /// The text is hidden and the child may record: a review before its first
   /// attempt, or a near miss that keeps new memorization in recitation.
@@ -180,6 +185,7 @@ class KidsModeLoaded extends KidsModeState {
     int? silentAttempts,
     List<bool>? recalledWords,
     bool clearRecalledWords = false,
+    bool? isGuardianAssessing,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -209,6 +215,7 @@ class KidsModeLoaded extends KidsModeState {
     recalledWords: clearRecalledWords
         ? null
         : recalledWords ?? this.recalledWords,
+    isGuardianAssessing: isGuardianAssessing ?? this.isGuardianAssessing,
   );
 
   @override
@@ -235,5 +242,6 @@ class KidsModeLoaded extends KidsModeState {
     silentAttempts,
     isReview,
     recalledWords,
+    isGuardianAssessing,
   ];
 }

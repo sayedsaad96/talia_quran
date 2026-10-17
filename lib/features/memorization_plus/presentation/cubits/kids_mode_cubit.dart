@@ -608,6 +608,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
     if (st.isCompleted) return;
+    // Item 20: the guardian grades by ear; the microphone stays off.
+    if (st.isGuardianAssessing) return;
 
     if (_loopCount < maxLoops) {
       _flagListenFirst(st);
@@ -671,8 +673,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
     // The guardian may have completed the session manually while the mic was
     // still open (M7); a finished session must never evaluate a late capture
-    // or surface a confusing post-completion error.
-    if (current.isCompleted) return;
+    // or surface a confusing post-completion error. A guardian who took over
+    // the recitation (item 20) grades it instead of a late capture.
+    if (current.isCompleted || current.isGuardianAssessing) return;
 
     // ── Error cases (permission denied, mic unavailable) ──────────────────
     if (capture.isError) {
@@ -818,10 +821,103 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
 
+  /// Item 20 — the child recites the hidden ayah to a guardian, who has
+  /// already proven themselves with the guardian PIN (the page verifies it
+  /// before calling this). Needs the required listens first; moves the
+  /// session into hidden recall through the same engine steps as
+  /// [tryFromMemory]. Returns whether the mode is now on.
+  Future<bool> enterGuardianRecitation() async {
+    if (state is! KidsModeLoaded) return false;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted) return false;
+    if (st.isGuardianAssessing) return true;
+    if (_loopCount < maxLoops) {
+      _flagListenFirst(st);
+      return false;
+    }
+    if (st.isRecording) {
+      await _recitationRecorder.stop();
+      _recordingTimer?.cancel();
+      _recordingTimer = null;
+      final pendingCapture = _recordingCompleter;
+      _recordingCompleter = null;
+      if (pendingCapture != null && !pendingCapture.isCompleted) {
+        pendingCapture.complete(
+          const KidsRecitationCaptureResult.stoppedByUser(),
+        );
+      }
+    }
+    if (st.isPlaying) await stopAudio();
+    if (isClosed || state is! KidsModeLoaded) return false;
+    final current = state as KidsModeLoaded;
+    if (current.isCompleted) return false;
+    final session = switch (current.sessionState.phase) {
+      V2SessionPhase.learning => _sessionEngine.startMemorizing(
+        current.sessionState,
+      ),
+      V2SessionPhase.remediation => _sessionEngine.completeRemediation(
+        current.sessionState,
+      ),
+      _ => current.sessionState,
+    };
+    emit(
+      current.copyWith(
+        sessionState: session,
+        isGuardianAssessing: true,
+        isRecording: false,
+        recordingSeconds: 0,
+        clearRecordingError: true,
+        lastMatchedWords: 0,
+        lastTargetWords: 0,
+        clearRecalledWords: true,
+      ),
+    );
+    await _saveKidsSession(session);
+    return true;
+  }
+
+  /// Item 20 — «لنعد»: the child tries again in front of the guardian.
+  /// Nothing is graded or saved, and the mode stays on.
+  void retryGuardianRecitation() {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing || st.isCompleted) return;
+    emit(st.copyWith(clearRecordingError: true));
+  }
+
+  /// Item 20 — the guardian's grade: «متقن» ([PerformanceRating.excellent])
+  /// or «تحتاج مراجعة» ([PerformanceRating.average]). Saved through the
+  /// existing manual completion path (`commitPass(manuallyAssessed: true)`),
+  /// once per ayah: [markCompleted]'s completed and in-flight guards apply.
+  Future<bool> submitGuardianAssessment(PerformanceRating rating) async {
+    if (state is! KidsModeLoaded) return false;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing || st.isCompleted) return false;
+    if (rating != PerformanceRating.excellent &&
+        rating != PerformanceRating.average) {
+      return false;
+    }
+    await _markCompleted(manualGrade: true, guardianRating: rating);
+    return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
+  }
+
   Future<void> markCompleted({
     bool manualGrade = false,
     String? automaticSpokenText,
     double? automaticSimilarity,
+  }) => _markCompleted(
+    manualGrade: manualGrade,
+    automaticSpokenText: automaticSpokenText,
+    automaticSimilarity: automaticSimilarity,
+  );
+
+  /// [guardianRating] is only passed by [submitGuardianAssessment] and only
+  /// replaces the mastery rating; every other step is the manual path.
+  Future<void> _markCompleted({
+    bool manualGrade = false,
+    String? automaticSpokenText,
+    double? automaticSimilarity,
+    PerformanceRating? guardianRating,
   }) async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
@@ -898,7 +994,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           _requiresHouseReview &&
           _sessionId != null &&
           _guardianAuditionSessionId == _sessionId;
-      final masteryRating = guardianAudition
+      final masteryRating = guardianRating != null && manualGrade
+          ? guardianRating
+          : guardianAudition
           ? PerformanceRating.average
           : _masteryRatingFor(
               failureCount: failureCount,
@@ -1009,6 +1107,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
             // Completion always settles the mic flag — even when the session
             // finished while a capture was still in flight.
             isRecording: false,
+            isGuardianAssessing: false,
             sessionStarsEarned: 0,
             clearRecordingError: true,
           ),
@@ -1042,6 +1141,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           // Completion always settles the mic flag — even when the session
           // finished while a capture was still in flight.
           isRecording: false,
+          isGuardianAssessing: false,
           newAwards: newAwards,
           sessionStarsEarned: completion.starsEarned,
           // K11: surface session points and any level-up on completion.

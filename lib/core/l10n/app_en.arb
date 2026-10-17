@@ -3642,4 +3642,9 @@
   ,"kidsBedtimeTimer": "Stops after"
   ,"kidsBedtimeEmpty": "Memorize a surah first to listen to it before bed"
   ,"kidsBedtimeCard": "Quiet time: listen to your surahs before bed"
+  ,"guardianRecitationTitle": "Recite to your guardian"
+  ,"guardianRecitationExcellent": "Mastered"
+  ,"guardianRecitationReview": "Needs review"
+  ,"guardianRecitationRetry": "Let's try again"
+  ,"guardianRecitationHint": "Ask your guardian to listen and grade"
 }

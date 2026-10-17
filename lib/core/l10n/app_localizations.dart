@@ -15063,6 +15063,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حان وقت الهدوء: استمع لسورك قبل النوم'**
   String get kidsBedtimeCard;
+
+  /// No description provided for @guardianRecitationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التسميع على ولي الأمر'**
+  String get guardianRecitationTitle;
+
+  /// No description provided for @guardianRecitationExcellent.
+  ///
+  /// In ar, this message translates to:
+  /// **'متقن'**
+  String get guardianRecitationExcellent;
+
+  /// No description provided for @guardianRecitationReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج مراجعة'**
+  String get guardianRecitationReview;
+
+  /// No description provided for @guardianRecitationRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'لنعد'**
+  String get guardianRecitationRetry;
+
+  /// No description provided for @guardianRecitationHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اطلب من ولي أمرك أن يستمع ويقيّم'**
+  String get guardianRecitationHint;
 }
 
 class _AppLocalizationsDelegate

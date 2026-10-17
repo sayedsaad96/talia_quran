@@ -120,6 +120,37 @@ Future<bool> _verifyGuardianForPractice(BuildContext context) async {
   );
 }
 
+/// Item 20 — «التسميع على ولي الأمر» is off unless the rollout flag is wired
+/// and switched on.
+@visibleForTesting
+bool kidsGuardianRecitationEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.guardianRecitation,
+    );
+
+/// Guards the guardian recitation entry against a double tap.
+bool _guardianRecitationInFlight = false;
+
+/// Item 20 — the guardian proves themselves first ([verifyGuardian], the
+/// same PIN check as family practice); a failed or cancelled check changes
+/// nothing. Only then does the session enter the guardian-assessed mode.
+@visibleForTesting
+Future<bool> startKidsGuardianRecitation(
+  KidsModeCubit cubit,
+  Future<bool> Function() verifyGuardian,
+) async {
+  if (_guardianRecitationInFlight) return false;
+  _guardianRecitationInFlight = true;
+  try {
+    if (!await verifyGuardian()) return false;
+    if (cubit.isClosed) return false;
+    return await cubit.enterGuardianRecitation();
+  } finally {
+    _guardianRecitationInFlight = false;
+  }
+}
+
 /// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
 bool _familyPracticeEnabled() =>
     getIt.isRegistered<KidsEnrichmentFlags>() &&
@@ -341,6 +372,19 @@ class _KidsGamifiedListenView extends StatelessWidget {
                     verifyGuardian: _verifyGuardianForPractice,
                   )
                 : null,
+            onGuardianRecitation: kidsGuardianRecitationEnabled()
+                ? () => unawaited(
+                    startKidsGuardianRecitation(
+                      context.read<KidsModeCubit>(),
+                      () => _verifyGuardianForPractice(context),
+                    ),
+                  )
+                : null,
+            onGuardianGrade: (rating) => unawaited(
+              context.read<KidsModeCubit>().submitGuardianAssessment(rating),
+            ),
+            onGuardianRetry: () =>
+                context.read<KidsModeCubit>().retryGuardianRecitation(),
             // A guardian's proactive setting implies the suggestions.
             supportSuggestions: _supportActionsEnabled() || proactiveSupport,
             proactiveSupport: proactiveSupport,
@@ -398,9 +442,22 @@ class KidsGamifiedListenContent extends StatelessWidget {
     this.onRemindMe,
     this.onManualComplete,
     this.onFamilyPractice,
+    this.onGuardianRecitation,
+    this.onGuardianGrade,
+    this.onGuardianRetry,
     this.supportSuggestions = false,
     this.proactiveSupport = false,
   });
+
+  /// Item 20 — «التسميع على ولي الأمر» entry (null hides it). Shown once the
+  /// required listens are done, never while playing, recording or completed.
+  final VoidCallback? onGuardianRecitation;
+
+  /// Item 20 — the guardian's grade while [KidsModeLoaded.isGuardianAssessing].
+  final ValueChanged<PerformanceRating>? onGuardianGrade;
+
+  /// Item 20 — «لنعد»: try again, nothing saved.
+  final VoidCallback? onGuardianRetry;
 
   /// T8 — point at one help after a missed recitation (off: unchanged page).
   final bool supportSuggestions;
@@ -539,17 +596,43 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             _SupportSuggestion(action: support),
                             const SizedBox(height: AppSpacing.md),
                           ],
-                          _KidsGamifiedAudioControls(
-                            state: state,
-                            onPlayPause: onPlayPause,
-                            onRecordRecitation: onRecordRecitation,
-                            onStopRecording: onStopRecording,
-                            onTryFromMemory: onTryFromMemory,
-                            onRevealFirstWord: onRevealFirstWord,
-                            onRemindMe: onRemindMe,
-                            onManualComplete: onManualComplete,
-                            highlight: support,
-                          ),
+                          if (state.isGuardianAssessing && !state.isCompleted)
+                            _GuardianRecitationPanel(
+                              onGrade: onGuardianGrade,
+                              onRetry: onGuardianRetry,
+                            )
+                          else
+                            _KidsGamifiedAudioControls(
+                              state: state,
+                              onPlayPause: onPlayPause,
+                              onRecordRecitation: onRecordRecitation,
+                              onStopRecording: onStopRecording,
+                              onTryFromMemory: onTryFromMemory,
+                              onRevealFirstWord: onRevealFirstWord,
+                              onRemindMe: onRemindMe,
+                              onManualComplete: onManualComplete,
+                              highlight: support,
+                            ),
+                          if (onGuardianRecitation != null &&
+                              !state.isGuardianAssessing &&
+                              !state.isCompleted &&
+                              !state.isRecording &&
+                              !state.isPlaying &&
+                              state.currentLoop >= state.maxLoops) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Center(
+                              child: TextButton.icon(
+                                key: const ValueKey(
+                                  'kids-guardian-recitation-open',
+                                ),
+                                onPressed: onGuardianRecitation,
+                                icon: const Icon(TaliaKidsIcons.verified),
+                                label: Text(
+                                  context.l10n.guardianRecitationTitle,
+                                ),
+                              ),
+                            ),
+                          ],
                           if (onFamilyPractice != null &&
                               !calm &&
                               !state.isCompleted) ...[
@@ -1124,6 +1207,78 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Item 20 — the guardian listens to the child and grades by ear: «متقن»,
+/// «تحتاج مراجعة», or «لنعد» (try again, nothing saved). No microphone here.
+class _GuardianRecitationPanel extends StatelessWidget {
+  const _GuardianRecitationPanel({this.onGrade, this.onRetry});
+
+  final ValueChanged<PerformanceRating>? onGrade;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final grade = onGrade;
+    return Container(
+      key: const ValueKey('kids-guardian-recitation-panel'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: _kidsSoftCardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.guardianRecitationTitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.titleSmall.copyWith(
+              color: KidsTheme.inkOnParchment,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.l10n.guardianRecitationHint,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: KidsTheme.inkOnParchment.withValues(alpha: 0.8),
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          KidsChunkyButton(
+            key: const ValueKey('kids-guardian-grade-excellent'),
+            onPressed: grade == null
+                ? null
+                : () => grade(PerformanceRating.excellent),
+            icon: TaliaKidsIcons.verified,
+            label: context.l10n.guardianRecitationExcellent,
+            tone: KidsButtonTone.green,
+            height: 56,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          KidsChunkyButton(
+            key: const ValueKey('kids-guardian-grade-review'),
+            onPressed: grade == null
+                ? null
+                : () => grade(PerformanceRating.average),
+            icon: TaliaKidsIcons.hifz,
+            label: context.l10n.guardianRecitationReview,
+            tone: KidsButtonTone.purple,
+            height: 56,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          KidsChunkyButton(
+            key: const ValueKey('kids-guardian-grade-retry'),
+            onPressed: onRetry,
+            icon: TaliaKidsIcons.listen,
+            label: context.l10n.guardianRecitationRetry,
+            tone: KidsButtonTone.soft,
+            height: 56,
+          ),
+        ],
+      ),
     );
   }
 }
