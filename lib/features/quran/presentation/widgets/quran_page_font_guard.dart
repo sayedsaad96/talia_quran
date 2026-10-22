@@ -80,7 +80,7 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
     try {
       loader.ensureFontLoaded(page).then(
         (_) => _markReady(generation, page, loader),
-        onError: (_, __) => _markFailed(generation, page, loader),
+        onError: (Object error, StackTrace stack) => _markFailed(generation, page, loader),
       );
     } catch (_) {
       _markFailed(generation, page, loader);

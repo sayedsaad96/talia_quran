@@ -8,15 +8,14 @@ import 'hands_free_round_state.dart';
 /// Pure, synchronous state transitions for a hands-free practice round.
 final class HandsFreeRoundEngine {
   const HandsFreeRoundEngine({
-    required ListeningCorpus corpus,
-    ReviewDueEvaluator dueEvaluator = const ReviewDueEvaluator(),
-  }) : _corpus = corpus,
-       _dueEvaluator = dueEvaluator;
+    required this.corpus,
+    this.dueEvaluator = const ReviewDueEvaluator(),
+  });
 
   static const defaultMaxItems = 10;
 
-  final ListeningCorpus _corpus;
-  final ReviewDueEvaluator _dueEvaluator;
+  final ListeningCorpus corpus;
+  final ReviewDueEvaluator dueEvaluator;
 
   HandsFreeRoundState start({
     required List<AyahReviewRecord> due,
@@ -109,8 +108,8 @@ final class HandsFreeRoundEngine {
     final ref = ListeningAyahRef(record.surahId, record.ayahNumber);
     return ReviewRecordFilters.isAdultCompatible(record) &&
         record.totalReviews > 0 &&
-        _corpus.textOf(ref) != null &&
-        _dueEvaluator.isDue(
+        corpus.textOf(ref) != null &&
+        dueEvaluator.isDue(
           now: now,
           scheduledAt: record.nextReviewDate,
           policy: ReviewDuePolicy.onOrAfterScheduledTime,
