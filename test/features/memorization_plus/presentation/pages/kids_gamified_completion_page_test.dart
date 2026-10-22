@@ -499,7 +499,7 @@ class _CompletionRepository implements MemorizationPlusRepository {
   final ParentSettings settings;
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
     required int surahId,
   }) async => Right([
     KidsJourneyStage(

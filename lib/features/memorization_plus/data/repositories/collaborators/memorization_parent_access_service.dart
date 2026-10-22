@@ -156,15 +156,18 @@ class MemorizationParentAccessService {
   /// stay as history, the rest could never be opened or approved again. The
   /// server rows are untouched and come back if the guardian links again.
   Future<void> _keepClaimedGiftsOnly() async {
-    final rewards = await _datasource.getParentRewards();
-    await _datasource.saveParentRewards(giftsKeptAfterUnlink(rewards));
+    await _datasource.updateParentRewards((rewards) async =>
+        giftsKeptAfterUnlink(rewards));
   }
 
   @visibleForTesting
   static List<T> giftsKeptAfterUnlink<T extends ParentReward>(
     List<T> rewards,
   ) => rewards
-      .where((reward) => reward.status == ParentRewardStatus.claimed)
+      .where(
+        (reward) => reward.origin != ParentRewardOrigin.cloud ||
+            reward.status == ParentRewardStatus.claimed,
+      )
       .toList();
 
   Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(

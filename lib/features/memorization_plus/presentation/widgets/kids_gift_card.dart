@@ -81,7 +81,8 @@ class KidsGiftCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  status,
+                  reward.origin == ParentRewardOrigin.unknown
+                      ? l10n.parentRewardOriginUnknown : status,
                   style: AppTypography.bodySmall.copyWith(
                     color: KidsTheme.inkOnParchment,
                     letterSpacing: 0,

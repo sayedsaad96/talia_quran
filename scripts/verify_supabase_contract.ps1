@@ -338,6 +338,7 @@ Check 'parent_rewards.requested_at exists' "SELECT EXISTS (SELECT 1 FROM informa
 Check 'parent rewards child read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='parent_rewards' AND policyname='parent_rewards_child_read')"
 Check 'bookmark owner read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='quran_bookmarks_cloud' AND policyname='quran_bookmarks_cloud_owner_read')"
 Check 'review events owner and guardian read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='ayah_review_events' AND policyname='ayah_review_events_read' AND qual LIKE '%auth.uid()%parent_child_links%')"
+. (Join-Path $PSScriptRoot 'verify_roadmap_phase2_contract.ps1')
 if ($anyFailed) { throw 'Supabase contract verification failed.' }
 Write-Host 'PASS: Supabase contract verified'
 } finally {

@@ -15103,13 +15103,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupImportSignedIn.
   ///
   /// In ar, this message translates to:
-  /// **'الاستعادة متاحة فقط دون حساب. بياناتك محفوظة في حسابك.'**
+  /// **'الاستعادة متاحة فقط دون حساب. ملاحظاتك الشخصية تبقى على هذا الجهاز فقط.'**
   String get backupImportSignedIn;
 
   /// No description provided for @backupIncludes.
   ///
   /// In ar, this message translates to:
-  /// **'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل'**
+  /// **'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل، والملاحظات الشخصية'**
   String get backupIncludes;
 
   /// No description provided for @backupExcludes.
@@ -15127,7 +15127,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupConfirmBody.
   ///
   /// In ar, this message translates to:
-  /// **'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف.'**
+  /// **'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف. النسخة من الإصدار 1 لا تحتوي ملاحظات شخصية وستمسح ملاحظاتك الحالية.'**
   String get backupConfirmBody;
 
   /// No description provided for @backupConfirm.
@@ -15243,6 +15243,600 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إنهاء التسميع'**
   String get guardianRecitationExit;
+
+  /// No description provided for @forgettingForecastTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستضعف خلال 7 أيام إن لم تراجعها'**
+  String get forgettingForecastTitle;
+
+  /// No description provided for @forgettingForecastPassage.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah}، الآيات {start}–{end}'**
+  String forgettingForecastPassage(Object surah, Object start, Object end);
+
+  /// No description provided for @forgettingForecastReviewNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجعها الآن'**
+  String get forgettingForecastReviewNow;
+
+  /// No description provided for @notificationForgettingForecastTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وقت للمراجعة'**
+  String get notificationForgettingForecastTitle;
+
+  /// No description provided for @notificationForgettingForecastBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصص وقتاً قصيراً لمراجعة ما تعلمته.'**
+  String get notificationForgettingForecastBody;
+
+  /// No description provided for @notificationSettingsForgettingForecast.
+  ///
+  /// In ar, this message translates to:
+  /// **'توقع النسيان'**
+  String get notificationSettingsForgettingForecast;
+
+  /// No description provided for @ayahNotesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تدبّراتي'**
+  String get ayahNotesTitle;
+
+  /// No description provided for @ayahNoteAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظتي'**
+  String get ayahNoteAction;
+
+  /// No description provided for @ayahNoteLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظتك'**
+  String get ayahNoteLabel;
+
+  /// No description provided for @ayahNoteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب تدبّرك الشخصي'**
+  String get ayahNoteHint;
+
+  /// No description provided for @ayahNotesEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد تدبّرات بعد'**
+  String get ayahNotesEmpty;
+
+  /// No description provided for @ayahNoteSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر حفظ ملاحظتك. حاول مرة أخرى.'**
+  String get ayahNoteSaveFailed;
+
+  /// No description provided for @ayahNotesLoadFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل ملاحظاتك. حاول مرة أخرى.'**
+  String get ayahNotesLoadFailed;
+
+  /// No description provided for @ayahNoteNavigationFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر فتح هذه الآية. حاول مرة أخرى.'**
+  String get ayahNoteNavigationFailed;
+
+  /// No description provided for @audioDownloadsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل التلاوات'**
+  String get audioDownloadsTitle;
+
+  /// No description provided for @audioDownloadsStorage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخزين التلاوات'**
+  String get audioDownloadsStorage;
+
+  /// No description provided for @audioDownloadsWholeJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل جزء كامل'**
+  String get audioDownloadsWholeJuz;
+
+  /// No description provided for @audioDownloadsJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجزء {number}'**
+  String audioDownloadsJuz(String number);
+
+  /// No description provided for @audioDownloadsWifiOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'عبر Wi-Fi فقط'**
+  String get audioDownloadsWifiOnly;
+
+  /// No description provided for @audioDownloadsWifiUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة.'**
+  String get audioDownloadsWifiUnavailable;
+
+  /// No description provided for @audioDownloadsSpaceUnknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات.'**
+  String get audioDownloadsSpaceUnknown;
+
+  /// No description provided for @audioDownloadsNetworkWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل.'**
+  String get audioDownloadsNetworkWarning;
+
+  /// No description provided for @audioDownloadsProceed.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة التنزيل'**
+  String get audioDownloadsProceed;
+
+  /// No description provided for @audioDownloadsStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل أو استئناف'**
+  String get audioDownloadsStart;
+
+  /// No description provided for @audioDownloadsCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتمل التنزيل'**
+  String get audioDownloadsCompleted;
+
+  /// No description provided for @audioDownloadsCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُلغي التنزيل؛ تبقى الملفات المحفوظة متاحة'**
+  String get audioDownloadsCancelled;
+
+  /// No description provided for @audioDownloadsInsufficientSpace.
+  ///
+  /// In ar, this message translates to:
+  /// **'المساحة المتاحة غير كافية'**
+  String get audioDownloadsInsufficientSpace;
+
+  /// No description provided for @audioDownloadsFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر التنزيل. يمكنك الاستئناف دون إعادة تنزيل الملفات المحفوظة.'**
+  String get audioDownloadsFailed;
+
+  /// No description provided for @audioDownloadsInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ تنزيل التلاوات…'**
+  String get audioDownloadsInProgress;
+
+  /// No description provided for @audioDownloadsBytes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{bytes} بايت'**
+  String audioDownloadsBytes(String bytes);
+
+  /// No description provided for @audioDownloadsDelete.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف تنزيلات هذا القارئ'**
+  String get audioDownloadsDelete;
+
+  /// No description provided for @audioDownloadsDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد حذف التسجيلات المحفوظة لهذا القارئ من هذا الجهاز؟'**
+  String get audioDownloadsDeleteConfirm;
+
+  /// No description provided for @hijriYearRecapTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حصاد العام الهجري'**
+  String get hijriYearRecapTitle;
+
+  /// No description provided for @hijriYearRecapCompletions.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمات المكتملة'**
+  String get hijriYearRecapCompletions;
+
+  /// No description provided for @hijriYearRecapMemorizedApprox.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات محفوظة تقريبًا'**
+  String get hijriYearRecapMemorizedApprox;
+
+  /// No description provided for @hijriYearRecapApproxDefinition.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات المحفوظة حاليًا والمراجَعة في هذا العام الهجري'**
+  String get hijriYearRecapApproxDefinition;
+
+  /// No description provided for @hijriYearRecapLifetimeStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'أطول سلسلة على الإطلاق'**
+  String get hijriYearRecapLifetimeStreak;
+
+  /// No description provided for @hijriYearRecapDismiss.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء لهذا العام'**
+  String get hijriYearRecapDismiss;
+
+  /// No description provided for @hijriYearRecapShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة'**
+  String get hijriYearRecapShare;
+
+  /// No description provided for @hijriYearRecapActivityDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام النشاط'**
+  String get hijriYearRecapActivityDays;
+
+  /// No description provided for @similarAyahTrainerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تدريب المتشابهات'**
+  String get similarAyahTrainerTitle;
+
+  /// No description provided for @similarAyahTrainerMachineNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.'**
+  String get similarAyahTrainerMachineNote;
+
+  /// No description provided for @similarAyahLookupAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات متقاربة اللفظ (محسوبة آليًا)'**
+  String get similarAyahLookupAction;
+
+  /// No description provided for @similarAyahTrainerEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد أنماط متشابهات مسجلة بعد'**
+  String get similarAyahTrainerEmpty;
+
+  /// No description provided for @similarAyahTrainerTryAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول مرة أخرى'**
+  String get similarAyahTrainerTryAgain;
+
+  /// No description provided for @similarAyahTrainerTarget.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموضع المقصود'**
+  String get similarAyahTrainerTarget;
+
+  /// No description provided for @similarAyahTrainerOther.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموضع المتشابه'**
+  String get similarAyahTrainerOther;
+
+  /// No description provided for @similarAyahTrainerPrevious.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية السابقة'**
+  String get similarAyahTrainerPrevious;
+
+  /// No description provided for @similarAyahTrainerPractice.
+  ///
+  /// In ar, this message translates to:
+  /// **'استدعِ الموضع المقصود، ثم أظهره عندما تكون مستعدًا.'**
+  String get similarAyahTrainerPractice;
+
+  /// No description provided for @similarAyahTrainerReveal.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الموضع المقصود'**
+  String get similarAyahTrainerReveal;
+
+  /// No description provided for @similarAyahTrainerUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا التدريب متاح لحسابات البالغين المؤهلة فقط.'**
+  String get similarAyahTrainerUnavailable;
+
+  /// No description provided for @similarAyahFailureNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'يبدو أنك انتقلت إلى آية مشابهة في الموضع {reference}.'**
+  String similarAyahFailureNotice(Object reference);
+
+  /// No description provided for @similarAyahOpenComparison.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمييز المتشابهات'**
+  String get similarAyahOpenComparison;
+
+  /// No description provided for @v2AccountChanged.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيّر الحساب. افتح الجلسة من حسابك الحالي للمتابعة.'**
+  String get v2AccountChanged;
+
+  /// No description provided for @similarAyahTrainerNoPrevious.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد آية سابقة في هذه السورة'**
+  String get similarAyahTrainerNoPrevious;
+
+  /// No description provided for @similarAyahTrainerCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{مرة واحدة} =2{مرتان} few{{count} مرات} other{{count} مرة}}'**
+  String similarAyahTrainerCount(int count);
+
+  /// No description provided for @prayerReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجِع في صلاتك'**
+  String get prayerReviewTitle;
+
+  /// No description provided for @prayerReviewQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل قرأت المقطع؟'**
+  String get prayerReviewQuestion;
+
+  /// No description provided for @prayerReviewSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ تقييمك الذاتي.'**
+  String get prayerReviewSaved;
+
+  /// No description provided for @prayerReviewUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد مقطع مراجعة متاح الآن.'**
+  String get prayerReviewUnavailable;
+
+  /// No description provided for @prayerReviewLoadFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل المقطع. حاول مرة أخرى.'**
+  String get prayerReviewLoadFailed;
+
+  /// No description provided for @prayerReviewSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الحفظ. يمكنك إعادة المحاولة للمقطع نفسه.'**
+  String get prayerReviewSaveFailed;
+
+  /// No description provided for @prayerReviewGradeMastered.
+  ///
+  /// In ar, this message translates to:
+  /// **'متقن'**
+  String get prayerReviewGradeMastered;
+
+  /// No description provided for @prayerReviewGradeHesitated.
+  ///
+  /// In ar, this message translates to:
+  /// **'بتردد'**
+  String get prayerReviewGradeHesitated;
+
+  /// No description provided for @prayerReviewGradeForgot.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم أستطع'**
+  String get prayerReviewGradeForgot;
+
+  /// No description provided for @prayerReviewSuggestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح: {reference}'**
+  String prayerReviewSuggestion(String reference);
+
+  /// No description provided for @prayerReviewPassage.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah} {start}–{end}'**
+  String prayerReviewPassage(String surah, String start, String end);
+
+  /// No description provided for @prayerReviewSettingsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'طول المقطع لكل صلاة'**
+  String get prayerReviewSettingsTitle;
+
+  /// No description provided for @prayerReviewLengthOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, zero {دون آيات} one {حتى آية واحدة} two {حتى آيتين} few {حتى {count} آيات} many {حتى {count} آية} other {حتى {count} آية}}'**
+  String prayerReviewLengthOption(int count);
+
+  /// No description provided for @kidsRemotePlanNextSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح السورة التالية'**
+  String get kidsRemotePlanNextSurah;
+
+  /// No description provided for @kidsRemotePlanSize.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات المرحلة الجديدة'**
+  String get kidsRemotePlanSize;
+
+  /// No description provided for @kidsRemotePlanDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام تذكير التدريب'**
+  String get kidsRemotePlanDays;
+
+  /// No description provided for @kidsRemotePlanDeviceDefault.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب إعداد الجهاز'**
+  String get kidsRemotePlanDeviceDefault;
+
+  /// No description provided for @kidsRemotePlanDaysHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تؤثر الأيام في التذكير فقط، ويظل التعلم متاحًا كل يوم.'**
+  String get kidsRemotePlanDaysHint;
+
+  /// No description provided for @encouragementTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرسل تشجيعًا'**
+  String get encouragementTitle;
+
+  /// No description provided for @encouragementInboxTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رسالة تشجيع لك'**
+  String get encouragementInboxTitle;
+
+  /// No description provided for @encouragementProud.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا فخور بك!'**
+  String get encouragementProud;
+
+  /// No description provided for @encouragementWellDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت!'**
+  String get encouragementWellDone;
+
+  /// No description provided for @encouragementKeepGoing.
+  ///
+  /// In ar, this message translates to:
+  /// **'واصل، أنت تتقدم!'**
+  String get encouragementKeepGoing;
+
+  /// No description provided for @encouragementGreatEffort.
+  ///
+  /// In ar, this message translates to:
+  /// **'جهد رائع!'**
+  String get encouragementGreatEffort;
+
+  /// No description provided for @encouragementSeeYouTomorrow.
+  ///
+  /// In ar, this message translates to:
+  /// **'نلتقي غدًا!'**
+  String get encouragementSeeYouTomorrow;
+
+  /// No description provided for @encouragementStarSticker.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجمة'**
+  String get encouragementStarSticker;
+
+  /// No description provided for @encouragementTaliaSticker.
+  ///
+  /// In ar, this message translates to:
+  /// **'تالية تشجعك'**
+  String get encouragementTaliaSticker;
+
+  /// No description provided for @encouragementSend.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال التشجيع'**
+  String get encouragementSend;
+
+  /// No description provided for @encouragementSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصل تشجيعك، وسيظهر للطفل عند المزامنة.'**
+  String get encouragementSent;
+
+  /// No description provided for @encouragementFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الإرسال. حاول مجددًا.'**
+  String get encouragementFailed;
+
+  /// No description provided for @encouragementQuota.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصلت إلى الحد اليومي لهذا الطفل. حاول غدًا.'**
+  String get encouragementQuota;
+
+  /// No description provided for @encouragementLimit.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى ١٠ رسائل يوميًا لكل طفل، ويبدأ اليوم بتوقيت UTC.'**
+  String get encouragementLimit;
+
+  /// No description provided for @encouragementDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم'**
+  String get encouragementDone;
+
+  /// No description provided for @parentRewardOriginUnknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الهدية القديمة محفوظة للعرض فقط. يمكن لولي الأمر إنشاء هدية جديدة.'**
+  String get parentRewardOriginUnknown;
+
+  /// No description provided for @kidsLegacyResumeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كيف تحب أن تكمل هذه السورة؟'**
+  String get kidsLegacyResumeTitle;
+
+  /// No description provided for @kidsLegacyResumeExplanation.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقطة توقفك محفوظة. اختر تقسيمًا لاستكمال هذه الجلسة القديمة؛ لا يتوفر تقسيمها السابق.'**
+  String get kidsLegacyResumeExplanation;
+
+  /// No description provided for @kidsLegacyResumeChoose.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار طريقة الاستكمال'**
+  String get kidsLegacyResumeChoose;
+
+  /// No description provided for @kidsLegacyResumeSaveFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يُحفظ الاختيار. ما زالت نقطة توقفك محفوظة، ويمكنك المحاولة مجددًا.'**
+  String get kidsLegacyResumeSaveFailed;
+
+  /// No description provided for @audioDownloadsLeaveTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التنزيل؟'**
+  String get audioDownloadsLeaveTitle;
+
+  /// No description provided for @audioDownloadsLeaveBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'التنزيل جارٍ. إذا غادرت هذه الصفحة سيتوقف التنزيل وتبقى الملفات المحفوظة متاحة.'**
+  String get audioDownloadsLeaveBody;
+
+  /// No description provided for @audioDownloadsLeaveStay.
+  ///
+  /// In ar, this message translates to:
+  /// **'البقاء'**
+  String get audioDownloadsLeaveStay;
+
+  /// No description provided for @audioDownloadsLeaveStop.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التنزيل'**
+  String get audioDownloadsLeaveStop;
+
+  /// No description provided for @similarAyahIndexUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.'**
+  String get similarAyahIndexUnavailable;
 }
 
 class _AppLocalizationsDelegate

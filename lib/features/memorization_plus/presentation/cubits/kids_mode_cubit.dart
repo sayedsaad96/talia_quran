@@ -31,6 +31,9 @@ import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_recalled_words.dart';
 import '../../domain/services/kids_house_review_policy.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
+import '../../domain/usecases/recover_kids_session_split.dart';
+import '../../domain/entities/kids_legacy_resume_recovery.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/services/audio_cache_service.dart';
@@ -67,7 +70,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsReviewOutcomeCommitter? reviewOutcomeCommitter,
     AudioPlayer? audioPlayer,
     KidsAudioSourceLoader? audioSourceLoader,
-  ]) : _activityRecorder = activityRecorder,
+    RecoverKidsSessionSplit? recoverSessionSplit,
+  ]) : _recoverSessionSplit = recoverSessionSplit,
+       _activityRecorder = activityRecorder,
        _reviewOutcomeCommitter = reviewOutcomeCommitter,
        _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
@@ -99,6 +104,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   final GetKidsProgressUsecase _getKidsProgress;
+  final RecoverKidsSessionSplit? _recoverSessionSplit;
+  int _loadGeneration = 0;
+  StreamSubscription<void>? _legacyRecoveryChanges;
+  ({int surahId, int ayahNumber, String text, KidsMissionType mission})? _legacyRecoveryIntent;
   final GetKidsJourneyUsecase _getKidsJourney;
   final AwardKidsPointsUsecase _awardPoints;
   final AchievementService _achievementService;
@@ -173,14 +182,22 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     String ayahText, {
     KidsMissionType missionType = KidsMissionType.newMemorization,
   }) async {
+    final generation = ++_loadGeneration;
+    bool stale() => isClosed || generation != _loadGeneration;
     emit(const KidsModeLoading());
     _requiresHouseReview = false;
     _guardianAuditionSessionId = null;
     _guardianRecitationSessionId = null;
 
     final journeyResult = await _getKidsJourney(
-      GetKidsJourneyParams(surahId: surahId),
+      GetKidsJourneyParams(surahId: surahId, freezeForSession: true),
     );
+    if (stale()) return;
+    final recovery = journeyResult.fold((failure) => failure, (_) => null);
+    if (recovery is KidsSplitChoiceRequiredFailure) {
+      _offerLegacyRecovery(recovery.ticket);
+      return;
+    }
     final targetStage = journeyResult.fold<KidsJourneyStage?>((_) => null, (
       stages,
     ) {
@@ -226,6 +243,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
 
     final progressResult = await _getKidsProgress();
+    if (stale()) return;
     final progress = progressResult.fold(
       (_) => const KidsProgress.initial(),
       (p) => p,
@@ -241,6 +259,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? await _restoreKidsSession(surahId, fallbackAyah)
         : null;
     final resumed = sessionState != null;
+    if (stale()) return;
     // A `resume` request without a paused session (e.g. the stage page
     // opening an in-progress stage) is really a first pass or a review of
     // this ayah: resolve its original semantics now so a first pass earns
@@ -252,6 +271,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           )
         : missionType;
     final policy = await _loadSessionPolicy();
+    if (stale()) return;
 
     // K15 — daily session-limit gate. Only genuinely new work (new
     // memorization) counts against maxNewAyahs; a restored interrupted
@@ -259,6 +279,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // reachable regardless of how many sessions ran earlier today.
     if (!resumed && effectiveMissionType == KidsMissionType.newMemorization) {
       final budget = await _loadDailyBudget(policy);
+      if (stale()) return;
       if (budget.newAyahLimitReached) {
         emit(
           KidsModeError(
@@ -288,6 +309,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? _sessionEngine.startReview(initialSession)
         : _sessionEngine.startLearning(initialSession);
     await _saveKidsSession(sessionState);
+    if (stale()) return;
 
     final activeAyah = sessionState.currentAyah;
     final startedAt = DateTime.now().toUtc();
@@ -312,6 +334,57 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         isReview: isReview,
       ),
     );
+  }
+
+  void _offerLegacyRecovery(KidsLegacyResumeRecoveryTicket ticket) {
+    try {
+      ticket.lease.checkOwner(ticket.ownerId);
+      _legacyRecoveryIntent = (surahId: ticket.surahId, ayahNumber: ticket.checkpointAyah,
+        text: '', mission: KidsMissionType.resume);
+      unawaited(_legacyRecoveryChanges?.cancel());
+      _legacyRecoveryChanges = ticket.lease.changes.listen((_) {
+        try {
+          ticket.lease.checkOwner(ticket.ownerId);
+        } on AccountDataUnavailableException {
+          _loadGeneration++;
+          _legacyRecoveryIntent = null;
+          if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+        }
+      });
+      emit(KidsModeSplitChoiceRequired(ticket));
+    } on AccountDataUnavailableException {
+      emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+    }
+  }
+
+  Future<void> recoverLegacySplit(KidsLegacyResumeRecoveryTicket displayedTicket,
+      {required bool whole, int? stageSize}) async {
+    final current = state;
+    final intent = _legacyRecoveryIntent;
+    if (current is! KidsModeSplitChoiceRequired || current.saving || intent == null ||
+        !identical(current.ticket, displayedTicket)) {
+      return;
+    }
+    final ticket = current.ticket;
+    final saver = _recoverSessionSplit;
+    if (saver == null) {
+      emit(KidsModeSplitChoiceRequired(ticket, failed: true));
+      return;
+    }
+    try {
+      ticket.lease.checkOwner(ticket.ownerId);
+      emit(KidsModeSplitChoiceRequired(ticket, saving: true));
+      final saved = await saver(ticket, whole: whole, stageSize: stageSize);
+      ticket.lease.checkOwner(ticket.ownerId);
+      if (isClosed) return;
+      if (saved.isLeft()) {
+        emit(KidsModeSplitChoiceRequired(ticket, failed: true));
+        return;
+      }
+      await load(intent.surahId, intent.ayahNumber, intent.text, missionType: intent.mission);
+    } on AccountDataUnavailableException {
+      if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+    }
   }
 
   /// K15 — today's budget from the local session log, the same one the
@@ -1294,6 +1367,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   @override
   Future<void> close() async {
+    _loadGeneration++;
+    await _legacyRecoveryChanges?.cancel();
     _closingAudio = true;
     _playbackGeneration++;
     final current = state;

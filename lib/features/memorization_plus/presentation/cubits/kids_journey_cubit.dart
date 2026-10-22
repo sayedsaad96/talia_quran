@@ -88,6 +88,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     this._pathLoader,
     this._settingsLoader,
     this._splitSaver,
+    this._remotePlanEnabled,
     this._missionResolver = const KidsNextMissionResolver(),
     this._v2Enabled = true,
     DateTime Function()? clock,
@@ -112,6 +113,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsJourneyPathLoader? _pathLoader;
   final KidsJourneySettingsLoader? _settingsLoader;
   final KidsSurahSplitSaver? _splitSaver;
+  final bool Function()? _remotePlanEnabled;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -243,6 +245,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
             path: path,
           )
         : null;
+    final remoteHint = _v2Enabled ? await _validatedRemoteHint(path) : null;
     final now = _clock().toUtc();
     KidsNextMission? resolveWith(KidsDailyBudget budget) =>
         _missionResolver.resolve(
@@ -253,6 +256,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           now: now,
           budget: budget,
           continuation: continuation,
+          validatedRemoteHint: remoteHint,
           path: path,
         );
     final nextMission = _v2Enabled
@@ -420,6 +424,20 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<KidsNextMission?> _validatedRemoteHint(
+    KidsJourneyPathDefinition path,
+  ) async {
+    if (_remotePlanEnabled?.call() != true) return null;
+    final settings = await _readSettings();
+    final hinted = settings?.remotePlan.nextSurahId;
+    // A guardian hint never moves the child off the selected path.
+    if (hinted == null || !path.contains(hinted)) return null;
+    return _missionResolver.validatedRemoteHint(
+      hintedSurahId: hinted,
+      loadStages: _loadStages,
+    );
   }
 
   /// The selected path, read once per load; any failure means the adventure.

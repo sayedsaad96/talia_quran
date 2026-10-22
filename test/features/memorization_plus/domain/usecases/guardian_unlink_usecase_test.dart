@@ -15,6 +15,9 @@ ParentReward _gift(String id, ParentRewardStatus status) => ParentReward(
   title: 'Gift $id',
   status: status,
   createdAt: DateTime.utc(2026, 10),
+  origin: ParentRewardOrigin.cloud,
+  serverId: id,
+  ownerId: 'child',
 );
 
 void main() {
@@ -50,7 +53,7 @@ void main() {
     });
   });
 
-  test('after unlinking only received gifts stay on the device', () {
+  test('after unlinking only received cloud gifts stay on the device', () {
     final kept = MemorizationParentAccessService.giftsKeptAfterUnlink([
       _gift('1', ParentRewardStatus.locked),
       _gift('2', ParentRewardStatus.unlocked),
@@ -59,5 +62,14 @@ void main() {
     ]);
 
     expect(kept.map((gift) => gift.id), ['4']);
+  });
+
+  test('unlink preserves local gifts and legacy rows whose origin is unknown', () {
+    final kept = MemorizationParentAccessService.giftsKeptAfterUnlink([
+      _gift('cloud', ParentRewardStatus.locked),
+      _gift('local', ParentRewardStatus.locked).copyWith(origin: ParentRewardOrigin.local),
+      _gift('legacy', ParentRewardStatus.locked).copyWith(origin: ParentRewardOrigin.unknown),
+    ]);
+    expect(kept.map((gift) => gift.id), ['local', 'legacy']);
   });
 }

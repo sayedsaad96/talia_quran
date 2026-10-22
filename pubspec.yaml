@@ -64,6 +64,9 @@ dependencies:
   screenshot: ^3.0.0
   supabase_flutter: ^2.8.0
   crypto: ^3.0.6
+  # Durable audio downloads live outside the OS-purgeable cache directory.
+  file: ^7.0.1
+  characters: ^1.4.1
   qcf_quran_plus: 0.0.8
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.4.2

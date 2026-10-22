@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../prayer_review/presentation/prayer_review_confirmation_bridge.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -795,7 +796,8 @@ class _CompanionActionRow extends StatelessWidget {
       enabled: enabled,
       label: label,
       child: OutlinedButton(
-        onPressed: enabled ? () => cubit.submit(command) : null,
+        onPressed: enabled ? () => submitPrayerCompanionWithReview(
+          context, cubit, data.occurrence, command) : null,
         style: OutlinedButton.styleFrom(
           foregroundColor: skin.gold,
           side: BorderSide(color: skin.gold.withValues(alpha: 0.5)),

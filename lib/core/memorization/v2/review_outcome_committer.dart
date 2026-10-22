@@ -9,6 +9,10 @@ import '../../../features/memorization_plus/data/models/memorization_models.dart
 import '../../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../identity/record_owner_provider.dart';
+import '../../identity/account_data_barrier.dart';
+import '../similar_ayah/similar_ayah_attempt_authority.dart';
+import '../similar_ayah/similar_ayah_confusion_detector.dart';
+import '../../../features/memorization_plus/data/repositories/isar_confusion_pair_repository.dart';
 import '../../progress/progress_changed_reason.dart';
 import '../../progress/progress_events_bus.dart';
 import '../review_record_audience_scope.dart';
@@ -49,6 +53,7 @@ final class V2ReviewOutcomeCommitter {
     String Function()? idGenerator,
     this._activityRecorder,
     this._progressEvents,
+    this._accountBarrier,
   }) : _isar = isar,
        _now = now ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? V2ReviewOutcomeCommitSupport.newOpaqueId,
@@ -61,6 +66,7 @@ final class V2ReviewOutcomeCommitter {
   final String Function() _idGenerator;
   final ReviewEffectOutboxWriter _effects;
   final ActivityEventRecorder? _activityRecorder;
+  final AccountDataBarrier? _accountBarrier;
 
   /// Per-ayah commits change progress before any completion effect runs, so
   /// read-side screens must hear about the review record directly.
@@ -393,6 +399,8 @@ final class V2ReviewOutcomeCommitter {
     bool manuallyAssessed = false,
     double? similarityScore,
     String? eventId,
+    SimilarAyahConfusionMatch? confusionMatch,
+    SimilarAyahAttemptAuthority? attemptAuthority,
   }) async {
     const audience = ReviewRecordReadScope.adult;
     final ownerId = _owner.currentOwnerId;
@@ -406,11 +414,17 @@ final class V2ReviewOutcomeCommitter {
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
     var demotedRecord = false;
 
-    final result = await _isar.writeTxn(() async {
+    _validateAuthority(attemptAuthority, ownerId);
+
+    Future<V2ReviewOutcomeCommitResult> write(
+      AccountDataLease? activeLease,
+    ) => _isar.writeTxn(() async {
+      _checkAuthority(ownerId, activeLease);
       final existingByEventId = await _isar.isarReviewEvidenceEvents
           .filter()
           .eventIdEqualTo(requestedEventId)
           .findFirst();
+      _checkAuthority(ownerId, activeLease);
       if (existingByEventId != null) {
         _validateEventIdReuse(existingByEventId, ownerId, audience, taskId);
         return V2ReviewOutcomeCommitResult(
@@ -423,6 +437,7 @@ final class V2ReviewOutcomeCommitter {
           .filter()
           .sessionKeyEqualTo(sessionKey)
           .findFirst();
+      _checkAuthority(ownerId, activeLease);
       final sessionId =
           V2ReviewOutcomeCommitSupport.nonEmpty(existingSession?.sessionId) ??
           'session-${_idGenerator()}';
@@ -443,12 +458,43 @@ final class V2ReviewOutcomeCommitter {
           .filter()
           .idempotencyKeyEqualTo(attemptKey)
           .findFirst();
+      _checkAuthority(ownerId, activeLease);
       if (existingEvent != null) {
         return V2ReviewOutcomeCommitResult(
           eventId: existingEvent.eventId,
           sessionId: sessionId,
           alreadyCommitted: true,
         );
+      }
+
+      if (confusionMatch != null) {
+        _validateConfusionRequest(
+          previousState: previousState,
+          nextState: nextState,
+          manuallyAssessed: manuallyAssessed,
+          similarityScore: similarityScore,
+          confusionMatch: confusionMatch,
+          attemptAuthority: attemptAuthority,
+          ownerId: ownerId,
+        );
+        final other = _parseAyahKey(confusionMatch.otherKey);
+        try {
+          await ConfusionPairTransactionWriter.record(
+            _isar,
+            ownerId: ownerId,
+            lease: activeLease!,
+            targetSurahId: nextState.surahId,
+            targetAyahNumber: currentAyah.numberInSurah,
+            otherSurahId: other.$1,
+            otherAyahNumber: other.$2,
+            occurredAt: now,
+          );
+        } on FormatException {
+          // A corrupt stored pair loses only this attribution (the writer
+          // validates before it writes). The failure itself must still
+          // commit, or the learner is stuck retrying the same save.
+        }
+        _checkAuthority(ownerId, activeLease);
       }
 
       // A failed block review is real forgetting of an ayah that already
@@ -465,6 +511,7 @@ final class V2ReviewOutcomeCommitter {
                   .ratingIndexEqualTo(PerformanceRating.weak.index)
                   .findFirst() ==
               null;
+      _checkAuthority(ownerId, activeLease);
       if (demote) {
         final identity = ReviewRecordIdentity(
           ownerUserId: ownerId,
@@ -475,6 +522,7 @@ final class V2ReviewOutcomeCommitter {
         final existing = await _isar.isarAyahReviewRecords.getByCompositeKey(
           identity.storageKey,
         );
+        _checkAuthority(ownerId, activeLease);
         if (existing != null) {
           final demoted = _scheduler
               .schedule(existing.toModel(), PerformanceRating.weak, now)
@@ -490,6 +538,7 @@ final class V2ReviewOutcomeCommitter {
               ..cloudDirty = true
               ..lastSyncedAt = null,
           );
+          _checkAuthority(ownerId, activeLease);
           demotedRecord = true;
         }
       }
@@ -522,6 +571,7 @@ final class V2ReviewOutcomeCommitter {
           ..committedAt = now
           ..studyDayKey = V2ReviewOutcomeCommitSupport.studyDayKey(now),
       );
+      _checkAuthority(ownerId, activeLease);
       final checkpoint = V2ReviewOutcomeCommitSupport.checkpointFromState(
         nextState,
         ownerId: ownerId,
@@ -529,6 +579,7 @@ final class V2ReviewOutcomeCommitter {
         launchContext: existingSession?.launchContext,
       )..id = existingSession?.id ?? Isar.autoIncrement;
       await _isar.isarV2Sessions.put(checkpoint);
+      _checkAuthority(ownerId, activeLease);
       await _effects.put(
         eventId: requestedEventId,
         ownerId: ownerId,
@@ -537,12 +588,18 @@ final class V2ReviewOutcomeCommitter {
         receiptKey: 'sync:$requestedEventId',
         createdAt: now,
       );
+      _checkAuthority(ownerId, activeLease);
       return V2ReviewOutcomeCommitResult(
         eventId: requestedEventId,
         sessionId: sessionId,
         alreadyCommitted: false,
       );
     });
+    final result = await _runFailedWrite(
+      write,
+      attemptAuthority,
+      confusionMatch != null,
+    );
     if (demotedRecord) {
       _progressEvents?.notify(ProgressChangedReason.reviewRecord);
     }
@@ -581,6 +638,97 @@ final class V2ReviewOutcomeCommitter {
       ),
       replace: kind == ActivityEventKind.memorize,
     );
+  }
+
+  Future<V2ReviewOutcomeCommitResult> _runFailedWrite(
+    Future<V2ReviewOutcomeCommitResult> Function(AccountDataLease? lease) write,
+    SimilarAyahAttemptAuthority? authority,
+    bool hasConfusionMatch,
+  ) {
+    if (authority == null) {
+      if (hasConfusionMatch) throw const FormatException('Missing authority');
+      return write(null);
+    }
+    final barrier = _accountBarrier;
+    if (barrier == null) {
+      throw const FormatException('Missing account barrier');
+    }
+    return barrier.run(
+      (lease) async {
+        authority.check();
+        return write(lease);
+      },
+      authority: authority.lease,
+    );
+  }
+
+  void _validateConfusionRequest({
+    required V2SessionState previousState,
+    required V2SessionState nextState,
+    required bool manuallyAssessed,
+    required double? similarityScore,
+    required SimilarAyahConfusionMatch? confusionMatch,
+    required SimilarAyahAttemptAuthority? attemptAuthority,
+    required String ownerId,
+  }) {
+    _validateAuthority(attemptAuthority, ownerId);
+    if (confusionMatch == null) return;
+    if (attemptAuthority == null || _accountBarrier == null || manuallyAssessed) {
+      throw const FormatException('Invalid confusion attribution');
+    }
+    final current = nextState.currentAyah;
+    final expected = '${nextState.surahId}:${current.numberInSurah}';
+    final previousFailures = previousState.failureTracker.failureCountFor(
+      nextState.surahId,
+      current.numberInSurah,
+    );
+    final failures = nextState.failureTracker.failureCountFor(
+      nextState.surahId,
+      current.numberInSurah,
+    );
+    if (previousState.phase != V2SessionPhase.reciting ||
+        failures <= previousFailures ||
+        confusionMatch.targetKey != expected ||
+        !_validScore(similarityScore) ||
+        !_validScore(confusionMatch.originalScore) ||
+        !_validScore(confusionMatch.candidateScore) ||
+        similarityScore != confusionMatch.originalScore) {
+      throw const FormatException('Invalid confusion attribution');
+    }
+    final other = _parseAyahKey(confusionMatch.otherKey);
+    if (other.$1 == nextState.surahId && other.$2 == current.numberInSurah) {
+      throw const FormatException('Invalid confusion attribution');
+    }
+  }
+
+  static void _validateAuthority(
+    SimilarAyahAttemptAuthority? authority,
+    String ownerId,
+  ) {
+    if (authority == null) return;
+    authority.check();
+    if (authority.ownerId != ownerId) {
+      throw const AccountDataUnavailableException();
+    }
+  }
+
+  static bool _validScore(double? value) =>
+      value != null && value.isFinite && value >= 0 && value <= 1;
+
+  static (int, int) _parseAyahKey(String value) {
+    final parts = value.split(':');
+    if (parts.length != 2) throw const FormatException('Invalid ayah key');
+    final surah = int.tryParse(parts[0]);
+    final ayah = int.tryParse(parts[1]);
+    if (surah == null || ayah == null || value != '$surah:$ayah') {
+      throw const FormatException('Invalid ayah key');
+    }
+    ConfusionPairTransactionWriter.checkAyah(surah, ayah);
+    return (surah, ayah);
+  }
+
+  static void _checkAuthority(String ownerId, AccountDataLease? lease) {
+    if (lease != null) lease.checkOwner(ownerId);
   }
 
   void _validateEventIdReuse(

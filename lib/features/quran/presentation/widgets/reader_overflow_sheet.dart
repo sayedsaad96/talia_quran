@@ -24,6 +24,7 @@ class ReaderOverflowSheet extends StatefulWidget {
     required this.onTajweedChanged,
     this.strengthOverlayEnabled,
     this.onStrengthOverlayChanged,
+    this.onDownload,
   });
 
   final VoidCallback onEnterFocus;
@@ -38,6 +39,7 @@ class ReaderOverflowSheet extends StatefulWidget {
   /// Memorization-strength overlay switch; shown only when both are non-null.
   final bool? strengthOverlayEnabled;
   final ValueChanged<bool>? onStrengthOverlayChanged;
+  final VoidCallback? onDownload;
 
   static Future<void> show(
     BuildContext context, {
@@ -47,18 +49,28 @@ class ReaderOverflowSheet extends StatefulWidget {
     required ValueChanged<bool> onTajweedChanged,
     bool? strengthOverlayEnabled,
     ValueChanged<bool>? onStrengthOverlayChanged,
+    VoidCallback? onDownload,
   }) {
     return showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReaderOverflowSheet(
-        onEnterFocus: onEnterFocus,
-        onOpenNavigation: onOpenNavigation,
-        tajweedEnabled: tajweedEnabled,
-        onTajweedChanged: onTajweedChanged,
-        strengthOverlayEnabled: strengthOverlayEnabled,
-        onStrengthOverlayChanged: onStrengthOverlayChanged,
+      isScrollControlled: true,
+      builder: (_) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .9,
+        ),
+        child: SingleChildScrollView(
+          child: ReaderOverflowSheet(
+            onEnterFocus: onEnterFocus,
+            onOpenNavigation: onOpenNavigation,
+            tajweedEnabled: tajweedEnabled,
+            onTajweedChanged: onTajweedChanged,
+            strengthOverlayEnabled: strengthOverlayEnabled,
+            onStrengthOverlayChanged: onStrengthOverlayChanged,
+            onDownload: onDownload,
+          ),
+        ),
       ),
     );
   }
@@ -155,6 +167,12 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
                   onTap: () => ReciterSelectorSheet.show(context),
                 ),
               ),
+              if (widget.onDownload != null)
+                _actionTile(
+                  icon: TaliaIcons.download,
+                  title: context.l10n.audioDownloadsTitle,
+                  onTap: widget.onDownload!,
+                ),
               SwitchListTile(
                 key: const Key('reader-tajweed-toggle'),
                 secondary: _leadingIcon(TaliaIcons.palette, primary),

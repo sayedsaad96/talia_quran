@@ -7,6 +7,7 @@ import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
 import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/router/app_router.dart';
@@ -25,6 +26,7 @@ import '../theme/home_skin.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/home_activity_feed.dart';
 import '../widgets/home_after_prayer_azkar_card.dart';
+import '../widgets/prayer_review_home_slot.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
@@ -40,6 +42,7 @@ import '../widgets/resume_session_card.dart';
 import '../widgets/staggered_fade_slide.dart';
 import '../../../../core/router/open_location.dart';
 import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
+import '../../../progress/presentation/widgets/hijri_year_recap_slot.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.requestDailyAyahShare = false});
@@ -309,7 +312,38 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 snapshot: widget.state.prayerSnapshot,
               ),
             ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                ),
+                child: PrayerReviewHomeSlot(
+                  skin: widget.skin,
+                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  isEnabled: getIt.isRegistered<ExperienceFlags>() &&
+                      getIt<ExperienceFlags>().isEnabled(
+                        ExperienceFeature.prayerReview,
+                      ),
+                ),
+              ),
+            ),
             SliverToBoxAdapter(child: _ramadanCard()),
+            if (getIt.isRegistered<ExperienceFlags>() &&
+                getIt<ExperienceFlags>().isEnabled(
+                  ExperienceFeature.hijriYearRecap,
+                ))
+              SliverToBoxAdapter(
+                child: HijriYearRecapSlot(
+                  enabled: true,
+                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                ),
+              ),
             if (journeyEnabled &&
                 widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(

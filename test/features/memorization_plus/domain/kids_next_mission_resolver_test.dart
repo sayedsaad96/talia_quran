@@ -877,6 +877,167 @@ void main() {
       expect(mission?.ayahNumbers, const [4]);
     });
   });
+
+  group('validated remote next-surah hint', () {
+    const finished = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: [1, 2, 3],
+      status: KidsJourneyStageStatus.completed,
+    );
+    const hintedOpen = KidsJourneyStage(
+      stageNumber: 2,
+      surahId: 67,
+      startAyah: 1,
+      endAyah: 5,
+      completedAyahs: [1, 2, 3],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    Future<List<KidsJourneyStage>?> hintedStages(int surahId) async =>
+        surahId == 67 ? const [hintedOpen] : null;
+
+    test('uses a hinted surah only from its loaded current stage', () async {
+      final mission = await const KidsNextMissionResolver()
+          .resolveWithRemoteHint(
+            activeSurahId: 114,
+            stages: const [finished],
+            reviewRecords: const [],
+            now: DateTime.utc(2026, 9, 1),
+            continuation: const KidsJourneyContinuation(null),
+            hintedSurahId: 67,
+            loadStages: hintedStages,
+          );
+
+      expect(mission?.type, KidsMissionType.newMemorization);
+      expect(mission?.surahId, 67);
+      expect(mission?.ayahNumbers, const [4]);
+    });
+
+    test('hint never displaces due review, resume, or continuation', () async {
+      const resume = KidsNextMission(
+        type: KidsMissionType.resume,
+        surahId: 113,
+        ayahNumbers: [2],
+      );
+      const continuation = KidsJourneyContinuation(
+        KidsNextMission(
+          type: KidsMissionType.newMemorization,
+          surahId: 112,
+          ayahNumbers: [3],
+        ),
+      );
+      const resolver = KidsNextMissionResolver();
+
+      final due = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: [_dueReviewRecord(surahId: 114, ayahNumber: 1)],
+        now: DateTime.utc(2026, 9, 1),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final resumed = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        resumableMission: resume,
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final continued = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: continuation,
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+
+      expect(due?.type, KidsMissionType.dueReview);
+      expect(resumed, resume);
+      expect(continued, continuation.mission);
+    });
+
+    test('hint can replace an untouched default but never a started gap at ayah one', () async {
+      const resolver = KidsNextMissionResolver();
+      const untouched = KidsJourneyStage(
+        stageNumber: 1, surahId: 113, startAyah: 1, endAyah: 5,
+        completedAyahs: [], status: KidsJourneyStageStatus.current,
+      );
+      final suggested = await resolver.resolveWithRemoteHint(
+        activeSurahId: 113, stages: const [untouched], reviewRecords: const [],
+        now: DateTime.utc(2026), hintedSurahId: 67, loadStages: hintedStages,
+      );
+      final started = await resolver.resolveWithRemoteHint(
+        activeSurahId: 113, stages: [untouched.copyWithAddedCompletedAyah(2)],
+        reviewRecords: const [], now: DateTime.utc(2026),
+        hintedSurahId: 67, loadStages: hintedStages,
+      );
+      expect(suggested?.surahId, 67);
+      expect(started?.surahId, 113);
+      expect(started?.ayahNumbers, [1]);
+    });
+
+    test('hint cannot bypass the new-ayah cap or a locked target', () async {
+      const resolver = KidsNextMissionResolver();
+      final capped = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        budget: const KidsDailyBudget(
+          newAyahsCompletedToday: 1,
+          maxNewAyahsPerDay: 1,
+        ),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final locked = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: const KidsJourneyContinuation(null),
+        hintedSurahId: 67,
+        loadStages: (_) async => const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 67,
+            startAyah: 1,
+            endAyah: 5,
+            completedAyahs: [],
+            status: KidsJourneyStageStatus.locked,
+          ),
+        ],
+      );
+
+      expect(capped, isNull);
+      expect(locked, isNull);
+    });
+
+    test('skipping an ayah applies the same hint safety rules', () async {
+      final mission = await const KidsNextMissionResolver()
+          .resolveSkippingAyahWithRemoteHint(
+            activeSurahId: 114,
+            stages: const [finished],
+            reviewRecords: const [],
+            now: DateTime.utc(2026, 9, 1),
+            justCompletedSurahId: 114,
+            justCompletedAyah: 3,
+            continuation: const KidsJourneyContinuation(null),
+            hintedSurahId: 67,
+            loadStages: hintedStages,
+          );
+
+      expect(mission?.surahId, 67);
+      expect(mission?.ayahNumbers, const [4]);
+    });
+  });
 }
 
 const _currentStage = KidsJourneyStage(

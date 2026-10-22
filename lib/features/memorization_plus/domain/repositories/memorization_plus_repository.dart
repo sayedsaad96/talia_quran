@@ -98,6 +98,7 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress);
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
     required int surahId,
+    bool freezeForSession = false,
   });
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs();
   Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
@@ -174,6 +175,7 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   });
   @override
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(

@@ -74,6 +74,7 @@ void _stubCancellations() {
     () => mockNotificationService.cancelTahajjudReminder(),
     () => mockNotificationService.cancelKhatmahReminder(),
     () => mockNotificationService.cancelSmartReminder(),
+    () => mockNotificationService.cancelForgettingForecastReminder(),
     () => mockNotificationService.cancelPrayerTimesReminders(),
     () => mockNotificationService.cancelPrayerCompanionReminders(),
   ];

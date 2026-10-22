@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../../core/l10n/cubit_message_codes.dart';
 // lib/features/memorization_plus/presentation/pages/v2_session_page.dart
 //
 // V2 session orchestrator — owns the BlocProvider and the phase router.
@@ -117,10 +118,41 @@ class _V2SessionViewState extends State<_V2SessionView> {
     if (identical(_presentedFeedback, feedback)) return;
     _presentedFeedback = feedback;
 
-    final action = await showV2RecitationResultSheet(sheetContext, feedback);
+    final activeCubit = context.read<MemorizationSessionCubit>();
+    final action = await showV2RecitationResultSheet(
+      sheetContext, feedback,
+      isCurrent: () => activeCubit.isFeedbackCurrent(feedback),
+      expiry: activeCubit.stream.where((state) =>
+        state is MSInitial ||
+        (state is MSError && state.message == CubitMessageCodes.v2AccountChanged)
+      ).map((_) {}),
+    );
     if (!mounted) return;
     final cubit = context.read<MemorizationSessionCubit>();
     switch (action) {
+      case V2RecitationResultAction.compareAyahs:
+        final current = cubit.state;
+        final match = feedback.confusionMatch;
+        if (current is MSActive &&
+            identical(current.lastEvaluation, feedback) &&
+            match != null) {
+          final target = match.targetKey.split(':');
+          final other = match.otherKey.split(':');
+          // The router validates these; invalid values open the plain list.
+          await context.push(
+            Uri(
+              path: AppRoutes.similarAyahTrainer,
+              queryParameters: target.length == 2 && other.length == 2
+                  ? {
+                      'surahId': target[0],
+                      'ayah': target[1],
+                      'otherSurahId': other[0],
+                      'otherAyah': other[1],
+                    }
+                  : null,
+            ).toString(),
+          );
+        }
       case V2RecitationResultAction.retryNow:
         // A near miss stays in reciting: record again right away. After a
         // real failure the engine sits in remediation — jump back to reciting.
@@ -145,6 +177,8 @@ class _V2SessionViewState extends State<_V2SessionView> {
     required bool sessionAllowsPop,
   }) async {
     if (didPop || sessionAllowsPop || _forceAllowPop) return;
+    await context.read<MemorizationSessionCubit>().waitForEvaluation();
+    if (!mounted) return;
     final l10n = context.l10n;
     final action = await showDialog<_V2SessionExitAction>(
       context: context,
@@ -178,6 +212,8 @@ class _V2SessionViewState extends State<_V2SessionView> {
       ),
     );
     if (action == null || !mounted) return;
+    await context.read<MemorizationSessionCubit>().waitForEvaluation();
+    if (!mounted) return;
     if (action == _V2SessionExitAction.discard) {
       final discarded = await context
           .read<MemorizationSessionCubit>()

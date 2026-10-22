@@ -59,7 +59,16 @@ enum KidsEnrichmentFeature {
   guardianMilestones,
 
   /// البند 27 من خارطة التميّز
-  monthlyReport;
+  monthlyReport,
+
+  /// Phase 2 — guardian planning hints for the linked child.
+  remotePlan,
+
+  /// Phase 2 — remote milestone gifts.
+  remotePromise,
+
+  /// Phase 2 — fixed encouragement messages and approved stickers.
+  encouragements;
 
   String get storageKey => '${KidsEnrichmentFlags.keyPrefix}$name';
 }

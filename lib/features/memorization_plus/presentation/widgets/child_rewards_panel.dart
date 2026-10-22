@@ -35,11 +35,11 @@ class _ChildRewardsPanelState extends State<ChildRewardsPanel> {
     ParentRewardStatus.claimed => 3,
   };
 
-  Future<void> _run(String id, Future<void> Function(String) action) async {
+  Future<void> _run(String id, Future<void> Function() action) async {
     if (!_busy.add(id)) return;
     setState(() {});
     try {
-      await action(id);
+      await action();
     } finally {
       if (mounted) setState(() => _busy.remove(id));
     }
@@ -54,13 +54,18 @@ class _ChildRewardsPanelState extends State<ChildRewardsPanel> {
         for (final reward in rewards)
           _RewardRow(
             reward: reward,
-            busy: _busy.contains(reward.id),
-            onUnlock: () => _run(reward.id, widget.onUnlock),
-            onApprove: () => _run(reward.id, widget.onApprove),
+            busy: _busy.contains(reward.storageIdentity),
+            onUnlock: () => _run(reward.storageIdentity,
+              () => widget.onUnlock(_actionId(reward))),
+            onApprove: () => _run(reward.storageIdentity,
+              () => widget.onApprove(_actionId(reward))),
           ),
       ],
     );
   }
+
+  String _actionId(ParentReward reward) => reward.origin == ParentRewardOrigin.local
+      ? reward.storageIdentity : reward.serverId ?? reward.id;
 }
 
 class _RewardRow extends StatelessWidget {
@@ -97,7 +102,7 @@ class _RewardRow extends StatelessWidget {
         l10n.parentDashboardRewardClaimed,
       ),
     };
-    final action = switch (reward.status) {
+    final action = reward.origin == ParentRewardOrigin.unknown ? null : switch (reward.status) {
       ParentRewardStatus.locked => (l10n.parentRewardUnlockAction, onUnlock),
       ParentRewardStatus.requested => (
         l10n.parentRewardApproveAction,
@@ -118,7 +123,7 @@ class _RewardRow extends StatelessWidget {
               children: [
                 Text(reward.title, style: AppTypography.bodyMedium),
                 Text(
-                  label,
+                  reward.origin == ParentRewardOrigin.unknown ? l10n.parentRewardOriginUnknown : label,
                   style: AppTypography.bodySmall.copyWith(
                     color: context.tokens.textSecondary,
                   ),

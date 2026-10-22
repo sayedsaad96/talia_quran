@@ -14,6 +14,8 @@ import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/strength_band.dart';
+import '../../../../core/memorization/learning_launch_context.dart';
+import '../../../../core/quran/ayah_target_validation.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,6 +35,7 @@ import '../cubits/surah_detail_cubit.dart';
 import '../services/quran_read_confirmation_gate.dart';
 import '../../data/services/quran_warmup_service.dart';
 import '../widgets/app_quran_page_view.dart';
+import '../widgets/audio_downloads_access.dart';
 import '../widgets/ayah_options_sheet.dart';
 import '../widgets/long_press_hint_banner.dart';
 import '../widgets/quick_navigation_sheet.dart';
@@ -127,12 +130,14 @@ class QuranReaderPage extends StatefulWidget {
     this.pageNumber,
     this.readerMode = QuranReaderMode.free,
     this.khatmahCubit,
+    this.initialTarget,
   });
 
   final int? surahId;
   final int? pageNumber;
   final QuranReaderMode readerMode;
   final KhatmahCubit? khatmahCubit;
+  final AyahReference? initialTarget;
 
   @override
   State<QuranReaderPage> createState() => _QuranReaderPageState();
@@ -171,6 +176,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   /// Tajweed colouring of the Mushaf page (N13). Rarely toggled, so a plain
   /// field + setState is enough.
   late bool _tajweed = _readTajweedPreference();
+  bool _audioDownloadsAllowed = false;
   final _showLongPressHintNotifier = ValueNotifier<bool>(false);
   final _showReadConfirmedNotifier = ValueNotifier<bool>(false);
 
@@ -199,6 +205,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _quranPageCubit = getIt<QuranPageCubit>();
+    unawaited(
+      audioDownloadsAvailable().then((allowed) {
+        if (mounted && allowed != _audioDownloadsAllowed) {
+          setState(() => _audioDownloadsAllowed = allowed);
+        }
+      }),
+    );
 
     if (widget.readerMode == QuranReaderMode.khatmah) {
       if (widget.khatmahCubit != null) {
@@ -809,7 +822,11 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           page: audioState.currentPageNumber!,
                         )
                       : null,
-                  selected: _selectedAyah,
+                  selected: _selectedAyah ??
+                      validatedInitialTargetForPage(
+                        detail: detail,
+                        target: widget.initialTarget,
+                      ),
                   strengthBands:
                       _strengthCubit?.bandsForPage(pageNumber) ?? const {},
                   strengthColors: strengthColorsFor(context.tokens),
@@ -882,6 +899,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                           onOpenMenu: () =>
                                               ReaderOverflowSheet.show(
                                                 context,
+                                                onDownload: firstAyah != null &&
+                                                    _audioDownloadsAllowed
+                                                    ? () => context.push('/quran/downloads?surah=${firstAyah.surahId}')
+                                                    : null,
                                                 onOpenNavigation: () =>
                                                     _openQuickNav(
                                                       context,

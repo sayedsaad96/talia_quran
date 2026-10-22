@@ -22,6 +22,15 @@ class KidsModeError extends KidsModeState {
   List<Object?> get props => [message];
 }
 
+class KidsModeSplitChoiceRequired extends KidsModeState {
+  const KidsModeSplitChoiceRequired(this.ticket, {this.saving = false, this.failed = false});
+  final KidsLegacyResumeRecoveryTicket ticket;
+  final bool saving;
+  final bool failed;
+  @override
+  List<Object?> get props => [ticket, saving, failed];
+}
+
 class KidsModeLoaded extends KidsModeState {
   const KidsModeLoaded({
     required this.surahId,

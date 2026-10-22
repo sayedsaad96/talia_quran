@@ -9000,11 +9000,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupImportSignedIn =>
-      'Restore is only available without an account. Your data is saved in your account.';
+      'Restore is only available without an account. Your personal notes stay only on this device.';
 
   @override
   String get backupIncludes =>
-      'Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress and the child\'s progress';
+      'Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress, the child\'s progress, and personal notes';
 
   @override
   String get backupExcludes =>
@@ -9015,7 +9015,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupConfirmBody =>
-      'Your current data on this device will be replaced by the file\'s data.';
+      'Your current data on this device will be replaced by the file\'s data. A version 1 backup has no personal notes and will clear your current notes.';
 
   @override
   String get backupConfirm => 'Replace';
@@ -9076,4 +9076,358 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianRecitationExit => 'End';
+
+  @override
+  String get forgettingForecastTitle =>
+      'May weaken within 7 days without review';
+
+  @override
+  String forgettingForecastPassage(Object surah, Object start, Object end) {
+    return '$surah, ayahs $start–$end';
+  }
+
+  @override
+  String get forgettingForecastReviewNow => 'Review now';
+
+  @override
+  String get notificationForgettingForecastTitle => 'Time for review';
+
+  @override
+  String get notificationForgettingForecastBody =>
+      'Set aside a short time to review what you learned.';
+
+  @override
+  String get notificationSettingsForgettingForecast => 'Forgetting forecast';
+
+  @override
+  String get ayahNotesTitle => 'My reflections';
+
+  @override
+  String get ayahNoteAction => 'My note';
+
+  @override
+  String get ayahNoteLabel => 'Your note';
+
+  @override
+  String get ayahNoteHint => 'Write your private reflection';
+
+  @override
+  String get ayahNotesEmpty => 'No reflections yet';
+
+  @override
+  String get ayahNoteSaveFailed =>
+      'Couldn\'t save your note. Please try again.';
+
+  @override
+  String get ayahNotesLoadFailed =>
+      'Couldn\'t load your notes. Please try again.';
+
+  @override
+  String get ayahNoteNavigationFailed =>
+      'Couldn\'t open this ayah. Please try again.';
+
+  @override
+  String get audioDownloadsTitle => 'Download recitations';
+
+  @override
+  String get audioDownloadsStorage => 'Recitation storage';
+
+  @override
+  String get audioDownloadsWholeJuz => 'Download a whole juz';
+
+  @override
+  String audioDownloadsJuz(String number) {
+    return 'Juz $number';
+  }
+
+  @override
+  String get audioDownloadsWifiOnly => 'Wi-Fi only';
+
+  @override
+  String get audioDownloadsWifiUnavailable =>
+      'This device\'s network type cannot be checked. Connect to Wi-Fi before continuing.';
+
+  @override
+  String get audioDownloadsSpaceUnknown =>
+      'Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size.';
+
+  @override
+  String get audioDownloadsNetworkWarning =>
+      'Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading.';
+
+  @override
+  String get audioDownloadsProceed => 'Continue downloading';
+
+  @override
+  String get audioDownloadsStart => 'Download or resume';
+
+  @override
+  String get audioDownloadsCompleted => 'Download finished';
+
+  @override
+  String get audioDownloadsCancelled =>
+      'Download cancelled; saved files remain available';
+
+  @override
+  String get audioDownloadsInsufficientSpace => 'Not enough storage space';
+
+  @override
+  String get audioDownloadsFailed =>
+      'Download failed. You can resume without downloading saved files again.';
+
+  @override
+  String get audioDownloadsInProgress => 'Downloading recitations…';
+
+  @override
+  String audioDownloadsBytes(String bytes) {
+    return '$bytes bytes';
+  }
+
+  @override
+  String get audioDownloadsDelete => 'Delete this reciter\'s downloads';
+
+  @override
+  String get audioDownloadsDeleteConfirm =>
+      'Delete the saved recordings for this reciter from this device?';
+
+  @override
+  String get hijriYearRecapTitle => 'Hijri year recap';
+
+  @override
+  String get hijriYearRecapCompletions => 'Completed khatmas';
+
+  @override
+  String get hijriYearRecapMemorizedApprox => 'Approx. memorized ayahs';
+
+  @override
+  String get hijriYearRecapApproxDefinition =>
+      'Currently memorized ayahs last reviewed this Hijri year';
+
+  @override
+  String get hijriYearRecapLifetimeStreak => 'Lifetime longest streak';
+
+  @override
+  String get hijriYearRecapDismiss => 'Hide for this year';
+
+  @override
+  String get hijriYearRecapShare => 'Share';
+
+  @override
+  String get hijriYearRecapActivityDays => 'Activity days';
+
+  @override
+  String get similarAyahTrainerTitle => 'Similar passages practice';
+
+  @override
+  String get similarAyahTrainerMachineNote =>
+      'These are machine-computed lexical relationships, not a recitation assessment.';
+
+  @override
+  String get similarAyahLookupAction => 'Similar wording (machine-computed)';
+
+  @override
+  String get similarAyahTrainerEmpty =>
+      'No historical similar-passage patterns yet';
+
+  @override
+  String get similarAyahTrainerTryAgain => 'Try again';
+
+  @override
+  String get similarAyahTrainerTarget => 'Target passage';
+
+  @override
+  String get similarAyahTrainerOther => 'Similar passage';
+
+  @override
+  String get similarAyahTrainerPrevious => 'Previous ayah';
+
+  @override
+  String get similarAyahTrainerPractice =>
+      'Recall the target passage, then reveal it when ready.';
+
+  @override
+  String get similarAyahTrainerReveal => 'Show target passage';
+
+  @override
+  String get similarAyahTrainerUnavailable =>
+      'This practice is available only for eligible adult accounts.';
+
+  @override
+  String similarAyahFailureNotice(Object reference) {
+    return 'It looks like you moved to a similar ayah at $reference.';
+  }
+
+  @override
+  String get similarAyahOpenComparison => 'Compare similar passages';
+
+  @override
+  String get v2AccountChanged =>
+      'The account changed. Open the session from your current account to continue.';
+
+  @override
+  String get similarAyahTrainerNoPrevious => 'No previous ayah in this surah';
+
+  @override
+  String similarAyahTrainerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: 'once',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerReviewTitle => 'Review in your prayer';
+
+  @override
+  String get prayerReviewQuestion => 'Did you recite this passage?';
+
+  @override
+  String get prayerReviewSaved => 'Your self-assessment was saved.';
+
+  @override
+  String get prayerReviewUnavailable =>
+      'No prayer review passage is available right now.';
+
+  @override
+  String get prayerReviewLoadFailed => 'Could not load the passage. Try again.';
+
+  @override
+  String get prayerReviewSaveFailed =>
+      'Could not save. You can retry with the same passage.';
+
+  @override
+  String get prayerReviewGradeMastered => 'Mastered';
+
+  @override
+  String get prayerReviewGradeHesitated => 'With hesitation';
+
+  @override
+  String get prayerReviewGradeForgot => 'Could not recite it';
+
+  @override
+  String prayerReviewSuggestion(String reference) {
+    return 'Suggestion: $reference';
+  }
+
+  @override
+  String prayerReviewPassage(String surah, String start, String end) {
+    return '$surah $start–$end';
+  }
+
+  @override
+  String get prayerReviewSettingsTitle => 'Passage length for each prayer';
+
+  @override
+  String prayerReviewLengthOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Up to $count ayahs',
+      one: 'Up to 1 ayah',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsRemotePlanNextSurah => 'Suggested next surah';
+
+  @override
+  String get kidsRemotePlanSize => 'Ayahs in a new stage';
+
+  @override
+  String get kidsRemotePlanDays => 'Practice reminder days';
+
+  @override
+  String get kidsRemotePlanDeviceDefault => 'Use device setting';
+
+  @override
+  String get kidsRemotePlanDaysHint =>
+      'These days affect reminders only. Learning stays available every day.';
+
+  @override
+  String get encouragementTitle => 'Send encouragement';
+
+  @override
+  String get encouragementInboxTitle => 'An encouraging message for you';
+
+  @override
+  String get encouragementProud => 'I am proud of you!';
+
+  @override
+  String get encouragementWellDone => 'Well done!';
+
+  @override
+  String get encouragementKeepGoing => 'Keep going, you are making progress!';
+
+  @override
+  String get encouragementGreatEffort => 'Great effort!';
+
+  @override
+  String get encouragementSeeYouTomorrow => 'See you tomorrow!';
+
+  @override
+  String get encouragementStarSticker => 'Star';
+
+  @override
+  String get encouragementTaliaSticker => 'Talia cheers you on';
+
+  @override
+  String get encouragementSend => 'Send encouragement';
+
+  @override
+  String get encouragementSent =>
+      'Your encouragement was sent and will appear when the child syncs.';
+
+  @override
+  String get encouragementFailed => 'Could not send. Try again.';
+
+  @override
+  String get encouragementQuota =>
+      'You reached this child’s daily limit. Try tomorrow.';
+
+  @override
+  String get encouragementLimit =>
+      'Up to 10 messages per child each day. The day starts at midnight UTC.';
+
+  @override
+  String get encouragementDone => 'Done';
+
+  @override
+  String get parentRewardOriginUnknown =>
+      'This older gift is kept for viewing. Your guardian can create a new gift.';
+
+  @override
+  String get kidsLegacyResumeTitle =>
+      'How would you like to continue this surah?';
+
+  @override
+  String get kidsLegacyResumeExplanation =>
+      'Your paused ayah is saved. Choose a split to continue this older session; its previous split is unavailable.';
+
+  @override
+  String get kidsLegacyResumeChoose => 'Choose how to continue';
+
+  @override
+  String get kidsLegacyResumeSaveFailed =>
+      'Your choice was not saved. Your paused ayah is still saved. You can try again.';
+
+  @override
+  String get audioDownloadsLeaveTitle => 'Stop the download?';
+
+  @override
+  String get audioDownloadsLeaveBody =>
+      'A download is in progress. Leaving this page stops it; files already saved stay available.';
+
+  @override
+  String get audioDownloadsLeaveStay => 'Stay';
+
+  @override
+  String get audioDownloadsLeaveStop => 'Stop download';
+
+  @override
+  String get similarAyahIndexUnavailable =>
+      'The similar-ayah list has not been approved yet, so it is not available here.';
 }

@@ -2,8 +2,10 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../../core/error/app_failure.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
+import '../../../../../core/identity/account_data_barrier.dart';
 import '../../../../../core/utils/talia_logger.dart';
 import '../../../domain/entities/kids_child_policy.dart';
+import '../../../domain/entities/kids_remote_plan.dart';
 import '../../../domain/entities/parent_dashboard.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -19,11 +21,17 @@ typedef KidsPolicyCasRpc =
 /// Supabase client. [onPolicyChanged] runs after every local policy write
 /// (the app reloads `KidsPolicyController` there).
 class KidsChildPolicySync {
-  KidsChildPolicySync(this._datasource, this._owner, {this._onPolicyChanged});
+  KidsChildPolicySync(
+    this._datasource,
+    this._owner, {
+    this._onPolicyChanged,
+    this._barrier,
+  });
 
   final MemorizationPlusLocalDatasource _datasource;
   final RecordOwnerProvider _owner;
   final void Function()? _onPolicyChanged;
+  final AccountDataBarrier? _barrier;
 
   /// Server error raised when the caller is the child but holds no active
   /// guardian link: the device is treated as unlinked (local-only edit).
@@ -38,12 +46,15 @@ class KidsChildPolicySync {
     required Future<Map<String, dynamic>?> Function() fetchRow,
   }) async {
     try {
+      final authority = _captureAuthority();
+      if (authority.ownerId != ownerId) return;
       final remote = policyFromRow(await fetchRow());
+      authority.check(_owner);
       if (remote == null || _owner.currentOwnerId != ownerId) return;
       final local = await _datasource.getParentSettings();
       if (remote.version <= local.policySyncedVersion) return;
       if (_owner.currentOwnerId != ownerId) return;
-      await _storeServer(local, remote);
+      await _storeServer(local, remote, authority);
     } catch (e) {
       TaliaLogger.w('Kids child policy pull skipped', e);
     }
@@ -70,8 +81,11 @@ class KidsChildPolicySync {
     required KidsPolicyCasRpc casRpc,
   }) async {
     final ParentSettings local;
+    final _PolicyAuthority authority;
     try {
+      authority = _captureAuthority();
       local = await _datasource.getParentSettings();
+      authority.check(_owner);
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
@@ -86,6 +100,7 @@ class KidsChildPolicySync {
             casParams(linkedChildUserId, edit, local.policySyncedVersion),
           ),
         );
+        authority.check(_owner);
         if (_owner.currentOwnerId != ownerId) {
           return const Left(NetworkFailure());
         }
@@ -93,14 +108,20 @@ class KidsChildPolicySync {
         if (parsed.applied) {
           final stored =
               parsed.policy ?? edit.copyWith(version: parsed.version);
-          await _storeServer(fresh, stored);
+          await _storeServer(fresh, stored, authority);
           return Right(stored);
         }
         if (parsed.policy == null && local.policySyncedVersion > 0) {
           // The row vanished (no conflict to show): keep the EDIT pending so
           // the next push recreates the row with expected = 0.
           final stored = edit.copyWith(version: fresh.policyVersion + 1);
-          await _store(fresh, stored, syncedVersion: 0, linkConfirmed: true);
+          await _store(
+            fresh,
+            stored,
+            syncedVersion: 0,
+            linkConfirmed: true,
+            authority: authority,
+          );
           return Right(stored);
         }
         await _storeServer(
@@ -108,6 +129,7 @@ class KidsChildPolicySync {
           parsed.policy ??
               // The row vanished: keep local values, restart from a create.
               KidsChildPolicy.fromSettings(fresh).copyWith(version: 0),
+          authority,
         );
         return const Left(PolicyConflictFailure());
       } catch (e) {
@@ -130,6 +152,7 @@ class KidsChildPolicySync {
         stored,
         syncedVersion: fresh.policySyncedVersion,
         linkConfirmed: linkConfirmed ?? fresh.policyLinkConfirmed,
+        authority: authority,
       );
       return Right(stored);
     } catch (e) {
@@ -155,8 +178,10 @@ class KidsChildPolicySync {
     required KidsPolicyCasRpc casRpc,
   }) async {
     try {
+      final authority = _captureAuthority();
       if (_owner.currentOwnerId != ownerId) return;
       final local = await _datasource.getParentSettings();
+      authority.check(_owner);
       final upgradeFromP2 =
           local.policySyncedVersion == 0 && local.policyLinkConfirmed == null;
       if (local.policyVersion <= local.policySyncedVersion && !upgradeFromP2) {
@@ -174,26 +199,30 @@ class KidsChildPolicySync {
           return;
         }
         if (_owner.currentOwnerId != ownerId) return;
+        authority.check(_owner);
         final fresh = await _datasource.getParentSettings();
-        await _datasource.saveParentSettings(
+        await _persist(
           ParentSettingsModel.fromEntity(
             fresh.copyWith(policyLinkConfirmed: false),
           ),
+          authority,
         );
         return;
       }
       if (_owner.currentOwnerId != ownerId) return;
+      authority.check(_owner);
       final fresh = await _datasource.getParentSettings();
       if (parsed.applied && fresh.policyVersion != local.policyVersion) {
         // Edited again during the call: record the acknowledgement only;
         // the newer edit stays pending for the next sync.
-        await _datasource.saveParentSettings(
+        await _persist(
           ParentSettingsModel.fromEntity(
             fresh.copyWith(
               policySyncedVersion: parsed.version,
               policyLinkConfirmed: true,
             ),
           ),
+          authority,
         );
         return;
       }
@@ -208,6 +237,7 @@ class KidsChildPolicySync {
           ).copyWith(version: fresh.policyVersion + 1),
           syncedVersion: 0,
           linkConfirmed: true,
+          authority: authority,
         );
         return;
       }
@@ -217,6 +247,7 @@ class KidsChildPolicySync {
             (parsed.applied
                 ? edit.copyWith(version: parsed.version)
                 : edit.copyWith(version: 0)),
+        authority,
       );
     } catch (e) {
       TaliaLogger.w('Kids child policy push skipped', e);
@@ -232,14 +263,27 @@ class KidsChildPolicySync {
     required KidsChildPolicy policy,
     required int expectedVersion,
     required KidsPolicyCasRpc casRpc,
+    bool useV2 = false,
   }) async {
     try {
+      final authority = _captureAuthority();
       final edit = policy.sanitized();
       final parsed = _CasResponse.parse(
         await casRpc(
-          casParams(childUserId, edit, clampKidsPolicyVersion(expectedVersion)),
+          useV2
+              ? casParamsV2(
+                  childUserId,
+                  edit,
+                  clampKidsPolicyVersion(expectedVersion),
+                )
+              : casParams(
+                  childUserId,
+                  edit,
+                  clampKidsPolicyVersion(expectedVersion),
+                ),
         ),
       );
+      authority.check(_owner);
       if (!parsed.applied) return const Left(PolicyConflictFailure());
       return Right(parsed.policy ?? edit.copyWith(version: parsed.version));
     } catch (e) {
@@ -260,6 +304,16 @@ class KidsChildPolicySync {
     'p_session_goal_minutes': policy.sessionGoalMinutes,
   };
 
+  /// Guardian-only v2 parameters; v1 never includes nullable remote hints.
+  static Map<String, dynamic> casParamsV2(
+    String childUserId,
+    KidsChildPolicy policy,
+    int expectedVersion,
+  ) => {
+    ...casParams(childUserId, policy, expectedVersion),
+    ...policy.remotePlan.toRpcParameters(),
+  };
+
   /// Maps a `kids_child_policies` row (type-tolerant) to a sanitized policy;
   /// null when [row] is not a map.
   static KidsChildPolicy? policyFromRow(Object? row) {
@@ -271,6 +325,7 @@ class KidsChildPolicySync {
       homeMissionsEnabled: _bool(row['home_missions_enabled'], true),
       sessionGoalMinutes: _int(row['session_goal_minutes']),
       version: _int(row['version']) ?? 0,
+      remotePlan: KidsRemotePlan.fromRow(row),
     ).sanitized();
   }
 
@@ -289,22 +344,27 @@ class KidsChildPolicySync {
 
   /// Stores a server-acknowledged policy: both versions = its version, link
   /// confirmed.
-  Future<void> _storeServer(ParentSettings base, KidsChildPolicy policy) =>
-      _store(
-        base,
-        policy,
-        syncedVersion: clampKidsPolicyVersion(policy.version),
-        linkConfirmed: true,
-      );
+  Future<void> _storeServer(
+    ParentSettings base,
+    KidsChildPolicy policy,
+    _PolicyAuthority authority,
+  ) => _store(
+    base,
+    policy,
+    syncedVersion: clampKidsPolicyVersion(policy.version),
+    linkConfirmed: true,
+    authority: authority,
+  );
 
   Future<void> _store(
     ParentSettings base,
     KidsChildPolicy policy, {
     required int syncedVersion,
     required bool? linkConfirmed,
+    required _PolicyAuthority authority,
   }) async {
     final clean = policy.sanitized();
-    await _datasource.saveParentSettings(
+    await _persist(
       ParentSettingsModel.fromEntity(
         base.copyWith(
           kidsReduceMotion: clean.reduceMotion,
@@ -316,13 +376,53 @@ class KidsChildPolicySync {
           policySyncedVersion: syncedVersion,
           policyLinkConfirmed: linkConfirmed,
           clearPolicyLinkConfirmed: linkConfirmed == null,
+          remotePlan: clean.remotePlan,
         ),
       ),
+      authority,
     );
     try {
       _onPolicyChanged?.call();
     } catch (e) {
       TaliaLogger.w('Kids policy change listener failed', e);
+    }
+  }
+
+  _PolicyAuthority _captureAuthority() {
+    final authority = _PolicyAuthority(
+      _owner.currentOwnerId,
+      _barrier?.capture(),
+    );
+    authority.check(_owner);
+    return authority;
+  }
+
+  Future<void> _persist(
+    ParentSettingsModel settings,
+    _PolicyAuthority authority,
+  ) async {
+    authority.check(_owner);
+    final barrier = _barrier;
+    if (barrier == null) {
+      await _datasource.saveParentSettings(settings);
+    } else {
+      await barrier.run((_) async {
+        authority.check(_owner);
+        await _datasource.saveParentSettings(settings);
+      }, authority: authority.lease);
+    }
+    authority.check(_owner);
+  }
+}
+
+final class _PolicyAuthority {
+  const _PolicyAuthority(this.ownerId, this.lease);
+  final String ownerId;
+  final AccountDataLease? lease;
+  void check(RecordOwnerProvider owner) {
+    lease?.checkOwner(ownerId);
+    if (owner.currentOwnerId != ownerId) {
+      throw const AccountDataUnavailableException();
     }
   }
 }

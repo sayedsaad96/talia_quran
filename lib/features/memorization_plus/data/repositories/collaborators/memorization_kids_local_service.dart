@@ -4,9 +4,11 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../../core/error/app_failure.dart';
 import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
+import '../../../../../core/identity/account_data_barrier.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_filters.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
@@ -20,11 +22,13 @@ import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
 import '../../../domain/entities/kids_home_mission.dart';
 import '../../../domain/entities/kids_journey_path_definition.dart';
+import '../../../domain/entities/kids_legacy_resume_recovery.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../../domain/services/kids_due_review_policy.dart';
 import '../../../domain/services/kids_house_review_policy.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
+import 'kids_legacy_resume_recovery_probe.dart';
 
 bool _quranJourneyOff() => false;
 
@@ -44,6 +48,11 @@ class MemorizationKidsLocalService {
     ParentPinSecureStore? parentPinStore,
     this._owner = const SupabaseRecordOwnerProvider(),
     this._quranJourneyEnabled = _quranJourneyOff,
+    this._remotePlanEnabled,
+    this._remoteMilestoneUnlock,
+    this._remoteMilestoneEnabled,
+    this._barrier,
+    this._legacyResumeProbe,
     this._promiseEnabled = _promiseOn,
   }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore();
 
@@ -55,6 +64,11 @@ class MemorizationKidsLocalService {
   final ParentPinSecureStore _parentPinStore;
   final RecordOwnerProvider _owner;
   final bool Function() _quranJourneyEnabled;
+  final bool Function()? _remotePlanEnabled;
+  final Future<void> Function(int surahId)? _remoteMilestoneUnlock;
+  final bool Function()? _remoteMilestoneEnabled;
+  final AccountDataBarrier? _barrier;
+  final KidsLegacyResumeProbe? _legacyResumeProbe;
 
   /// Whether surah-linked gifts keep their condition. With the feature off a
   /// milestone gift behaves as a plain gift, so it can never be stranded
@@ -135,9 +149,12 @@ class MemorizationKidsLocalService {
 
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
     required int surahId,
+    bool freezeForSession = false,
   }) async {
     try {
       final ownerId = _owner.currentOwnerId;
+      final lease = _barrier?.capture();
+      if (freezeForSession && lease == null) throw const CacheFailure();
       final logs = await _datasource.getKidsSessionLogs();
       final completed = logs
           .where(
@@ -177,13 +194,15 @@ class MemorizationKidsLocalService {
       final totalAyahs = detail.surah.ayahCount;
 
       final profile = await _datasource.getMemorizationProfile();
-      _ensureKidsOwner(ownerId);
+      _ensureKidsAuthority(ownerId, lease);
       final stageSize = await _houseSize(
         surahId,
         logs,
         profile.childAge,
         ownerId,
         ayahCount: totalAyahs,
+        freezeForSession: freezeForSession,
+        lease: lease,
       );
       final settings = await _datasource.getParentSettings();
       final blockedByEarlierSurah = await _earlierHouseUnfinished(
@@ -193,7 +212,7 @@ class MemorizationKidsLocalService {
         profile.childAge,
         ownerId,
       );
-      _ensureKidsOwner(ownerId);
+      _ensureKidsAuthority(ownerId, lease);
       final stages = <KidsJourneyStage>[];
       var foundCurrent = blockedByEarlierSurah;
       for (var start = 1; start <= totalAyahs; start += stageSize) {
@@ -251,6 +270,7 @@ class MemorizationKidsLocalService {
       }
       return Right(stages);
     } catch (e) {
+      if (e is Failure) return Left(e);
       return Left(CacheFailure.from(e));
     }
   }
@@ -261,9 +281,11 @@ class MemorizationKidsLocalService {
     int? age,
     String ownerId, {
     required int ayahCount,
+    required bool freezeForSession,
+    AccountDataLease? lease,
   }) async {
     final settings = await _datasource.getParentSettings();
-    _ensureKidsOwner(ownerId);
+    _ensureKidsAuthority(ownerId, lease);
     // "Whole" is checked first, so a stray size key never overrides it and
     // nothing is frozen for a whole surah.
     if (settings.kidsWholeSurahIds.contains(surahId) &&
@@ -280,10 +302,82 @@ class MemorizationKidsLocalService {
           log.surahId == surahId &&
           KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
     )) {
-      final saved = await _freezeHouseSize(surahId, ageDefault, ownerId);
-      return saved.kidsHouseSizesBySurah[surahId]!;
+      final saved = await _freezeHouseSize(
+        surahId, ageDefault, ownerId, lease: lease,
+      );
+      return _frozenWinner(saved, surahId, ayahCount);
     }
-    return sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ?? ageDefault;
+    final unknownPartition = await _requireLegacySplitChoice(
+      surahId: surahId,
+      ownerId: ownerId,
+      lease: lease,
+      ayahCount: ayahCount,
+      safeDefault: sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ??
+          ageDefault,
+      freezeForSession: freezeForSession,
+    );
+    if (unknownPartition) {
+      return sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ?? ageDefault;
+    }
+    final remote = _remotePlanEnabled?.call() == true
+        ? settings.remotePlan.ayahsPerSession
+        : null;
+    final selected = sanitizeKidsAyahsPerHouse(remote) ??
+        sanitizeKidsAyahsPerHouse(settings.kidsAyahsPerHouse) ??
+        ageDefault;
+    if (!freezeForSession) return selected;
+    final saved = await _freezeHouseSize(
+      surahId, selected, ownerId, lease: lease,
+    );
+    return _frozenWinner(saved, surahId, ayahCount);
+  }
+
+  Future<bool> _requireLegacySplitChoice({
+    required int surahId,
+    required String ownerId,
+    required AccountDataLease? lease,
+    required int ayahCount,
+    required int safeDefault,
+    required bool freezeForSession,
+  }) async {
+    if (lease == null) return false;
+    final probe = _legacyResumeProbe;
+    if (probe == null) return false;
+    final result = await probe.inspect(surahId: surahId, lease: lease);
+    _ensureKidsAuthority(ownerId, lease);
+    switch (result) {
+      case KidsLegacyResumeProbeChoiceRequired(:final checkpointAyah):
+        if (checkpointAyah < 1 || checkpointAyah > ayahCount) return false;
+        if (!freezeForSession) return true;
+        throw KidsSplitChoiceRequiredFailure(
+          KidsLegacyResumeRecoveryTicket(
+            ownerId: ownerId,
+            lease: lease,
+            surahId: surahId,
+            verifiedAyahCount: ayahCount,
+            defaultStageSize: safeDefault,
+            checkpointAyah: checkpointAyah,
+          ),
+        );
+      case KidsLegacyResumeProbeUnavailable():
+        // An unreadable checkpoint never blocks the child's session: use the
+        // safe default unfrozen, exactly as before the probe existed.
+        return true;
+      case KidsLegacyResumeProbeNone():
+        return false;
+    }
+  }
+
+  int _frozenWinner(ParentSettings settings, int surahId, int ayahCount) {
+    if (settings.kidsWholeSurahIds.contains(surahId) &&
+        ayahCount <= kKidsWholeSurahMaxAyahs) {
+      return ayahCount;
+    }
+    final size = sanitizeKidsAyahsPerHouse(
+      settings.kidsHouseSizesBySurah[surahId],
+    );
+    if (size == null) throw const CacheFailure();
+    return size;
   }
 
   Future<bool> _earlierHouseUnfinished(
@@ -354,6 +448,8 @@ class MemorizationKidsLocalService {
         age,
         ownerId,
         ayahCount: detail.surah.ayahCount,
+        freezeForSession: false,
+        lease: null,
       );
       for (var start = 1; start <= detail.surah.ayahCount; start += size) {
         final range = [
@@ -375,11 +471,17 @@ class MemorizationKidsLocalService {
   Future<ParentSettings> _freezeHouseSize(
     int surahId,
     int size,
-    String ownerId,
-  ) {
-    _ensureKidsOwner(ownerId);
-    return _datasource.updateKidsHouseSettings((current) {
-      _ensureKidsOwner(ownerId);
+    String ownerId, {
+    AccountDataLease? lease,
+  }
+  ) async {
+    _ensureKidsAuthority(ownerId, lease);
+    Future<ParentSettings> write() => _datasource.updateKidsHouseSettings((current) {
+      _ensureKidsAuthority(ownerId, lease);
+      if (current.kidsWholeSurahIds.contains(surahId) ||
+          current.kidsHouseSizesBySurah.containsKey(surahId)) {
+        return current;
+      }
       return current.copyWith(
         kidsHouseSizesBySurah: {
           surahId: size,
@@ -387,6 +489,17 @@ class MemorizationKidsLocalService {
         },
       );
     });
+    final barrier = _barrier;
+    final saved = lease == null || barrier == null
+        ? await write()
+        : await barrier.run((_) => write(), authority: lease);
+    _ensureKidsAuthority(ownerId, lease);
+    return saved;
+  }
+
+  void _ensureKidsAuthority(String ownerId, AccountDataLease? lease) {
+    _ensureKidsOwner(ownerId);
+    lease?.checkOwner(ownerId);
   }
 
   Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(
@@ -725,23 +838,30 @@ class MemorizationKidsLocalService {
           CacheFailure(CubitMessageCodes.parentRewardTitleTooLong),
         );
       }
-      final rewards = await _datasource.getParentRewards();
-      if (rewards.length >= 3) {
-        return const Left(
-          CacheFailure(CubitMessageCodes.parentRewardLimitReached),
-        );
-      }
       final reward = ParentRewardModel(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: const Uuid().v4(),
         title: trimmed,
         status: ParentRewardStatus.locked,
         createdAt: DateTime.now(),
         milestoneSurahId: ParentReward.isValidMilestoneSurahId(milestoneSurahId)
             ? milestoneSurahId
             : null,
+        origin: ParentRewardOrigin.local,
+        ownerId: _owner.currentOwnerId,
       );
-      final next = [...rewards, reward];
-      await _datasource.saveParentRewards(next);
+      var limitReached = false;
+      final next = await _datasource.updateParentRewards((rewards) async {
+        if (rewards.where((stored) => stored.origin == ParentRewardOrigin.local).length >= 3) {
+          limitReached = true;
+          return rewards;
+        }
+        return [...rewards, reward];
+      });
+      if (limitReached) {
+        return const Left(
+          CacheFailure(CubitMessageCodes.parentRewardLimitReached),
+        );
+      }
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -757,9 +877,13 @@ class MemorizationKidsLocalService {
   }
 
   /// Guardian: opens a locked gift early.
-  Future<Either<Failure, List<ParentReward>>> unlockParentReward(String id) =>
+  Future<Either<Failure, List<ParentReward>>> unlockParentReward(
+    String id, {
+    AccountDataLease? authority,
+  }) =>
       _transitionParentReward(
         id,
+        authority: authority,
         from: ParentRewardStatus.locked,
         to: ParentRewardStatus.unlocked,
         alreadyDone: const {
@@ -771,9 +895,13 @@ class MemorizationKidsLocalService {
       );
 
   /// Child: asks to receive an unlocked gift.
-  Future<Either<Failure, List<ParentReward>>> requestParentReward(String id) =>
+  Future<Either<Failure, List<ParentReward>>> requestParentReward(
+    String id, {
+    AccountDataLease? authority,
+  }) =>
       _transitionParentReward(
         id,
+        authority: authority,
         from: ParentRewardStatus.unlocked,
         to: ParentRewardStatus.requested,
         alreadyDone: const {
@@ -784,9 +912,13 @@ class MemorizationKidsLocalService {
       );
 
   /// Guardian: confirms the gift was handed over.
-  Future<Either<Failure, List<ParentReward>>> approveParentReward(String id) =>
+  Future<Either<Failure, List<ParentReward>>> approveParentReward(
+    String id, {
+    AccountDataLease? authority,
+  }) =>
       _transitionParentReward(
         id,
+        authority: authority,
         from: ParentRewardStatus.requested,
         to: ParentRewardStatus.claimed,
         alreadyDone: const {ParentRewardStatus.claimed},
@@ -797,31 +929,40 @@ class MemorizationKidsLocalService {
   /// other out-of-order step is refused.
   Future<Either<Failure, List<ParentReward>>> _transitionParentReward(
     String id, {
+    AccountDataLease? authority,
     required ParentRewardStatus from,
     required ParentRewardStatus to,
     required Set<ParentRewardStatus> alreadyDone,
     required ParentReward Function(ParentReward, DateTime) stamp,
   }) async {
     try {
-      final rewards = await _datasource.getParentRewards();
-      final index = rewards.indexWhere((reward) => reward.id == id);
-      if (index == -1) {
+      var unavailable = false;
+      final next = await _datasource.updateParentRewards((rewards) async {
+        final index = rewards.indexWhere(
+          (reward) => (reward.storageIdentity == id || reward.id == id) &&
+              reward.origin == ParentRewardOrigin.local,
+        );
+        if (index == -1) {
+          unavailable = true;
+          return rewards;
+        }
+        final current = rewards[index];
+        if (alreadyDone.contains(current.status)) return rewards;
+        if (current.status != from) {
+          unavailable = true;
+          return rewards;
+        }
+        final changed = [...rewards];
+        changed[index] = ParentRewardModel.fromEntity(
+          stamp(current, DateTime.now().toUtc()).copyWith(status: to),
+        );
+        return changed;
+      }, authority: authority);
+      if (unavailable) {
         return const Left(
           CacheFailure(CubitMessageCodes.parentRewardUnavailable),
         );
       }
-      final current = rewards[index];
-      if (alreadyDone.contains(current.status)) return Right(rewards);
-      if (current.status != from) {
-        return const Left(
-          CacheFailure(CubitMessageCodes.parentRewardUnavailable),
-        );
-      }
-      final next = [...rewards];
-      next[index] = ParentRewardModel.fromEntity(
-        stamp(current, DateTime.now().toUtc()).copyWith(status: to),
-      );
-      await _datasource.saveParentRewards(next);
       return Right(next);
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -1085,8 +1226,10 @@ class MemorizationKidsLocalService {
           throw StateError('Kids data owner changed during reward commit');
         }
         final updated = await _reconcileKidsProjection();
-        await _runKidsRewardAncillaryEffects();
         final wasNewCommit = committed.id == log.id;
+        await _runKidsRewardAncillaryEffects(
+          completedSurahId: wasNewCommit ? surahId : null,
+        );
 
         return Right(
           KidsCompletionResult(
@@ -1206,13 +1349,51 @@ class MemorizationKidsLocalService {
     return committed;
   }
 
-  Future<void> _runKidsRewardAncillaryEffects() async {
+  Future<void> _runKidsRewardAncillaryEffects({int? completedSurahId}) async {
     final ownerId = _owner.currentOwnerId;
     await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
     _ensureKidsOwner(ownerId);
     await _unlockWeeklyRewardIfNeeded();
     _ensureKidsOwner(ownerId);
+    if (completedSurahId != null && _remoteMilestoneUnlock != null &&
+        _remoteMilestoneEnabled?.call() == true) {
+      // Completion is already durable. Cloud gifts are retried on Treasures;
+      // connectivity must never hold up or undo the child's success screen.
+      unawaited(_tryUnlockRemoteMilestone(completedSurahId));
+    }
     _progressEvents.notify(ProgressChangedReason.kidsProgress);
+  }
+
+  Future<void> _tryUnlockRemoteMilestone(int surahId) async {
+    final ownerId = _owner.currentOwnerId;
+    try {
+      final authority = _barrier?.capture();
+      if (authority == null) return;
+      authority.checkOwner(ownerId);
+      final complete = await _isCanonicalSurahComplete(surahId);
+      authority.checkOwner(ownerId);
+      if (complete) await _remoteMilestoneUnlock?.call(surahId);
+    } catch (error, stack) {
+      TaliaLogger.w('Remote milestone will retry from Treasures', error, stack);
+    }
+  }
+
+  Future<bool> _isCanonicalSurahComplete(int surahId) async {
+    final detail = await _quranRepository.getSurahDetail(surahId);
+    final surah = detail.fold((_) => null, (value) => value.surah);
+    if (surah == null || surah.id != surahId || surah.ayahCount <= 0) return false;
+    final total = surah.ayahCount;
+    final logs = await _datasource.getKidsSessionLogs();
+    final completed = <int>{
+      for (final log in logs)
+        if (log.surahId == surahId &&
+            KidsSessionLogsCloudMerge.isCanonicalRewardLog(log))
+          log.ayahNumber,
+    };
+    for (var ayah = 1; ayah <= total; ayah++) {
+      if (!completed.contains(ayah)) return false;
+    }
+    return true;
   }
 
   void _ensureKidsOwner(String ownerId) {
@@ -1298,6 +1479,7 @@ class MemorizationKidsLocalService {
     final promiseOn = _promiseEnabled();
     final alreadyUnlockedThisWeek = rewards.any(
       (reward) =>
+          reward.origin == ParentRewardOrigin.local &&
           (!promiseOn || reward.milestoneSurahId == null) &&
           reward.unlockedAt != null &&
           !reward.unlockedAt!.toUtc().isBefore(weekStart),
@@ -1316,6 +1498,7 @@ class MemorizationKidsLocalService {
     final next = rewards.map((reward) {
       // A surah promise opens only when its surah is completed.
       if (!unlockedOne &&
+          reward.origin == ParentRewardOrigin.local &&
           reward.status == ParentRewardStatus.locked &&
           (!promiseOn || reward.milestoneSurahId == null)) {
         unlockedOne = true;
@@ -1329,6 +1512,23 @@ class MemorizationKidsLocalService {
       return reward;
     }).toList();
     if (!unlockedOne) return;
-    await _datasource.saveParentRewards(next);
+    ParentRewardModel? unlocked;
+    for (final reward in next) {
+      if (reward.status == ParentRewardStatus.unlocked &&
+          !rewards.any((old) =>
+              old.storageIdentity == reward.storageIdentity &&
+              old.status == ParentRewardStatus.unlocked)) {
+        unlocked = reward;
+        break;
+      }
+    }
+    if (unlocked == null) return;
+    final unlockedReward = unlocked;
+    await _datasource.updateParentRewards((current) async => current.map((reward) {
+      return reward.storageIdentity == unlockedReward.storageIdentity &&
+              reward.status == ParentRewardStatus.locked
+          ? ParentRewardModel.fromEntity(unlockedReward)
+          : reward;
+    }).toList());
   }
 }

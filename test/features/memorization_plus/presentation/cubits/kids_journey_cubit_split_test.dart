@@ -4,6 +4,7 @@ import 'package:mockito/mockito.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_remote_plan.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
@@ -345,6 +346,52 @@ void main() {
       await cubit.load(surahId: 1, followFrontier: true);
       expect(loaded().surahId, 1);
     });
+  });
+
+  test('a guardian surah hint outside the selected path is ignored', () async {
+    // Al-Baqarah is open but not on the Juz Amma adventure.
+    when(getJourney(any)).thenAnswer((invocation) async {
+      final params =
+          invocation.positionalArguments.first as GetKidsJourneyParams;
+      return Right([
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: params.surahId,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: const [],
+          status: KidsJourneyStageStatus.current,
+        ),
+      ]);
+    });
+    when(quran.getSurahDetail(any)).thenAnswer(
+      (_) async => const Right(SurahDetail(surah: surah, ayahs: [])),
+    );
+    settings = const ParentSettings(
+      remotePlan: KidsRemotePlan(nextSurahId: 2),
+    );
+    KidsJourneyCubit withHint(KidsJourneyPathDefinition path) =>
+        KidsJourneyCubit(
+          getJourney,
+          getProgress,
+          quran,
+          sessionLogsLoader: () async => logs,
+          pathLoader: () async => path,
+          policyLoader: () async => KidsSessionPolicy.forAge(8),
+          settingsLoader: () async => settings,
+          remotePlanEnabled: () => true,
+        );
+
+    cubit = withHint(KidsJourneyPathDefinition.adventure);
+    await cubit.load(surahId: 1, followFrontier: true);
+    expect(loaded().nextMission?.surahId, isNot(2));
+    await cubit.close();
+
+    cubit = withHint(
+      KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromFatiha),
+    );
+    await cubit.load(surahId: 1, followFrontier: true);
+    expect(loaded().nextMission?.surahId, 2);
   });
 
   test('chooseSplit returns false and keeps state when saving fails', () async {

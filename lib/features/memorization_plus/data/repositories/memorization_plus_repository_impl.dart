@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/identity/record_owner_provider.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/kids_hifz_feature_flags.dart';
 import '../../../../core/memorization/kids_progress_cloud_merge.dart';
@@ -36,6 +37,7 @@ import '../datasources/memorization_plus_local_datasource.dart';
 import '../datasources/remote_children_dashboard_cache.dart';
 import '../models/memorization_models.dart';
 import 'collaborators/kids_reading_support_sync.dart';
+import 'collaborators/kids_legacy_resume_recovery_probe.dart';
 import 'collaborators/memorization_cloud_gateway.dart';
 import 'collaborators/memorization_cloud_mappers.dart';
 import 'collaborators/memorization_custom_plan_service.dart';
@@ -80,6 +82,8 @@ class MemorizationPlusRepositoryImpl extends _MemorizationPlusRepositoryCore
     super.familyActivityInputs,
     super.readingSupportSync,
     super.readingSupportEnabled,
+    super.remotePlanEnabled,
+    super.remotePromiseEnabled,
     super.quranJourneyEnabled,
     super.promiseEnabled,
   });
@@ -113,9 +117,13 @@ abstract class _MemorizationPlusRepositoryCore
     this._familyActivityInputs,
     this._readingSupportSync,
     this._readingSupportEnabled,
+    this._remotePlanEnabled,
+    this._remotePromiseEnabled,
     this._quranJourneyEnabled = _quranJourneyOff,
     this._promiseEnabled = _promiseOn,
-  });
+  }) {
+    AccountDataBarrier.forPreferences(_prefs).owner ??= _owner;
+  }
 
   final ParentPinSecureStore? _parentPinStore;
 
@@ -125,6 +133,8 @@ abstract class _MemorizationPlusRepositoryCore
   final FamilyActivityInputsLoader? _familyActivityInputs;
   final KidsReadingSupportSync? _readingSupportSync;
   final bool Function()? _readingSupportEnabled;
+  final bool Function()? _remotePlanEnabled;
+  final bool Function()? _remotePromiseEnabled;
   final bool Function() _quranJourneyEnabled;
   final bool Function() _promiseEnabled;
 
@@ -155,6 +165,18 @@ abstract class _MemorizationPlusRepositoryCore
         parentPinStore: _parentPinStore,
         owner: _owner,
         quranJourneyEnabled: _quranJourneyEnabled,
+        remotePlanEnabled: _remotePlanEnabled,
+        remoteMilestoneUnlock:
+            _kidsCloudSync.unlockStoredCloudRewardsForCompletedSurah,
+        remoteMilestoneEnabled: _remotePromiseEnabled,
+        barrier: AccountDataBarrier.forPreferences(_prefs),
+        legacyResumeProbe: _isar == null
+            ? null
+            : KidsLegacyResumeRecoveryProbe(
+                isar: _isar,
+                owner: _owner,
+                barrier: AccountDataBarrier.forPreferences(_prefs),
+              ),
         promiseEnabled: _promiseEnabled,
       );
   late final MemorizationDailyPlanService _dailyPlan =
@@ -210,6 +232,9 @@ abstract class _MemorizationPlusRepositoryCore
         dashboardCache: _dashboardCache,
         readingSupportSync: _readingSupportSync,
         readingSupportEnabled: _readingSupportEnabled,
+        remotePlanEnabled: _remotePlanEnabled,
+        remotePromiseEnabled: _remotePromiseEnabled,
+        barrier: AccountDataBarrier.forPreferences(_prefs),
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(

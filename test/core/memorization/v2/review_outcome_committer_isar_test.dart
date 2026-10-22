@@ -2,8 +2,12 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/learning_launch_context.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_attempt_authority.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/review_outcome_committer.dart';
@@ -20,6 +24,7 @@ import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_rev
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_confusion_pair.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -33,10 +38,16 @@ void main() {
     late Directory tempDir;
     late Isar isar;
     late V2ReviewOutcomeCommitter committer;
+    late SharedPreferences prefs;
+    late AccountDataBarrier barrier;
+    const owner = FixedRecordOwnerProvider('owner-a');
     var generatedId = 0;
 
     setUp(() async {
       await _initializeIsarCoreForTests();
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
       tempDir = await Directory.systemTemp.createTemp('talia_review_outcome_');
       isar = await Isar.open(
         [
@@ -44,13 +55,14 @@ void main() {
           IsarV2SessionSchema,
           IsarReviewEvidenceEventSchema,
           IsarReviewEffectOutboxSchema,
+          IsarConfusionPairSchema,
         ],
         directory: tempDir.path,
         name: 'review_outcome_${DateTime.now().microsecondsSinceEpoch}',
       );
       committer = V2ReviewOutcomeCommitter(
         isar: isar,
-        owner: const FixedRecordOwnerProvider('owner-a'),
+        owner: owner,
         scheduler: const ScheduleNextReviewUsecase(),
         now: () => DateTime.utc(2026, 9, 8, 12),
         idGenerator: () {
@@ -59,6 +71,24 @@ void main() {
         },
       );
     });
+
+    V2ReviewOutcomeCommitter authorityCommitter([Isar? database]) =>
+        V2ReviewOutcomeCommitter(
+          isar: database ?? isar,
+          owner: owner,
+          scheduler: const ScheduleNextReviewUsecase(),
+          now: () => DateTime.utc(2026, 9, 8, 12),
+          idGenerator: () {
+            generatedId += 1;
+            return '00000000-0000-4000-8000-${generatedId.toString().padLeft(12, '0')}';
+          },
+          accountBarrier: barrier,
+        );
+
+    SimilarAyahAttemptAuthority authority() => SimilarAyahAttemptAuthority(
+      ownerId: 'owner-a',
+      lease: barrier.capture(),
+    );
 
     tearDown(() async {
       await isar.close(deleteFromDisk: true);
@@ -380,6 +410,316 @@ void main() {
         expect(projection?.lastRatingIndex, PerformanceRating.average.index);
       },
     );
+
+    test('one accepted attempt increments once, then a second increments again',
+        () async {
+      final firstFailure = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final first = _recitingState.copyWith(
+        phase: V2SessionPhase.remediation,
+        failureTracker: firstFailure,
+      );
+      const match = SimilarAyahConfusionMatch(
+        targetKey: '1:1',
+        otherKey: '1:2',
+        originalScore: .3,
+        candidateScore: .8,
+      );
+      final secured = authorityCommitter();
+      await secured.commitFailedAutomaticAttempt(
+        previousState: _recitingState,
+        nextState: first,
+        taskId: 'ayah-1',
+        eventId: 'first-event',
+        similarityScore: .3,
+        confusionMatch: match,
+        attemptAuthority: authority(),
+      );
+      final duplicate = await secured.commitFailedAutomaticAttempt(
+        previousState: _recitingState,
+        nextState: first,
+        taskId: 'ayah-1',
+        eventId: 'different-event-same-attempt',
+        similarityScore: .3,
+        confusionMatch: match,
+        attemptAuthority: authority(),
+      );
+      final secondFailure = firstFailure.recordFailure(surahId: 1, ayahNumber: 1);
+      await secured.commitFailedAutomaticAttempt(
+        previousState: first.copyWith(phase: V2SessionPhase.reciting),
+        nextState: first.copyWith(failureTracker: secondFailure),
+        taskId: 'ayah-1',
+        eventId: 'second-event',
+        similarityScore: .3,
+        confusionMatch: match,
+        attemptAuthority: authority(),
+      );
+
+      final pair = (await isar.isarConfusionPairs.where().findAll()).single;
+      expect(duplicate.alreadyCommitted, isTrue);
+      expect(pair.count, 2);
+      expect(await isar.isarReviewEvidenceEvents.count(), 2);
+    });
+
+    test('a corrupt stored pair drops only the attribution; the failure '
+        'still commits', () async {
+      await isar.writeTxn(() async {
+        await isar.isarConfusionPairs.put(
+          IsarConfusionPair()
+            ..ownerId = 'owner-a'
+            ..audience = IsarConfusionPair.adultAudience
+            ..targetKey = '1:1'
+            ..otherKey = '1:2'
+            ..count = 0
+            ..firstAt = DateTime.utc(2026, 2)
+            ..lastAt = DateTime.utc(2026, 1),
+        );
+      });
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+
+      final result = await authorityCommitter().commitFailedAutomaticAttempt(
+        previousState: _recitingState,
+        nextState: _recitingState.copyWith(
+          phase: V2SessionPhase.remediation,
+          failureTracker: failures,
+        ),
+        taskId: 'ayah-1',
+        similarityScore: .3,
+        confusionMatch: const SimilarAyahConfusionMatch(
+          targetKey: '1:1',
+          otherKey: '1:2',
+          originalScore: .3,
+          candidateScore: .8,
+        ),
+        attemptAuthority: authority(),
+      );
+
+      expect(result.alreadyCommitted, isFalse);
+      expect(await isar.isarReviewEvidenceEvents.count(), 1);
+      expect((await isar.isarConfusionPairs.where().findAll()).single.count, 0);
+    });
+
+    test('invalidated authority writes neither attempt nor aggregate', () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final stale = authority();
+      barrier.invalidate();
+      await expectLater(
+        authorityCommitter().commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: _recitingState.copyWith(
+            phase: V2SessionPhase.remediation,
+            failureTracker: failures,
+          ),
+          taskId: 'ayah-1',
+          similarityScore: .3,
+          confusionMatch: const SimilarAyahConfusionMatch(
+            targetKey: '1:1',
+            otherKey: '1:2',
+            originalScore: .3,
+            candidateScore: .8,
+          ),
+          attemptAuthority: stale,
+        ),
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+      expect(await isar.isarConfusionPairs.count(), 0);
+    });
+
+    test('an existing event is never backfilled by a later match', () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final failed = _recitingState.copyWith(
+        phase: V2SessionPhase.remediation,
+        failureTracker: failures,
+      );
+      await committer.commitFailedAutomaticAttempt(
+        previousState: _recitingState,
+        nextState: failed,
+        taskId: 'ayah-1',
+        eventId: 'same-event',
+        similarityScore: .3,
+      );
+      final retry = await authorityCommitter().commitFailedAutomaticAttempt(
+        previousState: _recitingState,
+        nextState: failed,
+        taskId: 'ayah-1',
+        eventId: 'same-event',
+        similarityScore: .3,
+        confusionMatch: const SimilarAyahConfusionMatch(
+          targetKey: '1:1',
+          otherKey: '1:2',
+          originalScore: .3,
+          candidateScore: .8,
+        ),
+        attemptAuthority: authority(),
+      );
+      expect(retry.alreadyCommitted, isTrue);
+      expect(await isar.isarReviewEvidenceEvents.count(), 1);
+      expect(await isar.isarConfusionPairs.count(), 0);
+    });
+
+    test('concurrent duplicate calls retain one event and one aggregate',
+        () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final failed = _recitingState.copyWith(
+        phase: V2SessionPhase.remediation,
+        failureTracker: failures,
+      );
+      const match = SimilarAyahConfusionMatch(
+        targetKey: '1:1',
+        otherKey: '1:2',
+        originalScore: .3,
+        candidateScore: .8,
+      );
+      final secured = authorityCommitter();
+      await Future.wait([
+        secured.commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: failed,
+          taskId: 'ayah-1',
+          eventId: 'concurrent-event',
+          similarityScore: .3,
+          confusionMatch: match,
+          attemptAuthority: authority(),
+        ),
+        secured.commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: failed,
+          taskId: 'ayah-1',
+          eventId: 'concurrent-event',
+          similarityScore: .3,
+          confusionMatch: match,
+          attemptAuthority: authority(),
+        ),
+      ]);
+      expect(await isar.isarReviewEvidenceEvents.count(), 1);
+      expect((await isar.isarConfusionPairs.where().findAll()).single.count, 1);
+    });
+
+    test('wrong-owner authority writes neither attempt nor aggregate', () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final wrongOwner = SimilarAyahAttemptAuthority(
+        ownerId: 'owner-b',
+        lease: barrier.capture(),
+      );
+      await expectLater(
+        authorityCommitter().commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: _recitingState.copyWith(
+            phase: V2SessionPhase.remediation,
+            failureTracker: failures,
+          ),
+          taskId: 'ayah-1',
+          similarityScore: .3,
+          confusionMatch: const SimilarAyahConfusionMatch(
+            targetKey: '1:1',
+            otherKey: '1:2',
+            originalScore: .3,
+            candidateScore: .8,
+          ),
+          attemptAuthority: wrongOwner,
+        ),
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+      expect(await isar.isarConfusionPairs.count(), 0);
+    });
+
+    test('missing downstream outbox schema rolls back aggregate and commit rows',
+        () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      final missingOutbox = await Isar.open(
+        [
+          IsarAyahReviewRecordSchema,
+          IsarV2SessionSchema,
+          IsarReviewEvidenceEventSchema,
+          IsarConfusionPairSchema,
+        ],
+        directory: tempDir.path,
+        name: 'missing_outbox_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      try {
+        await expectLater(
+          authorityCommitter(missingOutbox).commitFailedAutomaticAttempt(
+          previousState: _recitingState,
+          nextState: _recitingState.copyWith(
+            phase: V2SessionPhase.remediation,
+            failureTracker: failures,
+          ),
+          taskId: 'ayah-1',
+          similarityScore: .3,
+          confusionMatch: const SimilarAyahConfusionMatch(
+            targetKey: '1:1',
+            otherKey: '1:2',
+            originalScore: .3,
+            candidateScore: .8,
+          ),
+          attemptAuthority: authority(),
+          ),
+          throwsA(isA<IsarError>()),
+        );
+        expect(await missingOutbox.isarConfusionPairs.count(), 0);
+        expect(await missingOutbox.isarReviewEvidenceEvents.count(), 0);
+        expect(await missingOutbox.isarV2Sessions.count(), 0);
+      } finally {
+        await missingOutbox.close(deleteFromDisk: true);
+      }
+    });
+
+    test('manual and block attempts reject an attribution', () async {
+      final failures = V2AyahFailureTracker.empty.recordFailure(
+        surahId: 1,
+        ayahNumber: 1,
+      );
+      const match = SimilarAyahConfusionMatch(
+        targetKey: '1:1',
+        otherKey: '1:2',
+        originalScore: .3,
+        candidateScore: .8,
+      );
+      final secured = authorityCommitter();
+      for (final previous in [
+        _recitingState,
+        _recitingState.copyWith(phase: V2SessionPhase.blockReview),
+      ]) {
+        await expectLater(
+          secured.commitFailedAutomaticAttempt(
+            previousState: previous,
+            nextState: _recitingState.copyWith(
+              phase: V2SessionPhase.remediation,
+              failureTracker: failures,
+            ),
+            taskId: 'ayah-1',
+            manuallyAssessed: previous.phase == V2SessionPhase.reciting,
+            similarityScore: .3,
+            confusionMatch: match,
+            attemptAuthority: authority(),
+          ),
+          throwsA(isA<FormatException>()),
+        );
+      }
+      expect(await isar.isarConfusionPairs.count(), 0);
+    });
 
     test(
       'block-review failure records the ayah selected for remediation',

@@ -735,16 +735,22 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i4.Future<_i2.Either<_i6.Failure, List<_i9.KidsJourneyStage>>>
-  getKidsJourney({required int? surahId}) =>
+  getKidsJourney({required int? surahId, bool? freezeForSession = false}) =>
       (super.noSuchMethod(
-            Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+            Invocation.method(#getKidsJourney, [], {
+              #surahId: surahId,
+              #freezeForSession: freezeForSession,
+            }),
             returnValue:
                 _i4.Future<
                   _i2.Either<_i6.Failure, List<_i9.KidsJourneyStage>>
                 >.value(
                   _FakeEither_0<_i6.Failure, List<_i9.KidsJourneyStage>>(
                     this,
-                    Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+                    Invocation.method(#getKidsJourney, [], {
+                      #surahId: surahId,
+                      #freezeForSession: freezeForSession,
+                    }),
                   ),
                 ),
           )
@@ -1177,11 +1183,13 @@ class MockMemorizationPlusRepository extends _i1.Mock
   saveRemoteParentReward({
     required String? childUserId,
     required String? title,
+    int? milestoneSurahId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveRemoteParentReward, [], {
               #childUserId: childUserId,
               #title: title,
+              #milestoneSurahId: milestoneSurahId,
             }),
             returnValue:
                 _i4.Future<
@@ -1192,6 +1200,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                     Invocation.method(#saveRemoteParentReward, [], {
                       #childUserId: childUserId,
                       #title: title,
+                      #milestoneSurahId: milestoneSurahId,
                     }),
                   ),
                 ),

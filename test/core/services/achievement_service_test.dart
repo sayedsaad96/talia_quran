@@ -222,6 +222,8 @@ AyahReviewRecordModel _smartMemorized(int surahId, int ayahNumber) {
 }
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
   _FakeMemPlusDatasource(this.records);
 
   final List<AyahReviewRecordModel> records;

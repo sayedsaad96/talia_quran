@@ -22,6 +22,9 @@ final class V2SessionEngine {
 
   final V2RecitationEvaluator _evaluator;
 
+  /// Immutable policy shared with alternative-ayah attribution for this session.
+  V2RecitationEvaluator get recitationEvaluator => _evaluator;
+
   /// A copy of this engine with a different recitation pass threshold (the
   /// retry band stays unchanged).
   V2SessionEngine withPassThreshold(double passThreshold) => V2SessionEngine(

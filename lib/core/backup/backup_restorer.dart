@@ -9,6 +9,8 @@ import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
+import '../../features/quran/data/models/isar_ayah_note.dart';
+import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
 import '../progress/progress_changed_reason.dart';
@@ -19,6 +21,9 @@ import '../sync/cloud_sync_queue_item.dart';
 import '../utils/talia_logger.dart';
 import 'backup_file_format.dart';
 import 'backup_sections.dart';
+import 'prayer_review_backup_mapper.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
 
 enum BackupRestoreResult { restored, invalidSections, writeFailed }
 
@@ -39,6 +44,10 @@ class _IsarScopeSnapshot {
     required this.evidence,
     required this.outbox,
     required this.queue,
+    required this.notes,
+    required this.confusionPairs,
+    required this.prayerAssignments,
+    required this.prayerReceipts,
   });
 
   final List<IsarAyahReviewRecord> reviews;
@@ -50,6 +59,10 @@ class _IsarScopeSnapshot {
   final List<IsarReviewEvidenceEvent> evidence;
   final List<IsarReviewEffectOutbox> outbox;
   final List<CloudSyncQueueItem> queue;
+  final List<IsarAyahNote> notes;
+  final List<IsarConfusionPair> confusionPairs;
+  final List<IsarPrayerReviewAssignment> prayerAssignments;
+  final List<IsarPrayerReviewReceipt> prayerReceipts;
 }
 
 /// Replaces the current owner's backed-up data with a backup.
@@ -106,7 +119,7 @@ class BackupRestorer {
       if (p.schemaVersion < 1 || p.schemaVersion > kBackupSchemaVersion) {
         throw const BackupSectionInvalid('schemaVersion');
       }
-      parsed = ParsedBackupSections.parse(p.sections, ownerId);
+      parsed = ParsedBackupSections.parse(p.sections, ownerId, p.schemaVersion);
     } on BackupSectionInvalid catch (e) {
       TaliaLogger.w('Backup restore rejected: ${e.message}');
       return BackupRestoreResult.invalidSections;
@@ -123,7 +136,7 @@ class BackupRestorer {
         try {
           _ensureOwner(ownerId);
           prefsSnapshot = _snapshotPreferences(parsed, ownerId);
-          isarSnapshot = await _replaceIsar(parsed, ownerId);
+          isarSnapshot = await _replaceIsar(parsed, ownerId, p.schemaVersion);
           _ensureOwner(ownerId);
           lease.check();
           await _replacePreferences(parsed, ownerId);
@@ -183,7 +196,11 @@ class BackupRestorer {
   Future<_IsarScopeSnapshot> _replaceIsar(
     ParsedBackupSections parsed,
     String ownerId,
+    int schemaVersion,
   ) async {
+    // Data the file's version predates (notes, confusion pairs, prayer
+    // reviews) is kept, never wiped by an older backup that cannot carry it.
+    final carried = BackupSections.forVersion(schemaVersion);
     late _IsarScopeSnapshot snapshot;
     await _isar.writeTxn(() async {
       snapshot = await _readScope(ownerId);
@@ -195,6 +212,29 @@ class BackupRestorer {
       final xp = parsed.xp;
       if (xp != null) await _isar.xpIsars.put(xp);
       await _isar.dailyActivityIsars.putAll(parsed.dailyActivity);
+      await _isar.isarAyahNotes.putAll(
+        carried.contains(BackupSections.ayahNotes)
+            ? parsed.ayahNotes
+            : snapshot.notes,
+      );
+      await _isar.isarConfusionPairs.putAll(
+        carried.contains(BackupSections.confusionPairs)
+            ? parsed.confusionPairs
+            : snapshot.confusionPairs,
+      );
+      await _isar.isarPrayerReviewAssignments.putAll(
+        carried.contains(BackupSections.prayerReviewAssignments)
+            ? parsed.prayerAssignments
+            : snapshot.prayerAssignments,
+      );
+      await _isar.isarPrayerReviewReceipts.putAll(
+        carried.contains(BackupSections.prayerReviewReceipts)
+            ? _mergePrayerReceipts(
+                parsed.prayerReceipts,
+                snapshot.prayerReceipts,
+              )
+            : snapshot.prayerReceipts,
+      );
       // Restored rows are dirty; queue their upload like a local write would
       // (`CloudSyncQueue.enqueue` never queues for the local owner).
       if (ownerId != ReviewRecordIdentity.localOwnerId) {
@@ -210,6 +250,26 @@ class BackupRestorer {
       }
     });
     return snapshot;
+  }
+
+  /// Retain today's device fence even when importing an older backup. The
+  /// first accepted device decision wins a conflicting imported decision.
+  List<IsarPrayerReviewReceipt> _mergePrayerReceipts(
+    List<IsarPrayerReviewReceipt> imported,
+    List<IsarPrayerReviewReceipt> device,
+  ) {
+    final now = DateTime.now();
+    final day = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    final merged = {for (final row in imported) row.receiptKey: row};
+    for (final row in device) {
+      if (row.localDayKey != day) continue;
+      // Reject a corrupt fence instead of silently reopening daily scheduling.
+      PrayerReviewBackupMapper.receiptToJson(row);
+      merged[row.receiptKey] = row;
+    }
+    return merged.values.toList();
   }
 
   /// Rows the restore replaces: this owner's (and legacy null-owner) review
@@ -258,6 +318,16 @@ class BackupRestorer {
                   .findAll())
             if (replacedQueueKinds.contains(item.kind)) item,
         ],
+        notes: await _isar.isarAyahNotes
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .findAll(),
+        confusionPairs: await _isar.isarConfusionPairs
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .findAll(),
+        prayerAssignments: await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).findAll(),
+        prayerReceipts: await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).findAll(),
       );
 
   Future<void> _clearScope(_IsarScopeSnapshot s) async {
@@ -276,6 +346,12 @@ class BackupRestorer {
       for (final r in s.outbox) r.id,
     ]);
     await _isar.cloudSyncQueueItems.deleteAll([for (final r in s.queue) r.id]);
+    await _isar.isarAyahNotes.deleteAll([for (final r in s.notes) r.id]);
+    await _isar.isarConfusionPairs.deleteAll([
+      for (final r in s.confusionPairs) r.id,
+    ]);
+    await _isar.isarPrayerReviewAssignments.deleteAll([for (final row in s.prayerAssignments) row.id]);
+    await _isar.isarPrayerReviewReceipts.deleteAll([for (final row in s.prayerReceipts) row.id]);
   }
 
   Future<void> _replacePreferences(
@@ -375,6 +451,10 @@ class BackupRestorer {
           await _isar.isarReviewEvidenceEvents.putAll(isarSnapshot.evidence);
           await _isar.isarReviewEffectOutboxs.putAll(isarSnapshot.outbox);
           await _isar.cloudSyncQueueItems.putAll(isarSnapshot.queue);
+          await _isar.isarAyahNotes.putAll(isarSnapshot.notes);
+          await _isar.isarConfusionPairs.putAll(isarSnapshot.confusionPairs);
+          await _isar.isarPrayerReviewAssignments.putAll(isarSnapshot.prayerAssignments);
+          await _isar.isarPrayerReviewReceipts.putAll(isarSnapshot.prayerReceipts);
         });
       } catch (e, st) {
         TaliaLogger.e('Backup restore rollback of Isar failed', e, st);

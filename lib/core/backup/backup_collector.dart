@@ -6,12 +6,17 @@ import '../../features/memorization_plus/data/models/isar_ayah_review_record.dar
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
+import '../../features/quran/data/models/isar_ayah_note.dart';
+import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
 import '../memorization/review_record_identity.dart';
 import '../utils/talia_logger.dart';
 import 'backup_file_format.dart';
 import 'backup_sections.dart';
+import 'prayer_review_backup_mapper.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
 
 /// Reads the current owner's local data into a [BackupPayload].
 ///
@@ -41,6 +46,16 @@ class BackupCollector {
           streak: await _isar.streakIsars.get(1),
           xp: await _isar.xpIsars.get(1),
           daily: await _isar.dailyActivityIsars.where().findAll(),
+          notes: await _isar.isarAyahNotes
+              .filter()
+              .ownerIdEqualTo(ownerId)
+              .findAll(),
+          confusionPairs: await _isar.isarConfusionPairs
+              .filter()
+              .ownerIdEqualTo(ownerId)
+              .findAll(),
+          prayerAssignments: await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).findAll(),
+          prayerReceipts: await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).findAll(),
         ),
       );
       lease.check();
@@ -64,13 +79,59 @@ class BackupCollector {
           BackupSections.dailyActivity: _valid('dailyActivity', [
             for (final d in rows.daily) DailyActivityBackupMapper.toJson(d),
           ], DailyActivityBackupMapper.fromJson),
+          BackupSections.ayahNotes: _notes(rows.notes, ownerId),
+          BackupSections.confusionPairs: _confusionPairs(
+            rows.confusionPairs,
+            ownerId,
+          ),
           BackupSections.prefs: prefs,
+          BackupSections.prayerReviewAssignments: _prayerRows(rows.prayerAssignments, PrayerReviewBackupMapper.assignmentToJson),
+          BackupSections.prayerReviewReceipts: _prayerRows(rows.prayerReceipts, PrayerReviewBackupMapper.receiptToJson),
         },
       );
       lease.check();
       _ensureOwner(ownerId);
       return payload;
     });
+  }
+
+  List<Map<String, Object?>> _prayerRows<T>(List<T> rows, Map<String, Object?> Function(T) encode) {
+    try {
+      return [for (final row in rows) encode(row)];
+    } on FormatException {
+      throw StateError('A local prayer review row cannot be backed up');
+    }
+  }
+
+  List<Map<String, Object?>> _confusionPairs(
+    List<IsarConfusionPair> pairs,
+    String ownerId,
+  ) {
+    final encoded = <Map<String, Object?>>[];
+    for (final pair in pairs) {
+      try {
+        final json = ConfusionPairBackupMapper.toJson(pair);
+        ConfusionPairBackupMapper.fromJson(json, ownerId);
+        encoded.add(json);
+      } on BackupSectionInvalid {
+        throw StateError('A local confusion pair cannot be backed up');
+      }
+    }
+    return encoded;
+  }
+
+  List<Map<String, Object?>> _notes(List<IsarAyahNote> notes, String ownerId) {
+    final encoded = <Map<String, Object?>>[];
+    for (final note in notes) {
+      try {
+        final json = AyahNoteBackupMapper.toJson(note);
+        AyahNoteBackupMapper.fromJson(json, ownerId);
+        encoded.add(json);
+      } on BackupSectionInvalid {
+        throw StateError('A local note cannot be backed up');
+      }
+    }
+    return encoded;
   }
 
   void _ensureOwner(String ownerId) {

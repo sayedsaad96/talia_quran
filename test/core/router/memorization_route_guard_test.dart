@@ -105,15 +105,16 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 }
 
 class _FakeGoRouterState extends Fake implements GoRouterState {
-  _FakeGoRouterState(this._uri);
+  _FakeGoRouterState(this._uri, {this._extra});
 
   final Uri _uri;
+  final Object? _extra;
 
   @override
   Uri get uri => _uri;
 
   @override
-  Object? get extra => null;
+  Object? get extra => _extra;
 }
 
 class _FakeBuildContext extends Fake implements BuildContext {}
@@ -462,6 +463,30 @@ void main() {
         MemorizationRouteGuard.invalidV2SessionRedirect(
           _FakeGoRouterState(
             Uri.parse('${AppRoutes.memorizationV2Session}?surahId=0'),
+          ),
+        ),
+        AppRoutes.memorizationHub,
+      );
+    });
+
+    test('rejects a malformed review range supplied through extra', () {
+      expect(
+        MemorizationRouteGuard.invalidV2SessionRedirect(
+          _FakeGoRouterState(
+            Uri.parse('${AppRoutes.memorizationV2Session}?surahId=2&startAyah=1'),
+            extra: const {'reviewEndAyah': '3', 'intent': 'review'},
+          ),
+        ),
+        AppRoutes.memorizationHub,
+      );
+    });
+
+    test('rejects a review range when extra declares a non-review intent', () {
+      expect(
+        MemorizationRouteGuard.invalidV2SessionRedirect(
+          _FakeGoRouterState(
+            Uri.parse('${AppRoutes.memorizationV2Session}?surahId=2&startAyah=1'),
+            extra: const {'reviewEndAyah': 3, 'intent': 'memorize'},
           ),
         ),
         AppRoutes.memorizationHub,

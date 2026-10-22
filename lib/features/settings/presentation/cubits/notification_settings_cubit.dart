@@ -58,6 +58,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     final weeklyImpact =
         _prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
         true;
+    final forgettingForecast =
+        _prefs.getBool(TaliaNotificationService.forgettingForecastPreferenceKey) ??
+        false;
     final tahajjud =
         _prefs.getBool(TaliaNotificationService.tahajjudPreferenceKey) ?? false;
     final khatmahReminder =
@@ -116,6 +119,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         kidsReminder: kidsReminder,
         fridayKahf: fridayKahf,
         weeklyImpact: weeklyImpact,
+        forgettingForecast: forgettingForecast,
         tahajjud: tahajjud,
         khatmahReminder: khatmahReminder,
         prayerNotifications: prayerNotifications,
@@ -176,6 +180,16 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
           defaultHour: 16,
           defaultMinute: 0,
         ),
+        forgettingForecastTime: _readTime(
+          TaliaNotificationService.forgettingForecastPreferenceKey,
+          defaultHour: 18,
+          defaultMinute: 0,
+        ),
+        forgettingForecastWeekday:
+            _prefs.getInt(
+              '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday',
+            ) ??
+            DateTime.monday,
         tahajjudTime: _readTime(
           TaliaNotificationService.tahajjudPreferenceKey,
           defaultHour: 3,
@@ -240,6 +254,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       ),
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
         weeklyImpact: persistedValue,
+      ),
+      TaliaNotificationService.forgettingForecastPreferenceKey => state.copyWith(
+        forgettingForecast: persistedValue,
       ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjud: persistedValue,
@@ -362,6 +379,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.fridayKahfPreferenceKey => state.fridayKahfTime,
       TaliaNotificationService.weeklyImpactPreferenceKey =>
         state.weeklyImpactTime,
+      TaliaNotificationService.forgettingForecastPreferenceKey =>
+        state.forgettingForecastTime,
       TaliaNotificationService.tahajjudPreferenceKey => state.tahajjudTime,
       TaliaNotificationService.khatmahReminderPreferenceKey =>
         state.khatmahReminderTime,
@@ -403,6 +422,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
         weeklyImpactTime: persistedTime,
       ),
+      TaliaNotificationService.forgettingForecastPreferenceKey => state.copyWith(
+        forgettingForecastTime: persistedTime,
+      ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjudTime: persistedTime,
       ),
@@ -417,6 +439,23 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     if (!hourSaved || !minuteSaved) {
       _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
     }
+  }
+
+  Future<void> updateForgettingForecastWeekday(
+    int weekday, {
+    AppLocalizations? l10n,
+  }) async {
+    if (weekday < DateTime.monday || weekday > DateTime.sunday) return;
+    const key = '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday';
+    final saved = await _writeInt(key, weekday);
+    if (!saved) {
+      _emitFeedback(state, NotificationSettingsFeedback.saveFailed);
+      return;
+    }
+    if (!isClosed) {
+      emit(state.copyWith(forgettingForecastWeekday: weekday));
+    }
+    await _reschedule(l10n);
   }
 
   /// Toggles an individual prayer notification in the prayer filter.

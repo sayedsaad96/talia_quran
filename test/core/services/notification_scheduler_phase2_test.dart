@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
@@ -80,6 +81,18 @@ void main() {
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelForgettingForecastReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleForgettingForecastReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        weekday: any(named: 'weekday'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleWeeklyImpactReminder(
@@ -337,6 +350,57 @@ void main() {
         () => mockNotificationService.scheduleFridayKahfReminder(
           title: any(named: 'title'),
           body: any(named: 'body'),
+          hour: any(named: 'hour'),
+          minute: any(named: 'minute'),
+        ),
+      );
+    });
+  });
+
+  group('Forgetting forecast reminder', () {
+    test('schedules for an enabled adult without foreground DI', () async {
+      SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.forgettingForecastPreferenceKey: true,
+        ExperienceFeature.forgettingForecast.storageKey: true,
+      });
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        forecastAudienceIsAdult: (_) async => true,
+      );
+
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+
+      verify(
+        () => mockNotificationService.scheduleForgettingForecastReminder(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          weekday: DateTime.monday,
+          hour: 18,
+          minute: 0,
+        ),
+      ).called(1);
+    });
+
+    test('cancels forecast reminder while independently disabled', () async {
+      SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.forgettingForecastPreferenceKey: false,
+      });
+      final scheduler = NotificationScheduler(mockNotificationService);
+
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+
+      verify(
+        () => mockNotificationService.cancelForgettingForecastReminder(),
+      ).called(1);
+      verifyNever(
+        () => mockNotificationService.scheduleForgettingForecastReminder(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          weekday: any(named: 'weekday'),
           hour: any(named: 'hour'),
           minute: any(named: 'minute'),
         ),

@@ -6,7 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 
 const kBackupFormatId = 'talia-backup';
-const kBackupSchemaVersion = 1;
+const kBackupSchemaVersion = 4;
 
 /// Upper bound for both the compressed input and the decompressed JSON
 /// (zip-bomb guard). Oversized compressed input maps to

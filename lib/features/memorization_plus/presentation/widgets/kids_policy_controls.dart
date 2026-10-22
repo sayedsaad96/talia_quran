@@ -4,6 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/kids_child_policy.dart';
+import 'kids_remote_plan_controls.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
@@ -24,6 +25,7 @@ class KidsPolicyControls extends StatelessWidget {
     required this.policy,
     required this.onChanged,
     this.enabled = true,
+    this.remotePlanEnabled = false,
   });
 
   final KidsChildPolicy policy;
@@ -31,6 +33,7 @@ class KidsPolicyControls extends StatelessWidget {
 
   /// False while a save is in flight: every control is inert.
   final bool enabled;
+  final bool remotePlanEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +142,9 @@ class KidsPolicyControls extends StatelessWidget {
                   : null,
             ),
           ),
+          if (remotePlanEnabled)
+            KidsRemotePlanControls(plan: policy.remotePlan, enabled: enabled,
+              onChanged: (plan) => onChanged(policy.copyWith(remotePlan: plan))),
         ],
       ),
     );
@@ -152,10 +158,12 @@ class KidsPolicyEditor extends StatefulWidget {
     super.key,
     required this.policy,
     required this.onSave,
+    this.remotePlanEnabled = false,
   });
 
   final KidsChildPolicy policy;
   final Future<void> Function(KidsChildPolicy policy) onSave;
+  final bool remotePlanEnabled;
 
   @override
   State<KidsPolicyEditor> createState() => _KidsPolicyEditorState();
@@ -179,5 +187,6 @@ class _KidsPolicyEditorState extends State<KidsPolicyEditor> {
     policy: widget.policy,
     enabled: !_saving,
     onChanged: _save,
+    remotePlanEnabled: widget.remotePlanEnabled,
   );
 }

@@ -11,6 +11,8 @@ import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../kids_encouragement/presentation/cubits/parent_encouragement_composer_cubit.dart';
+import '../../../kids_encouragement/presentation/widgets/parent_encouragement_composer.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -92,12 +94,14 @@ bool _supportProfileEnabled() =>
       KidsEnrichmentFeature.supportProfile,
     );
 
-/// The surahs a guardian can tie a gift to, for the child on this device.
-/// Empty (no condition picker) while the promise feature is off, for a linked
-/// child, or when the path cannot be read.
+/// Remote gifts can name any canonical surah; local gifts follow their path.
 Future<List<int>> _promiseSurahChoices(FamilyChildEntry child) async {
-  if (!child.isLocal ||
-      !getIt.isRegistered<KidsEnrichmentFlags>() ||
+  if (!getIt.isRegistered<KidsEnrichmentFlags>()) return const [];
+  if (!child.isLocal) {
+    return getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePromise)
+        ? List<int>.generate(114, (index) => index + 1) : const [];
+  }
+  if (
       !getIt<KidsEnrichmentFlags>().isEnabled(
         KidsEnrichmentFeature.guardianPromise,
       ) ||
@@ -182,6 +186,21 @@ class ChildDetailPage extends StatelessWidget {
               : context.go('/family-dashboard'),
         ),
         actions: [
+          if (!child.isLocal &&
+              getIt.isRegistered<ParentEncouragementComposerCubit>() &&
+              getIt.isRegistered<KidsEnrichmentFlags>() &&
+              getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.encouragements))
+            IconButton(
+              icon: const Icon(TaliaIcons.heartFilled),
+              tooltip: context.l10n.encouragementTitle,
+              onPressed: () => showModalBottomSheet<void>(
+                context: context, isScrollControlled: true, useSafeArea: true,
+                builder: (_) => BlocProvider(
+                  create: (_) => getIt<ParentEncouragementComposerCubit>(),
+                  child: ParentEncouragementComposer(childUserId: child.childUserId),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(TaliaIcons.gift),
             tooltip: context.l10n.childDetailAddReward,
@@ -207,6 +226,7 @@ class ChildDetailPage extends StatelessWidget {
       if (draft != null && context.mounted) {
         await context.read<FamilyDashboardCubit>().addReward(
           draft.title,
+          childId: child.isLocal ? null : child.childUserId,
           milestoneSurahId: draft.milestoneSurahId,
         );
       }
@@ -447,6 +467,8 @@ class _ChildDetailBody extends StatelessWidget {
                   )
                 : KidsPolicyEditor(
                     policy: summary.policy ?? const KidsChildPolicy(),
+                    remotePlanEnabled: getIt.isRegistered<KidsEnrichmentFlags>() &&
+                        getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePlan),
                     onSave: (policy) => context
                         .read<FamilyDashboardCubit>()
                         .saveChildPolicy(policy, childId: child.childUserId),

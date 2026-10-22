@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:math' as math;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 
@@ -114,6 +115,35 @@ void main() {
       expect(result.predictedFsrsIntervalDays, isNotNull);
       expect(result.predictedRetrievability, isNotNull);
       expect(result.predictedFsrsDueDate, isNotNull);
+    });
+
+    test('delegated prediction is equivalent to the previous formula', () {
+      for (final stability in [-4.0, 0.0, 0.5, 8.5]) {
+        for (final elapsed in [-2, 0, 3]) {
+          final record = createRecord(
+            stability: stability,
+            difficulty: 3.5,
+            intervalDays: 13,
+            nextReviewDate: now.add(const Duration(days: 20)),
+          );
+          final result = usecase.predict(record, elapsed, now);
+          final expectedRetrievability = math
+              .exp(-(elapsed / math.max(stability, 1.0)))
+              .clamp(0.0, 1.0);
+          final expectedInterval =
+              (stability * (11 - record.difficulty) / 5)
+                  .round()
+                  .clamp(1, 365);
+          final expected = record.copyWith(
+            predictedRetrievability: expectedRetrievability,
+            predictedFsrsIntervalDays: expectedInterval,
+            predictedFsrsDueDate: now.add(Duration(days: expectedInterval)),
+            predictedRecallProbability: expectedRetrievability,
+          );
+
+          expect(result.props, expected.props, reason: 'S=$stability, t=$elapsed');
+        }
+      }
     });
   });
 }

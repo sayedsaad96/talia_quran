@@ -257,7 +257,9 @@ class KidsTreasuresContent extends StatelessWidget {
                           ),
                           onRequest: onRequestReward == null
                               ? null
-                              : () => onRequestReward!(reward.id),
+                              : reward.origin == ParentRewardOrigin.unknown
+                                  ? null
+                                  : () => onRequestReward!(reward.storageIdentity),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                       ],

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
@@ -9,7 +10,9 @@ import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/memorization_kids_local_service.dart';
+import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/kids_legacy_resume_recovery_probe.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_remote_plan.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
@@ -62,34 +65,79 @@ class _FakeProgressEventsBus implements ProgressEventsBus {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FailingHouseSettingsDatasource
+    extends MemorizationPlusLocalDatasourceImpl {
+  _FailingHouseSettingsDatasource(super.prefs, {required super.owner});
+
+  @override
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings current) mutate,
+  ) async => throw StateError('settings write failed');
+}
+
+class _Probe implements KidsLegacyResumeProbe {
+  _Probe(this.result);
+
+  final KidsLegacyResumeProbeResult result;
+  AccountDataLease? receivedLease;
+  int calls = 0;
+
+  @override
+  Future<KidsLegacyResumeProbeResult> inspect({
+    required int surahId,
+    required AccountDataLease lease,
+  }) async {
+    calls++;
+    receivedLease = lease;
+    return result;
+  }
+}
+
 void main() {
   late SharedPreferences prefs;
-  late MemorizationPlusLocalDatasourceImpl datasource;
+  late MemorizationPlusLocalDatasource datasource;
+  late AccountDataBarrier barrier;
+  const owner = FixedRecordOwnerProvider('a');
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
   });
 
-  MemorizationKidsLocalService serviceFor({bool journeyEnabled = true}) {
-    const provider = FixedRecordOwnerProvider('a');
-    datasource = MemorizationPlusLocalDatasourceImpl(prefs, owner: provider);
+  MemorizationKidsLocalService serviceFor({
+    bool journeyEnabled = true,
+    bool remotePlanEnabled = false,
+    bool Function()? remotePlanGate,
+    KidsLegacyResumeProbe? legacyResumeProbe,
+    Future<void> Function(int)? remoteMilestoneUnlock,
+    MemorizationPlusLocalDatasource? storage,
+  }) {
+    datasource =
+        storage ?? MemorizationPlusLocalDatasourceImpl(prefs, owner: owner);
+    barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
     return MemorizationKidsLocalService(
       datasource,
       _FakeQuranRepository(),
       _FakeStreakReader(),
       _FakeProgressEventsBus(),
       null,
-      owner: provider,
+      owner: owner,
       quranJourneyEnabled: () => journeyEnabled,
+      remotePlanEnabled: remotePlanGate ?? () => remotePlanEnabled,
+      barrier: barrier,
+      legacyResumeProbe: legacyResumeProbe,
+      remoteMilestoneUnlock: remoteMilestoneUnlock,
+      remoteMilestoneEnabled: () => remoteMilestoneUnlock != null,
     );
   }
 
   Future<List<KidsJourneyStage>> journey(
     MemorizationKidsLocalService service,
-    int surahId,
-  ) async => (await service.getKidsJourney(
+    int surahId, {
+    bool freezeForSession = false,
+  }) async => (await service.getKidsJourney(
     surahId: surahId,
+    freezeForSession: freezeForSession,
   )).fold((f) => fail('expected Right, got $f'), (v) => v);
 
   Future<void> seedRewards(int surahId, Iterable<int> ayahs) =>
@@ -174,5 +222,209 @@ void main() {
 
     final stages = await journey(service, 113);
     expect(stages.first.status, KidsJourneyStageStatus.locked);
+  });
+
+  test('session start freezes the local fallback while the remote flag is off', () async {
+    final service = serviceFor();
+    await service.setKidsAyahsPerHouse(2);
+
+    final started = await journey(service, 67, freezeForSession: true);
+    await service.setKidsAyahsPerHouse(3);
+    final preview = await journey(service, 67);
+    final settings = await datasource.getParentSettings();
+
+    expect(started.first.endAyah, 2);
+    expect(preview.first.endAyah, 2);
+    expect(settings.kidsHouseSizesBySurah[67], 2);
+  });
+
+  test('enabled remote house size freezes at session start', () async {
+    final service = serviceFor(remotePlanEnabled: true);
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(
+        remotePlan: const KidsRemotePlan(ayahsPerSession: 3),
+      ),
+    );
+
+    final stages = await journey(service, 67, freezeForSession: true);
+    final settings = await datasource.getParentSettings();
+
+    expect(stages.first.endAyah, 3);
+    expect(settings.kidsHouseSizesBySurah[67], 3);
+  });
+
+  test('current whole-surah choice wins over a remote house size', () async {
+    final service = serviceFor(remotePlanEnabled: true);
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(
+        kidsWholeSurahIds: {103},
+        remotePlan: const KidsRemotePlan(ayahsPerSession: 2),
+      ),
+    );
+
+    final stages = await journey(service, 103, freezeForSession: true);
+    final settings = await datasource.getParentSettings();
+
+    expect(stages, hasLength(1));
+    expect(stages.single.endAyah, 3);
+    expect(settings.kidsHouseSizesBySurah.containsKey(103), isFalse);
+  });
+
+  test('legacy frozen house size wins over a changed remote policy', () async {
+    final service = serviceFor(remotePlanEnabled: true);
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(
+        kidsHouseSizesBySurah: {67: 5},
+        remotePlan: const KidsRemotePlan(ayahsPerSession: 2),
+      ),
+    );
+
+    final stages = await journey(service, 67, freezeForSession: true);
+
+    expect(stages.first.endAyah, 5);
+  });
+
+  test('failed freeze does not launch a session or persist a house size', () async {
+    final failing = _FailingHouseSettingsDatasource(prefs, owner: owner);
+    final service = serviceFor(storage: failing);
+
+    final outcome = await service.getKidsJourney(
+      surahId: 67,
+      freezeForSession: true,
+    );
+    final settings = await datasource.getParentSettings();
+
+    expect(outcome.isLeft(), isTrue);
+    expect(settings.kidsHouseSizesBySurah, isEmpty);
+  });
+
+  test('invalidated account authority prevents a session freeze', () async {
+    final service = serviceFor();
+    barrier.invalidate();
+
+    final outcome = await service.getKidsJourney(
+      surahId: 67,
+      freezeForSession: true,
+    );
+
+    expect(outcome.isLeft(), isTrue);
+    expect(
+      (await datasource.getParentSettings()).kidsHouseSizesBySurah,
+      isEmpty,
+    );
+  });
+
+  test('concurrent session starts retain one frozen house size', () async {
+    var remoteReadCount = 0;
+    final service = serviceFor(
+      remotePlanGate: () => remoteReadCount++ == 0,
+    );
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(
+        remotePlan: const KidsRemotePlan(ayahsPerSession: 3),
+        kidsAyahsPerHouse: 2,
+      ),
+    );
+
+    final results = await Future.wait([
+      journey(service, 67, freezeForSession: true),
+      journey(service, 67, freezeForSession: true),
+    ]);
+    final settings = await datasource.getParentSettings();
+
+    expect(results.map((stages) => stages.first.endAyah).toSet(), {3});
+    expect(settings.kidsHouseSizesBySurah, {67: 3});
+  });
+
+  for (final remoteEnabled in [false, true]) {
+  test('unknown legacy resume blocks freezing with remote=$remoteEnabled without a split choice', () async {
+    final probe = _Probe(
+      const KidsLegacyResumeProbeResult.choiceRequired(checkpointAyah: 3),
+    );
+    final service = serviceFor(
+      remotePlanEnabled: remoteEnabled,
+      legacyResumeProbe: probe,
+    );
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(
+        remotePlan: const KidsRemotePlan(ayahsPerSession: 7),
+      ),
+    );
+
+    final outcome = await service.getKidsJourney(
+      surahId: 67,
+      freezeForSession: true,
+    );
+
+    expect(outcome.isLeft(), isTrue);
+    expect(probe.receivedLease, isNotNull);
+    expect((await datasource.getParentSettings()).kidsHouseSizesBySurah,
+        isEmpty);
+    final preview = await journey(service, 67);
+    expect(preview.first.endAyah, KidsSessionPolicy.forChildAge(null).journeyStageSize);
+    expect((await datasource.getParentSettings()).kidsHouseSizesBySurah, isEmpty);
+  });
+  }
+
+  test('an unreadable legacy checkpoint never blocks the session start', () async {
+    final probe = _Probe(const KidsLegacyResumeProbeResult.unavailable());
+    final service = serviceFor(legacyResumeProbe: probe);
+    await service.setKidsAyahsPerHouse(2);
+
+    final stages = await journey(service, 67, freezeForSession: true);
+
+    expect(probe.calls, 1);
+    expect(stages.first.endAyah, 2);
+    // The safe default is used unfrozen, as before the probe existed.
+    expect(
+      (await datasource.getParentSettings()).kidsHouseSizesBySurah,
+      isEmpty,
+    );
+  });
+
+  test('established whole, frozen, and canonical history bypass the probe',
+      () async {
+    final probe = _Probe(
+      const KidsLegacyResumeProbeResult.choiceRequired(checkpointAyah: 3),
+    );
+    final service = serviceFor(legacyResumeProbe: probe);
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(kidsWholeSurahIds: {103}),
+    );
+
+    await journey(service, 103, freezeForSession: true);
+    expect(probe.calls, 0);
+
+    await datasource.updateKidsHouseSettings(
+      (current) => current.copyWith(kidsHouseSizesBySurah: {67: 4}),
+    );
+    await journey(service, 67, freezeForSession: true);
+    expect(probe.calls, 0);
+
+    await seedRewards(113, [1]);
+    await journey(service, 113, freezeForSession: true);
+    expect(probe.calls, 0);
+  });
+
+  test('out-of-range log counts cannot attest complete canonical surah coverage', () async {
+    final opened = <int>[];
+    final service = serviceFor(remoteMilestoneUnlock: (id) async => opened.add(id));
+    await seedRewards(67, List.generate(30, (index) => index + 100));
+    final result = await service.awardKidsPoints(completionAuthorized: true,
+      surahId: 67, ayahNumber: 1, repeatsCompleted: 3);
+    await Future<void>.delayed(Duration.zero);
+    expect(result.isRight(), isTrue);
+    expect(opened, isEmpty);
+  });
+
+  test('an unavailable milestone side effect cannot fail a committed completion', () async {
+    final service = serviceFor(remoteMilestoneUnlock: (_) async => throw StateError('offline'));
+    await seedRewards(103, [1, 2]);
+    final result = await service.awardKidsPoints(completionAuthorized: true,
+      surahId: 103, ayahNumber: 3, repeatsCompleted: 3);
+    await Future<void>.delayed(Duration.zero);
+    expect(result.isRight(), isTrue);
+    expect((await datasource.getKidsSessionLogs()).any((log) =>
+      log.surahId == 103 && log.ayahNumber == 3), isTrue);
   });
 }

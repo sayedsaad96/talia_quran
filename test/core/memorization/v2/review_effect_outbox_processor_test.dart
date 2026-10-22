@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/xp_constants.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
@@ -58,7 +61,6 @@ class _MockAchievementService extends Mock implements AchievementService {
           as Future<List<CertificateAward>>;
 }
 
-
 Future<void> _initializeIsarCoreForTests() => initializeIsarCoreForTests();
 
 void main() {
@@ -69,6 +71,8 @@ void main() {
     late _MockAchievementService achievements;
     late V2ReviewOutcomeCommitter committer;
     late V2ReviewEffectOutboxProcessor processor;
+    late SharedPreferences prefs;
+    late AccountDataBarrier barrier;
 
     setUp(() async {
       await _initializeIsarCoreForTests();
@@ -88,6 +92,10 @@ void main() {
       );
       repository = _MockMemorizationRepository();
       achievements = _MockAchievementService();
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+      barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = const FixedRecordOwnerProvider('owner-a');
       committer = V2ReviewOutcomeCommitter(
         isar: isar,
         owner: const FixedRecordOwnerProvider('owner-a'),
@@ -98,6 +106,7 @@ void main() {
       processor = V2ReviewEffectOutboxProcessor(
         isar: isar,
         owner: const FixedRecordOwnerProvider('owner-a'),
+        barrier: barrier,
         markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(repository),
         achievements: achievements,
         progressEvents: ProgressEventsBus(),
@@ -118,6 +127,84 @@ void main() {
         eventId: 'terminal-event',
       );
     }
+
+    test(
+      'reset waits for daily-plan write and removes the old account plan',
+      () async {
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        when(
+          repository.markDailyPlanAyahCompleted(surahId: 1, ayahNumber: 1),
+        ).thenAnswer((_) async {
+          entered.complete();
+          await release.future;
+          await prefs.setString('memorization_daily_plan', 'owner-a-plan');
+          return const Right(true);
+        });
+        await commitTerminalPass();
+        final processing = processor.processPending();
+        await entered.future;
+        final reset = barrier.clear(() async {
+          await prefs.remove('memorization_daily_plan');
+        });
+        release.complete();
+        await Future.wait([processing, reset]);
+        expect(prefs.getString('memorization_daily_plan'), isNull);
+      },
+    );
+
+    test('an invalidated snapshot never starts daily-plan mutation', () async {
+      await commitTerminalPass();
+      final occupied = Completer<void>();
+      final release = Completer<void>();
+      final blocker = barrier.run((_) async {
+        occupied.complete();
+        await release.future;
+      });
+      await occupied.future;
+      final processing = processor.processPending();
+      final reset = barrier.clear(() async {
+        await prefs.setString('memorization_daily_plan', 'fresh-plan');
+      });
+      release.complete();
+      await Future.wait([blocker.catchError((_) {}), processing, reset]);
+      verifyNever(
+        repository.markDailyPlanAyahCompleted(surahId: 1, ayahNumber: 1),
+      );
+      expect(prefs.getString('memorization_daily_plan'), 'fresh-plan');
+      final effects = await isar.isarReviewEffectOutboxs.where().findAll();
+      expect(effects.every((effect) => effect.attempts == 0), isTrue);
+    });
+
+    test('effects stay pending while the account barrier is blocked and '
+        'drain after markOwnerReady', () async {
+      when(
+        achievements.checkAndUnlockCertificatesStrict(isKids: false),
+      ).thenAnswer((_) async => const []);
+      await commitTerminalPass();
+
+      barrier.prepareOwner('owner-a'); // blocks (account switch in progress)
+      expect(await processor.processPending(), isEmpty);
+      var effects = await isar.isarReviewEffectOutboxs.where().findAll();
+      expect(effects, isNotEmpty);
+      expect(
+        effects.every((e) => e.processedAt == null && e.attempts == 0),
+        isTrue,
+      );
+      expect(await isar.xpIsars.get(1), isNull);
+
+      await barrier.markOwnerReady('owner-a');
+      await processor.processPending();
+      effects = await isar.isarReviewEffectOutboxs.where().findAll();
+      for (final type in ['xp', 'streak']) {
+        expect(
+          effects.singleWhere((e) => e.effectType == type).processedAt,
+          isNotNull,
+          reason: type,
+        );
+      }
+      expect((await isar.xpIsars.get(1))?.totalXp, greaterThan(0));
+    });
 
     test('concurrent drains apply XP and streak exactly once', () async {
       when(

@@ -7,7 +7,10 @@ import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 import '../cubits/quran_audio_player_cubit.dart';
+import 'audio_downloads_access.dart';
 
 class ReciterSelectorSheet extends StatelessWidget {
   const ReciterSelectorSheet({super.key});
@@ -18,7 +21,12 @@ class ReciterSelectorSheet extends StatelessWidget {
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => const ReciterSelectorSheet(),
+      builder: (_) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .9,
+        ),
+        child: const SingleChildScrollView(child: ReciterSelectorSheet()),
+      ),
     );
   }
 
@@ -74,6 +82,23 @@ class ReciterSelectorSheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
+            FutureBuilder<bool>(
+              future: audioDownloadsAvailable(),
+              builder: (context, snapshot) => snapshot.data != true
+                  ? const SizedBox.shrink()
+                  : Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        leading: const Icon(TaliaIcons.download),
+                        title: Text(context.l10n.audioDownloadsTitle),
+                        onTap: () {
+                          final router = GoRouter.of(context);
+                          Navigator.pop(context);
+                          router.push(AppRoutes.audioDownloads);
+                        },
+                      ),
+                    ),
+            ),
             ValueListenableBuilder<QuranReciter>(
               valueListenable: reciterService.currentReciter,
               builder: (context, current, _) {

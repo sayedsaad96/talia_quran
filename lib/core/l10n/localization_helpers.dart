@@ -181,6 +181,7 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.hifzMemorizationSaveFailed,
       CubitMessageCodes.v2SurahLoadFailed => l10n.v2SurahLoadFailed,
       CubitMessageCodes.v2NoAyahsInRange => l10n.v2NoAyahsInRange,
+      CubitMessageCodes.v2AccountChanged => l10n.v2AccountChanged,
       CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
       CubitMessageCodes.kidsMicPermissionDenied => l10n.micPermissionError,
       CubitMessageCodes.kidsRecordingUnavailable =>

@@ -271,6 +271,7 @@ void main() {
     ParentReward promise(String id, int? surahId, {ParentRewardStatus? status}) =>
         ParentReward(
           id: id,
+          origin: ParentRewardOrigin.local,
           title: 'وعد $id',
           status: status ?? ParentRewardStatus.locked,
           createdAt: DateTime.utc(2026, 10, 1),
@@ -304,7 +305,7 @@ void main() {
 
       final state = cubit.state as KidsTreasuresLoaded;
       expect(state.rewards.single.status, ParentRewardStatus.unlocked);
-      expect(rewardRepo.unlocks, [('p1', null)]);
+      expect(rewardRepo.unlocks, [('|local|p1', null)]);
       expect(state.promiseUnlockedIds, {'p1'});
     });
 
@@ -517,7 +518,7 @@ class _FakeRewardRepo implements ParentRewardRepository {
     if (unlockFailure != null) return Left(unlockFailure!);
     rewards = [
       for (final r in rewards)
-        r.id == id ? r.copyWith(status: ParentRewardStatus.unlocked) : r,
+        r.storageIdentity == id ? r.copyWith(status: ParentRewardStatus.unlocked) : r,
     ];
     return Right(rewards);
   }

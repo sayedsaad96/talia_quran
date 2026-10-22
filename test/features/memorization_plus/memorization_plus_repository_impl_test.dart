@@ -453,6 +453,7 @@ void main() {
       await datasource.saveParentRewards([
         ParentRewardModel(
           id: 'p',
+          origin: ParentRewardOrigin.local,
           title: 'وعد',
           status: ParentRewardStatus.unlocked,
           createdAt: DateTime.now().toUtc(),
@@ -461,6 +462,7 @@ void main() {
         ),
         ParentRewardModel(
           id: 'g',
+          origin: ParentRewardOrigin.local,
           title: 'عادية',
           status: ParentRewardStatus.locked,
           createdAt: DateTime.now().toUtc(),

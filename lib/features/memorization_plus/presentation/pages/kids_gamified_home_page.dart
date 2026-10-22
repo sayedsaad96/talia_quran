@@ -9,6 +9,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../kids_encouragement/presentation/cubits/child_encouragement_inbox_cubit.dart';
+import '../../../kids_encouragement/presentation/widgets/child_encouragement_inbox.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_split_choice.dart';
@@ -87,6 +89,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
   /// Guards against rapid double taps stacking two copies of the same
   /// destination on top of each other — a very real pattern with children.
   bool _destinationOpen = false;
+  int _encouragementRefresh = 0;
 
   /// Set once the open destination actually covers home, so the guard can be
   /// released when home is current again.
@@ -246,8 +249,11 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
           return KidsGamifiedHomeContent(
             state: state,
             childName: _nickname,
-            onRefresh: () =>
-                context.read<KidsJourneyCubit>().refresh(surahId: surahId),
+            onRefresh: () async {
+              await context.read<KidsJourneyCubit>().refresh(surahId: surahId);
+              if (mounted) setState(() => _encouragementRefresh++);
+            },
+            encouragementRefresh: _encouragementRefresh,
             onMushafTap: () => _openDestination(() async {
               if (!context.mounted) return;
               // The general Mushaf action opens Al-Fatihah. The surah query
@@ -395,6 +401,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onBedtimeTap,
     this.onHomeMissionReport,
     this.taliaHappy = false,
+    this.encouragementRefresh = 0,
   });
 
   final KidsJourneyLoaded state;
@@ -423,6 +430,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   /// Shows Talia happy (just after a home mission was reported).
   final bool taliaHappy;
+  final int encouragementRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +463,14 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onBedtimeTap: onBedtimeTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
+                      if (getIt.isRegistered<ChildEncouragementInboxCubit>() &&
+                          getIt.isRegistered<KidsEnrichmentFlags>() &&
+                          getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.encouragements))
+                        BlocProvider(
+                          key: ValueKey('encouragement-inbox-$encouragementRefresh'),
+                          create: (_) => getIt<ChildEncouragementInboxCubit>(),
+                          child: const ChildEncouragementInbox(),
+                        ),
                       if (taliaHappy)
                         KidsTaliaCompanion(
                           pose: KidsTaliaPose.happy,

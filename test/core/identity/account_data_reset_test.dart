@@ -27,6 +27,7 @@ import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_sessi
 import 'package:talia_quran/features/streak/data/models/daily_activity_isar.dart';
 import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
+import 'package:talia_quran/features/quran/data/models/isar_ayah_note.dart';
 import '../../helpers/isar_test_core.dart';
 
 
@@ -151,6 +152,7 @@ void main() {
           DailyActivityIsarSchema,
           CloudSyncQueueItemSchema,
           PrayerCompanionRecordIsarSchema,
+          IsarAyahNoteSchema,
         ],
         directory: dir.path,
         name: 'reset_${DateTime.now().microsecondsSinceEpoch}',
@@ -241,7 +243,11 @@ void main() {
 
     test('clears every account-owned Isar collection', () async {
       await seedAllCollections();
-      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+      await AccountDataReset(
+        isar,
+        prefs,
+        documentsDirectory: () async => dir,
+      ).clearAccountOwnedData();
       expect(await isar.isarAyahReviewRecords.where().count(), 0);
       expect(await isar.isarReviewEvidenceEvents.where().count(), 0);
       expect(await isar.isarReviewEffectOutboxs.where().count(), 0);
@@ -251,6 +257,76 @@ void main() {
       expect(await isar.xpIsars.where().count(), 0);
       expect(await isar.dailyActivityIsars.where().count(), 0);
       expect(await isar.cloudSyncQueueItems.where().count(), 0);
+    });
+
+    test('prayer review lengths preserve recovery owner and erase exact owner', () async {
+      await prefs.setString('prayer_review_lengths|user-a', '{"fajr":3}');
+      await prefs.setString('prayer_review_lengths|user-b', '{"fajr":15}');
+      await prefs.setBool('pending_bookmark_recovery_owner_user-b', true);
+      final reset = AccountDataReset(isar, prefs, documentsDirectory: () async => dir);
+      await reset.clearAccountOwnedData();
+      expect(prefs.containsKey('prayer_review_lengths|user-a'), isFalse);
+      expect(prefs.getString('prayer_review_lengths|user-b'), '{"fajr":15}');
+      await prefs.setString('prayer_review_lengths|user-c', '{"fajr":7}');
+      await reset.eraseDeletedAccountLocally(departingOwnerId: 'user-b');
+      expect(prefs.containsKey('prayer_review_lengths|user-b'), isFalse);
+      expect(prefs.getString('prayer_review_lengths|user-c'), '{"fajr":7}');
+    });
+
+    test('pending encouragement receipts preserve recovery owner and erase exact encoded owner', () async {
+      const protected = 'user-b/recovery';
+      final protectedKey = 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(protected)}';
+      final otherKey = 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent('$protected-other')}';
+      await prefs.setString('kids_encouragement_pending_seen_v1_user-a', '[1]');
+      await prefs.setString(protectedKey, '[2]');
+      await prefs.setBool('pending_bookmark_recovery_owner_$protected', true);
+      final reset = AccountDataReset(isar, prefs, documentsDirectory: () async => dir);
+      await reset.clearAccountOwnedData();
+      expect(prefs.containsKey('kids_encouragement_pending_seen_v1_user-a'), isFalse);
+      expect(prefs.getString(protectedKey), '[2]');
+      await prefs.setString(otherKey, '[3]');
+      await reset.eraseDeletedAccountLocally(departingOwnerId: protected);
+      expect(prefs.containsKey(protectedKey), isFalse);
+      expect(prefs.getString(otherKey), '[3]');
+    });
+
+    test('preserves protected note owners but deleted-account erase is exact',
+        () async {
+      final stamp = DateTime.utc(2026, 10, 19);
+      await isar.writeTxn(() => isar.isarAyahNotes.putAll([
+            IsarAyahNote()
+              ..ownerId = 'user-a'
+              ..surahId = 1
+              ..ayahNumber = 1
+              ..body = 'A'
+              ..createdAt = stamp
+              ..updatedAt = stamp,
+            IsarAyahNote()
+              ..ownerId = 'user-b'
+              ..surahId = 1
+              ..ayahNumber = 1
+              ..body = 'B'
+              ..createdAt = stamp
+              ..updatedAt = stamp,
+          ]));
+      await prefs.setBool('pending_bookmark_recovery_owner_user-b', true);
+
+      await AccountDataReset(
+        isar,
+        prefs,
+        documentsDirectory: () async => dir,
+      ).clearAccountOwnedData();
+      expect(
+        (await isar.isarAyahNotes.where().findAll()).map((note) => note.ownerId),
+        ['user-b'],
+      );
+
+      await AccountDataReset(
+        isar,
+        prefs,
+        documentsDirectory: () async => dir,
+      ).eraseDeletedAccountLocally(departingOwnerId: 'user-b');
+      expect(await isar.isarAyahNotes.count(), 0);
     });
 
     test('clears prayer companion rows and preferences', () async {

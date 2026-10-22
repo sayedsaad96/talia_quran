@@ -10,6 +10,7 @@ import '../../features/memorization_plus/application/guardian_session_controller
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../constants/app_constants.dart';
+import '../constants/surah_names.dart';
 import '../di/injection.dart';
 import '../experience/experience_feature_flags.dart';
 import '../l10n/app_localizations.dart';
@@ -17,6 +18,9 @@ import '../memorization/kids_enrichment_feature_flags.dart';
 import '../memorization/learning_launch_context.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../services/get_daily_wird_usecase.dart';
+import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
+import '../../features/prayer_review/presentation/cubits/prayer_review_cubit.dart';
+import '../../features/prayer_review/presentation/pages/prayer_review_page.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
@@ -24,6 +28,9 @@ import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_search_page.dart';
 import '../../features/quran/presentation/pages/bookmarks_page.dart';
+import '../../features/quran/presentation/pages/ayah_notes_page.dart';
+import '../../features/quran/presentation/pages/audio_downloads_page.dart';
+import '../../features/quran/presentation/pages/audio_storage_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/khatmah/domain/entities/khatmah_dedication.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
@@ -62,6 +69,9 @@ import '../../features/memorization_plus/presentation/pages/plan_details_page.da
 import '../../features/memorization_plus/presentation/pages/memorization_tab_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
+import '../../features/memorization_plus/presentation/pages/similar_ayah_trainer_page.dart';
+import '../../features/memorization_plus/domain/entities/similar_ayah_reference_pair.dart';
+import '../../features/memorization_plus/presentation/cubits/similar_ayah_trainer_cubit.dart';
 import '../../features/memorization_plus/presentation/pages/family_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/child_detail_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_monthly_report_page.dart';
@@ -91,6 +101,11 @@ abstract class AppRoutes {
   static const String quranDaily = '/quran/daily';
   static const String quranSearch = '/quran/search';
   static const String quranBookmarks = '/quran/bookmarks';
+  static const String quranNotes = '/quran/notes';
+  static const String similarAyahTrainer = '/memorization-plus/similar-ayahs';
+  static const String prayerReview = '/memorization-plus/prayer-review';
+  static const String audioDownloads = '/quran/downloads';
+  static const String audioStorage = '/settings/audio-storage';
   static const String hifz = '/hifz';
 
   /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
@@ -168,6 +183,63 @@ String? backupRedirect(ExperienceFlags? flags) =>
     flags != null && flags.isEnabled(ExperienceFeature.localBackup)
     ? null
     : AppRoutes.settings;
+
+@visibleForTesting
+String? ayahNotesRedirect(ExperienceFlags? flags) =>
+    flags != null && flags.isEnabled(ExperienceFeature.ayahNotes)
+    ? null
+    : AppRoutes.quran;
+
+@visibleForTesting
+String? similarAyahTrainerRedirect(ExperienceFlags? flags) =>
+    flags?.isEnabled(ExperienceFeature.similarAyahTrainer) == true
+        ? null
+        : AppRoutes.memorizationHub;
+
+@visibleForTesting
+String? prayerReviewRedirect(ExperienceFlags? flags, Object? occurrence) {
+  if (flags?.isEnabled(ExperienceFeature.prayerReview) != true) {
+    return AppRoutes.memorizationHub;
+  }
+  return occurrence is PrayerOccurrence ? null : AppRoutes.home;
+}
+
+AyahReference? _similarAyahTarget(Map<String, String> query) {
+  final surah = int.tryParse(query['surahId'] ?? '');
+  final ayah = int.tryParse(query['ayah'] ?? '');
+  if (surah == null || ayah == null || surah < 1 || surah > 114 ||
+      ayah < 1 || ayah > SurahNames.ayahCount(surah)) {
+    return null;
+  }
+  return AyahReference(surahId: surah, ayahNumber: ayah);
+}
+
+/// Optional detected pair from the recitation result sheet. Needs a valid
+/// target (`surahId`/`ayah`) plus a valid, different `otherSurahId`/`otherAyah`.
+(AyahReference, AyahReference)? _similarAyahPair(Map<String, String> query) {
+  final target = _similarAyahTarget(query);
+  final surah = int.tryParse(query['otherSurahId'] ?? '');
+  final ayah = int.tryParse(query['otherAyah'] ?? '');
+  if (target == null || surah == null || ayah == null || surah < 1 ||
+      surah > 114 || ayah < 1 || ayah > SurahNames.ayahCount(surah) ||
+      (surah == target.surahId && ayah == target.ayahNumber)) {
+    return null;
+  }
+  return (target, AyahReference(surahId: surah, ayahNumber: ayah));
+}
+
+/// Invalid pair params fall back to the plain list (no query at all).
+@visibleForTesting
+String? similarAyahPairRedirect(Map<String, String> query) =>
+    (query.containsKey('otherSurahId') || query.containsKey('otherAyah')) &&
+            _similarAyahPair(query) == null
+        ? AppRoutes.similarAyahTrainer : null;
+
+@visibleForTesting
+String? similarAyahTargetRedirect(Map<String, String> query) =>
+    (query.containsKey('surahId') || query.containsKey('ayah')) &&
+            _similarAyahTarget(query) == null
+        ? AppRoutes.quran : null;
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
 /// re-evaluates its [redirect] automatically whenever auth state changes.
@@ -292,6 +364,10 @@ class MemorizationRouteGuard {
 
   static String? invalidV2SessionRedirect(GoRouterState state) {
     final extra = state.extra as Map<String, dynamic>?;
+    final hasExtraReviewEndAyah = extra?.containsKey('reviewEndAyah') == true;
+    final hasReviewEndAyah =
+        hasExtraReviewEndAyah ||
+        state.uri.queryParameters.containsKey('reviewEndAyah');
     final surahId =
         extra?['surahId'] as int? ??
         int.tryParse(state.uri.queryParameters['surahId'] ?? '');
@@ -303,7 +379,21 @@ class MemorizationRouteGuard {
         extra?['blockSize'] as int? ??
         int.tryParse(state.uri.queryParameters['blockSize'] ?? '') ??
         5;
-    if (!AppRouter._isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
+    final extraReviewEndAyah = extra?['reviewEndAyah'];
+    final reviewEndAyah = hasExtraReviewEndAyah
+        ? extraReviewEndAyah is int
+              ? extraReviewEndAyah
+              : null
+        : int.tryParse(state.uri.queryParameters['reviewEndAyah'] ?? '');
+    final intent =
+        extra?['intent'] as String? ?? state.uri.queryParameters['intent'];
+    if (!AppRouter._isValidSurahId(surahId) ||
+        startAyah < 1 ||
+        blockSize < 1 ||
+        (hasReviewEndAyah &&
+            (reviewEndAyah == null ||
+                reviewEndAyah < startAyah ||
+                intent != 'review'))) {
       return invalidV2SessionLocation;
     }
     return null;
@@ -664,6 +754,109 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.audioDownloads,
+        redirect: (context, state) async {
+          if (!getIt.isRegistered<ExperienceFlags>() ||
+              !getIt<ExperienceFlags>().isEnabled(
+                ExperienceFeature.audioDownloads,
+              )) {
+            return AppRoutes.quran;
+          }
+          return MemorizationRouteGuard.adultOnlyRedirect();
+        },
+        builder: (context, state) => AudioDownloadsPage(
+          initialSurah: switch (
+            int.tryParse(state.uri.queryParameters['surah'] ?? '')
+          ) {
+            final int value when value >= 1 && value <= 114 => value,
+            _ => null,
+          },
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.audioStorage,
+        redirect: (context, state) async {
+          if (!getIt.isRegistered<ExperienceFlags>() ||
+              !getIt<ExperienceFlags>().isEnabled(
+                ExperienceFeature.audioDownloads,
+              )) {
+            return AppRoutes.quran;
+          }
+          return MemorizationRouteGuard.adultOnlyRedirect();
+        },
+        builder: (context, state) => const AudioStoragePage(),
+      ),
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: AppRoutes.prayerReview,
+          redirect: (context, state) async => prayerReviewRedirect(
+            getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
+            state.extra) ?? await MemorizationRouteGuard.adultOnlyRedirect(),
+          builder: (context, state) {
+            final occurrence = state.extra! as PrayerOccurrence;
+            return BlocProvider(
+              create: (_) => getIt<PrayerReviewCubit>()
+                ..load(occurrence, allowSelection: false),
+              child: Builder(builder: (context) => PrayerReviewPage(
+                onRetry: () => context.read<PrayerReviewCubit>()
+                  .load(occurrence, allowSelection: false))),
+            );
+          },
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: AppRoutes.similarAyahTrainer,
+          redirect: (context, state) async =>
+              similarAyahTrainerRedirect(
+                getIt.isRegistered<ExperienceFlags>()
+                    ? getIt<ExperienceFlags>() : null,
+              ) ?? similarAyahPairRedirect(state.uri.queryParameters) ??
+                  similarAyahTargetRedirect(state.uri.queryParameters) ??
+                  await MemorizationRouteGuard.adultOnlyRedirect(),
+          builder: (context, state) => BlocProvider(
+            create: (_) {
+              final cubit = getIt<SimilarAyahTrainerCubit>();
+              final query = state.uri.queryParameters;
+              final pair = _similarAyahPair(query);
+              final target = _similarAyahTarget(query);
+              if (pair != null) {
+                // Load the list first so Back returns to it, then open the pair.
+                unawaited(cubit.load().then((_) => cubit.chooseReference(
+                  SimilarAyahReferencePair(
+                    targetSurahId: pair.$1.surahId,
+                    targetAyahNumber: pair.$1.ayahNumber,
+                    otherSurahId: pair.$2.surahId,
+                    otherAyahNumber: pair.$2.ayahNumber,
+                  ),
+                )));
+              } else {
+                unawaited(
+                  target == null ? cubit.load() : cubit.loadRelated(target),
+                );
+              }
+              return cubit;
+            },
+            child: Builder(builder: (context) => SimilarAyahTrainerPage(
+              cubit: context.read<SimilarAyahTrainerCubit>(),
+            )),
+          ),
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: AppRoutes.quranNotes,
+        redirect: (context, state) async {
+          final flagged = ayahNotesRedirect(
+            getIt.isRegistered<ExperienceFlags>()
+                ? getIt<ExperienceFlags>()
+                : null,
+          );
+          return flagged ?? MemorizationRouteGuard.adultOnlyRedirect();
+        },
+        builder: (context, state) => const AyahNotesPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.quranDaily,
         redirect: (context, state) async {
           try {
@@ -683,7 +876,31 @@ abstract class AppRouter {
           final mode = state.uri.queryParameters['mode'] == 'khatmah'
               ? QuranReaderMode.khatmah
               : QuranReaderMode.free;
-          return QuranReaderPage(pageNumber: pageNumber, readerMode: mode);
+          final flags = getIt.isRegistered<ExperienceFlags>()
+              ? getIt<ExperienceFlags>()
+              : null;
+          final targetSurah = int.tryParse(
+            state.uri.queryParameters['targetSurah'] ?? '',
+          );
+          final targetAyah = int.tryParse(
+            state.uri.queryParameters['targetAyah'] ?? '',
+          );
+          final initialTarget =
+              flags?.isEnabled(ExperienceFeature.ayahNotes) == true &&
+                  targetSurah != null &&
+                  targetAyah != null &&
+                  targetSurah > 0 &&
+                  targetAyah > 0
+              ? AyahReference(
+                  surahId: targetSurah,
+                  ayahNumber: targetAyah,
+                )
+              : null;
+          return QuranReaderPage(
+            pageNumber: pageNumber,
+            readerMode: mode,
+            initialTarget: initialTarget,
+          );
         },
       ),
       GoRoute(
@@ -725,7 +942,9 @@ abstract class AppRouter {
         path: AppRoutes.trustCenter,
         // Flag off: the page does not exist; lead back to settings.
         redirect: (context, state) => trustCenterRedirect(
-          getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
+          getIt.isRegistered<ExperienceFlags>()
+              ? getIt<ExperienceFlags>()
+              : null,
         ),
         builder: (context, state) => const TrustCenterPage(),
       ),
@@ -734,7 +953,9 @@ abstract class AppRouter {
         path: AppRoutes.backup,
         // Flag off: the page does not exist; lead back to settings.
         redirect: (context, state) => backupRedirect(
-          getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
+          getIt.isRegistered<ExperienceFlags>()
+              ? getIt<ExperienceFlags>()
+              : null,
         ),
         builder: (context, state) => const BackupPage(),
       ),
@@ -1102,6 +1323,9 @@ abstract class AppRouter {
               extra?['blockSize'] as int? ??
               int.tryParse(state.uri.queryParameters['blockSize'] ?? '') ??
               5;
+          final reviewEndAyah =
+              extra?['reviewEndAyah'] as int? ??
+              int.tryParse(state.uri.queryParameters['reviewEndAyah'] ?? '');
           if (!_isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
             return const MemorizationHubPage();
           }
@@ -1114,6 +1338,7 @@ abstract class AppRouter {
             origin:
                 extra?['origin'] as String? ??
                 state.uri.queryParameters['origin'],
+            reviewEndAyah: reviewEndAyah,
           );
           return V2SessionPage(
             surahId: surahId,

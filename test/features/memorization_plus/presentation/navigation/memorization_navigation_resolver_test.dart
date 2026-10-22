@@ -748,7 +748,7 @@ class _FakeRepository implements MemorizationPlusRepository {
   final Map<int, List<KidsJourneyStage>>? kidsStagesBySurah;
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
     required int surahId,
   }) async => Right(kidsStagesBySurah?[surahId] ?? kidsStages);
 

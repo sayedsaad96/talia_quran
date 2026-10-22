@@ -32,6 +32,7 @@ import 'package:talia_quran/features/prayer_companion/data/models/prayer_compani
 import 'package:talia_quran/features/streak/data/models/daily_activity_isar.dart';
 import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
+import 'package:talia_quran/features/quran/data/models/isar_ayah_note.dart';
 
 import '../../helpers/isar_test_core.dart';
 
@@ -1128,6 +1129,247 @@ void main() {
     expect(stored['flutter.read_pages'], '[600]');
     expect(stored['flutter.ramadan_tarawih|user-b'], '[{"night":9}]');
     expect(stored.containsKey('flutter.khatmah_active_plan'), isFalse);
+  });
+
+  test('v2 backup round-trips private note text and timestamps under the new owner',
+      () async {
+    final created = DateTime.utc(2026, 10, 1, 6, 30);
+    final updated = DateTime.utc(2026, 10, 2, 7, 45);
+    final isarA = await openIsar('notes_v2_source');
+    await isarA.writeTxn(() => isarA.isarAyahNotes.putAll([
+          IsarAyahNote()
+            ..ownerId = 'user-a'
+            ..surahId = 2
+            ..ayahNumber = 255
+            ..body = 'Private note: e\u{301} 👩🏽‍💻'
+            ..createdAt = created
+            ..updatedAt = updated,
+          IsarAyahNote()
+            ..ownerId = 'user-c'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Other owner'
+            ..createdAt = created
+            ..updatedAt = updated,
+        ]));
+    final payload = await collectA(isarA, await freshPrefs(ownerAPrefs()));
+    final notes = payload.sections[BackupSections.ayahNotes]! as List;
+    expect(notes, hasLength(1));
+    expect((notes.single as Map)['ownerId'], kBackupOwnerToken);
+    expect((notes.single as Map).containsKey('id'), isFalse);
+
+    final isarB = await openIsar('notes_v2_target');
+    await isarB.writeTxn(() => isarB.isarAyahNotes.put(
+          IsarAyahNote()
+            ..ownerId = 'user-c'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Keep private C'
+            ..createdAt = created
+            ..updatedAt = updated,
+        ));
+    expect(
+      await BackupRestorer(
+        isarB,
+        await freshPrefs({}),
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(payload),
+      BackupRestoreResult.restored,
+    );
+    final restored = await isarB.isarAyahNotes
+        .filter()
+        .ownerIdEqualTo('user-b')
+        .findAll();
+    expect(restored, hasLength(1));
+    expect(restored.single.body, 'Private note: e\u{301} 👩🏽‍💻');
+    expect(restored.single.createdAt.toUtc(), created);
+    expect(restored.single.updatedAt.toUtc(), updated);
+    expect(
+      (await isarB.isarAyahNotes.filter().ownerIdEqualTo('user-c').findAll())
+          .single
+          .body,
+      'Keep private C',
+    );
+  });
+
+  test('a v1 backup keeps the notes it cannot carry; note section validation is strict',
+      () async {
+    final source = await openIsar('notes_v1_source');
+    final v2 = await collectA(source, await freshPrefs(ownerAPrefs()));
+    final decoded = decodeBackup(
+      await File('test/fixtures/backups/pre_ayah_notes_v1.talia').readAsBytes(),
+    );
+    expect(decoded.error, isNull);
+    expect(decoded.payload!.schemaVersion, 1);
+    final v1 = decoded.payload!;
+    final target = await openIsar('notes_v1_target');
+    final stamp = DateTime.utc(2026, 10, 1);
+    await target.writeTxn(() => target.isarAyahNotes.putAll([
+          IsarAyahNote()
+            ..ownerId = 'user-b'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Replace me'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+          IsarAyahNote()
+            ..ownerId = 'user-c'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Keep me'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+        ]));
+    final prefs = await freshPrefs({});
+    final restorer = BackupRestorer(
+      target,
+      prefs,
+      const FixedRecordOwnerProvider('user-b'),
+    );
+    expect(await restorer.restore(v1), BackupRestoreResult.restored);
+    // A pre-notes backup has no notes section: the device's notes survive.
+    expect(
+      (await target.isarAyahNotes.filter().ownerIdEqualTo('user-b').findFirst())!
+          .body,
+      'Replace me',
+    );
+    expect(
+      (await target.isarAyahNotes.filter().ownerIdEqualTo('user-c').findFirst())!
+          .body,
+      'Keep me',
+    );
+
+    final missing = BackupPayload(
+      schemaVersion: 2,
+      createdAt: v2.createdAt,
+      sections: {
+        for (final entry in v2.sections.entries)
+          if (entry.key != BackupSections.ayahNotes) entry.key: entry.value,
+      },
+    );
+    final duplicate = BackupPayload(
+      schemaVersion: 2,
+      createdAt: v2.createdAt,
+      sections: {
+        ...v2.sections,
+        BackupSections.ayahNotes: [
+          {
+            'ownerId': kBackupOwnerToken,
+            'surahId': 1,
+            'ayahNumber': 1,
+            'body': 'one',
+            'createdAt': stamp.toIso8601String(),
+            'updatedAt': stamp.toIso8601String(),
+          },
+          {
+            'ownerId': kBackupOwnerToken,
+            'surahId': 1,
+            'ayahNumber': 1,
+            'body': 'two',
+            'createdAt': stamp.toIso8601String(),
+            'updatedAt': stamp.toIso8601String(),
+          },
+        ],
+      },
+    );
+    final corrupt = BackupPayload(
+      schemaVersion: 2,
+      createdAt: v2.createdAt,
+      sections: {
+        ...v2.sections,
+        BackupSections.ayahNotes: [
+          {
+            'ownerId': kBackupOwnerToken,
+            'surahId': 1,
+            'ayahNumber': 1,
+            'body': '   ',
+            'createdAt': stamp.toIso8601String(),
+            'updatedAt': stamp.toIso8601String(),
+          },
+        ],
+      },
+    );
+    final v1WithNotes = BackupPayload(
+      schemaVersion: 1,
+      createdAt: v2.createdAt,
+      sections: v2.sections,
+    );
+    expect(await restorer.restore(missing), BackupRestoreResult.invalidSections);
+    expect(await restorer.restore(duplicate), BackupRestoreResult.invalidSections);
+    expect(await restorer.restore(corrupt), BackupRestoreResult.invalidSections);
+    expect(
+      await restorer.restore(v1WithNotes),
+      BackupRestoreResult.invalidSections,
+    );
+  });
+
+  test('corrupt local notes fail collection and preference rollback restores notes',
+      () async {
+    final source = await openIsar('notes_corrupt_source');
+    final stamp = DateTime.utc(2026, 10, 1);
+    await source.writeTxn(() => source.isarAyahNotes.put(
+          IsarAyahNote()
+            ..ownerId = 'user-a'
+            ..surahId = 115
+            ..ayahNumber = 1
+            ..body = 'invalid reference'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+        ));
+    await expectLater(
+      collectA(source, await freshPrefs(ownerAPrefs())),
+      throwsA(isA<StateError>()),
+    );
+
+    final importSource = await openIsar('notes_rollback_source');
+    await importSource.writeTxn(() => importSource.isarAyahNotes.put(
+          IsarAyahNote()
+            ..ownerId = 'user-a'
+            ..surahId = 2
+            ..ayahNumber = 255
+            ..body = 'Imported note'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+        ));
+    final payload = await collectA(importSource, await freshPrefs(ownerAPrefs()));
+    final env = await ownerBDevice('notes_rollback', hooked: true);
+    await env.isar.writeTxn(() => env.isar.isarAyahNotes.putAll([
+          IsarAyahNote()
+            ..ownerId = 'user-b'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Original B'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+          IsarAyahNote()
+            ..ownerId = 'user-c'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..body = 'Private C'
+            ..createdAt = stamp
+            ..updatedAt = stamp,
+        ]));
+    env.store!.onSet = (key) => key != 'ramadan_tarawih|user-b';
+    expect(
+      await BackupRestorer(
+        env.isar,
+        env.prefs,
+        const FixedRecordOwnerProvider('user-b'),
+      ).restore(payload),
+      BackupRestoreResult.writeFailed,
+    );
+    expect(
+      (await env.isar.isarAyahNotes.filter().ownerIdEqualTo('user-b').findAll())
+          .single
+          .body,
+      'Original B',
+    );
+    expect(
+      (await env.isar.isarAyahNotes.filter().ownerIdEqualTo('user-c').findAll())
+          .single
+          .body,
+      'Private C',
+    );
   });
 
   test('azkar counters travel with their day stamp: a yesterday backup reads '

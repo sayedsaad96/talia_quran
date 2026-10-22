@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:meta/meta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/identity/account_data_barrier.dart';
 import '../../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
@@ -20,6 +21,7 @@ import 'kids_child_policy_sync.dart';
 import 'kids_home_mission_child_sync.dart';
 import 'kids_reading_support_sync.dart';
 import 'memorization_cloud_mappers.dart';
+import 'parent_reward_cloud_merge.dart';
 
 /// Kids-mode cloud sync: pushes kids progress + session logs to Supabase and
 /// reads the parent-facing remote children dashboard (with the legacy row-by-
@@ -36,6 +38,9 @@ class MemorizationKidsCloudSyncService {
     this._dashboardCache,
     this._readingSupportSync,
     this._readingSupportEnabled,
+    this._remotePlanEnabled,
+    this._remotePromiseEnabled,
+    this._barrier,
   });
 
   final FamilyActivityPublisher? _activityPublisher;
@@ -45,6 +50,25 @@ class MemorizationKidsCloudSyncService {
   /// flag is on. Best-effort: it never fails the kids pull or push.
   final KidsReadingSupportSync? _readingSupportSync;
   final bool Function()? _readingSupportEnabled;
+  final bool Function()? _remotePlanEnabled;
+  final bool Function()? _remotePromiseEnabled;
+  final AccountDataBarrier? _barrier;
+
+  bool get _useRemotePromiseV2 {
+    try {
+      return _remotePromiseEnabled?.call() ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool get _useRemotePlanV2 {
+    try {
+      return _remotePlanEnabled?.call() ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 
   KidsReadingSupportSync? get _activeReadingSupport {
     final sync = _readingSupportSync;
@@ -71,6 +95,7 @@ class MemorizationKidsCloudSyncService {
     _datasource,
     _owner,
     onPolicyChanged: _onKidsPolicyChanged,
+    barrier: _barrier,
   );
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
@@ -174,25 +199,29 @@ class MemorizationKidsCloudSyncService {
 
   Future<void> _pullInbound(SupabaseClient client, String ownerId) async {
     _ensureOwner(ownerId);
+    final rewardLease = _datasource.captureParentRewardsLease();
     // The gift list mirrors the server only while a guardian is linked. An
     // unlinked device keeps the gifts its guardian area made locally, and a
     // child can still read rows of a revoked link that can no longer move.
     if ((await _datasource.getMemorizationProfile()).isGuardianLinked) {
-      final rewardRows = await client
-          .from('parent_rewards')
-          .select()
-          .eq('child_user_id', ownerId)
-          .order('created_at', ascending: false);
+      final rewardRows = await _completeRewardSnapshot(client, ownerId);
       _ensureOwner(ownerId);
-      await _datasource.saveParentRewards(
-        rewardRows
-            .map(
-              (row) => ParentRewardModel.fromEntity(
-                _mappers.rewardFromCloud(Map<String, dynamic>.from(row)),
-              ),
-            )
-            .toList(),
-      );
+      // Every page was read above, so this is a complete snapshot. Commit
+      // only its cloud subset under the reward write lock;
+      // local and unresolved legacy rows created while fetching survive.
+      final snapshot = rewardRows
+          .map(
+            (row) => ParentRewardModel.fromEntity(
+              _mappers.rewardFromCloud(Map<String, dynamic>.from(row)),
+            ),
+          )
+          .toList();
+      await _datasource.updateParentRewards((current) async =>
+          ParentRewardCloudMerge.completeSnapshot(
+            current: current,
+            cloudSnapshot: snapshot,
+            ownerId: ownerId,
+          ), authority: rewardLease);
       _ensureOwner(ownerId);
     }
     // Home missions never fail the pull (the table may be undeployed or the
@@ -235,6 +264,28 @@ class MemorizationKidsCloudSyncService {
         return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
       },
     );
+  }
+
+  /// Fetches every page before replacing any cloud cache rows. A failed page
+  /// leaves the previous subset intact because this method throws before the
+  /// locked merge is reached.
+  Future<List<dynamic>> _completeRewardSnapshot(
+    SupabaseClient client,
+    String ownerId,
+  ) async {
+    const pageSize = 500;
+    final all = <dynamic>[];
+    for (var offset = 0;; offset += pageSize) {
+      final page = await client
+          .from('parent_rewards')
+          .select()
+          .eq('child_user_id', ownerId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + pageSize - 1);
+      _ensureOwner(ownerId);
+      all.addAll(page);
+      if (page.length < pageSize) return all;
+    }
   }
 
   Future<Either<Failure, void>> syncKidsProgressToCloud() async {
@@ -535,6 +586,7 @@ class MemorizationKidsCloudSyncService {
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   }) async {
     try {
       final trimmed = title.trim();
@@ -559,9 +611,19 @@ class MemorizationKidsCloudSyncService {
           NetworkFailure(CubitMessageCodes.guardianSignInRequired),
         );
       }
+      final useV2 = _useRemotePromiseV2;
       await client.rpc(
-        'create_parent_reward',
-        params: {'p_child_user_id': childUserId, 'p_title': trimmed},
+        useV2 ? 'create_parent_reward_v2' : 'create_parent_reward',
+        params: {
+          'p_child_user_id': childUserId,
+          'p_title': trimmed,
+          if (useV2)
+            'p_milestone_surah_id': ParentReward.isValidMilestoneSurahId(
+              milestoneSurahId,
+            )
+                ? milestoneSurahId
+                : null,
+        },
       );
       final rows = await client
           .from('parent_rewards')
@@ -741,12 +803,15 @@ class MemorizationKidsCloudSyncService {
         NetworkFailure(CubitMessageCodes.guardianSignInRequired),
       );
     }
+    final useV2 = _useRemotePlanV2;
     return _policySync.casRemote(
       childUserId: childUserId,
       policy: policy,
       expectedVersion: policy.version,
+      useV2: useV2,
       casRpc: (params) =>
-          client.rpc('compare_and_swap_child_policy', params: params),
+          client.rpc(useV2 ? 'compare_and_swap_child_policy_v2'
+              : 'compare_and_swap_child_policy', params: params),
     );
   }
 
@@ -928,6 +993,76 @@ class MemorizationKidsCloudSyncService {
     cacheOnDevice: true,
   );
 
+  /// Uses explicit cached provenance for a child-device transition. A restored
+  /// cache is not authority: the live owner must still match the cloud row.
+  Future<Either<Failure, List<ParentReward>>> requestStoredCloudParentReward(
+    ParentReward reward,
+    {AccountDataLease? authority,
+  }
+  ) {
+    if (reward.origin != ParentRewardOrigin.cloud ||
+        reward.serverId == null ||
+        reward.ownerId == null ||
+        reward.ownerId != _owner.currentOwnerId) {
+      return Future.value(
+        const Left(CacheFailure(CubitMessageCodes.parentRewardUnavailable)),
+      );
+    }
+    return _transitionRemoteParentReward(
+      'request_parent_reward',
+      reward.serverId!,
+      cacheOnDevice: true,
+      authority: authority,
+    );
+  }
+
+  /// Called only after the local completion pipeline has acknowledged a
+  /// canonical completed-surah result. Each server response is the only
+  /// source used to unlock the cached cloud row.
+  Future<void> unlockStoredCloudRewardsForCompletedSurah(int surahId) async {
+    if (!_useRemotePromiseV2 || !ParentReward.isValidMilestoneSurahId(surahId)) {
+      return;
+    }
+    final ownerId = _owner.currentOwnerId;
+    final authority = _datasource.captureParentRewardsLease();
+    authority.checkOwner(ownerId);
+    final rewards = await _datasource.getParentRewards();
+    authority.checkOwner(ownerId);
+    for (final reward in rewards) {
+      authority.checkOwner(ownerId);
+      if (reward.origin != ParentRewardOrigin.cloud ||
+          reward.ownerId != ownerId ||
+          reward.milestoneSurahId != surahId ||
+          reward.status != ParentRewardStatus.locked ||
+          reward.serverId == null) {
+        continue;
+      }
+      final result = await _transitionRemoteParentReward(
+        'unlock_parent_reward_by_milestone',
+        reward.serverId!,
+        cacheOnDevice: true,
+        authority: authority,
+      );
+      if (result.isLeft()) continue;
+    }
+  }
+
+  /// The treasures page also checks canonical completion for promises that
+  /// arrived after the surah was completed. Only the server unlocks this row.
+  Future<Either<Failure, List<ParentReward>>> unlockStoredCloudMilestoneReward(
+    ParentReward reward,
+    {AccountDataLease? authority,
+  }
+  ) {
+    if (!_useRemotePromiseV2 || reward.origin != ParentRewardOrigin.cloud ||
+        reward.ownerId != _owner.currentOwnerId || reward.serverId == null ||
+        !ParentReward.isValidMilestoneSurahId(reward.milestoneSurahId)) {
+      return Future.value(const Left(CacheFailure(CubitMessageCodes.parentRewardUnavailable)));
+    }
+    return _transitionRemoteParentReward('unlock_parent_reward_by_milestone',
+      reward.serverId!, cacheOnDevice: true, authority: authority);
+  }
+
   /// Guardian: confirms the hand-over (requested → claimed).
   Future<Either<Failure, List<ParentReward>>> approveRemoteParentReward(
     String rewardId,
@@ -942,11 +1077,16 @@ class MemorizationKidsCloudSyncService {
   /// the child's own transitions ([cacheOnDevice]) are written to it.
   Future<Either<Failure, List<ParentReward>>> _transitionRemoteParentReward(
     String rpcName,
-    String rewardId, {
+    String serverId, {
     bool cacheOnDevice = false,
+    AccountDataLease? authority,
   }) async {
     try {
-      final parsedId = int.tryParse(rewardId);
+      final ownerId = _owner.currentOwnerId;
+      final originalAuthority =
+          authority ?? _datasource.captureParentRewardsLease();
+      originalAuthority.checkOwner(ownerId);
+      final parsedId = int.tryParse(serverId);
       if (parsedId == null) {
         return const Left(
           CacheFailure(CubitMessageCodes.parentRewardUnavailable),
@@ -961,7 +1101,7 @@ class MemorizationKidsCloudSyncService {
       final client = clientResult.getOrElse(
         () => throw StateError('unreachable'),
       );
-      if (client.auth.currentUser == null) {
+      if (client.auth.currentUser?.id != ownerId) {
         return const Left(
           NetworkFailure(CubitMessageCodes.guardianSignInRequired),
         );
@@ -971,28 +1111,27 @@ class MemorizationKidsCloudSyncService {
         rpcName,
         params: {'p_reward_id': parsedId},
       );
+      originalAuthority.checkOwner(ownerId);
+      _ensureOwner(ownerId);
       final acknowledged = (response as List<dynamic>)
           .whereType<Map>()
           .map(
             (row) => _mappers.rewardFromCloud(Map<String, dynamic>.from(row)),
           )
           .toList();
-      if (acknowledged.isEmpty) {
+      if (acknowledged.length != 1 || acknowledged.single.serverId != serverId ||
+          (cacheOnDevice && acknowledged.single.ownerId != ownerId)) {
         return const Left(
           NetworkFailure(CubitMessageCodes.parentRewardUnavailable),
         );
       }
       if (!cacheOnDevice) return Right(acknowledged);
 
-      final local = await _datasource.getParentRewards();
-      final byId = {for (final reward in local) reward.id: reward};
-      for (final reward in acknowledged) {
-        byId[reward.id] = ParentRewardModel.fromEntity(reward);
-      }
-      final merged = byId.values.toList();
-      await _datasource.saveParentRewards(
-        merged.map(ParentRewardModel.fromEntity).toList(),
-      );
+      final merged = await _datasource.updateParentRewards((current) async =>
+          ParentRewardCloudMerge.mergeAcknowledged(
+            current: current,
+            acknowledged: acknowledged,
+          ), authority: originalAuthority);
       return Right(merged);
     } on PostgrestException catch (e) {
       if (e.message.contains('Invalid reward transition') ||

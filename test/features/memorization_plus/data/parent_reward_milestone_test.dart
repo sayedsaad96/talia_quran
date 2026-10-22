@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
@@ -113,8 +111,8 @@ void main() {
     });
   });
 
-  group('cloud stays unchanged', () {
-    test('rewardFromCloud ignores any milestone column', () {
+  group('cloud milestone provenance', () {
+    test('rewardFromCloud keeps a valid server milestone', () {
       final mapper = MemorizationCloudMappers(const ProgressMetricsService());
       final reward = mapper.rewardFromCloud({
         'id': 'r1',
@@ -124,26 +122,9 @@ void main() {
         'milestone_surah_id': 78,
         'milestoneSurahId': 78,
       });
-      expect(reward.milestoneSurahId, isNull);
+      expect(reward.milestoneSurahId, 78);
     });
 
-    test('the cloud paths never mention the local milestone field', () {
-      const files = [
-        'lib/features/memorization_plus/data/repositories/collaborators/'
-            'memorization_cloud_mappers.dart',
-        'lib/features/memorization_plus/data/repositories/collaborators/'
-            'memorization_kids_cloud_sync_service.dart',
-        'lib/features/memorization_plus/domain/repositories/'
-            'memorization_cloud_repository.dart',
-      ];
-      for (final path in files) {
-        expect(
-          File(path).readAsStringSync().toLowerCase(),
-          isNot(contains('milestone')),
-          reason: path,
-        );
-      }
-    });
   });
 }
 

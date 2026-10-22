@@ -77,95 +77,110 @@ class _V2CompletionPageState extends State<V2CompletionPage> {
     final textSecondary = context.tokens.textSecondary;
     final l10n = context.l10n;
 
+    // Scrolls only when the content is taller than the screen (a long closing
+    // ayah on a small phone); otherwise the spacers lay it out as before.
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Spacer(),
-            // ── Closing moment: سكينة before statistics ──
-            ClosingMomentAyahCard(
-              key: const Key('v2_closing_moment'),
-              summary: finalState.isReview
-                  ? l10n.closingSummaryReview
-                  : l10n.closingSummaryMemorization(
-                      finalState.passedAyahNumbers.length,
-                      context.numText(finalState.passedAyahNumbers.length),
+      child: CustomScrollView(
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.pagePadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Spacer(),
+                  // ── Closing moment: سكينة before statistics ──
+                  ClosingMomentAyahCard(
+                    key: const Key('v2_closing_moment'),
+                    summary: finalState.isReview
+                        ? l10n.closingSummaryReview
+                        : l10n.closingSummaryMemorization(
+                            finalState.passedAyahNumbers.length,
+                            context.numText(
+                              finalState.passedAyahNumbers.length,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  V2SummaryRow(
+                    passed: finalState.passedAyahNumbers.length,
+                    total: finalState.totalAyahsInBlock,
+                    failures: finalState.failureTracker.totalFailures,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    l10n.closingRestNote,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: textSecondary,
                     ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            V2SummaryRow(
-              passed: finalState.passedAyahNumbers.length,
-              total: finalState.totalAyahsInBlock,
-              failures: finalState.failureTracker.totalFailures,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              l10n.closingRestNote,
-              textAlign: TextAlign.center,
-              style: AppTypography.bodySmall.copyWith(color: textSecondary),
-            ),
-            const Spacer(),
-            OutlinedButton.icon(
-              key: const Key('v2_closing_dua_button'),
-              onPressed: () => showClosingDuaSheet(context),
-              icon: const Icon(TaliaIcons.dua),
-              label: Text(l10n.closingDuaButton),
-            ),
-            if (!finalState.isReview) ...[
-              const SizedBox(height: AppSpacing.sm),
-              OutlinedButton.icon(
-                onPressed: () {
-                  final profileState = context.read<ProfileCubit>().state;
-                  final name =
-                      profileState is ProfileLoaded &&
-                          profileState.profile.hasName
-                      ? profileState.profile.displayName
-                      : null;
-                  final data = SocialShareData.memorization(
-                    ayahsCount: finalState.passedAyahNumbers.length,
-                    surahsCount: 0,
-                    userName: name,
-                  );
-                  SocialShareSheet.show(context, data);
-                },
-                icon: const Icon(TaliaIcons.share),
-                label: Text(context.l10n.shareMemorizationMilestone),
+                  ),
+                  const Spacer(),
+                  OutlinedButton.icon(
+                    key: const Key('v2_closing_dua_button'),
+                    onPressed: () => showClosingDuaSheet(context),
+                    icon: const Icon(TaliaIcons.dua),
+                    label: Text(l10n.closingDuaButton),
+                  ),
+                  if (!finalState.isReview) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        final profileState = context.read<ProfileCubit>().state;
+                        final name =
+                            profileState is ProfileLoaded &&
+                                profileState.profile.hasName
+                            ? profileState.profile.displayName
+                            : null;
+                        final data = SocialShareData.memorization(
+                          ayahsCount: finalState.passedAyahNumbers.length,
+                          surahsCount: 0,
+                          userName: name,
+                        );
+                        SocialShareSheet.show(context, data);
+                      },
+                      icon: const Icon(TaliaIcons.share),
+                      label: Text(context.l10n.shareMemorizationMilestone),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
+                  if (_nextStep case final next?) ...[
+                    FilledButton.icon(
+                      key: const Key('v2_next_plan_item_button'),
+                      // Replace this finished session so "back" returns to where
+                      // the learner started, not to a completed screen.
+                      onPressed: () => context.pushReplacement(next.route),
+                      style: FilledButton.styleFrom(backgroundColor: primary),
+                      icon: const Icon(TaliaIcons.skipNext),
+                      label: Text(
+                        widget.isSurahPractice
+                            ? l10n.practiceNextPassage(
+                                context.numText(next.remaining),
+                              )
+                            : l10n.v2NextPlanItem(
+                                context.numText(next.remaining),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: () => context.go(AppRoutes.memorizationHub),
+                      icon: const Icon(TaliaIcons.hub),
+                      label: Text(context.l10n.v2MemorizationHub),
+                    ),
+                  ] else
+                    FilledButton.icon(
+                      onPressed: () => context.go(AppRoutes.memorizationHub),
+                      style: FilledButton.styleFrom(backgroundColor: primary),
+                      icon: const Icon(TaliaIcons.hub),
+                      label: Text(context.l10n.v2MemorizationHub),
+                    ),
+                ],
               ),
-            ],
-            const SizedBox(height: AppSpacing.sm),
-            if (_nextStep case final next?) ...[
-              FilledButton.icon(
-                key: const Key('v2_next_plan_item_button'),
-                // Replace this finished session so "back" returns to where
-                // the learner started, not to a completed screen.
-                onPressed: () => context.pushReplacement(next.route),
-                style: FilledButton.styleFrom(backgroundColor: primary),
-                icon: const Icon(TaliaIcons.skipNext),
-                label: Text(
-                  widget.isSurahPractice
-                      ? l10n.practiceNextPassage(
-                          context.numText(next.remaining),
-                        )
-                      : l10n.v2NextPlanItem(context.numText(next.remaining)),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              OutlinedButton.icon(
-                onPressed: () => context.go(AppRoutes.memorizationHub),
-                icon: const Icon(TaliaIcons.hub),
-                label: Text(context.l10n.v2MemorizationHub),
-              ),
-            ] else
-              FilledButton.icon(
-                onPressed: () => context.go(AppRoutes.memorizationHub),
-                style: FilledButton.styleFrom(backgroundColor: primary),
-                icon: const Icon(TaliaIcons.hub),
-                label: Text(context.l10n.v2MemorizationHub),
-              ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

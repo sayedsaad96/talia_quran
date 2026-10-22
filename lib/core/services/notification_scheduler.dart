@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
+import '../experience/experience_feature_flags.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/locale_number_formatter.dart';
 import '../prayer_delivery/android_prayer_delivery_scheduler.dart';
@@ -25,6 +27,24 @@ import 'notification_service.dart';
 import 'prayer_times_service.dart';
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
+typedef ForecastAudienceResolver = Future<bool> Function(SharedPreferences prefs);
+typedef PrayerReviewPreparationBodyLoader = Future<String?> Function(
+  PrayerOccurrence occurrence, AppLocalizations l10n);
+
+/// Reads the persisted memorization profile without a foreground DI graph.
+/// Unknown, malformed, and unselected profiles fail closed to protect children.
+Future<bool> forecastAudienceIsAdultFromPreferences(
+  SharedPreferences prefs,
+) async {
+  try {
+    final raw = prefs.getString('mem_plus_profile');
+    if (raw == null) return false;
+    final decoded = jsonDecode(raw);
+    return decoded is Map<String, dynamic> && decoded['selectedPath'] == 'adult';
+  } catch (_) {
+    return false;
+  }
+}
 
 bool hasCompletedKidsMissionToday(
   Iterable<DateTime> completedAt, {
@@ -88,6 +108,10 @@ class NotificationScheduler {
   final GetActiveKhatmahUsecase? _getActiveKhatmah;
   final PrayerCompanionPlanner? _prayerCompanionPlanner;
   final PrayerCompanionPreferences? _prayerCompanionPreferences;
+  final ForecastAudienceResolver _forecastAudienceIsAdult;
+  final PrayerReviewPreparationBodyLoader? _prayerReviewBodyLoader;
+  final DateTime Function() _prayerReviewNow;
+  final Future<int?> Function()? _kidsPracticeDaysLoader;
 
   /// Prayer V2 delivery coordinator. Non-null on Android only (created with
   /// the MethodChannel-backed native scheduler); injectable for tests.
@@ -102,8 +126,15 @@ class NotificationScheduler {
     this._getActiveKhatmah,
     this._prayerCompanionPlanner,
     this._prayerCompanionPreferences,
+    ForecastAudienceResolver? forecastAudienceIsAdult,
     PrayerDeliveryCoordinator? prayerDeliveryCoordinator,
-  }) : _prayerDeliveryCoordinator =
+    this._prayerReviewBodyLoader,
+    this._kidsPracticeDaysLoader,
+    DateTime Function()? prayerReviewNow,
+  }) : _prayerReviewNow = prayerReviewNow ?? DateTime.now,
+       _forecastAudienceIsAdult =
+           forecastAudienceIsAdult ?? forecastAudienceIsAdultFromPreferences,
+       _prayerDeliveryCoordinator =
            prayerDeliveryCoordinator ??
            (Platform.isAndroid
                ? PrayerDeliveryCoordinator(AndroidPrayerDeliveryScheduler())
@@ -520,12 +551,30 @@ class NotificationScheduler {
             '${TaliaNotificationService.kidsReminderPreferenceKey}_minute',
           ) ??
           30;
-      await _service.scheduleKidsReviewReminder(
-        title: l10n.notificationKidsReviewTitle,
-        body: l10n.notificationKidsReviewBody,
-        hour: quiet(hour, minute).hour,
-        minute: quiet(hour, minute).minute,
-      );
+      int? practiceDays;
+      try {
+        practiceDays = await _kidsPracticeDaysLoader?.call();
+      } catch (_) {
+        // A loader failure means "no remote restriction": keep the legacy
+        // daily reminder instead of cancelling every kids review reminder.
+        practiceDays = null;
+      }
+      if (practiceDays == null) {
+        await _service.scheduleKidsReviewReminder(
+          title: l10n.notificationKidsReviewTitle,
+          body: l10n.notificationKidsReviewBody,
+          hour: quiet(hour, minute).hour,
+          minute: quiet(hour, minute).minute,
+        );
+      } else {
+        await _service.scheduleKidsPracticeReminders(
+          title: l10n.notificationKidsReviewTitle,
+          body: l10n.notificationKidsReviewBody,
+          practiceDays: practiceDays,
+          hour: quiet(hour, minute).hour,
+          minute: quiet(hour, minute).minute,
+        );
+      }
     } else {
       await _service.cancelKidsReviewReminder();
     }
@@ -597,6 +646,43 @@ class NotificationScheduler {
       );
     } else {
       await _service.cancelWeeklyImpactReminder();
+    }
+
+    final forecastEnabled =
+        prefs.getBool(TaliaNotificationService.forgettingForecastPreferenceKey) ??
+        false;
+    var adultAudience = false;
+    try {
+      adultAudience = await _forecastAudienceIsAdult(prefs);
+    } catch (_) {
+      adultAudience = false;
+    }
+    final featureEnabled = ExperienceFlags.fromPreferences(prefs).isEnabled(
+      ExperienceFeature.forgettingForecast,
+    );
+    if (forecastEnabled && featureEnabled && adultAudience) {
+      final hour = prefs.getInt(
+            '${TaliaNotificationService.forgettingForecastPreferenceKey}_hour',
+          ) ??
+          18;
+      final minute = prefs.getInt(
+            '${TaliaNotificationService.forgettingForecastPreferenceKey}_minute',
+          ) ??
+          0;
+      final weekday = prefs.getInt(
+            '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday',
+          ) ??
+          DateTime.monday;
+      final adjusted = quiet(hour, minute);
+      await _service.scheduleForgettingForecastReminder(
+        title: l10n.notificationForgettingForecastTitle,
+        body: l10n.notificationForgettingForecastBody,
+        weekday: weekday,
+        hour: adjusted.hour,
+        minute: adjusted.minute,
+      );
+    } else {
+      await _service.cancelForgettingForecastReminder();
     }
 
     // Tahajjud / Qiyam Al-Layl Reminder
@@ -906,6 +992,14 @@ class NotificationScheduler {
         PrayerKey.maghrib => isArabic ? 'المغرب' : 'Maghrib',
         PrayerKey.isha => isArabic ? 'العشاء' : 'Isha',
       };
+      var reviewActive = true;
+      final reviewBodies = await _reviewPreparationBodies(
+        reminders, l10n, () => reviewActive,
+      ).timeout(const Duration(seconds: 2), onTimeout: () {
+        reviewActive = false;
+        return const <int, String>{};
+      });
+      reviewActive = false;
       await _service.schedulePrayerCompanionReminders(
         reminders: reminders,
         titleFor: (reminder) => switch (reminder.kind) {
@@ -920,7 +1014,8 @@ class NotificationScheduler {
           final prayerName = prayerNameFor(reminder.occurrence.prayerKey);
           return switch (reminder.kind) {
             PrayerCompanionNotificationKind.preparation =>
-              l10n.notificationCompanionPreparationBody(prayerName),
+              l10n.notificationCompanionPreparationBody(prayerName) +
+                (reviewBodies[reminder.id] == null ? '' : '\n${reviewBodies[reminder.id]}'),
             PrayerCompanionNotificationKind.checkIn =>
               l10n.notificationCompanionCheckInBody(prayerName),
             PrayerCompanionNotificationKind.followUp =>
@@ -949,6 +1044,45 @@ class NotificationScheduler {
       }
       return false;
     }
+  }
+
+  static const Duration _prayerReviewSelectionHorizon = Duration(hours: 24);
+
+  Future<Map<int, String>> _reviewPreparationBodies(
+    List<ScheduledPrayerCompanionNotification> reminders, AppLocalizations l10n,
+    bool Function() isActive,
+  ) async {
+    final loader = _prayerReviewBodyLoader;
+    if (loader == null) return const {};
+    final result = <int, String>{};
+    for (final reminder in reminders) {
+      if (!isActive()) break;
+      if (reminder.kind != PrayerCompanionNotificationKind.preparation) continue;
+      final now = _prayerReviewNow();
+      if (!now.isBefore(reminder.scheduledAt) ||
+          !now.isBefore(reminder.occurrence.scheduledAt)) {
+        continue;
+      }
+      // Selection freezes an assignment, so only occurrences within the next
+      // 24h may create one; further-out notifications keep the base body.
+      if (reminder.occurrence.scheduledAt.difference(now) >
+          _prayerReviewSelectionHorizon) {
+        continue;
+      }
+      try {
+        final addition = await loader(reminder.occurrence, l10n);
+        if (!isActive()) return const {};
+        final checkedAt = _prayerReviewNow();
+        if (addition != null && addition.trim().isNotEmpty &&
+            checkedAt.isBefore(reminder.scheduledAt) &&
+            checkedAt.isBefore(reminder.occurrence.scheduledAt)) {
+          result[reminder.id] = addition;
+        }
+      } catch (_) {
+        // This optional line must not cancel or shift Companion notifications.
+      }
+    }
+    return result;
   }
 
   static const String _smartReminderOpenHoursKey = 'smart_reminder_open_hours';

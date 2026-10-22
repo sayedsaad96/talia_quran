@@ -94,7 +94,7 @@ class _Repo implements MemorizationPlusRepository {
   }
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({ int? milestoneSurahId,
     required String childUserId,
     required String title,
   }) async {

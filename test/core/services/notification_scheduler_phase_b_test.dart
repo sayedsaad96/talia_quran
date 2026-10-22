@@ -34,6 +34,9 @@ void main() {
       () => mockNotificationService.cancelSmartReminder(),
     ).thenAnswer((_) async {});
     when(
+      () => mockNotificationService.cancelForgettingForecastReminder(),
+    ).thenAnswer((_) async {});
+    when(
       () => mockNotificationService.cancelDailyReviewReminder(),
     ).thenAnswer((_) async {});
     when(

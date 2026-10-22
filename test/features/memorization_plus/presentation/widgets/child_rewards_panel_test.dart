@@ -12,6 +12,8 @@ ParentReward _reward(String id, ParentRewardStatus status) => ParentReward(
   title: 'gift $id',
   status: status,
   createdAt: DateTime.utc(2026, 10, 1),
+  origin: ParentRewardOrigin.cloud,
+  serverId: id,
 );
 
 Widget _app(Widget child) => MaterialApp(

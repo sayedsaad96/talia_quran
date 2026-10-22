@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/identity/record_owner_provider.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../core/memorization/review_record_identity.dart';
@@ -110,6 +111,17 @@ abstract class MemorizationPlusLocalDatasource {
   );
   Future<List<ParentRewardModel>> getParentRewards();
   Future<void> saveParentRewards(List<ParentRewardModel> rewards);
+
+  AccountDataLease captureParentRewardsLease();
+
+  /// Serializes an owner-scoped reward read-modify-write and rejects an
+  /// account switch before it can commit a different owner's cache.
+  Future<List<ParentRewardModel>> updateParentRewards(
+    Future<List<ParentRewardModel>> Function(List<ParentRewardModel> current)
+    mutate, {
+    AccountDataLease? authority,
+  }
+  );
   Future<List<KidsHomeMission>> getHomeMissions();
   Future<void> saveHomeMissions(List<KidsHomeMission> missions);
 

@@ -249,13 +249,14 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
     if (unlock == null) return opened;
     for (final reward in rewards) {
       final surahId = reward.milestoneSurahId;
-      if (reward.status != ParentRewardStatus.locked ||
+      if (reward.origin == ParentRewardOrigin.unknown ||
+          reward.status != ParentRewardStatus.locked ||
           surahId == null ||
           !memorized.contains(surahId)) {
         continue;
       }
       try {
-        final result = await unlock.unlock(reward.id);
+        final result = await unlock.unlock(reward.storageIdentity);
         if (result.isRight()) opened.add(reward.id);
       } catch (_) {
         // The gift stays locked; the next load tries again.

@@ -1,0 +1,874 @@
+{
+  "status": "pending_human_review",
+  "labels": "none",
+  "candidatePairCount": 30,
+  "rawBasmalahOnlyCandidateCount": 6,
+  "candidatePairs": [
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 3,
+        "ayah": 1
+      },
+      "selectionStratum": "first_ayah_body",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          1
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 5
+      }
+    },
+    {
+      "a": {
+        "surah": 3,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 29,
+        "ayah": 1
+      },
+      "selectionStratum": "first_ayah_body",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          1
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 5
+      }
+    },
+    {
+      "a": {
+        "surah": 29,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 32,
+        "ayah": 1
+      },
+      "selectionStratum": "first_ayah_body",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          1
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 5
+      }
+    },
+    {
+      "a": {
+        "surah": 54,
+        "ayah": 17
+      },
+      "b": {
+        "surah": 54,
+        "ayah": 22
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          7,
+          7
+        ],
+        "sharedRunTokens": 7,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 7
+      }
+    },
+    {
+      "a": {
+        "surah": 54,
+        "ayah": 22
+      },
+      "b": {
+        "surah": 54,
+        "ayah": 32
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          7,
+          7
+        ],
+        "sharedRunTokens": 7,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 7
+      }
+    },
+    {
+      "a": {
+        "surah": 54,
+        "ayah": 32
+      },
+      "b": {
+        "surah": 54,
+        "ayah": 40
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          7,
+          7
+        ],
+        "sharedRunTokens": 7,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 7
+      }
+    },
+    {
+      "a": {
+        "surah": 55,
+        "ayah": 13
+      },
+      "b": {
+        "surah": 55,
+        "ayah": 16
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          4,
+          4
+        ],
+        "sharedRunTokens": 4,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 77,
+        "ayah": 15
+      },
+      "b": {
+        "surah": 77,
+        "ayah": 19
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          3,
+          3
+        ],
+        "sharedRunTokens": 3,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 3
+      }
+    },
+    {
+      "a": {
+        "surah": 109,
+        "ayah": 3
+      },
+      "b": {
+        "surah": 109,
+        "ayah": 5
+      },
+      "selectionStratum": "repeated_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          5,
+          5
+        ],
+        "sharedRunTokens": 5,
+        "normalizedSimilarity": 1.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 5
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 136
+      },
+      "b": {
+        "surah": 3,
+        "ayah": 84
+      },
+      "selectionStratum": "long_cross_surah",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          31,
+          29
+        ],
+        "sharedRunTokens": 10,
+        "normalizedSimilarity": 0.806452,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 255
+      },
+      "b": {
+        "surah": 3,
+        "ayah": 2
+      },
+      "selectionStratum": "prefix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          50,
+          7
+        ],
+        "sharedRunTokens": 7,
+        "normalizedSimilarity": 0.14,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 7
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 285
+      },
+      "b": {
+        "surah": 4,
+        "ayah": 136
+      },
+      "selectionStratum": "long_cross_surah",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          27,
+          28
+        ],
+        "sharedRunTokens": 4,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 3,
+        "ayah": 26
+      },
+      "b": {
+        "surah": 35,
+        "ayah": 13
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          25,
+          28
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 3,
+        "ayah": 133
+      },
+      "b": {
+        "surah": 57,
+        "ayah": 21
+      },
+      "selectionStratum": "long_cross_surah",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          12,
+          25
+        ],
+        "sharedRunTokens": 6,
+        "normalizedSimilarity": 0.28,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 4,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 33,
+        "ayah": 70
+      },
+      "selectionStratum": "prefix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          28,
+          8
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.071429,
+        "firstAyahBodies": [
+          true,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 5,
+        "ayah": 32
+      },
+      "b": {
+        "surah": 6,
+        "ayah": 151
+      },
+      "selectionStratum": "long_cross_surah",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          40,
+          43
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 6,
+        "ayah": 59
+      },
+      "b": {
+        "surah": 27,
+        "ayah": 75
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          32,
+          10
+        ],
+        "sharedRunTokens": 4,
+        "normalizedSimilarity": 0.21875,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 7,
+        "ayah": 54
+      },
+      "b": {
+        "surah": 10,
+        "ayah": 3
+      },
+      "selectionStratum": "long_cross_surah",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          32,
+          29
+        ],
+        "sharedRunTokens": 14,
+        "normalizedSimilarity": 0.4375,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 14
+      }
+    },
+    {
+      "a": {
+        "surah": 9,
+        "ayah": 111
+      },
+      "b": {
+        "surah": 61,
+        "ayah": 10
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          38,
+          11
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.026316,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 10,
+        "ayah": 62
+      },
+      "b": {
+        "surah": 41,
+        "ayah": 30
+      },
+      "selectionStratum": "prefix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          10,
+          19
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.157895,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 11,
+        "ayah": 18
+      },
+      "b": {
+        "surah": 46,
+        "ayah": 10
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          23,
+          24
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.083333,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 12,
+        "ayah": 64
+      },
+      "b": {
+        "surah": 21,
+        "ayah": 89
+      },
+      "selectionStratum": "suffix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          17,
+          11
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.058824,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 14,
+        "ayah": 10
+      },
+      "b": {
+        "surah": 35,
+        "ayah": 3
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          34,
+          21
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.088235,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 16,
+        "ayah": 97
+      },
+      "b": {
+        "surah": 40,
+        "ayah": 40
+      },
+      "selectionStratum": "prefix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          18,
+          23
+        ],
+        "sharedRunTokens": 8,
+        "normalizedSimilarity": 0.304348,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 2
+      }
+    },
+    {
+      "a": {
+        "surah": 17,
+        "ayah": 111
+      },
+      "b": {
+        "surah": 25,
+        "ayah": 2
+      },
+      "selectionStratum": "suffix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          21,
+          19
+        ],
+        "sharedRunTokens": 8,
+        "normalizedSimilarity": 0.333333,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 19,
+        "ayah": 65
+      },
+      "b": {
+        "surah": 20,
+        "ayah": 14
+      },
+      "selectionStratum": "short_or_medium_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          12,
+          11
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 21,
+        "ayah": 30
+      },
+      "b": {
+        "surah": 24,
+        "ayah": 45
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          18,
+          31
+        ],
+        "sharedRunTokens": 2,
+        "normalizedSimilarity": 0.032258,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 23,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 70,
+        "ayah": 22
+      },
+      "selectionStratum": "short_or_medium_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          3,
+          2
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 39,
+        "ayah": 53
+      },
+      "b": {
+        "surah": 42,
+        "ayah": 25
+      },
+      "selectionStratum": "partial_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          21,
+          12
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          false,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    },
+    {
+      "a": {
+        "surah": 87,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 56,
+        "ayah": 96
+      },
+      "selectionStratum": "suffix_candidate",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          4,
+          4
+        ],
+        "sharedRunTokens": 1,
+        "normalizedSimilarity": 0.25,
+        "firstAyahBodies": [
+          true,
+          false
+        ],
+        "rawPrefixTokens": 0
+      }
+    }
+  ],
+  "rawBasmalahOnlyCandidates": [
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 4,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          28
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 5,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          23
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 6,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          14
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 7,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          1
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 8,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          18
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    },
+    {
+      "a": {
+        "surah": 2,
+        "ayah": 1
+      },
+      "b": {
+        "surah": 10,
+        "ayah": 1
+      },
+      "selectionStratum": "raw_basmalah_only",
+      "runtimeMetrics": {
+        "bodyTokenCounts": [
+          1,
+          5
+        ],
+        "sharedRunTokens": 0,
+        "normalizedSimilarity": 0.0,
+        "firstAyahBodies": [
+          true,
+          true
+        ],
+        "rawPrefixTokens": 4
+      }
+    }
+  ]
+}

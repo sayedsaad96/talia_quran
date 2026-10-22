@@ -425,7 +425,7 @@ class _FakeRepository implements MemorizationPlusRepository {
       const Right(KidsProgress.initial());
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
     required int surahId,
   }) async => Right(journey);
 

@@ -16,6 +16,7 @@ class NotificationSettingsState extends Equatable {
     this.kidsReminder = false,
     this.fridayKahf = true,
     this.weeklyImpact = true,
+    this.forgettingForecast = false,
     this.tahajjud = false,
     this.khatmahReminder = true,
     this.prayerNotifications = false,
@@ -40,6 +41,8 @@ class NotificationSettingsState extends Equatable {
     this.kidsReminderTime = const TimeOfDay(hour: 18, minute: 30),
     this.fridayKahfTime = const TimeOfDay(hour: 9, minute: 0),
     this.weeklyImpactTime = const TimeOfDay(hour: 16, minute: 0),
+    this.forgettingForecastTime = const TimeOfDay(hour: 18, minute: 0),
+    this.forgettingForecastWeekday = DateTime.monday,
     this.tahajjudTime = const TimeOfDay(hour: 3, minute: 30),
     this.khatmahReminderTime = const TimeOfDay(hour: 17, minute: 0),
     this.feedback,
@@ -59,6 +62,7 @@ class NotificationSettingsState extends Equatable {
   final bool kidsReminder;
   final bool fridayKahf;
   final bool weeklyImpact;
+  final bool forgettingForecast;
   final bool tahajjud;
   final bool khatmahReminder;
 
@@ -88,6 +92,8 @@ class NotificationSettingsState extends Equatable {
   final TimeOfDay kidsReminderTime;
   final TimeOfDay fridayKahfTime;
   final TimeOfDay weeklyImpactTime;
+  final TimeOfDay forgettingForecastTime;
+  final int forgettingForecastWeekday;
   final TimeOfDay tahajjudTime;
   final TimeOfDay khatmahReminderTime;
   final NotificationSettingsFeedback? feedback;
@@ -105,6 +111,7 @@ class NotificationSettingsState extends Equatable {
     if (kidsReminder) count++;
     if (fridayKahf) count++;
     if (weeklyImpact) count++;
+    if (forgettingForecast) count++;
     if (tahajjud) count++;
     if (khatmahReminder) count++;
     return count;
@@ -128,6 +135,7 @@ class NotificationSettingsState extends Equatable {
     bool? kidsReminder,
     bool? fridayKahf,
     bool? weeklyImpact,
+    bool? forgettingForecast,
     bool? tahajjud,
     bool? khatmahReminder,
     bool? prayerNotifications,
@@ -153,6 +161,8 @@ class NotificationSettingsState extends Equatable {
     TimeOfDay? fridayKahfTime,
     TimeOfDay? tahajjudTime,
     TimeOfDay? weeklyImpactTime,
+    TimeOfDay? forgettingForecastTime,
+    int? forgettingForecastWeekday,
     TimeOfDay? khatmahReminderTime,
     NotificationSettingsFeedback? feedback,
     int? feedbackRevision,
@@ -169,6 +179,7 @@ class NotificationSettingsState extends Equatable {
       kidsReminder: kidsReminder ?? this.kidsReminder,
       fridayKahf: fridayKahf ?? this.fridayKahf,
       weeklyImpact: weeklyImpact ?? this.weeklyImpact,
+      forgettingForecast: forgettingForecast ?? this.forgettingForecast,
       tahajjud: tahajjud ?? this.tahajjud,
       khatmahReminder: khatmahReminder ?? this.khatmahReminder,
       prayerNotifications: prayerNotifications ?? this.prayerNotifications,
@@ -193,6 +204,10 @@ class NotificationSettingsState extends Equatable {
       kidsReminderTime: kidsReminderTime ?? this.kidsReminderTime,
       fridayKahfTime: fridayKahfTime ?? this.fridayKahfTime,
       weeklyImpactTime: weeklyImpactTime ?? this.weeklyImpactTime,
+      forgettingForecastTime:
+          forgettingForecastTime ?? this.forgettingForecastTime,
+      forgettingForecastWeekday:
+          forgettingForecastWeekday ?? this.forgettingForecastWeekday,
       tahajjudTime: tahajjudTime ?? this.tahajjudTime,
       khatmahReminderTime: khatmahReminderTime ?? this.khatmahReminderTime,
       feedback: feedback ?? this.feedback,
@@ -213,6 +228,7 @@ class NotificationSettingsState extends Equatable {
     kidsReminder,
     fridayKahf,
     weeklyImpact,
+    forgettingForecast,
     tahajjud,
     khatmahReminder,
     prayerNotifications,
@@ -237,6 +253,8 @@ class NotificationSettingsState extends Equatable {
     kidsReminderTime,
     fridayKahfTime,
     weeklyImpactTime,
+    forgettingForecastTime,
+    forgettingForecastWeekday,
     tahajjudTime,
     khatmahReminderTime,
     feedback,

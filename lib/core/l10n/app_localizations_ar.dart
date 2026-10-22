@@ -9015,11 +9015,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupImportSignedIn =>
-      'الاستعادة متاحة فقط دون حساب. بياناتك محفوظة في حسابك.';
+      'الاستعادة متاحة فقط دون حساب. ملاحظاتك الشخصية تبقى على هذا الجهاز فقط.';
 
   @override
   String get backupIncludes =>
-      'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل';
+      'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل، والملاحظات الشخصية';
 
   @override
   String get backupExcludes =>
@@ -9030,7 +9030,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupConfirmBody =>
-      'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف.';
+      'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف. النسخة من الإصدار 1 لا تحتوي ملاحظات شخصية وستمسح ملاحظاتك الحالية.';
 
   @override
   String get backupConfirm => 'استبدال';
@@ -9090,4 +9090,356 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianRecitationExit => 'إنهاء التسميع';
+
+  @override
+  String get forgettingForecastTitle => 'ستضعف خلال 7 أيام إن لم تراجعها';
+
+  @override
+  String forgettingForecastPassage(Object surah, Object start, Object end) {
+    return '$surah، الآيات $start–$end';
+  }
+
+  @override
+  String get forgettingForecastReviewNow => 'راجعها الآن';
+
+  @override
+  String get notificationForgettingForecastTitle => 'وقت للمراجعة';
+
+  @override
+  String get notificationForgettingForecastBody =>
+      'خصص وقتاً قصيراً لمراجعة ما تعلمته.';
+
+  @override
+  String get notificationSettingsForgettingForecast => 'توقع النسيان';
+
+  @override
+  String get ayahNotesTitle => 'تدبّراتي';
+
+  @override
+  String get ayahNoteAction => 'ملاحظتي';
+
+  @override
+  String get ayahNoteLabel => 'ملاحظتك';
+
+  @override
+  String get ayahNoteHint => 'اكتب تدبّرك الشخصي';
+
+  @override
+  String get ayahNotesEmpty => 'لا توجد تدبّرات بعد';
+
+  @override
+  String get ayahNoteSaveFailed => 'تعذّر حفظ ملاحظتك. حاول مرة أخرى.';
+
+  @override
+  String get ayahNotesLoadFailed => 'تعذّر تحميل ملاحظاتك. حاول مرة أخرى.';
+
+  @override
+  String get ayahNoteNavigationFailed => 'تعذّر فتح هذه الآية. حاول مرة أخرى.';
+
+  @override
+  String get audioDownloadsTitle => 'تنزيل التلاوات';
+
+  @override
+  String get audioDownloadsStorage => 'تخزين التلاوات';
+
+  @override
+  String get audioDownloadsWholeJuz => 'تنزيل جزء كامل';
+
+  @override
+  String audioDownloadsJuz(String number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String get audioDownloadsWifiOnly => 'عبر Wi-Fi فقط';
+
+  @override
+  String get audioDownloadsWifiUnavailable =>
+      'لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة.';
+
+  @override
+  String get audioDownloadsSpaceUnknown =>
+      'لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات.';
+
+  @override
+  String get audioDownloadsNetworkWarning =>
+      'لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل.';
+
+  @override
+  String get audioDownloadsProceed => 'متابعة التنزيل';
+
+  @override
+  String get audioDownloadsStart => 'تنزيل أو استئناف';
+
+  @override
+  String get audioDownloadsCompleted => 'اكتمل التنزيل';
+
+  @override
+  String get audioDownloadsCancelled =>
+      'أُلغي التنزيل؛ تبقى الملفات المحفوظة متاحة';
+
+  @override
+  String get audioDownloadsInsufficientSpace => 'المساحة المتاحة غير كافية';
+
+  @override
+  String get audioDownloadsFailed =>
+      'تعذّر التنزيل. يمكنك الاستئناف دون إعادة تنزيل الملفات المحفوظة.';
+
+  @override
+  String get audioDownloadsInProgress => 'جارٍ تنزيل التلاوات…';
+
+  @override
+  String audioDownloadsBytes(String bytes) {
+    return '$bytes بايت';
+  }
+
+  @override
+  String get audioDownloadsDelete => 'حذف تنزيلات هذا القارئ';
+
+  @override
+  String get audioDownloadsDeleteConfirm =>
+      'هل تريد حذف التسجيلات المحفوظة لهذا القارئ من هذا الجهاز؟';
+
+  @override
+  String get hijriYearRecapTitle => 'حصاد العام الهجري';
+
+  @override
+  String get hijriYearRecapCompletions => 'الختمات المكتملة';
+
+  @override
+  String get hijriYearRecapMemorizedApprox => 'آيات محفوظة تقريبًا';
+
+  @override
+  String get hijriYearRecapApproxDefinition =>
+      'الآيات المحفوظة حاليًا والمراجَعة في هذا العام الهجري';
+
+  @override
+  String get hijriYearRecapLifetimeStreak => 'أطول سلسلة على الإطلاق';
+
+  @override
+  String get hijriYearRecapDismiss => 'إخفاء لهذا العام';
+
+  @override
+  String get hijriYearRecapShare => 'مشاركة';
+
+  @override
+  String get hijriYearRecapActivityDays => 'أيام النشاط';
+
+  @override
+  String get similarAyahTrainerTitle => 'تدريب المتشابهات';
+
+  @override
+  String get similarAyahTrainerMachineNote =>
+      'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.';
+
+  @override
+  String get similarAyahLookupAction => 'آيات متقاربة اللفظ (محسوبة آليًا)';
+
+  @override
+  String get similarAyahTrainerEmpty => 'لا توجد أنماط متشابهات مسجلة بعد';
+
+  @override
+  String get similarAyahTrainerTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get similarAyahTrainerTarget => 'الموضع المقصود';
+
+  @override
+  String get similarAyahTrainerOther => 'الموضع المتشابه';
+
+  @override
+  String get similarAyahTrainerPrevious => 'الآية السابقة';
+
+  @override
+  String get similarAyahTrainerPractice =>
+      'استدعِ الموضع المقصود، ثم أظهره عندما تكون مستعدًا.';
+
+  @override
+  String get similarAyahTrainerReveal => 'إظهار الموضع المقصود';
+
+  @override
+  String get similarAyahTrainerUnavailable =>
+      'هذا التدريب متاح لحسابات البالغين المؤهلة فقط.';
+
+  @override
+  String similarAyahFailureNotice(Object reference) {
+    return 'يبدو أنك انتقلت إلى آية مشابهة في الموضع $reference.';
+  }
+
+  @override
+  String get similarAyahOpenComparison => 'تمييز المتشابهات';
+
+  @override
+  String get v2AccountChanged =>
+      'تغيّر الحساب. افتح الجلسة من حسابك الحالي للمتابعة.';
+
+  @override
+  String get similarAyahTrainerNoPrevious => 'لا توجد آية سابقة في هذه السورة';
+
+  @override
+  String similarAyahTrainerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرة',
+      few: '$count مرات',
+      two: 'مرتان',
+      one: 'مرة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerReviewTitle => 'راجِع في صلاتك';
+
+  @override
+  String get prayerReviewQuestion => 'هل قرأت المقطع؟';
+
+  @override
+  String get prayerReviewSaved => 'حُفظ تقييمك الذاتي.';
+
+  @override
+  String get prayerReviewUnavailable => 'لا يوجد مقطع مراجعة متاح الآن.';
+
+  @override
+  String get prayerReviewLoadFailed => 'تعذّر تحميل المقطع. حاول مرة أخرى.';
+
+  @override
+  String get prayerReviewSaveFailed =>
+      'تعذّر الحفظ. يمكنك إعادة المحاولة للمقطع نفسه.';
+
+  @override
+  String get prayerReviewGradeMastered => 'متقن';
+
+  @override
+  String get prayerReviewGradeHesitated => 'بتردد';
+
+  @override
+  String get prayerReviewGradeForgot => 'لم أستطع';
+
+  @override
+  String prayerReviewSuggestion(String reference) {
+    return 'اقتراح: $reference';
+  }
+
+  @override
+  String prayerReviewPassage(String surah, String start, String end) {
+    return '$surah $start–$end';
+  }
+
+  @override
+  String get prayerReviewSettingsTitle => 'طول المقطع لكل صلاة';
+
+  @override
+  String prayerReviewLengthOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حتى $count آية',
+      many: 'حتى $count آية',
+      few: 'حتى $count آيات',
+      two: 'حتى آيتين',
+      one: 'حتى آية واحدة',
+      zero: 'دون آيات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsRemotePlanNextSurah => 'اقتراح السورة التالية';
+
+  @override
+  String get kidsRemotePlanSize => 'آيات المرحلة الجديدة';
+
+  @override
+  String get kidsRemotePlanDays => 'أيام تذكير التدريب';
+
+  @override
+  String get kidsRemotePlanDeviceDefault => 'حسب إعداد الجهاز';
+
+  @override
+  String get kidsRemotePlanDaysHint =>
+      'تؤثر الأيام في التذكير فقط، ويظل التعلم متاحًا كل يوم.';
+
+  @override
+  String get encouragementTitle => 'أرسل تشجيعًا';
+
+  @override
+  String get encouragementInboxTitle => 'رسالة تشجيع لك';
+
+  @override
+  String get encouragementProud => 'أنا فخور بك!';
+
+  @override
+  String get encouragementWellDone => 'أحسنت!';
+
+  @override
+  String get encouragementKeepGoing => 'واصل، أنت تتقدم!';
+
+  @override
+  String get encouragementGreatEffort => 'جهد رائع!';
+
+  @override
+  String get encouragementSeeYouTomorrow => 'نلتقي غدًا!';
+
+  @override
+  String get encouragementStarSticker => 'نجمة';
+
+  @override
+  String get encouragementTaliaSticker => 'تالية تشجعك';
+
+  @override
+  String get encouragementSend => 'إرسال التشجيع';
+
+  @override
+  String get encouragementSent => 'وصل تشجيعك، وسيظهر للطفل عند المزامنة.';
+
+  @override
+  String get encouragementFailed => 'تعذّر الإرسال. حاول مجددًا.';
+
+  @override
+  String get encouragementQuota =>
+      'وصلت إلى الحد اليومي لهذا الطفل. حاول غدًا.';
+
+  @override
+  String get encouragementLimit =>
+      'حتى ١٠ رسائل يوميًا لكل طفل، ويبدأ اليوم بتوقيت UTC.';
+
+  @override
+  String get encouragementDone => 'تم';
+
+  @override
+  String get parentRewardOriginUnknown =>
+      'هذه الهدية القديمة محفوظة للعرض فقط. يمكن لولي الأمر إنشاء هدية جديدة.';
+
+  @override
+  String get kidsLegacyResumeTitle => 'كيف تحب أن تكمل هذه السورة؟';
+
+  @override
+  String get kidsLegacyResumeExplanation =>
+      'نقطة توقفك محفوظة. اختر تقسيمًا لاستكمال هذه الجلسة القديمة؛ لا يتوفر تقسيمها السابق.';
+
+  @override
+  String get kidsLegacyResumeChoose => 'اختيار طريقة الاستكمال';
+
+  @override
+  String get kidsLegacyResumeSaveFailed =>
+      'لم يُحفظ الاختيار. ما زالت نقطة توقفك محفوظة، ويمكنك المحاولة مجددًا.';
+
+  @override
+  String get audioDownloadsLeaveTitle => 'إيقاف التنزيل؟';
+
+  @override
+  String get audioDownloadsLeaveBody =>
+      'التنزيل جارٍ. إذا غادرت هذه الصفحة سيتوقف التنزيل وتبقى الملفات المحفوظة متاحة.';
+
+  @override
+  String get audioDownloadsLeaveStay => 'البقاء';
+
+  @override
+  String get audioDownloadsLeaveStop => 'إيقاف التنزيل';
+
+  @override
+  String get similarAyahIndexUnavailable =>
+      'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
 }

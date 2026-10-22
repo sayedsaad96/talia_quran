@@ -511,9 +511,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     }
   }
 
-  /// [milestoneSurahId] (open the gift when that surah is completed) applies
-  /// to the child on this device only; a linked child's gift is cloud-owned
-  /// and never carries it.
+  /// The linked-child transport gates milestone fields through the v2 flag.
   Future<void> addReward(
     String title, {
     String? childId,
@@ -528,6 +526,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       final result = await _remoteLink.saveRemoteReward(
         childUserId: childId,
         title: title.trim(),
+        milestoneSurahId: milestoneSurahId,
       );
       await result.fold(
         (failure) async => emit(

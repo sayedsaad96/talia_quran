@@ -106,6 +106,10 @@ class AccountDataBarrier {
     Future<T> Function(AccountDataLease lease) work, {
     Object? authority,
   }) {
+    if (authority is AccountDataLease &&
+        !identical(authority._barrier, this)) {
+      throw const AccountDataUnavailableException();
+    }
     final lease = authority is AccountDataLease ? authority : capture();
     final result = _tail.then((_) async {
       lease.check();
@@ -134,10 +138,23 @@ class AccountDataBarrier {
 }
 
 class AccountDataLease {
-  const AccountDataLease._(this._barrier, this._generation);
+  AccountDataLease._(this._barrier, this._generation)
+    : _ownerId = _barrier.owner?.currentOwnerId;
   final AccountDataBarrier _barrier;
   final int _generation;
+  final String? _ownerId;
   Stream<void> get changes => _barrier.changes;
+
+  /// Binds an account-owned write to the owner governing this lease.
+  /// An unbound barrier cannot authorize an owner-scoped write.
+  void checkOwner(String ownerId) {
+    check();
+    if (ownerId.isEmpty || _ownerId != ownerId ||
+        _barrier.owner?.currentOwnerId != ownerId) {
+      throw const AccountDataUnavailableException();
+    }
+  }
+
   void check() {
     _barrier._checkOwner();
     if (_barrier._blocked || _generation != _barrier._generation) {

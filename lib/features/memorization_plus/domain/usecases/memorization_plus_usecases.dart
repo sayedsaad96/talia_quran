@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:dartz/dartz.dart';
+import '../../../../core/memorization/retention_forecast.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
 import '../entities/kids_child_policy.dart';
@@ -200,9 +201,11 @@ class FsrsPredictionUsecase {
     final now = nowOverride ?? DateTime.now().toUtc();
 
     // Retrievability Prediction
-    final retrievability = math
-        .exp(-(actualElapsedDays / math.max(record.stability, 1.0)))
-        .clamp(0.0, 1.0);
+    final retrievability = retrievabilityAt(
+      record.copyWith(stability: math.max(record.stability, 1.0)),
+      now,
+      elapsedDaysOverride: actualElapsedDays,
+    ).clamp(0.0, 1.0);
 
     // Interval Prediction
     final predictedInterval = (record.stability * (11 - record.difficulty) / 5)
@@ -310,8 +313,13 @@ class AwardKidsPointsUsecase
 }
 
 class GetKidsJourneyParams {
-  const GetKidsJourneyParams({required this.surahId});
+  const GetKidsJourneyParams({
+    required this.surahId,
+    this.freezeForSession = false,
+  });
   final int surahId;
+  /// Session-start only. Preview and split-choice reads must stay write-free.
+  final bool freezeForSession;
 }
 
 class GetKidsJourneyUsecase
@@ -322,7 +330,10 @@ class GetKidsJourneyUsecase
   @override
   Future<Either<Failure, List<KidsJourneyStage>>> call(
     GetKidsJourneyParams params,
-  ) => _repository.getKidsJourney(surahId: params.surahId);
+  ) => _repository.getKidsJourney(
+    surahId: params.surahId,
+    freezeForSession: params.freezeForSession,
+  );
 }
 
 class SaveKidsSessionLogParams {
@@ -473,9 +484,11 @@ class ParentRemoteLinkUsecase {
   Future<Either<Failure, List<ParentReward>>> saveRemoteReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   }) => _repository.saveRemoteParentReward(
     childUserId: childUserId,
     title: title,
+    milestoneSurahId: milestoneSurahId,
   );
 
   Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({

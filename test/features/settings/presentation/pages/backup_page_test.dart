@@ -156,7 +156,7 @@ void main() {
     expect(
       find.text(
         'Restore is only available without an account. '
-        'Your data is saved in your account.',
+        'Your personal notes stay only on this device.',
       ),
       findsOneWidget,
     );

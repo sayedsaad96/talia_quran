@@ -1068,7 +1068,7 @@ class _FakeRemoteLink implements ParentRemoteLinkUsecase {
   }
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveRemoteReward({
+  Future<Either<Failure, List<ParentReward>>> saveRemoteReward({ int? milestoneSurahId,
     required String childUserId,
     required String title,
   }) async {

@@ -20,7 +20,7 @@ void main() {
     }
   });
 
-  test('batch C flags are appended in order and off by default', () async {
+  test('roadmap flags are appended in order and off by default', () async {
     expect(KidsEnrichmentFeature.values.map((e) => e.name).toList(), [
       'homeMissionTemplates',
       'effortAchievements',
@@ -40,6 +40,9 @@ void main() {
       'guardianRecitation',
       'guardianMilestones',
       'monthlyReport',
+      'remotePlan',
+      'remotePromise',
+      'encouragements',
     ]);
     await seed({});
     final flags = KidsEnrichmentFlags.fromPreferences(prefs);
@@ -50,6 +53,9 @@ void main() {
       'guardianRecitation',
       'guardianMilestones',
       'monthlyReport',
+      'remotePlan',
+      'remotePromise',
+      'encouragements',
     ]) {
       final feature = KidsEnrichmentFeature.values.firstWhere(
         (e) => e.name == name,

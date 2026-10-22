@@ -4,6 +4,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/memorization/progress_metrics.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/quran_structure_maps.dart';
+import '../../../../core/memorization/retention_forecast.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
@@ -14,6 +15,7 @@ import '../datasources/progress_local_datasource.dart';
 
 import '../../../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../../quran/data/datasources/quran_local_datasource.dart';
+import '../../../quran/domain/entities/quran_entities.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
   ProgressRepositoryImpl(
@@ -42,6 +44,18 @@ class ProgressRepositoryImpl implements ProgressRepository {
       );
 
       final structure = await QuranStructureMaps.load(_quranDs);
+      final ayahsBySurah = <int, List<Ayah>>{};
+      for (final ayahs in structure.ayahsByJuz.values) {
+        for (final ayah in ayahs) {
+          ayahsBySurah.putIfAbsent(ayah.surahId, () => []).add(ayah);
+        }
+      }
+      final now = DateTime.now().toUtc();
+      final weakeningPassages = weakeningSoon(
+        memPlusRecords,
+        now,
+        ayahsBySurah: ayahsBySurah,
+      );
       final surahAyahCounts = structure.surahAyahCounts;
       final ayahKeysByJuz = structure.ayahKeysByJuz;
       final readPages = _progressDs.getReadPages();
@@ -64,7 +78,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       // Single source of truth for every progress number.
       final metrics = _metrics.calculate(
         records: memPlusRecords,
-        now: DateTime.now().toUtc(),
+        now: now,
         audience: ProgressAudience.adult,
         surahAyahCounts: surahAyahCounts,
         ayahKeysByJuz: ayahKeysByJuz,
@@ -123,6 +137,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
           achievements: achievements,
           readPagesCount: metrics.readPagesCount,
           totalQuranPages: metrics.totalQuranPages,
+          weakeningPassages: weakeningPassages,
         ),
       );
     } catch (e) {

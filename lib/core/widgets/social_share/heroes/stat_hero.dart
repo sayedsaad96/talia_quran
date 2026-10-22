@@ -139,9 +139,11 @@ class StatHero extends StatelessWidget {
 
   List<Widget> _progress(SocialShareCopy copy) {
     final stats = [
-      (data.readPagesCount ?? 0, copy.pagesReadLabel),
-      (data.memorizedAyahsCount ?? 0, copy.ayahsMemorizedLabel),
-      (data.streakDays ?? 0, copy.streakDaysLabel),
+      if (data.readPagesCount case final value?) (value, copy.pagesReadLabel),
+      if (data.memorizedAyahsCount case final value?)
+        (value, data.memorizedAyahsLabel ?? copy.ayahsMemorizedLabel),
+      if (data.streakDays case final value?)
+        (value, data.streakDaysLabel ?? copy.streakDaysLabel),
     ];
     return [
       Text(
@@ -156,32 +158,36 @@ class StatHero extends StatelessWidget {
       Row(
         children: [
           for (final (value, label) in stats)
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  HeroNumeral(
-                    text: copy.number(value),
-                    color: palette.textAccent,
-                    size: metrics.statNumeralSize,
-                  ),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: TaliaShareTypography.body(
-                      color: palette.textSecondary,
-                      fontSize: metrics.bodySize,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: _progressStat(copy.number(value), label)),
         ],
       ),
+      if (_nonEmpty(data.subtitle) case final subtitle?)
+        _line(subtitle, palette.textSecondary),
+      if (_nonEmpty(data.content) case final content?)
+        _line(content, palette.textSecondary),
     ];
   }
+
+  Widget _progressStat(String value, String label) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      HeroNumeral(
+        text: value,
+        color: palette.textAccent,
+        size: metrics.statNumeralSize,
+      ),
+      Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        style: TaliaShareTypography.body(
+          color: palette.textSecondary,
+          fontSize: metrics.bodySize,
+          height: 1.3,
+        ),
+      ),
+    ],
+  );
 
   List<Widget> _wird(SocialShareCopy copy) {
     final completed = data.currentValue ?? 0;

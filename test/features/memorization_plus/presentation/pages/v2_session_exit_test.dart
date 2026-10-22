@@ -160,6 +160,9 @@ class _ExitTestCubit extends Cubit<MemorizationSessionState>
   int discardCalls = 0;
 
   @override
+  Future<void> waitForEvaluation() async {}
+
+  @override
   Future<void> startSession({
     required int surahId,
     required int startAyah,

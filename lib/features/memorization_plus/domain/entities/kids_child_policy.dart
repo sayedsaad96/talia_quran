@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'parent_dashboard.dart';
+import 'kids_remote_plan.dart';
 
 /// Default and bounds for the guardian's daily-suggestions limit.
 const int kKidsDefaultDailySuggestions = 3;
@@ -35,6 +36,7 @@ final class KidsChildPolicy extends Equatable {
     this.homeMissionsEnabled = true,
     this.sessionGoalMinutes,
     this.version = 0,
+    this.remotePlan = const KidsRemotePlan(),
   });
 
   factory KidsChildPolicy.fromSettings(ParentSettings s) => KidsChildPolicy(
@@ -43,6 +45,7 @@ final class KidsChildPolicy extends Equatable {
     homeMissionsEnabled: s.homeMissionsEnabled,
     sessionGoalMinutes: sanitizeKidsSessionGoalMinutes(s.sessionGoalMinutes),
     version: clampKidsPolicyVersion(s.policyVersion),
+    remotePlan: s.remotePlan.sanitized(),
   );
 
   final bool reduceMotion;
@@ -52,6 +55,7 @@ final class KidsChildPolicy extends Equatable {
   /// Null keeps the age-band default.
   final int? sessionGoalMinutes;
   final int version;
+  final KidsRemotePlan remotePlan;
 
   KidsChildPolicy copyWith({
     bool? reduceMotion,
@@ -60,6 +64,7 @@ final class KidsChildPolicy extends Equatable {
     int? sessionGoalMinutes,
     bool clearSessionGoalMinutes = false,
     int? version,
+    KidsRemotePlan? remotePlan,
   }) => KidsChildPolicy(
     reduceMotion: reduceMotion ?? this.reduceMotion,
     maxDailySuggestions: maxDailySuggestions ?? this.maxDailySuggestions,
@@ -68,6 +73,7 @@ final class KidsChildPolicy extends Equatable {
         ? null
         : (sessionGoalMinutes ?? this.sessionGoalMinutes),
     version: version ?? this.version,
+    remotePlan: remotePlan ?? this.remotePlan,
   );
 
   /// Values clamped/sanitized into the policy limits (1..3 suggestions,
@@ -78,6 +84,7 @@ final class KidsChildPolicy extends Equatable {
     homeMissionsEnabled: homeMissionsEnabled,
     sessionGoalMinutes: sanitizeKidsSessionGoalMinutes(sessionGoalMinutes),
     version: clampKidsPolicyVersion(version),
+    remotePlan: remotePlan.sanitized(),
   );
 
   @override
@@ -87,5 +94,6 @@ final class KidsChildPolicy extends Equatable {
     homeMissionsEnabled,
     sessionGoalMinutes,
     version,
+    remotePlan,
   ];
 }

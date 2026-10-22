@@ -31,6 +31,7 @@ import '../widgets/guardian_pin_dialog.dart';
 import '../widgets/kids_chunky_button.dart';
 import '../widgets/kids_family_practice_panel.dart';
 import '../widgets/kids_loading_widget.dart';
+import '../widgets/kids_legacy_resume_recovery_panel.dart';
 import '../widgets/kids_loop_progress_indicator.dart';
 import '../widgets/kids_recording_waveform.dart';
 import '../widgets/kids_talia_companion.dart';
@@ -336,6 +337,17 @@ class _KidsGamifiedListenView extends StatelessWidget {
             return KidsGamifiedListenStatusShell(
               onBack: onBack,
               child: const KidsLoadingWidget(),
+            );
+          }
+
+          if (state is KidsModeSplitChoiceRequired) {
+            return KidsGamifiedListenStatusShell(
+              onBack: onBack,
+              child: SingleChildScrollView(child: KidsLegacyResumeRecoveryPanel(
+                state: state,
+                onRecover: ({required whole, stageSize}) => context.read<KidsModeCubit>()
+                    .recoverLegacySplit(state.ticket, whole: whole, stageSize: stageSize),
+              )),
             );
           }
 

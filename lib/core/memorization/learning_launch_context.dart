@@ -23,11 +23,13 @@ final class LearningLaunchContext {
     required this.ayah,
     required this.intent,
     required this.origin,
+    this.reviewEndAyah,
   });
 
   factory LearningLaunchContext.fromRouteValues({
     required int surahId,
     required int startAyah,
+    int? reviewEndAyah,
     String? intent,
     String? origin,
   }) {
@@ -43,18 +45,21 @@ final class LearningLaunchContext {
         origin,
         LearningOrigin.unknown,
       ),
+      reviewEndAyah: reviewEndAyah,
     );
   }
 
   final AyahReference ayah;
   final LearningIntent intent;
   final LearningOrigin origin;
+  final int? reviewEndAyah;
 
   Map<String, String> toRouteQuery() => {
     'surahId': '${ayah.surahId}',
     'startAyah': '${ayah.ayahNumber}',
     'intent': intent.name,
     'origin': origin.name,
+    if (reviewEndAyah != null) 'reviewEndAyah': '$reviewEndAyah',
   };
 }
 

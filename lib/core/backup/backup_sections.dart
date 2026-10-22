@@ -1,4 +1,8 @@
 import 'dart:convert';
+import 'prayer_review_backup_mapper.dart';
+import '../prayer_review/prayer_review_lengths.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
 
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/certificate/domain/entities/certificate_award.dart';
@@ -14,12 +18,16 @@ import '../../features/settings/data/user_profile.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
+import '../../features/quran/data/models/isar_ayah_note.dart';
+import '../../features/quran/domain/services/ayah_note_policy.dart';
+import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
+import '../../features/memorization_plus/data/repositories/isar_confusion_pair_repository.dart';
 import '../constants/surah_names.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/review_record_identity.dart';
 import '../utils/talia_logger.dart';
 
-/// Section names of a v1 backup. A v1 payload must carry exactly these.
+/// Section names of a versioned backup.
 abstract final class BackupSections {
   static const reviewRecords = 'reviewRecords';
   static const ayahProgress = 'ayahProgress';
@@ -27,14 +35,29 @@ abstract final class BackupSections {
   static const xp = 'xp';
   static const dailyActivity = 'dailyActivity';
   static const prefs = 'prefs';
+  static const ayahNotes = 'ayahNotes';
+  static const confusionPairs = 'confusionPairs';
+  static const prayerReviewAssignments = 'prayerReviewAssignments';
+  static const prayerReviewReceipts = 'prayerReviewReceipts';
 
-  static const all = {
+  static const v1 = {
     reviewRecords,
     ayahProgress,
     streak,
     xp,
     dailyActivity,
     prefs,
+  };
+  static const v2 = {...v1, ayahNotes};
+  static const v3 = {...v2, confusionPairs};
+  static const v4 = {...v3, prayerReviewAssignments, prayerReviewReceipts};
+  static const all = v4;
+  static Set<String> forVersion(int version) => switch (version) {
+    1 => v1,
+    2 => v2,
+    3 => v3,
+    4 => v4,
+    _ => throw const BackupSectionInvalid('schemaVersion'),
   };
 }
 
@@ -62,6 +85,7 @@ abstract final class BackupPreferencePolicy {
     'khatmah_history',
     'earned_certificates_v2',
     'earned_certificates_v2_kids',
+    PrayerReviewLengths.baseKey,
   };
 
   static const prefixes = {
@@ -75,6 +99,7 @@ abstract final class BackupPreferencePolicy {
     'azkar_all_done_',
     'azkar_smart_wird_',
     'ramadan_',
+    'hijri_year_recap_dismissed_',
   };
 
   /// Prefixes whose remainder is the owner id itself (no `|` separator),
@@ -93,6 +118,7 @@ abstract final class BackupPreferencePolicy {
   /// Kids bases stored as `base|<owner>`. Their unscoped (pre-owner legacy)
   /// form is never exported.
   static const ownerScopedKidsBases = {
+    PrayerReviewLengths.baseKey,
     'mem_plus_kids_progress',
     'mem_plus_kids_legacy_cloud_floor',
     'mem_plus_kids_session_logs',
@@ -339,6 +365,10 @@ abstract final class BackupPreferencePolicy {
   }
 
   static final Map<String, void Function(Object value)> _exactSpecs = {
+    PrayerReviewLengths.baseKey: (value) {
+      if (value is! String) throw const BackupSectionInvalid('prayer review lengths');
+      PrayerReviewLengths.decode(value);
+    },
     'user_profile': _string(_mapOf(UserProfile.fromJson)),
     'read_pages': _string(_pages),
     'khatmah_active_plan': _string(_mapOf(KhatmahPlanModel.fromJson)),
@@ -417,6 +447,7 @@ abstract final class BackupPreferencePolicy {
     'azkar_smart_wird_active': _string(_jsonMap),
     'azkar_smart_wird_xp': _string(),
     'ramadan_card_dismissed_': _bool,
+    'hijri_year_recap_dismissed_': _bool,
   };
 
   static void Function(Object value) _string([
@@ -833,6 +864,122 @@ abstract final class DailyActivityBackupMapper {
   }
 }
 
+abstract final class AyahNoteBackupMapper {
+  static Map<String, Object?> toJson(IsarAyahNote note) => {
+    'ownerId': kBackupOwnerToken,
+    'surahId': note.surahId,
+    'ayahNumber': note.ayahNumber,
+    'body': note.body,
+    'createdAt': _iso(note.createdAt),
+    'updatedAt': _iso(note.updatedAt),
+  };
+
+  static IsarAyahNote fromJson(Object? raw, String ownerId, {DateTime? now}) {
+    final m = _map(raw, 'ayahNote');
+    const fields = {
+      'ownerId',
+      'surahId',
+      'ayahNumber',
+      'body',
+      'createdAt',
+      'updatedAt',
+    };
+    if (m.length != fields.length || !fields.every(m.containsKey)) {
+      throw const BackupSectionInvalid('ayahNote fields');
+    }
+    if (m['ownerId'] != kBackupOwnerToken) {
+      throw const BackupSectionInvalid('ayahNote owner');
+    }
+    final body = m['body'];
+    if (body is! String) throw const BackupSectionInvalid('ayahNote body');
+    final surahId = _int(m, 'surahId');
+    final ayahNumber = _int(m, 'ayahNumber');
+    final createdAt = _date(m, 'createdAt');
+    final updatedAt = _date(m, 'updatedAt');
+    try {
+      AyahNotePolicy.checkReference(surahId, ayahNumber);
+      AyahNotePolicy.checkBody(body);
+      AyahNotePolicy.checkDates(createdAt, updatedAt);
+    } on FormatException {
+      throw const BackupSectionInvalid('ayahNote invalid');
+    }
+    // A timestamp in the future (clock skew, tampering) would pin the note:
+    // upsert never lowers updatedAt. Clamp to now; order is preserved because
+    // createdAt <= updatedAt was verified above.
+    final limit = (now ?? DateTime.now()).toUtc();
+    DateTime clamp(DateTime value) =>
+        value.toUtc().isAfter(limit) ? limit : value;
+    return IsarAyahNote()
+      ..ownerId = ownerId
+      ..surahId = surahId
+      ..ayahNumber = ayahNumber
+      ..body = body
+      ..createdAt = clamp(createdAt)
+      ..updatedAt = clamp(updatedAt);
+  }
+}
+
+abstract final class ConfusionPairBackupMapper {
+  static Map<String, Object?> toJson(IsarConfusionPair pair) => {
+    'ownerId': kBackupOwnerToken,
+    'audience': pair.audience,
+    'targetKey': pair.targetKey,
+    'otherKey': pair.otherKey,
+    'count': pair.count,
+    'firstAt': _iso(pair.firstAt),
+    'lastAt': _iso(pair.lastAt),
+  };
+
+  static IsarConfusionPair fromJson(Object? raw, String ownerId) {
+    final map = _map(raw, 'confusionPair');
+    const fields = {
+      'ownerId', 'audience', 'targetKey', 'otherKey', 'count', 'firstAt', 'lastAt',
+    };
+    if (map.length != fields.length || !fields.every(map.containsKey)) {
+      throw const BackupSectionInvalid('confusionPair fields');
+    }
+    if (map['ownerId'] != kBackupOwnerToken ||
+        map['audience'] != IsarConfusionPair.adultAudience) {
+      throw const BackupSectionInvalid('confusionPair owner or audience');
+    }
+    final target = _key(map['targetKey']);
+    final other = _key(map['otherKey']);
+    if (target == other) throw const BackupSectionInvalid('confusionPair self');
+    final count = _int(map, 'count', min: 1);
+    if (count > ConfusionPairTransactionWriter.maxCount) {
+      throw const BackupSectionInvalid('confusionPair count');
+    }
+    final firstAt = _date(map, 'firstAt');
+    final lastAt = _date(map, 'lastAt');
+    if (lastAt.isBefore(firstAt)) {
+      throw const BackupSectionInvalid('confusionPair timestamps');
+    }
+    return IsarConfusionPair()
+      ..ownerId = ownerId
+      ..audience = IsarConfusionPair.adultAudience
+      ..targetKey = map['targetKey'] as String
+      ..otherKey = map['otherKey'] as String
+      ..count = count
+      ..firstAt = firstAt
+      ..lastAt = lastAt;
+  }
+
+  static String _key(Object? value) {
+    if (value is! String) throw const BackupSectionInvalid('confusionPair key');
+    try {
+      final parts = value.split(':');
+      if (parts.length != 2) throw const FormatException();
+      final surah = int.parse(parts[0]);
+      final ayah = int.parse(parts[1]);
+      ConfusionPairTransactionWriter.checkAyah(surah, ayah);
+      if (value != '$surah:$ayah') throw const FormatException();
+      return value;
+    } on FormatException {
+      throw const BackupSectionInvalid('confusionPair key');
+    }
+  }
+}
+
 /// Every section of a payload, parsed and validated, ready to write.
 class ParsedBackupSections {
   ParsedBackupSections._({
@@ -841,6 +988,10 @@ class ParsedBackupSections {
     required this.streak,
     required this.xp,
     required this.dailyActivity,
+    required this.ayahNotes,
+    required this.confusionPairs,
+    required this.prayerAssignments,
+    required this.prayerReceipts,
     required this.prefs,
   });
 
@@ -849,6 +1000,10 @@ class ParsedBackupSections {
   final StreakIsar? streak;
   final XpIsar? xp;
   final List<DailyActivityIsar> dailyActivity;
+  final List<IsarAyahNote> ayahNotes;
+  final List<IsarConfusionPair> confusionPairs;
+  final List<IsarPrayerReviewAssignment> prayerAssignments;
+  final List<IsarPrayerReviewReceipt> prayerReceipts;
 
   /// Real (rebound) key → typed value.
   final Map<String, Object> prefs;
@@ -857,9 +1012,11 @@ class ParsedBackupSections {
   static ParsedBackupSections parse(
     Map<String, Object?> sections,
     String ownerId,
+    int schemaVersion,
   ) {
-    if (sections.length != BackupSections.all.length ||
-        !BackupSections.all.every(sections.containsKey)) {
+    final expected = BackupSections.forVersion(schemaVersion);
+    if (sections.length != expected.length ||
+        !expected.every(sections.containsKey)) {
       throw const BackupSectionInvalid('section set');
     }
 
@@ -880,6 +1037,42 @@ class ParsedBackupSections {
         DailyActivityBackupMapper.fromJson(d),
     ];
     _unique(daily.map((d) => d.dayKey), 'dailyActivity');
+
+    final notes = schemaVersion == 1
+        ? <IsarAyahNote>[]
+        : [
+            for (final note in _list(
+              sections[BackupSections.ayahNotes],
+              'ayahNotes',
+            ))
+              AyahNoteBackupMapper.fromJson(note, ownerId),
+          ];
+    _unique(notes.map((n) => '${n.surahId}:${n.ayahNumber}'), 'ayahNotes');
+
+    final pairs = schemaVersion < 3
+        ? <IsarConfusionPair>[]
+        : [
+            for (final pair in _list(
+              sections[BackupSections.confusionPairs],
+              'confusionPairs',
+            ))
+              ConfusionPairBackupMapper.fromJson(pair, ownerId),
+          ];
+    _unique(
+      pairs.map((pair) => '${pair.targetKey}|${pair.otherKey}'),
+      'confusionPairs',
+    );
+
+    final assignments = schemaVersion < 4 ? <IsarPrayerReviewAssignment>[] : [
+      for (final row in _list(sections[BackupSections.prayerReviewAssignments], 'prayer assignments'))
+        PrayerReviewBackupMapper.assignmentFromJson(row, ownerId),
+    ];
+    final receipts = schemaVersion < 4 ? <IsarPrayerReviewReceipt>[] : [
+      for (final row in _list(sections[BackupSections.prayerReviewReceipts], 'prayer receipts'))
+        PrayerReviewBackupMapper.receiptFromJson(row, ownerId),
+    ];
+    _unique(assignments.map((r) => r.occurrenceKey), 'prayer assignments');
+    _unique(receipts.map((r) => r.receiptKey), 'prayer receipts');
 
     final prefs = <String, Object>{};
     final rawPrefs = _map(sections[BackupSections.prefs], 'prefs');
@@ -908,6 +1101,10 @@ class ParsedBackupSections {
       streak: StreakBackupMapper.fromJson(sections[BackupSections.streak]),
       xp: XpBackupMapper.fromJson(sections[BackupSections.xp]),
       dailyActivity: daily,
+      ayahNotes: notes,
+      confusionPairs: pairs,
+      prayerAssignments: assignments,
+      prayerReceipts: receipts,
       prefs: prefs,
     );
   }

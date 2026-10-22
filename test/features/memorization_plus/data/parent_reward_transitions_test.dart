@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
@@ -114,6 +115,39 @@ void main() {
     await addReward();
 
     expectUnavailable(await repository.unlockParentReward('missing'));
+  });
+
+  test('a signed-in child requests a local reward by full identity despite a cloud id collision', () async {
+    // This scenario starts signed in; it does not replace the provider of an
+    // already initialized guest barrier with a second, conflicting provider.
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    const owner = FixedRecordOwnerProvider('child-a');
+    datasource = MemorizationPlusLocalDatasourceImpl(prefs, owner: owner);
+    repository = MemorizationPlusRepositoryImpl(
+      datasource, _UnusedQuranRepository(), _ZeroStreakReader(),
+      ProgressEventsBus(), prefs, owner: owner,
+    );
+    final local = ParentRewardModel(
+      id: '42', title: 'local', status: ParentRewardStatus.unlocked,
+      createdAt: DateTime.utc(2026), origin: ParentRewardOrigin.local,
+      ownerId: 'child-a',
+    );
+    final cloud = ParentRewardModel(
+      id: '42', title: 'cloud', status: ParentRewardStatus.unlocked,
+      createdAt: DateTime.utc(2026), origin: ParentRewardOrigin.cloud,
+      ownerId: 'child-a', serverId: '42',
+    );
+    await datasource.saveParentRewards([cloud, local]);
+
+    expectUnavailable(await repository.requestParentReward('42'));
+    final requested = await repository.requestParentReward(local.storageIdentity);
+    expect(requested.isRight(), isTrue);
+    final saved = await datasource.getParentRewards();
+    expect(saved.singleWhere((r) => r.origin == ParentRewardOrigin.local).status,
+        ParentRewardStatus.requested);
+    expect(saved.singleWhere((r) => r.origin == ParentRewardOrigin.cloud).status,
+        ParentRewardStatus.unlocked);
   });
 
   group('ParentRewardModel', () {

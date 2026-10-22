@@ -101,4 +101,20 @@ void main() {
 
     expect(result, isFalse);
   });
+
+  test('headless forecast audience reads the adult profile without DI', () async {
+    SharedPreferences.setMockInitialValues({
+      'mem_plus_profile':
+          '{"selectedPath":"adult","schemaVersion":1}',
+    });
+    final prefs = await SharedPreferences.getInstance();
+
+    expect(await forecastAudienceIsAdultFromPreferences(prefs), isTrue);
+  });
+
+  test('headless forecast audience fails closed for unknown profile state', () async {
+    final prefs = await SharedPreferences.getInstance();
+
+    expect(await forecastAudienceIsAdultFromPreferences(prefs), isFalse);
+  });
 }
