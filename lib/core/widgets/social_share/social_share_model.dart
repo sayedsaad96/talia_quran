@@ -190,6 +190,8 @@ class SocialShareData {
   final int? memorizedAyahsCount;
   final int? memorizedSurahsCount;
   final int? streakDays;
+  final String? memorizedAyahsLabel;
+  final String? streakDaysLabel;
   final String? verificationCode;
   final bool showCharacter;
   final String? characterAssetPath;
@@ -215,6 +217,8 @@ class SocialShareData {
     this.memorizedAyahsCount,
     this.memorizedSurahsCount,
     this.streakDays,
+    this.memorizedAyahsLabel,
+    this.streakDaysLabel,
     this.verificationCode,
     this.showCharacter = true,
     this.characterAssetPath,
@@ -523,6 +527,8 @@ class SocialShareData {
     memorizedSurahsCount: memorizedSurahsCount,
     streakDays: streakDays,
     verificationCode: verificationCode,
+    memorizedAyahsLabel: memorizedAyahsLabel,
+    streakDaysLabel: streakDaysLabel,
     showCharacter: showCharacter ?? this.showCharacter,
     characterAssetPath: characterAssetPath,
     audience: audience ?? this.audience,

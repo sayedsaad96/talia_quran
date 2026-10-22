@@ -232,6 +232,8 @@ AyahReviewRecordModel _reviewRecord(int surahId, int ayahNumber) {
 }
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
   _FakeMemPlusDatasource([this.records = const [], this.profile]);
 
   final List<AyahReviewRecordModel> records;

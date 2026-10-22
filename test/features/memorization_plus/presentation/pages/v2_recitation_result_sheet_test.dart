@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_word_diff.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_session_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/v2/v2_recitation_result_sheet.dart';
@@ -47,6 +50,84 @@ Widget _host(void Function(BuildContext) onOpen) {
 }
 
 void main() {
+  testWidgets('expired feedback is hidden when expiry precedes first route build',
+      (tester) async {
+    final expiry = StreamController<void>.broadcast(sync: true);
+    var valid = true;
+    final feedback = _feedback(target: 'private target one two',
+      spoken: 'different result one two');
+    await tester.pumpWidget(_host((context) {
+      unawaited(showV2RecitationResultSheet(
+        context, feedback, expiry: expiry.stream, isCurrent: () => valid,
+      ));
+      valid = false;
+      expiry.add(null);
+    }));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byType(V2RecitationResultSheet), findsNothing);
+    expect(find.byKey(const Key('v2-result-retry-now')), findsNothing);
+    expect(tester.takeException(), isNull);
+    await expiry.close();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('closed feedback source cannot open a late sheet', (tester) async {
+    final feedback = _feedback(target: 'private target one two',
+      spoken: 'different result one two');
+    await tester.pumpWidget(_host((context) {
+      unawaited(showV2RecitationResultSheet(
+        context, feedback, isCurrent: () => false,
+      ));
+    }));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byType(V2RecitationResultSheet), findsNothing);
+  });
+
+  testWidgets('attribution note preserves the original failure result', (tester) async {
+    final original = _feedback(target: 'alpha beta gamma delta', spoken: 'one two three four');
+    final feedback = V2EvaluationFeedback(
+      result: original.result, wordDiff: original.wordDiff,
+      confusionMatch: const SimilarAyahConfusionMatch(
+        targetKey: '2:1', otherKey: '2:2', originalScore: 0, candidateScore: 1,
+      ),
+    );
+    await tester.pumpWidget(_host((context) {
+      unawaited(showV2RecitationResultSheet(context, feedback));
+    }));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    // The other ayah is named by surah, never by its raw "2:2" key.
+    expect(find.textContaining('2:2'), findsNothing);
+    expect(find.textContaining('البقرة'), findsOneWidget);
+    expect(find.byKey(const Key('v2-result-retry-now')), findsOneWidget);
+    expect(find.byKey(const Key('v2-result-continue')), findsNothing);
+    expect(feedback.result, same(original.result));
+  });
+
+  testWidgets('expiry removes exact feedback route beneath another dialog', (tester) async {
+    final expiry = StreamController<void>.broadcast(sync: true);
+    late BuildContext hostContext;
+    final feedback = _feedback(target: 'private target one two', spoken: 'different result one two');
+    await tester.pumpWidget(_host((context) {
+      hostContext = context;
+      unawaited(showV2RecitationResultSheet(context, feedback, expiry: expiry.stream));
+    }));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    unawaited(showDialog<void>(context: hostContext, builder: (_) =>
+      const AlertDialog(content: Text('independent dialog'))));
+    await tester.pumpAndSettle();
+    expiry.add(null);
+    await tester.pumpAndSettle();
+    expect(find.byType(V2RecitationResultSheet), findsNothing);
+    expect(find.text('independent dialog'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await expiry.close();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets(
     'result sheet shows success header and continue action on pass',
     (tester) async {

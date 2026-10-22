@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
@@ -242,6 +244,13 @@ class _QuranViewState extends State<_QuranView>
         style: AppTypography.headlineMedium.copyWith(color: Colors.white),
       ),
       actions: [
+        if (getIt.isRegistered<ExperienceFlags>() &&
+            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.ayahNotes))
+          IconButton(
+            tooltip: context.l10n.ayahNotesTitle,
+            icon: const Icon(TaliaIcons.note),
+            onPressed: () => context.push(AppRoutes.quranNotes),
+          ),
         ValueListenableBuilder<QuranReciter>(
           valueListenable: reciterService.currentReciter,
           builder: (context, reciter, _) {

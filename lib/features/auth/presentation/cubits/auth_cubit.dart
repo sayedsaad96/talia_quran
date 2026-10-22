@@ -34,6 +34,7 @@ import '../../../../core/services/achievement_service.dart';
 import '../../../../core/utils/talia_logger.dart';
 
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../quran/domain/repositories/ayah_note_repository.dart';
 
 import '../../application/cloud_sync_coordinator.dart';
 
@@ -56,6 +57,8 @@ class AuthCubit extends Cubit<AuthState> {
     this._accountDataReset,
 
     CloudSyncCoordinator? cloudSyncCoordinator,
+
+    this._ayahNoteClaimer,
   ]) : _cloudSyncCoordinator =
            cloudSyncCoordinator ??
            CloudSyncCoordinator(
@@ -347,6 +350,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AccountDataReset? _accountDataReset;
 
+  /// Moves guest «تدبّراتي» notes along with a confirmed guest-record import.
+  final AyahNoteClaimer? _ayahNoteClaimer;
+
   final CloudSyncCoordinator _cloudSyncCoordinator;
 
   StreamSubscription<AppUser?>? _authSub;
@@ -607,7 +613,22 @@ class AuthCubit extends Cubit<AuthState> {
         const Left(UnknownFailure('Memorization data is unavailable')),
       );
     }
-    return repository.claimLocalReviewRecords();
+    return _claimGuestRecords(repository);
+  }
+
+  Future<Either<Failure, int>> _claimGuestRecords(
+    MemorizationPlusRepository repository,
+  ) async {
+    final result = await repository.claimLocalReviewRecords();
+    // Notes written as a guest travel with the same confirmed import. A note
+    // failure must never turn a successful review-record claim into an error.
+    if (result.isLeft()) return result;
+    try {
+      await _ayahNoteClaimer?.claimLocalNotes();
+    } catch (error, stack) {
+      TaliaLogger.w('Guest ayah note claim failed', error, stack);
+    }
+    return result;
   }
 
   /// Guest review records the signed-in account could import (0 on failure,

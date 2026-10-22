@@ -3,23 +3,30 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../kids_encouragement/presentation/cubits/parent_encouragement_composer_cubit.dart';
+import '../../../kids_encouragement/presentation/widgets/parent_encouragement_composer.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/kids_remote_reading_support_repository.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/repositories/kids_support_profile_repository.dart';
+import '../../domain/services/kids_monthly_report.dart';
 import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/services/kids_weekly_coaching.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/child_activity_summary.dart';
 import '../widgets/child_progress_panel.dart';
 import '../widgets/family_child_name.dart';
+import '../widgets/guardian_promise_dialog.dart';
 import '../widgets/child_pin_recovery_panel.dart';
 import '../widgets/child_rewards_panel.dart';
 import '../widgets/guardian_session_scope.dart';
@@ -31,6 +38,7 @@ import '../widgets/kids_weekly_coaching_card.dart';
 import '../widgets/parent_support_tip.dart';
 import '../widgets/remove_child_from_family_button.dart';
 import 'family_dashboard_page.dart';
+import 'kids_monthly_report_page.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 
@@ -63,6 +71,20 @@ bool _weeklyCoachingEnabled() =>
       KidsEnrichmentFeature.weeklyCoaching,
     );
 
+/// Whether the monthly report button is switched on (off when the flags are
+/// not wired).
+bool _monthlyReportEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.monthlyReport);
+
+/// Whether the guardian promise feature is switched on (off when the flags
+/// are not wired).
+bool _guardianPromiseEnabled() =>
+    getIt.isRegistered<KidsEnrichmentFlags>() &&
+    getIt<KidsEnrichmentFlags>().isEnabled(
+      KidsEnrichmentFeature.guardianPromise,
+    );
+
 /// The learning-support question shows only while its flag is on and the
 /// store is wired.
 bool _supportProfileEnabled() =>
@@ -71,6 +93,33 @@ bool _supportProfileEnabled() =>
     getIt<KidsEnrichmentFlags>().isEnabled(
       KidsEnrichmentFeature.supportProfile,
     );
+
+/// Remote gifts can name any canonical surah; local gifts follow their path.
+Future<List<int>> _promiseSurahChoices(FamilyChildEntry child) async {
+  if (!getIt.isRegistered<KidsEnrichmentFlags>()) return const [];
+  if (!child.isLocal) {
+    return getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePromise)
+        ? List<int>.generate(114, (index) => index + 1) : const [];
+  }
+  if (
+      !getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.guardianPromise,
+      ) ||
+      !getIt.isRegistered<MemorizationPlusRepository>()) {
+    return const [];
+  }
+  try {
+    final result = await getIt<MemorizationPlusRepository>()
+        .getKidsJourneyPath();
+    final ids = result.fold<List<int>>(
+      (_) => const [],
+      (path) => path.surahIds,
+    );
+    return ids;
+  } catch (_) {
+    return const [];
+  }
+}
 
 class ChildDetailRouteArgs {
   const ChildDetailRouteArgs({required this.child, required this.cubit});
@@ -137,6 +186,21 @@ class ChildDetailPage extends StatelessWidget {
               : context.go('/family-dashboard'),
         ),
         actions: [
+          if (!child.isLocal &&
+              getIt.isRegistered<ParentEncouragementComposerCubit>() &&
+              getIt.isRegistered<KidsEnrichmentFlags>() &&
+              getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.encouragements))
+            IconButton(
+              icon: const Icon(TaliaIcons.heartFilled),
+              tooltip: context.l10n.encouragementTitle,
+              onPressed: () => showModalBottomSheet<void>(
+                context: context, isScrollControlled: true, useSafeArea: true,
+                builder: (_) => BlocProvider(
+                  create: (_) => getIt<ParentEncouragementComposerCubit>(),
+                  child: ParentEncouragementComposer(childUserId: child.childUserId),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(TaliaIcons.gift),
             tooltip: context.l10n.childDetailAddReward,
@@ -152,12 +216,33 @@ class ChildDetailPage extends StatelessWidget {
     BuildContext context,
     FamilyChildEntry child,
   ) async {
+    final surahIds = await _promiseSurahChoices(child);
+    if (!context.mounted) return;
+    if (surahIds.isNotEmpty) {
+      final draft = await showDialog<GuardianPromiseDraft>(
+        context: context,
+        builder: (_) => GuardianPromiseDialog(surahIds: surahIds),
+      );
+      if (draft != null && context.mounted) {
+        await context.read<FamilyDashboardCubit>().addReward(
+          draft.title,
+          childId: child.isLocal ? null : child.childUserId,
+          milestoneSurahId: draft.milestoneSurahId,
+        );
+      }
+      return;
+    }
     final title = await showDialog<String>(
       context: context,
       builder: (_) => _TextInputDialog(
         title: context.l10n.parentDashboardRemoteRewardTitle,
         hintText: context.l10n.parentDashboardRewardHint,
         actionLabel: context.l10n.save,
+        // The longer 80-character limit belongs to the promise feature; with
+        // it off the dialog keeps its previous 50.
+        limit: _guardianPromiseEnabled()
+            ? ParentReward.titleMaxLength
+            : _TextInputDialog.maxLength,
       ),
     );
     if (title != null && title.isNotEmpty && context.mounted) {
@@ -168,6 +253,14 @@ class ChildDetailPage extends StatelessWidget {
     }
   }
 }
+
+/// Remote summaries carry only the latest [_remoteLogCap] logs, so a linked
+/// child's report is incomplete once the cap is reached. A local child always
+/// has the full history.
+const int _remoteLogCap = 30;
+
+bool _reportHistoryComplete(FamilyChildEntry child, int logCount) =>
+    child.isLocal || logCount < _remoteLogCap;
 
 class _ChildDetailBody extends StatelessWidget {
   const _ChildDetailBody({required this.child});
@@ -225,6 +318,30 @@ class _ChildDetailBody extends StatelessWidget {
                 // Only this device's own child has a complete local history;
                 // a linked child's logs may be partial.
                 historyComplete: child.isLocal && child.localData != null,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        if (_monthlyReportEnabled()) ...[
+          OutlinedButton.icon(
+            key: const ValueKey('child-monthly-report-button'),
+            icon: const Icon(TaliaIcons.calendarRange),
+            label: Text(context.l10n.monthlyReportTitle),
+            onPressed: () => context.push(
+              AppRoutes.childMonthlyReport,
+              extra: KidsMonthlyReportRouteArgs(
+                report: buildKidsMonthlyReport(
+                  logs: logs,
+                  ayahCountBySurah: {
+                    for (var id = 1; id <= 114; id++)
+                      id: SurahNames.ayahCount(id),
+                  },
+                  now: DateTime.now(),
+                ),
+                childName: child.shownName(context.l10n),
+                historyComplete: _reportHistoryComplete(child, logs.length),
               ),
             ),
           ),
@@ -350,6 +467,8 @@ class _ChildDetailBody extends StatelessWidget {
                   )
                 : KidsPolicyEditor(
                     policy: summary.policy ?? const KidsChildPolicy(),
+                    remotePlanEnabled: getIt.isRegistered<KidsEnrichmentFlags>() &&
+                        getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePlan),
                     onSave: (policy) => context
                         .read<FamilyDashboardCubit>()
                         .saveChildPolicy(policy, childId: child.childUserId),

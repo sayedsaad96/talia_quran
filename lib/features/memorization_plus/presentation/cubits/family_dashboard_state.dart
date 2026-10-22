@@ -15,6 +15,7 @@ enum FamilyDashboardFeedbackType {
   rewardApproved,
   reminderSaved,
   houseSizeSaved,
+  settingsSaved,
   accountPasswordIncorrect,
   accountCheckUnavailable,
   failure,
@@ -58,6 +59,9 @@ class FamilyDashboardFeedback extends Equatable {
       message = null;
   const FamilyDashboardFeedback.houseSizeSaved()
     : type = FamilyDashboardFeedbackType.houseSizeSaved,
+      message = null;
+  const FamilyDashboardFeedback.settingsSaved()
+    : type = FamilyDashboardFeedbackType.settingsSaved,
       message = null;
   const FamilyDashboardFeedback.accountPasswordIncorrect()
     : type = FamilyDashboardFeedbackType.accountPasswordIncorrect,
@@ -132,30 +136,53 @@ class FamilyDashboardLocked extends FamilyDashboardState {
   List<Object?> get props => [settings, feedback, feedbackEventId];
 }
 
+/// One «ما الجديد» line: a milestone the guardian has not seen for [child].
+class GuardianNewsItem extends Equatable {
+  const GuardianNewsItem({
+    required this.childKey,
+    required this.child,
+    required this.milestone,
+  });
+
+  /// `local` for the child on this device, else the linked child's id.
+  final String childKey;
+  final FamilyChildEntry child;
+  final GuardianMilestone milestone;
+
+  @override
+  List<Object?> get props => [childKey, child, milestone];
+}
+
 /// Dashboard is unlocked and data is loaded.
 class FamilyDashboardLoaded extends FamilyDashboardState {
   const FamilyDashboardLoaded({
     required this.dashboard,
     this.feedback,
     this.feedbackEventId = 0,
+    this.news = const [],
   });
 
   final FamilyDashboard dashboard;
   final FamilyDashboardFeedback? feedback;
   final int feedbackEventId;
 
+  /// Unseen milestones; empty when the feature is off or nothing is new.
+  final List<GuardianNewsItem> news;
+
   FamilyDashboardLoaded copyWith({
     FamilyDashboard? dashboard,
     FamilyDashboardFeedback? feedback,
     int feedbackEventId = 0,
+    List<GuardianNewsItem>? news,
   }) => FamilyDashboardLoaded(
     dashboard: dashboard ?? this.dashboard,
     feedback: feedback,
     feedbackEventId: feedbackEventId,
+    news: news ?? this.news,
   );
 
   @override
-  List<Object?> get props => [dashboard, feedback, feedbackEventId];
+  List<Object?> get props => [dashboard, feedback, feedbackEventId, news];
 }
 
 class FamilyDashboardError extends FamilyDashboardState {

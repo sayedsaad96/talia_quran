@@ -225,6 +225,7 @@ void main() {
       id: id,
       title: 'gift $id',
       status: status,
+      origin: ParentRewardOrigin.local,
       createdAt: DateTime.utc(2026, 10, 1),
     );
 
@@ -256,7 +257,7 @@ void main() {
       expect(find.byKey(const ValueKey('kids-gift-request-c')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('kids-gift-request-b')));
 
-      expect(requested, ['b']);
+      expect(requested, ['|local|b']);
       expect(find.byType(KidsTaliaCompanion), findsNothing);
     });
 

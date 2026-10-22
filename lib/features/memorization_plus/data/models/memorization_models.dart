@@ -1,4 +1,5 @@
 import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_remote_plan.dart';
 import '../../domain/entities/memorization_entities.dart';
 
 // ─── MemorizationProfileModel ────────────────────────────────────────────────
@@ -463,6 +464,9 @@ class ParentSettingsModel extends ParentSettings {
     super.policyLinkConfirmed,
     super.kidsAyahsPerHouse,
     super.kidsHouseSizesBySurah,
+    super.kidsJourneyPathId,
+    super.kidsWholeSurahIds,
+    super.remotePlan,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -500,6 +504,11 @@ class ParentSettingsModel extends ParentSettings {
           _intOr(json['kidsAyahsPerHouse'], 0),
         ),
         kidsHouseSizesBySurah: _houseSizes(json['kidsHouseSizesBySurah']),
+        kidsJourneyPathId: json['kidsJourneyPathId'] is String
+            ? json['kidsJourneyPathId'] as String
+            : null,
+        kidsWholeSurahIds: _wholeSurahIds(json['kidsWholeSurahIds']),
+        remotePlan: KidsRemotePlan.fromJson(json['remotePlan']),
       );
 
   static bool _boolOr(Object? raw, bool fallback) =>
@@ -516,6 +525,14 @@ class ParentSettingsModel extends ParentSettings {
       }
     }
     return sizes;
+  }
+
+  static Set<int> _wholeSurahIds(Object? raw) {
+    if (raw is! List) return const {};
+    return {
+      for (final value in raw)
+        if (value is int && value >= 1 && value <= 114) value,
+    };
   }
 
   static int _intOr(Object? raw, int fallback) =>
@@ -542,6 +559,9 @@ class ParentSettingsModel extends ParentSettings {
         policyLinkConfirmed: settings.policyLinkConfirmed,
         kidsAyahsPerHouse: settings.kidsAyahsPerHouse,
         kidsHouseSizesBySurah: settings.kidsHouseSizesBySurah,
+        kidsJourneyPathId: settings.kidsJourneyPathId,
+        kidsWholeSurahIds: settings.kidsWholeSurahIds,
+        remotePlan: settings.remotePlan.sanitized(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -558,6 +578,9 @@ class ParentSettingsModel extends ParentSettings {
     'kidsHouseSizesBySurah': kidsHouseSizesBySurah.map(
       (key, value) => MapEntry('$key', value),
     ),
+    'kidsJourneyPathId': kidsJourneyPathId,
+    'kidsWholeSurahIds': kidsWholeSurahIds.toList()..sort(),
+    'remotePlan': remotePlan.toJson(),
     'startingSurahId': startingSurahId,
     'kidsHifzV2Enabled': kidsHifzV2Enabled,
     'kidsReduceMotion': kidsReduceMotion,
@@ -578,6 +601,10 @@ class ParentRewardModel extends ParentReward {
     super.unlockedAt,
     super.requestedAt,
     super.claimedAt,
+    super.milestoneSurahId,
+    super.origin,
+    super.serverId,
+    super.ownerId,
   });
 
   factory ParentRewardModel.fromJson(Map<String, dynamic> json) {
@@ -592,6 +619,10 @@ class ParentRewardModel extends ParentReward {
       unlockedAt: _optionalDate(json['unlockedAt']),
       requestedAt: _optionalDate(json['requestedAt']),
       claimedAt: _optionalDate(json['claimedAt']),
+      milestoneSurahId: _optionalSurahId(json['milestoneSurahId']),
+      origin: _originFromJson(json['origin']),
+      serverId: _optionalNonEmptyString(json['serverId']),
+      ownerId: _optionalNonEmptyString(json['ownerId']),
     );
   }
 
@@ -604,7 +635,28 @@ class ParentRewardModel extends ParentReward {
         unlockedAt: reward.unlockedAt,
         requestedAt: reward.requestedAt,
         claimedAt: reward.claimedAt,
+        milestoneSurahId: reward.milestoneSurahId,
+        origin: reward.origin,
+        serverId: reward.serverId,
+        ownerId: reward.ownerId,
       );
+
+  static int? _optionalSurahId(Object? value) =>
+      value is int && ParentReward.isValidMilestoneSurahId(value)
+      ? value
+      : null;
+
+  static ParentRewardOrigin _originFromJson(Object? value) {
+    if (value is! String) return ParentRewardOrigin.unknown;
+    return ParentRewardOrigin.values.firstWhere(
+      (origin) => origin.name == value,
+      orElse: () => ParentRewardOrigin.unknown,
+    );
+  }
+
+  static String? _optionalNonEmptyString(Object? value) => value is String && value.isNotEmpty
+      ? value
+      : null;
 
   static DateTime? _optionalDate(Object? value) =>
       value == null ? null : DateTime.parse(value as String);
@@ -617,6 +669,10 @@ class ParentRewardModel extends ParentReward {
     'unlockedAt': unlockedAt?.toIso8601String(),
     'requestedAt': requestedAt?.toIso8601String(),
     'claimedAt': claimedAt?.toIso8601String(),
+    'milestoneSurahId': milestoneSurahId,
+    'origin': origin.name,
+    'serverId': serverId,
+    'ownerId': ownerId,
   };
 }
 

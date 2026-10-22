@@ -75,6 +75,31 @@ void main() {
       expect(find.text('Share memorization milestone'), findsOneWidget);
     });
 
+    testWidgets('a short phone scrolls instead of overflowing (found on a '
+        'device)', (tester) async {
+      // 360x500 dp: shorter than the page's content.
+      tester.view.devicePixelRatio = 2;
+      tester.view.physicalSize = const Size(720, 1000);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: V2CompletionPage(finalState: _completedState(passed: 3)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CustomScrollView), findsOneWidget);
+      // The last action is reachable by scrolling.
+      await tester.scrollUntilVisible(
+        find.text('Closing dua'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Closing dua'), findsOneWidget);
+    });
+
     testWidgets('shows no ayah when the canonical corpus is unavailable', (
       tester,
     ) async {

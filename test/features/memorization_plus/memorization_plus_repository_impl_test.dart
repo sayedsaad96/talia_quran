@@ -424,6 +424,65 @@ void main() {
       );
     });
 
+    test('the weekly goal skips a locked surah promise', () async {
+      await datasource.saveParentSettings(
+        const ParentSettingsModel(weeklyGoalSessions: 1),
+      );
+      await repository.saveParentReward('وعد', milestoneSurahId: 112);
+      await repository.saveParentReward('عادية');
+
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'weekly-promise-skip',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      final byTitle = {
+        for (final r in await datasource.getParentRewards()) r.title: r.status,
+      };
+      expect(byTitle['وعد'], ParentRewardStatus.locked);
+      expect(byTitle['عادية'], ParentRewardStatus.unlocked);
+    });
+
+    test('a promise opened this week does not block the weekly gift', () async {
+      await datasource.saveParentSettings(
+        const ParentSettingsModel(weeklyGoalSessions: 1),
+      );
+      await datasource.saveParentRewards([
+        ParentRewardModel(
+          id: 'p',
+          origin: ParentRewardOrigin.local,
+          title: 'وعد',
+          status: ParentRewardStatus.unlocked,
+          createdAt: DateTime.now().toUtc(),
+          unlockedAt: DateTime.now().toUtc(),
+          milestoneSurahId: 112,
+        ),
+        ParentRewardModel(
+          id: 'g',
+          origin: ParentRewardOrigin.local,
+          title: 'عادية',
+          status: ParentRewardStatus.locked,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      ]);
+
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'weekly-promise-open',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      final byId = {
+        for (final r in await datasource.getParentRewards()) r.id: r.status,
+      };
+      expect(byId['g'], ParentRewardStatus.unlocked);
+    });
+
     test('an unsynced positive kids log is pending cloud work', () async {
       await repository.awardKidsPoints(
         completionAuthorized: true,

@@ -39,6 +39,13 @@ class KidsJourneyLoaded extends KidsJourneyState {
     this.isReturningAfterBreak = false,
     this.dailyMissions = const [],
     this.currentRegion,
+    this.isQuranJourney = false,
+    this.needsSplitChoice = false,
+    this.nextMissionNeedsSplitChoice = false,
+    this.surahAyahCount = 0,
+    this.defaultStageSize = 0,
+    this.currentSplitWhole = false,
+    this.currentStageSize = 0,
   });
 
   final int surahId;
@@ -69,6 +76,29 @@ class KidsJourneyLoaded extends KidsJourneyState {
 
   /// Region progress of [surahId]; null when off the kids path or unreadable.
   final KidsRegionProgress? currentRegion;
+
+  /// The selected path is the whole-Quran journey.
+  final bool isQuranJourney;
+
+  /// Quran journey, nothing started in this surah and no split chosen yet:
+  /// the page asks «كيف تحب أن تحفظها؟».
+  final bool needsSplitChoice;
+
+  /// [nextMission] starts a surah whose split is not chosen yet: the home
+  /// card opens that surah's journey page to ask first (spec §4.4).
+  final bool nextMissionNeedsSplitChoice;
+
+  /// Ayahs in [surahId]; 0 off the Quran journey.
+  final int surahAyahCount;
+
+  /// Stage size pre-selected in the split sheet; 0 off the Quran journey.
+  final int defaultStageSize;
+
+  /// The surah is already memorized whole (<= 20 ayahs).
+  final bool currentSplitWhole;
+
+  /// The surah's current stage size: frozen size, else the default.
+  final int currentStageSize;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
@@ -116,6 +146,13 @@ class KidsJourneyLoaded extends KidsJourneyState {
     List<KidsDailyMission>? dailyMissions,
     KidsRegionProgress? currentRegion,
     bool clearCurrentRegion = false,
+    bool? isQuranJourney,
+    bool? needsSplitChoice,
+    bool? nextMissionNeedsSplitChoice,
+    int? surahAyahCount,
+    int? defaultStageSize,
+    bool? currentSplitWhole,
+    int? currentStageSize,
   }) => KidsJourneyLoaded(
     surahId: surahId,
     stages: stages ?? this.stages,
@@ -134,6 +171,14 @@ class KidsJourneyLoaded extends KidsJourneyState {
     currentRegion: clearCurrentRegion
         ? null
         : (currentRegion ?? this.currentRegion),
+    isQuranJourney: isQuranJourney ?? this.isQuranJourney,
+    needsSplitChoice: needsSplitChoice ?? this.needsSplitChoice,
+    nextMissionNeedsSplitChoice:
+        nextMissionNeedsSplitChoice ?? this.nextMissionNeedsSplitChoice,
+    surahAyahCount: surahAyahCount ?? this.surahAyahCount,
+    defaultStageSize: defaultStageSize ?? this.defaultStageSize,
+    currentSplitWhole: currentSplitWhole ?? this.currentSplitWhole,
+    currentStageSize: currentStageSize ?? this.currentStageSize,
   );
 
   @override
@@ -151,5 +196,12 @@ class KidsJourneyLoaded extends KidsJourneyState {
     isReturningAfterBreak,
     dailyMissions,
     currentRegion,
+    isQuranJourney,
+    needsSplitChoice,
+    nextMissionNeedsSplitChoice,
+    surahAyahCount,
+    defaultStageSize,
+    currentSplitWhole,
+    currentStageSize,
   ];
 }

@@ -4,6 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
+import '../../../../core/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 import '../../../adult_journey/presentation/widgets/adult_journey_settings_tile.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/profile_cubit.dart';
@@ -16,6 +20,7 @@ import '../pages/subpages/prayer_settings_page.dart';
 import '../pages/subpages/quran_settings_page.dart';
 import 'settings_account_tiles.dart';
 import 'settings_appearance_tiles.dart';
+import 'settings_clarity_tile.dart';
 import 'settings_group.dart';
 import 'settings_nav_tile.dart';
 import 'settings_section.dart';
@@ -91,6 +96,7 @@ class SettingsHubBody extends StatelessWidget {
           title: l10n.theme,
         ),
         ThemeSettingTile(isDark: isDark),
+        const ClaritySettingTile(),
       ],
     );
   }
@@ -119,6 +125,26 @@ class SettingsHubBody extends StatelessWidget {
           page: const PrayerSettingsPage(),
         ),
         // Confirmed adult profile only (not the legacy `mem_plus_track` hint).
+        if ((state.memorizationProfile?.isAdult ?? false) &&
+            getIt.isRegistered<ExperienceFlags>() &&
+            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.audioDownloads))
+          SettingsNavTile(
+            icon: TaliaIcons.storage,
+            iconColor: context.tokens.accent,
+            title: context.l10n.audioDownloadsStorage,
+            isDark: isDark,
+            onTap: () => context.push(AppRoutes.audioStorage),
+          ),
+        if ((state.memorizationProfile?.isAdult ?? false) &&
+            getIt.isRegistered<ExperienceFlags>() &&
+            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.similarAyahTrainer))
+          SettingsNavTile(
+            icon: TaliaIcons.swapHorizontal,
+            iconColor: context.tokens.accent,
+            title: l10n.similarAyahTrainerTitle,
+            isDark: isDark,
+            onTap: () => context.push(AppRoutes.similarAyahTrainer),
+          ),
         if (state.memorizationProfile?.isAdult ?? false)
           AdultJourneySettingsTile(isDark: isDark),
       ],

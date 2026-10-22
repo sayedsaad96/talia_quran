@@ -73,7 +73,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
     int ayahNumber,
     V2SelfGrade grade,
   ) {
-    if (grade != V2SelfGrade.mastered) return PerformanceRating.weak;
+    if (manualGradeRating(grade) == PerformanceRating.weak) return PerformanceRating.weak;
     final evidence = ratingFor(state, ayahNumber);
     return evidence == PerformanceRating.excellent
         ? PerformanceRating.average
@@ -82,6 +82,9 @@ abstract final class V2ReviewOutcomeCommitSupport {
 
   static String? nonEmpty(String? value) =>
       value == null || value.isEmpty ? null : value;
+
+  static PerformanceRating manualGradeRating(V2SelfGrade grade) =>
+      grade == V2SelfGrade.mastered ? PerformanceRating.average : PerformanceRating.weak;
 
   static String studyDayKey(DateTime utc) {
     final local = utc.toLocal();

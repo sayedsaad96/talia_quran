@@ -1,5 +1,12 @@
 import 'dart:async';
+import 'prayer_review_injection.dart';
+import 'kids_remote_plan_injection.dart';
+import 'kids_encouragement_injection.dart';
+import '../../features/memorization_plus/data/repositories/kids_legacy_split_recovery_repository_impl.dart';
+import '../../features/memorization_plus/domain/usecases/recover_kids_session_split.dart';
+import '../prayer_review/prayer_review_notification_text.dart';
 import 'dart:ui' show Locale;
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +14,9 @@ import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
+import '../services/quran_audio_download_manager.dart';
+import '../progress/hijri_year_recap_loader.dart';
+import '../../features/progress/presentation/cubits/hijri_year_recap_cubit.dart';
 import '../services/audio_lifecycle_manager.dart';
 import '../privacy/recitation_voice_consent.dart';
 import '../router/app_router.dart';
@@ -45,6 +55,11 @@ import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../../features/seasons/data/tarawih_log_store.dart';
+import '../accessibility/clarity_mode.dart';
+import '../backup/backup_collector.dart';
+import '../backup/backup_restorer.dart';
+import '../experience/experience_feature_flags.dart';
 import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/adult_journey/application/adult_journey_usecases.dart';
@@ -65,6 +80,7 @@ import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/recitation_evaluator.dart';
 import '../../features/memorization_plus/domain/entities/kids_child_policy.dart';
+import '../../features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/kids_review_outcome_committer.dart';
@@ -74,13 +90,19 @@ import '../memorization/v2/session_phase.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
+import '../memorization/similar_ayah/similar_ayah_attempt_service.dart';
+import '../../features/memorization_plus/data/datasources/approved_similar_ayah_candidate_source.dart';
+import '../../features/memorization_plus/data/repositories/isar_confusion_pair_repository.dart';
+import '../../features/memorization_plus/presentation/cubits/similar_ayah_trainer_cubit.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../security/parent_pin_secure_store.dart';
 import '../security/encrypted_account_preferences_store.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
+import '../../features/quran/data/repositories/isar_ayah_note_repository.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
+import '../../features/quran/domain/repositories/ayah_note_repository.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/quran/domain/usecases/get_surahs_usecase.dart';
@@ -89,6 +111,10 @@ import '../../features/quran/domain/usecases/search_quran_usecase.dart';
 import '../../features/quran/presentation/cubits/surah_list_cubit.dart';
 import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
+import '../../features/quran/presentation/cubits/strength_overlay_cubit.dart';
+import '../../features/quran/presentation/cubits/ayah_notes_cubit.dart';
+import '../../features/quran/presentation/services/qcf_page_ayah_ranges.dart';
+import '../../features/quran/presentation/services/strength_overlay_source.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
@@ -145,6 +171,7 @@ import '../../features/memorization_plus/data/datasources/kids_map_celebration_s
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_family_practice_store.dart';
+import '../../features/memorization_plus/data/datasources/guardian_milestone_seen_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_support_profile_store.dart';
 import '../../features/memorization_plus/data/repositories/collaborators/kids_reading_support_sync.dart';
 import '../../features/memorization_plus/data/repositories/collaborators/memorization_cloud_gateway.dart';
@@ -155,6 +182,7 @@ import '../../features/memorization_plus/domain/repositories/kids_support_profil
 import '../../features/memorization_plus/data/datasources/kids_streak_store.dart';
 import '../../features/memorization_plus/domain/services/kids_progress_snapshot.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_progress_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_bedtime_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_learning_game_cubit.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
@@ -177,6 +205,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_quran_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_treasures_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
@@ -325,6 +354,13 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
+  getIt.registerLazySingleton<QuranAudioDownloadManager>(
+    () => QuranAudioDownloadManager(
+      getIt<SharedPreferences>(),
+      getIt<QuranRepository>(),
+      cache: QuranAudioDurableCache.instance,
+    ),
+  );
   getIt.registerSingleton<QuranReciterService>(
     QuranReciterService(getIt<SharedPreferences>()),
   );
@@ -358,6 +394,16 @@ Future<void> configureDependencies({bool background = false}) async {
       prayerTimesService: getIt<PrayerTimesService>(),
       prayerCompanionPlanner: getIt<PrayerCompanionPlanner>(),
       prayerCompanionPreferences: getIt<PrayerCompanionPreferences>(),
+      kidsPracticeDaysLoader: () => readKidsPracticeDays(getIt),
+      prayerReviewBodyLoader: (occurrence, l10n) async {
+        if (!getIt<ExperienceFlags>().isEnabled(ExperienceFeature.prayerReview)) return null;
+        return getIt<PrayerReviewNotificationText>().forOccurrence(occurrence, l10n);
+      },
+      forecastAudienceIsAdult: (_) async {
+        final profile = await getIt<MemorizationPathResolver>()
+            .currentProfile();
+        return profile?.isAdult == true;
+      },
       kidsSessionDatesLoader: () async {
         if (!getIt.isRegistered<MemorizationPlusRepository>()) return [];
         final result = await getIt<MemorizationPlusRepository>()
@@ -701,12 +747,33 @@ Future<void> configureDependencies({bool background = false}) async {
         if (getIt.isRegistered<KidsPolicyController>()) {
           unawaited(getIt<KidsPolicyController>().reload());
         }
+        if (getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePlan) &&
+            getIt.isRegistered<NotificationScheduler>() &&
+            getIt.isRegistered<LocaleCubit>()) {
+          unawaited(getIt<NotificationScheduler>().refreshNotifications(
+            lookupAppLocalizations(getIt<LocaleCubit>().state), force: true,
+          ));
+        }
       },
       familyActivityInputs: familyActivityInputsLoader(getIt),
       readingSupportSync: getIt<KidsReadingSupportSync>(),
+      quranJourneyEnabled: () => KidsHifzFeatureFlags.isQuranJourneyEnabled(
+        getIt<SharedPreferences>(),
+      ),
       readingSupportEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
         KidsEnrichmentFeature.supportProfile,
       ),
+      remotePlanEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.remotePlan,
+      ),
+      remotePromiseEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.remotePromise,
+      ),
+      promiseEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianPromise,
+          ),
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(
@@ -771,6 +838,9 @@ Future<void> configureDependencies({bool background = false}) async {
       scheduler: getIt<ScheduleNextReviewUsecase>(),
       activityRecorder: getIt<ActivityEventRecorder>(),
       progressEvents: getIt<ProgressEventsBus>(),
+      accountBarrier: AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ),
     ),
   );
   getIt.registerLazySingleton<KidsReviewOutcomeCommitter>(
@@ -787,6 +857,7 @@ Future<void> configureDependencies({bool background = false}) async {
     () => V2ReviewEffectOutboxProcessor(
       isar: getIt<Isar>(),
       owner: getIt<RecordOwnerProvider>(),
+      barrier: AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
       markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(
         getIt<MemorizationPlusRepository>(),
       ),
@@ -977,6 +1048,15 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerFactory<SurahDetailCubit>(
     () => SurahDetailCubit(getIt<GetSurahDetailUsecase>()),
   );
+  getIt.registerFactory<StrengthOverlayCubit>(
+    () => StrengthOverlayCubit(
+      repository: getIt<MemorizationPlusRepository>(),
+      events: getIt<ProgressEventsBus>(),
+      source: StrengthOverlaySource(pageRanges: qcfPageAyahRanges),
+      prefs: getIt<SharedPreferences>(),
+      currentOwnerId: () => getIt<RecordOwnerProvider>().currentOwnerId,
+    ),
+  );
   getIt.registerFactory<QuranPageCubit>(
     () => QuranPageCubit(
       getIt<QuranRepository>(),
@@ -1091,6 +1171,12 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
       getIt<ActivityEventRecorder>(),
       getIt<KidsReviewOutcomeCommitter>(),
+      null,
+      null,
+      RecoverKidsSessionSplit(KidsLegacySplitRecoveryRepositoryImpl(
+        getIt<MemorizationPlusLocalDatasource>(), getIt<RecordOwnerProvider>(),
+        AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+      )),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -1163,6 +1249,72 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<KidsEnrichmentFlags>(
     () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
   );
+  // Roadmap batch A rollout switches (all off by default).
+  getIt.registerLazySingleton<ExperienceFlags>(
+    () => ExperienceFlags.fromPreferences(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<BackupCollector>(
+    () => BackupCollector(
+      getIt<Isar>(),
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<AyahNoteRepository>(
+    () => IsarAyahNoteRepository(
+      getIt<Isar>(),
+      getIt<RecordOwnerProvider>(),
+      AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+    ),
+  );
+  getIt.registerFactory<AyahNotesCubit>(
+    () => AyahNotesCubit(
+      getIt<AyahNoteRepository>(),
+      getIt<QuranRepository>(),
+      AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+    ),
+  );
+  getIt.registerLazySingleton<HijriYearRecapLoader>(
+    () => HijriYearRecapLoader(
+      getIt<KhatmahRepository>(),
+      getIt<MemorizationPlusLocalDatasource>(),
+      getIt<StreakService>(),
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+      AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+      getIt<HijriDateAdjustment>(),
+    ),
+  );
+  getIt.registerFactory<HijriYearRecapCubit>(
+    () => HijriYearRecapCubit(
+      getIt<HijriYearRecapLoader>(),
+      AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+      readAdultEligibility: () async =>
+          (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
+              .fold((_) => false, (profile) => profile.isAdult),
+    ),
+  );
+  getIt.registerLazySingleton<BackupRestorer>(
+    () => BackupRestorer(
+      getIt<Isar>(),
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+      events: getIt<ProgressEventsBus>(),
+    ),
+  );
+  getIt.registerLazySingleton<ClarityModeController>(
+    () => ClarityModeController(
+      getIt<SharedPreferences>(),
+      flagEnabled: () =>
+          getIt<ExperienceFlags>().isEnabled(ExperienceFeature.clarityMode),
+    ),
+  );
+  getIt.registerLazySingleton<TarawihLogStore>(
+    () => TarawihLogStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   // Adult journey package 1: owner-scoped preferences and rollout switches
   // (all off by default). Home does not depend on these.
   getIt.registerLazySingleton<AdultJourneyFlags>(
@@ -1184,9 +1336,9 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<AdultJourneyLaunchResolver>(
     () => AdultJourneyLaunchResolver(
       owner: getIt<RecordOwnerProvider>(),
-      captureLease: () =>
-          AccountDataBarrier.forPreferences(getIt<SharedPreferences>())
-              .capture(),
+      captureLease: () => AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ).capture(),
       memorizationDestinations: () async {
         final targets = await MemorizationNavigationResolver(
           getIt<MemorizationPlusRepository>(),
@@ -1235,6 +1387,27 @@ Future<void> configureDependencies({bool background = false}) async {
           getIt<ProgressEventsBus>().notify(ProgressChangedReason.kidsProgress),
     ),
   );
+  // «استماع قبل النوم» (behind its route guard and flag): listening only.
+  getIt.registerFactory<KidsBedtimeCubit>(
+    () => KidsBedtimeCubit(
+      sessionLogs: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsSessionLogs()).fold(
+            (failure) => throw failure,
+            (logs) => logs,
+          ),
+      surahs: () async => (await getIt<QuranRepository>().getSurahs()).fold(
+        (failure) => throw failure,
+        (surahs) => surahs,
+      ),
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
+      play: (surahIds, sleep) => getIt<QuranContinuousPlayerService>()
+          .playSurahQueue(surahIds, sleep: sleep),
+      stop: () => getIt<QuranContinuousPlayerService>().stop(),
+      playback: getIt<QuranContinuousPlayerService>().stateNotifier,
+    ),
+  );
   // «أي سورة هذه؟» listening game (T9, behind its route guard and flag).
   getIt.registerFactory<KidsLearningGameCubit>(
     () => KidsLearningGameCubit(
@@ -1244,6 +1417,9 @@ Future<void> configureDependencies({bool background = false}) async {
             (logs) => logs,
           ),
       audioSource: AudioCacheService.instance.getAudioSource,
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
     ),
   );
   // The kids track's own «تقدّمي» (kids-only stores; see KidsStreakStore).
@@ -1309,11 +1485,22 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
       homeMissionsEnabled: () =>
           getIt<KidsPolicyController>().value.homeMissionsEnabled,
+      promiseEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianPromise,
+          ),
     ),
   );
   // App lifetime, so the resume throttle survives the kids home being rebuilt.
   getIt.registerLazySingleton<KidsInboundRefresher>(
     () => KidsInboundRefresher(getIt<KidsInboundRepository>()),
+  );
+  getIt.registerFactory<KidsQuranJourneyCubit>(
+    () => KidsQuranJourneyCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<QuranRepository>(),
+    ),
   );
   getIt.registerFactory<KidsJourneyCubit>(
     () => KidsJourneyCubit(
@@ -1340,6 +1527,9 @@ Future<void> configureDependencies({bool background = false}) async {
       // App-lifetime policy singleton: read, refreshed on each home load,
       // never disposed here.
       childPolicyReader: () => getIt<KidsPolicyController>().value,
+      remotePlanEnabled: () => getIt<KidsEnrichmentFlags>().isEnabled(
+        KidsEnrichmentFeature.remotePlan,
+      ),
       childPolicyRefresh: () => getIt<KidsPolicyController>().reload(),
       inboundRefresh: ({bool force = false}) =>
           getIt<KidsInboundRefresher>().refresh(force: force),
@@ -1353,6 +1543,20 @@ Future<void> configureDependencies({bool background = false}) async {
       },
       recentReadingDaysLoader: (before) =>
           getIt<KidsReadingReceiptStore>().recentReadingDays(before),
+      pathLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getKidsJourneyPath())
+              .getOrElse(() => KidsJourneyPathDefinition.adventure),
+      settingsLoader: () async =>
+          (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+            (_) => null,
+            (settings) => settings,
+          ),
+      splitSaver: (surahId, {required whole, stageSize}) =>
+          getIt<MemorizationPlusRepository>().setKidsSurahSplit(
+            surahId,
+            whole: whole,
+            stageSize: stageSize,
+          ),
       policyLoader: () async {
         final result = await getIt<MemorizationPlusRepository>()
             .getMemorizationProfile();
@@ -1394,6 +1598,12 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
 
+  getIt.registerLazySingleton<GuardianMilestoneSeenStore>(
+    () => GuardianMilestoneSeenStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerFactory<FamilyDashboardCubit>(
     () => FamilyDashboardCubit(
       getIt<ParentAccessUsecase>(),
@@ -1406,8 +1616,73 @@ Future<void> configureDependencies({bool background = false}) async {
       pinOptional: () async =>
           (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
               .fold((_) => false, (profile) => !profile.isChild),
+      milestoneStore: getIt<GuardianMilestoneSeenStore>(),
+      milestonesEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.guardianMilestones,
+          ),
+      ayahCounts: () async => {
+        for (final surah in (await getIt<QuranRepository>().getSurahs()).fold(
+          (failure) => throw failure,
+          (surahs) => surahs,
+        ))
+          surah.id: surah.ayahCount,
+      },
+      localCertificates: () =>
+          getIt<AchievementService>().getEarnedCertificates(isKids: true),
     ),
   );
+  getIt.registerLazySingleton<SimilarAyahCandidateSource>(
+    () => ApprovedSimilarAyahCandidateSource(
+      quran: getIt<QuranRepository>(),
+      readBytes: (path) async {
+        final data = await rootBundle.load(path);
+        return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      },
+    ),
+  );
+  getIt.registerLazySingleton<SimilarAyahAttemptService>(
+    () => SimilarAyahAttemptService(
+      owner: getIt<RecordOwnerProvider>(),
+      barrier: AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+      isEnabled: () => getIt<ExperienceFlags>().isEnabled(
+        ExperienceFeature.similarAyahTrainer,
+      ),
+      readAdultEligibility: () async =>
+          (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
+              .fold((_) => false, (profile) => profile.isAdult),
+      // The source remains unavailable until the manifest approves the index.
+      candidates: getIt<SimilarAyahCandidateSource>(),
+    ),
+  );
+  getIt.registerLazySingleton<IsarConfusionPairRepository>(
+    () => IsarConfusionPairRepository(
+      getIt<Isar>(), getIt<RecordOwnerProvider>(),
+      AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+    ),
+  );
+  getIt.registerFactory<SimilarAyahTrainerCubit>(
+    () => SimilarAyahTrainerCubit(
+      readPairs: getIt<IsarConfusionPairRepository>().list,
+      quran: getIt<QuranRepository>(),
+      candidateSource: getIt<SimilarAyahCandidateSource>(),
+      // The trainer needs a live authority; with the feature off there is
+      // none, which it handles like an unavailable account (fail closed).
+      captureAuthority: () =>
+          getIt<SimilarAyahAttemptService>().captureAuthority() ??
+          (throw const AccountDataUnavailableException()),
+      accountChanges: getIt<SimilarAyahAttemptService>().accountChanges,
+      readAdultEligibility: () async =>
+          (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
+              .fold((_) => false, (profile) => profile.isAdult),
+      isEnabled: () => getIt<ExperienceFlags>().isEnabled(
+        ExperienceFeature.similarAyahTrainer,
+      ),
+    ),
+  );
+  registerPrayerReviewDependencies(getIt);
+  registerKidsEncouragementDependencies(getIt);
   getIt.registerFactory<MemorizationSessionCubit>(
     () => MemorizationSessionCubit(
       quranRepository: getIt<QuranRepository>(),
@@ -1422,6 +1697,7 @@ Future<void> configureDependencies({bool background = false}) async {
       recitationPassThreshold:
           getIt<SettingsRepository>().getSimilarityThreshold,
       voiceConsent: getIt<RecitationVoiceConsent>(),
+      similarAyahAttempts: getIt<SimilarAyahAttemptService>(),
     ),
   );
 
@@ -1489,6 +1765,10 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<SharedPreferences>(),
       getIt<AccountDataReset>(),
       getIt<CloudSyncCoordinator>(),
+      switch (getIt<AyahNoteRepository>()) {
+        final AyahNoteClaimer claimer => claimer,
+        _ => null,
+      },
     ),
   );
 }

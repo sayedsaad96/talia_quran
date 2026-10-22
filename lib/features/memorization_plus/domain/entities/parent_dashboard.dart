@@ -6,10 +6,16 @@ import 'kids_journey_stage.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
 import 'kids_session_policy.dart';
+import 'kids_remote_plan.dart';
 
 /// Flow: locked → unlocked → requested (child) → claimed (guardian approves).
 /// Stored locally by index, so new values are only ever appended.
 enum ParentRewardStatus { locked, unlocked, claimed, requested }
+
+/// Where a reward row came from.  Legacy serialized rows deliberately remain
+/// [unknown]: an id shape is not evidence that a row is safe to send to a
+/// server.
+enum ParentRewardOrigin { unknown, local, cloud }
 
 class ParentSettings extends Equatable {
   const ParentSettings({
@@ -32,6 +38,9 @@ class ParentSettings extends Equatable {
     this.policyLinkConfirmed,
     this.kidsAyahsPerHouse,
     this.kidsHouseSizesBySurah = const {},
+    this.kidsJourneyPathId,
+    this.kidsWholeSurahIds = const {},
+    this.remotePlan = const KidsRemotePlan(),
   });
 
   final String? pinHash;
@@ -72,6 +81,14 @@ class ParentSettings extends Equatable {
   final int? kidsAyahsPerHouse;
   final Map<int, int> kidsHouseSizesBySurah;
 
+  /// Stored journey path id; null or unknown resolves to the adventure.
+  final String? kidsJourneyPathId;
+
+  /// Surahs (<= 20 ayahs) the guardian chose to memorize as one whole house.
+  /// Takes precedence over [kidsHouseSizesBySurah].
+  final Set<int> kidsWholeSurahIds;
+  final KidsRemotePlan remotePlan;
+
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
   ParentSettings copyWith({
@@ -98,6 +115,10 @@ class ParentSettings extends Equatable {
     int? kidsAyahsPerHouse,
     bool clearKidsAyahsPerHouse = false,
     Map<int, int>? kidsHouseSizesBySurah,
+    String? kidsJourneyPathId,
+    bool clearKidsJourneyPathId = false,
+    Set<int>? kidsWholeSurahIds,
+    KidsRemotePlan? remotePlan,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -124,6 +145,11 @@ class ParentSettings extends Equatable {
         ? null
         : kidsAyahsPerHouse ?? this.kidsAyahsPerHouse,
     kidsHouseSizesBySurah: kidsHouseSizesBySurah ?? this.kidsHouseSizesBySurah,
+    kidsJourneyPathId: clearKidsJourneyPathId
+        ? null
+        : kidsJourneyPathId ?? this.kidsJourneyPathId,
+    kidsWholeSurahIds: kidsWholeSurahIds ?? this.kidsWholeSurahIds,
+    remotePlan: remotePlan ?? this.remotePlan,
   );
 
   @override
@@ -147,6 +173,9 @@ class ParentSettings extends Equatable {
     policyLinkConfirmed,
     kidsAyahsPerHouse,
     kidsHouseSizesBySurah,
+    kidsJourneyPathId,
+    kidsWholeSurahIds,
+    remotePlan,
   ];
 }
 
@@ -159,7 +188,27 @@ class ParentReward extends Equatable {
     this.unlockedAt,
     this.requestedAt,
     this.claimedAt,
+    this.milestoneSurahId,
+    this.origin = ParentRewardOrigin.unknown,
+    this.serverId,
+    this.ownerId,
   });
+
+  /// Longest gift title a guardian can write.
+  static const int titleMaxLength = 80;
+
+  /// Title length as the text field counts it: combining marks (Arabic
+  /// tashkeel, accents) join their base letter instead of adding to the count.
+  static int titleLength(String title) => title.runes.where((r) {
+    return !((r >= 0x0300 && r <= 0x036F) ||
+        (r >= 0x064B && r <= 0x065F) ||
+        r == 0x0670 ||
+        (r >= 0x06D6 && r <= 0x06ED));
+  }).length;
+
+  /// A valid surah number for [milestoneSurahId].
+  static bool isValidMilestoneSurahId(int? surahId) =>
+      surahId != null && surahId >= 1 && surahId <= 114;
 
   final String id;
   final String title;
@@ -169,12 +218,34 @@ class ParentReward extends Equatable {
   final DateTime? requestedAt;
   final DateTime? claimedAt;
 
+  /// Local-only promise: the gift opens by itself once the child completes
+  /// this surah. Never sent to the cloud.
+  final int? milestoneSurahId;
+
+  /// Explicit storage provenance. Unknown records are display-only until a
+  /// user action can establish their authority without guessing.
+  final ParentRewardOrigin origin;
+
+  /// Immutable server primary key for [ParentRewardOrigin.cloud] records.
+  final String? serverId;
+
+  /// The child account that owns this row. Local rows use the local storage
+  /// owner, cloud rows use the server's `child_user_id`.
+  final String? ownerId;
+
+  String get storageIdentity => '${ownerId ?? ''}|${origin.name}|$id';
+
   ParentReward copyWith({
     String? title,
     ParentRewardStatus? status,
     DateTime? unlockedAt,
     DateTime? requestedAt,
     DateTime? claimedAt,
+    ParentRewardOrigin? origin,
+    String? serverId,
+    String? ownerId,
+    bool clearServerId = false,
+    bool clearOwnerId = false,
   }) => ParentReward(
     id: id,
     title: title ?? this.title,
@@ -183,6 +254,10 @@ class ParentReward extends Equatable {
     unlockedAt: unlockedAt ?? this.unlockedAt,
     requestedAt: requestedAt ?? this.requestedAt,
     claimedAt: claimedAt ?? this.claimedAt,
+    milestoneSurahId: milestoneSurahId,
+    origin: origin ?? this.origin,
+    serverId: clearServerId ? null : (serverId ?? this.serverId),
+    ownerId: clearOwnerId ? null : (ownerId ?? this.ownerId),
   );
 
   @override
@@ -194,6 +269,10 @@ class ParentReward extends Equatable {
     unlockedAt,
     requestedAt,
     claimedAt,
+    milestoneSurahId,
+    origin,
+    serverId,
+    ownerId,
   ];
 }
 

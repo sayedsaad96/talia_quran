@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../../core/memorization/retention_forecast.dart';
 
 class OverallProgress extends Equatable {
   const OverallProgress({
@@ -32,6 +33,7 @@ class OverallProgress extends Equatable {
     this.kidsPoints = 0,
     this.kidsStars = 0,
     this.inProgressSurahs = 0,
+    this.weakeningPassages = const [],
   });
 
   final int memorizedAyahs;
@@ -44,6 +46,7 @@ class OverallProgress extends Equatable {
   final int totalAyahs;
   final int memorizedSurahs;
   final int inProgressSurahs;
+  final List<ForecastPassage> weakeningPassages;
   final int totalSurahs;
   final int memorizedJuz;
   final int totalJuz;
@@ -136,6 +139,7 @@ class OverallProgress extends Equatable {
     reviewAyahs,
     kidsPoints,
     kidsStars,
+    weakeningPassages,
   ];
 }
 

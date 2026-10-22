@@ -5,6 +5,8 @@ import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
+import '../../../../core/memorization/retention_forecast.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/l10n/localization_helpers.dart';
@@ -25,12 +27,14 @@ import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/achievement_tier_palette.dart';
+import '../widgets/hijri_year_recap_slot.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
 part '../widgets/progress_stat_cards.dart';
 part '../widgets/progress_detailed_card.dart';
 part '../widgets/progress_achievements.dart';
 part '../widgets/progress_certificates.dart';
+part '../widgets/progress_forgetting_forecast.dart';
 
 class ProgressPage extends StatelessWidget {
   const ProgressPage({super.key});
@@ -329,6 +333,21 @@ class _ProgressContentState extends State<_ProgressContent>
 
   void _openMemorization() => context.go(AppRoutes.memorizationHub);
 
+  void _openForecastReview(ForecastPassage passage) {
+    context.go(
+      Uri(
+        path: AppRoutes.memorizationV2Session,
+        queryParameters: {
+          'surahId': '${passage.surahId}',
+          'startAyah': '${passage.startAyah}',
+          'reviewEndAyah': '${passage.endAyah}',
+          'intent': 'review',
+          'origin': 'review',
+        },
+      ).toString(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = widget.progress;
@@ -412,6 +431,17 @@ class _ProgressContentState extends State<_ProgressContent>
               const SizedBox(height: AppSpacing.md),
               _NextMilestoneCard(milestone: p.nextMilestone, isDark: isDark),
 
+              if (getIt.isRegistered<ExperienceFlags>() &&
+                  getIt<ExperienceFlags>().isEnabled(
+                    ExperienceFeature.hijriYearRecap,
+                  )) ...[
+                const HijriYearRecapSlot(
+                  enabled: true,
+                  isAdult: true,
+                  padding: EdgeInsets.only(top: AppSpacing.sectionGap),
+                ),
+              ],
+
               const SizedBox(height: AppSpacing.sectionGap),
               ActivityHeatmap(
                 activityCountsByDay: widget.activityCountsByDay,
@@ -468,6 +498,17 @@ class _ProgressContentState extends State<_ProgressContent>
                   dueCount: p.reviewAyahs,
                   hasOverdue: p.overdueReviews > 0,
                   onStart: _openMemorization,
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (getIt.isRegistered<ExperienceFlags>() &&
+                  getIt<ExperienceFlags>().isEnabled(
+                    ExperienceFeature.forgettingForecast,
+                  ) &&
+                  p.weakeningPassages.isNotEmpty) ...[
+                _ForgettingForecastCard(
+                  passages: p.weakeningPassages,
+                  onReview: _openForecastReview,
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],

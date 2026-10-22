@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
-import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
-import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 
 void main() {
@@ -373,6 +373,267 @@ void main() {
       },
     );
 
+    group('mandatory house review outside Juz Amma', () {
+      final profile = MemorizationProfile(
+        schemaVersion: 1,
+        selectedPath: MemorizationPath.child,
+        guardianLinkStatus: GuardianLinkStatus.none,
+        guardianOnboardingStatus: GuardianOnboardingStatus.skipped,
+        isParentGuardian: false,
+        createdAt: DateTime.utc(2026, 1, 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+      );
+      const houseReview67 = KidsJourneyStage(
+        stageNumber: 1,
+        surahId: 67,
+        startAyah: 1,
+        endAyah: 3,
+        completedAyahs: [1, 2, 3],
+        status: KidsJourneyStageStatus.current,
+        requiresHouseReview: true,
+        pendingHouseReviewAyahs: [1],
+      );
+      final rewardLog67 = KidsSessionLog(
+        id: 'reward-67',
+        surahId: 67,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+        pointsEarned: 10,
+        completedAt: DateTime.utc(2026, 1, 1),
+        missionType: KidsMissionType.newMemorization,
+      );
+
+      test('is found on the Quran journey', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            profile: profile,
+            kidsPath: KidsJourneyPathDefinition.of(
+              KidsJourneyPathId.quranFromNas,
+            ),
+            // The newest log is 114, so only the mandatory review points
+            // at 67.
+            kidsLogs: [
+              rewardLog67,
+              KidsSessionLog(
+                id: 'reward-114',
+                surahId: 114,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.utc(2026, 1, 2),
+                missionType: KidsMissionType.newMemorization,
+              ),
+            ],
+            kidsStagesBySurah: const {67: [houseReview67]},
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '67',
+        );
+        expect(
+          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+          '67',
+        );
+      });
+
+      test('completion follows the Quran journey order', () async {
+        KidsJourneyStage done(int surahId) => KidsJourneyStage(
+          stageNumber: 1,
+          surahId: surahId,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: const [1, 2, 3],
+          status: KidsJourneyStageStatus.completed,
+        );
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsPath: KidsJourneyPathDefinition.of(
+              KidsJourneyPathId.quranFromNas,
+            ),
+            kidsStagesBySurah: {
+              67: [done(67)],
+              66: [done(66)],
+              65: const [
+                KidsJourneyStage(
+                  stageNumber: 1,
+                  surahId: 65,
+                  startAyah: 1,
+                  endAyah: 3,
+                  completedAyahs: [1],
+                  status: KidsJourneyStageStatus.current,
+                ),
+              ],
+            },
+          ),
+        );
+
+        final outcome = await resolver.kidsMissionAfterCompletion(
+          surahId: 67,
+          completedAyah: 3,
+        );
+
+        expect(outcome.mission?.surahId, 65);
+        expect(outcome.mission?.startAyah, 2);
+      });
+
+      test('Next asks nothing once the split is chosen or on the '
+          'adventure', () async {
+        KidsJourneyStage stage(int surahId, {required bool done}) =>
+            KidsJourneyStage(
+              stageNumber: 1,
+              surahId: surahId,
+              startAyah: 1,
+              endAyah: 3,
+              completedAyahs: done ? const [1, 2, 3] : const [],
+              status: done
+                  ? KidsJourneyStageStatus.completed
+                  : KidsJourneyStageStatus.current,
+            );
+        Future<KidsMissionAfterCompletion> outcome({
+          required KidsJourneyPathDefinition path,
+          ParentSettings settings = const ParentSettings(),
+        }) => MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsPath: path,
+            parentSettings: settings,
+            kidsStagesBySurah: {
+              67: [stage(67, done: true)],
+              66: [stage(66, done: false)],
+            },
+          ),
+        ).kidsMissionAfterCompletion(surahId: 67, completedAyah: 3);
+
+        final nas = KidsJourneyPathDefinition.of(
+          KidsJourneyPathId.quranFromNas,
+        );
+        final fresh = await outcome(path: nas);
+        expect(fresh.mission?.surahId, 66);
+        expect(fresh.needsSplitChoice, isTrue);
+
+        final chosen = await outcome(
+          path: nas,
+          settings: const ParentSettings(kidsHouseSizesBySurah: {66: 3}),
+        );
+        expect(chosen.needsSplitChoice, isFalse);
+
+        final adventure = await outcome(
+          path: KidsJourneyPathDefinition.adventure,
+        );
+        expect(adventure.needsSplitChoice, isFalse);
+      });
+
+      test('a review started on the Quran journey still binds the adventure '
+          '(R9)', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            profile: profile,
+            kidsPath: KidsJourneyPathDefinition.adventure,
+            // The newest reward log is 113, on the adventure; 67 is off it.
+            kidsLogs: [
+              rewardLog67,
+              KidsSessionLog(
+                id: 'reward-113',
+                surahId: 113,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.utc(2026, 1, 2),
+                missionType: KidsMissionType.newMemorization,
+              ),
+            ],
+            kidsStagesBySurah: const {67: [houseReview67]},
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '67',
+        );
+        expect(
+          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+          '67',
+        );
+      });
+
+      test('the Quran journey does not skip surahs before the starting '
+          'surah', () async {
+        const houseReview114 = KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: [1, 2, 3],
+          status: KidsJourneyStageStatus.current,
+          requiresHouseReview: true,
+          pendingHouseReviewAyahs: [1],
+        );
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            profile: profile,
+            kidsPath: KidsJourneyPathDefinition.of(
+              KidsJourneyPathId.quranFromNas,
+            ),
+            parentSettings: const ParentSettings(startingSurahId: 78),
+            kidsLogs: [
+              KidsSessionLog(
+                id: 'reward-114',
+                surahId: 114,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.utc(2026, 1, 1),
+                missionType: KidsMissionType.newMemorization,
+              ),
+              KidsSessionLog(
+                id: 'reward-78',
+                surahId: 78,
+                ayahNumber: 1,
+                repeatsCompleted: 3,
+                pointsEarned: 10,
+                completedAt: DateTime.utc(2026, 1, 2),
+                missionType: KidsMissionType.newMemorization,
+              ),
+            ],
+            kidsStagesBySurah: const {114: [houseReview114]},
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '114',
+        );
+      });
+    });
+
+    test('a starting surah off the active path falls back to its first '
+        'surah (R10)', () async {
+      const resolver = MemorizationNavigationResolver(
+        _FakeRepository(
+          kidsPath: KidsJourneyPathDefinition.adventure,
+          parentSettings: ParentSettings(startingSurahId: 2),
+        ),
+      );
+
+      final targets = await resolver.resolve();
+
+      expect(
+        Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+        '1',
+      );
+      expect(
+        Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+        '1',
+      );
+    });
+
     test(
       'an adult plan without generated work cannot launch a fallback block',
       () async {
@@ -470,7 +731,13 @@ class _FakeRepository implements MemorizationPlusRepository {
     this.parentSettings = const ParentSettings(),
     this.kidsStages = const [],
     this.kidsStagesBySurah,
+    this.kidsPath,
+    this.profile,
   });
+
+  /// Null makes getKidsJourneyPath throw, like an unstubbed repository.
+  final KidsJourneyPathDefinition? kidsPath;
+  final MemorizationProfile? profile;
 
   final DailyPlan? cachedPlan;
   final CustomMemorizationPlan? customPlan;
@@ -481,7 +748,7 @@ class _FakeRepository implements MemorizationPlusRepository {
   final Map<int, List<KidsJourneyStage>>? kidsStagesBySurah;
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
     required int surahId,
   }) async => Right(kidsStagesBySurah?[surahId] ?? kidsStages);
 
@@ -507,7 +774,15 @@ class _FakeRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
-      const Left(CacheFailure('No profile'));
+      profile == null ? const Left(CacheFailure('No profile')) : Right(profile!);
+
+  @override
+  Future<Either<Failure, KidsJourneyPathDefinition>>
+  getKidsJourneyPath() async {
+    final path = kidsPath;
+    if (path == null) throw StateError('getKidsJourneyPath not stubbed');
+    return Right(path);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
+import '../../../../prayer_review/presentation/widgets/prayer_review_settings_slot.dart';
 import '../../widgets/settings_group.dart';
 import '../../widgets/settings_hijri_adjustment_tile.dart';
 import '../../widgets/settings_prayer_notification_tiles.dart';
@@ -82,6 +83,7 @@ class _PrayerSettingsPageState extends State<PrayerSettingsPage> {
             ),
           ],
         ),
+        const PrayerReviewSettingsSlot(),
       ],
     );
   }

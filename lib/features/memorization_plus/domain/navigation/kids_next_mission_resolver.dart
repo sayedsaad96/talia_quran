@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import '../services/kids_daily_budget.dart';
 import '../services/kids_due_review_policy.dart';
@@ -30,12 +31,13 @@ typedef KidsSurahStagesLoader =
 /// found by [KidsNextMissionResolver.findContinuation]. A null [mission]
 /// means every remaining Juz Amma surah is already memorized (K17).
 final class KidsJourneyContinuation extends Equatable {
-  const KidsJourneyContinuation(this.mission);
+  const KidsJourneyContinuation(this.mission, {this.hasStartedMemorization = false});
 
   final KidsNextMission? mission;
+  final bool hasStartedMemorization;
 
   @override
-  List<Object?> get props => [mission];
+  List<Object?> get props => [mission, hasStartedMemorization];
 }
 
 /// Resolves one distraction-free kids mission using the product priority:
@@ -50,8 +52,10 @@ final class KidsNextMissionResolver {
   /// Where the path ends (An-Naba by default).
   final int lastJuzAmmaSurahId;
 
-  int? _nextSurah(int surahId) =>
-      KidsJourneyPath.nextAfter(surahId, lastSurahId: lastJuzAmmaSurahId);
+  int? _nextSurah(int surahId, KidsJourneyPathDefinition path) =>
+      path.locksAhead
+      ? KidsJourneyPath.nextAfter(surahId, lastSurahId: lastJuzAmmaSurahId)
+      : path.nextAfter(surahId);
 
   KidsNextMission? resolve({
     required int activeSurahId,
@@ -61,6 +65,8 @@ final class KidsNextMissionResolver {
     required DateTime now,
     KidsDailyBudget budget = KidsDailyBudget.unlimited,
     KidsJourneyContinuation? continuation,
+    KidsNextMission? validatedRemoteHint,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) {
     final requiredHouse = _mandatoryHouseMission(stages);
     if (requiredHouse != null) return requiredHouse;
@@ -112,6 +118,9 @@ final class KidsNextMissionResolver {
 
     for (final stage in stages) {
       if (!_isOpen(stage)) continue;
+      if (validatedRemoteHint != null && !_hasStartedMemorization(stages)) {
+        return validatedRemoteHint;
+      }
       return KidsNextMission(
         type: KidsMissionType.newMemorization,
         surahId: stage.surahId,
@@ -121,11 +130,17 @@ final class KidsNextMissionResolver {
       );
     }
 
-    if (continuation != null) return continuation.mission;
+    final continued = continuation?.mission;
+    if (continued != null &&
+        (continuation!.hasStartedMemorization || continued.startAyah > 1)) {
+      return continued;
+    }
+    if (validatedRemoteHint != null) return validatedRemoteHint;
+    if (continuation != null) return continued;
 
     // Without a continuation the caller could not look ahead: keep starting
     // the next surah on the path from its first ayah.
-    final nextSurahId = _nextSurah(activeSurahId);
+    final nextSurahId = _nextSurah(activeSurahId, path);
     if (nextSurahId != null &&
         stages.isNotEmpty &&
         !stages.any((stage) => stage.status == KidsJourneyStageStatus.locked)) {
@@ -136,6 +151,67 @@ final class KidsNextMissionResolver {
       );
     }
 
+    return null;
+  }
+
+  /// Loads a guardian hint from its actual journey stages before it can enter
+  /// the same priority pipeline as local work. A hint never creates ayah one
+  /// from a raw id and never opens a locked or review-obligated stage.
+  Future<KidsNextMission?> resolveWithRemoteHint({
+    required int activeSurahId,
+    required List<KidsJourneyStage> stages,
+    KidsNextMission? resumableMission,
+    required List<AyahReviewRecord> reviewRecords,
+    required DateTime now,
+    required int? hintedSurahId,
+    required KidsSurahStagesLoader loadStages,
+    KidsDailyBudget budget = KidsDailyBudget.unlimited,
+    KidsJourneyContinuation? continuation,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
+  }) async {
+    final hint = await validatedRemoteHint(
+      hintedSurahId: hintedSurahId,
+      loadStages: loadStages,
+    );
+    return resolve(
+      activeSurahId: activeSurahId,
+      stages: stages,
+      resumableMission: resumableMission,
+      reviewRecords: reviewRecords,
+      now: now,
+      budget: budget,
+      continuation: continuation,
+      validatedRemoteHint: hint,
+      path: path,
+    );
+  }
+
+  /// Reads a hint target as a real, unlocked journey stage. Null is safe for
+  /// malformed, unavailable, completed, locked, and review-obligated targets.
+  Future<KidsNextMission?> validatedRemoteHint({
+    required int? hintedSurahId,
+    required KidsSurahStagesLoader loadStages,
+  }) async {
+    if (hintedSurahId == null || hintedSurahId < 1 || hintedSurahId > 114) {
+      return null;
+    }
+    List<KidsJourneyStage>? stages;
+    try {
+      stages = await loadStages(hintedSurahId);
+    } catch (_) {
+      return null;
+    }
+    if (stages == null || stages.isEmpty || _mandatoryHouseMission(stages) != null) {
+      return null;
+    }
+    for (final stage in stages) {
+      if (!_isOpen(stage) || stage.surahId != hintedSurahId) continue;
+      return KidsNextMission(
+        type: KidsMissionType.newMemorization,
+        surahId: hintedSurahId,
+        ayahNumbers: [stage.nextAyahToStart],
+      );
+    }
     return null;
   }
 
@@ -153,6 +229,8 @@ final class KidsNextMissionResolver {
     required int justCompletedAyah,
     KidsDailyBudget budget = KidsDailyBudget.unlimited,
     KidsJourneyContinuation? continuation,
+    KidsNextMission? validatedRemoteHint,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) {
     return resolve(
       activeSurahId: activeSurahId,
@@ -166,6 +244,42 @@ final class KidsNextMissionResolver {
       now: now,
       budget: budget,
       continuation: continuation,
+      validatedRemoteHint: validatedRemoteHint,
+      path: path,
+    );
+  }
+
+  /// Completion-screen variant of [resolveWithRemoteHint].
+  Future<KidsNextMission?> resolveSkippingAyahWithRemoteHint({
+    required int activeSurahId,
+    required List<KidsJourneyStage> stages,
+    KidsNextMission? resumableMission,
+    required List<AyahReviewRecord> reviewRecords,
+    required DateTime now,
+    required int justCompletedSurahId,
+    required int justCompletedAyah,
+    required int? hintedSurahId,
+    required KidsSurahStagesLoader loadStages,
+    KidsDailyBudget budget = KidsDailyBudget.unlimited,
+    KidsJourneyContinuation? continuation,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
+  }) async {
+    final hint = await validatedRemoteHint(
+      hintedSurahId: hintedSurahId,
+      loadStages: loadStages,
+    );
+    return resolveSkippingAyah(
+      activeSurahId: activeSurahId,
+      stages: stages,
+      resumableMission: resumableMission,
+      reviewRecords: reviewRecords,
+      now: now,
+      justCompletedSurahId: justCompletedSurahId,
+      justCompletedAyah: justCompletedAyah,
+      budget: budget,
+      continuation: continuation,
+      validatedRemoteHint: hint,
+      path: path,
     );
   }
 
@@ -194,6 +308,7 @@ final class KidsNextMissionResolver {
     required int activeSurahId,
     required List<KidsJourneyStage> stages,
     required KidsSurahStagesLoader loadStages,
+    KidsJourneyPathDefinition path = KidsJourneyPathDefinition.adventure,
   }) async {
     if (stages.isEmpty ||
         stages.any(_isOpen) ||
@@ -202,9 +317,9 @@ final class KidsNextMissionResolver {
       return null;
     }
     for (
-      var surahId = _nextSurah(activeSurahId);
+      var surahId = _nextSurah(activeSurahId, path);
       surahId != null;
-      surahId = _nextSurah(surahId)
+      surahId = _nextSurah(surahId, path)
     ) {
       final surahStages = await loadStages(surahId);
       if (surahStages == null || surahStages.isEmpty) {
@@ -220,6 +335,7 @@ final class KidsNextMissionResolver {
             surahId: surahId,
             ayahNumbers: [stage.nextAyahToStart],
           ),
+          hasStartedMemorization: _hasStartedMemorization(surahStages),
         );
       }
       if (surahStages.any(
@@ -267,6 +383,10 @@ final class KidsNextMissionResolver {
   static bool _isOpen(KidsJourneyStage stage) =>
       stage.status == KidsJourneyStageStatus.current &&
       stage.completedCount < stage.totalAyahs;
+
+  static bool _hasStartedMemorization(List<KidsJourneyStage> stages) => stages.any(
+    (stage) => stage.completedCount > 0 || stage.status == KidsJourneyStageStatus.completed,
+  );
 
   static List<int> _completedOrRange(KidsJourneyStage stage) {
     if (stage.completedAyahs.isNotEmpty) {

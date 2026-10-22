@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import 'quran_audio_service.dart';
+import 'quran_audio_download_manager.dart';
 import 'quran_reciter.dart';
 
 /// Intelligent audio caching service for Quran audio files.
@@ -9,16 +11,26 @@ import 'quran_reciter.dart';
 /// Wraps [flutter_cache_manager] to provide offline-capable audio playback.
 /// Audio files are cached for 30 days and up to 500 files (~50MB).
 class AudioCacheService {
-  AudioCacheService._();
-  static final AudioCacheService instance = AudioCacheService._();
+  AudioCacheService({
+    CacheManager? cacheManager,
+    QuranAudioDurableLookup? durableLookup,
+  }) : _injectedCacheManager = cacheManager,
+       _durableLookup = durableLookup ?? _defaultDurableLookup;
+  static AudioCacheService? _instance;
+  static AudioCacheService get instance => _instance ??= AudioCacheService();
 
-  static final _cacheManager = CacheManager(
+  static final _defaultCacheManager = CacheManager(
     Config(
       'quran_audio_cache',
       stalePeriod: const Duration(days: 30),
       maxNrOfCacheObjects: 500,
     ),
   );
+  static final _defaultDurableLookup = QuranAudioDurableCache.instance;
+
+  final CacheManager? _injectedCacheManager;
+  CacheManager get _cacheManager => _injectedCacheManager ?? _defaultCacheManager;
+  final QuranAudioDurableLookup _durableLookup;
 
   /// Returns a local file path for the given ayah audio.
   Future<String> getAudioPath(
@@ -26,16 +38,21 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    final durable = await _durablePath(surahId, ayahNumber, reciter);
+    if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
       surahId,
       ayahNumber,
       reciter: reciter,
     );
     final fileInfo = await _cacheManager.getFileFromCache(url);
-    if (fileInfo != null) {
+    if (fileInfo != null && await _isNonEmpty(fileInfo.file)) {
       return fileInfo.file.path;
     }
     final file = await _cacheManager.getSingleFile(url);
+    if (!await _isNonEmpty(file)) {
+      throw StateError('Audio cache returned an empty file');
+    }
     return file.path;
   }
 
@@ -45,13 +62,15 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    final durable = await _durablePath(surahId, ayahNumber, reciter);
+    if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
       surahId,
       ayahNumber,
       reciter: reciter,
     );
     final fileInfo = await _cacheManager.getFileFromCache(url);
-    if (fileInfo != null) {
+    if (fileInfo != null && await _isNonEmpty(fileInfo.file)) {
       return fileInfo.file.path;
     }
     // Return the URL — the player will stream it, and we cache in background
@@ -66,13 +85,17 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    final durable = await _durablePath(surahId, ayahNumber, reciter);
+    if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
       surahId,
       ayahNumber,
       reciter: reciter,
     );
     final fileInfo = await _cacheManager.getFileFromCache(url);
-    return fileInfo?.file.path;
+    return fileInfo != null && await _isNonEmpty(fileInfo.file)
+        ? fileInfo.file.path
+        : null;
   }
 
   /// Pre-downloads audio files for an upcoming session.
@@ -120,5 +143,24 @@ class AudioCacheService {
   /// Clears the entire audio cache.
   Future<void> clearCache() async {
     await _cacheManager.emptyCache();
+  }
+
+  static Future<bool> _isNonEmpty(File file) async =>
+      await file.exists() && await file.length() > 0;
+
+  Future<String?> _durablePath(
+    int surahId,
+    int ayahNumber,
+    QuranReciter? reciter,
+  ) async {
+    try {
+      return await _durableLookup.getValidFilePath(
+        surahId,
+        ayahNumber,
+        reciter: reciter,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }

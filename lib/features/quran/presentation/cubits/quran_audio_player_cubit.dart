@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
+import '../../../../core/services/reader_repeat_plan.dart';
+import '../../../../core/services/sleep_timer.dart';
 import '../../domain/entities/quran_entities.dart';
 
 class QuranAudioPlayerState extends Equatable {
@@ -17,6 +19,9 @@ class QuranAudioPlayerState extends Equatable {
     this.errorMessage,
     this.hasNext = false,
     this.hasPrevious = false,
+    this.repeat = const ReaderRepeatSettings(),
+    this.sleepChoice = SleepTimerChoice.off,
+    this.isSurahQueue = false,
   });
 
   final PlaybackStatus status;
@@ -29,6 +34,12 @@ class QuranAudioPlayerState extends Equatable {
   final String? errorMessage;
   final bool hasNext;
   final bool hasPrevious;
+  final ReaderRepeatSettings repeat;
+  final SleepTimerChoice sleepChoice;
+
+  /// True while a kids bedtime surah queue owns playback; the reader's
+  /// repeat and sleep controls must not act on it.
+  final bool isSurahQueue;
 
   bool get isIdle => status == PlaybackStatus.idle;
   bool get isLoading => status == PlaybackStatus.loading;
@@ -49,6 +60,9 @@ class QuranAudioPlayerState extends Equatable {
       errorMessage: s.errorMessage,
       hasNext: s.hasNext,
       hasPrevious: s.hasPrevious,
+      repeat: s.repeat,
+      sleepChoice: s.sleepChoice,
+      isSurahQueue: s.isSurahQueue,
     );
   }
 
@@ -64,6 +78,9 @@ class QuranAudioPlayerState extends Equatable {
         errorMessage,
         hasNext,
         hasPrevious,
+        repeat,
+        sleepChoice,
+        isSurahQueue,
       ];
 }
 
@@ -83,6 +100,7 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
     int surahId, {
     int startAyah = 1,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
     // If already actively playing/paused for this Surah, toggle play/pause
     if (state.currentSurahId == surahId &&
@@ -91,13 +109,19 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
       await togglePlayPause();
       return;
     }
-    await _playerService.playSurah(surahId, startAyah: startAyah, reciter: reciter);
+    await _playerService.playSurah(
+      surahId,
+      startAyah: startAyah,
+      reciter: reciter,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> playPage(
     int pageNumber, {
     int startAyahIndex = 0,
     QuranReciter? reciter,
+    bool applyReaderSettings = false,
   }) async {
     if (state.currentPageNumber == pageNumber &&
         state.scope == PlayScope.page &&
@@ -105,7 +129,12 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
       await togglePlayPause();
       return;
     }
-    await _playerService.playPage(pageNumber, startAyahIndex: startAyahIndex, reciter: reciter);
+    await _playerService.playPage(
+      pageNumber,
+      startAyahIndex: startAyahIndex,
+      reciter: reciter,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> playAyah(
@@ -113,8 +142,15 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
     int ayahNumber, {
     QuranReciter? reciter,
     PlayScope scope = PlayScope.singleAyah,
+    bool applyReaderSettings = false,
   }) async {
-    await _playerService.playAyah(surahId, ayahNumber, reciter: reciter, scope: scope);
+    await _playerService.playAyah(
+      surahId,
+      ayahNumber,
+      reciter: reciter,
+      scope: scope,
+      applyReaderSettings: applyReaderSettings,
+    );
   }
 
   Future<void> pause() => _playerService.pause();
@@ -128,6 +164,20 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
   Future<void> previousAyah() => _playerService.previousAyah();
 
   Future<void> stop() => _playerService.stop();
+
+  /// Session-only repeat/speed settings (never persisted). A no-op while a
+  /// bedtime surah queue owns playback.
+  Future<void> setRepeat(ReaderRepeatSettings settings) async {
+    if (_playerService.state.isSurahQueue) return;
+    await _playerService.setRepeat(settings);
+  }
+
+  /// A no-op while a bedtime surah queue owns playback: its timer belongs to
+  /// the bedtime session.
+  Future<void> setSleepTimer(SleepTimerChoice choice) async {
+    if (_playerService.state.isSurahQueue) return;
+    await _playerService.setSleepTimer(choice);
+  }
 
   Future<void> changeReciter(QuranReciter reciter) =>
       _playerService.changeReciter(reciter);

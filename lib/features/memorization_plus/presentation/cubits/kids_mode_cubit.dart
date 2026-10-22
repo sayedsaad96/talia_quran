@@ -31,6 +31,9 @@ import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_recalled_words.dart';
 import '../../domain/services/kids_house_review_policy.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
+import '../../domain/usecases/recover_kids_session_split.dart';
+import '../../domain/entities/kids_legacy_resume_recovery.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/services/audio_cache_service.dart';
@@ -67,7 +70,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsReviewOutcomeCommitter? reviewOutcomeCommitter,
     AudioPlayer? audioPlayer,
     KidsAudioSourceLoader? audioSourceLoader,
-  ]) : _activityRecorder = activityRecorder,
+    RecoverKidsSessionSplit? recoverSessionSplit,
+  ]) : _recoverSessionSplit = recoverSessionSplit,
+       _activityRecorder = activityRecorder,
        _reviewOutcomeCommitter = reviewOutcomeCommitter,
        _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
@@ -99,6 +104,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   final GetKidsProgressUsecase _getKidsProgress;
+  final RecoverKidsSessionSplit? _recoverSessionSplit;
+  int _loadGeneration = 0;
+  StreamSubscription<void>? _legacyRecoveryChanges;
+  ({int surahId, int ayahNumber, String text, KidsMissionType mission})? _legacyRecoveryIntent;
   final GetKidsJourneyUsecase _getKidsJourney;
   final AwardKidsPointsUsecase _awardPoints;
   final AchievementService _achievementService;
@@ -154,6 +163,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   bool _requiresHouseReview = false;
   String? _guardianAuditionSessionId;
 
+  /// Item 20 — the session whose guardian recitation mode was entered with
+  /// a verified PIN; a grade for any other session is refused.
+  String? _guardianRecitationSessionId;
+
   // Recording timer
   Timer? _recordingTimer;
   Completer<KidsRecitationCaptureResult>? _recordingCompleter;
@@ -169,13 +182,22 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     String ayahText, {
     KidsMissionType missionType = KidsMissionType.newMemorization,
   }) async {
+    final generation = ++_loadGeneration;
+    bool stale() => isClosed || generation != _loadGeneration;
     emit(const KidsModeLoading());
     _requiresHouseReview = false;
     _guardianAuditionSessionId = null;
+    _guardianRecitationSessionId = null;
 
     final journeyResult = await _getKidsJourney(
-      GetKidsJourneyParams(surahId: surahId),
+      GetKidsJourneyParams(surahId: surahId, freezeForSession: true),
     );
+    if (stale()) return;
+    final recovery = journeyResult.fold((failure) => failure, (_) => null);
+    if (recovery is KidsSplitChoiceRequiredFailure) {
+      _offerLegacyRecovery(recovery.ticket);
+      return;
+    }
     final targetStage = journeyResult.fold<KidsJourneyStage?>((_) => null, (
       stages,
     ) {
@@ -221,6 +243,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
 
     final progressResult = await _getKidsProgress();
+    if (stale()) return;
     final progress = progressResult.fold(
       (_) => const KidsProgress.initial(),
       (p) => p,
@@ -236,6 +259,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? await _restoreKidsSession(surahId, fallbackAyah)
         : null;
     final resumed = sessionState != null;
+    if (stale()) return;
     // A `resume` request without a paused session (e.g. the stage page
     // opening an in-progress stage) is really a first pass or a review of
     // this ayah: resolve its original semantics now so a first pass earns
@@ -247,6 +271,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           )
         : missionType;
     final policy = await _loadSessionPolicy();
+    if (stale()) return;
 
     // K15 — daily session-limit gate. Only genuinely new work (new
     // memorization) counts against maxNewAyahs; a restored interrupted
@@ -254,6 +279,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // reachable regardless of how many sessions ran earlier today.
     if (!resumed && effectiveMissionType == KidsMissionType.newMemorization) {
       final budget = await _loadDailyBudget(policy);
+      if (stale()) return;
       if (budget.newAyahLimitReached) {
         emit(
           KidsModeError(
@@ -283,6 +309,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? _sessionEngine.startReview(initialSession)
         : _sessionEngine.startLearning(initialSession);
     await _saveKidsSession(sessionState);
+    if (stale()) return;
 
     final activeAyah = sessionState.currentAyah;
     final startedAt = DateTime.now().toUtc();
@@ -307,6 +334,57 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         isReview: isReview,
       ),
     );
+  }
+
+  void _offerLegacyRecovery(KidsLegacyResumeRecoveryTicket ticket) {
+    try {
+      ticket.lease.checkOwner(ticket.ownerId);
+      _legacyRecoveryIntent = (surahId: ticket.surahId, ayahNumber: ticket.checkpointAyah,
+        text: '', mission: KidsMissionType.resume);
+      unawaited(_legacyRecoveryChanges?.cancel());
+      _legacyRecoveryChanges = ticket.lease.changes.listen((_) {
+        try {
+          ticket.lease.checkOwner(ticket.ownerId);
+        } on AccountDataUnavailableException {
+          _loadGeneration++;
+          _legacyRecoveryIntent = null;
+          if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+        }
+      });
+      emit(KidsModeSplitChoiceRequired(ticket));
+    } on AccountDataUnavailableException {
+      emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+    }
+  }
+
+  Future<void> recoverLegacySplit(KidsLegacyResumeRecoveryTicket displayedTicket,
+      {required bool whole, int? stageSize}) async {
+    final current = state;
+    final intent = _legacyRecoveryIntent;
+    if (current is! KidsModeSplitChoiceRequired || current.saving || intent == null ||
+        !identical(current.ticket, displayedTicket)) {
+      return;
+    }
+    final ticket = current.ticket;
+    final saver = _recoverSessionSplit;
+    if (saver == null) {
+      emit(KidsModeSplitChoiceRequired(ticket, failed: true));
+      return;
+    }
+    try {
+      ticket.lease.checkOwner(ticket.ownerId);
+      emit(KidsModeSplitChoiceRequired(ticket, saving: true));
+      final saved = await saver(ticket, whole: whole, stageSize: stageSize);
+      ticket.lease.checkOwner(ticket.ownerId);
+      if (isClosed) return;
+      if (saved.isLeft()) {
+        emit(KidsModeSplitChoiceRequired(ticket, failed: true));
+        return;
+      }
+      await load(intent.surahId, intent.ayahNumber, intent.text, missionType: intent.mission);
+    } on AccountDataUnavailableException {
+      if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+    }
   }
 
   /// K15 — today's budget from the local session log, the same one the
@@ -608,6 +686,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
     if (st.isCompleted) return;
+    // Item 20: the guardian grades by ear; the microphone stays off.
+    if (st.isGuardianAssessing) return;
 
     if (_loopCount < maxLoops) {
       _flagListenFirst(st);
@@ -671,8 +751,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
     // The guardian may have completed the session manually while the mic was
     // still open (M7); a finished session must never evaluate a late capture
-    // or surface a confusing post-completion error.
-    if (current.isCompleted) return;
+    // or surface a confusing post-completion error. A guardian who took over
+    // the recitation (item 20) grades it instead of a late capture.
+    if (current.isCompleted || current.isGuardianAssessing) return;
 
     // ── Error cases (permission denied, mic unavailable) ──────────────────
     if (capture.isError) {
@@ -818,10 +899,131 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
 
+  /// Item 20 — the child recites the hidden ayah to a guardian, who proves
+  /// themselves with [guardianPin], verified here exactly like
+  /// [submitManualCompletion]. Needs the required listens first; moves the
+  /// session into hidden recall through the same engine steps as
+  /// [tryFromMemory]. Returns whether the mode is now on.
+  Future<bool> enterGuardianRecitation({required String guardianPin}) async {
+    if (state is! KidsModeLoaded) return false;
+    final before = state as KidsModeLoaded;
+    final requestedSessionId = _sessionId;
+    if (before.isCompleted || before.isGuardianAssessing) return false;
+    if (_loopCount < maxLoops) {
+      _flagListenFirst(before);
+      return false;
+    }
+    final verifier = _guardianPinVerifier;
+    if (verifier == null || guardianPin.length != 4) return false;
+    if (!await verifier(guardianPin)) return false;
+    // The check above awaited; act on the current state, not a snapshot.
+    if (isClosed || state is! KidsModeLoaded) return false;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted ||
+        st.isGuardianAssessing ||
+        _sessionId != requestedSessionId) {
+      return false;
+    }
+    if (st.isRecording) {
+      await _recitationRecorder.stop();
+      _recordingTimer?.cancel();
+      _recordingTimer = null;
+      final pendingCapture = _recordingCompleter;
+      _recordingCompleter = null;
+      if (pendingCapture != null && !pendingCapture.isCompleted) {
+        pendingCapture.complete(
+          const KidsRecitationCaptureResult.stoppedByUser(),
+        );
+      }
+    }
+    if (st.isPlaying) await stopAudio();
+    if (isClosed || state is! KidsModeLoaded) return false;
+    final current = state as KidsModeLoaded;
+    if (current.isCompleted || _sessionId != requestedSessionId) return false;
+    _guardianRecitationSessionId = requestedSessionId;
+    final session = switch (current.sessionState.phase) {
+      V2SessionPhase.learning => _sessionEngine.startMemorizing(
+        current.sessionState,
+      ),
+      V2SessionPhase.remediation => _sessionEngine.completeRemediation(
+        current.sessionState,
+      ),
+      _ => current.sessionState,
+    };
+    emit(
+      current.copyWith(
+        sessionState: session,
+        isGuardianAssessing: true,
+        isRecording: false,
+        recordingSeconds: 0,
+        clearRecordingError: true,
+        lastMatchedWords: 0,
+        lastTargetWords: 0,
+        clearRecalledWords: true,
+      ),
+    );
+    await _saveKidsSession(session);
+    return true;
+  }
+
+  /// Item 20 — «لنعد»: the child tries again in front of the guardian.
+  /// Nothing is graded or saved, and the mode stays on.
+  void retryGuardianRecitation() {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing || st.isCompleted) return;
+    emit(st.copyWith(clearRecordingError: true));
+  }
+
+  /// Item 20 — «إنهاء التسميع»: leaves the mode without grading or saving;
+  /// the child is back at the normal recall controls.
+  void exitGuardianRecitation() {
+    _guardianRecitationSessionId = null;
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing) return;
+    emit(st.copyWith(isGuardianAssessing: false, clearRecordingError: true));
+  }
+
+  /// Item 20 — the guardian's grade: «متقن» ([PerformanceRating.excellent])
+  /// or «تحتاج مراجعة» ([PerformanceRating.average]). Saved through the
+  /// existing manual completion path (`commitPass(manuallyAssessed: true)`),
+  /// once per ayah: [markCompleted]'s completed and in-flight guards apply.
+  /// The grade is capped by the session's hints and missed recalls, and is
+  /// refused unless this session entered the mode with a verified PIN.
+  Future<bool> submitGuardianAssessment(PerformanceRating rating) async {
+    if (state is! KidsModeLoaded) return false;
+    final st = state as KidsModeLoaded;
+    if (!st.isGuardianAssessing || st.isCompleted) return false;
+    // Only a mode entered through the PIN-verified path of this session.
+    if (_sessionId == null || _guardianRecitationSessionId != _sessionId) {
+      return false;
+    }
+    if (rating != PerformanceRating.excellent &&
+        rating != PerformanceRating.average) {
+      return false;
+    }
+    await _markCompleted(manualGrade: true, guardianRating: rating);
+    return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
+  }
+
   Future<void> markCompleted({
     bool manualGrade = false,
     String? automaticSpokenText,
     double? automaticSimilarity,
+  }) => _markCompleted(
+    manualGrade: manualGrade,
+    automaticSpokenText: automaticSpokenText,
+    automaticSimilarity: automaticSimilarity,
+  );
+
+  /// [guardianRating] is only passed by [submitGuardianAssessment] and only
+  /// replaces the mastery rating; every other step is the manual path.
+  Future<void> _markCompleted({
+    bool manualGrade = false,
+    String? automaticSpokenText,
+    double? automaticSimilarity,
+    PerformanceRating? guardianRating,
   }) async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
@@ -898,7 +1100,17 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           _requiresHouseReview &&
           _sessionId != null &&
           _guardianAuditionSessionId == _sessionId;
-      final masteryRating = guardianAudition
+      // A guardian may lower the evidence-derived rating, never raise it:
+      // hints and missed recalls cap the grade exactly as on the STT path.
+      final masteryRating = guardianRating != null && manualGrade
+          ? _lowerRating(
+              guardianRating,
+              _masteryRatingFor(
+                failureCount: failureCount,
+                hintLevel: trackedHint,
+              ),
+            )
+          : guardianAudition
           ? PerformanceRating.average
           : _masteryRatingFor(
               failureCount: failureCount,
@@ -970,6 +1182,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           awardSessionId,
         );
       }
+      final awardHint = guardianRating != null ? trackedHint : effectiveHint;
       final result = await _awardPoints(
         AwardKidsPointsParams(
           completionAuthorized: true,
@@ -981,8 +1194,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           ayahNumbers: [st.ayahNumber],
           durationSeconds: durationSeconds,
           attemptCount: failureCount + 1,
-          hintCount: effectiveHint == V2HintLevel.none ? 0 : 1,
+          // A guardian grade logs the real tracked hint (the manual full-ayah
+          // fallback would inflate coaching's "sessions with hints") and
+          // never earns the first-try bonus.
+          hintCount: awardHint == V2HintLevel.none ? 0 : 1,
           masteryRating: masteryRating,
+          firstTryBonusEligible: guardianRating == null,
         ),
       );
 
@@ -1009,6 +1226,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
             // Completion always settles the mic flag — even when the session
             // finished while a capture was still in flight.
             isRecording: false,
+            isGuardianAssessing: false,
             sessionStarsEarned: 0,
             clearRecordingError: true,
           ),
@@ -1042,6 +1260,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
           // Completion always settles the mic flag — even when the session
           // finished while a capture was still in flight.
           isRecording: false,
+          isGuardianAssessing: false,
           newAwards: newAwards,
           sessionStarsEarned: completion.starsEarned,
           // K11: surface session points and any level-up on completion.
@@ -1074,6 +1293,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return PerformanceRating.average;
     }
     return PerformanceRating.excellent;
+  }
+
+  /// The weaker of two ratings (weak < average < excellent).
+  static PerformanceRating _lowerRating(
+    PerformanceRating a,
+    PerformanceRating b,
+  ) {
+    const order = [
+      PerformanceRating.weak,
+      PerformanceRating.average,
+      PerformanceRating.excellent,
+    ];
+    return order.indexOf(a) <= order.indexOf(b) ? a : b;
   }
 
   Future<void> _recordSessionActivity({int? surahId, int? ayahNumber}) async {
@@ -1135,6 +1367,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   @override
   Future<void> close() async {
+    _loadGeneration++;
+    await _legacyRecoveryChanges?.cancel();
     _closingAudio = true;
     _playbackGeneration++;
     final current = state;

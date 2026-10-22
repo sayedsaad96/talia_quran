@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 
@@ -37,6 +38,7 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
     int weeklyGoalSessions = 5,
     bool? guidanceAudioEnabled,
     int startingSurahId = KidsJourneyPath.firstSurahId,
+    KidsJourneyPathId journeyPathId = KidsJourneyPathId.juzAmmaAdventure,
   }) async {
     final trimmedName = ChildIdentityPolicy.normalizeNickname(nickname);
     if (trimmedName == null ||
@@ -50,7 +52,7 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
         reminderMinute > 59 ||
         weeklyGoalSessions < 1 ||
         weeklyGoalSessions > 7 ||
-        !KidsJourneyPath.contains(startingSurahId)) {
+        !KidsJourneyPathDefinition.of(journeyPathId).contains(startingSurahId)) {
       emit(const MemorizationIdentityError(message: 'Invalid child setup'));
       return;
     }
@@ -106,6 +108,13 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
     );
     if (settingsSaveFailure != null) {
       emit(MemorizationIdentityError(message: settingsSaveFailure.message));
+      return;
+    }
+
+    final pathResult = await _repository.setKidsJourneyPath(journeyPathId);
+    final pathFailure = pathResult.fold((failure) => failure, (_) => null);
+    if (pathFailure != null) {
+      emit(MemorizationIdentityError(message: pathFailure.message));
       return;
     }
 

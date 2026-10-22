@@ -5,6 +5,13 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_legacy_resume_recovery.dart';
+import 'package:talia_quran/features/memorization_plus/domain/usecases/recover_kids_session_split.dart';
+import 'package:talia_quran/features/memorization_plus/data/repositories/kids_legacy_split_recovery_repository_impl.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
@@ -77,6 +84,7 @@ void main() {
       V2SessionEngine? engine,
       AudioPlayer? audioPlayer,
       KidsAudioSourceLoader? audioSourceLoader,
+      RecoverKidsSessionSplit? recoverSessionSplit,
     }) => KidsModeCubit(
       GetKidsProgressUsecase(repository),
       GetKidsJourneyUsecase(repository),
@@ -99,6 +107,7 @@ void main() {
       null,
       audioPlayer,
       audioSourceLoader,
+      recoverSessionSplit,
     );
 
     setUp(() {
@@ -918,6 +927,51 @@ void main() {
       // session must complete directly instead of dead-ending.
       expect(loaded.sessionState.blockReviewRequired, isFalse);
     });
+    test('legacy partition failure offers recovery without launching or clearing checkpoint', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = const FixedRecordOwnerProvider('child');
+      repository.journeyFailure = KidsSplitChoiceRequiredFailure(
+        KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
+          surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1),
+      );
+      await cubit.load(114, 1, 'test ayah', missionType: KidsMissionType.resume);
+      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+      expect(repository.getJourneyCalls, 1);
+      barrier.invalidate();
+      expect(cubit.state, isA<KidsModeError>());
+    });
+
+    test('legacy recovery shows save failure then retries the original ayah without awarding', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      const owner = FixedRecordOwnerProvider('child');
+      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+      final source = _RecoveryDatasource(prefs, owner: owner);
+      final ticket = KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
+        surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1);
+      repository.journeyFailureLoader = () async =>
+        (await source.getParentSettings()).kidsHouseSizesBySurah.containsKey(114)
+          ? null : KidsSplitChoiceRequiredFailure(ticket);
+      await cubit.close();
+      cubit = buildCubit(recorder: _FakeKidsRecitationRecorder(),
+        quran: const _ResumeQuranRepository(), recoverSessionSplit: RecoverKidsSessionSplit(
+          KidsLegacySplitRecoveryRepositoryImpl(source, owner, barrier)));
+      await cubit.load(114, 1, 'ayah text', missionType: KidsMissionType.resume);
+      source.failWrites = true;
+      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+      expect((cubit.state as KidsModeSplitChoiceRequired).failed, isTrue);
+      expect((await source.getParentSettings()).kidsHouseSizesBySurah, isEmpty);
+      source.failWrites = false;
+      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+      expect(cubit.state, isA<KidsModeLoaded>());
+      expect((cubit.state as KidsModeLoaded).ayahNumber, 1);
+      expect((await source.getParentSettings()).kidsHouseSizesBySurah[114], 4);
+      expect(repository.awardCalls, 0);
+    });
+
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
         KidsJourneyStage(
@@ -2282,6 +2336,8 @@ KidsSessionLog _sessionLog() => KidsSessionLog(
 );
 
 class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
+  Future<Failure?> Function()? journeyFailureLoader;
+  Failure? journeyFailure;
   Completer<Either<Failure, KidsCompletionResult>>? awardCompleter;
   List<KidsJourneyStage> journey = const [
     KidsJourneyStage(
@@ -2314,7 +2370,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
       const Right(KidsProgress.initial());
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
     required int surahId,
   }) async {
     // Some phase-4 tests load another surah (e.g. 113 for a due review);
@@ -2323,6 +2379,9 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
       expect(surahId, 114);
     }
     getJourneyCalls++;
+    final loadedFailure = await journeyFailureLoader?.call();
+    if (loadedFailure != null) return Left(loadedFailure);
+    if (journeyFailure != null) return Left(journeyFailure!);
     return Right(journey);
   }
 
@@ -2339,6 +2398,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) async {
     expect(completionAuthorized, isTrue);
     expect(surahId, 114);
@@ -2418,6 +2478,18 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
 
   @override
   Future<bool> hasPendingCloudWork() async => false;
+}
+
+class _RecoveryDatasource extends MemorizationPlusLocalDatasourceImpl {
+  _RecoveryDatasource(super.prefs, {required super.owner});
+  bool failWrites = false;
+  @override
+  Future<ParentSettingsModel> updateKidsHouseSettings(
+    ParentSettings Function(ParentSettings) mutate,
+  ) {
+    if (failWrites) throw StateError('write failed');
+    return super.updateKidsHouseSettings(mutate);
+  }
 }
 
 class _FakeAchievementService implements AchievementService {

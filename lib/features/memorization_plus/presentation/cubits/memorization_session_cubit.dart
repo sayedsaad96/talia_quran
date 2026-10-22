@@ -21,6 +21,9 @@ import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/review_passage_picker.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/review_record_filters.dart';
+import '../../../../core/memorization/similar_ayah/similar_ayah_attempt_authority.dart';
+import '../../../../core/memorization/similar_ayah/similar_ayah_attempt_service.dart';
+import '../../../../core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../core/memorization/v2/recitation_word_diff.dart';
 import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
@@ -163,13 +166,18 @@ class MSActive extends MemorizationSessionState {
 /// attempt. Carries the engine's [result] plus the word-level diff so the
 /// result sheet can render a colour-coded comparison.
 final class V2EvaluationFeedback extends Equatable {
-  const V2EvaluationFeedback({required this.result, required this.wordDiff});
+  const V2EvaluationFeedback({
+    required this.result,
+    required this.wordDiff,
+    this.confusionMatch,
+  });
 
   final V2RecitationResult result;
   final RecitationWordDiffResult wordDiff;
+  final SimilarAyahConfusionMatch? confusionMatch;
 
   @override
-  List<Object?> get props => [result, wordDiff];
+  List<Object?> get props => [result, wordDiff, confusionMatch];
 }
 
 /// Learner-controlled audio loop mode for the current ayah.
@@ -220,7 +228,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     this._appSessionService,
     this._recitationPassThreshold,
     RecitationVoiceConsent? voiceConsent,
+    SimilarAyahAttemptService? similarAyahAttempts,
   }) : _quranRepo = quranRepository,
+       _similarAyahAttempts = similarAyahAttempts,
        _voiceConsent = voiceConsent,
        _memRepo = memorizationRepository,
        _baseEngine = sessionEngine,
@@ -233,6 +243,13 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // for the speech disclosure (startRecording initializes it otherwise).
     if (voiceConsent == null || voiceConsent.isAccepted) _initSpeech();
     AudioLifecycleManager.instance.register(_player);
+    _accountChanges = similarAyahAttempts?.accountChanges.listen((_) {
+      try {
+        _sessionAuthority?.check();
+      } catch (_) {
+        _invalidateAccountSession();
+      }
+    });
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         if (state is MSActive) {
@@ -257,6 +274,45 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final V2ReviewOutcomeCommitter? _reviewOutcomeCommitter;
   final V2ReviewEffectOutboxProcessor? _effectOutboxProcessor;
   final AppSessionService? _appSessionService;
+  final SimilarAyahAttemptService? _similarAyahAttempts;
+  StreamSubscription<void>? _accountChanges;
+  SimilarAyahAttemptAuthority? _sessionAuthority;
+  int _sessionLoadGeneration = 0;
+  bool _closing = false;
+
+  bool isFeedbackCurrent(V2EvaluationFeedback feedback) {
+    if (_closing || isClosed) return false;
+    try {
+      _sessionAuthority?.check();
+    } catch (_) {
+      return false;
+    }
+    final current = state;
+    return (current is MSActive && identical(current.lastEvaluation, feedback)) ||
+        (current is MSCompleted &&
+          _sessionState?.phase == V2SessionPhase.completed);
+  }
+
+  void _invalidateAccountSession() {
+    if (isClosed) return;
+    _sessionState = null;
+    _sessionAuthority = null;
+    _sessionLoadGeneration++;
+    _launchContext = null;
+    _audioRequestId++;
+    _loopRemaining = null;
+    emit(const MSError(message: CubitMessageCodes.v2AccountChanged));
+    unawaited(_stopInvalidatedSessionMedia());
+  }
+
+  Future<void> _stopInvalidatedSessionMedia() async {
+    try {
+      await _player.stop();
+    } catch (_) {}
+    try {
+      await _speechToText.cancel();
+    } catch (_) {}
+  }
 
   /// The user's "Accuracy level" pass threshold; null keeps the engine's.
   final double Function()? _recitationPassThreshold;
@@ -270,6 +326,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final RecitationVoiceConsent? _voiceConsent;
   bool _speechEnabled = false;
   bool _evaluationInFlight = false;
+  Completer<void>? _evaluationDone;
 
   Future<void> _initSpeech() async {
     try {
@@ -364,6 +421,13 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     LearningLaunchContext? launchContext,
   }) async {
     emit(const MSLoading());
+    final loadGeneration = ++_sessionLoadGeneration;
+    try {
+      _sessionAuthority = _similarAyahAttempts?.captureAuthority();
+    } catch (_) {
+      _invalidateAccountSession();
+      return;
+    }
     _discardCommitted = false;
     _launchContext =
         launchContext ??
@@ -372,6 +436,14 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           intent: LearningIntent.memorize,
           origin: LearningOrigin.unknown,
         );
+    final requestedContext = _launchContext!;
+    if (requestedContext.reviewEndAyah != null &&
+        (requestedContext.intent != LearningIntent.review ||
+            requestedContext.ayah.surahId != surahId ||
+            requestedContext.ayah.ayahNumber != startAyah)) {
+      emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
+      return;
+    }
     // Effects are durable and account-scoped. Replaying a previously committed
     // receipt here heals an interrupted session without duplicating rewards.
     unawaited(_processPendingEffects());
@@ -385,6 +457,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     } catch (_) {}
     try {
       final planResult = await _memRepo.getCustomPlan();
+      if (!_isCurrentSessionLoad(loadGeneration)) return;
       final plan = planResult.fold((_) => null, (value) => value);
       if (plan != null &&
           plan.isActive &&
@@ -396,6 +469,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
             : threshold;
       }
     } catch (_) {}
+    if (!_isCurrentSessionLoad(loadGeneration)) return;
     if (threshold != null) {
       _engine = _baseEngine.withPassThreshold(threshold);
     }
@@ -403,6 +477,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // 1. Determine blockReviewRequired from profile.
     bool blockReviewRequired = true; // safe default
     final profileResult = await _memRepo.getMemorizationProfile();
+    if (!_isCurrentSessionLoad(loadGeneration)) return;
     profileResult.fold(
       (_) => blockReviewRequired = true,
       (profile) => blockReviewRequired = profile.isBlockReviewRequired,
@@ -410,6 +485,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
     // 2. Load surah detail to get all ayahs.
     final surahResult = await _quranRepo.getSurahDetail(surahId);
+    if (!_isCurrentSessionLoad(loadGeneration)) return;
     if (surahResult.isLeft()) {
       emit(const MSError(message: CubitMessageCodes.v2SurahLoadFailed));
       return;
@@ -423,9 +499,39 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
       return;
     }
-    final requestedContext = _launchContext!;
     final isReview = requestedContext.intent == LearningIntent.review;
-    final startIndex = (startAyah - 1).clamp(0, allAyahs.length - 1);
+    final explicitReviewEnd = requestedContext.reviewEndAyah;
+    final startIndex = allAyahs.indexWhere(
+      (ayah) => ayah.numberInSurah == startAyah,
+    );
+    List<Ayah>? explicitReviewAyahs;
+    if (explicitReviewEnd != null) {
+      final endIndex = allAyahs.indexWhere(
+        (ayah) => ayah.numberInSurah == explicitReviewEnd,
+      );
+      if (!isReview ||
+          startIndex < 0 ||
+          endIndex < startIndex ||
+          endIndex - startIndex >= ReviewPassagePicker.defaultMaxAyahs) {
+        emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
+        return;
+      }
+      final range = allAyahs.sublist(startIndex, endIndex + 1);
+      final page = range.first.page;
+      if (page == null ||
+          range.any((ayah) =>
+              ayah.surahId != surahId ||
+              ayah.page != page ||
+              ayah.numberInSurah != startAyah + range.indexOf(ayah))) {
+        emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
+        return;
+      }
+      explicitReviewAyahs = range;
+    }
+    if (startIndex < 0) {
+      emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
+      return;
+    }
     final requestedMemorizeAyahs = allAyahs
         .sublist(startIndex, (startIndex + blockSize).clamp(0, allAyahs.length))
         .map((ayah) => ayah.numberInSurah)
@@ -444,6 +550,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       surahId,
       review: isReview,
     );
+    if (!_isCurrentSessionLoad(loadGeneration)) return;
     final saved = savedOpt.fold(() => null, (s) => s);
     if (saved != null) {
       final savedPhase = _phaseFromPersistedIndex(saved.phaseIndex);
@@ -452,6 +559,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // durable proof of completion. Clearing the checkpoint lets a learner
         // begin the next block without replaying the old result.
         await _progressAdapter.clear(surahId, review: isReview);
+        if (!_isCurrentSessionLoad(loadGeneration)) return;
       } else if (savedPhase != V2SessionPhase.created &&
           _canResumeCheckpoint(
             saved,
@@ -483,11 +591,13 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         // checkpoint explicitly. Clearing it first gives the new session its
         // own sessionId, so its outcomes are never mistaken for duplicates of
         // the old session's already-committed tasks.
-        if (!await _discardIncompatibleCheckpoint(
+        final discarded = await _discardIncompatibleCheckpoint(
           saved,
           allAyahs,
           requestedIsReview: isReview,
-        )) {
+        );
+        if (!_isCurrentSessionLoad(loadGeneration)) return;
+        if (!discarded) {
           emit(const MSError(message: CubitMessageCodes.hifzReviewSaveFailed));
           return;
         }
@@ -499,12 +609,16 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // ayahs on the same page, each still recited and scheduled on its own.
     final List<Ayah> blockAyahs;
     if (isReview) {
-      final passage = ReviewPassagePicker.pick(
-        surahAyahs: allAyahs,
-        startAyah: allAyahs[startIndex].numberInSurah,
-        dueAyahNumbers: await _dueReviewAyahNumbers(surahId),
-      );
-      blockAyahs = passage.isEmpty ? [allAyahs[startIndex]] : passage;
+      if (explicitReviewAyahs != null) {
+        blockAyahs = explicitReviewAyahs;
+      } else {
+        final passage = ReviewPassagePicker.pick(
+          surahAyahs: allAyahs,
+          startAyah: allAyahs[startIndex].numberInSurah,
+          dueAyahNumbers: await _dueReviewAyahNumbers(surahId),
+        );
+        blockAyahs = passage.isEmpty ? [allAyahs[startIndex]] : passage;
+      }
     } else {
       blockAyahs = allAyahs.sublist(
         startIndex,
@@ -512,6 +626,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       );
     }
 
+    if (!_isCurrentSessionLoad(loadGeneration)) return;
     if (blockAyahs.isEmpty) {
       emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
       return;
@@ -548,6 +663,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     unawaited(_prefetchBlockAudio(surahId, blockAyahs));
   }
 
+  bool _isCurrentSessionLoad(int generation) {
+    if (_closing || isClosed || generation != _sessionLoadGeneration) return false;
+    try {
+      _sessionAuthority?.check();
+      return true;
+    } catch (_) {
+      _invalidateAccountSession();
+      return false;
+    }
+  }
+
   /// Adult ayahs of [surahId] due for review now. Any read failure yields
   /// none, so the review falls back to its single target ayah.
   Future<Set<int>> _dueReviewAyahNumbers(int surahId) async {
@@ -580,11 +706,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<bool> discardSession() async {
     if (_discardCommitted) return true;
     if (_discardInFlight) return false;
-    final sessionState = _sessionState;
-    if (sessionState == null) return true;
-
     _discardInFlight = true;
     try {
+      await waitForEvaluation();
+      final sessionState = _sessionState;
+      if (sessionState == null) return true;
       final weakResult = await _reviewAdapter.recordAbandonedFailures(
         sessionState.failureTracker,
         passedAyahNumbers: sessionState.passedAyahNumbers,
@@ -754,10 +880,12 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (!st.isRecording) return;
 
     await _speechToText.stop();
+    if (!_isCurrentEvaluation(st.sessionState)) return;
     emit(st.copyWith(isRecording: false, isEvaluating: true));
 
     // Brief UI delay for "Evaluating..." feedback.
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!_isCurrentEvaluation(st.sessionState)) return;
     await _evaluateCurrentRecitation();
   });
 
@@ -972,6 +1100,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   @override
   Future<void> close() async {
+    _closing = true;
+    _sessionLoadGeneration++;
+    await _accountChanges?.cancel();
     AudioLifecycleManager.instance.unregister(_player);
     // Cleanup must never throw: speech_to_text.cancel() fails on platforms
     // without speech support or when initialize() never completed, and a
@@ -1049,6 +1180,15 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (!_isResumableIntent(savedContext.intent, requestedIsReview)) {
       return false;
     }
+    if (requested.reviewEndAyah != null) {
+      return _sameAyahNumbers(
+        saved.blockAyahNumbers,
+        List<int>.generate(
+          requested.reviewEndAyah! - requested.ayah.ayahNumber + 1,
+          (index) => requested.ayah.ayahNumber + index,
+        ),
+      );
+    }
     final scopedRequest =
         requested.origin == LearningOrigin.dailyPlan ||
         requested.origin == LearningOrigin.surahPractice;
@@ -1099,14 +1239,22 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<void> _runEvaluationExclusive(
     Future<void> Function() operation,
   ) async {
-    if (_evaluationInFlight) return;
+    if (_evaluationInFlight || _discardInFlight || _discardCommitted) return;
     _evaluationInFlight = true;
+    final done = Completer<void>();
+    _evaluationDone = done;
     try {
       await operation();
     } finally {
       _evaluationInFlight = false;
+      _evaluationDone = null;
+      done.complete();
     }
   }
+
+  /// Waits until the accepted evaluation and its checkpoint write have settled.
+  Future<void> waitForEvaluation() =>
+      _evaluationDone?.future ?? Future<void>.value();
 
   /// Evaluates the current recitation based on session phase.
   Future<void> _evaluateCurrentRecitation({
@@ -1117,6 +1265,14 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (_sessionState == null || state is! MSActive) return;
     final spokenText = (state as MSActive).recognizedText;
     final previousState = _sessionState!;
+    final SimilarAyahAttemptAuthority? attemptAuthority;
+    try {
+      _sessionAuthority?.check();
+      attemptAuthority = _similarAyahAttempts?.captureAuthority();
+    } catch (_) {
+      _invalidateAccountSession();
+      return;
+    }
 
     V2SessionState newState;
     V2RecitationResult? automaticEvidence;
@@ -1165,7 +1321,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // Capture presentation feedback BEFORE the transition: a successful pass
     // clears the engine's transient result, so the result sheet needs its own
     // snapshot. Purely presentational — never persisted, never re-evaluated.
-    final V2EvaluationFeedback? feedback;
+    V2EvaluationFeedback? feedback;
     if (newState.lastRecitationResult == previousState.lastRecitationResult &&
         newState.phase == previousState.phase) {
       feedback = null; // no-attempt or ignored phase — nothing to show
@@ -1188,6 +1344,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       feedback = null;
     }
 
+    final confusion = await _detectSimilarAyahAttempt(
+      previousState, newState, spokenText, automaticEvidence, attemptAuthority,
+    );
+    if (!_isCurrentEvaluation(previousState)) return;
+    if (confusion != null && feedback != null) {
+      feedback = V2EvaluationFeedback(
+        result: feedback.result, wordDiff: feedback.wordDiff,
+        confusionMatch: confusion,
+      );
+    }
+
     // Never expose a progress transition before its review/checkpoint writes
     // succeed. This keeps the currently displayed state retryable after a
     // local-storage or SRS failure.
@@ -1197,7 +1364,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       manuallyAssessed: manualGrade,
       selfGrade: selfGrade,
       similarityScore: automaticEvidence?.similarityScore,
+      attemptAuthority: attemptAuthority,
+      confusionMatch: confusion,
     );
+    if (!_isCurrentEvaluation(previousState)) return;
     if (!persisted) {
       _restoreAfterPersistenceFailure(previousState);
       return;
@@ -1238,6 +1408,36 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     );
   }
 
+  bool _isCurrentEvaluation(V2SessionState previous) =>
+      !_closing && !isClosed && state is MSActive &&
+          identical(_sessionState, previous);
+
+  Future<SimilarAyahConfusionMatch?> _detectSimilarAyahAttempt(
+    V2SessionState previous,
+    V2SessionState next,
+    String spoken,
+    V2RecitationResult? evidence,
+    SimilarAyahAttemptAuthority? authority,
+  ) async {
+    final attempts = _similarAyahAttempts;
+    if (attempts == null || authority == null || evidence == null) return null;
+    try {
+      return await attempts.detect(
+        authority: authority,
+        targetKey: '${previous.surahId}:${previous.currentAyah.numberInSurah}',
+        spokenText: spoken,
+        original: evidence,
+        evaluator: _engine.recitationEvaluator,
+        phase: previous.phase,
+        acceptedFailure: next.failureTracker.totalFailures >
+            previous.failureTracker.totalFailures,
+      );
+    } catch (_) {
+      if (_isCurrentEvaluation(previous)) _invalidateAccountSession();
+      return null;
+    }
+  }
+
   /// Persists records and handles phase transitions after evaluation.
   Future<bool> _handlePostEvaluation(
     V2SessionState previousState,
@@ -1245,6 +1445,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     bool manuallyAssessed = false,
     V2SelfGrade selfGrade = V2SelfGrade.mastered,
     double? similarityScore,
+    SimilarAyahAttemptAuthority? attemptAuthority,
+    SimilarAyahConfusionMatch? confusionMatch,
   }) async {
     final passedAyah = previousState.currentAyah;
     final newlyPassedAyahs = newState.passedAyahNumbers.difference(
@@ -1267,6 +1469,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         similarityScore ?? newState.lastRecitationResult?.similarityScore;
 
     try {
+      attemptAuthority?.check();
       if (shouldRecordPass) {
         final committer = _reviewOutcomeCommitter;
         if (committer != null) {
@@ -1318,6 +1521,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           taskId: taskId,
           manuallyAssessed: manuallyAssessed,
           similarityScore: evidenceSimilarity,
+          attemptAuthority: attemptAuthority,
+          confusionMatch: confusionMatch,
         );
         unawaited(_processPendingEffects());
         return true;

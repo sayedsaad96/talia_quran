@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'package:dartz/dartz.dart';
+import '../../../../core/memorization/retention_forecast.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
 import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/family_dashboard_stream_repository.dart';
 import '../repositories/memorization_plus_repository.dart';
@@ -199,9 +201,11 @@ class FsrsPredictionUsecase {
     final now = nowOverride ?? DateTime.now().toUtc();
 
     // Retrievability Prediction
-    final retrievability = math
-        .exp(-(actualElapsedDays / math.max(record.stability, 1.0)))
-        .clamp(0.0, 1.0);
+    final retrievability = retrievabilityAt(
+      record.copyWith(stability: math.max(record.stability, 1.0)),
+      now,
+      elapsedDaysOverride: actualElapsedDays,
+    ).clamp(0.0, 1.0);
 
     // Interval Prediction
     final predictedInterval = (record.stability * (11 - record.difficulty) / 5)
@@ -265,6 +269,7 @@ class AwardKidsPointsParams {
     this.attemptCount = 1,
     this.hintCount = 0,
     this.masteryRating = PerformanceRating.excellent,
+    this.firstTryBonusEligible = true,
   });
   final bool completionAuthorized;
   final String? sessionId;
@@ -277,6 +282,10 @@ class AwardKidsPointsParams {
   final int attemptCount;
   final int hintCount;
   final PerformanceRating masteryRating;
+
+  /// False when the grade came from a guardian: the child's first-try
+  /// excellence bonus is never granted for a guardian-assessed ayah.
+  final bool firstTryBonusEligible;
 }
 
 class AwardKidsPointsUsecase
@@ -299,12 +308,18 @@ class AwardKidsPointsUsecase
     attemptCount: params.attemptCount,
     hintCount: params.hintCount,
     masteryRating: params.masteryRating,
+    firstTryBonusEligible: params.firstTryBonusEligible,
   );
 }
 
 class GetKidsJourneyParams {
-  const GetKidsJourneyParams({required this.surahId});
+  const GetKidsJourneyParams({
+    required this.surahId,
+    this.freezeForSession = false,
+  });
   final int surahId;
+  /// Session-start only. Preview and split-choice reads must stay write-free.
+  final bool freezeForSession;
 }
 
 class GetKidsJourneyUsecase
@@ -315,7 +330,10 @@ class GetKidsJourneyUsecase
   @override
   Future<Either<Failure, List<KidsJourneyStage>>> call(
     GetKidsJourneyParams params,
-  ) => _repository.getKidsJourney(surahId: params.surahId);
+  ) => _repository.getKidsJourney(
+    surahId: params.surahId,
+    freezeForSession: params.freezeForSession,
+  );
 }
 
 class SaveKidsSessionLogParams {
@@ -397,6 +415,23 @@ class ParentAccessUsecase {
   Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count) =>
       _repository.setKidsAyahsPerHouse(count);
 
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath() =>
+      _repository.getKidsJourneyPath();
+
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) => _repository.setKidsJourneyPath(id);
+
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  }) => _repository.setKidsSurahSplit(
+    surahId,
+    whole: whole,
+    stageSize: stageSize,
+  );
+
   Future<Either<Failure, bool>> verifyPin(String pin) =>
       _repository.verifyParentPin(pin);
 
@@ -409,8 +444,10 @@ class ParentAccessUsecase {
     bool value,
   ) => _repository.setParentGuardianMode(value);
 
-  Future<Either<Failure, List<ParentReward>>> saveReward(String title) =>
-      _repository.saveParentReward(title);
+  Future<Either<Failure, List<ParentReward>>> saveReward(
+    String title, {
+    int? milestoneSurahId,
+  }) => _repository.saveParentReward(title, milestoneSurahId: milestoneSurahId);
 
   Future<Either<Failure, List<ParentReward>>> claimReward(String id) =>
       _repository.claimParentReward(id);
@@ -447,9 +484,11 @@ class ParentRemoteLinkUsecase {
   Future<Either<Failure, List<ParentReward>>> saveRemoteReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   }) => _repository.saveRemoteParentReward(
     childUserId: childUserId,
     title: title,
+    milestoneSurahId: milestoneSurahId,
   );
 
   Future<Either<Failure, List<KidsHomeMission>>> createRemoteHomeMission({

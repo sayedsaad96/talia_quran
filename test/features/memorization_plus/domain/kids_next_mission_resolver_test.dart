@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_budget.dart';
@@ -648,6 +649,129 @@ void main() {
     });
   });
 
+  group('selected journey path', () {
+    final quranFromNas = KidsJourneyPathDefinition.of(
+      KidsJourneyPathId.quranFromNas,
+    );
+    final quranFromFatiha = KidsJourneyPathDefinition.of(
+      KidsJourneyPathId.quranFromFatiha,
+    );
+    KidsJourneyStage done(int surahId) => KidsJourneyStage(
+      stageNumber: 1,
+      surahId: surahId,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: const [1, 2, 3],
+      status: KidsJourneyStageStatus.completed,
+    );
+    KidsJourneyStage open(int surahId) => KidsJourneyStage(
+      stageNumber: 1,
+      surahId: surahId,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: const [1],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    test(
+      'quran journey continues from 67 to 66 skipping a memorized 66',
+      () async {
+        const resolver = KidsNextMissionResolver();
+        final loaded = <int>[];
+        final continuation = await resolver.findContinuation(
+          activeSurahId: 67,
+          stages: [done(67)],
+          path: quranFromNas,
+          loadStages: (surahId) async {
+            loaded.add(surahId);
+            return switch (surahId) {
+              66 => [done(66)],
+              65 => [open(65)],
+              _ => null,
+            };
+          },
+        );
+
+        expect(loaded, [66, 65]);
+        expect(continuation?.mission?.type, KidsMissionType.newMemorization);
+        expect(continuation?.mission?.surahId, 65);
+        expect(continuation?.mission?.ayahNumbers, const [2]);
+      },
+    );
+
+    test('quran journey from Fatiha: 1 -> 2', () async {
+      const resolver = KidsNextMissionResolver();
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 1,
+        stages: [done(1)],
+        path: quranFromFatiha,
+        loadStages: (surahId) async => surahId == 2 ? [open(2)] : null,
+      );
+      final mission = resolver.resolve(
+        activeSurahId: 1,
+        stages: [done(1)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        path: quranFromFatiha,
+      );
+
+      expect(continuation?.mission?.surahId, 2);
+      expect(mission?.surahId, 2);
+      expect(mission?.ayahNumbers, const [1]);
+    });
+
+    test('adventure default is unchanged: 79 -> 78 then null', () async {
+      const resolver = KidsNextMissionResolver();
+      final mission = resolver.resolve(
+        activeSurahId: 79,
+        stages: [done(79)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+      );
+      final afterLast = resolver.resolve(
+        activeSurahId: 78,
+        stages: [done(78)],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+      );
+      final continuation = await resolver.findContinuation(
+        activeSurahId: 78,
+        stages: [done(78)],
+        loadStages: (_) async => fail('nothing follows An-Naba'),
+      );
+
+      expect(mission?.surahId, 78);
+      expect(afterLast, isNull);
+      expect(continuation?.mission, isNull);
+    });
+
+    test('due review of surah 67 still leads on the adventure path', () {
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 114,
+        stages: [open(114)],
+        reviewRecords: [
+          AyahReviewRecord(
+            surahId: 67,
+            ayahNumber: 1,
+            strengthLevel: 1,
+            intervalDays: 1,
+            lastReviewedAt: DateTime.utc(2026, 8, 30),
+            nextReviewDate: DateTime.utc(2026, 8, 31),
+            totalReviews: 1,
+            lastRating: PerformanceRating.average,
+            createdByMode: ReviewRecordCreatedByMode.kidsMode,
+          ),
+        ],
+        now: DateTime.utc(2026, 9, 1),
+        path: KidsJourneyPathDefinition.adventure,
+      );
+
+      expect(mission?.type, KidsMissionType.dueReview);
+      expect(mission?.surahId, 67);
+      expect(mission?.ayahNumbers, const [1]);
+    });
+  });
+
   group('daily goal cap (K18)', () {
     const finished114 = KidsJourneyStage(
       stageNumber: 1,
@@ -750,6 +874,167 @@ void main() {
       );
 
       expect(mission?.type, KidsMissionType.newMemorization);
+      expect(mission?.ayahNumbers, const [4]);
+    });
+  });
+
+  group('validated remote next-surah hint', () {
+    const finished = KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 3,
+      completedAyahs: [1, 2, 3],
+      status: KidsJourneyStageStatus.completed,
+    );
+    const hintedOpen = KidsJourneyStage(
+      stageNumber: 2,
+      surahId: 67,
+      startAyah: 1,
+      endAyah: 5,
+      completedAyahs: [1, 2, 3],
+      status: KidsJourneyStageStatus.current,
+    );
+
+    Future<List<KidsJourneyStage>?> hintedStages(int surahId) async =>
+        surahId == 67 ? const [hintedOpen] : null;
+
+    test('uses a hinted surah only from its loaded current stage', () async {
+      final mission = await const KidsNextMissionResolver()
+          .resolveWithRemoteHint(
+            activeSurahId: 114,
+            stages: const [finished],
+            reviewRecords: const [],
+            now: DateTime.utc(2026, 9, 1),
+            continuation: const KidsJourneyContinuation(null),
+            hintedSurahId: 67,
+            loadStages: hintedStages,
+          );
+
+      expect(mission?.type, KidsMissionType.newMemorization);
+      expect(mission?.surahId, 67);
+      expect(mission?.ayahNumbers, const [4]);
+    });
+
+    test('hint never displaces due review, resume, or continuation', () async {
+      const resume = KidsNextMission(
+        type: KidsMissionType.resume,
+        surahId: 113,
+        ayahNumbers: [2],
+      );
+      const continuation = KidsJourneyContinuation(
+        KidsNextMission(
+          type: KidsMissionType.newMemorization,
+          surahId: 112,
+          ayahNumbers: [3],
+        ),
+      );
+      const resolver = KidsNextMissionResolver();
+
+      final due = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: [_dueReviewRecord(surahId: 114, ayahNumber: 1)],
+        now: DateTime.utc(2026, 9, 1),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final resumed = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        resumableMission: resume,
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final continued = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: continuation,
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+
+      expect(due?.type, KidsMissionType.dueReview);
+      expect(resumed, resume);
+      expect(continued, continuation.mission);
+    });
+
+    test('hint can replace an untouched default but never a started gap at ayah one', () async {
+      const resolver = KidsNextMissionResolver();
+      const untouched = KidsJourneyStage(
+        stageNumber: 1, surahId: 113, startAyah: 1, endAyah: 5,
+        completedAyahs: [], status: KidsJourneyStageStatus.current,
+      );
+      final suggested = await resolver.resolveWithRemoteHint(
+        activeSurahId: 113, stages: const [untouched], reviewRecords: const [],
+        now: DateTime.utc(2026), hintedSurahId: 67, loadStages: hintedStages,
+      );
+      final started = await resolver.resolveWithRemoteHint(
+        activeSurahId: 113, stages: [untouched.copyWithAddedCompletedAyah(2)],
+        reviewRecords: const [], now: DateTime.utc(2026),
+        hintedSurahId: 67, loadStages: hintedStages,
+      );
+      expect(suggested?.surahId, 67);
+      expect(started?.surahId, 113);
+      expect(started?.ayahNumbers, [1]);
+    });
+
+    test('hint cannot bypass the new-ayah cap or a locked target', () async {
+      const resolver = KidsNextMissionResolver();
+      final capped = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        budget: const KidsDailyBudget(
+          newAyahsCompletedToday: 1,
+          maxNewAyahsPerDay: 1,
+        ),
+        hintedSurahId: 67,
+        loadStages: hintedStages,
+      );
+      final locked = await resolver.resolveWithRemoteHint(
+        activeSurahId: 114,
+        stages: const [finished],
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 1),
+        continuation: const KidsJourneyContinuation(null),
+        hintedSurahId: 67,
+        loadStages: (_) async => const [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 67,
+            startAyah: 1,
+            endAyah: 5,
+            completedAyahs: [],
+            status: KidsJourneyStageStatus.locked,
+          ),
+        ],
+      );
+
+      expect(capped, isNull);
+      expect(locked, isNull);
+    });
+
+    test('skipping an ayah applies the same hint safety rules', () async {
+      final mission = await const KidsNextMissionResolver()
+          .resolveSkippingAyahWithRemoteHint(
+            activeSurahId: 114,
+            stages: const [finished],
+            reviewRecords: const [],
+            now: DateTime.utc(2026, 9, 1),
+            justCompletedSurahId: 114,
+            justCompletedAyah: 3,
+            continuation: const KidsJourneyContinuation(null),
+            hintedSurahId: 67,
+            loadStages: hintedStages,
+          );
+
+      expect(mission?.surahId, 67);
       expect(mission?.ayahNumbers, const [4]);
     });
   });

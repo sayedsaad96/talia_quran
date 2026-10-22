@@ -80,7 +80,11 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
   @override
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
     required int surahId,
-  }) => _kidsLocal.getKidsJourney(surahId: surahId);
+    bool freezeForSession = false,
+  }) => _kidsLocal.getKidsJourney(
+    surahId: surahId,
+    freezeForSession: freezeForSession,
+  );
 
   @override
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() =>
@@ -127,6 +131,38 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     int? count,
   ) async {
     final outcome = await _kidsLocal.setKidsAyahsPerHouse(count);
+    if (outcome.isRight()) {
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
+    }
+    return outcome;
+  }
+
+  @override
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath() =>
+      _kidsLocal.getKidsJourneyPath();
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  ) async {
+    final outcome = await _kidsLocal.setKidsJourneyPath(id);
+    if (outcome.isRight()) {
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
+    }
+    return outcome;
+  }
+
+  @override
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  }) async {
+    final outcome = await _kidsLocal.setKidsSurahSplit(
+      surahId,
+      whole: whole,
+      stageSize: stageSize,
+    );
     if (outcome.isRight()) {
       _progressEvents.notify(ProgressChangedReason.kidsProgress);
     }
@@ -185,8 +221,10 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
       _kidsLocal.resetParentAccess();
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title) =>
-      _kidsLocal.saveParentReward(title);
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  }) => _kidsLocal.saveParentReward(title, milestoneSurahId: milestoneSurahId);
 
   @override
   Future<Either<Failure, List<KidsHomeMission>>> getHomeMissions() =>
@@ -219,11 +257,33 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
       _kidsLocal.getParentRewards();
 
   @override
-  Future<Either<Failure, List<ParentReward>>> requestParentReward(String id) {
-    if (_gateway.hasSignedInCloudUser) {
-      return _kidsCloudSync.requestRemoteParentReward(id);
+  Future<Either<Failure, List<ParentReward>>> requestParentReward(
+    String id,
+  ) async {
+    try {
+      final authority = _datasource.captureParentRewardsLease();
+      authority.checkOwner(_owner.currentOwnerId);
+      final rewards = await _kidsLocal.getParentRewards();
+      authority.checkOwner(_owner.currentOwnerId);
+      return await rewards.fold(Left.new, (items) {
+        final reward = _findStoredReward(items, id);
+        if (reward == null || reward.origin == ParentRewardOrigin.unknown) {
+          return const Left(CacheFailure(CubitMessageCodes.parentRewardUnavailable));
+        }
+        if (reward.origin == ParentRewardOrigin.local) {
+          return _kidsLocal.requestParentReward(
+            reward.storageIdentity,
+            authority: authority,
+          );
+        }
+        return _kidsCloudSync.requestStoredCloudParentReward(
+          reward,
+          authority: authority,
+        );
+      });
+    } catch (error) {
+      return Left(CacheFailure.from(error));
     }
-    return _kidsLocal.requestParentReward(id);
   }
 
   @override
@@ -231,16 +291,75 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     String id, {
     String? childUserId,
   }) => childUserId == null
-      ? _kidsLocal.unlockParentReward(id)
+      ? _unlockStoredReward(id)
       : _kidsCloudSync.unlockRemoteParentReward(id);
+
+  Future<Either<Failure, List<ParentReward>>> _unlockStoredReward(String id) async {
+    try {
+      final authority = _datasource.captureParentRewardsLease();
+      authority.checkOwner(_owner.currentOwnerId);
+      final rewards = await _kidsLocal.getParentRewards();
+      authority.checkOwner(_owner.currentOwnerId);
+      return await rewards.fold(Left.new, (items) {
+        final reward = _findStoredReward(items, id);
+        if (reward?.origin == ParentRewardOrigin.local) {
+          return _kidsLocal.unlockParentReward(
+            reward!.storageIdentity,
+            authority: authority,
+          );
+        }
+        if (reward?.origin == ParentRewardOrigin.cloud) {
+          return _kidsCloudSync.unlockStoredCloudMilestoneReward(
+            reward!,
+            authority: authority,
+          );
+        }
+        return const Left(CacheFailure(CubitMessageCodes.parentRewardUnavailable));
+      });
+    } catch (error) {
+      return Left(CacheFailure.from(error));
+    }
+  }
 
   @override
   Future<Either<Failure, List<ParentReward>>> approveParentReward(
     String id, {
     String? childUserId,
   }) => childUserId == null
-      ? _kidsLocal.approveParentReward(id)
+      ? _routeStoredReward(id, _kidsLocal.approveParentReward)
       : _kidsCloudSync.approveRemoteParentReward(id);
+
+  Future<Either<Failure, List<ParentReward>>> _routeStoredReward(
+    String id,
+    Future<Either<Failure, List<ParentReward>>> Function(
+      String id, {
+      AccountDataLease? authority,
+    })
+    local,
+  ) async {
+    try {
+      final authority = _datasource.captureParentRewardsLease();
+      authority.checkOwner(_owner.currentOwnerId);
+      final rewards = await _kidsLocal.getParentRewards();
+      authority.checkOwner(_owner.currentOwnerId);
+      return await rewards.fold(Left.new, (items) {
+        final reward = _findStoredReward(items, id);
+        if (reward == null || reward.origin != ParentRewardOrigin.local) {
+          return const Left(CacheFailure(CubitMessageCodes.parentRewardUnavailable));
+        }
+        return local(reward.storageIdentity, authority: authority);
+      });
+    } catch (error) {
+      return Left(CacheFailure.from(error));
+    }
+  }
+
+  ParentReward? _findStoredReward(List<ParentReward> rewards, String id) {
+    final identified = rewards.where((reward) => reward.storageIdentity == id);
+    if (identified.length == 1) return identified.single;
+    final legacyMatches = rewards.where((reward) => reward.id == id);
+    return legacyMatches.length == 1 ? legacyMatches.single : null;
+  }
 
   @override
   Future<Either<Failure, String>> createChildLinkToken() =>
@@ -275,9 +394,11 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   }) => _kidsCloudSync.saveRemoteParentReward(
     childUserId: childUserId,
     title: title,
+    milestoneSurahId: milestoneSurahId,
   );
 
   @override
@@ -331,6 +452,7 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) => _kidsLocal.awardKidsPoints(
     completionAuthorized: completionAuthorized,
     sessionId: sessionId,
@@ -343,6 +465,7 @@ mixin _MemorizationFamilyReads on _MemorizationPlusRepositoryCore {
     attemptCount: attemptCount,
     hintCount: hintCount,
     masteryRating: masteryRating,
+    firstTryBonusEligible: firstTryBonusEligible,
   );
 
   // ─── Custom memorization plan ──────────────────────────────────────────────

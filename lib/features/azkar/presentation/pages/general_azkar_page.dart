@@ -34,25 +34,38 @@ class GeneralAzkarPage extends StatelessWidget {
     super.key,
     this.category = AzkarCategory.general,
     this.prefsStore,
+    this.initialSubcategory,
   });
 
   final AzkarCategory category;
   final AzkarPreferencesStore? prefsStore;
 
+  /// Optional subcategory tab to open on (e.g. «أذكار بعد الصلاة»).
+  final String? initialSubcategory;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<AzkarCubit>()..load(category),
-      child: _GeneralAzkarView(category: category, prefsStore: prefsStore),
+      child: _GeneralAzkarView(
+        category: category,
+        prefsStore: prefsStore,
+        initialSubcategory: initialSubcategory,
+      ),
     );
   }
 }
 
 class _GeneralAzkarView extends StatefulWidget {
-  const _GeneralAzkarView({required this.category, this.prefsStore});
+  const _GeneralAzkarView({
+    required this.category,
+    this.prefsStore,
+    this.initialSubcategory,
+  });
 
   final AzkarCategory category;
   final AzkarPreferencesStore? prefsStore;
+  final String? initialSubcategory;
 
   @override
   State<_GeneralAzkarView> createState() => _GeneralAzkarViewState();
@@ -70,6 +83,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   void initState() {
     super.initState();
     _prefsStore = widget.prefsStore ?? getIt<AzkarPreferencesStore>();
+    _selectedSubcategory = widget.initialSubcategory ?? '';
   }
 
   @override

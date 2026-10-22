@@ -181,6 +181,7 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.hifzMemorizationSaveFailed,
       CubitMessageCodes.v2SurahLoadFailed => l10n.v2SurahLoadFailed,
       CubitMessageCodes.v2NoAyahsInRange => l10n.v2NoAyahsInRange,
+      CubitMessageCodes.v2AccountChanged => l10n.v2AccountChanged,
       CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
       CubitMessageCodes.kidsMicPermissionDenied => l10n.micPermissionError,
       CubitMessageCodes.kidsRecordingUnavailable =>
@@ -210,6 +211,8 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.parentRewardErrorTitleRequired,
       CubitMessageCodes.parentRewardLimitReached =>
         l10n.parentRewardErrorLimitReached,
+      CubitMessageCodes.parentRewardTitleTooLong =>
+        l10n.parentRewardErrorTitleTooLong,
       CubitMessageCodes.parentRewardUnavailable =>
         l10n.parentRewardErrorUnavailable,
       CubitMessageCodes.childNicknameInvalid => l10n.childErrorNicknameInvalid(

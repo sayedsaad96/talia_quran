@@ -435,6 +435,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Color the tajweed rules on the Mushaf page';
 
   @override
+  String get strengthOverlayToggle => 'Show memorization strength';
+
+  @override
+  String get strengthLegendDue => 'Due';
+
+  @override
+  String get strengthLegendWeak => 'Weak';
+
+  @override
+  String get strengthLegendBuilding => 'Building';
+
+  @override
+  String get strengthLegendSolid => 'Solid';
+
+  @override
+  String get reviewThisAyahNow => 'Review this ayah now';
+
+  @override
   String get surahInProgressBadge => 'Memorizing';
 
   @override
@@ -2297,11 +2315,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open the guardian dashboard on the other device and scan the code.';
 
   @override
-  String kidsStageTitle(String stage) {
-    return 'Stage $stage';
-  }
-
-  @override
   String kidsStageProgress(
     String startAyah,
     String endAyah,
@@ -2497,6 +2510,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsWeeklyCoachingTipStartSmall =>
       'A quiet week. A short session of a few minutes is a good way back.';
+
+  @override
+  String get monthlyReportTitle => 'Monthly report';
+
+  @override
+  String monthlyReportPeriod(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String monthlyReportSessions(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText sessions',
+      one: '1 session',
+      zero: 'No sessions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportActiveDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText active days',
+      one: '1 active day',
+      zero: 'No active days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportNewAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText new ayahs',
+      one: '1 new ayah',
+      zero: 'No new ayahs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportReviews(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText reviews',
+      one: '1 review',
+      zero: 'No reviews',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get monthlyReportCompleted => 'Surahs completed';
+
+  @override
+  String get monthlyReportNeedsSupport => 'Ayahs that need support';
+
+  @override
+  String get monthlyReportNote => 'Guardian note';
+
+  @override
+  String get monthlyReportNoteHint =>
+      'An encouraging word shown in the image only, not saved';
+
+  @override
+  String get monthlyReportEmpty => 'No sessions this month';
+
+  @override
+  String get monthlyReportIncompleteHistory =>
+      'These numbers may not include every session because the linked child\'s history from another device is partial';
+
+  @override
+  String get monthlyReportSavePdf => 'Save PDF';
+
+  @override
+  String get monthlyReportShare => 'Share';
+
+  @override
+  String get monthlyReportShareText => 'Talia monthly report';
+
+  @override
+  String monthlyReportAyahRef(String surah, String ayah) {
+    return '$surah · ayah $ayah';
+  }
 
   @override
   String get kidsFamilyPracticeAction => 'Learn together';
@@ -3645,6 +3748,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGiftRequestAction => 'I want it!';
 
   @override
+  String get promiseExample1 => 'A trip to the park';
+
+  @override
+  String get promiseExample2 => 'A new book';
+
+  @override
+  String get promiseExample3 => 'A meal of their choice';
+
+  @override
+  String get promiseLinkSurah => 'When a surah is completed';
+
+  @override
+  String get promiseNoCondition => 'No condition';
+
+  @override
+  String promiseProgress(String doneText, int total, String totalText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText ayahs',
+      one: '1 ayah',
+    );
+    return '$doneText of $_temp0';
+  }
+
+  @override
+  String get promiseUnlockedByMilestone => 'Promise kept!';
+
+  @override
+  String get parentRewardErrorTitleTooLong => 'The gift title is too long';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'Enter a name of 1 to $max characters.';
   }
@@ -4366,6 +4501,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardReminderSaved => 'Reminder updated';
+
+  @override
+  String get parentDashboardSettingsSaved => 'Settings saved';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -5910,6 +6048,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get guardianNewsTitle => 'What\'s new';
+
+  @override
+  String guardianNewsSurah(String child, String surah) {
+    return '$child completed Surah $surah';
+  }
+
+  @override
+  String guardianNewsCertificate(String child, String title) {
+    return '$child earned a certificate: $title';
+  }
+
+  @override
+  String guardianNewsWeek(String child) {
+    return '$child completed the weekly goal';
+  }
+
+  @override
+  String get guardianNewsDismiss => 'Done';
+
+  @override
   String get familyDashboardChildNoActivity => 'No activity today';
 
   @override
@@ -6334,6 +6493,30 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tarawihTitle => 'What the imam recited tonight';
+
+  @override
+  String get tarawihFromPage => 'From page';
+
+  @override
+  String get tarawihToPage => 'To page';
+
+  @override
+  String tarawihTotal(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You heard $countText pages this month',
+      one: 'You heard $countText page this month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tarawihInvalidRange =>
+      'Pages must be between 1 and 604, and the start must not come after the end';
 
   @override
   String streakDaysUnit(int count) {
@@ -8551,4 +8734,700 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appUpdateInstallFailed =>
       'The update could not start. Please try again.';
+
+  @override
+  String get kidsJourneyPathTitle => 'Memorization path';
+
+  @override
+  String get kidsJourneyPathAdventure => 'Juz Amma adventure';
+
+  @override
+  String get kidsJourneyPathFromNas => 'Quran journey: An-Nas to Al-Baqarah';
+
+  @override
+  String get kidsJourneyPathFromFatiha => 'Quran journey: Al-Fatihah to An-Nas';
+
+  @override
+  String get kidsQuranJourneyTitle => 'Quran journey';
+
+  @override
+  String kidsQuranJourneyJuz(String number) {
+    return 'Juz $number';
+  }
+
+  @override
+  String kidsQuranJourneyJumpConfirm(String surah, String current) {
+    return 'Start Surah $surah? Surah $current will wait for you.';
+  }
+
+  @override
+  String get kidsQuranJourneyJumpYes => 'Let\'s start';
+
+  @override
+  String get kidsQuranJourneyJumpNo => 'Not now';
+
+  @override
+  String get kidsQuranJourneyComplete =>
+      'You finished the whole Quran journey! Tell your guardian about this great achievement.';
+
+  @override
+  String get kidsHouseStatusNotStarted => 'Not started';
+
+  @override
+  String get kidsHouseStatusInProgress => 'In progress';
+
+  @override
+  String get kidsHouseStatusNeedsReview => 'Needs review';
+
+  @override
+  String get kidsHouseStatusCompleted => 'Completed';
+
+  @override
+  String get kidsHouseCurrentMarker => 'You are here';
+
+  @override
+  String get kidsSplitTitle => 'How would you like to memorize it?';
+
+  @override
+  String get kidsSplitWhole => 'All at once';
+
+  @override
+  String get kidsSplitStaged => 'In stages';
+
+  @override
+  String get kidsSplitAyahsPerStage => 'Ayahs per stage';
+
+  @override
+  String kidsSplitStageCount(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText stages',
+      one: '$countText stage',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsSplitConfirm => 'Start';
+
+  @override
+  String get kidsSplitChange => 'Change how to memorize';
+
+  @override
+  String kidsStageTitle(String number) {
+    return 'Stage $number';
+  }
+
+  @override
+  String kidsReviewStageTitle(String number) {
+    return 'Stage $number review';
+  }
+
+  @override
+  String get readerRepeatTitle => 'Repeat and sleep timer';
+
+  @override
+  String get readerRepeatPerAyah => 'Repeat each ayah';
+
+  @override
+  String get readerRepeatRange => 'Repeat the passage';
+
+  @override
+  String get readerRepeatInfinite => 'Non-stop';
+
+  @override
+  String get readerRepeatSpeed => 'Recitation speed';
+
+  @override
+  String get readerSleepTimer => 'Sleep timer';
+
+  @override
+  String get readerSleepOff => 'Off';
+
+  @override
+  String readerSleepMinutes(String countText) {
+    return '$countText min';
+  }
+
+  @override
+  String get readerSleepEndOfSurah => 'End of surah';
+
+  @override
+  String get trustCenterTitle => 'How we protect content and your privacy';
+
+  @override
+  String get trustSourcesTitle => 'Verified sources';
+
+  @override
+  String get trustSourcesBody =>
+      'Talia contains no generated religious text. Every text has a source and a reference.';
+
+  @override
+  String trustSourcesMeta(String version, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText sources',
+      one: '1 source',
+    );
+    return 'Data version $version • $_temp0';
+  }
+
+  @override
+  String get trustVoiceTitle => 'Your voice';
+
+  @override
+  String get trustVoiceBody =>
+      'Talia does not keep a recording of your voice or send it to Talia\'s servers. Speech recognition uses your device\'s system service (such as Google), which may send the audio to its provider under its own policies.';
+
+  @override
+  String get trustDataTitle => 'Your data';
+
+  @override
+  String get trustDataBody =>
+      'You can use Talia without an account. Sync is optional, and each account\'s data is kept separate.';
+
+  @override
+  String get trustViewSources => 'View sources and licenses';
+
+  @override
+  String get trustViewPrivacy => 'Privacy policy';
+
+  @override
+  String get clarityModeTitle => 'Clarity mode';
+
+  @override
+  String get clarityModeSubtitle =>
+      'Larger text, higher contrast and a simpler home';
+
+  @override
+  String get afterPrayerAzkarTitle => 'After-prayer adhkar';
+
+  @override
+  String afterPrayerAzkarSubtitle(String prayer) {
+    return 'After $prayer prayer';
+  }
+
+  @override
+  String get afterPrayerAzkarOpen => 'Start';
+
+  @override
+  String get afterPrayerAzkarDone => 'Done';
+
+  @override
+  String get ramadanTemplateOne => 'One khatmah in Ramadan';
+
+  @override
+  String get ramadanTemplateTwo => 'Two khatmahs in Ramadan';
+
+  @override
+  String get ramadanTemplateSplit => 'Daily wird split over the prayers';
+
+  @override
+  String ramadanTemplateDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText days remaining',
+      one: '$countText day remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanPortion(String prayer, String from, String to) {
+    return 'After $prayer: pages $from–$to';
+  }
+
+  @override
+  String get ramadanInviteTitle => 'Get ready for Ramadan';
+
+  @override
+  String get ramadanInviteBody =>
+      'Pick your khatmah plan before the month starts';
+
+  @override
+  String ramadanDayTitle(String day) {
+    return 'Day $day of Ramadan';
+  }
+
+  @override
+  String get ramadanLastTen => 'The last ten nights';
+
+  @override
+  String get ramadanSummaryTitle => 'Your Ramadan';
+
+  @override
+  String ramadanSummaryNights(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You logged tarawih on $countText nights',
+      one: 'You logged tarawih on $countText night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanSummaryKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You completed $countText khatmahs in Ramadan',
+      one: 'You completed $countText khatmah in Ramadan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLogTarawih => 'Log tarawih';
+
+  @override
+  String get ramadanDismiss => 'Hide';
+
+  @override
+  String get ramadanOpenKhatmah => 'Khatmah';
+
+  @override
+  String get backupTitle => 'Backup';
+
+  @override
+  String get backupExport => 'Export a backup';
+
+  @override
+  String get backupImport => 'Restore from a file';
+
+  @override
+  String get backupImportSignedIn =>
+      'Restore is only available without an account. Your personal notes stay only on this device.';
+
+  @override
+  String get backupIncludes =>
+      'Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress, the child\'s progress, and personal notes';
+
+  @override
+  String get backupExcludes =>
+      'Excludes: bookmarks, device settings and notifications, and the guardian PIN';
+
+  @override
+  String get backupConfirmTitle => 'Replace current data?';
+
+  @override
+  String get backupConfirmBody =>
+      'Your current data on this device will be replaced by the file\'s data. A version 1 backup has no personal notes and will clear your current notes.';
+
+  @override
+  String get backupConfirm => 'Replace';
+
+  @override
+  String get backupErrorInvalid => 'This file is not a valid Talia backup.';
+
+  @override
+  String get backupErrorNewer =>
+      'This backup is from a newer app version. Update the app first.';
+
+  @override
+  String get backupErrorCorrupt =>
+      'The file is damaged and cannot be restored.';
+
+  @override
+  String get backupDone => 'Restore complete';
+
+  @override
+  String get kidsBedtimeTitle => 'Bedtime listening';
+
+  @override
+  String get kidsBedtimeStart => 'Start';
+
+  @override
+  String get kidsBedtimeStop => 'Stop';
+
+  @override
+  String get kidsBedtimeTimer => 'Stops after';
+
+  @override
+  String get kidsBedtimeEmpty =>
+      'Memorize a surah first to listen to it before bed';
+
+  @override
+  String get kidsBedtimeCard => 'Quiet time: listen to your surahs before bed';
+
+  @override
+  String get guardianRecitationTitle => 'Recite to your guardian';
+
+  @override
+  String get guardianRecitationExcellent => 'Mastered';
+
+  @override
+  String get guardianRecitationReview => 'Needs review';
+
+  @override
+  String get guardianRecitationRetry => 'Let\'s try again';
+
+  @override
+  String get guardianRecitationHint => 'Ask your guardian to listen and grade';
+
+  @override
+  String get guardianRecitationShowText => 'Show the text to the guardian';
+
+  @override
+  String get guardianRecitationHideText => 'Hide the text';
+
+  @override
+  String get guardianRecitationExit => 'End';
+
+  @override
+  String get forgettingForecastTitle =>
+      'May weaken within 7 days without review';
+
+  @override
+  String forgettingForecastPassage(Object surah, Object start, Object end) {
+    return '$surah, ayahs $start–$end';
+  }
+
+  @override
+  String get forgettingForecastReviewNow => 'Review now';
+
+  @override
+  String get notificationForgettingForecastTitle => 'Time for review';
+
+  @override
+  String get notificationForgettingForecastBody =>
+      'Set aside a short time to review what you learned.';
+
+  @override
+  String get notificationSettingsForgettingForecast => 'Forgetting forecast';
+
+  @override
+  String get ayahNotesTitle => 'My reflections';
+
+  @override
+  String get ayahNoteAction => 'My note';
+
+  @override
+  String get ayahNoteLabel => 'Your note';
+
+  @override
+  String get ayahNoteHint => 'Write your private reflection';
+
+  @override
+  String get ayahNotesEmpty => 'No reflections yet';
+
+  @override
+  String get ayahNoteSaveFailed =>
+      'Couldn\'t save your note. Please try again.';
+
+  @override
+  String get ayahNotesLoadFailed =>
+      'Couldn\'t load your notes. Please try again.';
+
+  @override
+  String get ayahNoteNavigationFailed =>
+      'Couldn\'t open this ayah. Please try again.';
+
+  @override
+  String get audioDownloadsTitle => 'Download recitations';
+
+  @override
+  String get audioDownloadsStorage => 'Recitation storage';
+
+  @override
+  String get audioDownloadsWholeJuz => 'Download a whole juz';
+
+  @override
+  String audioDownloadsJuz(String number) {
+    return 'Juz $number';
+  }
+
+  @override
+  String get audioDownloadsWifiOnly => 'Wi-Fi only';
+
+  @override
+  String get audioDownloadsWifiUnavailable =>
+      'This device\'s network type cannot be checked. Connect to Wi-Fi before continuing.';
+
+  @override
+  String get audioDownloadsSpaceUnknown =>
+      'Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size.';
+
+  @override
+  String get audioDownloadsNetworkWarning =>
+      'Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading.';
+
+  @override
+  String get audioDownloadsProceed => 'Continue downloading';
+
+  @override
+  String get audioDownloadsStart => 'Download or resume';
+
+  @override
+  String get audioDownloadsCompleted => 'Download finished';
+
+  @override
+  String get audioDownloadsCancelled =>
+      'Download cancelled; saved files remain available';
+
+  @override
+  String get audioDownloadsInsufficientSpace => 'Not enough storage space';
+
+  @override
+  String get audioDownloadsFailed =>
+      'Download failed. You can resume without downloading saved files again.';
+
+  @override
+  String get audioDownloadsInProgress => 'Downloading recitations…';
+
+  @override
+  String audioDownloadsBytes(String bytes) {
+    return '$bytes bytes';
+  }
+
+  @override
+  String get audioDownloadsDelete => 'Delete this reciter\'s downloads';
+
+  @override
+  String get audioDownloadsDeleteConfirm =>
+      'Delete the saved recordings for this reciter from this device?';
+
+  @override
+  String get hijriYearRecapTitle => 'Hijri year recap';
+
+  @override
+  String get hijriYearRecapCompletions => 'Completed khatmas';
+
+  @override
+  String get hijriYearRecapMemorizedApprox => 'Approx. memorized ayahs';
+
+  @override
+  String get hijriYearRecapApproxDefinition =>
+      'Currently memorized ayahs last reviewed this Hijri year';
+
+  @override
+  String get hijriYearRecapLifetimeStreak => 'Lifetime longest streak';
+
+  @override
+  String get hijriYearRecapDismiss => 'Hide for this year';
+
+  @override
+  String get hijriYearRecapShare => 'Share';
+
+  @override
+  String get hijriYearRecapActivityDays => 'Activity days';
+
+  @override
+  String get similarAyahTrainerTitle => 'Similar passages practice';
+
+  @override
+  String get similarAyahTrainerMachineNote =>
+      'These are machine-computed lexical relationships, not a recitation assessment.';
+
+  @override
+  String get similarAyahLookupAction => 'Similar wording (machine-computed)';
+
+  @override
+  String get similarAyahTrainerEmpty =>
+      'No historical similar-passage patterns yet';
+
+  @override
+  String get similarAyahTrainerTryAgain => 'Try again';
+
+  @override
+  String get similarAyahTrainerTarget => 'Target passage';
+
+  @override
+  String get similarAyahTrainerOther => 'Similar passage';
+
+  @override
+  String get similarAyahTrainerPrevious => 'Previous ayah';
+
+  @override
+  String get similarAyahTrainerPractice =>
+      'Recall the target passage, then reveal it when ready.';
+
+  @override
+  String get similarAyahTrainerReveal => 'Show target passage';
+
+  @override
+  String get similarAyahTrainerUnavailable =>
+      'This practice is available only for eligible adult accounts.';
+
+  @override
+  String similarAyahFailureNotice(Object reference) {
+    return 'It looks like you moved to a similar ayah at $reference.';
+  }
+
+  @override
+  String get similarAyahOpenComparison => 'Compare similar passages';
+
+  @override
+  String get v2AccountChanged =>
+      'The account changed. Open the session from your current account to continue.';
+
+  @override
+  String get similarAyahTrainerNoPrevious => 'No previous ayah in this surah';
+
+  @override
+  String similarAyahTrainerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: 'once',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerReviewTitle => 'Review in your prayer';
+
+  @override
+  String get prayerReviewQuestion => 'Did you recite this passage?';
+
+  @override
+  String get prayerReviewSaved => 'Your self-assessment was saved.';
+
+  @override
+  String get prayerReviewUnavailable =>
+      'No prayer review passage is available right now.';
+
+  @override
+  String get prayerReviewLoadFailed => 'Could not load the passage. Try again.';
+
+  @override
+  String get prayerReviewSaveFailed =>
+      'Could not save. You can retry with the same passage.';
+
+  @override
+  String get prayerReviewGradeMastered => 'Mastered';
+
+  @override
+  String get prayerReviewGradeHesitated => 'With hesitation';
+
+  @override
+  String get prayerReviewGradeForgot => 'Could not recite it';
+
+  @override
+  String prayerReviewSuggestion(String reference) {
+    return 'Suggestion: $reference';
+  }
+
+  @override
+  String prayerReviewPassage(String surah, String start, String end) {
+    return '$surah $start–$end';
+  }
+
+  @override
+  String get prayerReviewSettingsTitle => 'Passage length for each prayer';
+
+  @override
+  String prayerReviewLengthOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Up to $count ayahs',
+      one: 'Up to 1 ayah',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsRemotePlanNextSurah => 'Suggested next surah';
+
+  @override
+  String get kidsRemotePlanSize => 'Ayahs in a new stage';
+
+  @override
+  String get kidsRemotePlanDays => 'Practice reminder days';
+
+  @override
+  String get kidsRemotePlanDeviceDefault => 'Use device setting';
+
+  @override
+  String get kidsRemotePlanDaysHint =>
+      'These days affect reminders only. Learning stays available every day.';
+
+  @override
+  String get encouragementTitle => 'Send encouragement';
+
+  @override
+  String get encouragementInboxTitle => 'An encouraging message for you';
+
+  @override
+  String get encouragementProud => 'I am proud of you!';
+
+  @override
+  String get encouragementWellDone => 'Well done!';
+
+  @override
+  String get encouragementKeepGoing => 'Keep going, you are making progress!';
+
+  @override
+  String get encouragementGreatEffort => 'Great effort!';
+
+  @override
+  String get encouragementSeeYouTomorrow => 'See you tomorrow!';
+
+  @override
+  String get encouragementStarSticker => 'Star';
+
+  @override
+  String get encouragementTaliaSticker => 'Talia cheers you on';
+
+  @override
+  String get encouragementSend => 'Send encouragement';
+
+  @override
+  String get encouragementSent =>
+      'Your encouragement was sent and will appear when the child syncs.';
+
+  @override
+  String get encouragementFailed => 'Could not send. Try again.';
+
+  @override
+  String get encouragementQuota =>
+      'You reached this child’s daily limit. Try tomorrow.';
+
+  @override
+  String get encouragementLimit =>
+      'Up to 10 messages per child each day. The day starts at midnight UTC.';
+
+  @override
+  String get encouragementDone => 'Done';
+
+  @override
+  String get parentRewardOriginUnknown =>
+      'This older gift is kept for viewing. Your guardian can create a new gift.';
+
+  @override
+  String get kidsLegacyResumeTitle =>
+      'How would you like to continue this surah?';
+
+  @override
+  String get kidsLegacyResumeExplanation =>
+      'Your paused ayah is saved. Choose a split to continue this older session; its previous split is unavailable.';
+
+  @override
+  String get kidsLegacyResumeChoose => 'Choose how to continue';
+
+  @override
+  String get kidsLegacyResumeSaveFailed =>
+      'Your choice was not saved. Your paused ayah is still saved. You can try again.';
+
+  @override
+  String get audioDownloadsLeaveTitle => 'Stop the download?';
+
+  @override
+  String get audioDownloadsLeaveBody =>
+      'A download is in progress. Leaving this page stops it; files already saved stay available.';
+
+  @override
+  String get audioDownloadsLeaveStay => 'Stay';
+
+  @override
+  String get audioDownloadsLeaveStop => 'Stop download';
+
+  @override
+  String get similarAyahIndexUnavailable =>
+      'The similar-ayah list has not been approved yet, so it is not available here.';
 }

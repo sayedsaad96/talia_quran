@@ -30,6 +30,8 @@ class _FakeProgressDatasource implements ProgressLocalDatasource {
 }
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
   _FakeMemPlusDatasource(this.records);
   final List<AyahReviewRecordModel> records;
   ParentSettingsModel _parentSettings = const ParentSettingsModel.defaults();

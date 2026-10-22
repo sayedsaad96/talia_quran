@@ -4,12 +4,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
+import '../../../../core/services/sleep_timer.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import 'quran_audio_equalizer.dart';
+import 'reader_repeat_sheet.dart';
 
 /// Docked audio bar for the adult reader (presentation only).
 ///
@@ -17,7 +21,21 @@ import 'quran_audio_equalizer.dart';
 /// layout directly above the footer instead of covering the Mushaf. It reads
 /// the same [QuranAudioPlayerCubit] — no second controller or audio state.
 class ReaderDockedAudioBar extends StatelessWidget {
-  const ReaderDockedAudioBar({super.key});
+  const ReaderDockedAudioBar({super.key, this.showRepeatControls});
+
+  /// Overrides the [ExperienceFeature.readerRepeat] lookup (tests).
+  final bool? showRepeatControls;
+
+  bool get _repeatEnabled {
+    final override = showRepeatControls;
+    if (override != null) return override;
+    try {
+      return getIt.isRegistered<ExperienceFlags>() &&
+          getIt<ExperienceFlags>().isEnabled(ExperienceFeature.readerRepeat);
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +166,25 @@ class ReaderDockedAudioBar extends StatelessWidget {
                   ),
                 ),
               ),
+              // A bedtime surah queue owns its own timer and settings.
+              if (_repeatEnabled && !state.isSurahQueue)
+                IconButton(
+                  key: const ValueKey('reader-repeat-button'),
+                  icon: Icon(
+                    TaliaIcons.repeat,
+                    size: 20,
+                    color: state.repeat.isDefault &&
+                            state.sleepChoice == SleepTimerChoice.off
+                        ? context.tokens.textHint
+                        : primary,
+                  ),
+                  tooltip: context.l10n.readerRepeatTitle,
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    ReaderRepeatSheet.show(context);
+                  },
+                  visualDensity: VisualDensity.compact,
+                ),
               IconButton(
                 icon: Icon(
                   TaliaIcons.close,

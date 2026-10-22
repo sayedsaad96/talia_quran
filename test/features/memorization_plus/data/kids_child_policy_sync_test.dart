@@ -648,23 +648,26 @@ void main() {
       expect((await local()).policySyncedVersion, 1);
     });
 
-    test('a device known unlinked (synced 0, link false) is not pending', () async {
-      await seed(
-        const ParentSettings(
-          pinHash: 'secure-v2',
-          policyLinkConfirmed: false,
-        ),
-      );
-      final cas = _FakeCas([]);
+    test(
+      'a device known unlinked (synced 0, link false) is not pending',
+      () async {
+        await seed(
+          const ParentSettings(
+            pinHash: 'secure-v2',
+            policyLinkConfirmed: false,
+          ),
+        );
+        final cas = _FakeCas([]);
 
-      await sync.pushPending(
-        ownerId: ownerId,
-        childUserId: ownerId,
-        casRpc: cas.call,
-      );
+        await sync.pushPending(
+          ownerId: ownerId,
+          childUserId: ownerId,
+          casRpc: cas.call,
+        );
 
-      expect(cas.calls, isEmpty);
-    });
+        expect(cas.calls, isEmpty);
+      },
+    );
 
     test('nothing pending sends nothing', () async {
       final cas = _FakeCas([]);
@@ -680,6 +683,48 @@ void main() {
   });
 
   group('guardian edit', () {
+    test(
+      'v2 preserves nullable hints while child transport remains v1',
+      () async {
+        final row = {
+          ..._row(version: 4),
+          'next_surah_id': 114,
+          'ayahs_per_session': 7,
+          'practice_days': 0,
+        };
+        final policy = KidsChildPolicySync.policyFromRow(row)!;
+        final cas = _FakeCas([
+          {
+            'applied': true,
+            'version': 5,
+            'policy': {...row, 'version': 5},
+          },
+        ]);
+        final result = await sync.casRemote(
+          childUserId: 'child-1',
+          policy: policy,
+          expectedVersion: 4,
+          casRpc: cas.call,
+          useV2: true,
+        );
+        expect(result.isRight(), isTrue);
+        expect(cas.calls.single['p_next_surah_id'], 114);
+        expect(cas.calls.single['p_practice_days'], 0);
+        expect(
+          result.getOrElse(() => throw StateError('failed')).remotePlan,
+          policy.remotePlan,
+        );
+        expect(
+          KidsChildPolicySync.casParams(
+            'child-1',
+            policy,
+            4,
+          ).containsKey('p_next_surah_id'),
+          isFalse,
+        );
+      },
+    );
+
     test('CAS uses the summary version for the child id', () async {
       final cas = _FakeCas([
         {'applied': true, 'version': 3, 'policy': _row(version: 3)},

@@ -20,6 +20,51 @@ void main() {
     }
   });
 
+  test('roadmap flags are appended in order and off by default', () async {
+    expect(KidsEnrichmentFeature.values.map((e) => e.name).toList(), [
+      'homeMissionTemplates',
+      'effortAchievements',
+      'weeklyCoaching',
+      'familyPractice',
+      'learningLessons',
+      'spokenGuidance',
+      'supportProfile',
+      'supportActions',
+      'learningGames',
+      'worldGrowth',
+      'weeklyPack',
+      'recitationPortfolio',
+      'guardianCertificates',
+      'bedtimeListening',
+      'guardianPromise',
+      'guardianRecitation',
+      'guardianMilestones',
+      'monthlyReport',
+      'remotePlan',
+      'remotePromise',
+      'encouragements',
+    ]);
+    await seed({});
+    final flags = KidsEnrichmentFlags.fromPreferences(prefs);
+    for (final name in [
+      'guardianCertificates',
+      'bedtimeListening',
+      'guardianPromise',
+      'guardianRecitation',
+      'guardianMilestones',
+      'monthlyReport',
+      'remotePlan',
+      'remotePromise',
+      'encouragements',
+    ]) {
+      final feature = KidsEnrichmentFeature.values.firstWhere(
+        (e) => e.name == name,
+      );
+      expect(feature.storageKey, 'kids_enrichment_$name');
+      expect(flags.isEnabled(feature), isFalse, reason: name);
+    }
+  });
+
   test('a flag turns on only its own feature', () async {
     await seed({KidsEnrichmentFeature.homeMissionTemplates.storageKey: true});
     final flags = KidsEnrichmentFlags.fromPreferences(prefs);

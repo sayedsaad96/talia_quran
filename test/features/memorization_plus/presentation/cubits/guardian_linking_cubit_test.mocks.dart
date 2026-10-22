@@ -13,10 +13,12 @@ import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
     as _i8;
 import 'package:talia_quran/core/sync/sync_result.dart' as _i7;
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
-    as _i11;
+    as _i12;
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart'
-    as _i10;
+    as _i11;
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart'
+    as _i10;
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart'
     as _i9;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
     as _i6;
@@ -521,16 +523,22 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, List<_i6.KidsJourneyStage>>>
-  getKidsJourney({required int? surahId}) =>
+  getKidsJourney({required int? surahId, bool? freezeForSession = false}) =>
       (super.noSuchMethod(
-            Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+            Invocation.method(#getKidsJourney, [], {
+              #surahId: surahId,
+              #freezeForSession: freezeForSession,
+            }),
             returnValue:
                 _i4.Future<
                   _i2.Either<_i5.Failure, List<_i6.KidsJourneyStage>>
                 >.value(
                   _FakeEither_0<_i5.Failure, List<_i6.KidsJourneyStage>>(
                     this,
-                    Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+                    Invocation.method(#getKidsJourney, [], {
+                      #surahId: surahId,
+                      #freezeForSession: freezeForSession,
+                    }),
                   ),
                 ),
           )
@@ -651,6 +659,83 @@ class MockMemorizationPlusRepository extends _i1.Mock
           as _i4.Future<_i2.Either<_i5.Failure, void>>);
 
   @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>> setKidsAyahsPerHouse(
+    int? count,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#setKidsAyahsPerHouse, [count]),
+            returnValue:
+                _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>.value(
+                  _FakeEither_0<_i5.Failure, _i6.ParentSettings>(
+                    this,
+                    Invocation.method(#setKidsAyahsPerHouse, [count]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, _i9.KidsJourneyPathDefinition>>
+  getKidsJourneyPath() =>
+      (super.noSuchMethod(
+            Invocation.method(#getKidsJourneyPath, []),
+            returnValue:
+                _i4.Future<
+                  _i2.Either<_i5.Failure, _i9.KidsJourneyPathDefinition>
+                >.value(
+                  _FakeEither_0<_i5.Failure, _i9.KidsJourneyPathDefinition>(
+                    this,
+                    Invocation.method(#getKidsJourneyPath, []),
+                  ),
+                ),
+          )
+          as _i4.Future<
+            _i2.Either<_i5.Failure, _i9.KidsJourneyPathDefinition>
+          >);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>> setKidsJourneyPath(
+    _i9.KidsJourneyPathId? id,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#setKidsJourneyPath, [id]),
+            returnValue:
+                _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>.value(
+                  _FakeEither_0<_i5.Failure, _i6.ParentSettings>(
+                    this,
+                    Invocation.method(#setKidsJourneyPath, [id]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>> setKidsSurahSplit(
+    int? surahId, {
+    required bool? whole,
+    int? stageSize,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #setKidsSurahSplit,
+              [surahId],
+              {#whole: whole, #stageSize: stageSize},
+            ),
+            returnValue:
+                _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>.value(
+                  _FakeEither_0<_i5.Failure, _i6.ParentSettings>(
+                    this,
+                    Invocation.method(
+                      #setKidsSurahSplit,
+                      [surahId],
+                      {#whole: whole, #stageSize: stageSize},
+                    ),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, _i6.ParentSettings>>);
+
+  @override
   _i4.Future<_i2.Either<_i5.Failure, bool>> verifyParentPin(String? pin) =>
       (super.noSuchMethod(
             Invocation.method(#verifyParentPin, [pin]),
@@ -691,17 +776,26 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, List<_i6.ParentReward>>> saveParentReward(
-    String? title,
-  ) =>
+    String? title, {
+    int? milestoneSurahId,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#saveParentReward, [title]),
+            Invocation.method(
+              #saveParentReward,
+              [title],
+              {#milestoneSurahId: milestoneSurahId},
+            ),
             returnValue:
                 _i4.Future<
                   _i2.Either<_i5.Failure, List<_i6.ParentReward>>
                 >.value(
                   _FakeEither_0<_i5.Failure, List<_i6.ParentReward>>(
                     this,
-                    Invocation.method(#saveParentReward, [title]),
+                    Invocation.method(
+                      #saveParentReward,
+                      [title],
+                      {#milestoneSurahId: milestoneSurahId},
+                    ),
                   ),
                 ),
           )
@@ -726,72 +820,72 @@ class MockMemorizationPlusRepository extends _i1.Mock
           as _i4.Future<_i2.Either<_i5.Failure, List<_i6.ParentReward>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   getHomeMissions() =>
       (super.noSuchMethod(
             Invocation.method(#getHomeMissions, []),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#getHomeMissions, []),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   addLocalHomeMission(String? title) =>
       (super.noSuchMethod(
             Invocation.method(#addLocalHomeMission, [title]),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#addLocalHomeMission, [title]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   reportHomeMission(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#reportHomeMission, [id]),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#reportHomeMission, [id]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   acknowledgeLocalHomeMission(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#acknowledgeLocalHomeMission, [id]),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#acknowledgeLocalHomeMission, [id]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, String>> createChildLinkToken() =>
@@ -877,11 +971,13 @@ class MockMemorizationPlusRepository extends _i1.Mock
   saveRemoteParentReward({
     required String? childUserId,
     required String? title,
+    int? milestoneSurahId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveRemoteParentReward, [], {
               #childUserId: childUserId,
               #title: title,
+              #milestoneSurahId: milestoneSurahId,
             }),
             returnValue:
                 _i4.Future<
@@ -892,6 +988,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                     Invocation.method(#saveRemoteParentReward, [], {
                       #childUserId: childUserId,
                       #title: title,
+                      #milestoneSurahId: milestoneSurahId,
                     }),
                   ),
                 ),
@@ -916,7 +1013,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
           as _i4.Future<_i2.Either<_i5.Failure, List<_i6.ParentReward>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   createRemoteHomeMission({
     required String? childUserId,
     required String? title,
@@ -928,9 +1025,9 @@ class MockMemorizationPlusRepository extends _i1.Mock
             }),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#createRemoteHomeMission, [], {
                       #childUserId: childUserId,
@@ -939,18 +1036,18 @@ class MockMemorizationPlusRepository extends _i1.Mock
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   acknowledgeRemoteHomeMission(String? missionId) =>
       (super.noSuchMethod(
             Invocation.method(#acknowledgeRemoteHomeMission, [missionId]),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#acknowledgeRemoteHomeMission, [
                       missionId,
@@ -958,45 +1055,45 @@ class MockMemorizationPlusRepository extends _i1.Mock
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>
   getRemoteHomeMissions(String? childUserId) =>
       (super.noSuchMethod(
             Invocation.method(#getRemoteHomeMissions, [childUserId]),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>
+                  _i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i9.KidsHomeMission>>(
+                  _FakeEither_0<_i5.Failure, List<_i10.KidsHomeMission>>(
                     this,
                     Invocation.method(#getRemoteHomeMissions, [childUserId]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i9.KidsHomeMission>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i10.KidsHomeMission>>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>
-  saveLocalChildPolicy(_i10.KidsChildPolicy? policy) =>
+  _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>
+  saveLocalChildPolicy(_i11.KidsChildPolicy? policy) =>
       (super.noSuchMethod(
             Invocation.method(#saveLocalChildPolicy, [policy]),
             returnValue:
-                _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>.value(
-                  _FakeEither_0<_i5.Failure, _i10.KidsChildPolicy>(
+                _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>.value(
+                  _FakeEither_0<_i5.Failure, _i11.KidsChildPolicy>(
                     this,
                     Invocation.method(#saveLocalChildPolicy, [policy]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>);
+          as _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>
+  _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>
   saveRemoteChildPolicy({
     required String? childUserId,
-    required _i10.KidsChildPolicy? policy,
+    required _i11.KidsChildPolicy? policy,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveRemoteChildPolicy, [], {
@@ -1004,8 +1101,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
               #policy: policy,
             }),
             returnValue:
-                _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>.value(
-                  _FakeEither_0<_i5.Failure, _i10.KidsChildPolicy>(
+                _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>.value(
+                  _FakeEither_0<_i5.Failure, _i11.KidsChildPolicy>(
                     this,
                     Invocation.method(#saveRemoteChildPolicy, [], {
                       #childUserId: childUserId,
@@ -1014,7 +1111,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, _i10.KidsChildPolicy>>);
+          as _i4.Future<_i2.Either<_i5.Failure, _i11.KidsChildPolicy>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.KidsCompletionResult>>
@@ -1030,6 +1127,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
     int? attemptCount = 1,
     int? hintCount = 0,
     _i6.PerformanceRating? masteryRating = _i6.PerformanceRating.excellent,
+    bool? firstTryBonusEligible = true,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#awardKidsPoints, [], {
@@ -1044,6 +1142,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
               #attemptCount: attemptCount,
               #hintCount: hintCount,
               #masteryRating: masteryRating,
+              #firstTryBonusEligible: firstTryBonusEligible,
             }),
             returnValue:
                 _i4.Future<
@@ -1063,6 +1162,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                       #attemptCount: attemptCount,
                       #hintCount: hintCount,
                       #masteryRating: masteryRating,
+                      #firstTryBonusEligible: firstTryBonusEligible,
                     }),
                   ),
                 ),
@@ -1192,25 +1292,25 @@ class MockMemorizationPlusRepository extends _i1.Mock
           as _i4.Future<_i2.Either<_i5.Failure, void>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, List<_i11.CertificateAward>>>
+  _i4.Future<_i2.Either<_i5.Failure, List<_i12.CertificateAward>>>
   pullCertificatesFromCloud() =>
       (super.noSuchMethod(
             Invocation.method(#pullCertificatesFromCloud, []),
             returnValue:
                 _i4.Future<
-                  _i2.Either<_i5.Failure, List<_i11.CertificateAward>>
+                  _i2.Either<_i5.Failure, List<_i12.CertificateAward>>
                 >.value(
-                  _FakeEither_0<_i5.Failure, List<_i11.CertificateAward>>(
+                  _FakeEither_0<_i5.Failure, List<_i12.CertificateAward>>(
                     this,
                     Invocation.method(#pullCertificatesFromCloud, []),
                   ),
                 ),
           )
-          as _i4.Future<_i2.Either<_i5.Failure, List<_i11.CertificateAward>>>);
+          as _i4.Future<_i2.Either<_i5.Failure, List<_i12.CertificateAward>>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, void>> pushCertificatesToCloud(
-    List<_i11.CertificateAward>? certificates,
+    List<_i12.CertificateAward>? certificates,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#pushCertificatesToCloud, [certificates]),

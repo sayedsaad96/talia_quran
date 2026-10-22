@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
@@ -1351,6 +1352,225 @@ void main() {
       );
 
       expect(entry, findsNothing);
+    });
+  });
+
+  group('guardian recitation (item 20)', () {
+    Future<void> pumpContent(
+      WidgetTester tester,
+      KidsModeLoaded state, {
+      VoidCallback? onGuardianRecitation,
+      ValueChanged<PerformanceRating>? onGuardianGrade,
+      VoidCallback? onGuardianRetry,
+      VoidCallback? onGuardianExit,
+      VoidCallback? onRecord,
+    }) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1600);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: state,
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: onRecord ?? () {},
+            onStopRecording: () {},
+            onTryFromMemory: () {},
+            onGuardianRecitation: onGuardianRecitation,
+            onGuardianGrade: onGuardianGrade,
+            onGuardianRetry: onGuardianRetry,
+            onGuardianExit: onGuardianExit,
+          ),
+        ),
+      );
+    }
+
+    final entry = find.byKey(const ValueKey('kids-guardian-recitation-open'));
+    final listened = _baseState.copyWith(currentLoop: 3);
+
+    testWidgets('with the flag off there is no button', (tester) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags((_) => false),
+      );
+      addTearDown(() => getIt.unregister<KidsEnrichmentFlags>());
+
+      expect(kidsGuardianRecitationEnabled(), isFalse);
+      await pumpContent(tester, listened);
+      expect(entry, findsNothing);
+    });
+
+    testWidgets('the flag on enables the entry', (tester) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => key == KidsEnrichmentFeature.guardianRecitation.storageKey,
+        ),
+      );
+      addTearDown(() => getIt.unregister<KidsEnrichmentFlags>());
+
+      expect(kidsGuardianRecitationEnabled(), isTrue);
+    });
+
+    testWidgets('shows after the listens and calls back on tap', (
+      tester,
+    ) async {
+      var opened = false;
+      await pumpContent(
+        tester,
+        listened,
+        onGuardianRecitation: () => opened = true,
+      );
+
+      expect(find.text('Recite to your guardian'), findsOneWidget);
+      await tester.ensureVisible(entry);
+      await tester.tap(entry);
+      expect(opened, isTrue);
+    });
+
+    testWidgets('waits for the required listens', (tester) async {
+      await pumpContent(tester, _baseState, onGuardianRecitation: () {});
+
+      expect(entry, findsNothing);
+    });
+
+    testWidgets('never appears while recording or once completed', (
+      tester,
+    ) async {
+      await pumpContent(
+        tester,
+        listened.copyWith(isRecording: true),
+        onGuardianRecitation: () {},
+      );
+      expect(entry, findsNothing);
+
+      await pumpContent(
+        tester,
+        listened.copyWith(isCompleted: true),
+        onGuardianRecitation: () {},
+      );
+      expect(entry, findsNothing);
+    });
+
+    testWidgets('the mode offers three grades and no microphone', (
+      tester,
+    ) async {
+      final grades = <PerformanceRating>[];
+      var retried = 0;
+      var recorded = false;
+      await pumpContent(
+        tester,
+        listened.copyWith(isGuardianAssessing: true),
+        onGuardianRecitation: () {},
+        onGuardianGrade: grades.add,
+        onGuardianRetry: () => retried++,
+        onRecord: () => recorded = true,
+      );
+
+      expect(
+        find.text('Ask your guardian to listen and grade'),
+        findsOneWidget,
+      );
+      expect(entry, findsNothing);
+      expect(
+        find.byKey(const ValueKey('kids-gamified-record-recitation-idle')),
+        findsNothing,
+      );
+
+      for (final key in [
+        'kids-guardian-grade-excellent',
+        'kids-guardian-grade-review',
+        'kids-guardian-grade-retry',
+      ]) {
+        final button = find.byKey(ValueKey(key));
+        await tester.ensureVisible(button);
+        await tester.tap(button);
+        await tester.pump();
+      }
+
+      expect(grades, [PerformanceRating.excellent, PerformanceRating.average]);
+      expect(retried, 1);
+      expect(recorded, isFalse);
+    });
+
+    testWidgets('the guardian text is hidden by default and toggles', (
+      tester,
+    ) async {
+      // The cubit always opens the mode in recall (ayah hidden).
+      final assessing = _recallState().copyWith(isGuardianAssessing: true);
+      final text = find.byKey(const ValueKey('kids-guardian-recitation-text'));
+      final toggle = find.byKey(const ValueKey('kids-guardian-text-toggle'));
+      await pumpContent(
+        tester,
+        assessing,
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+      );
+
+      expect(text, findsNothing);
+      expect(find.byType(MemorizationAyahDisplay), findsNothing);
+      expect(find.text('Show the text to the guardian'), findsOneWidget);
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pump();
+      expect(text, findsOneWidget);
+      expect(find.byType(MemorizationAyahDisplay), findsOneWidget);
+      expect(find.text('Hide the text'), findsOneWidget);
+
+      // Leaving and re-entering the mode hides it again.
+      await pumpContent(tester, listened);
+      await pumpContent(
+        tester,
+        assessing,
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+      );
+      expect(text, findsNothing);
+    });
+
+    testWidgets('the guardian can end the mode', (tester) async {
+      var exited = false;
+      await pumpContent(
+        tester,
+        listened.copyWith(isGuardianAssessing: true),
+        onGuardianGrade: (_) {},
+        onGuardianRetry: () {},
+        onGuardianExit: () => exited = true,
+      );
+
+      final exit = find.byKey(const ValueKey('kids-guardian-recitation-exit'));
+      expect(find.text('End'), findsOneWidget);
+      await tester.ensureVisible(exit);
+      await tester.tap(exit);
+      expect(exited, isTrue);
+    });
+
+    testWidgets('fits a 320px Arabic screen', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 900);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _TestApp(
+          locale: const Locale('ar'),
+          child: KidsGamifiedListenContent(
+            state: listened.copyWith(isGuardianAssessing: true),
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onGuardianGrade: (_) {},
+            onGuardianRetry: () {},
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
     });
   });
 }

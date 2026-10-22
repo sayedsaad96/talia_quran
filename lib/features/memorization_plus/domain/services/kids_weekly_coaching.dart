@@ -66,6 +66,19 @@ class KidsWeeklyCoaching extends Equatable {
   ];
 }
 
+/// A due or linked review session. Shared with the monthly report so both
+/// summaries count reviews the same way.
+bool kidsLogIsReview(KidsSessionLog log) =>
+    log.missionType == KidsMissionType.dueReview ||
+    log.missionType == KidsMissionType.linkedReview;
+
+/// A session in which the child used at least one hint.
+bool kidsLogUsedHint(KidsSessionLog log) => log.hintCount > 0;
+
+/// A session that asked for new memorization.
+bool kidsLogIsNewMemorization(KidsSessionLog log) =>
+    log.missionType == KidsMissionType.newMemorization;
+
 /// Pure summary of the last seven local calendar days, today included.
 ///
 /// [historyComplete] must be true only when [logs] is the child's whole
@@ -109,18 +122,10 @@ KidsWeeklyCoaching buildKidsWeeklyCoaching({
     days.add(day);
   }
 
-  final reviews = week
-      .where(
-        (l) =>
-            l.missionType == KidsMissionType.dueReview ||
-            l.missionType == KidsMissionType.linkedReview,
-      )
-      .length;
-  final withHints = week.where((l) => l.hintCount > 0).length;
+  final reviews = week.where(kidsLogIsReview).length;
+  final withHints = week.where(kidsLogUsedHint).length;
   final retried = week.where((l) => l.attemptCount > 1).length;
-  final newAyahs = week
-      .where((l) => l.missionType == KidsMissionType.newMemorization)
-      .length;
+  final newAyahs = week.where(kidsLogIsNewMemorization).length;
 
   KidsWeeklyCoachingTip tip;
   if (week.isEmpty) {

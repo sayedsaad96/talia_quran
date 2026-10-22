@@ -21,6 +21,7 @@ class KidsJourneySegment extends StatelessWidget {
     required this.onTap,
     required this.onLockedTap,
     this.celebrate = false,
+    this.useStageWording = false,
   });
 
   final KidsJourneyStage stage;
@@ -35,6 +36,9 @@ class KidsJourneySegment extends StatelessWidget {
 
   /// K37 — the house was finished since the last visit.
   final bool celebrate;
+
+  /// Quran journey wording («المرحلة»).
+  final bool useStageWording;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +78,7 @@ class KidsJourneySegment extends StatelessWidget {
                       onTap: onTap,
                       onLockedTap: onLockedTap,
                       celebrate: celebrate,
+                      useStageWording: useStageWording,
                     ),
                   ),
                 ),

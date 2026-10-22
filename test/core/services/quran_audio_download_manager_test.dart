@@ -1,0 +1,348 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:dartz/dartz.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/services/quran_audio_download_manager.dart';
+import 'package:talia_quran/core/services/audio_cache_service.dart';
+import 'package:talia_quran/core/services/quran_reciter.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
+import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
+
+void main() {
+  late _QuranRepository repository;
+  late _DurableCache cache;
+  late QuranAudioDownloadManager manager;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    repository = _QuranRepository();
+    cache = _DurableCache();
+    manager = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => 500 * 1024 * 1024,
+      estimatedBytesPerAyah: 1,
+    );
+  });
+
+  test(
+    'waits for an explicit decision when Wi-Fi type is unavailable',
+    () async {
+      final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ]).toList();
+      expect(progress.last.phase, DownloadPhase.waitingForNetworkConfirmation);
+      expect(cache.fetchCalls, 0);
+    },
+  );
+
+  test('marks a full surah only after every canonical ayah is valid', () async {
+    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(progress.last.phase, DownloadPhase.completed);
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isTrue);
+    expect(cache.fetchCalls, 2);
+  });
+
+  test(
+    'skips valid files and recovers a missing file after a restart',
+    () async {
+      await manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).drain();
+      expect(cache.fetchCalls, 2);
+      await manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).drain();
+      expect(cache.fetchCalls, 2);
+
+      cache.remove(QuranReciter.alafasy, 1, 1);
+      manager = QuranAudioDownloadManager(
+        await SharedPreferences.getInstance(),
+        repository,
+        cache: cache,
+        freeBytes: () async => 500 * 1024 * 1024,
+        estimatedBytesPerAyah: 1,
+      );
+      await manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).drain();
+      expect(cache.fetchCalls, 3);
+      expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isTrue);
+    },
+  );
+
+  test('an HTML 200 (captive portal) is evicted and never recorded', () async {
+    cache.payload = '<html>login</html>'.codeUnits;
+    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(progress.last.phase, DownloadPhase.failed);
+    expect(cache.evicted, hasLength(2));
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+    expect(await manager.usedBytes(reciter: QuranReciter.alafasy), 0);
+  });
+
+  test('ID3 tagged audio is accepted', () async {
+    cache.payload = [0x49, 0x44, 0x33, 4];
+    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(progress.last.phase, DownloadPhase.completed);
+  });
+
+  test('manifest is persisted once per surah, not per ayah', () async {
+    final prefs = await SharedPreferences.getInstance();
+    var writes = 0;
+    final counting = _CountingPrefs(prefs, () => writes++);
+    final m = QuranAudioDownloadManager(
+      counting,
+      repository,
+      cache: cache,
+      freeBytes: () async => 500 * 1024 * 1024,
+      estimatedBytesPerAyah: 1,
+    );
+    await m.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    // one flush at the end of the surah + one after completion marking.
+    expect(writes, lessThanOrEqualTo(2));
+  });
+
+  test('a split juz keeps its partial surah resumable, not complete', () async {
+    final progress = await manager
+        .downloadJuz(QuranReciter.alafasy, 1, allowUnverifiedNetwork: true)
+        .toList();
+    expect(progress.last.phase, DownloadPhase.completed);
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+  });
+
+  test('reports actual bytes and keeps reciter stores independent', () async {
+    await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    await manager.downloadSurahs(QuranReciter.sudais, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    expect(await manager.usedBytes(reciter: QuranReciter.alafasy), 4);
+    await manager.deleteReciter(QuranReciter.alafasy);
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+    expect(await manager.isDownloaded(QuranReciter.sudais, 1), isTrue);
+  });
+
+  test('refuses known-low space and flags unknown free space', () async {
+    final low = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => 0,
+      estimatedBytesPerAyah: 1,
+    );
+    expect(
+      (await low.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).toList()).last.phase,
+      DownloadPhase.insufficientSpace,
+    );
+    final unknown = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: _DurableCache(),
+      freeBytes: () async => null,
+      estimatedBytesPerAyah: 1,
+    );
+    final progress = await unknown.downloadSurahs(QuranReciter.sudais, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(progress.last.spaceUnknown, isTrue);
+  });
+
+  test(
+    'cancel awaits a pending fetch and prevents a late completion',
+    () async {
+      cache.pending = Completer<File>();
+      final stream = manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).drain();
+      await cache.started.future;
+      final cancelled = manager.cancel();
+      var completed = false;
+      unawaited(cancelled.then((_) => completed = true));
+      await Future<void>.delayed(Duration.zero);
+      expect(completed, isFalse);
+      await cache.completePending();
+      await cancelled;
+      await stream;
+      expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+      final reopened = QuranAudioDownloadManager(
+        await SharedPreferences.getInstance(),
+        repository,
+        cache: cache,
+      );
+      expect(await reopened.usedBytes(reciter: QuranReciter.alafasy), 2);
+    },
+  );
+
+  test('delete waits for a pending fetch and cannot be resurrected', () async {
+    cache.pending = Completer<File>();
+    final stream = manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    await cache.started.future;
+    final deleted = manager.deleteReciter(QuranReciter.alafasy);
+    await cache.completePending();
+    await deleted;
+    await stream;
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+  });
+
+  test(
+    'durable audio wins for every lookup with explicit and default reciters',
+    () async {
+      final durable = _Lookup('/durable/audio.mp3');
+      final service = AudioCacheService(durableLookup: durable);
+      expect(
+        await service.getAudioPath(1, 1, reciter: QuranReciter.sudais),
+        '/durable/audio.mp3',
+      );
+      expect(await service.getAudioSource(1, 1), '/durable/audio.mp3');
+      expect(await service.getCachedFilePath(1, 1), '/durable/audio.mp3');
+      expect(durable.reciters, [QuranReciter.sudais, null, null]);
+    },
+  );
+}
+
+class _DurableCache extends QuranAudioDurableCache {
+  _DurableCache();
+  final _files = <String, File>{};
+  int fetchCalls = 0;
+  Completer<File>? pending;
+  Completer<void> started = Completer<void>();
+  List<int>? payload;
+  final evicted = <String>[];
+
+  String _key(int surah, int ayah, QuranReciter? reciter) =>
+      '${reciter?.id}:$surah:$ayah';
+
+  @override
+  Future<String?> getValidFilePath(
+    int surahId,
+    int ayahNumber, {
+    QuranReciter? reciter,
+  }) async => _files[_key(surahId, ayahNumber, reciter)]?.path;
+
+  @override
+  Future<File> fetch(QuranReciter reciter, int surahId, int ayahNumber) async {
+    fetchCalls++;
+    if (!started.isCompleted) started.complete();
+    final waiting = pending;
+    if (waiting != null) return waiting.future;
+    return _create(reciter, surahId, ayahNumber);
+  }
+
+  Future<void> completePending() async {
+    final waiting = pending;
+    if (waiting == null || waiting.isCompleted) return;
+    waiting.complete(await _create(QuranReciter.alafasy, 1, 1));
+  }
+
+  Future<File> _create(
+    QuranReciter reciter,
+    int surahId,
+    int ayahNumber,
+  ) async {
+    final file = File(
+      '${Directory.systemTemp.path}/talia_d3_${reciter.id}_${surahId}_$ayahNumber.mp3',
+    );
+    await file.writeAsBytes(payload ?? [0xFF, 0xFB]);
+    _files[_key(surahId, ayahNumber, reciter)] = file;
+    return file;
+  }
+
+  void remove(QuranReciter reciter, int surahId, int ayahNumber) {
+    _files.remove(_key(surahId, ayahNumber, reciter));
+  }
+
+  @override
+  Future<void> evict(QuranReciter reciter, int surahId, int ayahNumber) async {
+    evicted.add(_key(surahId, ayahNumber, reciter));
+    await _files.remove(_key(surahId, ayahNumber, reciter))?.delete();
+  }
+
+  @override
+  Future<void> deleteReciter(QuranReciter reciter) async {
+    _files.removeWhere((key, _) => key.startsWith('${reciter.id}:'));
+  }
+}
+
+class _CountingPrefs extends Fake implements SharedPreferences {
+  _CountingPrefs(this._inner, this._onWrite);
+  final SharedPreferences _inner;
+  final void Function() _onWrite;
+  @override
+  String? getString(String key) => _inner.getString(key);
+  @override
+  Future<bool> setString(String key, String value) {
+    _onWrite();
+    return _inner.setString(key, value);
+  }
+}
+
+class _Lookup implements QuranAudioDurableLookup {
+  _Lookup(this.path);
+  final String path;
+  final reciters = <QuranReciter?>[];
+  @override
+  Future<String?> getValidFilePath(
+    int surahId,
+    int ayahNumber, {
+    QuranReciter? reciter,
+  }) async {
+    reciters.add(reciter);
+    return path;
+  }
+}
+
+class _QuranRepository implements QuranRepository {
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
+    if (surahId != 1) return Right(_detail(surahId, const []));
+    return Right(
+      _detail(1, const [
+        Ayah(number: 1, surahId: 1, text: '', numberInSurah: 1, juz: 1),
+        Ayah(number: 2, surahId: 1, text: '', numberInSurah: 2, juz: 2),
+      ]),
+    );
+  }
+
+  SurahDetail _detail(int id, List<Ayah> ayahs) => SurahDetail(
+    surah: Surah(
+      id: id,
+      nameAr: '',
+      nameEn: '',
+      ayahCount: ayahs.length,
+      juz: 1,
+      type: 'meccan',
+      page: 1,
+    ),
+    ayahs: ayahs,
+  );
+
+  @override
+  Future<Either<Failure, QuranPageDetail>> getQuranPage(int pageNumber) =>
+      throw UnimplementedError();
+  @override
+  Future<Either<Failure, List<Surah>>> getSurahs() =>
+      throw UnimplementedError();
+  @override
+  Future<Either<Failure, List<Ayah>>> searchAyahs(String query) =>
+      throw UnimplementedError();
+  @override
+  Future<Either<Failure, List<Surah>>> searchSurahs(String query) =>
+      throw UnimplementedError();
+}

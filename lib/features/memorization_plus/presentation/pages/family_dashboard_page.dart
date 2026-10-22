@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/memorization/kids_hifz_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -19,14 +21,17 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../application/guardian_session_controller.dart';
 import '../../domain/entities/kids_child_policy.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/family_child_name.dart';
 import '../widgets/family_remote_status_banner.dart';
+import '../widgets/guardian_news_section.dart';
 import '../widgets/guardian_session_scope.dart';
 import '../widgets/kids_policy_controls.dart';
 import '../widgets/kids_house_size_selector.dart';
+import '../widgets/kids_journey_path_selector.dart';
 import 'child_detail_page.dart';
 
 import '../../../../core/widgets/locale_time_picker.dart';
@@ -186,7 +191,10 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
             );
           }
           if (state is FamilyDashboardLoaded) {
-            return _FamilyLoadedBody(dashboard: state.dashboard);
+            return _FamilyLoadedBody(
+              dashboard: state.dashboard,
+              news: state.news,
+            );
           }
           return const SizedBox.shrink();
         },
@@ -223,6 +231,8 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
       FamilyDashboardFeedbackType.reminderSaved =>
         l10n.parentDashboardReminderSaved,
       FamilyDashboardFeedbackType.houseSizeSaved => l10n.kidsHouseSizeSaved,
+      FamilyDashboardFeedbackType.settingsSaved =>
+        l10n.parentDashboardSettingsSaved,
       FamilyDashboardFeedbackType.accountPasswordIncorrect =>
         l10n.parentDashboardAccountPasswordIncorrect,
       FamilyDashboardFeedbackType.accountCheckUnavailable =>
@@ -318,105 +328,11 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (hasLocalChild) ...[
-                  KidsHouseSizeSelector(
-                    current: settings.kidsAyahsPerHouse,
-                    onSave: (count) async {
-                      final saved = await dashboardCubit.setKidsHouseSize(
-                        count,
-                      );
-                      if (saved && sheetContext.mounted) {
-                        Navigator.pop(sheetContext);
-                      }
-                      return saved;
-                    },
+                if (hasLocalChild)
+                  _LocalChildSettingsForm(
+                    settings: settings,
+                    cubit: dashboardCubit,
                   ),
-                  const Divider(),
-                  Text(
-                    context.l10n.kidsJourneyBetaTitle,
-                    style: AppTypography.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  SwitchListTile(
-                    title: Text(context.l10n.kidsJourneyBetaTitle),
-                    subtitle: Text(context.l10n.kidsJourneyBetaDescription),
-                    value: settings.kidsHifzV2Enabled,
-                    onChanged: (value) async {
-                      await dashboardCubit.saveSettings(
-                        settings.copyWith(kidsHifzV2Enabled: value),
-                      );
-                      if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    },
-                  ),
-                  // The "guidance audio" switch stays intentionally absent
-                  // until the kids session consumes the setting (K10 in
-                  // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings
-                  // keeps the stored value so nothing is lost meanwhile.
-                  // Policy fields (incl. the session goal) save through the
-                  // policy path: CAS when this device is linked, else local.
-                  KidsPolicyControls(
-                    policy: KidsChildPolicy.fromSettings(settings),
-                    onChanged: (policy) async {
-                      await dashboardCubit.saveChildPolicy(policy);
-                      if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    },
-                  ),
-                  const Divider(),
-                  Text(
-                    context.l10n.parentDashboardReminders,
-                    style: AppTypography.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  SwitchListTile(
-                    title: Text(context.l10n.parentDashboardDailyReminder),
-                    subtitle: Text(
-                      settings.reminderEnabled
-                          ? TimeOfDay(
-                              hour: settings.reminderHour,
-                              minute: settings.reminderMinute,
-                            ).format(context)
-                          : context.l10n.parentDashboardNotSet,
-                    ),
-                    value: settings.reminderEnabled,
-                    onChanged: (val) async {
-                      final cubit = dashboardCubit;
-                      final l10n = sheetContext.l10n;
-                      if (val) {
-                        final time = await showLocaleTimePicker(
-                          context: sheetContext,
-                          initialTime: TimeOfDay(
-                            hour: settings.reminderHour,
-                            minute: settings.reminderMinute,
-                          ),
-                        );
-                        if (time != null && sheetContext.mounted) {
-                          await cubit.saveSettings(
-                            settings.copyWith(
-                              reminderEnabled: true,
-                              reminderHour: time.hour,
-                              reminderMinute: time.minute,
-                            ),
-                          );
-                          await getIt<NotificationScheduler>()
-                              .refreshNotifications(l10n);
-                          if (sheetContext.mounted) {
-                            Navigator.pop(sheetContext);
-                          }
-                        }
-                      } else {
-                        await cubit.saveSettings(
-                          settings.copyWith(reminderEnabled: false),
-                        );
-                        await getIt<NotificationScheduler>()
-                            .refreshNotifications(l10n);
-                        if (sheetContext.mounted) {
-                          Navigator.pop(sheetContext);
-                        }
-                      }
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
                 // On the guardian's phone the lock is optional.
                 if (!hasLocalChild && !settings.hasPin)
                   SizedBox(
@@ -468,11 +384,177 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
   }
 }
 
+// ─── Local child settings ─────────────────────────────────────────────────────
+
+/// The local child's settings in the dashboard sheet. Every control edits a
+/// draft only; the save button writes all changes at once and closes the
+/// sheet, so the guardian can adjust several settings in one visit.
+class _LocalChildSettingsForm extends StatefulWidget {
+  const _LocalChildSettingsForm({required this.settings, required this.cubit});
+
+  final ParentSettings settings;
+  final FamilyDashboardCubit cubit;
+
+  @override
+  State<_LocalChildSettingsForm> createState() =>
+      _LocalChildSettingsFormState();
+}
+
+class _LocalChildSettingsFormState extends State<_LocalChildSettingsForm> {
+  late ParentSettings _draft = widget.settings;
+  late KidsChildPolicy _policy = KidsChildPolicy.fromSettings(widget.settings);
+  bool _saving = false;
+
+  bool get _quranJourneyEnabled =>
+      getIt.isRegistered<SharedPreferences>() &&
+      KidsHifzFeatureFlags.isQuranJourneyEnabled(getIt<SharedPreferences>());
+
+  bool get _reminderChanged =>
+      _draft.reminderEnabled != widget.settings.reminderEnabled ||
+      _draft.reminderHour != widget.settings.reminderHour ||
+      _draft.reminderMinute != widget.settings.reminderMinute;
+
+  bool get _dirty =>
+      _reminderChanged ||
+      _draft.kidsHifzV2Enabled != widget.settings.kidsHifzV2Enabled ||
+      _draft.kidsAyahsPerHouse != widget.settings.kidsAyahsPerHouse ||
+      KidsJourneyPathId.parse(_draft.kidsJourneyPathId) !=
+          KidsJourneyPathId.parse(widget.settings.kidsJourneyPathId) ||
+      _policy != KidsChildPolicy.fromSettings(widget.settings);
+
+  void _edit(ParentSettings Function(ParentSettings draft) change) =>
+      setState(() => _draft = change(_draft));
+
+  Future<void> _toggleReminder(bool enabled) async {
+    if (!enabled) {
+      _edit((d) => d.copyWith(reminderEnabled: false));
+      return;
+    }
+    final time = await showLocaleTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: _draft.reminderHour,
+        minute: _draft.reminderMinute,
+      ),
+    );
+    if (time == null || !mounted) return;
+    _edit(
+      (d) => d.copyWith(
+        reminderEnabled: true,
+        reminderHour: time.hour,
+        reminderMinute: time.minute,
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final l10n = context.l10n;
+    final reminderChanged = _reminderChanged;
+    final saved = await widget.cubit.saveLocalChildSettings(
+      original: widget.settings,
+      draft: _draft,
+      policy: _policy,
+    );
+    if (saved && reminderChanged) {
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
+    }
+    if (!mounted) return;
+    if (saved) {
+      Navigator.pop(context);
+    } else {
+      setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        KidsHouseSizeSelector(
+          current: _draft.kidsAyahsPerHouse,
+          onSave: (count) async {
+            _edit(
+              (d) => d.copyWith(
+                kidsAyahsPerHouse: count,
+                clearKidsAyahsPerHouse: count == null,
+              ),
+            );
+            return true;
+          },
+        ),
+        const Divider(),
+        if (_quranJourneyEnabled) ...[
+          KidsJourneyPathSelector(
+            value: KidsJourneyPathId.parse(_draft.kidsJourneyPathId),
+            onChanged: (id) =>
+                _edit((d) => d.copyWith(kidsJourneyPathId: id.storageValue)),
+          ),
+          const Divider(),
+        ],
+        Text(l10n.kidsJourneyBetaTitle, style: AppTypography.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        SwitchListTile(
+          title: Text(l10n.kidsJourneyBetaTitle),
+          subtitle: Text(l10n.kidsJourneyBetaDescription),
+          value: _draft.kidsHifzV2Enabled,
+          onChanged: _saving
+              ? null
+              : (value) => _edit((d) => d.copyWith(kidsHifzV2Enabled: value)),
+        ),
+        // The "guidance audio" switch stays intentionally absent until the
+        // kids session consumes the setting (K10 in
+        // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings keeps
+        // the stored value so nothing is lost meanwhile. Policy fields (incl.
+        // the session goal) save through the policy path.
+        KidsPolicyControls(
+          policy: _policy,
+          enabled: !_saving,
+          onChanged: (policy) => setState(() => _policy = policy),
+        ),
+        const Divider(),
+        Text(l10n.parentDashboardReminders, style: AppTypography.titleMedium),
+        const SizedBox(height: AppSpacing.md),
+        SwitchListTile(
+          title: Text(l10n.parentDashboardDailyReminder),
+          subtitle: Text(
+            _draft.reminderEnabled
+                ? TimeOfDay(
+                    hour: _draft.reminderHour,
+                    minute: _draft.reminderMinute,
+                  ).format(context)
+                : l10n.parentDashboardNotSet,
+          ),
+          value: _draft.reminderEnabled,
+          onChanged: _saving ? null : _toggleReminder,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        FilledButton(
+          key: const ValueKey('family-settings-save'),
+          onPressed: _dirty && !_saving ? _save : null,
+          child: _saving
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.save),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+      ],
+    );
+  }
+}
+
 // ─── Loaded body ──────────────────────────────────────────────────────────────
 
 class _FamilyLoadedBody extends StatelessWidget {
-  const _FamilyLoadedBody({required this.dashboard});
+  const _FamilyLoadedBody({required this.dashboard, this.news = const []});
   final FamilyDashboard dashboard;
+  final List<GuardianNewsItem> news;
 
   @override
   Widget build(BuildContext context) {
@@ -495,6 +577,9 @@ class _FamilyLoadedBody extends StatelessWidget {
             SliverToBoxAdapter(
               child: _FamilySummaryBanner(dashboard: dashboard),
             ),
+
+          if (news.isNotEmpty)
+            SliverToBoxAdapter(child: GuardianNewsSection(news: news)),
 
           // ─── Section label ───────────────────────────────────────────────
           SliverToBoxAdapter(

@@ -9,8 +9,11 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../kids_encouragement/presentation/cubits/child_encouragement_inbox_cubit.dart';
+import '../../../kids_encouragement/presentation/widgets/child_encouragement_inbox.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
-import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/kids_split_choice.dart';
 import '../../domain/services/kids_daily_missions.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/kids_journey_cubit.dart';
@@ -28,6 +31,7 @@ import '../widgets/kids_section_heading.dart';
 import '../widgets/kids_talia_companion.dart';
 import '../widgets/kids_talia_moments.dart';
 import '../widgets/kids_ui.dart';
+import 'kids_bedtime_listen_page.dart';
 
 /// The listening game chip shows only while its rollout flag is on.
 bool _learningGamesEnabled() =>
@@ -70,11 +74,6 @@ String kidsQuranReaderLocation(
     '${pageNumber == null ? '' : '&pageNumber=$pageNumber'}'
     '${ayahNumber == null ? '' : '&ayahNumber=$ayahNumber'}';
 
-@visibleForTesting
-String kidsMissionLocation(KidsNextMission mission) =>
-    '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
-    '&ayahNumber=${mission.startAyah}&missionType=${mission.type.name}';
-
 class _KidsGamifiedHomeView extends StatefulWidget {
   const _KidsGamifiedHomeView({required this.surahId, this.childName});
 
@@ -90,6 +89,7 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
   /// Guards against rapid double taps stacking two copies of the same
   /// destination on top of each other — a very real pattern with children.
   bool _destinationOpen = false;
+  int _encouragementRefresh = 0;
 
   /// Set once the open destination actually covers home, so the guard can be
   /// released when home is current again.
@@ -249,8 +249,11 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
           return KidsGamifiedHomeContent(
             state: state,
             childName: _nickname,
-            onRefresh: () =>
-                context.read<KidsJourneyCubit>().refresh(surahId: surahId),
+            onRefresh: () async {
+              await context.read<KidsJourneyCubit>().refresh(surahId: surahId);
+              if (mounted) setState(() => _encouragementRefresh++);
+            },
+            encouragementRefresh: _encouragementRefresh,
             onMushafTap: () => _openDestination(() async {
               if (!context.mounted) return;
               // The general Mushaf action opens Al-Fatihah. The surah query
@@ -266,8 +269,16 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
             }),
             onJourneyTap: () => _openDestination(() async {
               if (!context.mounted) return;
+              final path = getIt.isRegistered<MemorizationPlusRepository>()
+                  ? (await getIt<MemorizationPlusRepository>()
+                            .getKidsJourneyPath())
+                        .getOrElse(() => KidsJourneyPathDefinition.adventure)
+                  : KidsJourneyPathDefinition.adventure;
+              if (!context.mounted) return;
               await context.push(
-                '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
+                path.isQuranJourney
+                    ? AppRoutes.memorizationPlusKidsQuranJourney
+                    : '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
               );
             }),
             onMissionTap: () =>
@@ -295,6 +306,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
                 ? () => _openDestination(() async {
                     if (!context.mounted) return;
                     await context.push(AppRoutes.memorizationPlusKidsGame);
+                  })
+                : null,
+            onBedtimeTap: kidsBedtimeListeningEnabled()
+                ? () => _openDestination(() async {
+                    if (!context.mounted) return;
+                    await context.push(AppRoutes.memorizationPlusKidsBedtime);
                   })
                 : null,
           );
@@ -347,7 +364,12 @@ class _KidsGamifiedHomeViewState extends State<_KidsGamifiedHomeView>
       );
     } else {
       if (!context.mounted) return;
-      await context.push(kidsMissionLocation(mission));
+      await context.push(
+        kidsMissionLocation(
+          mission,
+          needsSplitChoice: state.nextMissionNeedsSplitChoice,
+        ),
+      );
     }
 
     if (context.mounted) {
@@ -376,8 +398,10 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     this.onTreasuresTap,
     this.onProgressTap,
     this.onGameTap,
+    this.onBedtimeTap,
     this.onHomeMissionReport,
     this.taliaHappy = false,
+    this.encouragementRefresh = 0,
   });
 
   final KidsJourneyLoaded state;
@@ -398,11 +422,15 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   /// Opens the listening game; null hides its chip (flag off).
   final VoidCallback? onGameTap;
 
+  /// Opens bedtime listening; null hides its chip and night card (flag off).
+  final VoidCallback? onBedtimeTap;
+
   /// «أنجزتها!» on the home-mission card.
   final void Function(String missionId)? onHomeMissionReport;
 
   /// Shows Talia happy (just after a home mission was reported).
   final bool taliaHappy;
+  final int encouragementRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -432,8 +460,17 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onTreasuresTap: onTreasuresTap,
                         onProgressTap: onProgressTap,
                         onGameTap: onGameTap,
+                        onBedtimeTap: onBedtimeTap,
                       ),
                       const SizedBox(height: AppSpacing.md),
+                      if (getIt.isRegistered<ChildEncouragementInboxCubit>() &&
+                          getIt.isRegistered<KidsEnrichmentFlags>() &&
+                          getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.encouragements))
+                        BlocProvider(
+                          key: ValueKey('encouragement-inbox-$encouragementRefresh'),
+                          create: (_) => getIt<ChildEncouragementInboxCubit>(),
+                          child: const ChildEncouragementInbox(),
+                        ),
                       if (taliaHappy)
                         KidsTaliaCompanion(
                           pose: KidsTaliaPose.happy,
@@ -446,6 +483,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                           moment: kidsHomeTaliaMoment(state),
                         ),
                       const SizedBox(height: AppSpacing.lg),
+                      // Night phase only; the card hides itself by day.
+                      if (onBedtimeTap != null)
+                        KidsBedtimeCard(onTap: onBedtimeTap!),
                       // K33: a warm welcome after a few days away.
                       if (state.isReturningAfterBreak) ...[
                         const KidsWelcomeBackCard(),

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/services/audio_lifecycle_manager.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/kids_learning_game.dart';
 import '../../domain/entities/kids_session_log.dart';
 import '../../domain/services/kids_learning_game_builder.dart';
@@ -86,6 +87,7 @@ class KidsLearningGameCubit extends Cubit<KidsLearningGameState> {
   KidsLearningGameCubit({
     required this._sessionLogs,
     required this._audioSource,
+    this._pathLoader,
     AudioPlayer? player,
     Random? random,
   }) : _player = player ?? AudioPlayer(),
@@ -101,6 +103,9 @@ class KidsLearningGameCubit extends Cubit<KidsLearningGameState> {
 
   final Future<List<KidsSessionLog>> Function() _sessionLogs;
   final KidsGameAudioSourceLoader _audioSource;
+
+  /// Resolves the child's journey path; null or a failure means the adventure.
+  final Future<KidsJourneyPathDefinition> Function()? _pathLoader;
   final AudioPlayer _player;
   final Random _random;
   StreamSubscription<PlayerState>? _playerState;
@@ -113,9 +118,16 @@ class KidsLearningGameCubit extends Cubit<KidsLearningGameState> {
     emit(const KidsLearningGameState());
     KidsLearningGame? game;
     try {
+      var path = KidsJourneyPathDefinition.adventure;
+      try {
+        path = await _pathLoader?.call() ?? path;
+      } catch (_) {
+        path = KidsJourneyPathDefinition.adventure;
+      }
       game = buildListenAndChooseSurahGame(
         await _sessionLogs(),
         random: _random,
+        path: path,
       );
     } catch (_) {
       game = null;

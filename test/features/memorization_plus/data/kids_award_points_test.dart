@@ -52,6 +52,7 @@ void main() {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   }) async {
     final result = await service.awardKidsPoints(
       completionAuthorized: true,
@@ -64,6 +65,7 @@ void main() {
       attemptCount: attemptCount,
       hintCount: hintCount,
       masteryRating: masteryRating,
+      firstTryBonusEligible: firstTryBonusEligible,
     );
     return result.fold((failure) => -1, (completion) => completion.pointsEarned);
   }
@@ -72,6 +74,12 @@ void main() {
     final points = await award(1);
 
     expect(points, 15); // 10 base + 5 excellence bonus
+  });
+
+  test('a guardian-assessed ayah never earns the first-try bonus', () async {
+    final points = await award(1, firstTryBonusEligible: false);
+
+    expect(points, 10);
   });
 
   test('an ayah that needed retries earns the base reward only', () async {

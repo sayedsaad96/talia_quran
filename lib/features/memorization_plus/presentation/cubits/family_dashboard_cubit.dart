@@ -7,10 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../auth/domain/services/account_password_verifier.dart';
+import '../../../certificate/domain/entities/certificate_award.dart';
+import '../../data/datasources/guardian_milestone_seen_store.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/services/guardian_milestone_detector.dart';
+import '../../domain/services/kids_progress_snapshot.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 import '../../domain/usecases/parent_reward_usecases.dart';
 
@@ -25,7 +31,27 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     this._rewards,
     this._guardianSessionActive,
     this._pinOptional,
-  }) : super(const FamilyDashboardInitial());
+    this._milestoneStore,
+    this._milestonesEnabled,
+    this._ayahCounts,
+    this._localCertificates,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now,
+       super(const FamilyDashboardInitial());
+
+  /// «ما الجديد» (R1: in-app only, found on open and refresh, no background
+  /// pull). Without the store, the switch, or the ayah counts nothing is
+  /// detected and the store is never read.
+  final GuardianMilestoneSeenStore? _milestoneStore;
+  final bool Function()? _milestonesEnabled;
+
+  /// Ayah count per surah, needed to know when a surah is complete.
+  final Future<Map<int, int>> Function()? _ayahCounts;
+
+  /// Certificates of the child on this device (a linked child's come with the
+  /// dashboard).
+  final List<CertificateAward> Function()? _localCertificates;
+  final DateTime Function() _clock;
 
   /// True on the guardian's own (adult) phone: the dashboard opens without a
   /// PIN unless the guardian chose to lock it. The child's device always
@@ -153,9 +179,118 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
             dashboard: dashboard,
             feedback: latest.feedback,
             feedbackEventId: latest.feedbackEventId,
+            news: latest.news,
           ),
         ),
       );
+    }
+    if (isClosed || generation != _refreshGeneration) return;
+    await _refreshNews(generation);
+  }
+
+  bool _newsEnabled() {
+    try {
+      return _milestoneStore != null && (_milestonesEnabled?.call() ?? false);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Finds what is new for each child. A child never looked at before has
+  /// everything it already has marked seen without being shown, so old
+  /// progress does not arrive as a flood. A child whose data is incomplete
+  /// (details still loading, certificates or ayah counts unreadable) is left
+  /// alone, so it is not marked seen on partial data.
+  Future<void> _refreshNews(int generation) async {
+    final latest = state;
+    if (latest is! FamilyDashboardLoaded) return;
+    final store = _milestoneStore;
+    if (store == null || !_newsEnabled()) {
+      _emitNews(latest, const []);
+      return;
+    }
+    final items = <GuardianNewsItem>[];
+    final Map<int, int>? counts;
+    try {
+      counts = await _ayahCounts?.call();
+    } catch (error, stack) {
+      TaliaLogger.w('Milestone ayah counts unreadable', error, stack);
+      _emitNews(latest, const []);
+      return;
+    }
+    if (counts == null || counts.isEmpty) {
+      _emitNews(latest, const []);
+      return;
+    }
+    final now = _clock();
+    // A linked child's policy carries no weekly goal, so every child is
+    // measured against this device's weekly goal.
+    final goal = latest.dashboard.settings.weeklyGoalSessions;
+    for (final entry in latest.dashboard.children) {
+      // One child failing must not hide the others.
+      try {
+        final summary = entry.remoteSummary;
+        if (summary?.detailsLoading ?? false) continue;
+        final logs = entry.isLocal ? entry.localData?.logs : summary?.logs;
+        if (logs == null) continue;
+        final certificates = entry.isLocal
+            ? (_localCertificates?.call() ?? const <CertificateAward>[])
+            : remoteKidsProgressSnapshot(summary!, now: now).certificates;
+        final detected = detectGuardianMilestones(
+          logs: logs,
+          ayahCountBySurah: counts,
+          certificates: certificates,
+          weeklyGoalSessions: goal,
+          now: now,
+        );
+        final childKey = entry.isLocal ? 'local' : entry.childUserId;
+        final fresh = await store.unseen(childKey, detected.map((m) => m.id));
+        for (final milestone in detected) {
+          if (!fresh.contains(milestone.id)) continue;
+          items.add(
+            GuardianNewsItem(
+              childKey: childKey,
+              child: entry,
+              milestone: milestone,
+            ),
+          );
+        }
+      } catch (error, stack) {
+        TaliaLogger.w('Guardian milestones not detected', error, stack);
+      }
+    }
+    if (isClosed || generation != _refreshGeneration) return;
+    final current = state;
+    if (current is FamilyDashboardLoaded) _emitNews(current, items);
+  }
+
+  void _emitNews(FamilyDashboardLoaded current, List<GuardianNewsItem> news) {
+    if (current.news == news) return;
+    emit(
+      current.copyWith(
+        feedback: current.feedback,
+        feedbackEventId: current.feedbackEventId,
+        news: news,
+      ),
+    );
+  }
+
+  /// «تم»: everything shown now is remembered as seen.
+  Future<void> dismissNews() async {
+    final current = state;
+    final store = _milestoneStore;
+    if (current is! FamilyDashboardLoaded ||
+        store == null ||
+        current.news.isEmpty) {
+      return;
+    }
+    final byChild = <String, List<String>>{};
+    for (final item in current.news) {
+      byChild.putIfAbsent(item.childKey, () => []).add(item.milestone.id);
+    }
+    _emitNews(current, const []);
+    for (final entry in byChild.entries) {
+      await store.markSeen(entry.key, entry.value);
     }
   }
 
@@ -186,6 +321,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
           dashboard: dashboard,
           feedback: feedback,
           feedbackEventId: feedback != null ? _nextFeedbackEventId() : 0,
+          news: previous is FamilyDashboardLoaded ? previous.news : const [],
         ),
       ),
     );
@@ -375,7 +511,12 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     }
   }
 
-  Future<void> addReward(String title, {String? childId}) async {
+  /// The linked-child transport gates milestone fields through the v2 flag.
+  Future<void> addReward(
+    String title, {
+    String? childId,
+    int? milestoneSurahId,
+  }) async {
     final current = state;
     if (current is! FamilyDashboardLoaded) return;
     if (title.trim().isEmpty) return;
@@ -385,6 +526,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       final result = await _remoteLink.saveRemoteReward(
         childUserId: childId,
         title: title.trim(),
+        milestoneSurahId: milestoneSurahId,
       );
       await result.fold(
         (failure) async => emit(
@@ -399,7 +541,10 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       );
     } else {
       // Global/Local reward
-      final result = await _parentAccess.saveReward(title.trim());
+      final result = await _parentAccess.saveReward(
+        title.trim(),
+        milestoneSurahId: milestoneSurahId,
+      );
       await result.fold(
         (failure) async => emit(
           current.copyWith(
@@ -573,6 +718,92 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
         return true;
       },
     );
+  }
+
+  Future<bool> setKidsJourneyPath(KidsJourneyPathId id) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded ||
+        !current.dashboard.children.any((child) => child.isLocal)) {
+      return false;
+    }
+    final outcome = await _parentAccess.setKidsJourneyPath(id);
+    if (isClosed) return false;
+    return outcome.fold(
+      (failure) {
+        emit(
+          current.copyWith(
+            feedback: FamilyDashboardFeedback.failure(failure.message),
+            feedbackEventId: _nextFeedbackEventId(),
+          ),
+        );
+        return false;
+      },
+      (_) {
+        unawaited(refresh());
+        return true;
+      },
+    );
+  }
+
+  /// Saves every local-child setting the guardian edited in the settings
+  /// sheet, comparing [draft] with [original] (the snapshot the sheet
+  /// opened with) so untouched values are not written. Whole-settings
+  /// fields are applied to a fresh read, never to the snapshot, and run
+  /// before the targeted writes (house size, path, policy), so no step rolls
+  /// back another. Stops at the first failure; true when all saved.
+  Future<bool> saveLocalChildSettings({
+    required ParentSettings original,
+    required ParentSettings draft,
+    required KidsChildPolicy policy,
+  }) async {
+    final current = state;
+    if (current is! FamilyDashboardLoaded ||
+        !current.dashboard.children.any((child) => child.isLocal)) {
+      return false;
+    }
+    final steps = <Future<Either<Failure, Object?>> Function()>[
+      if (draft.kidsHifzV2Enabled != original.kidsHifzV2Enabled ||
+          draft.reminderEnabled != original.reminderEnabled ||
+          draft.reminderHour != original.reminderHour ||
+          draft.reminderMinute != original.reminderMinute)
+        () async {
+          final fresh = await _parentAccess.getSettings();
+          return fresh.fold(
+            Left.new,
+            (stored) => _parentAccess.saveSettings(
+              stored.copyWith(
+                kidsHifzV2Enabled: draft.kidsHifzV2Enabled,
+                reminderEnabled: draft.reminderEnabled,
+                reminderHour: draft.reminderHour,
+                reminderMinute: draft.reminderMinute,
+              ),
+            ),
+          );
+        },
+      if (draft.kidsAyahsPerHouse != original.kidsAyahsPerHouse)
+        () => _parentAccess.setKidsAyahsPerHouse(draft.kidsAyahsPerHouse),
+      if (KidsJourneyPathId.parse(draft.kidsJourneyPathId) !=
+          KidsJourneyPathId.parse(original.kidsJourneyPathId))
+        () => _parentAccess.setKidsJourneyPath(
+          KidsJourneyPathId.parse(draft.kidsJourneyPathId),
+        ),
+      if (policy != KidsChildPolicy.fromSettings(original))
+        () => _parentAccess.saveChildPolicy(policy),
+    ];
+    for (final step in steps) {
+      final failure = (await step()).fold((f) => f, (_) => null);
+      if (isClosed) return false;
+      if (failure != null) {
+        await refresh(
+          feedback: FamilyDashboardFeedback.failure(failure.message),
+        );
+        return false;
+      }
+    }
+    if (steps.isNotEmpty && !isClosed) {
+      await refresh(feedback: const FamilyDashboardFeedback.settingsSaved());
+    }
+    return true;
   }
 
   bool _isValidPin(String pin) => pin.length == 4 && int.tryParse(pin) != null;

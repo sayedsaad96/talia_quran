@@ -35,6 +35,8 @@ void main() {
     });
 
     mockNotificationService = MockTaliaNotificationService();
+    when(() => mockNotificationService.cancelForgettingForecastReminder())
+        .thenAnswer((_) async {});
     mockStreakReader = MockStreakReader();
 
     when(

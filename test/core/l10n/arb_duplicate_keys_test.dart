@@ -11,7 +11,7 @@ void main() {
     'lib/core/l10n/app_en.arb',
   ]) {
     test('$path has no duplicate keys', () {
-      final keyLine = RegExp(r'^  "([^"]+)":', multiLine: true);
+      final keyLine = RegExp(r'^  ,?"([^"]+)":', multiLine: true);
       final seen = <String>{};
       final duplicates = <String>{};
       for (final match in keyLine.allMatches(File(path).readAsStringSync())) {

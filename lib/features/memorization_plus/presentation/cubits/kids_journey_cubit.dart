@@ -1,13 +1,18 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_child_policy.dart';
 import '../../domain/entities/kids_home_mission.dart';
+import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
+import '../../domain/navigation/kids_split_choice.dart';
 import '../../domain/services/kids_adventure_regions.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_daily_missions.dart';
@@ -48,6 +53,22 @@ typedef KidsChildPolicyRefresh = Future<void> Function();
 /// Pulls what the guardian sent; true when local data may have changed.
 typedef KidsInboundRefresh = Future<bool> Function({bool force});
 
+/// The selected kids journey path. When absent (or throwing) the Juz Amma
+/// adventure applies.
+typedef KidsJourneyPathLoader = Future<KidsJourneyPathDefinition> Function();
+
+/// The guardian settings that freeze a surah's split. When absent (or
+/// throwing) the split sheet is never offered.
+typedef KidsJourneySettingsLoader = Future<ParentSettings?> Function();
+
+/// Saves the child's whole-or-stages choice for one surah.
+typedef KidsSurahSplitSaver =
+    Future<Either<Failure, ParentSettings>> Function(
+      int surahId, {
+      required bool whole,
+      int? stageSize,
+    });
+
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
     this._getJourney,
@@ -64,6 +85,10 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     this._childPolicyReader,
     this._childPolicyRefresh,
     this._inboundRefresh,
+    this._pathLoader,
+    this._settingsLoader,
+    this._splitSaver,
+    this._remotePlanEnabled,
     this._missionResolver = const KidsNextMissionResolver(),
     this._v2Enabled = true,
     DateTime Function()? clock,
@@ -85,6 +110,10 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   final KidsChildPolicyReader? _childPolicyReader;
   final KidsChildPolicyRefresh? _childPolicyRefresh;
   final KidsInboundRefresh? _inboundRefresh;
+  final KidsJourneyPathLoader? _pathLoader;
+  final KidsJourneySettingsLoader? _settingsLoader;
+  final KidsSurahSplitSaver? _splitSaver;
+  final bool Function()? _remotePlanEnabled;
   final KidsNextMissionResolver _missionResolver;
   final bool _v2Enabled;
 
@@ -139,16 +168,35 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       emit(const KidsJourneyLoading());
     }
     var activeSurahId = surahId;
+    final path = await _loadPath();
+    final logs = await _loadSessionLogs();
     var journeyResult = await _getJourney(
       GetKidsJourneyParams(surahId: surahId),
     );
+    if (followFrontier && _v2Enabled && !path.locksAhead) {
+      // The Quran journey lets the child pick any surah, so the home follows
+      // the surah last memorized in, not the one it was opened with (which
+      // may be the path's untouched first surah).
+      final latest = _latestMemorizedSurah(logs, path);
+      if (latest != null && latest != surahId) {
+        final latestResult = await _getJourney(
+          GetKidsJourneyParams(surahId: latest),
+        );
+        if (latestResult.isRight()) {
+          activeSurahId = latest;
+          journeyResult = latestResult;
+        }
+      }
+    }
     if (followFrontier && _v2Enabled) {
+      final startSurahId = activeSurahId;
       final frontier = (await _missionResolver.findContinuation(
-        activeSurahId: surahId,
+        activeSurahId: startSurahId,
         stages: journeyResult.getOrElse(() => const <KidsJourneyStage>[]),
         loadStages: _loadStages,
+        path: path,
       ))?.mission;
-      if (frontier != null && frontier.surahId != surahId) {
+      if (frontier != null && frontier.surahId != startSurahId) {
         final frontierResult = await _getJourney(
           GetKidsJourneyParams(surahId: frontier.surahId),
         );
@@ -186,7 +234,6 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         // A corrupt or unavailable resume row must not block today's mission.
       }
     }
-    final logs = await _loadSessionLogs();
     final budget = _v2Enabled
         ? await _loadDailyBudget(logs)
         : KidsDailyBudget.unlimited;
@@ -195,8 +242,10 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
             activeSurahId: activeSurahId,
             stages: stages,
             loadStages: _loadStages,
+            path: path,
           )
         : null;
+    final remoteHint = _v2Enabled ? await _validatedRemoteHint(path) : null;
     final now = _clock().toUtc();
     KidsNextMission? resolveWith(KidsDailyBudget budget) =>
         _missionResolver.resolve(
@@ -207,6 +256,8 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           now: now,
           budget: budget,
           continuation: continuation,
+          validatedRemoteHint: remoteHint,
+          path: path,
         );
     final nextMission = _v2Enabled
         ? resolveWith(budget)
@@ -225,6 +276,7 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           )
         : const <KidsDailyMission>[];
 
+    final split = await _splitInfo(path, activeSurahId, stages, logs);
     final loaded = KidsJourneyLoaded(
       surahId: activeSurahId,
       stages: stages,
@@ -238,12 +290,163 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
           missionSurahId == null || missionSurahId == activeSurahId
           ? null
           : await _surahName(missionSurahId),
+      isQuranJourney: path.isQuranJourney,
+      needsSplitChoice: split.needsChoice,
+      nextMissionNeedsSplitChoice: await _missionNeedsSplitChoice(
+        path,
+        nextMission,
+        activeSurahId,
+        split.needsChoice,
+        logs,
+      ),
+      surahAyahCount: split.ayahCount,
+      defaultStageSize: split.defaultStageSize,
+      currentSplitWhole: split.currentWhole,
+      currentStageSize: split.currentStageSize,
       isReturningAfterBreak: kidsIsReturningAfterBreak(
         progressResult.fold((_) => null, (p) => p.lastSessionAt),
         _clock(),
       ),
     );
     if (!isStale()) emit(loaded);
+  }
+
+  /// Saves the child's whole-or-stages choice for [surahId], then reloads in
+  /// place so the map shows the new houses. False when it could not be saved.
+  Future<bool> chooseSplit({
+    required int surahId,
+    required bool whole,
+    int? stageSize,
+  }) async {
+    final saver = _splitSaver;
+    if (saver == null) return false;
+    try {
+      final result = await saver(surahId, whole: whole, stageSize: stageSize);
+      if (result.isLeft()) return false;
+    } catch (_) {
+      return false;
+    }
+    if (isClosed) return false;
+    await load(surahId: surahId, showLoading: false);
+    return true;
+  }
+
+  /// Whether the child still has to pick how to memorize [surahId]. Only the
+  /// Quran journey asks, only before anything is memorized in the surah, and
+  /// only when the settings are readable: a missing answer never blocks it.
+  Future<
+    ({
+      bool needsChoice,
+      int ayahCount,
+      int defaultStageSize,
+      bool currentWhole,
+      int currentStageSize,
+    })
+  >
+  _splitInfo(
+    KidsJourneyPathDefinition path,
+    int surahId,
+    List<KidsJourneyStage> stages,
+    List<KidsSessionLog>? logs,
+  ) async {
+    const none = (
+      needsChoice: false,
+      ayahCount: 0,
+      defaultStageSize: 0,
+      currentWhole: false,
+      currentStageSize: 0,
+    );
+    if (!path.isQuranJourney) return none;
+    final ayahCount = kidsAyahCountFromStages(surahId, stages);
+    final settings = await _readSettings();
+    KidsSessionPolicy? policy;
+    try {
+      policy = await _policyLoader?.call();
+    } catch (_) {
+      policy = null;
+    }
+    final defaultStageSize =
+        sanitizeKidsAyahsPerHouse(settings?.kidsAyahsPerHouse) ??
+        (policy ?? KidsSessionPolicy.forChildAge(null)).journeyStageSize;
+    final needsChoice = kidsSurahNeedsSplitChoice(
+      path: path,
+      surahId: surahId,
+      ayahCount: ayahCount,
+      settings: settings,
+      logs: logs,
+    );
+    return (
+      needsChoice: needsChoice,
+      ayahCount: ayahCount,
+      defaultStageSize: defaultStageSize,
+      currentWhole:
+          ayahCount <= kKidsWholeSurahMaxAyahsLimit &&
+          (settings?.kidsWholeSurahIds.contains(surahId) ?? false),
+      currentStageSize:
+          sanitizeKidsAyahsPerHouse(settings?.kidsHouseSizesBySurah[surahId]) ??
+          defaultStageSize,
+    );
+  }
+
+  /// Whether opening [mission] must first ask its surah's split question.
+  /// [activeNeedsChoice] is the already computed answer for [activeSurahId].
+  Future<bool> _missionNeedsSplitChoice(
+    KidsJourneyPathDefinition path,
+    KidsNextMission? mission,
+    int activeSurahId,
+    bool activeNeedsChoice,
+    List<KidsSessionLog>? logs,
+  ) async {
+    // Reviews and empty missions never ask, whatever the surah.
+    if (!kidsMissionNeedsSplitChoice(mission, surahNeedsChoice: (_) => true)) {
+      return false;
+    }
+    final surahId = mission!.surahId;
+    if (surahId == activeSurahId) return activeNeedsChoice;
+    try {
+      final stages = await _loadStages(surahId) ?? const <KidsJourneyStage>[];
+      return kidsSurahNeedsSplitChoice(
+        path: path,
+        surahId: surahId,
+        ayahCount: kidsAyahCountFromStages(surahId, stages),
+        settings: await _readSettings(),
+        logs: logs,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// The guardian settings, or null when unavailable or unreadable.
+  Future<ParentSettings?> _readSettings() async {
+    try {
+      return await _settingsLoader?.call();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<KidsNextMission?> _validatedRemoteHint(
+    KidsJourneyPathDefinition path,
+  ) async {
+    if (_remotePlanEnabled?.call() != true) return null;
+    final settings = await _readSettings();
+    final hinted = settings?.remotePlan.nextSurahId;
+    // A guardian hint never moves the child off the selected path.
+    if (hinted == null || !path.contains(hinted)) return null;
+    return _missionResolver.validatedRemoteHint(
+      hintedSurahId: hinted,
+      loadStages: _loadStages,
+    );
+  }
+
+  /// The selected path, read once per load; any failure means the adventure.
+  Future<KidsJourneyPathDefinition> _loadPath() async {
+    try {
+      return await _pathLoader?.call() ?? KidsJourneyPathDefinition.adventure;
+    } catch (_) {
+      return KidsJourneyPathDefinition.adventure;
+    }
   }
 
   /// A surah's display name, or null — a label never blocks the journey.
@@ -297,6 +500,27 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       }
     }
     return null;
+  }
+
+  /// The path surah of the newest new-memorization log (the same evidence
+  /// the kids entry route resolves from); null without one. Reviews never
+  /// move the frontier back (K17).
+  static int? _latestMemorizedSurah(
+    List<KidsSessionLog>? logs,
+    KidsJourneyPathDefinition path,
+  ) {
+    KidsSessionLog? latest;
+    for (final log in logs ?? const <KidsSessionLog>[]) {
+      if (!KidsSessionLogsCloudMerge.isCanonicalRewardLog(log) ||
+          !path.contains(log.surahId)) {
+        continue;
+      }
+      if (latest == null ||
+          log.completedAt.toUtc().isAfter(latest.completedAt.toUtc())) {
+        latest = log;
+      }
+    }
+    return latest?.surahId;
   }
 
   Future<List<KidsSessionLog>?> _loadSessionLogs() async {

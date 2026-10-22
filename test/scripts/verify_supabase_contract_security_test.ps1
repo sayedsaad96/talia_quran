@@ -218,7 +218,13 @@ $environmentLines = @(Get-ChildItem Env:PG* | Sort-Object Name | ForEach-Object 
 if ($env:PGPASSFILE -and (Test-Path -LiteralPath $env:PGPASSFILE)) {
   Copy-Item -LiteralPath $env:PGPASSFILE -Destination (Join-Path $captureDirectory 'pgpass.txt') -Force
 }
-if (@($args) -contains '--command') { Write-Output 't' }
+if (@($args) -contains '--command') {
+  $commandIndex = [array]::IndexOf($args, '--command')
+  $query = [string]$args[$commandIndex + 1]
+  # History returns migration names, not a boolean catalog assertion. The
+  # isolated fake has a history table with no deployed entries.
+  if ($query -notmatch '^SELECT version \|\|') { Write-Output 't' }
+}
 exit $exitCode
 '@
   Set-Content -LiteralPath (Join-Path $fakeBin 'psql.ps1') -Value $fakePsqlScript -Encoding UTF8
@@ -238,7 +244,7 @@ exit $exitCode
     [string[]] $Arguments = @(),
     [int] $FakeExitCode = 17,
     [string[]] $Secrets = @(),
-    [int] $ExpectedInvocationCount = 54,
+    [int] $ExpectedInvocationCount = 139,
     [bool] $Fresh = $false
   ) {
     $captureDirectory = Join-Path $captureRoot $Name
@@ -318,7 +324,9 @@ exit $exitCode
 
   $migrationCount = @(Get-ChildItem (Join-Path $repositoryRoot 'supabase\migrations') -Filter '*.sql' -File).Count
   $databaseTestCount = @(Get-ChildItem (Join-Path $repositoryRoot 'supabase\tests') -Filter '*.sql' -File).Count
-  $expectedContractQueryCount = 54
+  # 105 existing checks plus 32 phase2 checks; non-fresh cases also read
+  # migration-history availability and entries before these catalog checks.
+  $expectedContractQueryCount = 137
   $freshSuccessUrl = 'postgresql://fresh-user:fresh%3Apassword@fresh.example.test:6545/freshdb'
   $freshSuccess = Invoke-VerifierCase `
     -Name 'credentialed-host-success' `
@@ -389,7 +397,7 @@ exit $exitCode
     -PriorEnvironment @{} `
     -FakeExitCode 17 `
     -Secrets @('query:pass\word') `
-    -ExpectedInvocationCount $expectedContractQueryCount
+    -ExpectedInvocationCount ($expectedContractQueryCount + 2)
   Assert-CapturedEnvironment 'allowlisted-query-parameters-failure' $query.Environment 'PGHOST' 'query.example.test'
   Assert-CapturedEnvironment 'allowlisted-query-parameters-failure' $query.Environment 'PGHOSTADDR' '2001:db8::5'
   Assert-CapturedEnvironment 'allowlisted-query-parameters-failure' $query.Environment 'PGPORT' '7444'
@@ -408,8 +416,8 @@ exit $exitCode
     -PriorEnvironment @{} `
     -FakeExitCode 0 `
     -Secrets @('query:pass\word') `
-    -ExpectedInvocationCount $expectedContractQueryCount
-  Assert-QueryInvocationPatterns 'allowlisted-query-parameters-success' $querySuccess.Records $expectedContractQueryCount
+    -ExpectedInvocationCount ($expectedContractQueryCount + 2)
+  Assert-QueryInvocationPatterns 'allowlisted-query-parameters-success' $querySuccess.Records ($expectedContractQueryCount + 2)
   $selfCheckRecords = @(
     [pscustomobject]@{ sequence = 1; argv = @('safe', $queryUrl); exitCode = 0 },
     [pscustomobject]@{ sequence = 2; argv = @('safe-last'); exitCode = 0 }

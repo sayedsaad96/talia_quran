@@ -5,6 +5,7 @@ import '../../../../core/sync/sync_result.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../entities/kids_child_policy.dart';
 import '../entities/kids_home_mission.dart';
+import '../entities/kids_journey_path_definition.dart';
 import '../entities/memorization_entities.dart';
 import 'memorization_cloud_repository.dart';
 import 'memorization_identity_repository.dart';
@@ -97,6 +98,7 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress);
   Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
     required int surahId,
+    bool freezeForSession = false,
   });
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs();
   Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
@@ -118,10 +120,25 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, ParentSettings>> getParentSettings();
   Future<Either<Failure, void>> saveParentSettings(ParentSettings settings);
   Future<Either<Failure, ParentSettings>> setKidsAyahsPerHouse(int? count);
+
+  Future<Either<Failure, KidsJourneyPathDefinition>> getKidsJourneyPath();
+
+  Future<Either<Failure, ParentSettings>> setKidsJourneyPath(
+    KidsJourneyPathId id,
+  );
+
+  Future<Either<Failure, ParentSettings>> setKidsSurahSplit(
+    int surahId, {
+    required bool whole,
+    int? stageSize,
+  });
   Future<Either<Failure, bool>> verifyParentPin(String pin);
   Future<Either<Failure, void>> setParentPin(String pin);
   Future<Either<Failure, void>> resetParentAccess();
-  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title);
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  });
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id);
 
   // Home missions (guardian-assigned real-life tasks).
@@ -158,6 +175,7 @@ abstract class MemorizationPlusRepository
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   });
   @override
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
@@ -201,6 +219,7 @@ abstract class MemorizationPlusRepository
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
+    bool firstTryBonusEligible = true,
   });
 
   // ─── Custom memorization plan ──────────────────────────────────────────────

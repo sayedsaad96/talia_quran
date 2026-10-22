@@ -15,6 +15,7 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
   /// acknowledgement and cloud pull-merge all rewrite the whole list).
   static final Map<String, Future<void>> _kidsHomeMissionLocks = {};
   static final Map<String, Future<void>> _kidsSettingsLocks = {};
+  static final Map<String, Future<void>> _parentRewardLocks = {};
 
   String _kidsOwnerKey(String base, String ownerId) => '$base|$ownerId';
 
@@ -276,6 +277,9 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
           ...settings.kidsHouseSizesBySurah,
           ...current.kidsHouseSizesBySurah,
         },
+        kidsJourneyPathId: current.kidsJourneyPathId,
+        clearKidsJourneyPathId: current.kidsJourneyPathId == null,
+        kidsWholeSurahIds: current.kidsWholeSurahIds,
       );
       await _saveParentSettingsForOwner(
         ParentSettingsModel.fromEntity(merged),
@@ -341,7 +345,7 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
       if (dropped) {
         _quarantineCorruptKidsValue(base, ownerId, raw);
       }
-      return rewards;
+      return _resolveLegacyRewardOrigins(rewards, ownerId);
     } catch (_) {
       _quarantineCorruptKidsValue(base, ownerId, raw);
       return const [];
@@ -358,6 +362,108 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
       jsonEncode(rewards.map((reward) => reward.toJson()).toList()),
     );
   }
+
+  /// Atomic parent-reward mutation. Capture the account lease before waiting
+  /// on the per-owner queue, then re-read inside the queue so an in-flight
+  /// pull cannot erase a gift created while it was fetching.
+  Future<List<ParentRewardModel>> updateParentRewards(
+    Future<List<ParentRewardModel>> Function(List<ParentRewardModel> current)
+    mutate, {
+    AccountDataLease? authority,
+  }) {
+    final ownerId = _owner.currentOwnerId;
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    barrier.owner ??= _owner;
+    final lease = authority ?? barrier.capture();
+    return _withKidsLogWriteLock(ownerId, () {
+      return barrier.run((activeLease) async {
+        activeLease.checkOwner(ownerId);
+        _ensureStorageOwner(ownerId);
+        await _claimLegacyKidsDataIfAuthorized(ownerId);
+        activeLease.checkOwner(ownerId);
+        final current = await _parentRewardsForOwner(ownerId);
+        final next = await mutate(current);
+        activeLease.checkOwner(ownerId);
+        await _saveParentRewardsForOwner(next, ownerId);
+        activeLease.checkOwner(ownerId);
+        return next;
+      }, authority: lease);
+    }, locks: _parentRewardLocks);
+  }
+
+  AccountDataLease captureParentRewardsLease() {
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    barrier.owner ??= _owner;
+    return barrier.capture();
+  }
+
+  Future<List<ParentRewardModel>> _parentRewardsForOwner(String ownerId) async {
+    _ensureStorageOwner(ownerId);
+    const base = MemorizationPlusLocalDatasourceImpl._kParentRewards;
+    final raw = _readKidsValue(base, ownerId);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        _quarantineCorruptKidsValue(base, ownerId, raw);
+        return const [];
+      }
+      return _resolveLegacyRewardOrigins([
+        for (final item in decoded)
+          if (item is Map<String, dynamic>) ParentRewardModel.fromJson(item),
+      ], ownerId);
+    } catch (_) {
+      _quarantineCorruptKidsValue(base, ownerId, raw);
+      return const [];
+    }
+  }
+
+  /// Gifts stored before origins existed decode as unknown, which would leave
+  /// them inert on an unlinked device and duplicated beside the next cloud
+  /// snapshot on a linked one. The old app mirrored the server's gift list
+  /// only while a guardian was linked and kept device-made gifts otherwise,
+  /// so the link settles each row: linked rows are cloud mirrors (their id
+  /// was the server id), unlinked rows are this device's own gifts. The next
+  /// write persists the resolved origin.
+  List<ParentRewardModel> _resolveLegacyRewardOrigins(
+    List<ParentRewardModel> rewards,
+    String ownerId,
+  ) {
+    if (!rewards.any((r) => r.origin == ParentRewardOrigin.unknown)) {
+      return rewards;
+    }
+    final rawProfile = _prefs.getString(
+      MemorizationPlusLocalDatasourceImpl._kProfile,
+    );
+    final linked =
+        (rawProfile == null
+                ? null
+                : _tryParse(rawProfile, MemorizationProfileModel.fromJson))
+            ?.isGuardianLinked ??
+        false;
+    return [
+      for (final reward in rewards)
+        reward.origin != ParentRewardOrigin.unknown
+            ? reward
+            : ParentRewardModel.fromEntity(
+                reward.copyWith(
+                  origin: linked
+                      ? ParentRewardOrigin.cloud
+                      : ParentRewardOrigin.local,
+                  serverId: linked ? reward.id : null,
+                  ownerId: ownerId,
+                ),
+              ),
+    ];
+  }
+
+  Future<void> _saveParentRewardsForOwner(
+    List<ParentRewardModel> rewards,
+    String ownerId,
+  ) => _setStringOrThrow(
+    _kidsOwnerKey(MemorizationPlusLocalDatasourceImpl._kParentRewards, ownerId),
+    jsonEncode(rewards.map((reward) => reward.toJson()).toList()),
+  );
 
   Future<List<KidsHomeMission>> getHomeMissions() async {
     final ownerId = _owner.currentOwnerId;

@@ -152,6 +152,12 @@
   "readerGoToPage": "Go to a page, surah or juz",
   "readerTajweedColors": "Tajweed colors",
   "readerTajweedColorsHint": "Color the tajweed rules on the Mushaf page",
+  "strengthOverlayToggle": "Show memorization strength",
+  "strengthLegendDue": "Due",
+  "strengthLegendWeak": "Weak",
+  "strengthLegendBuilding": "Building",
+  "strengthLegendSolid": "Solid",
+  "reviewThisAyahNow": "Review this ayah now",
   "surahInProgressBadge": "Memorizing",
   "exitFocusMode": "Exit focus mode",
   "closeReader": "Close reader",
@@ -849,14 +855,6 @@
   "createQr": "Create QR",
   "renew": "Renew",
   "remoteGuardianLinkInstruction": "Open the guardian dashboard on the other device and scan the code.",
-  "kidsStageTitle": "Stage {stage}",
-  "@kidsStageTitle": {
-    "placeholders": {
-      "stage": {
-        "type": "String"
-      }
-    }
-  },
   "kidsStageProgress": "Ayahs {startAyah}-{endAyah} • {completed}/{total}",
   "@kidsStageProgress": {
     "placeholders": {
@@ -959,6 +957,28 @@
   "kidsWeeklyCoachingTipKeepRhythm": "A steady week. Keep the same short time each day.",
   "kidsWeeklyCoachingTipAddReview": "Next time, add one short review before a new ayah.",
   "kidsWeeklyCoachingTipStartSmall": "A quiet week. A short session of a few minutes is a good way back.",
+  "monthlyReportTitle": "Monthly report",
+  "monthlyReportPeriod": "From {from} to {to}",
+  "@monthlyReportPeriod": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "monthlyReportSessions": "{count, plural, =0{No sessions} =1{1 session} other{{countText} sessions}}",
+  "@monthlyReportSessions": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "monthlyReportActiveDays": "{count, plural, =0{No active days} =1{1 active day} other{{countText} active days}}",
+  "@monthlyReportActiveDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "monthlyReportNewAyahs": "{count, plural, =0{No new ayahs} =1{1 new ayah} other{{countText} new ayahs}}",
+  "@monthlyReportNewAyahs": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "monthlyReportReviews": "{count, plural, =0{No reviews} =1{1 review} other{{countText} reviews}}",
+  "@monthlyReportReviews": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "monthlyReportCompleted": "Surahs completed",
+  "monthlyReportNeedsSupport": "Ayahs that need support",
+  "monthlyReportNote": "Guardian note",
+  "monthlyReportNoteHint": "An encouraging word shown in the image only, not saved",
+  "monthlyReportEmpty": "No sessions this month",
+  "monthlyReportIncompleteHistory": "These numbers may not include every session because the linked child's history from another device is partial",
+  "monthlyReportSavePdf": "Save PDF",
+  "monthlyReportShare": "Share",
+  "monthlyReportShareText": "Talia monthly report",
+  "monthlyReportAyahRef": "{surah} · ayah {ayah}",
+  "@monthlyReportAyahRef": {"placeholders": {"surah": {"type": "String"}, "ayah": {"type": "String"}}},
   "kidsFamilyPracticeAction": "Learn together",
   "kidsFamilyPracticeContext": "{surah} · ayah {ayah}",
   "@kidsFamilyPracticeContext": {
@@ -1480,6 +1500,21 @@
   "kidsGiftRequested": "Request sent, waiting for your grown-up",
   "kidsGiftClaimed": "Received, well done!",
   "kidsGiftRequestAction": "I want it!",
+  "promiseExample1": "A trip to the park",
+  "promiseExample2": "A new book",
+  "promiseExample3": "A meal of their choice",
+  "promiseLinkSurah": "When a surah is completed",
+  "promiseNoCondition": "No condition",
+  "promiseProgress": "{doneText} of {total, plural, =1{1 ayah} other{{totalText} ayahs}}",
+  "@promiseProgress": {
+    "placeholders": {
+      "doneText": {"type": "String"},
+      "total": {"type": "int"},
+      "totalText": {"type": "String"}
+    }
+  },
+  "promiseUnlockedByMilestone": "Promise kept!",
+  "parentRewardErrorTitleTooLong": "The gift title is too long",
   "childErrorNicknameInvalid": "Enter a name of 1 to {max} characters.",
   "@childErrorNicknameInvalid": {
     "placeholders": {
@@ -1832,6 +1867,7 @@
   "parentDashboardRemoteRewardAdded": "Reward sent to child",
   "parentDashboardChildLinked": "Child linked successfully",
   "parentDashboardReminderSaved": "Reminder updated",
+  "parentDashboardSettingsSaved": "Settings saved",
   "guardianLinkingSlowHint": "This is taking longer than expected. You can continue and link later.",
   "bookmarkSaveError": "Failed to save bookmark",
   "longPressToUndo": "Long-press to undo",
@@ -2465,6 +2501,47 @@
       }
     }
   },
+  "guardianNewsTitle": "What's new",
+  "@guardianNewsTitle": {
+    "description": "Family dashboard section: new milestones of the children"
+  },
+  "guardianNewsSurah": "{child} completed Surah {surah}",
+  "@guardianNewsSurah": {
+    "description": "What's new: a child completed a surah",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      },
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsCertificate": "{child} earned a certificate: {title}",
+  "@guardianNewsCertificate": {
+    "description": "What's new: a child earned a certificate",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsWeek": "{child} completed the weekly goal",
+  "@guardianNewsWeek": {
+    "description": "What's new: a child met the weekly goal",
+    "placeholders": {
+      "child": {
+        "type": "String"
+      }
+    }
+  },
+  "guardianNewsDismiss": "Done",
+  "@guardianNewsDismiss": {
+    "description": "What's new: mark everything shown as seen"
+  },
 
   "familyDashboardChildNoActivity": "No activity today",
   "@familyDashboardChildNoActivity": { "description": "No activity today label on child card" },
@@ -2679,6 +2756,12 @@
   "v2FirstLettersRevealed": "First letters revealed — try to recall",
   "countAyahs": "{count, plural, =1{{countText} ayah} other{{countText} ayahs}}",
   "@countAyahs": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "tarawihTitle": "What the imam recited tonight",
+  "tarawihFromPage": "From page",
+  "tarawihToPage": "To page",
+  "tarawihTotal": "{count, plural, =1{You heard {countText} page this month} other{You heard {countText} pages this month}}",
+  "@tarawihTotal": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "tarawihInvalidRange": "Pages must be between 1 and 604, and the start must not come after the end",
   "streakDaysUnit": "{count, plural, =1{day} other{days}}",
   "@streakDaysUnit": {"placeholders": {"count": {"type": "int"}}},
   "v2SurahLoadFailed": "Could not load surah data.",
@@ -3528,4 +3611,214 @@
   ,"appUpdateReady": "An update is ready to install."
   ,"appUpdateInstallAction": "Install and restart"
   ,"appUpdateInstallFailed": "The update could not start. Please try again."
+  ,"kidsJourneyPathTitle": "Memorization path"
+  ,"kidsJourneyPathAdventure": "Juz Amma adventure"
+  ,"kidsJourneyPathFromNas": "Quran journey: An-Nas to Al-Baqarah"
+  ,"kidsJourneyPathFromFatiha": "Quran journey: Al-Fatihah to An-Nas"
+  ,"kidsQuranJourneyTitle": "Quran journey"
+  ,"kidsQuranJourneyJuz": "Juz {number}"
+  ,"@kidsQuranJourneyJuz": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpConfirm": "Start Surah {surah}? Surah {current} will wait for you."
+  ,"@kidsQuranJourneyJumpConfirm": {"placeholders": {"surah": {"type": "String"}, "current": {"type": "String"}}}
+  ,"kidsQuranJourneyJumpYes": "Let's start"
+  ,"kidsQuranJourneyJumpNo": "Not now"
+  ,"kidsQuranJourneyComplete": "You finished the whole Quran journey! Tell your guardian about this great achievement."
+  ,"kidsHouseStatusNotStarted": "Not started"
+  ,"kidsHouseStatusInProgress": "In progress"
+  ,"kidsHouseStatusNeedsReview": "Needs review"
+  ,"kidsHouseStatusCompleted": "Completed"
+  ,"kidsHouseCurrentMarker": "You are here"
+  ,"kidsSplitTitle": "How would you like to memorize it?"
+  ,"kidsSplitWhole": "All at once"
+  ,"kidsSplitStaged": "In stages"
+  ,"kidsSplitAyahsPerStage": "Ayahs per stage"
+  ,"kidsSplitStageCount": "{count, plural, =1{{countText} stage} other{{countText} stages}}"
+  ,"@kidsSplitStageCount": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
+  ,"kidsSplitConfirm": "Start"
+  ,"kidsSplitChange": "Change how to memorize"
+  ,"kidsStageTitle": "Stage {number}"
+  ,"@kidsStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"kidsReviewStageTitle": "Stage {number} review"
+  ,"@kidsReviewStageTitle": {"placeholders": {"number": {"type": "String"}}}
+  ,"readerRepeatTitle": "Repeat and sleep timer"
+  ,"readerRepeatPerAyah": "Repeat each ayah"
+  ,"readerRepeatRange": "Repeat the passage"
+  ,"readerRepeatInfinite": "Non-stop"
+  ,"readerRepeatSpeed": "Recitation speed"
+  ,"readerSleepTimer": "Sleep timer"
+  ,"readerSleepOff": "Off"
+  ,"readerSleepMinutes": "{countText} min"
+  ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
+  ,"readerSleepEndOfSurah": "End of surah"
+  ,"trustCenterTitle": "How we protect content and your privacy"
+  ,"trustSourcesTitle": "Verified sources"
+  ,"trustSourcesBody": "Talia contains no generated religious text. Every text has a source and a reference."
+  ,"trustSourcesMeta": "Data version {version} • {count, plural, =1{1 source} other{{countText} sources}}"
+  ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
+  ,"trustVoiceTitle": "Your voice"
+  ,"trustVoiceBody": "Talia does not keep a recording of your voice or send it to Talia's servers. Speech recognition uses your device's system service (such as Google), which may send the audio to its provider under its own policies."
+  ,"trustDataTitle": "Your data"
+  ,"trustDataBody": "You can use Talia without an account. Sync is optional, and each account's data is kept separate."
+  ,"trustViewSources": "View sources and licenses"
+  ,"trustViewPrivacy": "Privacy policy"
+  ,"clarityModeTitle": "Clarity mode"
+  ,"clarityModeSubtitle": "Larger text, higher contrast and a simpler home"
+  ,"afterPrayerAzkarTitle": "After-prayer adhkar"
+  ,"afterPrayerAzkarSubtitle": "After {prayer} prayer"
+  ,"afterPrayerAzkarOpen": "Start"
+  ,"afterPrayerAzkarDone": "Done"
+  ,"ramadanTemplateOne": "One khatmah in Ramadan"
+  ,"ramadanTemplateTwo": "Two khatmahs in Ramadan"
+  ,"ramadanTemplateSplit": "Daily wird split over the prayers"
+  ,"ramadanTemplateDays": "{count, plural, =1{{countText} day remaining} other{{countText} days remaining}}"
+  ,"@ramadanTemplateDays": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}}
+  ,"ramadanPortion": "After {prayer}: pages {from}–{to}"
+  ,"@ramadanPortion": {"placeholders": {"prayer": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "ramadanInviteTitle": "Get ready for Ramadan",
+  "ramadanInviteBody": "Pick your khatmah plan before the month starts",
+  "ramadanDayTitle": "Day {day} of Ramadan",
+  "@ramadanDayTitle": {"placeholders": {"day": {"type": "String"}}},
+  "ramadanLastTen": "The last ten nights",
+  "ramadanSummaryTitle": "Your Ramadan",
+  "ramadanSummaryNights": "{count, plural, =1{You logged tarawih on {countText} night} other{You logged tarawih on {countText} nights}}",
+  "@ramadanSummaryNights": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanSummaryKhatmah": "{count, plural, =1{You completed {countText} khatmah in Ramadan} other{You completed {countText} khatmahs in Ramadan}}",
+  "@ramadanSummaryKhatmah": {"placeholders": {"count": {"type": "int"}, "countText": {"type": "String"}}},
+  "ramadanLogTarawih": "Log tarawih",
+  "ramadanDismiss": "Hide",
+  "ramadanOpenKhatmah": "Khatmah"
+  ,"backupTitle": "Backup"
+  ,"backupExport": "Export a backup"
+  ,"backupImport": "Restore from a file"
+  ,"backupImportSignedIn": "Restore is only available without an account. Your personal notes stay only on this device."
+  ,"backupIncludes": "Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress, the child's progress, and personal notes"
+  ,"backupExcludes": "Excludes: bookmarks, device settings and notifications, and the guardian PIN"
+  ,"backupConfirmTitle": "Replace current data?"
+  ,"backupConfirmBody": "Your current data on this device will be replaced by the file's data. A version 1 backup has no personal notes and will clear your current notes."
+  ,"backupConfirm": "Replace"
+  ,"backupErrorInvalid": "This file is not a valid Talia backup."
+  ,"backupErrorNewer": "This backup is from a newer app version. Update the app first."
+  ,"backupErrorCorrupt": "The file is damaged and cannot be restored."
+  ,"backupDone": "Restore complete"
+  ,"kidsBedtimeTitle": "Bedtime listening"
+  ,"kidsBedtimeStart": "Start"
+  ,"kidsBedtimeStop": "Stop"
+  ,"kidsBedtimeTimer": "Stops after"
+  ,"kidsBedtimeEmpty": "Memorize a surah first to listen to it before bed"
+  ,"kidsBedtimeCard": "Quiet time: listen to your surahs before bed"
+  ,"guardianRecitationTitle": "Recite to your guardian"
+  ,"guardianRecitationExcellent": "Mastered"
+  ,"guardianRecitationReview": "Needs review"
+  ,"guardianRecitationRetry": "Let's try again"
+  ,"guardianRecitationHint": "Ask your guardian to listen and grade"
+  ,"guardianRecitationShowText": "Show the text to the guardian"
+  ,"guardianRecitationHideText": "Hide the text"
+  ,"guardianRecitationExit": "End"
+  ,"forgettingForecastTitle": "May weaken within 7 days without review"
+  ,"forgettingForecastPassage": "{surah}, ayahs {start}–{end}"
+  ,"@forgettingForecastPassage": {"placeholders": {"surah": {}, "start": {}, "end": {}}}
+  ,"forgettingForecastReviewNow": "Review now"
+  ,"notificationForgettingForecastTitle": "Time for review"
+  ,"notificationForgettingForecastBody": "Set aside a short time to review what you learned."
+  ,"notificationSettingsForgettingForecast": "Forgetting forecast"
+  ,"ayahNotesTitle": "My reflections"
+  ,"ayahNoteAction": "My note"
+  ,"ayahNoteLabel": "Your note"
+  ,"ayahNoteHint": "Write your private reflection"
+  ,"ayahNotesEmpty": "No reflections yet"
+  ,"ayahNoteSaveFailed": "Couldn't save your note. Please try again."
+  ,"ayahNotesLoadFailed": "Couldn't load your notes. Please try again."
+  ,"ayahNoteNavigationFailed": "Couldn't open this ayah. Please try again."
+  ,"audioDownloadsTitle": "Download recitations"
+  ,"audioDownloadsStorage": "Recitation storage"
+  ,"audioDownloadsWholeJuz": "Download a whole juz"
+  ,"audioDownloadsJuz": "Juz {number}"
+  ,"@audioDownloadsJuz": {"placeholders": {"number": {"type": "String"}}}
+  ,"audioDownloadsWifiOnly": "Wi-Fi only"
+  ,"audioDownloadsWifiUnavailable": "This device's network type cannot be checked. Connect to Wi-Fi before continuing."
+  ,"audioDownloadsSpaceUnknown": "Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size."
+  ,"audioDownloadsNetworkWarning": "Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading."
+  ,"audioDownloadsProceed": "Continue downloading"
+  ,"audioDownloadsStart": "Download or resume"
+  ,"audioDownloadsCompleted": "Download finished"
+  ,"audioDownloadsCancelled": "Download cancelled; saved files remain available"
+  ,"audioDownloadsInsufficientSpace": "Not enough storage space"
+  ,"audioDownloadsFailed": "Download failed. You can resume without downloading saved files again."
+  ,"audioDownloadsInProgress": "Downloading recitations…"
+  ,"audioDownloadsBytes": "{bytes} bytes"
+  ,"@audioDownloadsBytes": {"placeholders": {"bytes": {"type": "String"}}}
+  ,"audioDownloadsDelete": "Delete this reciter's downloads"
+  ,"audioDownloadsDeleteConfirm": "Delete the saved recordings for this reciter from this device?"
+  ,"hijriYearRecapTitle": "Hijri year recap"
+  ,"hijriYearRecapCompletions": "Completed khatmas"
+  ,"hijriYearRecapMemorizedApprox": "Approx. memorized ayahs"
+  ,"hijriYearRecapApproxDefinition": "Currently memorized ayahs last reviewed this Hijri year"
+  ,"hijriYearRecapLifetimeStreak": "Lifetime longest streak"
+  ,"hijriYearRecapDismiss": "Hide for this year"
+  ,"hijriYearRecapShare": "Share"
+  ,"hijriYearRecapActivityDays": "Activity days"
+  ,"similarAyahTrainerTitle": "Similar passages practice"
+  ,"similarAyahTrainerMachineNote": "These are machine-computed lexical relationships, not a recitation assessment."
+  ,"similarAyahLookupAction": "Similar wording (machine-computed)"
+  ,"similarAyahTrainerEmpty": "No historical similar-passage patterns yet"
+  ,"similarAyahTrainerTryAgain": "Try again"
+  ,"similarAyahTrainerTarget": "Target passage"
+  ,"similarAyahTrainerOther": "Similar passage"
+  ,"similarAyahTrainerPrevious": "Previous ayah"
+  ,"similarAyahTrainerPractice": "Recall the target passage, then reveal it when ready."
+  ,"similarAyahTrainerReveal": "Show target passage"
+  ,"similarAyahTrainerUnavailable": "This practice is available only for eligible adult accounts."
+  ,"similarAyahFailureNotice": "It looks like you moved to a similar ayah at {reference}."
+  ,"@similarAyahFailureNotice": {"placeholders": {"reference": {}}}
+  ,"similarAyahOpenComparison": "Compare similar passages"
+  ,"v2AccountChanged": "The account changed. Open the session from your current account to continue."
+  ,"similarAyahTrainerNoPrevious": "No previous ayah in this surah"
+  ,"similarAyahTrainerCount": "{count, plural, =1{once} other{{count} times}}"
+  ,"@similarAyahTrainerCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"prayerReviewTitle": "Review in your prayer"
+  ,"prayerReviewQuestion": "Did you recite this passage?"
+  ,"prayerReviewSaved": "Your self-assessment was saved."
+  ,"prayerReviewUnavailable": "No prayer review passage is available right now."
+  ,"prayerReviewLoadFailed": "Could not load the passage. Try again."
+  ,"prayerReviewSaveFailed": "Could not save. You can retry with the same passage."
+  ,"prayerReviewGradeMastered": "Mastered"
+  ,"prayerReviewGradeHesitated": "With hesitation"
+  ,"prayerReviewGradeForgot": "Could not recite it"
+  ,"prayerReviewSuggestion": "Suggestion: {reference}"
+  ,"@prayerReviewSuggestion": {"placeholders": {"reference": {"type": "String"}}}
+  ,"prayerReviewPassage": "{surah} {start}–{end}"
+  ,"@prayerReviewPassage": {"placeholders": {"surah": {"type": "String"}, "start": {"type": "String"}, "end": {"type": "String"}}}
+  ,"prayerReviewSettingsTitle": "Passage length for each prayer"
+  ,"prayerReviewLengthOption": "{count, plural, one {Up to 1 ayah} other {Up to {count} ayahs}}"
+  ,"@prayerReviewLengthOption": {"placeholders": {"count": {"type": "int"}}}
+  ,"kidsRemotePlanNextSurah": "Suggested next surah"
+  ,"kidsRemotePlanSize": "Ayahs in a new stage"
+  ,"kidsRemotePlanDays": "Practice reminder days"
+  ,"kidsRemotePlanDeviceDefault": "Use device setting"
+  ,"kidsRemotePlanDaysHint": "These days affect reminders only. Learning stays available every day."
+  ,"encouragementTitle": "Send encouragement"
+  ,"encouragementInboxTitle": "An encouraging message for you"
+  ,"encouragementProud": "I am proud of you!"
+  ,"encouragementWellDone": "Well done!"
+  ,"encouragementKeepGoing": "Keep going, you are making progress!"
+  ,"encouragementGreatEffort": "Great effort!"
+  ,"encouragementSeeYouTomorrow": "See you tomorrow!"
+  ,"encouragementStarSticker": "Star"
+  ,"encouragementTaliaSticker": "Talia cheers you on"
+  ,"encouragementSend": "Send encouragement"
+  ,"encouragementSent": "Your encouragement was sent and will appear when the child syncs."
+  ,"encouragementFailed": "Could not send. Try again."
+  ,"encouragementQuota": "You reached this child’s daily limit. Try tomorrow."
+  ,"encouragementLimit": "Up to 10 messages per child each day. The day starts at midnight UTC."
+  ,"encouragementDone": "Done"
+  ,"parentRewardOriginUnknown": "This older gift is kept for viewing. Your guardian can create a new gift."
+  ,"kidsLegacyResumeTitle": "How would you like to continue this surah?"
+  ,"kidsLegacyResumeExplanation": "Your paused ayah is saved. Choose a split to continue this older session; its previous split is unavailable."
+  ,"kidsLegacyResumeChoose": "Choose how to continue"
+  ,"kidsLegacyResumeSaveFailed": "Your choice was not saved. Your paused ayah is still saved. You can try again."
+  ,"audioDownloadsLeaveTitle": "Stop the download?"
+  ,"audioDownloadsLeaveBody": "A download is in progress. Leaving this page stops it; files already saved stay available."
+  ,"audioDownloadsLeaveStay": "Stay"
+  ,"audioDownloadsLeaveStop": "Stop download"
+  ,"similarAyahIndexUnavailable": "The similar-ayah list has not been approved yet, so it is not available here."
 }

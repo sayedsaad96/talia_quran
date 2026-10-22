@@ -84,6 +84,9 @@ class MemorizationCloudMappers {
 
   ParentReward rewardFromCloud(Map<String, dynamic> row) => ParentReward(
     id: row['id'].toString(),
+    serverId: row['id'].toString(),
+    origin: ParentRewardOrigin.cloud,
+    ownerId: row['child_user_id'] as String?,
     title: row['title'] as String,
     status: ParentRewardStatus.values.firstWhere(
       (status) => status.name == (row['status'] as String? ?? 'locked'),
@@ -99,6 +102,11 @@ class MemorizationCloudMappers {
     claimedAt: row['claimed_at'] == null
         ? null
         : DateTime.parse(row['claimed_at'] as String),
+    milestoneSurahId: ParentReward.isValidMilestoneSurahId(
+      (row['milestone_surah_id'] as num?)?.toInt(),
+    )
+        ? (row['milestone_surah_id'] as num).toInt()
+        : null,
   );
 
   KidsHomeMission homeMissionFromCloud(Map<String, dynamic> row) =>

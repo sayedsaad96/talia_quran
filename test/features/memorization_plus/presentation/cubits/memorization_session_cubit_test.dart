@@ -3,6 +3,11 @@ import 'dart:async';
 // import 'package:bloc_test/bloc_test.dart'; // bloc_test is missing or unused
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_attempt_service.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/learning_launch_context.dart';
@@ -88,6 +93,20 @@ void main() {
     ),
   );
 
+  MemorizationSessionCubit createCubit({SimilarAyahAttemptService? attempts}) =>
+    MemorizationSessionCubit(
+      quranRepository: mockQuranRepo,
+      memorizationRepository: mockMemRepo,
+      sessionEngine: realEngine,
+      reviewAdapter: realReviewAdapter,
+      progressAdapter: realProgressAdapter,
+      gamificationAdapter: realGamificationAdapter,
+      audioPlayer: mockAudioPlayer,
+      speechToText: mockSpeechToText,
+      audioCacheService: mockAudioCache,
+      similarAyahAttempts: attempts,
+    );
+
   setUp(() {
     mockQuranRepo = MockQuranRepository();
     mockMemRepo = MockMemorizationPlusRepository();
@@ -144,17 +163,7 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
-    cubit = MemorizationSessionCubit(
-      quranRepository: mockQuranRepo,
-      memorizationRepository: mockMemRepo,
-      sessionEngine: realEngine,
-      reviewAdapter: realReviewAdapter,
-      progressAdapter: realProgressAdapter,
-      gamificationAdapter: realGamificationAdapter,
-      audioPlayer: mockAudioPlayer,
-      speechToText: mockSpeechToText,
-      audioCacheService: mockAudioCache,
-    );
+    cubit = createCubit();
   });
 
   tearDown(() async {
@@ -175,6 +184,138 @@ void main() {
       return const ScheduleNextReviewUsecase().schedule(record, rating);
     });
   }
+
+  group('similar ayah attempt coordination', () {
+    late AccountDataBarrier barrier;
+    late Completer<List<SimilarAyahCandidate>?>? pending;
+    late Completer<void> started;
+    late int candidateReads;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      const owner = FixedRecordOwnerProvider('test-owner');
+      barrier = AccountDataBarrier.forPreferences(
+        await SharedPreferences.getInstance(),
+      )..owner = owner;
+      candidateReads = 0;
+      pending = null;
+      started = Completer<void>();
+      final attempts = SimilarAyahAttemptService(
+        owner: owner, barrier: barrier, isEnabled: () => true,
+        readAdultEligibility: () async => true,
+        candidates: _SimilarCandidateSource((_) {
+          candidateReads++;
+          if (!started.isCompleted) started.complete();
+          return pending?.future ?? Future.value(const [
+            SimilarAyahCandidate(key: '1:2', text: 'one two three four'),
+          ]);
+        }),
+      );
+      await cubit.close();
+      cubit = createCubit(attempts: attempts);
+      when(mockQuranRepo.getSurahDetail(1)).thenAnswer((_) async => const Right(
+        SurahDetail(surah: defaultSurah, ayahs: [Ayah(
+          number: 1, surahId: 1, numberInSurah: 1,
+          text: 'alpha beta gamma delta', page: 1,
+        )]),
+      ));
+    });
+
+    Future<void> recall() async {
+      await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 1);
+      await cubit.advanceToMemorizing();
+      await cubit.advanceToReciting();
+    }
+
+    test('attribution keeps original failure verdict and score', () async {
+      await recall();
+      await cubit.evaluateCurrentRecitationForTesting('one two three four');
+      final active = cubit.state as MSActive;
+      expect(active.lastEvaluation?.result.passed, isFalse);
+      expect(active.lastEvaluation?.result.similarityScore, 0);
+      expect(active.lastEvaluation?.confusionMatch?.otherKey, '1:2');
+      expect(active.sessionState.passedAyahNumbers, isEmpty);
+      expect(candidateReads, 1);
+    });
+
+    test('manual forgot does not consult candidate source', () async {
+      await recall();
+      await cubit.submitManualRecall(V2SelfGrade.forgot);
+      expect(candidateReads, 0);
+      expect((cubit.state as MSActive).lastEvaluation, isNull);
+    });
+
+    test('stale candidate load cannot save or reveal old account evidence', () async {
+      await recall();
+      pending = Completer<List<SimilarAyahCandidate>?>();
+      clearInteractions(mockLocalDatasource);
+      final evaluation = cubit.evaluateCurrentRecitationForTesting(
+        'one two three four',
+      );
+      await started.future;
+      barrier.invalidate();
+      expect(cubit.state, isA<MSError>());
+      pending!.complete(const [
+        SimilarAyahCandidate(key: '1:2', text: 'one two three four'),
+      ]);
+      await evaluation;
+      expect(cubit.state, isA<MSError>());
+      verifyNever(mockLocalDatasource.saveSession(any));
+    });
+
+    test('discard waits for pending evaluation before clearing its checkpoint',
+        () async {
+      stubReviewWrite();
+      when(mockLocalDatasource.clearSession(1)).thenAnswer((_) async {});
+      await recall();
+      pending = Completer<List<SimilarAyahCandidate>?>();
+      final evaluation = cubit.evaluateCurrentRecitationForTesting(
+        'one two three four',
+      );
+      await started.future;
+      var cleared = false;
+      final discarding = cubit.discardSession().then((value) {
+        cleared = value;
+        return value;
+      });
+      await Future<void>.delayed(Duration.zero);
+      final clearedBeforeEvaluation = cleared;
+      pending!.complete(const [
+        SimilarAyahCandidate(key: '1:2', text: 'one two three four'),
+      ]);
+      await evaluation;
+      expect(await discarding, isTrue);
+      expect(clearedBeforeEvaluation, isFalse);
+      verify(mockLocalDatasource.clearSession(1)).called(1);
+    });
+
+    test('ordinary account data notifications retain the current session', () async {
+      await recall();
+      final active = cubit.state;
+      barrier.notifyChanged();
+      expect(cubit.state, same(active));
+      barrier.invalidate();
+      expect(cubit.state, isA<MSError>());
+    });
+
+    test('invalidation while starting cannot resurrect the loaded session', () async {
+      final detail = Completer<Right<Failure, SurahDetail>>();
+      final reading = Completer<void>();
+      when(mockQuranRepo.getSurahDetail(1)).thenAnswer((_) {
+        reading.complete();
+        return detail.future;
+      });
+      final starting = cubit.startSession(surahId: 1, startAyah: 1);
+      await reading.future;
+      barrier.invalidate();
+      detail.complete(Right(SurahDetail(
+        surah: defaultSurah, ayahs: defaultAyahs,
+      )));
+      await starting;
+      expect(cubit.state, isA<MSError>());
+      verifyNever(mockLocalDatasource.saveSession(any));
+    });
+  });
 
   group('startSession', () {
     test('emits MSActive when new session starts successfully', () async {
@@ -318,6 +459,130 @@ void main() {
 
       final active = cubit.state as MSActive;
       expect(active.sessionState.blockAyahs.map((a) => a.numberInSurah), [3]);
+    });
+
+    test('uses the explicit forecast range and excludes due neighbours', () async {
+      when(
+        mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')),
+      ).thenAnswer((_) async => Right([dueRecord(2), dueRecord(3), dueRecord(4)]));
+      const forecast = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 3),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.review,
+        reviewEndAyah: 5,
+      );
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 3,
+        launchContext: forecast,
+      );
+
+      final active = cubit.state as MSActive;
+      expect(active.sessionState.blockAyahs.map((a) => a.numberInSurah), [3, 4, 5]);
+      expect(active.sessionState.phase, V2SessionPhase.reciting);
+    });
+
+    test('rejects an invalid explicit range before reading a checkpoint', () async {
+      const invalid = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 3),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.review,
+        reviewEndAyah: 11,
+      );
+
+      await cubit.startSession(surahId: 1, startAyah: 3, launchContext: invalid);
+
+      expect(cubit.state, isA<MSError>());
+      verifyNever(mockLocalDatasource.getSession(1, review: true));
+      verifyNever(mockLocalDatasource.clearSession(1, review: true));
+    });
+
+    test('rejects a mismatched explicit launch context before durable effects', () async {
+      const invalid = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 4),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.review,
+        reviewEndAyah: 5,
+      );
+
+      await cubit.startSession(surahId: 1, startAyah: 3, launchContext: invalid);
+
+      expect(cubit.state, isA<MSError>());
+      verifyNever(mockLocalDatasource.getSession(1, review: true));
+      verifyNever(mockLocalDatasource.saveSession(any));
+    });
+
+    test('resumes only an exactly matching explicit forecast checkpoint', () async {
+      final saved = IsarV2Session.create(
+        surahId: 1,
+        blockAyahNumbers: const [3, 4, 5],
+        currentAyahIndex: 1,
+        phaseIndex: V2SessionPhase.reciting.index,
+        passedAyahNumbers: const {},
+        failureCounts: const {},
+        hintLevels: const {},
+        blockReviewRequired: true,
+        review: true,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 3),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.review,
+          reviewEndAyah: 5,
+        ),
+      );
+      when(mockLocalDatasource.getSession(1, review: true))
+          .thenAnswer((_) async => saved);
+      const forecast = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 3),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.review,
+        reviewEndAyah: 5,
+      );
+
+      await cubit.startSession(surahId: 1, startAyah: 3, launchContext: forecast);
+
+      expect((cubit.state as MSActive).sessionState.currentAyahIndex, 1);
+      verifyNever(mockLocalDatasource.clearSession(1, review: true));
+    });
+
+    test('replaces a nonmatching explicit forecast checkpoint', () async {
+      final saved = IsarV2Session.create(
+        surahId: 1,
+        blockAyahNumbers: const [3],
+        currentAyahIndex: 0,
+        phaseIndex: V2SessionPhase.reciting.index,
+        passedAyahNumbers: const {},
+        failureCounts: const {},
+        hintLevels: const {},
+        blockReviewRequired: true,
+        review: true,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 3),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.review,
+        ),
+      );
+      when(mockLocalDatasource.getSession(1, review: true))
+          .thenAnswer((_) async => saved);
+      when(mockLocalDatasource.clearSession(1, review: true))
+          .thenAnswer((_) async {});
+      when(mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')))
+          .thenAnswer((_) async => const Right([]));
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 3,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 3),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.review,
+          reviewEndAyah: 5,
+        ),
+      );
+
+      expect((cubit.state as MSActive).sessionState.blockAyahs.length, 3);
+      verify(mockLocalDatasource.clearSession(1, review: true)).called(1);
     });
   });
 
@@ -924,4 +1189,12 @@ void main() {
 Future<void> _startSession(MemorizationSessionCubit cubit) async {
   await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 5);
   expect(cubit.state, isA<MSActive>());
+}
+
+final class _SimilarCandidateSource implements SimilarAyahCandidateSource {
+  const _SimilarCandidateSource(this.load);
+  final Future<List<SimilarAyahCandidate>?> Function(String) load;
+  @override
+  Future<List<SimilarAyahCandidate>?> loadCandidates(String targetKey) =>
+      load(targetKey);
 }

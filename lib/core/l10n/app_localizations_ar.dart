@@ -431,6 +431,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readerTajweedColorsHint => 'تلوين أحكام التجويد في صفحة المصحف';
 
   @override
+  String get strengthOverlayToggle => 'إظهار قوة الحفظ';
+
+  @override
+  String get strengthLegendDue => 'مستحقة';
+
+  @override
+  String get strengthLegendWeak => 'ضعيفة';
+
+  @override
+  String get strengthLegendBuilding => 'تتقوّى';
+
+  @override
+  String get strengthLegendSolid => 'ثابتة';
+
+  @override
+  String get reviewThisAyahNow => 'راجع هذه الآية الآن';
+
+  @override
   String get surahInProgressBadge => 'قيد الحفظ';
 
   @override
@@ -2284,11 +2302,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
 
   @override
-  String kidsStageTitle(String stage) {
-    return 'مرحلة $stage';
-  }
-
-  @override
   String kidsStageProgress(
     String startAyah,
     String endAyah,
@@ -2480,6 +2493,107 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kidsWeeklyCoachingTipStartSmall =>
       'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
+
+  @override
+  String get monthlyReportTitle => 'تقرير الشهر';
+
+  @override
+  String monthlyReportPeriod(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String monthlyReportSessions(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText جلسة',
+      many: '$countText جلسة',
+      few: '$countText جلسات',
+      two: 'جلستان',
+      one: 'جلسة واحدة',
+      zero: 'لا جلسات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportActiveDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يوم نشط',
+      many: '$countText يومًا نشطًا',
+      few: '$countText أيام نشطة',
+      two: 'يومان نشطان',
+      one: 'يوم نشط واحد',
+      zero: 'لا أيام نشطة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportNewAyahs(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText آية جديدة',
+      many: '$countText آية جديدة',
+      few: '$countText آيات جديدة',
+      two: 'آيتان جديدتان',
+      one: 'آية جديدة واحدة',
+      zero: 'لا آيات جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String monthlyReportReviews(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText مراجعة',
+      many: '$countText مراجعة',
+      few: '$countText مراجعات',
+      two: 'مراجعتان',
+      one: 'مراجعة واحدة',
+      zero: 'لا مراجعات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get monthlyReportCompleted => 'سور أتمّها';
+
+  @override
+  String get monthlyReportNeedsSupport => 'آيات تحتاج دعماً';
+
+  @override
+  String get monthlyReportNote => 'ملاحظة ولي الأمر';
+
+  @override
+  String get monthlyReportNoteHint => 'كلمة تشجيع تظهر في الصورة فقط ولا تُحفظ';
+
+  @override
+  String get monthlyReportEmpty => 'لا جلسات في هذا الشهر';
+
+  @override
+  String get monthlyReportIncompleteHistory =>
+      'قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي';
+
+  @override
+  String get monthlyReportSavePdf => 'حفظ PDF';
+
+  @override
+  String get monthlyReportShare => 'مشاركة';
+
+  @override
+  String get monthlyReportShareText => 'تقرير تالية للشهر';
+
+  @override
+  String monthlyReportAyahRef(String surah, String ayah) {
+    return '$surah · آية $ayah';
+  }
 
   @override
   String get kidsFamilyPracticeAction => 'نتعلم سوا';
@@ -3615,6 +3729,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGiftRequestAction => 'أريدها!';
 
   @override
+  String get promiseExample1 => 'نزهة في الحديقة';
+
+  @override
+  String get promiseExample2 => 'كتاب جديد';
+
+  @override
+  String get promiseExample3 => 'وجبة يختارها';
+
+  @override
+  String get promiseLinkSurah => 'عند إتمام سورة';
+
+  @override
+  String get promiseNoCondition => 'بدون شرط';
+
+  @override
+  String promiseProgress(String doneText, int total, String totalText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$totalText آية',
+      few: '$totalText آيات',
+      two: 'آيتين',
+      one: 'آية واحدة',
+    );
+    return '$doneText من $_temp0';
+  }
+
+  @override
+  String get promiseUnlockedByMilestone => 'تحقق الوعد!';
+
+  @override
+  String get parentRewardErrorTitleTooLong => 'عنوان الهدية طويل جداً';
+
+  @override
   String childErrorNicknameInvalid(String max) {
     return 'اكتب اسماً من حرف واحد إلى $max حرفاً.';
   }
@@ -4362,6 +4510,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardReminderSaved => 'تم تحديث التذكير';
+
+  @override
+  String get parentDashboardSettingsSaved => 'تم حفظ الإعدادات';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -5876,6 +6027,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get guardianNewsTitle => 'ما الجديد';
+
+  @override
+  String guardianNewsSurah(String child, String surah) {
+    return '$child أتمّ سورة $surah';
+  }
+
+  @override
+  String guardianNewsCertificate(String child, String title) {
+    return '$child حصل على شهادة: $title';
+  }
+
+  @override
+  String guardianNewsWeek(String child) {
+    return '$child أكمل هدف الأسبوع';
+  }
+
+  @override
+  String get guardianNewsDismiss => 'تم';
+
+  @override
   String get familyDashboardChildNoActivity => 'لا نشاط اليوم';
 
   @override
@@ -6303,6 +6475,34 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get tarawihTitle => 'ما قرأه الإمام الليلة';
+
+  @override
+  String get tarawihFromPage => 'من صفحة';
+
+  @override
+  String get tarawihToPage => 'إلى صفحة';
+
+  @override
+  String tarawihTotal(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سمعتَ $countText صفحة هذا الشهر',
+      many: 'سمعتَ $countText صفحة هذا الشهر',
+      few: 'سمعتَ $countText صفحات هذا الشهر',
+      two: 'سمعتَ صفحتين هذا الشهر',
+      one: 'سمعتَ صفحة واحدة هذا الشهر',
+      zero: 'سمعتَ $countText صفحة هذا الشهر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tarawihInvalidRange =>
+      'تأكد أن الصفحتين بين ١ و٦٠٤ وأن البداية قبل النهاية';
 
   @override
   String streakDaysUnit(int count) {
@@ -8534,4 +8734,712 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appUpdateInstallFailed => 'تعذر بدء التحديث. حاول مرة أخرى.';
+
+  @override
+  String get kidsJourneyPathTitle => 'مسار الحفظ';
+
+  @override
+  String get kidsJourneyPathAdventure => 'مغامرة جزء عمّ';
+
+  @override
+  String get kidsJourneyPathFromNas => 'رحلة القرآن: من الناس إلى البقرة';
+
+  @override
+  String get kidsJourneyPathFromFatiha => 'رحلة القرآن: من الفاتحة إلى الناس';
+
+  @override
+  String get kidsQuranJourneyTitle => 'رحلة القرآن';
+
+  @override
+  String kidsQuranJourneyJuz(String number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String kidsQuranJourneyJumpConfirm(String surah, String current) {
+    return 'تريد أن تبدأ سورة $surah؟ سورة $current ستنتظرك';
+  }
+
+  @override
+  String get kidsQuranJourneyJumpYes => 'نبدأ';
+
+  @override
+  String get kidsQuranJourneyJumpNo => 'ليس الآن';
+
+  @override
+  String get kidsQuranJourneyComplete =>
+      'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
+
+  @override
+  String get kidsHouseStatusNotStarted => 'لم تبدأ بعد';
+
+  @override
+  String get kidsHouseStatusInProgress => 'جارية';
+
+  @override
+  String get kidsHouseStatusNeedsReview => 'تحتاج مراجعة';
+
+  @override
+  String get kidsHouseStatusCompleted => 'مكتملة';
+
+  @override
+  String get kidsHouseCurrentMarker => 'أنت هنا';
+
+  @override
+  String get kidsSplitTitle => 'كيف تحب أن تحفظها؟';
+
+  @override
+  String get kidsSplitWhole => 'كاملة مرة واحدة';
+
+  @override
+  String get kidsSplitStaged => 'على مراحل';
+
+  @override
+  String get kidsSplitAyahsPerStage => 'آيات كل مرحلة';
+
+  @override
+  String kidsSplitStageCount(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ستكون $countText مرحلة',
+      many: 'ستكون $countText مرحلة',
+      few: 'ستكون $countText مراحل',
+      two: 'ستكون مرحلتين',
+      one: 'ستكون مرحلة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsSplitConfirm => 'ابدأ';
+
+  @override
+  String get kidsSplitChange => 'غيّر طريقة الحفظ';
+
+  @override
+  String kidsStageTitle(String number) {
+    return 'المرحلة $number';
+  }
+
+  @override
+  String kidsReviewStageTitle(String number) {
+    return 'مراجعة المرحلة $number';
+  }
+
+  @override
+  String get readerRepeatTitle => 'التكرار ومؤقت النوم';
+
+  @override
+  String get readerRepeatPerAyah => 'تكرار كل آية';
+
+  @override
+  String get readerRepeatRange => 'تكرار المقطع';
+
+  @override
+  String get readerRepeatInfinite => 'بلا توقف';
+
+  @override
+  String get readerRepeatSpeed => 'سرعة التلاوة';
+
+  @override
+  String get readerSleepTimer => 'مؤقت النوم';
+
+  @override
+  String get readerSleepOff => 'إيقاف';
+
+  @override
+  String readerSleepMinutes(String countText) {
+    return '$countText دقيقة';
+  }
+
+  @override
+  String get readerSleepEndOfSurah => 'حتى نهاية السورة';
+
+  @override
+  String get trustCenterTitle => 'كيف نحفظ المحتوى وخصوصيتك';
+
+  @override
+  String get trustSourcesTitle => 'مصادر موثّقة';
+
+  @override
+  String get trustSourcesBody =>
+      'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.';
+
+  @override
+  String trustSourcesMeta(String version, int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText مصدرًا',
+      many: '$countText مصدرًا',
+      few: '$countText مصادر',
+      two: 'مصدران',
+      one: 'مصدر واحد',
+    );
+    return 'إصدار البيانات $version • $_temp0';
+  }
+
+  @override
+  String get trustVoiceTitle => 'صوتك';
+
+  @override
+  String get trustVoiceBody =>
+      'تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته.';
+
+  @override
+  String get trustDataTitle => 'بياناتك';
+
+  @override
+  String get trustDataBody =>
+      'يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره.';
+
+  @override
+  String get trustViewSources => 'عرض المصادر والتراخيص';
+
+  @override
+  String get trustViewPrivacy => 'سياسة الخصوصية';
+
+  @override
+  String get clarityModeTitle => 'وضع الوضوح';
+
+  @override
+  String get clarityModeSubtitle => 'خط أكبر، تباين أعلى، ورئيسية أبسط';
+
+  @override
+  String get afterPrayerAzkarTitle => 'أذكار بعد الصلاة';
+
+  @override
+  String afterPrayerAzkarSubtitle(String prayer) {
+    return 'بعد صلاة $prayer';
+  }
+
+  @override
+  String get afterPrayerAzkarOpen => 'ابدأ';
+
+  @override
+  String get afterPrayerAzkarDone => 'تمّت';
+
+  @override
+  String get ramadanTemplateOne => 'ختمة في رمضان';
+
+  @override
+  String get ramadanTemplateTwo => 'ختمتان في رمضان';
+
+  @override
+  String get ramadanTemplateSplit => 'ورد مقسّم على الصلوات';
+
+  @override
+  String ramadanTemplateDays(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText يومًا متبقيًا',
+      many: '$countText يومًا متبقية',
+      few: '$countText أيام متبقية',
+      two: 'يومان متبقيان',
+      one: 'يوم واحد متبقٍ',
+      zero: '$countText يوم متبقٍ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanPortion(String prayer, String from, String to) {
+    return 'بعد $prayer: صفحات $from–$to';
+  }
+
+  @override
+  String get ramadanInviteTitle => 'استعد لرمضان';
+
+  @override
+  String get ramadanInviteBody => 'اختر خطة ختمتك قبل أن يبدأ الشهر';
+
+  @override
+  String ramadanDayTitle(String day) {
+    return 'اليوم $day من رمضان';
+  }
+
+  @override
+  String get ramadanLastTen => 'العشر الأواخر';
+
+  @override
+  String get ramadanSummaryTitle => 'حصاد رمضان';
+
+  @override
+  String ramadanSummaryNights(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سجّلت التراويح في $countText ليلة',
+      many: 'سجّلت التراويح في $countText ليلة',
+      few: 'سجّلت التراويح في $countText ليالٍ',
+      two: 'سجّلت التراويح في ليلتين',
+      one: 'سجّلت التراويح في ليلة واحدة',
+      zero: 'سجّلت التراويح في $countText ليلة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanSummaryKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أتممتَ $countText ختمة في رمضان',
+      many: 'أتممتَ $countText ختمة في رمضان',
+      few: 'أتممتَ $countText ختمات في رمضان',
+      two: 'أتممتَ ختمتين في رمضان',
+      one: 'أتممتَ ختمة واحدة في رمضان',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLogTarawih => 'سجّل التراويح';
+
+  @override
+  String get ramadanDismiss => 'إخفاء';
+
+  @override
+  String get ramadanOpenKhatmah => 'الختمة';
+
+  @override
+  String get backupTitle => 'النسخة الاحتياطية';
+
+  @override
+  String get backupExport => 'تصدير نسخة احتياطية';
+
+  @override
+  String get backupImport => 'استعادة من ملف';
+
+  @override
+  String get backupImportSignedIn =>
+      'الاستعادة متاحة فقط دون حساب. ملاحظاتك الشخصية تبقى على هذا الجهاز فقط.';
+
+  @override
+  String get backupIncludes =>
+      'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل، والملاحظات الشخصية';
+
+  @override
+  String get backupExcludes =>
+      'لا يشمل: العلامات المرجعية، إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر';
+
+  @override
+  String get backupConfirmTitle => 'استبدال البيانات الحالية؟';
+
+  @override
+  String get backupConfirmBody =>
+      'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف. النسخة من الإصدار 1 لا تحتوي ملاحظات شخصية وستمسح ملاحظاتك الحالية.';
+
+  @override
+  String get backupConfirm => 'استبدال';
+
+  @override
+  String get backupErrorInvalid =>
+      'هذا الملف ليس نسخة احتياطية صالحة من تالية.';
+
+  @override
+  String get backupErrorNewer =>
+      'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.';
+
+  @override
+  String get backupErrorCorrupt => 'الملف تالف ولا يمكن استعادته.';
+
+  @override
+  String get backupDone => 'تمت الاستعادة';
+
+  @override
+  String get kidsBedtimeTitle => 'استماع قبل النوم';
+
+  @override
+  String get kidsBedtimeStart => 'ابدأ';
+
+  @override
+  String get kidsBedtimeStop => 'إيقاف';
+
+  @override
+  String get kidsBedtimeTimer => 'يتوقف بعد';
+
+  @override
+  String get kidsBedtimeEmpty => 'احفظ سورة أولاً لتستمع إليها قبل النوم';
+
+  @override
+  String get kidsBedtimeCard => 'حان وقت الهدوء: استمع لسورك قبل النوم';
+
+  @override
+  String get guardianRecitationTitle => 'التسميع على ولي الأمر';
+
+  @override
+  String get guardianRecitationExcellent => 'متقن';
+
+  @override
+  String get guardianRecitationReview => 'تحتاج مراجعة';
+
+  @override
+  String get guardianRecitationRetry => 'لنعد';
+
+  @override
+  String get guardianRecitationHint => 'اطلب من ولي أمرك أن يستمع ويقيّم';
+
+  @override
+  String get guardianRecitationShowText => 'اعرض النص لولي الأمر';
+
+  @override
+  String get guardianRecitationHideText => 'إخفاء النص';
+
+  @override
+  String get guardianRecitationExit => 'إنهاء التسميع';
+
+  @override
+  String get forgettingForecastTitle => 'ستضعف خلال 7 أيام إن لم تراجعها';
+
+  @override
+  String forgettingForecastPassage(Object surah, Object start, Object end) {
+    return '$surah، الآيات $start–$end';
+  }
+
+  @override
+  String get forgettingForecastReviewNow => 'راجعها الآن';
+
+  @override
+  String get notificationForgettingForecastTitle => 'وقت للمراجعة';
+
+  @override
+  String get notificationForgettingForecastBody =>
+      'خصص وقتاً قصيراً لمراجعة ما تعلمته.';
+
+  @override
+  String get notificationSettingsForgettingForecast => 'توقع النسيان';
+
+  @override
+  String get ayahNotesTitle => 'تدبّراتي';
+
+  @override
+  String get ayahNoteAction => 'ملاحظتي';
+
+  @override
+  String get ayahNoteLabel => 'ملاحظتك';
+
+  @override
+  String get ayahNoteHint => 'اكتب تدبّرك الشخصي';
+
+  @override
+  String get ayahNotesEmpty => 'لا توجد تدبّرات بعد';
+
+  @override
+  String get ayahNoteSaveFailed => 'تعذّر حفظ ملاحظتك. حاول مرة أخرى.';
+
+  @override
+  String get ayahNotesLoadFailed => 'تعذّر تحميل ملاحظاتك. حاول مرة أخرى.';
+
+  @override
+  String get ayahNoteNavigationFailed => 'تعذّر فتح هذه الآية. حاول مرة أخرى.';
+
+  @override
+  String get audioDownloadsTitle => 'تنزيل التلاوات';
+
+  @override
+  String get audioDownloadsStorage => 'تخزين التلاوات';
+
+  @override
+  String get audioDownloadsWholeJuz => 'تنزيل جزء كامل';
+
+  @override
+  String audioDownloadsJuz(String number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String get audioDownloadsWifiOnly => 'عبر Wi-Fi فقط';
+
+  @override
+  String get audioDownloadsWifiUnavailable =>
+      'لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة.';
+
+  @override
+  String get audioDownloadsSpaceUnknown =>
+      'لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات.';
+
+  @override
+  String get audioDownloadsNetworkWarning =>
+      'لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل.';
+
+  @override
+  String get audioDownloadsProceed => 'متابعة التنزيل';
+
+  @override
+  String get audioDownloadsStart => 'تنزيل أو استئناف';
+
+  @override
+  String get audioDownloadsCompleted => 'اكتمل التنزيل';
+
+  @override
+  String get audioDownloadsCancelled =>
+      'أُلغي التنزيل؛ تبقى الملفات المحفوظة متاحة';
+
+  @override
+  String get audioDownloadsInsufficientSpace => 'المساحة المتاحة غير كافية';
+
+  @override
+  String get audioDownloadsFailed =>
+      'تعذّر التنزيل. يمكنك الاستئناف دون إعادة تنزيل الملفات المحفوظة.';
+
+  @override
+  String get audioDownloadsInProgress => 'جارٍ تنزيل التلاوات…';
+
+  @override
+  String audioDownloadsBytes(String bytes) {
+    return '$bytes بايت';
+  }
+
+  @override
+  String get audioDownloadsDelete => 'حذف تنزيلات هذا القارئ';
+
+  @override
+  String get audioDownloadsDeleteConfirm =>
+      'هل تريد حذف التسجيلات المحفوظة لهذا القارئ من هذا الجهاز؟';
+
+  @override
+  String get hijriYearRecapTitle => 'حصاد العام الهجري';
+
+  @override
+  String get hijriYearRecapCompletions => 'الختمات المكتملة';
+
+  @override
+  String get hijriYearRecapMemorizedApprox => 'آيات محفوظة تقريبًا';
+
+  @override
+  String get hijriYearRecapApproxDefinition =>
+      'الآيات المحفوظة حاليًا والمراجَعة في هذا العام الهجري';
+
+  @override
+  String get hijriYearRecapLifetimeStreak => 'أطول سلسلة على الإطلاق';
+
+  @override
+  String get hijriYearRecapDismiss => 'إخفاء لهذا العام';
+
+  @override
+  String get hijriYearRecapShare => 'مشاركة';
+
+  @override
+  String get hijriYearRecapActivityDays => 'أيام النشاط';
+
+  @override
+  String get similarAyahTrainerTitle => 'تدريب المتشابهات';
+
+  @override
+  String get similarAyahTrainerMachineNote =>
+      'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.';
+
+  @override
+  String get similarAyahLookupAction => 'آيات متقاربة اللفظ (محسوبة آليًا)';
+
+  @override
+  String get similarAyahTrainerEmpty => 'لا توجد أنماط متشابهات مسجلة بعد';
+
+  @override
+  String get similarAyahTrainerTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get similarAyahTrainerTarget => 'الموضع المقصود';
+
+  @override
+  String get similarAyahTrainerOther => 'الموضع المتشابه';
+
+  @override
+  String get similarAyahTrainerPrevious => 'الآية السابقة';
+
+  @override
+  String get similarAyahTrainerPractice =>
+      'استدعِ الموضع المقصود، ثم أظهره عندما تكون مستعدًا.';
+
+  @override
+  String get similarAyahTrainerReveal => 'إظهار الموضع المقصود';
+
+  @override
+  String get similarAyahTrainerUnavailable =>
+      'هذا التدريب متاح لحسابات البالغين المؤهلة فقط.';
+
+  @override
+  String similarAyahFailureNotice(Object reference) {
+    return 'يبدو أنك انتقلت إلى آية مشابهة في الموضع $reference.';
+  }
+
+  @override
+  String get similarAyahOpenComparison => 'تمييز المتشابهات';
+
+  @override
+  String get v2AccountChanged =>
+      'تغيّر الحساب. افتح الجلسة من حسابك الحالي للمتابعة.';
+
+  @override
+  String get similarAyahTrainerNoPrevious => 'لا توجد آية سابقة في هذه السورة';
+
+  @override
+  String similarAyahTrainerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرة',
+      few: '$count مرات',
+      two: 'مرتان',
+      one: 'مرة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerReviewTitle => 'راجِع في صلاتك';
+
+  @override
+  String get prayerReviewQuestion => 'هل قرأت المقطع؟';
+
+  @override
+  String get prayerReviewSaved => 'حُفظ تقييمك الذاتي.';
+
+  @override
+  String get prayerReviewUnavailable => 'لا يوجد مقطع مراجعة متاح الآن.';
+
+  @override
+  String get prayerReviewLoadFailed => 'تعذّر تحميل المقطع. حاول مرة أخرى.';
+
+  @override
+  String get prayerReviewSaveFailed =>
+      'تعذّر الحفظ. يمكنك إعادة المحاولة للمقطع نفسه.';
+
+  @override
+  String get prayerReviewGradeMastered => 'متقن';
+
+  @override
+  String get prayerReviewGradeHesitated => 'بتردد';
+
+  @override
+  String get prayerReviewGradeForgot => 'لم أستطع';
+
+  @override
+  String prayerReviewSuggestion(String reference) {
+    return 'اقتراح: $reference';
+  }
+
+  @override
+  String prayerReviewPassage(String surah, String start, String end) {
+    return '$surah $start–$end';
+  }
+
+  @override
+  String get prayerReviewSettingsTitle => 'طول المقطع لكل صلاة';
+
+  @override
+  String prayerReviewLengthOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حتى $count آية',
+      many: 'حتى $count آية',
+      few: 'حتى $count آيات',
+      two: 'حتى آيتين',
+      one: 'حتى آية واحدة',
+      zero: 'دون آيات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsRemotePlanNextSurah => 'اقتراح السورة التالية';
+
+  @override
+  String get kidsRemotePlanSize => 'آيات المرحلة الجديدة';
+
+  @override
+  String get kidsRemotePlanDays => 'أيام تذكير التدريب';
+
+  @override
+  String get kidsRemotePlanDeviceDefault => 'حسب إعداد الجهاز';
+
+  @override
+  String get kidsRemotePlanDaysHint =>
+      'تؤثر الأيام في التذكير فقط، ويظل التعلم متاحًا كل يوم.';
+
+  @override
+  String get encouragementTitle => 'أرسل تشجيعًا';
+
+  @override
+  String get encouragementInboxTitle => 'رسالة تشجيع لك';
+
+  @override
+  String get encouragementProud => 'أنا فخور بك!';
+
+  @override
+  String get encouragementWellDone => 'أحسنت!';
+
+  @override
+  String get encouragementKeepGoing => 'واصل، أنت تتقدم!';
+
+  @override
+  String get encouragementGreatEffort => 'جهد رائع!';
+
+  @override
+  String get encouragementSeeYouTomorrow => 'نلتقي غدًا!';
+
+  @override
+  String get encouragementStarSticker => 'نجمة';
+
+  @override
+  String get encouragementTaliaSticker => 'تالية تشجعك';
+
+  @override
+  String get encouragementSend => 'إرسال التشجيع';
+
+  @override
+  String get encouragementSent => 'وصل تشجيعك، وسيظهر للطفل عند المزامنة.';
+
+  @override
+  String get encouragementFailed => 'تعذّر الإرسال. حاول مجددًا.';
+
+  @override
+  String get encouragementQuota =>
+      'وصلت إلى الحد اليومي لهذا الطفل. حاول غدًا.';
+
+  @override
+  String get encouragementLimit =>
+      'حتى ١٠ رسائل يوميًا لكل طفل، ويبدأ اليوم بتوقيت UTC.';
+
+  @override
+  String get encouragementDone => 'تم';
+
+  @override
+  String get parentRewardOriginUnknown =>
+      'هذه الهدية القديمة محفوظة للعرض فقط. يمكن لولي الأمر إنشاء هدية جديدة.';
+
+  @override
+  String get kidsLegacyResumeTitle => 'كيف تحب أن تكمل هذه السورة؟';
+
+  @override
+  String get kidsLegacyResumeExplanation =>
+      'نقطة توقفك محفوظة. اختر تقسيمًا لاستكمال هذه الجلسة القديمة؛ لا يتوفر تقسيمها السابق.';
+
+  @override
+  String get kidsLegacyResumeChoose => 'اختيار طريقة الاستكمال';
+
+  @override
+  String get kidsLegacyResumeSaveFailed =>
+      'لم يُحفظ الاختيار. ما زالت نقطة توقفك محفوظة، ويمكنك المحاولة مجددًا.';
+
+  @override
+  String get audioDownloadsLeaveTitle => 'إيقاف التنزيل؟';
+
+  @override
+  String get audioDownloadsLeaveBody =>
+      'التنزيل جارٍ. إذا غادرت هذه الصفحة سيتوقف التنزيل وتبقى الملفات المحفوظة متاحة.';
+
+  @override
+  String get audioDownloadsLeaveStay => 'البقاء';
+
+  @override
+  String get audioDownloadsLeaveStop => 'إيقاف التنزيل';
+
+  @override
+  String get similarAyahIndexUnavailable =>
+      'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
 }

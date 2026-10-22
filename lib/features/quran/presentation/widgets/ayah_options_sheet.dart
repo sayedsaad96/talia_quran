@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/router/app_router.dart';
@@ -23,6 +24,7 @@ import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import 'reciter_selector_sheet.dart';
+import 'ayah_note_editor_sheet.dart';
 
 /// Ayah long-press options sheet of the adult Mushaf reader.
 ///
@@ -34,10 +36,15 @@ class AyahOptionsSheet extends StatefulWidget {
     super.key,
     required this.ayah,
     required this.surahName,
+    this.showReviewNow = false,
   });
 
   final Ayah ayah;
   final String surahName;
+
+  /// Offers "review this ayah now"; the reader sets it only when the strength
+  /// flag is on and an adult review record exists for the ayah.
+  final bool showReviewNow;
 
   @override
   State<AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -52,11 +59,15 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
         cubit.state.currentAyahNumber == widget.ayah.numberInSurah) {
       await cubit.pause();
     } else {
-      await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
+      await cubit.playAyah(
+        widget.ayah.surahId,
+        widget.ayah.numberInSurah,
+        applyReaderSettings: true,
+      );
     }
   }
 
-  void _startLearning() {
+  void _startLearning({LearningIntent intent = LearningIntent.memorize}) {
     final router = GoRouter.of(context);
     final location = Uri(
       path: AppRoutes.memorizationV2Session,
@@ -65,7 +76,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
           surahId: widget.ayah.surahId,
           ayahNumber: widget.ayah.numberInSurah,
         ),
-        intent: LearningIntent.memorize,
+        intent: intent,
         origin: LearningOrigin.quranReader,
       ).toRouteQuery(),
     ).toString();
@@ -185,6 +196,56 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     color: primary,
                     onTap: _startLearning,
                   ),
+                  if (getIt.isRegistered<ExperienceFlags>() &&
+                      getIt<ExperienceFlags>().isEnabled(
+                        ExperienceFeature.similarAyahTrainer,
+                      ))
+                    AyahOptionButton(
+                      key: const Key('ayah-similar-action'),
+                      icon: TaliaIcons.swapHorizontal,
+                      label: context.l10n.similarAyahLookupAction,
+                      color: primary,
+                      onTap: () {
+                        final router = GoRouter.of(context);
+                        Navigator.of(context).pop();
+                        unawaited(router.push(Uri(
+                          path: AppRoutes.similarAyahTrainer,
+                          queryParameters: {
+                            'surahId': '${widget.ayah.surahId}',
+                            'ayah': '${widget.ayah.numberInSurah}',
+                          },
+                        ).toString()));
+                      },
+                    ),
+                  if (getIt.isRegistered<ExperienceFlags>() &&
+                      getIt<ExperienceFlags>().isEnabled(
+                        ExperienceFeature.ayahNotes,
+                      ))
+                    AyahOptionButton(
+                      key: const Key('ayah-note-action'),
+                      icon: TaliaIcons.bookmark,
+                      label: context.l10n.ayahNoteAction,
+                      color: primary,
+                      onTap: () {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => AyahNoteEditorSheet(
+                            surahId: widget.ayah.surahId,
+                            ayahNumber: widget.ayah.numberInSurah,
+                          ),
+                        );
+                      },
+                    ),
+                  if (widget.showReviewNow)
+                    AyahOptionButton(
+                      key: const Key('ayah-review-now'),
+                      icon: TaliaIcons.refresh,
+                      label: context.l10n.reviewThisAyahNow,
+                      color: primary,
+                      onTap: () =>
+                          _startLearning(intent: LearningIntent.review),
+                    ),
                   BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
                     builder: (context, audioState) {
                       final isPlayingThisAyah =

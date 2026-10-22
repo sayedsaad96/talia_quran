@@ -6,11 +6,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_learning_support_profile.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/kids_support_profile_repository.dart';
@@ -18,6 +22,7 @@ import 'package:talia_quran/features/memorization_plus/domain/repositories/memor
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/child_detail_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_monthly_report_page.dart';
 
 const _settings = ParentSettings(pinHash: 'hash');
 
@@ -76,6 +81,30 @@ class _Repo implements MemorizationPlusRepository {
   final localAcks = <String>[];
   final remotePolicies = <String>[];
   Completer<void>? policyGate;
+  final savedRewards = <String>[];
+  final remoteRewards = <String>[];
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title, {
+    int? milestoneSurahId,
+  }) async {
+    savedRewards.add('$title:$milestoneSurahId');
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({ int? milestoneSurahId,
+    required String childUserId,
+    required String title,
+  }) async {
+    remoteRewards.add('$childUserId:$title');
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, KidsJourneyPathDefinition>>
+  getKidsJourneyPath() async => const Right(KidsJourneyPathDefinition.adventure);
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
@@ -176,6 +205,68 @@ Future<_Repo> _pump(
   }
   return repo;
 }
+
+/// Opens the child page inside a router so the monthly-report route can be
+/// followed.
+Future<void> _pumpRouted(WidgetTester tester, FamilyChildEntry child) async {
+  final repo = _Repo(child);
+  final cubit = FamilyDashboardCubit(
+    ParentAccessUsecase(repo),
+    ParentRemoteLinkUsecase(repo),
+    GetFamilyDashboardUsecase(repo),
+  );
+  addTearDown(cubit.close);
+  await cubit.load();
+  await cubit.unlock('1234');
+  await tester.pumpWidget(
+    MaterialApp.router(
+      locale: const Locale('en'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => BlocProvider<FamilyDashboardCubit>.value(
+              value: cubit,
+              child: ChildDetailPage(child: child),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.childMonthlyReport,
+            builder: (_, state) {
+              final args = state.extra! as KidsMonthlyReportRouteArgs;
+              return KidsMonthlyReportPage(
+                report: args.report,
+                childName: args.childName,
+                historyComplete: args.historyComplete,
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+List<KidsSessionLog> _logs(int count) => [
+  for (var i = 0; i < count; i++)
+    KidsSessionLog(
+      id: 'l$i',
+      surahId: 112,
+      ayahNumber: 1 + i % 4,
+      ayahNumbers: [1 + i % 4],
+      repeatsCompleted: 3,
+      pointsEarned: 1,
+      completedAt: DateTime.now().subtract(Duration(hours: i)),
+    ),
+];
 
 /// Scrolls the lazily built page until [finder] matches at least once (it
 /// may match several widgets), then brings the first match into view.
@@ -419,6 +510,136 @@ void main() {
     expect(tester.widget<SwitchListTile>(reduceMotion).onChanged, isNotNull);
   });
 
+  group('monthly report button', () {
+    final getIt = GetIt.instance;
+
+    Future<void> withFlag(bool on) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => on && key == KidsEnrichmentFeature.monthlyReport.storageKey,
+        ),
+      );
+    }
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+    });
+
+    testWidgets('is hidden while the feature is off', (tester) async {
+      await withFlag(false);
+      await _pump(tester, _localChild(const []));
+
+      expect(
+        find.byKey(const ValueKey('child-monthly-report-button')),
+        findsNothing,
+      );
+    });
+
+    for (final local in [true, false]) {
+      testWidgets('shows for a ${local ? 'local' : 'linked'} child when on', (
+        tester,
+      ) async {
+        await withFlag(true);
+        await _pump(
+          tester,
+          local ? _localChild(const []) : _remoteChild(const []),
+        );
+        final button = find.byKey(const ValueKey('child-monthly-report-button'));
+        await _scrollTo(tester, button);
+
+        expect(button, findsOneWidget);
+      });
+    }
+  });
+
+  group('monthly report completeness', () {
+    final getIt = GetIt.instance;
+
+    setUp(() {
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) => key == KidsEnrichmentFeature.monthlyReport.storageKey,
+        ),
+      );
+    });
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+    });
+
+    Future<void> openReport(WidgetTester tester, FamilyChildEntry child) async {
+      await _pumpRouted(tester, child);
+      final button = find.byKey(const ValueKey('child-monthly-report-button'));
+      await _scrollTo(tester, button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+    }
+
+    FamilyChildEntry remote(int logs) => FamilyChildEntry(
+      childUserId: 'c1',
+      displayName: 'Fatima',
+      isLocal: false,
+      remoteSummary: RemoteChildSummary(
+        childUserId: 'c1',
+        displayName: 'Fatima',
+        progress: const KidsProgress.initial(),
+        logs: _logs(logs),
+        rewards: const [],
+        homeMissions: const [],
+      ),
+    );
+
+    testWidgets('a linked child at the log cap is marked incomplete', (
+      tester,
+    ) async {
+      await openReport(tester, remote(30));
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsOneWidget,
+      );
+      expect(find.text('Surahs completed'), findsNothing);
+    });
+
+    testWidgets('a linked child under the cap has no notice', (tester) async {
+      await openReport(tester, remote(5));
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a local child has no notice', (tester) async {
+      final local = FamilyChildEntry(
+        childUserId: 'local-child',
+        displayName: 'Talia',
+        isLocal: true,
+        localData: ParentDashboard(
+          progress: const KidsProgress.initial(),
+          stages: const [],
+          logs: _logs(40),
+          rewards: const [],
+          settings: _settings,
+          homeMissions: const [],
+        ),
+      );
+      await openReport(tester, local);
+
+      expect(
+        find.byKey(const ValueKey('monthly-report-incomplete')),
+        findsNothing,
+      );
+    });
+  });
+
   group('weekly summary', () {
     final getIt = GetIt.instance;
 
@@ -525,6 +746,123 @@ void main() {
       }
 
       expect(editor, findsNothing);
+    });
+  });
+
+  group('guardian promise', () {
+    final getIt = GetIt.instance;
+    const pickerKey = ValueKey('guardian-promise-surah');
+
+    Future<_Repo> openDialog(
+      WidgetTester tester,
+      FamilyChildEntry child, {
+      required bool flag,
+    }) async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      getIt.registerSingleton<KidsEnrichmentFlags>(
+        KidsEnrichmentFlags(
+          (key) =>
+              flag && key == KidsEnrichmentFeature.guardianPromise.storageKey,
+        ),
+      );
+      final repo = await _pump(tester, child);
+      if (getIt.isRegistered<MemorizationPlusRepository>()) {
+        await getIt.unregister<MemorizationPlusRepository>();
+      }
+      getIt.registerSingleton<MemorizationPlusRepository>(repo);
+      await tester.tap(find.byIcon(TaliaIcons.gift));
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    tearDown(() async {
+      if (getIt.isRegistered<KidsEnrichmentFlags>()) {
+        await getIt.unregister<KidsEnrichmentFlags>();
+      }
+      if (getIt.isRegistered<MemorizationPlusRepository>()) {
+        await getIt.unregister<MemorizationPlusRepository>();
+      }
+    });
+
+    testWidgets('the child on this device can link a gift to a surah', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _localChild(const []),
+        flag: true,
+      );
+
+      expect(find.byKey(pickerKey), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Park');
+      await tester.tap(find.byKey(pickerKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Al-Ikhlas').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('guardian-promise-save')));
+      await tester.pumpAndSettle();
+
+      expect(repo.savedRewards, ['Park:112']);
+    });
+
+    testWidgets('a linked child gets no condition picker', (tester) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: true,
+      );
+
+      expect(find.byKey(pickerKey), findsNothing);
+      await tester.enterText(find.byType(TextField), 'Park');
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(repo.remoteRewards, ['c1:Park']);
+      expect(repo.savedRewards, isEmpty);
+    });
+
+    testWidgets('a 60-character gift title saves with the feature on', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: true,
+      );
+
+      await tester.enterText(find.byType(TextField), 'a' * 60);
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(repo.remoteRewards, ['c1:${'a' * 60}']);
+    });
+
+    testWidgets('the gift title keeps the 50 limit with the feature off', (
+      tester,
+    ) async {
+      final repo = await openDialog(
+        tester,
+        _remoteChild(const []),
+        flag: false,
+      );
+
+      await tester.enterText(find.byType(TextField), 'a' * 60);
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      // The field itself stops at 50 characters.
+      expect(repo.remoteRewards, ['c1:${'a' * 50}']);
+    });
+
+    testWidgets('the picker stays hidden while the feature is off', (
+      tester,
+    ) async {
+      await openDialog(tester, _localChild(const []), flag: false);
+
+      expect(find.byKey(pickerKey), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }

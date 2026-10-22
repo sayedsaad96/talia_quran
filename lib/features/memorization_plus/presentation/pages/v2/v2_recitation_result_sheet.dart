@@ -17,6 +17,8 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/widgets/memorization_ayah_display.dart';
 import '../../cubits/memorization_session_cubit.dart';
+import '../../widgets/similar_ayah_label.dart';
+import 'v2_feedback_lifetime_guard.dart';
 
 /// Shows the modal result sheet for the latest evaluation feedback.
 ///
@@ -24,19 +26,31 @@ import '../../cubits/memorization_session_cubit.dart';
 /// drive the Cubit without this sheet touching it directly.
 Future<V2RecitationResultAction?> showV2RecitationResultSheet(
   BuildContext context,
-  V2EvaluationFeedback feedback,
-) {
+  V2EvaluationFeedback feedback, {
+  Stream<void>? expiry,
+  bool Function()? isCurrent,
+}) {
+  if (isCurrent != null && !isCurrent()) return Future.value(null);
   return showModalBottomSheet<V2RecitationResultAction>(
     context: context,
     useRootNavigator: true,
     isDismissible: false,
     enableDrag: false,
     backgroundColor: Colors.transparent,
-    builder: (sheetContext) => V2RecitationResultSheet(feedback: feedback),
+    builder: (sheetContext) {
+      final sheet = V2RecitationResultSheet(feedback: feedback);
+      return expiry == null && isCurrent == null
+          ? sheet
+          : V2FeedbackLifetimeGuard(
+              expiry: expiry,
+              isCurrent: isCurrent ?? () => true,
+              child: sheet,
+            );
+    },
   );
 }
 
-enum V2RecitationResultAction { retryNow, reviewAyah, dismiss }
+enum V2RecitationResultAction { retryNow, reviewAyah, dismiss, compareAyahs }
 
 /// Bottom sheet that turns the silent pass/fail transition into a clear,
 /// encouraging feedback moment with a colour-coded word comparison.
@@ -86,6 +100,22 @@ class V2RecitationResultSheet extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
               ],
               const SizedBox(height: AppSpacing.sm),
+              if (feedback.confusionMatch case final match?) ...[
+                Text(
+                  context.l10n.similarAyahFailureNotice(
+                    similarAyahLabelForKey(context, match.otherKey) ??
+                        match.otherKey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    V2RecitationResultAction.compareAyahs,
+                  ),
+                  child: Text(context.l10n.similarAyahOpenComparison),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               _ResultActions(result: result, accent: accent),
             ],
           ),

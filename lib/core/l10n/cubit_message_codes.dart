@@ -7,6 +7,7 @@ abstract final class CubitMessageCodes {
   static const hifzSurahLockedPrefix = '@hifz/surah_locked|';
   static const v2SurahLoadFailed = '@v2/surah_load_failed';
   static const v2NoAyahsInRange = '@v2/no_ayahs_in_range';
+  static const v2AccountChanged = '@v2/account_changed';
 
   static const kidsAudioPlaybackFailed = '@kids/audio_playback_failed';
   static const kidsMicPermissionDenied = '@kids/mic_permission_denied';
@@ -32,6 +33,7 @@ abstract final class CubitMessageCodes {
   static const guardianSameAccount = '@guardian/same_account';
   static const parentRewardTitleRequired = '@guardian/reward_title_required';
   static const parentRewardLimitReached = '@guardian/reward_limit_reached';
+  static const parentRewardTitleTooLong = '@guardian/reward_title_too_long';
   static const parentRewardUnavailable = '@guardian/reward_unavailable';
   static const childNicknameInvalid = '@guardian/child_nickname_invalid';
   static const childAgeInvalid = '@guardian/child_age_invalid';

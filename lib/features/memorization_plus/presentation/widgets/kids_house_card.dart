@@ -22,6 +22,7 @@ class KidsHouseCard extends StatelessWidget {
     this.onLockedTap,
     this.width = 172,
     this.celebrate = false,
+    this.useStageWording = false,
   });
 
   final KidsJourneyStage stage;
@@ -32,6 +33,10 @@ class KidsHouseCard extends StatelessWidget {
 
   /// K37 — completed since the child's last visit: glows once on arrival.
   final bool celebrate;
+
+  /// Quran journey: «المرحلة» instead of «بيت الحفظ». False keeps the
+  /// adventure wording.
+  final bool useStageWording;
 
   bool get _isLocked => stage.status == KidsJourneyStageStatus.locked;
   bool get _isCurrent => stage.status == KidsJourneyStageStatus.current;
@@ -46,13 +51,17 @@ class KidsHouseCard extends StatelessWidget {
     final title = stage.requiresHouseReview
         ? l10n.kidsHouseReviewTitle
         : _isReview
-        ? l10n.kidsGamifiedReviewHouseTitle(
+        ? (useStageWording
+              ? l10n.kidsReviewStageTitle
+              : l10n.kidsGamifiedReviewHouseTitle)(
             LocaleNumberFormatter.format(
               (stage.stageNumber).toString(),
               l10n.localeName,
             ),
           )
-        : l10n.kidsGamifiedHouseTitle(
+        : (useStageWording
+              ? l10n.kidsStageTitle
+              : l10n.kidsGamifiedHouseTitle)(
             LocaleNumberFormatter.format(
               (stage.stageNumber).toString(),
               l10n.localeName,

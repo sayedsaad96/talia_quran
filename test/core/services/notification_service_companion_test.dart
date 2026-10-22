@@ -80,6 +80,46 @@ void main() {
   });
 
   group('ID namespaces', () {
+    test('kids practice mask schedules Monday/Sunday and cancels old ids', () async {
+      when(() => plugin.zonedSchedule(
+        id: any(named: 'id'), title: any(named: 'title'), body: any(named: 'body'),
+        scheduledDate: any(named: 'scheduledDate'),
+        notificationDetails: any(named: 'notificationDetails'),
+        androidScheduleMode: any(named: 'androidScheduleMode'),
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: any(named: 'payload'))).thenAnswer((_) async {});
+      await service.scheduleKidsPracticeReminders(title: 'practice', body: 'body',
+        practiceDays: 65, hour: 18, minute: 30);
+      final dates = verify(() => plugin.zonedSchedule(
+        id: captureAny(named: 'id'), title: any(named: 'title'), body: any(named: 'body'),
+        scheduledDate: captureAny(named: 'scheduledDate'),
+        notificationDetails: any(named: 'notificationDetails'),
+        androidScheduleMode: any(named: 'androidScheduleMode'),
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: any(named: 'payload'))).captured;
+      expect(dates.whereType<int>(), [1130, 1136]);
+      expect(dates.whereType<tz.TZDateTime>().map((date) => date.weekday), [1, 7]);
+      verify(() => plugin.cancel(id: 1007)).called(1);
+      for (var id = 1130; id <= 1136; id++) {
+        verify(() => plugin.cancel(id: id)).called(1);
+      }
+    });
+
+    test('zero practice mask schedules none and cancellation covers all weekdays', () async {
+      await service.scheduleKidsPracticeReminders(title: 'practice', body: 'body',
+        practiceDays: 0);
+      verifyNever(() => plugin.zonedSchedule(
+        id: any(named: 'id'), title: any(named: 'title'), body: any(named: 'body'),
+        scheduledDate: any(named: 'scheduledDate'),
+        notificationDetails: any(named: 'notificationDetails'),
+        androidScheduleMode: any(named: 'androidScheduleMode'),
+        payload: any(named: 'payload')));
+      await service.cancelKidsReviewReminder();
+      for (var id = 1130; id <= 1136; id++) {
+        verify(() => plugin.cancel(id: id)).called(2);
+      }
+    });
+
     test('companion constants stay out of the legacy prayer range', () {
       expect(TaliaNotificationService.companionPlannedBaseId, 2100);
       expect(TaliaNotificationService.companionPlannedMaxCount, 20);

@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
 import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
@@ -22,6 +25,8 @@ import '../../domain/services/home_primary_action_resolver.dart';
 import '../theme/home_skin.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/home_activity_feed.dart';
+import '../widgets/home_after_prayer_azkar_card.dart';
+import '../widgets/prayer_review_home_slot.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
@@ -36,6 +41,8 @@ import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 import '../widgets/staggered_fade_slide.dart';
 import '../../../../core/router/open_location.dart';
+import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
+import '../../../progress/presentation/widgets/hijri_year_recap_slot.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.requestDailyAyahShare = false});
@@ -194,14 +201,21 @@ class HomeLoadedView extends StatefulWidget {
     super.key,
     required this.state,
     required this.skin,
+    this.clock,
   });
 
   final HomeLoaded state;
   final HomeSkin skin;
 
+  /// Injectable clock for the day-sensitive Ramadan card; defaults to now.
+  final DateTime Function()? clock;
+
   @override
   State<HomeLoadedView> createState() => _HomeLoadedViewState();
 }
+
+/// Never notifies; stands in when no clarity controller is registered.
+final ChangeNotifier _noClarityChanges = ChangeNotifier();
 
 class _HomeLoadedViewState extends State<HomeLoadedView> {
   final _scrollController = ScrollController();
@@ -214,6 +228,30 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: ClarityModeController.maybeInstance() ?? _noClarityChanges,
+      builder: (context, _) => _buildLoaded(
+        context,
+        clarityOn: ClarityModeController.isActive,
+      ),
+    );
+  }
+
+  /// The card computes its phase once per mount, so a new local day or a
+  /// changed Hijri adjustment must remount it.
+  Widget _ramadanCard() {
+    final now = (widget.clock ?? DateTime.now)();
+    final adjustment = getIt.isRegistered<HijriDateAdjustment>()
+        ? getIt<HijriDateAdjustment>().days
+        : 0;
+    return HomeRamadanCard(
+      key: ValueKey('ramadan-${now.year}-${now.month}-${now.day}|$adjustment'),
+      skin: widget.skin,
+      now: widget.clock,
+    );
+  }
+
+  Widget _buildLoaded(BuildContext context, {required bool clarityOn}) {
     final isDark = widget.skin.isDark;
     final journeyEnabled =
         JourneyFeatureFlags.unifiedJourneyEnabled && widget.state.unifiedJourneyEnabled;
@@ -268,6 +306,44 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 child: _PrimaryAction(state: widget.state, skin: widget.skin),
               ),
             ),
+            SliverToBoxAdapter(
+              child: HomeAfterPrayerAzkarCard(
+                skin: widget.skin,
+                snapshot: widget.state.prayerSnapshot,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                ),
+                child: PrayerReviewHomeSlot(
+                  skin: widget.skin,
+                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  isEnabled: getIt.isRegistered<ExperienceFlags>() &&
+                      getIt<ExperienceFlags>().isEnabled(
+                        ExperienceFeature.prayerReview,
+                      ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(child: _ramadanCard()),
+            if (getIt.isRegistered<ExperienceFlags>() &&
+                getIt<ExperienceFlags>().isEnabled(
+                  ExperienceFeature.hijriYearRecap,
+                ))
+              SliverToBoxAdapter(
+                child: HijriYearRecapSlot(
+                  enabled: true,
+                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                ),
+              ),
             if (journeyEnabled &&
                 widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(
@@ -318,6 +394,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
+            if (!clarityOn)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 240),
@@ -369,6 +446,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                   ),
                 ),
               ),
+            if (!clarityOn)
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 400),

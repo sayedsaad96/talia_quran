@@ -3,10 +3,14 @@ import 'package:isar_community/isar.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
 import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import '../../features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
+import '../../features/quran/data/models/isar_ayah_note.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
@@ -29,6 +33,10 @@ final List<CollectionSchema<dynamic>> appIsarSchemas = [
   ActivityEventIsarSchema,
   CloudSyncQueueItemSchema,
   PrayerCompanionRecordIsarSchema,
+  IsarAyahNoteSchema,
+  IsarConfusionPairSchema,
+  IsarPrayerReviewAssignmentSchema,
+  IsarPrayerReviewReceiptSchema,
 ];
 
 Future<Isar> openAppIsar({

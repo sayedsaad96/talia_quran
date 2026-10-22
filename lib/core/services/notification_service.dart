@@ -328,6 +328,8 @@ class TaliaNotificationService {
   static const String kidsReminderPreferenceKey = 'notifications_kids_review';
   static const String fridayKahfPreferenceKey = 'notifications_friday_kahf';
   static const String weeklyImpactPreferenceKey = 'notifications_weekly_impact';
+  static const String forgettingForecastPreferenceKey =
+      'notifications_forgetting_forecast';
   static const String tahajjudPreferenceKey = 'notifications_tahajjud';
   static const String khatmahReminderPreferenceKey = 'notifications_khatmah';
   static const String prayerNotificationsPreferenceKey =
@@ -365,12 +367,14 @@ class TaliaNotificationService {
   static const int _morningAzkarId = 1005;
   static const int _eveningAzkarId = 1006;
   static const int _kidsReviewId = 1007;
+  static const int _kidsPracticeBaseId = 1130;
   static const int _dailyDuaBaseId = 1010;
   static const int _dailyDuaScheduleDays = 16;
   static const int _dailyAyahBaseId = 1040;
   static const int _dailyAyahScheduleDays = 21;
   static const int _fridayKahfId = 1060;
   static const int _weeklyImpactId = 1064;
+  static const int _forgettingForecastId = 1065;
   static const int _tahajjudId = 1061;
   static const int _khatmahReminderId = 1062;
   static const int _khatmahReminderBaseId = 1110;
@@ -1724,6 +1728,7 @@ class TaliaNotificationService {
     int minute = 30,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _cancelKidsPracticeReminders();
     await _plugin.cancel(id: _kidsReviewId);
 
     await _zonedSchedule(
@@ -1739,8 +1744,42 @@ class TaliaNotificationService {
   }
 
   Future<void> cancelKidsReviewReminder() async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
+    if (!_companionSupported) return;
     await _plugin.cancel(id: _kidsReviewId);
+    await _cancelKidsPracticeReminders();
+  }
+
+  /// A nullable policy retains the legacy daily reminder; a zero mask is OFF.
+  /// Bits0..6 are Monday..Sunday and have their own stable, disjoint IDs.
+  Future<void> scheduleKidsPracticeReminders({
+    required String title,
+    required String body,
+    required int practiceDays,
+    int hour = 18,
+    int minute = 30,
+  }) async {
+    if (practiceDays < 0 || practiceDays > 127) {
+      throw RangeError.range(practiceDays, 0, 127, 'practiceDays');
+    }
+    if (!_companionSupported) return;
+    await cancelKidsReviewReminder();
+    for (var bit = 0; bit < 7; bit++) {
+      if ((practiceDays & (1 << bit)) == 0) continue;
+      await _zonedSchedule(
+        id: _kidsPracticeBaseId + bit, title: title, body: body,
+        scheduledDate: _nextInstanceOfDayAndTime(bit + 1, hour, minute),
+        notificationDetails: _kidsReviewNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: '/memorization-plus/kids-journey',
+      );
+    }
+  }
+
+  Future<void> _cancelKidsPracticeReminders() async {
+    for (var bit = 0; bit < 7; bit++) {
+      await _plugin.cancel(id: _kidsPracticeBaseId + bit);
+    }
   }
 
   // ─── Friday Surah Al-Kahf Reminder ─────────────────────────────────────────
@@ -1804,6 +1843,34 @@ class TaliaNotificationService {
   Future<void> cancelWeeklyImpactReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _weeklyImpactId);
+  }
+
+  /// Schedules the optional, generic forecast reminder without Quran or
+  /// review-record identifiers in the payload.
+  Future<void> scheduleForgettingForecastReminder({
+    required String title,
+    required String body,
+    required int weekday,
+    int hour = 18,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelForgettingForecastReminder();
+    await _zonedSchedule(
+      id: _forgettingForecastId,
+      title: title,
+      body: body,
+      scheduledDate: _nextInstanceOfDayAndTime(weekday, hour, minute),
+      notificationDetails: _milestoneCelebrationNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: '/progress',
+    );
+  }
+
+  Future<void> cancelForgettingForecastReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _forgettingForecastId);
   }
 
   // ─── Tahajjud / Qiyam Al-Layl Reminder ──────────────────────────────────────

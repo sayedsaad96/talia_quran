@@ -5,15 +5,28 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_number_formatter.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../theme/kids_theme.dart';
 
 /// One guardian gift in «كنوزي». An unlocked gift offers the request button;
 /// the guardian still has to confirm the hand-over.
 class KidsGiftCard extends StatelessWidget {
-  const KidsGiftCard({super.key, required this.reward, this.onRequest});
+  const KidsGiftCard({
+    super.key,
+    required this.reward,
+    this.onRequest,
+    this.milestoneProgress,
+    this.promiseJustKept = false,
+  });
 
   final ParentReward reward;
+
+  /// Saved ayahs of the surah this locked gift waits for (null: no condition).
+  final ({int done, int total})? milestoneProgress;
+
+  /// The surah promise came true on this visit.
+  final bool promiseJustKept;
 
   /// Null hides the request button (for example while it is being sent).
   final VoidCallback? onRequest;
@@ -36,6 +49,9 @@ class KidsGiftCard extends StatelessWidget {
         l10n.kidsGiftClaimed,
       ),
     };
+    final progress = reward.status == ParentRewardStatus.locked
+        ? milestoneProgress
+        : null;
     final canRequest =
         reward.status == ParentRewardStatus.unlocked && onRequest != null;
     return Container(
@@ -65,12 +81,58 @@ class KidsGiftCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  status,
+                  reward.origin == ParentRewardOrigin.unknown
+                      ? l10n.parentRewardOriginUnknown : status,
                   style: AppTypography.bodySmall.copyWith(
                     color: KidsTheme.inkOnParchment,
                     letterSpacing: 0,
                   ),
                 ),
+                if (promiseJustKept) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    l10n.promiseUnlockedByMilestone,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: KidsTheme.inkOnParchment,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+                if (progress != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Column(
+                    key: ValueKey('kids-gift-progress-${reward.id}'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LinearProgressIndicator(
+                        value: progress.total <= 0
+                            ? 0
+                            : (progress.done / progress.total).clamp(0.0, 1.0),
+                        color: KidsTheme.goldStar,
+                        backgroundColor: KidsTheme.parchmentEdge,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.promiseProgress(
+                          LocaleNumberFormatter.number(
+                            progress.done,
+                            l10n.localeName,
+                          ),
+                          progress.total,
+                          LocaleNumberFormatter.number(
+                            progress.total,
+                            l10n.localeName,
+                          ),
+                        ),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: KidsTheme.inkOnParchment,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

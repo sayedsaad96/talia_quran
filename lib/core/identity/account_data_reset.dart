@@ -22,6 +22,10 @@ import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
+import '../../features/quran/data/models/isar_ayah_note.dart';
+import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
+import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
 
 class AccountDataResetException implements Exception {
   const AccountDataResetException(this.message, [this.cause]);
@@ -111,6 +115,8 @@ class AccountDataReset {
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
   /// also removes `mem_plus_local_records_claimed_by` and every migration flag.
   static const Set<String> clearedPreferencePrefixes = {
+    'prayer_review_lengths|',
+    'kids_encouragement_pending_seen_v1_',
     'mem_plus_',
     'hifz_',
     'quran_bookmarks_owner_',
@@ -127,10 +133,18 @@ class AccountDataReset {
     'adult_journey_v1_',
     // Opt-in Prayer Companion settings are account-owned device data.
     'prayer_companion_',
+    // Ramadan self-log (tarawih pages heard), owner-scoped, local only.
+    'ramadan_',
+    // Per-owner, per-Hijri-year recap card dismissals.
+    'hijri_year_recap_dismissed_',
+    // Guardian «ما الجديد» seen ids, per owner and child (local only).
+    'guardian_milestones_seen',
   };
 
   /// Device-level preferences that must survive a logout.
   static const Set<String> retainedPreferenceKeys = {
+    // Explicitly downloaded recitations are device data, shared across owners.
+    'audio_downloads_manifest',
     'theme_mode',
     'locale',
     'bookmarks',
@@ -207,6 +221,12 @@ class AccountDataReset {
 
   Future<void> _clearDeletedAccountPreferences(String ownerId) async {
     final keys = _prefs.getKeys().where((key) {
+      if (key.startsWith('prayer_review_lengths|')) {
+        return key == 'prayer_review_lengths|$ownerId';
+      }
+      if (key.startsWith('kids_encouragement_pending_seen_v1_')) {
+        return key == 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}';
+      }
       if (key.startsWith('quran_bookmarks_owner_')) {
         return key == 'quran_bookmarks_owner_$ownerId' ||
             key == 'quran_bookmarks_owner_${ownerId}_migrated';
@@ -243,6 +263,21 @@ class AccountDataReset {
       await _isar.cloudSyncQueueItems.deleteAll(
         queue.map((row) => row.id).toList(),
       );
+      await _runWhenCollectionSchemaAvailable(() async {
+        await _isar.isarAyahNotes.filter().ownerIdEqualTo(ownerId).deleteAll();
+      });
+      await _runWhenCollectionSchemaAvailable(() async {
+        await _isar.isarConfusionPairs
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .deleteAll();
+      });
+      await _runWhenCollectionSchemaAvailable(() async {
+        await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).deleteAll();
+      });
+      await _runWhenCollectionSchemaAvailable(() async {
+        await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).deleteAll();
+      });
       // These legacy stores contain only the active, unscoped profile. They
       // must be erased, while explicitly owner-scoped records above survive.
       await _isar.isarAyahProgress.clear();
@@ -309,7 +344,9 @@ class AccountDataReset {
         )
         .where(
           (key) => !protectedOwners.any(
-            (ownerId) => key.startsWith('quran_bookmarks_owner_$ownerId'),
+            (ownerId) => key.startsWith('quran_bookmarks_owner_$ownerId') ||
+                key == 'prayer_review_lengths|$ownerId' ||
+                key == 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}',
           ),
         )
         .toList();
@@ -363,6 +400,29 @@ class AccountDataReset {
       await _runWhenCollectionSchemaAvailable(
         () => _isar.prayerCompanionRecordIsars.clear(),
       );
+      await _runWhenCollectionSchemaAvailable(() async {
+        if (protectedOwners.isEmpty) {
+          await _isar.isarAyahNotes.clear();
+          return;
+        }
+        final rows = await _isar.isarAyahNotes.where().findAll();
+        await _isar.isarAyahNotes.deleteAll([
+          for (final row in rows)
+            if (!protectedOwners.contains(row.ownerId)) row.id,
+        ]);
+      });
+      await _runWhenCollectionSchemaAvailable(() async {
+        if (protectedOwners.isEmpty) {
+          await _isar.isarConfusionPairs.clear();
+          return;
+        }
+        final rows = await _isar.isarConfusionPairs.where().findAll();
+        await _isar.isarConfusionPairs.deleteAll([
+          for (final row in rows)
+            if (!protectedOwners.contains(row.ownerId)) row.id,
+        ]);
+      });
+      await _clearPrayerReview(protectedOwners);
       if (protectedOwners.isEmpty) {
         await _isar.cloudSyncQueueItems.clear();
       } else {
@@ -373,6 +433,21 @@ class AccountDataReset {
             .toList();
         await _isar.cloudSyncQueueItems.deleteAll(removableIds);
       }
+    });
+  }
+
+  Future<void> _clearPrayerReview(Set<String> protectedOwners) async {
+    await _runWhenCollectionSchemaAvailable(() async {
+      final rows = await _isar.isarPrayerReviewAssignments.where().findAll();
+      await _isar.isarPrayerReviewAssignments.deleteAll([
+        for (final row in rows) if (!protectedOwners.contains(row.ownerId)) row.id,
+      ]);
+    });
+    await _runWhenCollectionSchemaAvailable(() async {
+      final rows = await _isar.isarPrayerReviewReceipts.where().findAll();
+      await _isar.isarPrayerReviewReceipts.deleteAll([
+        for (final row in rows) if (!protectedOwners.contains(row.ownerId)) row.id,
+      ]);
     });
   }
 

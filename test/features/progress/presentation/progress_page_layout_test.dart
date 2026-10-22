@@ -1,10 +1,13 @@
 import 'package:talia_quran/core/utils/locale_number_formatter.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
+import 'package:talia_quran/core/memorization/retention_forecast.dart';
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
@@ -63,6 +66,11 @@ void main() {
           ),
           findsOneWidget,
         );
+        expect(
+          find.text(l10n.forgettingForecastTitle),
+          findsNothing,
+          reason: 'The rollout flag is absent and therefore defaults off.',
+        );
       });
     }
   }
@@ -91,11 +99,67 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('shows three forecast passages and launches their review range', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final passages = [
+      for (final (surah, start, end) in const [(2, 1, 3), (3, 4, 5), (4, 6, 7)])
+        ForecastPassage(
+          surahId: surah,
+          startAyah: start,
+          endAyah: end,
+          weakensBy: DateTime.utc(2026, 10, 20),
+        ),
+    ];
+    getIt.registerSingleton<ExperienceFlags>(
+      ExperienceFlags(
+        (key) => key == ExperienceFeature.forgettingForecast.storageKey,
+      ),
+    );
+    getIt.unregister<ProgressCubit>();
+    getIt.registerFactory<ProgressCubit>(
+      () => _SeededProgressCubit(bus, passages),
+    );
+    final router = GoRouter(
+      initialLocation: '/progress',
+      routes: [
+        GoRoute(path: '/progress', builder: (_, _) => const ProgressPage()),
+        GoRoute(
+          path: '/memorization-v2/session',
+          builder: (_, state) => Text(state.uri.toString()),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Review now'), findsNWidgets(3));
+    final reviewButton = find.widgetWithText(TextButton, 'Review now').at(1);
+    await tester.tap(reviewButton);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('surahId=3'), findsOneWidget);
+    expect(find.textContaining('startAyah=4'), findsOneWidget);
+    expect(find.textContaining('reviewEndAyah=5'), findsOneWidget);
+  });
 }
 
 class _SeededProgressCubit extends ProgressCubit {
-  _SeededProgressCubit(ProgressEventsBus bus)
+  _SeededProgressCubit(ProgressEventsBus bus, [this.passages = const []])
     : super(_NeverCalledUsecase(), _NeverCalledResolver(), bus);
+
+  final List<ForecastPassage> passages;
 
   @override
   Future<void> load() async {
@@ -143,6 +207,7 @@ class _SeededProgressCubit extends ProgressCubit {
           reviewAyahs: 12,
           kidsPoints: 340,
           kidsStars: 21,
+          weakeningPassages: passages,
         ),
         activityCountsByDay: const {'2026-09-28': 12},
         activityStartDate: DateTime(2025, 1, 1),

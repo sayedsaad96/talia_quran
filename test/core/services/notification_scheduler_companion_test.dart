@@ -1,5 +1,6 @@
 ﻿import 'dart:ui';
 
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,13 +56,20 @@ void main() {
     scheduledAt: DateTime(2026, 9, 20, 5, 30),
   );
 
-  Future<NotificationScheduler> buildScheduler() async {
+  Future<NotificationScheduler> buildScheduler({
+    Future<String?> Function(PrayerOccurrence, AppLocalizations)? reviewBody,
+    DateTime Function()? reviewNow,
+    Future<int?> Function()? practiceDays,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     return NotificationScheduler(
       service,
       prayerTimesService: prayerTimes,
       prayerCompanionPlanner: planner,
       prayerCompanionPreferences: PrayerCompanionPreferences(prefs),
+      prayerReviewBodyLoader: reviewBody,
+      prayerReviewNow: reviewNow,
+      kidsPracticeDaysLoader: practiceDays,
     );
   }
 
@@ -77,6 +85,9 @@ void main() {
     when(() => service.cancelStreakAlert()).thenAnswer((_) async {});
     when(() => service.cancelStreakGentleNudge()).thenAnswer((_) async {});
     when(() => service.cancelSmartReminder()).thenAnswer((_) async {});
+    when(
+      () => service.cancelForgettingForecastReminder(),
+    ).thenAnswer((_) async {});
     when(() => service.cancelFridayKahfReminder()).thenAnswer((_) async {});
     when(() => service.cancelWeeklyImpactReminder()).thenAnswer((_) async {});
     when(
@@ -193,6 +204,154 @@ void main() {
   });
 
   group('prayer companion scheduling', () {
+    test('remote practice days use weekly schedule and null keeps daily path', () async {
+      SharedPreferences.setMockInitialValues({TaliaNotificationService.kidsReminderPreferenceKey: true});
+      when(() => service.scheduleKidsPracticeReminders(
+        title: any(named: 'title'), body: any(named: 'body'),
+        practiceDays: any(named: 'practiceDays'),
+        hour: any(named: 'hour'), minute: any(named: 'minute'))).thenAnswer((_) async {});
+      when(() => service.scheduleKidsReviewReminder(
+        title: any(named: 'title'), body: any(named: 'body'),
+        hour: any(named: 'hour'), minute: any(named: 'minute'))).thenAnswer((_) async {});
+      for (final mask in [65, 0, null]) {
+        final scheduler = await buildScheduler(practiceDays: () async => mask);
+        await scheduler.refreshNotifications(l10n, force: true);
+        if (mask == null) {
+          verify(() => service.scheduleKidsReviewReminder(
+            title: any(named: 'title'), body: any(named: 'body'),
+            hour: any(named: 'hour'), minute: any(named: 'minute'))).called(1);
+        } else {
+          verify(() => service.scheduleKidsPracticeReminders(
+            title: any(named: 'title'), body: any(named: 'body'), practiceDays: mask,
+            hour: any(named: 'hour'), minute: any(named: 'minute'))).called(1);
+        }
+      }
+    });
+
+    test('stalled review lookup falls back once and stops late lookups', () async {
+      SharedPreferences.setMockInitialValues({PrayerCompanionPreferences.enabledKey: true});
+      when(() => prayerTimes.isReadyForNotificationScheduling).thenReturn(true);
+      final now = DateTime(2026, 9, 20, 11, 40);
+      final plan = [
+        for (final id in [2100, 2102])
+          ScheduledPrayerCompanionNotification(id: id,
+            kind: PrayerCompanionNotificationKind.preparation,
+            occurrence: occurrence(PrayerKey.dhuhr),
+            scheduledAt: DateTime(2026, 9, 20, 11, 50)),
+      ];
+      when(() => planner.plan(now: any(named: 'now'))).thenAnswer((_) async => plan);
+      final stalled = Completer<String?>();
+      var calls = 0;
+      final scheduler = await buildScheduler(reviewNow: () => now,
+        reviewBody: (_, _) { calls++; return stalled.future; });
+      final refresh = scheduler.refreshNotifications(l10n, force: true);
+      try {
+        await refresh.timeout(const Duration(seconds: 4));
+      } finally {
+        stalled.complete('late suggestion');
+      }
+      await refresh;
+      await Future<void>.delayed(Duration.zero);
+      final values = verify(() => service.schedulePrayerCompanionReminders(
+        reminders: captureAny(named: 'reminders'), titleFor: any(named: 'titleFor'),
+        bodyFor: captureAny(named: 'bodyFor'))).captured;
+      expect(values[0], plan);
+      final body = values[1] as String Function(ScheduledPrayerCompanionNotification);
+      expect(body(plan.first), l10n.notificationCompanionPreparationBody('الظهر'));
+      expect(calls, 1);
+      verifyNever(() => service.cancelPrayerCompanionReminders());
+    });
+
+    test('review text changes only preparation copy and errors keep original plan', () async {
+      SharedPreferences.setMockInitialValues({PrayerCompanionPreferences.enabledKey: true});
+      when(() => prayerTimes.isReadyForNotificationScheduling).thenReturn(true);
+      final now = DateTime(2026, 9, 20, 11, 40);
+      final selectedOccurrence = occurrence(PrayerKey.dhuhr);
+      final preparation = ScheduledPrayerCompanionNotification(id: 2100,
+        kind: PrayerCompanionNotificationKind.preparation,
+        occurrence: selectedOccurrence, scheduledAt: DateTime(2026, 9, 20, 11, 50));
+      final checkIn = ScheduledPrayerCompanionNotification(id: 2101,
+        kind: PrayerCompanionNotificationKind.checkIn,
+        occurrence: selectedOccurrence, scheduledAt: DateTime(2026, 9, 20, 12, 20));
+      final plan = [preparation, checkIn];
+      when(() => planner.plan(now: any(named: 'now'))).thenAnswer((_) async => plan);
+      for (final mode in ['disabled', 'available', 'unavailable', 'failure']) {
+        var lookups = 0;
+        final scheduler = await buildScheduler(reviewNow: () => now,
+          reviewBody: mode == 'disabled' ? null : (_, _) async {
+            lookups++;
+            if (mode == 'failure') throw StateError('unavailable');
+            return mode == 'available' ? 'suggestion' : null;
+          });
+        await scheduler.refreshNotifications(l10n, force: true);
+        final values = verify(() => service.schedulePrayerCompanionReminders(
+          reminders: captureAny(named: 'reminders'), titleFor: any(named: 'titleFor'),
+          bodyFor: captureAny(named: 'bodyFor'))).captured;
+        expect(values[0], plan);
+        final body = values[1] as String Function(ScheduledPrayerCompanionNotification);
+        final base = l10n.notificationCompanionPreparationBody('الظهر');
+        expect(body(preparation), mode == 'available' ? '$base\nsuggestion' : base);
+        expect(body(checkIn), l10n.notificationCompanionCheckInBody('الظهر'));
+        expect(lookups, mode == 'disabled' ? 0 : 1);
+      }
+      verifyNever(() => service.cancelPrayerCompanionReminders());
+    });
+
+    test('review lookup never runs after the prayer has started', () async {
+      SharedPreferences.setMockInitialValues({PrayerCompanionPreferences.enabledKey: true});
+      when(() => prayerTimes.isReadyForNotificationScheduling).thenReturn(true);
+      final now = DateTime(2026, 9, 20, 12, 1);
+      final preparation = ScheduledPrayerCompanionNotification(id: 2100,
+        kind: PrayerCompanionNotificationKind.preparation,
+        occurrence: occurrence(PrayerKey.dhuhr), scheduledAt: now.add(const Duration(minutes: 1)));
+      when(() => planner.plan(now: any(named: 'now'))).thenAnswer((_) async => [preparation]);
+      var lookups = 0;
+      final scheduler = await buildScheduler(reviewNow: () => now,
+        reviewBody: (_, _) async { lookups++; return 'suggestion'; });
+      await scheduler.refreshNotifications(l10n, force: true);
+      expect(lookups, 0);
+    });
+
+    test('review lookup skips occurrences more than 24h away', () async {
+      SharedPreferences.setMockInitialValues({PrayerCompanionPreferences.enabledKey: true});
+      when(() => prayerTimes.isReadyForNotificationScheduling).thenReturn(true);
+      final now = DateTime(2026, 9, 18, 11, 40);
+      final far = ScheduledPrayerCompanionNotification(id: 2100,
+        kind: PrayerCompanionNotificationKind.preparation,
+        occurrence: occurrence(PrayerKey.dhuhr), scheduledAt: DateTime(2026, 9, 20, 11, 50));
+      when(() => planner.plan(now: any(named: 'now'))).thenAnswer((_) async => [far]);
+      var lookups = 0;
+      final scheduler = await buildScheduler(reviewNow: () => now,
+        reviewBody: (_, _) async { lookups++; return 'suggestion'; });
+      await scheduler.refreshNotifications(l10n, force: true);
+      expect(lookups, 0);
+      final values = verify(() => service.schedulePrayerCompanionReminders(
+        reminders: any(named: 'reminders'), titleFor: any(named: 'titleFor'),
+        bodyFor: captureAny(named: 'bodyFor'))).captured;
+      final body = values.single as String Function(ScheduledPrayerCompanionNotification);
+      expect(body(far), l10n.notificationCompanionPreparationBody('الظهر'));
+    });
+
+    test('kids practice-day loader failure keeps the legacy daily reminder', () async {
+      SharedPreferences.setMockInitialValues({TaliaNotificationService.kidsReminderPreferenceKey: true});
+      when(() => service.scheduleKidsPracticeReminders(
+        title: any(named: 'title'), body: any(named: 'body'),
+        practiceDays: any(named: 'practiceDays'),
+        hour: any(named: 'hour'), minute: any(named: 'minute'))).thenAnswer((_) async {});
+      when(() => service.scheduleKidsReviewReminder(
+        title: any(named: 'title'), body: any(named: 'body'),
+        hour: any(named: 'hour'), minute: any(named: 'minute'))).thenAnswer((_) async {});
+      final scheduler = await buildScheduler(practiceDays: () async => throw StateError('x'));
+      await scheduler.refreshNotifications(l10n, force: true);
+      verify(() => service.scheduleKidsReviewReminder(
+        title: any(named: 'title'), body: any(named: 'body'),
+        hour: any(named: 'hour'), minute: any(named: 'minute'))).called(1);
+      verifyNever(() => service.scheduleKidsPracticeReminders(
+        title: any(named: 'title'), body: any(named: 'body'),
+        practiceDays: any(named: 'practiceDays'),
+        hour: any(named: 'hour'), minute: any(named: 'minute')));
+    });
+
     test(
       'adds Companion events without changing legacy prayer requests',
       () async {

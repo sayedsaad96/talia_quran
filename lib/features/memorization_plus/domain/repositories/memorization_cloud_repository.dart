@@ -16,6 +16,7 @@ abstract class MemorizationCloudRepository {
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,
     required String title,
+    int? milestoneSurahId,
   });
   Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
     String rewardId,

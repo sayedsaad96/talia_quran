@@ -41,7 +41,34 @@ enum KidsEnrichmentFeature {
   weeklyPack,
 
   /// T12 — personal recitation portfolio (deferred).
-  recitationPortfolio;
+  recitationPortfolio,
+
+  /// البند 23 — مُغطّى بـ ChildProgressPanel (قائمة الشهادات القابلة للطباعة والمشاركة)؛ لا يقرؤه شيء
+  guardianCertificates,
+
+  /// البند 24 من خارطة التميّز
+  bedtimeListening,
+
+  /// البند 21 من خارطة التميّز
+  guardianPromise,
+
+  /// البند 20 من خارطة التميّز
+  guardianRecitation,
+
+  /// البند 25 من خارطة التميّز
+  guardianMilestones,
+
+  /// البند 27 من خارطة التميّز
+  monthlyReport,
+
+  /// Phase 2 — guardian planning hints for the linked child.
+  remotePlan,
+
+  /// Phase 2 — remote milestone gifts.
+  remotePromise,
+
+  /// Phase 2 — fixed encouragement messages and approved stickers.
+  encouragements;
 
   String get storageKey => '${KidsEnrichmentFlags.keyPrefix}$name';
 }
