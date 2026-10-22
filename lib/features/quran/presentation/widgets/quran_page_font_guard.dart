@@ -5,6 +5,25 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_colors.dart';
 
+/// Loads and reports QCF font registration for a canonical Mushaf page.
+abstract interface class QuranPageFontLoader {
+  bool isFontLoaded(int pageNumber);
+  Future<void> ensureFontLoaded(int pageNumber);
+}
+
+/// Default bridge to the QCF package loader.
+final class QcfPageFontLoader implements QuranPageFontLoader {
+  const QcfPageFontLoader();
+
+  @override
+  bool isFontLoaded(int pageNumber) =>
+      qcf.QcfFontLoader.isFontLoaded(pageNumber);
+
+  @override
+  Future<void> ensureFontLoaded(int pageNumber) =>
+      qcf.QcfFontLoader.ensureFontLoaded(pageNumber);
+}
+
 /// Ensures QCF fonts for a specific Quran page are loaded into Flutter engine
 /// before rendering the page. Displays a high-quality Shimmer loading placeholder
 /// while fonts are loading to prevent broken text rendering.
@@ -14,18 +33,22 @@ class QuranPageFontGuard extends StatefulWidget {
     required this.pageNumber,
     required this.isDark,
     required this.child,
+    this.fontLoader = const QcfPageFontLoader(),
   });
 
   final int pageNumber;
   final bool isDark;
   final Widget child;
+  final QuranPageFontLoader fontLoader;
 
   @override
   State<QuranPageFontGuard> createState() => _QuranPageFontGuardState();
 }
 
 class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
-  bool _isFontLoaded = false;
+  int _requestGeneration = 0;
+  int? _readyPage;
+  QuranPageFontLoader? _readyLoader;
 
   @override
   void initState() {
@@ -36,34 +59,74 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
   @override
   void didUpdateWidget(covariant QuranPageFontGuard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.pageNumber != widget.pageNumber) {
+    if (oldWidget.pageNumber != widget.pageNumber ||
+        !identical(oldWidget.fontLoader, widget.fontLoader)) {
       _checkAndLoadFont();
     }
   }
 
   void _checkAndLoadFont() {
-    if (qcf.QcfFontLoader.isFontLoaded(widget.pageNumber)) {
-      if (!_isFontLoaded) {
-        setState(() => _isFontLoaded = true);
-      }
+    final generation = ++_requestGeneration;
+    final page = widget.pageNumber;
+    final loader = widget.fontLoader;
+    _readyPage = null;
+    _readyLoader = null;
+
+    if (loader.isFontLoaded(page)) {
+      _markReady(generation, page, loader);
       return;
     }
 
-    _isFontLoaded = false;
-    qcf.QcfFontLoader.ensureFontLoaded(widget.pageNumber).then((_) {
-      if (mounted) {
-        setState(() => _isFontLoaded = true);
-      }
-    }).catchError((_) {
-      if (mounted) {
-        setState(() => _isFontLoaded = true);
-      }
+    try {
+      loader.ensureFontLoaded(page).then(
+        (_) => _markReady(generation, page, loader),
+        onError: (_, __) => _markFailed(generation, page, loader),
+      );
+    } catch (_) {
+      _markFailed(generation, page, loader);
+    }
+  }
+
+  bool _isCurrentRequest(
+    int generation,
+    int page,
+    QuranPageFontLoader loader,
+  ) =>
+      mounted &&
+      generation == _requestGeneration &&
+      page == widget.pageNumber &&
+      identical(loader, widget.fontLoader);
+
+  void _markReady(int generation, int page, QuranPageFontLoader loader) {
+    if (!_isCurrentRequest(generation, page, loader) ||
+        !loader.isFontLoaded(page)) {
+      return;
+    }
+    setState(() {
+      _readyPage = page;
+      _readyLoader = loader;
+    });
+  }
+
+  void _markFailed(int generation, int page, QuranPageFontLoader loader) {
+    if (!_isCurrentRequest(generation, page, loader)) return;
+    setState(() {
+      _readyPage = null;
+      _readyLoader = null;
     });
   }
 
   @override
+  void dispose() {
+    _requestGeneration++;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_isFontLoaded || qcf.QcfFontLoader.isFontLoaded(widget.pageNumber)) {
+    if (_readyPage == widget.pageNumber &&
+        identical(_readyLoader, widget.fontLoader) &&
+        widget.fontLoader.isFontLoaded(widget.pageNumber)) {
       return widget.child;
     }
 
