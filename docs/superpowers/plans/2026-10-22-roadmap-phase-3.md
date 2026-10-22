@@ -97,7 +97,7 @@
   - `final class QuranSpread { final int? rightPage; final int? leftPage; }`
   - الثابت `const kOddPageOnRight = true;` (قرار R3). ولا يُغيَّر أي شيء آخر عند تبديله.
 
-- [ ] **Step 1: الاختبارات الفاشلة**
+- [x] **Step 1: الاختبارات الفاشلة**
   - `shouldShowSpread`:
     - `(839, landscape, true)` ← false.
     - `(840, landscape, true)` ← true.
@@ -109,10 +109,10 @@
   - كل صفحة من 1 إلى 604 تظهر في spread واحد فقط.
   - `spreadAt(spreadIndexForPage(p))` يحتوي `p` لكل `p`.
   - نسخة ثانية من الاختبار بالقيمة الأخرى للثابت (مجموعة `group` بمعامل)، حتى يبقى قرار R3 آمناً.
-- [ ] **Step 2:** `flutter test test/features/quran/domain/quran_spread_policy_test.dart`. المتوقع: FAIL، الملف غير موجود.
-- [ ] **Step 3:** التنفيذ. دوال خالصة، بلا Flutter إلا `Orientation`.
-- [ ] **Step 4:** الاختبار نفسه. المتوقع: PASS.
-- [ ] **Step 5:** Commit `feat(quran): two-page spread policy`.
+- [x] **Step 2:** `flutter test test/features/quran/domain/quran_spread_policy_test.dart`. المتوقع: FAIL، الملف غير موجود.
+- [x] **Step 3:** التنفيذ. دوال خالصة، بلا Flutter إلا `Orientation`.
+- [x] **Step 4:** الاختبار نفسه. المتوقع: PASS.
+- [x] **Step 5:** Commit `feat(quran): two-page spread policy`.
 
 ### Task H2: نموذج أولي وقياس الأداء، ثم قرار المتابعة أو التوقف
 
@@ -121,12 +121,12 @@
 - Create: `docs/superpowers/reviews/YYYY-MM-DD-tablet-spread-perf.md`
 - Test: `test/features/quran/presentation/widgets/quran_spread_view_test.dart`
 
-- [ ] **Step 1: اختبار widget فاشل:**
+- [x] **Step 1: اختبار widget فاشل:**
   - على `Size(1280, 800)` تظهر الصفحتان، و`rightPage` على يمين `leftPage` (تُقارن `tester.getCenter(...).dx`)، حتى تحت `Directionality.rtl`.
   - `leftPage == null` ← صفحة واحدة في نصف الشاشة الأيمن.
-- [ ] **Step 2:** تشغيله. المتوقع: FAIL.
+- [x] **Step 2:** تشغيله. المتوقع: FAIL.
 - [ ] **Step 3:** التنفيذ. `pageBuilder` يستقبل رقم الصفحة ويعيد نفس الـwidget الذي يستخدمه `AppQuranPageView` لصفحة واحدة، دون تعديل حزمة qcf.
-- [ ] **Step 4:** تشغيله. المتوقع: PASS.
+- [x] **Step 4:** تشغيله. المتوقع: PASS.
 - [ ] **Step 5: قياس الأداء على جهاز لوحي أو إيميوليتر بعرض 1280×800 أفقي:**
   - بناء profile، ثم `flutter run --profile`.
   - تقليب 30 صفحة، وقراءة DevTools.
