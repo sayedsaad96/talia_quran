@@ -5,7 +5,7 @@ const kSpreadMinWidthDp = 840.0;
 
 /// Whether odd-numbered canonical Mushaf pages appear on the visual right.
 ///
-/// The printed Madinah Mushaf starts with page 1 on the right.
+/// This is the owner-approved R3 decision for Phase 3.
 const kOddPageOnRight = true;
 
 const _kCanonicalPageCount = 604;
