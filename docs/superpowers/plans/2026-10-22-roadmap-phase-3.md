@@ -125,7 +125,7 @@
   - على `Size(1280, 800)` تظهر الصفحتان، و`rightPage` على يمين `leftPage` (تُقارن `tester.getCenter(...).dx`)، حتى تحت `Directionality.rtl`.
   - `leftPage == null` ← صفحة واحدة في نصف الشاشة الأيمن.
 - [x] **Step 2:** تشغيله. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ. `pageBuilder` يستقبل رقم الصفحة ويعيد نفس الـwidget الذي يستخدمه `AppQuranPageView` لصفحة واحدة، دون تعديل حزمة qcf.
+- [x] **Step 3:** التنفيذ. `pageBuilder` يستقبل رقم الصفحة ويعيد نفس الـwidget الذي يستخدمه `AppQuranPageView` لصفحة واحدة، دون تعديل حزمة qcf.
 - [x] **Step 4:** تشغيله. المتوقع: PASS.
 - [ ] **Step 5: قياس الأداء على جهاز لوحي أو إيميوليتر بعرض 1280×800 أفقي:**
   - بناء profile، ثم `flutter run --profile`.
@@ -185,17 +185,17 @@
   - `Duration promptClipLength(Duration ayahDuration)`: الأصغر بين 3 ثوانٍ ونصف مدة الآية، ولا يقل عن ثانية.
   - `HandsFreeRoundSummary summarize(...)`: عدد «صح» و«راجع»، وقائمة آيات «راجع» للعرض فقط.
 
-- [ ] **Step 1: الاختبارات الفاشلة:**
+- [x] **Step 1: الاختبارات الفاشلة:**
   - ترتيب الأكثر تأخراً أولاً، والحد 10.
   - لا سجلات مستحقة ← `finished` فوراً، وملخص فارغ.
   - `grade` خارج `userTurn` ← نفس الحالة دون تغيير.
   - `interrupt` أثناء `userTurn` ← `paused`، والملخص لا يحتوي تلك الآية. **(Review Focus 2)**
   - `promptClipLength(Duration(seconds: 2))` ← ثانية واحدة. و`(10s)` ← 3 ثوانٍ. و`(1500ms)` ← ثانية واحدة.
   - المحرك لا يستورد أي ملف من `review_outcome_committer` أو SRS. يُفحص بقراءة مصدر الملف داخل الاختبار، أي اختبار حدود.
-- [ ] **Step 2:** `flutter test test/core/memorization/hands_free`. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ.
-- [ ] **Step 4:** نفس الأمر. المتوقع: PASS.
-- [ ] **Step 5:** Commit `feat(hifz): hands-free review round engine (no SRS writes)`.
+- [x] **Step 2:** `flutter test test/core/memorization/hands_free`. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ.
+- [x] **Step 4:** نفس الأمر. المتوقع: PASS.
+- [x] **Step 5:** Commit `feat(hifz): hands-free review round engine (no SRS writes)`.
 
 ### Task I2: التحكم بالصوت وأزرار الوسائط
 
