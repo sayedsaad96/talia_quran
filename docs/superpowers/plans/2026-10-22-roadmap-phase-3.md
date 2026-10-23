@@ -216,7 +216,7 @@
   - `abstract interface class HandsFreeMediaDelegate { void onPrimary(); void onSecondary(); void onInterrupted(); }`
   - `HandsFreeReviewCubit`، وطرقه: `start()` و`stopRound()`. وحالته `HandsFreeReviewState`، وفيها: الحالة من I1، و`micAvailable`، و`firstUseWarningPending`.
 
-- [ ] **Step 1: الاختبارات الفاشلة:**
+- [x] **Step 1: الاختبارات الفاشلة:**
   1. بلا مندوب، `play()` يشغّل القارئ كما قبل، ويُتحقق من ذلك بمشغّل وهمي.
   2. مع المندوب: `play()` يستدعي `onPrimary` ولا يشغّل القارئ.
   3. الكيوبت مع ميكروفون وهمي يعيد نص الآية الصحيح ← نغمة `correct` تعمل، ثم `next`.
@@ -224,10 +224,10 @@
   5. فقد تركيز الصوت أو حدث `becomingNoisy` ← `interrupt`، ولا نغمة، ولا تقييم. **(Review Focus 2)**
   6. لا استدعاء لأي `commit*` أو SRS طوال الجولة، يُتحقق منه بـmock صارم للمستودع.
   7. `stopRound()` يزيل المندوب، فيعود القارئ لسلوكه.
-- [ ] **Step 2:** تشغيلها. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ. تشغيل المقطع يقتصر على أول `promptClipLength` من ملف الآية، ثم إيقاف المشغّل. ولا يُخزَّن الصوت الملتقط (`SpeechToText` يعطي نصاً فقط).
-- [ ] **Step 4:** تشغيلها، ثم `test/core/services`. المتوقع: PASS.
-- [ ] **Step 5:** Commit `feat(hifz): hands-free review audio and media-button control`.
+- [x] **Step 2:** تشغيلها. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ. تشغيل المقطع يقتصر على أول `promptClipLength` من ملف الآية، ثم إيقاف المشغّل. ولا يُخزَّن الصوت الملتقط (`SpeechToText` يعطي نصاً فقط).
+- [x] **Step 4:** تشغيلها، ثم `test/core/services`. المتوقع: PASS.
+- [x] **Step 5:** Commit `feat(hifz): hands-free review audio and media-button control`.
 
 ### Task I3: الصفحة والدخول والتنبيه الأول
 
@@ -238,16 +238,20 @@
 - ARB: `handsFreeTitle`، و`handsFreeDrivingWarning` (النص: «لا تستخدم الشاشة أثناء القيادة»، من المواصفة)، و`handsFreeStart`، و`handsFreeCorrect`، و`handsFreeReview`، و`handsFreeSummary` بـICU plural، و`handsFreeNoDue`، و`handsFreeMicFallback`.
 - Test: `test/features/memorization_plus/presentation/pages/hands_free_review_page_test.dart`، و`test/core/router/hands_free_route_policy_test.dart`
 
-- [ ] **Step 1: الاختبارات الفاشلة:**
+- [x] **Step 1: الاختبارات الفاشلة:**
   - أول فتح يُظهر تحذير القيادة، ولا يظهر بعد قبوله (`hands_free_warning_seen|<owner>`).
   - العلم مطفأ ← لا بطاقة في المركز، والمسار يعيد إلى المركز.
   - ملف طفل ← إعادة توجيه.
   - لا مستحقات ← `handsFreeNoDue`.
   - الملخص يعرض أسماء السور وأرقام الآيات (`similarAyahLabel` من المرحلة 2)، **لا نص الآيات**.
-- [ ] **Step 2:** تشغيلها. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ. ويُضاف المفتاح `hands_free_warning_seen|` إلى `AccountDataReset`.
-- [ ] **Step 4:** تشغيلها، ثم `flutter analyze`. المتوقع: PASS ولا ملاحظات.
-- [ ] **Step 5:** Commit `feat(hifz): hands-free review page behind handsFreeReview`.
+- [x] **Step 2:** تشغيلها. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ. ويُضاف المفتاح `hands_free_warning_seen|` إلى `AccountDataReset`.
+- [x] **Step 4:** تشغيلها، ثم `flutter analyze`. المتوقع: PASS ولا ملاحظات.
+- [x] **Step 5:** Commit `feat(hifz): hands-free review page behind handsFreeReview`.
+
+توثيق I2/I3: `07cb4268` و`a54ac6e`، و2302 اختبار ناجح والتحليل الشامل بلا
+ملاحظات. [تقرير التنفيذ وحدود التحقق](../reviews/2026-10-23-hands-free-review.md).
+هذه نتائج آلية؛ I4 ما زال مطلوبًا قبل تفعيل العلم.
 
 ### Task I4: تجربة المالك (T8.3)
 
