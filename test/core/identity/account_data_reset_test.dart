@@ -388,6 +388,12 @@ void main() {
       expect(prefs.getString('mem_plus_home_missions|user-a'), isNull);
     });
 
+    test('clears group snapshots and pending operations on account reset', () async {
+      await prefs.setString('group_khatmah_cache_v1|user-a', '{"pending":["private-a"]}');
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+      expect(prefs.getString('group_khatmah_cache_v1|user-a'), isNull);
+    });
+
     test(
       'clears account-owned Khatmah data while retaining device settings',
       () async {

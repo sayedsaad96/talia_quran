@@ -2,6 +2,9 @@ import 'dart:async';
 import 'prayer_review_injection.dart';
 import 'hands_free_injection.dart';
 import 'home_widget_injection.dart';
+import 'group_khatmah_injection.dart';
+import '../sync/group_khatmah_environment.dart';
+import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import '../home_widget/home_widget_publisher.dart';
 import 'kids_remote_plan_injection.dart';
 import 'kids_encouragement_injection.dart';
@@ -909,6 +912,12 @@ Future<void> configureDependencies({bool background = false}) async {
       achievementService: getIt<AchievementService>(),
       cloudSyncQueue: getIt<CloudSyncQueue>(),
       bookmarkService: getIt<BookmarkService>(),
+      groupKhatmahRepository: getIt.isRegistered<GroupKhatmahRepository>()
+          ? getIt<GroupKhatmahRepository>() : null,
+      groupKhatmahAvailable: () =>
+          getIt.isRegistered<GroupKhatmahAppEnvironment>() &&
+          getIt<GroupKhatmahAppEnvironment>().featureEnabled &&
+          getIt<GroupKhatmahAppEnvironment>().isAdult,
       onMemorizationIdentityChanged:
           getIt<MemorizationPathResolver>().notifyChanged,
       syncBookmarks: !background,
@@ -1766,6 +1775,7 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KhatmDuaCubit(getIt<GetKhatmDuaUsecase>()),
   );
   if (!background) await registerHomeWidget(getIt);
+  if (!background) await registerGroupKhatmah(getIt);
   getIt.registerSingleton<AuthCubit>(
     AuthCubit(
       getIt<AuthRepository>(),

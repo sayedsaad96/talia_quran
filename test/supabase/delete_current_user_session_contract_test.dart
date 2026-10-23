@@ -16,9 +16,9 @@ void main() {
     expect(migration, contains('GRANT EXECUTE ON FUNCTION'));
   });
 
-  test('the hardened deletion RPC is the last definition applied', () {
-    // Migrations apply in lexical order; a later redefinition would silently
-    // drop the session check.
+  test('the latest deletion RPC preserves session checks before group cleanup', () {
+    // Migrations apply in lexical order. Verify the final behavior rather than
+    // pinning an older filename when a reviewed extension is added.
     final definitions =
         Directory('supabase/migrations')
             .listSync()
@@ -32,9 +32,19 @@ void main() {
             .toList()
           ..sort();
 
-    expect(
-      definitions.last,
-      '20261001235630_harden_delete_current_user_session.sql',
+    final source = File('supabase/migrations/${definitions.last}')
+        .readAsStringSync();
+    final start = source.indexOf(
+      'CREATE OR REPLACE FUNCTION public.delete_current_user()',
     );
+    expect(start, isNonNegative);
+    final definition = source.substring(start);
+    expect(definition, contains("auth.jwt() ->> 'session_id'"));
+    expect(definition, contains('FROM auth.sessions AS session'));
+    expect(definition, contains('session.user_id = v_uid'));
+    expect(definition, contains("SECURITY DEFINER SET search_path = ''"));
+    final cleanup = definition.indexOf('private.group_khatmah_cleanup_user(v_uid)');
+    expect(cleanup, greaterThan(definition.indexOf('session.user_id = v_uid')));
+    expect(cleanup, lessThan(definition.indexOf('DELETE FROM auth.users')));
   });
 }

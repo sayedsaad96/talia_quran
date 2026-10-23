@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:isar_community/isar.dart';
 
 import '../identity/record_owner_provider.dart';
+import '../identity/account_data_barrier.dart';
 import '../memorization/review_record_identity.dart';
 import 'cloud_sync_queue_item.dart';
 import 'sync_result.dart';
@@ -24,6 +25,8 @@ abstract final class CloudSyncQueueKind {
   static const kidsProgressPush = 'kids_progress_push';
   static const bookmarkPull = 'bookmark_pull';
   static const bookmarkPush = 'bookmark_push';
+  static const groupKhatmahPull = 'group_khatmah_pull';
+  static const groupKhatmahPush = 'group_khatmah_push';
 }
 
 class CloudSyncQueue {
@@ -89,6 +92,38 @@ class CloudSyncQueue {
       await _isar.cloudSyncQueueItems.put(item);
     });
     await _scheduleBackgroundDelivery?.call(ownerUserId);
+  }
+
+  /// Group operation retry budgets live in their durable journal. This row
+  /// only wakes that journal and cannot spend another operation's budget.
+  Future<void> reconcileGroupWake({
+    required String kind,
+    required String ownerId,
+    required AccountDataBarrier barrier,
+    required AccountDataLease lease,
+    required DateTime? nextRetryAt,
+  }) async {
+    if (kind != CloudSyncQueueKind.groupKhatmahPull &&
+        kind != CloudSyncQueueKind.groupKhatmahPush) {
+      throw ArgumentError.value(kind, 'kind');
+    }
+    lease.checkOwner(ownerId);
+    await barrier.run((authority) => _isar.writeTxn(() async {
+      authority.checkOwner(ownerId);
+      final existing = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(kind, ownerId);
+      if (nextRetryAt == null) {
+        if (existing != null) await _isar.cloudSyncQueueItems.delete(existing.id);
+      } else {
+        final item = existing ?? (CloudSyncQueueItem()
+          ..kind = kind ..ownerUserId = ownerId ..createdAt = _now().toUtc());
+        item.attemptCount = 0;
+        item.nextRetryAt = nextRetryAt.toUtc();
+        await _isar.cloudSyncQueueItems.put(item);
+      }
+      authority.checkOwner(ownerId);
+    }), authority: lease);
+    lease.checkOwner(ownerId);
+    if (nextRetryAt != null) await _scheduleBackgroundDelivery?.call(ownerId);
   }
 
   /// Atomically records a failed request for the owner captured before the
