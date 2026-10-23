@@ -84,25 +84,7 @@ final class HandsFreeRoundEngine {
     return _withPhase(state, HandsFreePhase.paused);
   }
 
-  HandsFreeRoundSummary summarize(HandsFreeRoundState state) {
-    var correctCount = 0;
-    final reviewAyahs = <ListeningAyahRef>[];
-    for (var index = 0; index < state.grades.length; index++) {
-      switch (state.grades[index]) {
-        case HandsFreeGrade.correct:
-          correctCount++;
-        case HandsFreeGrade.review:
-          reviewAyahs.add(state.items[index]);
-        case null:
-          break;
-      }
-    }
-    return HandsFreeRoundSummary(
-      correctCount: correctCount,
-      reviewCount: reviewAyahs.length,
-      reviewAyahs: List.unmodifiable(reviewAyahs),
-    );
-  }
+  HandsFreeRoundSummary summarize(HandsFreeRoundState state) => state.summary;
 
   bool _isEligible(AyahReviewRecord record, DateTime now) {
     final ref = ListeningAyahRef(record.surahId, record.ayahNumber);

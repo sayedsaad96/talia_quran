@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'prayer_review_injection.dart';
+import 'hands_free_injection.dart';
 import 'kids_remote_plan_injection.dart';
 import 'kids_encouragement_injection.dart';
 import '../../features/memorization_plus/data/repositories/kids_legacy_split_recovery_repository_impl.dart';
@@ -1085,6 +1086,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
     ),
   );
+  registerHandsFreeReview(getIt);
   getIt.registerFactory<ListeningReviewCubit>(
     () => ListeningReviewCubit(
       source: getIt<ListeningQuizSource>(),

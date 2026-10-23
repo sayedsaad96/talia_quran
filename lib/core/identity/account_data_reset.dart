@@ -115,6 +115,7 @@ class AccountDataReset {
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
   /// also removes `mem_plus_local_records_claimed_by` and every migration flag.
   static const Set<String> clearedPreferencePrefixes = {
+    'hands_free_warning_seen|',
     'prayer_review_lengths|',
     'kids_encouragement_pending_seen_v1_',
     'mem_plus_',

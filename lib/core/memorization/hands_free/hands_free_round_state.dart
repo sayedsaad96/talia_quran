@@ -31,6 +31,23 @@ final class HandsFreeRoundState extends Equatable {
   bool get isTerminal =>
       phase == HandsFreePhase.finished || phase == HandsFreePhase.paused;
 
+  HandsFreeRoundSummary get summary {
+    var correctCount = 0;
+    final reviewAyahs = <ListeningAyahRef>[];
+    for (var index = 0; index < grades.length; index++) {
+      switch (grades[index]) {
+        case HandsFreeGrade.correct:
+          correctCount++;
+        case HandsFreeGrade.review:
+          reviewAyahs.add(items[index]);
+        case null:
+          break;
+      }
+    }
+    return HandsFreeRoundSummary(correctCount: correctCount,
+      reviewCount: reviewAyahs.length, reviewAyahs: reviewAyahs);
+  }
+
   @override
   List<Object?> get props => [phase, items, currentIndex, grades];
 }

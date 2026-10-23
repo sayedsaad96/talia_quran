@@ -9,6 +9,11 @@ import '../../../../core/utils/talia_logger.dart';
 
 enum ListeningCaptureReadiness { ready, permissionDenied, unavailable }
 
+/// Optional recognizer health: an error is not a completed recitation attempt.
+abstract interface class ListeningCaptureHealth {
+  bool get hadError;
+}
+
 /// Speech seam for Listening Review so the cubit can be unit-tested.
 abstract interface class ListeningRecitationCapture {
   Future<ListeningCaptureReadiness> prepare();
@@ -26,7 +31,7 @@ abstract interface class ListeningRecitationCapture {
   Future<void> cancel();
 }
 
-class SpeechToTextListeningCapture implements ListeningRecitationCapture {
+class SpeechToTextListeningCapture implements ListeningRecitationCapture, ListeningCaptureHealth {
   SpeechToTextListeningCapture({SpeechToText? speech, this._voiceConsent})
     : _speech = speech ?? SpeechToText();
 
@@ -39,6 +44,7 @@ class SpeechToTextListeningCapture implements ListeningRecitationCapture {
   /// handled like a denied microphone, which falls back to self-grading.
   final Future<bool> Function()? _voiceConsent;
   bool _initialized = false;
+  @override bool hadError = false;
   String _words = '';
   Completer<void>? _finalResult;
   void Function()? _onStopped;
@@ -72,6 +78,7 @@ class SpeechToTextListeningCapture implements ListeningRecitationCapture {
     void Function(String words) onWords, {
     required void Function() onStopped,
   }) async {
+    hadError = false;
     _words = '';
     _finalResult = Completer<void>();
     _onStopped = onStopped;
@@ -115,6 +122,7 @@ class SpeechToTextListeningCapture implements ListeningRecitationCapture {
   }
 
   void _handleError(SpeechRecognitionError error) {
+    hadError = true;
     TaliaLogger.w('Listening review: speech error ${error.errorMsg}');
     _completeFinal();
     _fireStopped();

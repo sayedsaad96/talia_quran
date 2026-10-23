@@ -50,6 +50,7 @@ dependencies:
   isar_community_flutter_libs: 3.3.2
   just_audio: ^0.10.5
   audio_service: ^0.18.19
+  audio_session: 0.2.4
   path_provider: ^2.1.5
   percent_indicator: ^4.2.5
   permission_handler: ^13.0.2
@@ -104,7 +105,6 @@ dev_dependencies:
   mocktail: ^1.0.5
   shared_preferences_platform_interface: 2.4.2
 
-  audio_session: any
   speech_to_text_platform_interface: any
 flutter_launcher_icons:
   android: "launcher_icon"
@@ -147,6 +147,8 @@ flutter:
     - assets/data/khatm_dua.json
     - assets/data/daily_ayahs.json
     - assets/data/prayer_cities.json
+    - assets/audio/tones/correct.wav
+    - assets/audio/tones/review.wav
     - assets/fonts/
     - assets/fonts/TaliaIcons/LICENSE-lucide.txt
     # Runtime image assets. Keep this list explicit so generator input and
