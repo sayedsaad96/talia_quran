@@ -15927,6 +15927,300 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذّر الاستمرار. حاول مجددًا.'**
   String get handsFreeError;
+
+  /// No description provided for @groupKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة الجماعية'**
+  String get groupKhatmahTitle;
+
+  /// No description provided for @groupKhatmahCreate.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء مجموعة'**
+  String get groupKhatmahCreate;
+
+  /// No description provided for @groupKhatmahJoin.
+  ///
+  /// In ar, this message translates to:
+  /// **'الانضمام إلى مجموعة'**
+  String get groupKhatmahJoin;
+
+  /// No description provided for @groupKhatmahEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ختمة جماعية بعد'**
+  String get groupKhatmahEmpty;
+
+  /// No description provided for @groupKhatmahRefresh.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث المجموعات'**
+  String get groupKhatmahRefresh;
+
+  /// No description provided for @groupKhatmahGroupTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عنوان المجموعة'**
+  String get groupKhatmahGroupTitle;
+
+  /// No description provided for @groupKhatmahDisplayName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العرض الذي يراه أعضاء المجموعة'**
+  String get groupKhatmahDisplayName;
+
+  /// No description provided for @groupKhatmahInviteCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز الدعوة'**
+  String get groupKhatmahInviteCode;
+
+  /// No description provided for @groupKhatmahInvalidTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب عنوانًا من حرف إلى ٨٠ حرفًا.'**
+  String get groupKhatmahInvalidTitle;
+
+  /// No description provided for @groupKhatmahInvalidName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب اسم عرض من حرفين إلى ٢٤ حرفًا.'**
+  String get groupKhatmahInvalidName;
+
+  /// No description provided for @groupKhatmahInvalidCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب رمز الدعوة المكوّن من ستة أحرف.'**
+  String get groupKhatmahInvalidCode;
+
+  /// No description provided for @groupKhatmahMembersCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لا أعضاء} =1{عضو واحد} =2{عضوان} few{{count} أعضاء} many{{count} عضوًا} other{{count} عضو}}'**
+  String groupKhatmahMembersCount(int count);
+
+  /// No description provided for @groupKhatmahCompletedCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لم يكتمل أي جزء} =1{اكتمل جزء واحد من ٣٠} =2{اكتمل جزءان من ٣٠} few{اكتملت {count} أجزاء من ٣٠} many{اكتمل {count} جزءًا من ٣٠} other{اكتمل {count} جزء من ٣٠}}'**
+  String groupKhatmahCompletedCount(int count);
+
+  /// No description provided for @groupKhatmahJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجزء {number}'**
+  String groupKhatmahJuz(int number);
+
+  /// No description provided for @groupKhatmahOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'متاح'**
+  String get groupKhatmahOpen;
+
+  /// No description provided for @groupKhatmahClaimed.
+  ///
+  /// In ar, this message translates to:
+  /// **'محجوز'**
+  String get groupKhatmahClaimed;
+
+  /// No description provided for @groupKhatmahCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتمل'**
+  String get groupKhatmahCompleted;
+
+  /// No description provided for @groupKhatmahPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإكمال بانتظار التأكيد'**
+  String get groupKhatmahPending;
+
+  /// No description provided for @groupKhatmahClaim.
+  ///
+  /// In ar, this message translates to:
+  /// **'احجز'**
+  String get groupKhatmahClaim;
+
+  /// No description provided for @groupKhatmahComplete.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكملت الجزء'**
+  String get groupKhatmahComplete;
+
+  /// No description provided for @groupKhatmahRelease.
+  ///
+  /// In ar, this message translates to:
+  /// **'ألغِ الحجز'**
+  String get groupKhatmahRelease;
+
+  /// No description provided for @groupKhatmahShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة رمز الدعوة'**
+  String get groupKhatmahShare;
+
+  /// No description provided for @groupKhatmahLeave.
+  ///
+  /// In ar, this message translates to:
+  /// **'مغادرة المجموعة'**
+  String get groupKhatmahLeave;
+
+  /// No description provided for @groupKhatmahDelete.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المجموعة'**
+  String get groupKhatmahDelete;
+
+  /// No description provided for @groupKhatmahLeaveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد مغادرة المجموعة؟ ستُحرّر الأجزاء التي حجزتها ولم تكملها.'**
+  String get groupKhatmahLeaveConfirm;
+
+  /// No description provided for @groupKhatmahDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد حذف المجموعة لجميع الأعضاء؟ سيُحذف تقدمها المشترك.'**
+  String get groupKhatmahDeleteConfirm;
+
+  /// No description provided for @groupKhatmahCancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get groupKhatmahCancel;
+
+  /// No description provided for @groupKhatmahConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد'**
+  String get groupKhatmahConfirm;
+
+  /// No description provided for @groupKhatmahError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحديث المجموعة. حاول مرة أخرى.'**
+  String get groupKhatmahError;
+
+  /// No description provided for @groupKhatmahConflict.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيّر هذا الجزء. حُدّثت بيانات المجموعة.'**
+  String get groupKhatmahConflict;
+
+  /// No description provided for @groupKhatmahNetwork.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتصل بالإنترنت ثم حاول مرة أخرى.'**
+  String get groupKhatmahNetwork;
+
+  /// No description provided for @groupKhatmahNotMember.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تعد عضوًا في هذه المجموعة.'**
+  String get groupKhatmahNotMember;
+
+  /// No description provided for @groupKhatmahNotEligible.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة الجماعية غير متاحة لهذا الحساب.'**
+  String get groupKhatmahNotEligible;
+
+  /// No description provided for @groupKhatmahFull.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتمل عدد أعضاء هذه المجموعة.'**
+  String get groupKhatmahFull;
+
+  /// No description provided for @groupKhatmahInvalidInvite.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز الدعوة غير متاح.'**
+  String get groupKhatmahInvalidInvite;
+
+  /// No description provided for @groupKhatmahRateLimited.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات كثيرة. حاول لاحقًا.'**
+  String get groupKhatmahRateLimited;
+
+  /// No description provided for @groupKhatmahOwnerHasMembers.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب أن يغادر الأعضاء الآخرون قبل حذف المجموعة.'**
+  String get groupKhatmahOwnerHasMembers;
+
+  /// No description provided for @groupKhatmahDuaOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة دعاء الختم'**
+  String get groupKhatmahDuaOpen;
+
+  /// No description provided for @groupKhatmahDuaUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء الختم غير متاح حتى اعتماد نصه ومصدره.'**
+  String get groupKhatmahDuaUnavailable;
+
+  /// No description provided for @groupKhatmahStale.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه آخر بيانات محفوظة؛ اتصل للتحقق من العضوية.'**
+  String get groupKhatmahStale;
+
+  /// No description provided for @groupKhatmahAccountDeletionWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف حسابك سيحذف كل ختمة جماعية تملكها لجميع أعضائها.'**
+  String get groupKhatmahAccountDeletionWarning;
+
+  /// No description provided for @groupKhatmahCompletionFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'إكمال الجزء يحتاج إلى مراجعتك'**
+  String get groupKhatmahCompletionFailed;
+
+  /// No description provided for @groupKhatmahRetryCompletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة محاولة الإكمال'**
+  String get groupKhatmahRetryCompletion;
+
+  /// No description provided for @groupKhatmahDiscardCompletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف الطلب المحلي'**
+  String get groupKhatmahDiscardCompletion;
+
+  /// No description provided for @groupKhatmahDiscardConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد حذف طلب الإكمال المحلي؟ ربما وصل إلى المجموعة بالفعل. لن يؤدي هذا إلى التراجع عن إكمال أكده الخادم.'**
+  String get groupKhatmahDiscardConfirm;
+
+  /// No description provided for @groupKhatmahRecoveryRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إرسال إكمال الجزء. أعد المحاولة أو احذف الطلب المحلي.'**
+  String get groupKhatmahRecoveryRequired;
+
+  /// No description provided for @groupKhatmahRetryRequest.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة إرسال الطلب'**
+  String get groupKhatmahRetryRequest;
+
+  /// No description provided for @groupKhatmahDiscardRequestConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف هذا الطلب المحلي؟ ربما وصل إلى المجموعة بالفعل. حذفه لن يتراجع عن أي تغييرات حُفظت على الخادم.'**
+  String get groupKhatmahDiscardRequestConfirm;
+
+  /// No description provided for @groupKhatmahFailedRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبات تحتاج إلى مراجعتك'**
+  String get groupKhatmahFailedRequests;
 }
 
 class _AppLocalizationsDelegate

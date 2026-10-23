@@ -13,6 +13,11 @@ import '../constants/app_constants.dart';
 import '../constants/surah_names.dart';
 import '../di/injection.dart';
 import '../experience/experience_feature_flags.dart';
+import '../identity/record_owner_provider.dart';
+import '../sync/group_khatmah_environment.dart';
+import '../../features/group_khatmah/data/group_khatmah_remote.dart';
+import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
+import 'group_khatmah_route_page.dart';
 import '../l10n/app_localizations.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../memorization/learning_launch_context.dart';
@@ -165,6 +170,7 @@ abstract class AppRoutes {
   static const String backup = '/settings/backup';
   static const String khatmahSetup = '/khatmah/setup';
   static const String khatmahDashboard = '/khatmah/dashboard';
+  static const String groupKhatmah = '/khatmah/group';
   static const String khatmDua = '/quran/khatm-dua';
   static const String khatmahCompletion = '/khatmah/completion';
   static const String khatmahHistory = '/khatmah/history';
@@ -301,7 +307,18 @@ final _publicRoutes = <String>[
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
-final _remoteProtectedRoutes = <String>[AppRoutes.familyDashboard];
+String? groupKhatmahRedirect(
+  GroupKhatmahEnvironment? environment, RecordOwnerProvider? owner,
+) {
+  if (environment?.featureEnabled != true || environment?.isAdult != true) {
+    return AppRoutes.khatmahDashboard;
+  }
+  return owner?.isSignedIn == true ? null : AppRoutes.login;
+}
+
+final _remoteProtectedRoutes = <String>[
+  AppRoutes.familyDashboard, AppRoutes.groupKhatmah,
+];
 
 class MemorizationRouteGuard {
   const MemorizationRouteGuard._();
@@ -1002,6 +1019,21 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahDashboard,
         builder: (context, state) => const KhatmahDashboardPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.groupKhatmah,
+        redirect: (context, state) => groupKhatmahRedirect(
+          getIt.isRegistered<GroupKhatmahAppEnvironment>()
+              ? getIt<GroupKhatmahAppEnvironment>() : null,
+          getIt.isRegistered<RecordOwnerProvider>()
+              ? getIt<RecordOwnerProvider>() : null,
+        ),
+        builder: (context, state) => GroupKhatmahRoutePage(
+          environment: getIt<GroupKhatmahAppEnvironment>(),
+          owner: getIt<RecordOwnerProvider>(),
+          repository: getIt<GroupKhatmahRepository>(),
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
