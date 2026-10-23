@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
@@ -30,6 +32,7 @@ import '../widgets/prayer_review_home_slot.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
+import '../widgets/home_prayer_times_sheet.dart';
 import '../widgets/home_continue_card.dart';
 import '../widgets/home_contextual_slot.dart';
 import '../widgets/home_first_run.dart';
@@ -45,9 +48,12 @@ import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
 import '../../../progress/presentation/widgets/hijri_year_recap_slot.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.requestDailyAyahShare = false});
+  const HomePage({super.key, this.requestDailyAyahShare = false,
+    this.requestPrayerTimes = false, this.prayerRequestId});
 
   final bool requestDailyAyahShare;
+  final bool requestPrayerTimes;
+  final String? prayerRequestId;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -59,6 +65,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   StreamSubscription<HomeState>? _homeSubscription;
   bool _shareDailyAyahWhenReady = false;
   bool _isOpeningDailyAyahShare = false;
+  bool _openPrayerWhenReady = false;
+  bool _prayerOpeningScheduled = false;
 
   @override
   void initState() {
@@ -66,6 +74,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _homeCubit = getIt<HomeCubit>();
     _homeSubscription = _homeCubit.stream.listen(_onHomeStateChanged);
     _shareDailyAyahWhenReady = widget.requestDailyAyahShare;
+    _openPrayerWhenReady = widget.requestPrayerTimes;
     _homeCubit.load();
     _streakCubit = getIt<StreakCubit>()..loadStreak();
     WidgetsBinding.instance.addObserver(this);
@@ -94,6 +103,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(HomePage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.requestPrayerTimes && (!oldWidget.requestPrayerTimes ||
+        widget.prayerRequestId != oldWidget.prayerRequestId)) {
+      _openPrayerWhenReady = true;
+      _reloadProgress();
+    }
     if (widget.requestDailyAyahShare && !oldWidget.requestDailyAyahShare) {
       _shareDailyAyahWhenReady = true;
       _reloadProgress();
@@ -101,6 +115,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _onHomeStateChanged(HomeState state) {
+    _openRequestedPrayerTimes(state);
     if (!_shareDailyAyahWhenReady || _isOpeningDailyAyahShare) return;
     if (state is! HomeLoaded || state.isRefreshing || state.ayahOfDay == null) {
       return;
@@ -124,6 +139,37 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _isOpeningDailyAyahShare = false;
         if (mounted) AppRouter.router.go(AppRoutes.home);
       }
+    });
+  }
+
+  void _openRequestedPrayerTimes(HomeState state) {
+    if (!_openPrayerWhenReady || _prayerOpeningScheduled ||
+        state is! HomeLoaded || state.isRefreshing || state.prayerSnapshot == null) {
+      return;
+    }
+    final AccountDataLease lease;
+    try {
+      lease = AccountDataBarrier.forPreferences(getIt<SharedPreferences>()).capture();
+    } on AccountDataUnavailableException {
+      _openPrayerWhenReady = false;
+      return;
+    }
+    _prayerOpeningScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prayerOpeningScheduled = false;
+      if (!mounted) return;
+      try {
+        lease.check();
+      } on AccountDataUnavailableException {
+        _openPrayerWhenReady = false;
+        return;
+      }
+      final latest = _homeCubit.state;
+      if (latest is! HomeLoaded || latest.isRefreshing || latest.prayerSnapshot == null) return;
+      _openPrayerWhenReady = false;
+      if (!getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget) || latest.isKids) return;
+      unawaited(showHomePrayerTimesSheet(context,
+        snapshot: latest.prayerSnapshot!, hijriLabel: latest.hijriLabel));
     });
   }
 

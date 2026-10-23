@@ -1385,6 +1385,8 @@ abstract class AppRouter {
                 path: AppRoutes.home,
                 pageBuilder: (_, state) => NoTransitionPage(
                   child: HomePage(
+                    requestPrayerTimes: state.uri.queryParameters['widgetPrayer']=='1',
+                    prayerRequestId: state.uri.queryParameters['widgetTap'],
                     requestDailyAyahShare:
                         state.uri.queryParameters['dailyAyahAction'] == 'share',
                   ),

@@ -49,7 +49,11 @@ import '../home/presentation/cubits/home_cubit_test.mocks.dart';
 
 class _Auth extends Mock implements AuthRepository {}
 
-class _Reset extends Mock implements AccountDataReset {}
+class _Reset extends Mock implements AccountDataReset {
+  _Reset() {
+    when(() => clearAccountWidget()).thenAnswer((_) async {});
+  }
+}
 
 class _MarkerStore extends InMemorySharedPreferencesStore {
   _MarkerStore(super.data) : super.withData();

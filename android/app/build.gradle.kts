@@ -67,5 +67,6 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // Pure-JVM unit tests for the prayer delivery identity/codec (Prayer V2).
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20180813")
     implementation("com.google.android.material:material:1.14.0")
 }
