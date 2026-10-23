@@ -15837,6 +15837,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.'**
   String get similarAyahIndexUnavailable;
+
+  /// No description provided for @handsFreeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع لي'**
+  String get handsFreeTitle;
+
+  /// No description provided for @handsFreeDrivingWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تستخدم الشاشة أثناء القيادة'**
+  String get handsFreeDrivingWarning;
+
+  /// No description provided for @handsFreeAcceptWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'فهمت'**
+  String get handsFreeAcceptWarning;
+
+  /// No description provided for @handsFreeStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ'**
+  String get handsFreeStart;
+
+  /// No description provided for @handsFreeCorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'صح'**
+  String get handsFreeCorrect;
+
+  /// No description provided for @handsFreeReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع'**
+  String get handsFreeReview;
+
+  /// No description provided for @handsFreeSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لم تُقيّم آيات} =1{قُيّمت آية واحدة} =2{قُيّمت آيتان} few{قُيّمت {count} آيات} many{قُيّمت {count} آية} other{قُيّمت {count} آية}}'**
+  String handsFreeSummary(int count);
+
+  /// No description provided for @handsFreeNoDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مراجعات مستحقة الآن.'**
+  String get handsFreeNoDue;
+
+  /// No description provided for @handsFreeMicFallback.
+  ///
+  /// In ar, this message translates to:
+  /// **'التعرّف على الصوت غير متاح. استخدم الأزرار أدناه.'**
+  String get handsFreeMicFallback;
+
+  /// No description provided for @handsFreeDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع إلى بداية قصيرة ثم سمّع. هذا التدريب لا يغيّر تقدّم حفظك.'**
+  String get handsFreeDescription;
+
+  /// No description provided for @handsFreePrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع إلى البداية'**
+  String get handsFreePrompt;
+
+  /// No description provided for @handsFreeYourTurn.
+  ///
+  /// In ar, this message translates to:
+  /// **'دورك للتسميع'**
+  String get handsFreeYourTurn;
+
+  /// No description provided for @handsFreeFeedback.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تقييم إجابتك'**
+  String get handsFreeFeedback;
+
+  /// No description provided for @handsFreePaused.
+  ///
+  /// In ar, this message translates to:
+  /// **'توقفت الجولة'**
+  String get handsFreePaused;
+
+  /// No description provided for @handsFreeError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الاستمرار. حاول مجددًا.'**
+  String get handsFreeError;
 }
 
 class _AppLocalizationsDelegate

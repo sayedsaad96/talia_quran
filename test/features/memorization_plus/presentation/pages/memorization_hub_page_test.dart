@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -28,8 +29,9 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets(
-    'adult hub shows unified Today Practice Quiz Settings hierarchy',
+  for (final handsFreeEnabled in [false, true]) {
+    testWidgets(
+    'adult hub hierarchy with hands-free enabled=$handsFreeEnabled',
     (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1800);
@@ -39,6 +41,7 @@ void main() {
         _profile(MemorizationPath.adult),
         customPlan: _activeAdultPlan,
       );
+      getIt.registerSingleton<ExperienceFlags>(ExperienceFlags((_) => handsFreeEnabled));
       getIt.registerSingleton<MemorizationPlusRepository>(repo);
       getIt.registerLazySingleton<MemorizationPathResolver>(
         () => MemorizationPathResolver(repo),
@@ -64,8 +67,10 @@ void main() {
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Plan Settings'), findsOneWidget);
       expect(find.text('Family Dashboard'), findsNothing);
+      expect(find.text('Hands-free Review'), handsFreeEnabled ? findsOneWidget : findsNothing);
     },
   );
+  }
 
   testWidgets('kids hub shows mission journey rewards only', (tester) async {
     tester.view.devicePixelRatio = 1;

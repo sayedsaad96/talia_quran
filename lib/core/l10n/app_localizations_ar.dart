@@ -9442,4 +9442,63 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get similarAyahIndexUnavailable =>
       'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
+
+  @override
+  String get handsFreeTitle => 'سمّع لي';
+
+  @override
+  String get handsFreeDrivingWarning => 'لا تستخدم الشاشة أثناء القيادة';
+
+  @override
+  String get handsFreeAcceptWarning => 'فهمت';
+
+  @override
+  String get handsFreeStart => 'ابدأ';
+
+  @override
+  String get handsFreeCorrect => 'صح';
+
+  @override
+  String get handsFreeReview => 'راجع';
+
+  @override
+  String handsFreeSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قُيّمت $count آية',
+      many: 'قُيّمت $count آية',
+      few: 'قُيّمت $count آيات',
+      two: 'قُيّمت آيتان',
+      one: 'قُيّمت آية واحدة',
+      zero: 'لم تُقيّم آيات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get handsFreeNoDue => 'لا توجد مراجعات مستحقة الآن.';
+
+  @override
+  String get handsFreeMicFallback =>
+      'التعرّف على الصوت غير متاح. استخدم الأزرار أدناه.';
+
+  @override
+  String get handsFreeDescription =>
+      'استمع إلى بداية قصيرة ثم سمّع. هذا التدريب لا يغيّر تقدّم حفظك.';
+
+  @override
+  String get handsFreePrompt => 'استمع إلى البداية';
+
+  @override
+  String get handsFreeYourTurn => 'دورك للتسميع';
+
+  @override
+  String get handsFreeFeedback => 'تم تقييم إجابتك';
+
+  @override
+  String get handsFreePaused => 'توقفت الجولة';
+
+  @override
+  String get handsFreeError => 'تعذّر الاستمرار. حاول مجددًا.';
 }

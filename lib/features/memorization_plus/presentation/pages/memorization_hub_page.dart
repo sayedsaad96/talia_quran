@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
@@ -337,6 +338,17 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
+        if (getIt.isRegistered<ExperienceFlags>() &&
+            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.handsFreeReview)) ...[
+          _HubActionCard(
+            icon: TaliaIcons.listen,
+            title: context.l10n.handsFreeTitle,
+            description: context.l10n.handsFreeDescription,
+            route: AppRoutes.handsFreeReview,
+            isDark: isDark,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         _HubActionCard(
           icon: TaliaIcons.mic,
           title: context.l10n.reviewQuizTitle,

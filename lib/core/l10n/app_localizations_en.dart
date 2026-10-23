@@ -9430,4 +9430,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get similarAyahIndexUnavailable =>
       'The similar-ayah list has not been approved yet, so it is not available here.';
+
+  @override
+  String get handsFreeTitle => 'Hands-free Review';
+
+  @override
+  String get handsFreeDrivingWarning =>
+      'For your safety, do not use this while driving.';
+
+  @override
+  String get handsFreeAcceptWarning => 'I understand';
+
+  @override
+  String get handsFreeStart => 'Start';
+
+  @override
+  String get handsFreeCorrect => 'Correct';
+
+  @override
+  String get handsFreeReview => 'Review';
+
+  @override
+  String handsFreeSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ayahs graded',
+      one: '1 ayah graded',
+      zero: 'No ayahs graded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get handsFreeNoDue => 'No review is due right now.';
+
+  @override
+  String get handsFreeMicFallback =>
+      'Speech recognition is unavailable. Use the buttons below.';
+
+  @override
+  String get handsFreeDescription =>
+      'Listen to a short prompt, then recite. This practice does not change your memorization progress.';
+
+  @override
+  String get handsFreePrompt => 'Listen to the prompt';
+
+  @override
+  String get handsFreeYourTurn => 'Your turn to recite';
+
+  @override
+  String get handsFreeFeedback => 'Your answer has been graded';
+
+  @override
+  String get handsFreePaused => 'Round stopped';
+
+  @override
+  String get handsFreeError => 'Could not continue. Try again.';
 }

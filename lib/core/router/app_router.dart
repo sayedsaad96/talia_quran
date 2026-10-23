@@ -43,6 +43,7 @@ import '../../features/khatmah/presentation/khatmah_setup_prefill.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/memorization_plus/presentation/pages/listening_review_page.dart';
+import '../../features/memorization_plus/presentation/pages/hands_free_review_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
@@ -103,6 +104,7 @@ abstract class AppRoutes {
   static const String quranBookmarks = '/quran/bookmarks';
   static const String quranNotes = '/quran/notes';
   static const String similarAyahTrainer = '/memorization-plus/similar-ayahs';
+  static const String handsFreeReview = '/memorization-plus/hands-free';
   static const String prayerReview = '/memorization-plus/prayer-review';
   static const String audioDownloads = '/quran/downloads';
   static const String audioStorage = '/settings/audio-storage';
@@ -197,6 +199,11 @@ String? similarAyahTrainerRedirect(ExperienceFlags? flags) =>
         : AppRoutes.memorizationHub;
 
 @visibleForTesting
+String? handsFreeReviewRedirect(ExperienceFlags? flags, {required bool isAdult}) =>
+    flags?.isEnabled(ExperienceFeature.handsFreeReview) == true && isAdult
+        ? null : AppRoutes.memorizationHub;
+
+@visibleForTesting
 String? prayerReviewRedirect(ExperienceFlags? flags, Object? occurrence) {
   if (flags?.isEnabled(ExperienceFeature.prayerReview) != true) {
     return AppRoutes.memorizationHub;
@@ -276,6 +283,7 @@ final _publicRoutes = <String>[
   AppRoutes.hifz,
   AppRoutes.hifzPracticeSurah,
   AppRoutes.listeningReview,
+  AppRoutes.handsFreeReview,
   AppRoutes.memorizationHub,
   AppRoutes.azkar,
   AppRoutes.progress,
@@ -345,6 +353,13 @@ class MemorizationRouteGuard {
   static Future<String?> adultOnlyRedirect() async {
     final profile = await _readProfile();
     return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
+  }
+
+  static Future<String?> handsFreeRedirect(ExperienceFlags? flags) async {
+    final disabled = handsFreeReviewRedirect(flags, isAdult: true);
+    if (disabled != null) return disabled;
+    final profile = await _readProfile();
+    return handsFreeReviewRedirect(flags, isAdult: profile?.isAdult == true);
   }
 
   /// Guard for the V2 memorization session route.
@@ -803,6 +818,13 @@ abstract class AppRouter {
                   .load(occurrence, allowSelection: false))),
             );
           },
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: AppRoutes.handsFreeReview,
+          redirect: (context, state) => MemorizationRouteGuard.handsFreeRedirect(
+            getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null),
+          builder: (context, state) => const HandsFreeReviewPage(),
         ),
         GoRoute(
           parentNavigatorKey: _rootNavigatorKey,
