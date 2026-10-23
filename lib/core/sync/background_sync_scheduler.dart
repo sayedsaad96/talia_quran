@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'notification_refresh_worker.dart';
+import '../home_widget/platform_home_widget_bridge.dart';
 
 /// Workmanager uses one dispatcher for reminders and legacy cloud retries.
 @pragma('vm:entry-point')
@@ -16,7 +17,9 @@ Future<bool> dispatchBackgroundTask(
   Map<String, dynamic>? inputData,
 ) async {
   if (task == kNotificationRefreshTaskName) {
-    return runNotificationRefreshTask();
+    final success = await runNotificationRefreshTask();
+    await redrawHomeWidgetInBackground();
+    return success;
   }
   // Retire old cloud jobs without opening account stores in a second engine.
   // Foreground reconciliation still delivers the durable account outbox.

@@ -131,6 +131,7 @@ class NotificationScheduler {
     this._prayerReviewBodyLoader,
     this._kidsPracticeDaysLoader,
     DateTime Function()? prayerReviewNow,
+    this.onPrayerScheduleUpdated,
   }) : _prayerReviewNow = prayerReviewNow ?? DateTime.now,
        _forecastAudienceIsAdult =
            forecastAudienceIsAdult ?? forecastAudienceIsAdultFromPreferences,
@@ -141,6 +142,7 @@ class NotificationScheduler {
                : null);
 
   String? _lastRollingDateKey;
+  final Future<void> Function()? onPrayerScheduleUpdated;
   Future<void> _refreshQueue = Future<void>.value();
 
   Future<T> _enqueueRefresh<T>(Future<T> Function() refresh) {
@@ -895,6 +897,7 @@ class NotificationScheduler {
       throw StateError('One or more prayer notification updates failed');
     }
     if (shouldRefreshRolling) _lastRollingDateKey = todayKey;
+    await onPrayerScheduleUpdated?.call();
   }
 
   /// Legacy (V1) FLN prayer scheduling. Moved verbatim from the previous

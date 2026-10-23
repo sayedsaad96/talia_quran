@@ -296,6 +296,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
     barrier.prepareOwner(userId);
     try {
+      await reset.clearAccountWidget();
       final switched = await resolveOwnerChange(
         prefs: prefs,
         userId: userId,
@@ -574,6 +575,7 @@ class AuthCubit extends Cubit<AuthState> {
         if (prefs != null && preservedOwnerId != null) {
           preservedDataBarrier = AccountDataBarrier.forPreferences(prefs);
           preservedDataBarrier.prepareOwner(preservedOwnerId);
+          await _accountDataReset?.clearAccountWidget();
         }
         await _cloudSyncCoordinator.preservePendingSignOutWork();
       }

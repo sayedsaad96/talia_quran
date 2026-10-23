@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'prayer_review_injection.dart';
 import 'hands_free_injection.dart';
+import 'home_widget_injection.dart';
+import '../home_widget/home_widget_publisher.dart';
 import 'kids_remote_plan_injection.dart';
 import 'kids_encouragement_injection.dart';
 import '../../features/memorization_plus/data/repositories/kids_legacy_split_recovery_repository_impl.dart';
@@ -311,6 +313,9 @@ Future<void> configureDependencies({bool background = false}) async {
       audioResumeStore: getIt<AudioResumeStore>(),
       deleteBookmarksForOwner: getIt<BookmarkService>().eraseOwner,
       cancelAccountNotifications: getIt<TaliaNotificationService>().cancelAll,
+      clearHomeWidget: () async {
+        if (!background) await getIt<HomeWidgetPublisher>().clearForAccountTransition();
+      },
     ),
   );
 
@@ -393,6 +398,9 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<TaliaNotificationService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       prayerTimesService: getIt<PrayerTimesService>(),
+      onPrayerScheduleUpdated: () async {
+        if (!background) await getIt<HomeWidgetPublisher>().refresh();
+      },
       prayerCompanionPlanner: getIt<PrayerCompanionPlanner>(),
       prayerCompanionPreferences: getIt<PrayerCompanionPreferences>(),
       kidsPracticeDaysLoader: () => readKidsPracticeDays(getIt),
@@ -1757,6 +1765,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerFactory<KhatmDuaCubit>(
     () => KhatmDuaCubit(getIt<GetKhatmDuaUsecase>()),
   );
+  if (!background) await registerHomeWidget(getIt);
   getIt.registerSingleton<AuthCubit>(
     AuthCubit(
       getIt<AuthRepository>(),

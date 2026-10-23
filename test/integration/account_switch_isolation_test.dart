@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/home_widget/home_widget_publisher.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue.dart';
@@ -21,6 +22,12 @@ import '../helpers/isar_test_core.dart';
 
 
 Future<void> _initializeIsarCoreForTests() => initializeIsarCoreForTests();
+
+class _WidgetBridge implements HomeWidgetBridge {
+  String? value;
+  @override Future<void> save(String key, String? json) async { value = json; }
+  @override Future<void> requestUpdate() async {}
+}
 
 AyahReviewRecordModel _record({
   required int surahId,
@@ -111,6 +118,20 @@ void main() {
       expect(await isar.isarAyahReviewRecords.where().count(), 0);
       expect(await isar.cloudSyncQueueItems.where().count(), 0);
       expect(prefs.getString('ayah_review_pull_cursor'), isNull);
+      expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'user-b');
+    });
+
+    test('native widget is cleared before arriving owner is persisted', () async {
+      final bridge = _WidgetBridge()..value = '{"schemaVersion":1,"dueReviewCount":77}';
+      await prefs.setString(AuthCubit.lastSignedInUserIdKey, 'user-a');
+      final reset = AccountDataReset(isar, prefs, clearHomeWidget: () async {
+        expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'user-a');
+        await bridge.save(HomeWidgetPublisher.snapshotKey, null);
+        await bridge.requestUpdate();
+      });
+      await AuthCubit.resolveOwnerChange(prefs: prefs, userId: 'user-b',
+        onDepartingAccount: reset.clearAccountOwnedData);
+      expect(bridge.value, isNull);
       expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'user-b');
     });
 

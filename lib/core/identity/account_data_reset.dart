@@ -59,6 +59,7 @@ class AccountDataReset {
     this._deleteBookmarksForOwner,
     Future<Directory> Function()? documentsDirectory,
     this._cancelAccountNotifications,
+    this._clearHomeWidget,
   }) : _documentsDirectory =
            documentsDirectory ?? getApplicationDocumentsDirectory;
 
@@ -72,6 +73,9 @@ class AccountDataReset {
   final Future<void> Function(String ownerId)? _deleteBookmarksForOwner;
   final Future<Directory> Function() _documentsDirectory;
   final Future<void> Function()? _cancelAccountNotifications;
+  final Future<void> Function()? _clearHomeWidget;
+
+  Future<void> clearAccountWidget() async => _clearHomeWidget?.call();
 
   /// Individual account-owned preference keys.
   static const Set<String> clearedPreferenceKeys = {
@@ -170,6 +174,7 @@ class AccountDataReset {
     required bool preservePendingBookmarkRecovery,
   }) async {
     final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
+    await clearAccountWidget();
     if (!preservePendingBookmarkRecovery && ownerId != null) {
       await PendingBookmarkRecoveryMarker.clear(_prefs, ownerId);
     }
@@ -198,6 +203,7 @@ class AccountDataReset {
       ).clear(() => _eraseDeletedAccountLocally(departingOwnerId));
 
   Future<void> _eraseDeletedAccountLocally(String ownerId) async {
+    await clearAccountWidget();
     await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     await _audioResumeStore?.stopPlaybackForAccountReset();
     await _deleteBookmarksForOwner?.call(ownerId);

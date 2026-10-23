@@ -20,6 +20,15 @@ class AccountDataBarrier {
   bool _blocked = false;
   String? _preparingOwner;
   Future<void> _tail = Future.value();
+  final _invalidationParticipants = <Future<void> Function()>{};
+  Future<void> _invalidation = Future.value();
+  bool _invalidationFailed = false;
+
+  /// Native projections must clear before an account becomes locally ready.
+  void Function() addInvalidationParticipant(Future<void> Function() clear) {
+    _invalidationParticipants.add(clear);
+    return () => _invalidationParticipants.remove(clear);
+  }
   final _changes = StreamController<void>.broadcast(sync: true);
   Stream<void> get changes => _changes.stream;
   AccountDataLease get snapshot {
@@ -47,13 +56,15 @@ class AccountDataBarrier {
   }
 
   void prepareOwner(String ownerId) {
-    if (_preparingOwner == ownerId) return;
+    if (_preparingOwner == ownerId && !_invalidationFailed) return;
     _preparingOwner = ownerId;
     invalidate();
   }
 
   Future<void> markOwnerReady(String ownerId) async {
-    if (_preparingOwner != ownerId ||
+    final generation = _generation;
+    await _invalidation;
+    if (generation != _generation || _preparingOwner != ownerId ||
         (owner != null && owner!.currentOwnerId != ownerId)) {
       throw const AccountDataUnavailableException();
     }
@@ -66,7 +77,7 @@ class AccountDataBarrier {
         throw const AccountDataUnavailableException();
       }
     }
-    if (_preparingOwner != ownerId ||
+    if (generation != _generation || _preparingOwner != ownerId ||
         (owner != null && owner!.currentOwnerId != ownerId)) {
       throw const AccountDataUnavailableException();
     }
@@ -97,6 +108,14 @@ class AccountDataBarrier {
   void invalidate() {
     _generation++;
     _blocked = true;
+    _invalidationFailed = false;
+    final generation = _generation;
+    _invalidation = Future.wait<void>([
+      for (final clear in _invalidationParticipants.toList()) Future<void>.sync(clear),
+    ]).then<void>((_) {});
+    unawaited(_invalidation.then<void>((_) {}, onError: (Object _, StackTrace _) {
+      if (generation == _generation) _invalidationFailed = true;
+    }));
     _changes.add(null);
   }
 
@@ -124,7 +143,9 @@ class AccountDataBarrier {
   Future<void> clear(Future<void> Function() clearStores) {
     invalidate();
     final generation = _generation;
+    final invalidation = _invalidation;
     final result = _tail.then((_) async {
+      await invalidation;
       await clearStores();
       if (generation == _generation) {
         _readyOwner = owner?.currentOwnerId;
