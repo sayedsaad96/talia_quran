@@ -45,13 +45,14 @@ void main() {
     expect(p.pagesPerDay, 29);
   });
 
-  test('invite phase uses the full month length', () {
-    final p = paramsFor(
-      RamadanKhatmahTemplate.oneInMonth,
-      info(first, 30, RamadanPhase.invite),
-      DateTime(2027, 2, 5),
-    );
-    expect(p.targetDays, 30);
+  test('invite phase: a plan started before Ramadan ends on its last day', () {
+    final today = DateTime(2027, 2, 5);
+    final i = info(first, 30, RamadanPhase.invite);
+    final p = paramsFor(RamadanKhatmahTemplate.oneInMonth, i, today);
+    // 3 days before Ramadan plus the 30-day month.
+    expect(p.targetDays, 33);
+    final end = DateTime(today.year, today.month, today.day + p.targetDays - 1);
+    expect(end, i.lastDay);
   });
 
   test('twoInMonth: days ceil(n/2)', () {

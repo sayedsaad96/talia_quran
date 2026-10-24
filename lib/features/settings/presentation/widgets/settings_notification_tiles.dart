@@ -636,57 +636,62 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
             SettingsDivider(isDark: widget.isDark),
 
-            _buildTimeEditorTile(
-              title: context.l10n.notificationSettingsForgettingForecast,
-              time: state.forgettingForecastTime,
-              isEnabled: state.forgettingForecast,
-              onToggle: (v) => _cubit.toggleReminder(
-                _forgettingForecastKey,
-                v,
-                l10n: context.l10n,
-              ),
-              icon: TaliaIcons.history,
-              primaryColor: primary,
-              textColor: textColor,
-              subtextColor: subtextColor,
-              onTapEdit: () => _pickTime(
-                _forgettingForecastKey,
-                state.forgettingForecastTime,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: AppSpacing.lg,
-                end: AppSpacing.lg,
-                bottom: AppSpacing.sm,
-              ),
-              child: Semantics(
-                label: context.l10n.notificationSettingsForgettingForecast,
-                child: DropdownButton<int>(
-                  value: state.forgettingForecastWeekday,
-                  isExpanded: true,
-                  onChanged: state.forgettingForecast
-                      ? (weekday) {
-                          if (weekday != null) {
-                            _cubit.updateForgettingForecastWeekday(
-                              weekday,
-                              l10n: context.l10n,
-                            );
-                          }
-                        }
-                      : null,
-                  items: List.generate(DateTime.daysPerWeek, (index) {
-                    final weekday = index + 1;
-                    final date = DateTime.utc(2024, 1, weekday);
-                    final label = DateFormat.EEEE(
-                      Localizations.localeOf(context).toString(),
-                    ).format(date);
-                    return DropdownMenuItem(value: weekday, child: Text(label));
-                  }),
+            if (state.forgettingForecastAvailable) ...[
+              _buildTimeEditorTile(
+                title: context.l10n.notificationSettingsForgettingForecast,
+                time: state.forgettingForecastTime,
+                isEnabled: state.forgettingForecast,
+                onToggle: (v) => _cubit.toggleReminder(
+                  _forgettingForecastKey,
+                  v,
+                  l10n: context.l10n,
+                ),
+                icon: TaliaIcons.history,
+                primaryColor: primary,
+                textColor: textColor,
+                subtextColor: subtextColor,
+                onTapEdit: () => _pickTime(
+                  _forgettingForecastKey,
+                  state.forgettingForecastTime,
                 ),
               ),
-            ),
-            SettingsDivider(isDark: widget.isDark),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: AppSpacing.lg,
+                  end: AppSpacing.lg,
+                  bottom: AppSpacing.sm,
+                ),
+                child: Semantics(
+                  label: context.l10n.notificationSettingsForgettingForecast,
+                  child: DropdownButton<int>(
+                    value: state.forgettingForecastWeekday,
+                    isExpanded: true,
+                    onChanged: state.forgettingForecast
+                        ? (weekday) {
+                            if (weekday != null) {
+                              _cubit.updateForgettingForecastWeekday(
+                                weekday,
+                                l10n: context.l10n,
+                              );
+                            }
+                          }
+                        : null,
+                    items: List.generate(DateTime.daysPerWeek, (index) {
+                      final weekday = index + 1;
+                      final date = DateTime.utc(2024, 1, weekday);
+                      final label = DateFormat.EEEE(
+                        Localizations.localeOf(context).toString(),
+                      ).format(date);
+                      return DropdownMenuItem(
+                        value: weekday,
+                        child: Text(label),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+              SettingsDivider(isDark: widget.isDark),
+            ],
 
             // Khatmah Daily Progress Reminder
             _buildTimeEditorTile(

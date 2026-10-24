@@ -14905,19 +14905,19 @@ abstract class AppLocalizations {
   /// No description provided for @trustSourcesTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مصادر موثّقة'**
+  /// **'مصادر المحتوى'**
   String get trustSourcesTitle;
 
   /// No description provided for @trustSourcesBody.
   ///
   /// In ar, this message translates to:
-  /// **'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.'**
+  /// **'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.'**
   String get trustSourcesBody;
 
   /// No description provided for @trustSourcesMeta.
   ///
   /// In ar, this message translates to:
-  /// **'إصدار البيانات {version} • {count, plural, =1{مصدر واحد} =2{مصدران} few{{countText} مصادر} many{{countText} مصدرًا} other{{countText} مصدرًا}}'**
+  /// **'إصدار البيانات {version} • {count, plural, =1{مجموعة بيانات واحدة} =2{مجموعتا بيانات} few{{countText} مجموعات بيانات} many{{countText} مجموعة بيانات} other{{countText} مجموعة بيانات}}'**
   String trustSourcesMeta(String version, int count, String countText);
 
   /// No description provided for @trustVoiceTitle.
@@ -15357,6 +15357,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'عبر Wi-Fi فقط'**
   String get audioDownloadsWifiOnly;
+
+  /// No description provided for @audioDownloadsWaitingForWifi.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».'**
+  String get audioDownloadsWaitingForWifi;
 
   /// No description provided for @audioDownloadsWifiUnavailable.
   ///

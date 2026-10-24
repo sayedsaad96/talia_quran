@@ -40,6 +40,21 @@ class _DownloadViewState extends State<_DownloadView> {
   bool _wifiOnly = true;
 
   Future<void> _start() async {
+    final cubit = context.read<AudioDownloadsCubit>();
+    final unmetered = _wifiOnly ? await cubit.probeUnmeteredNetwork() : null;
+    if (!mounted) return;
+    // A known network needs no confirmation: Wi-Fi proceeds, and a metered
+    // network is refused by the manager with a "connect to Wi-Fi" status.
+    if (_wifiOnly && unmetered != null) {
+      await cubit.start(
+        reciter: _reciter,
+        wifiOnly: true,
+        allowUnverifiedNetwork: false,
+        surah: _wholeJuz ? null : _surah,
+        juz: _wholeJuz ? _juz : null,
+      );
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -58,7 +73,7 @@ class _DownloadViewState extends State<_DownloadView> {
       ),
     );
     if (!mounted || confirmed != true) return;
-    await context.read<AudioDownloadsCubit>().start(
+    await cubit.start(
       reciter: _reciter,
       wifiOnly: _wifiOnly,
       allowUnverifiedNetwork: true,
@@ -92,19 +107,17 @@ class _DownloadViewState extends State<_DownloadView> {
   }
 
   @override
-  Widget build(BuildContext context) => BlocBuilder<
-    AudioDownloadsCubit,
-    AudioDownloadsState
-  >(
-    buildWhen: (a, b) => a.busy != b.busy,
-    builder: (context, gate) => PopScope(
-      canPop: !gate.busy,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_confirmLeave());
-      },
-      child: _scaffold(),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      BlocBuilder<AudioDownloadsCubit, AudioDownloadsState>(
+        buildWhen: (a, b) => a.busy != b.busy,
+        builder: (context, gate) => PopScope(
+          canPop: !gate.busy,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) unawaited(_confirmLeave());
+          },
+          child: _scaffold(),
+        ),
+      );
 
   Widget _scaffold() => Scaffold(
     appBar: AppBar(title: Text(context.l10n.audioDownloadsTitle)),
@@ -124,15 +137,16 @@ class _DownloadViewState extends State<_DownloadView> {
           if (_wholeJuz) _juzField(state.busy) else _surahField(state.busy),
           SwitchListTile(
             title: Text(context.l10n.audioDownloadsWifiOnly),
-            subtitle: Text(context.l10n.audioDownloadsWifiUnavailable),
             value: _wifiOnly,
             onChanged: state.busy
                 ? null
                 : (value) => setState(() => _wifiOnly = value),
           ),
           const SizedBox(height: 12),
-          Text(context.l10n.audioDownloadsSpaceUnknown),
-          const SizedBox(height: 16),
+          if (state.progress?.spaceUnknown ?? false) ...[
+            Text(context.l10n.audioDownloadsSpaceUnknown),
+            const SizedBox(height: 16),
+          ],
           if (state.progress case final progress?) ...[
             Text(_status(context, progress.phase)),
             if (progress.totalAyahs > 0)
@@ -207,6 +221,7 @@ class _DownloadViewState extends State<_DownloadView> {
     DownloadPhase.failed => context.l10n.audioDownloadsFailed,
     DownloadPhase.waitingForNetworkConfirmation =>
       context.l10n.audioDownloadsWifiUnavailable,
+    DownloadPhase.waitingForWifi => context.l10n.audioDownloadsWaitingForWifi,
     _ => context.l10n.audioDownloadsInProgress,
   };
 }

@@ -3651,9 +3651,9 @@
   ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
   ,"readerSleepEndOfSurah": "End of surah"
   ,"trustCenterTitle": "How we protect content and your privacy"
-  ,"trustSourcesTitle": "Verified sources"
-  ,"trustSourcesBody": "Talia contains no generated religious text. Every text has a source and a reference."
-  ,"trustSourcesMeta": "Data version {version} • {count, plural, =1{1 source} other{{countText} sources}}"
+  ,"trustSourcesTitle": "Content sources"
+  ,"trustSourcesBody": "Talia contains no generated religious text. Every text is copied as-is from a named source, and documentation such as source links and hadith grades is still being completed for some azkar and hadith."
+  ,"trustSourcesMeta": "Data version {version} • {count, plural, =1{1 dataset} other{{countText} datasets}}"
   ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"trustVoiceTitle": "Your voice"
   ,"trustVoiceBody": "Talia does not keep a recording of your voice or send it to Talia's servers. Speech recognition uses your device's system service (such as Google), which may send the audio to its provider under its own policies."
@@ -3735,6 +3735,7 @@
   ,"audioDownloadsJuz": "Juz {number}"
   ,"@audioDownloadsJuz": {"placeholders": {"number": {"type": "String"}}}
   ,"audioDownloadsWifiOnly": "Wi-Fi only"
+  ,"audioDownloadsWaitingForWifi": "You're on a network that may count against your data plan. Connect to Wi-Fi, or turn off Wi-Fi only."
   ,"audioDownloadsWifiUnavailable": "This device's network type cannot be checked. Connect to Wi-Fi before continuing."
   ,"audioDownloadsSpaceUnknown": "Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size."
   ,"audioDownloadsNetworkWarning": "Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading."

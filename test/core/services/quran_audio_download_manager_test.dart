@@ -40,6 +40,70 @@ void main() {
     },
   );
 
+  test(
+    'a metered network waits for Wi-Fi even when unverified is allowed',
+    () async {
+      final metered = QuranAudioDownloadManager(
+        await SharedPreferences.getInstance(),
+        repository,
+        cache: cache,
+        freeBytes: () async => 500 * 1024 * 1024,
+        unmeteredNetwork: () async => false,
+        estimatedBytesPerAyah: 1,
+      );
+      final progress = await metered.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).toList();
+      expect(progress.last.phase, DownloadPhase.waitingForWifi);
+      expect(cache.fetchCalls, 0);
+    },
+  );
+
+  test('a detected unmetered network downloads without confirmation', () async {
+    final wifi = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => 500 * 1024 * 1024,
+      unmeteredNetwork: () async => true,
+      estimatedBytesPerAyah: 1,
+    );
+    final progress = await wifi.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ]).toList();
+    expect(progress.last.phase, DownloadPhase.completed);
+  });
+
+  test('low measured space refuses before any fetch; a failing probe is '
+      'treated as unknown', () async {
+    final low = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => 1024,
+      unmeteredNetwork: () async => true,
+    );
+    final refused = await low.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ]).toList();
+    expect(refused.last.phase, DownloadPhase.insufficientSpace);
+    expect(cache.fetchCalls, 0);
+
+    final unknown = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => throw StateError('statfs failed'),
+      unmeteredNetwork: () async => throw StateError('no service'),
+      estimatedBytesPerAyah: 1,
+    );
+    final progress = await unknown.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(progress.last.phase, DownloadPhase.completed);
+    expect(progress.last.spaceUnknown, isTrue);
+  });
+
   test('marks a full surah only after every canonical ayah is valid', () async {
     final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
       1,

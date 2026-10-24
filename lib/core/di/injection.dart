@@ -20,6 +20,7 @@ import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
+import '../services/device_resource_probe.dart';
 import '../services/quran_audio_download_manager.dart';
 import '../progress/hijri_year_recap_loader.dart';
 import '../../features/progress/presentation/cubits/hijri_year_recap_cubit.dart';
@@ -364,11 +365,16 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
   getIt.registerLazySingleton<QuranAudioDownloadManager>(
-    () => QuranAudioDownloadManager(
-      getIt<SharedPreferences>(),
-      getIt<QuranRepository>(),
-      cache: QuranAudioDurableCache.instance,
-    ),
+    () {
+      const probe = DeviceResourceProbe();
+      return QuranAudioDownloadManager(
+        getIt<SharedPreferences>(),
+        getIt<QuranRepository>(),
+        cache: QuranAudioDurableCache.instance,
+        freeBytes: probe.freeBytes,
+        unmeteredNetwork: probe.isOnUnmeteredNetwork,
+      );
+    },
   );
   getIt.registerSingleton<QuranReciterService>(
     QuranReciterService(getIt<SharedPreferences>()),
@@ -1508,6 +1514,11 @@ Future<void> configureDependencies({bool background = false}) async {
           getIt.isRegistered<KidsEnrichmentFlags>() &&
           getIt<KidsEnrichmentFlags>().isEnabled(
             KidsEnrichmentFeature.guardianPromise,
+          ),
+      remotePromiseEnabled: () =>
+          getIt.isRegistered<KidsEnrichmentFlags>() &&
+          getIt<KidsEnrichmentFlags>().isEnabled(
+            KidsEnrichmentFeature.remotePromise,
           ),
     ),
   );

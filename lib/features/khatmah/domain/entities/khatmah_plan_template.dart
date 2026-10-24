@@ -32,12 +32,13 @@ final class KhatmahTemplateParams extends Equatable {
   ];
 }
 
-/// Ramadan days available to a plan that starts [today]. In the invite phase
-/// the plan starts today and gets the full month; during Ramadan it ends on
-/// the last Ramadan day. Always at least 1.
+/// Days available to a plan that starts [today] and ends on the last Ramadan
+/// day. Plans always start today (the engine has no future start date), so in
+/// the invite phase the days left before Ramadan are included, so the plan
+/// still ends with the month instead of days before it. Always at least 1.
 int ramadanDaysRemaining(RamadanInfo info, DateTime today) {
   final last = info.lastDay;
-  if (info.phase == RamadanPhase.invite || last == null) {
+  if (last == null) {
     return info.monthLength < 1 ? 1 : info.monthLength;
   }
   final t = DateTime(today.year, today.month, today.day);

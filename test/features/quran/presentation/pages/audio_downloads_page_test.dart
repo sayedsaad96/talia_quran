@@ -157,6 +157,38 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('a detected network skips the confirmation dialog', (
+    tester,
+  ) async {
+    downloads.unmetered = false;
+    await tester.pumpWidget(app(const AudioDownloadsPage(initialSurah: 2)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Download or resume'));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue downloading'), findsNothing);
+    // The manager makes the Wi-Fi decision itself; nothing is pre-approved.
+    expect(downloads.requests.single, (
+      surah: 2,
+      juz: null,
+      wifi: true,
+      allowed: false,
+    ));
+    downloads.events.add(
+      const DownloadProgress(
+        phase: DownloadPhase.waitingForWifi,
+        completedAyahs: 0,
+        totalAyahs: 0,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.textContaining('Connect to Wi-Fi, or turn off'),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('leaving while downloading asks before stopping', (tester) async {
     await tester.pumpWidget(
       app(
@@ -264,6 +296,10 @@ class _Downloads extends QuranAudioDownloadManager {
   final deleted = <QuranReciter>[];
   int cancelCalls = 0;
   Completer<int>? bytesResult;
+  bool? unmetered;
+
+  @override
+  Future<bool?> isOnUnmeteredNetwork() async => unmetered;
 
   @override
   Stream<DownloadProgress> downloadSurahs(

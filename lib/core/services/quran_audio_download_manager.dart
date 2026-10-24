@@ -6,7 +6,8 @@ import 'package:file/file.dart' as file;
 import 'package:file/local.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart'
     hide DownloadProgress;
-import 'package:flutter_cache_manager/flutter_cache_manager.dart' as cache
+import 'package:flutter_cache_manager/flutter_cache_manager.dart'
+    as cache
     show FileSystem;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -141,17 +142,20 @@ class QuranAudioDurableCache implements QuranAudioDurableLookup {
   }
 }
 
-/// Local-only durable Quran recitation downloads. Network type is intentionally
-/// not inferred because this app has no connectivity dependency.
+/// Local-only durable Quran recitation downloads. Network type and free space
+/// come from injected probes; either may be unknown (null), in which case the
+/// caller must confirm before an unverified download starts.
 class QuranAudioDownloadManager {
   QuranAudioDownloadManager(
     this._prefs,
     this._quran, {
     QuranAudioDurableCache? cache,
     Future<int?> Function()? freeBytes,
+    Future<bool?> Function()? unmeteredNetwork,
     this.estimatedBytesPerAyah = 80 * 1024,
   }) : _cache = cache ?? QuranAudioDurableCache(),
-       _freeBytes = freeBytes ?? _unknownFreeBytes {
+       _freeBytes = freeBytes ?? _unknownFreeBytes,
+       _unmeteredNetwork = unmeteredNetwork ?? _unknownNetwork {
     _manifest = _readManifest(_prefs.getString(_manifestKey));
   }
 
@@ -160,6 +164,8 @@ class QuranAudioDownloadManager {
   final QuranAudioDurableCache _cache;
   final Future<int?> Function() _freeBytes;
   static Future<int?> _unknownFreeBytes() async => null;
+  final Future<bool?> Function() _unmeteredNetwork;
+  static Future<bool?> _unknownNetwork() async => null;
   final int estimatedBytesPerAyah;
   late final Map<String, Map<String, _SurahManifest>> _manifest;
   final Set<String> _unverifiedReciters = {};
@@ -316,6 +322,16 @@ class QuranAudioDownloadManager {
     }
   }
 
+  /// True on an unmetered (Wi-Fi-like) network, false on a metered one, and
+  /// null when the device cannot tell.
+  Future<bool?> isOnUnmeteredNetwork() async {
+    try {
+      return await _unmeteredNetwork();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Stream<DownloadProgress> _download(
     QuranReciter reciter,
     Future<List<_AyahRef>> Function() refs, {
@@ -324,14 +340,27 @@ class QuranAudioDownloadManager {
   }) async* {
     final run = _DownloadRun(reciter, ++_generation);
     yield run.progress(DownloadPhase.checking);
-    if (wifiOnly && !allowUnverifiedNetwork) {
-      yield run.progress(DownloadPhase.waitingForNetworkConfirmation);
-      return;
-    }
     try {
+      if (wifiOnly) {
+        final unmetered = await isOnUnmeteredNetwork();
+        _checkGeneration(run.generation);
+        if (unmetered == false) {
+          yield run.progress(DownloadPhase.waitingForWifi);
+          return;
+        }
+        if (unmetered == null && !allowUnverifiedNetwork) {
+          yield run.progress(DownloadPhase.waitingForNetworkConfirmation);
+          return;
+        }
+      }
       run.queue = (await refs()).toSet().toList(growable: false);
       _checkGeneration(run.generation);
-      final free = await _freeBytes();
+      int? free;
+      try {
+        free = await _freeBytes();
+      } catch (_) {
+        free = null;
+      }
       _checkGeneration(run.generation);
       run.spaceUnknown = free == null;
       if (free != null &&
@@ -359,7 +388,8 @@ class QuranAudioDownloadManager {
           run.failed++;
         }
         final lastOfSurah =
-            i == run.queue.length - 1 || run.queue[i + 1].surahId != ref.surahId;
+            i == run.queue.length - 1 ||
+            run.queue[i + 1].surahId != ref.surahId;
         // Persist at most once per surah instead of twice per ayah.
         if (lastOfSurah) await _enqueue(_writeManifest);
         yield run.progress(DownloadPhase.downloading, surahId: ref.surahId);

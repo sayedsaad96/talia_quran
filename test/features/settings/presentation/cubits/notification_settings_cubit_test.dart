@@ -63,6 +63,29 @@ void main() {
   tearDown(() => cubit.close());
 
   group('NotificationSettingsCubit', () {
+    test('the forecast reminder is offered and counted only when its flag is '
+        'on for an adult profile', () async {
+      await prefs.setBool(
+        TaliaNotificationService.forgettingForecastPreferenceKey,
+        true,
+      );
+      await cubit.load();
+      expect(cubit.state.forgettingForecastAvailable, isFalse);
+      final hiddenCount = cubit.state.enabledCount;
+      expect(cubit.state.totalCount, 11);
+
+      await prefs.setBool('experience_flag_forgettingForecast', true);
+      await prefs.setString('mem_plus_profile', '{"selectedPath":"child"}');
+      await cubit.load();
+      expect(cubit.state.forgettingForecastAvailable, isFalse);
+
+      await prefs.setString('mem_plus_profile', '{"selectedPath":"adult"}');
+      await cubit.load();
+      expect(cubit.state.forgettingForecastAvailable, isTrue);
+      expect(cubit.state.enabledCount, hiddenCount + 1);
+      expect(cubit.state.totalCount, 12);
+    });
+
     test(
       'load() populates state from SharedPreferences and permissions',
       () async {

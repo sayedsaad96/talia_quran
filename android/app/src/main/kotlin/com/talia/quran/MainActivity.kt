@@ -3,6 +3,9 @@ package com.talia.quran
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.StatFs
 import android.media.MediaPlayer
 import com.talia.quran.prayer.AdhanClipResolver
 import com.talia.quran.prayer.AdhanPreviewBridge
@@ -18,6 +21,36 @@ class MainActivity : AudioServiceActivity() {
         super.configureFlutterEngine(flutterEngine)
         registerAdhanPreviewChannel(flutterEngine.dartExecutor.binaryMessenger)
         registerHomeWidgetComponentChannel(flutterEngine.dartExecutor.binaryMessenger)
+        registerDeviceResourcesChannel(flutterEngine.dartExecutor.binaryMessenger)
+    }
+
+    /**
+     * Read-only probes for recitation downloads: free space in the app's files
+     * directory (where downloads are stored) and whether the active network is
+     * unmetered. Answers null when the device cannot tell.
+     */
+    private fun registerDeviceResourcesChannel(messenger: io.flutter.plugin.common.BinaryMessenger) {
+        MethodChannel(messenger, "talia/device_resources").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "freeBytes" -> result.success(
+                    try {
+                        StatFs(filesDir.absolutePath).availableBytes
+                    } catch (e: Exception) {
+                        null
+                    },
+                )
+                "isUnmeteredNetwork" -> result.success(
+                    try {
+                        val manager = getSystemService(ConnectivityManager::class.java)
+                        val capabilities = manager?.getNetworkCapabilities(manager.activeNetwork)
+                        capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                    } catch (e: Exception) {
+                        null
+                    },
+                )
+                else -> result.notImplemented()
+            }
+        }
     }
 
     /**

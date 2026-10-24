@@ -3689,9 +3689,9 @@
   ,"@readerSleepMinutes": {"placeholders": {"countText": {"type": "String"}}}
   ,"readerSleepEndOfSurah": "حتى نهاية السورة"
   ,"trustCenterTitle": "كيف نحفظ المحتوى وخصوصيتك"
-  ,"trustSourcesTitle": "مصادر موثّقة"
-  ,"trustSourcesBody": "لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع."
-  ,"trustSourcesMeta": "إصدار البيانات {version} • {count, plural, =1{مصدر واحد} =2{مصدران} few{{countText} مصادر} many{{countText} مصدرًا} other{{countText} مصدرًا}}"
+  ,"trustSourcesTitle": "مصادر المحتوى"
+  ,"trustSourcesBody": "لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث."
+  ,"trustSourcesMeta": "إصدار البيانات {version} • {count, plural, =1{مجموعة بيانات واحدة} =2{مجموعتا بيانات} few{{countText} مجموعات بيانات} many{{countText} مجموعة بيانات} other{{countText} مجموعة بيانات}}"
   ,"@trustSourcesMeta": {"placeholders": {"version": {"type": "String"}, "count": {"type": "int"}, "countText": {"type": "String"}}}
   ,"trustVoiceTitle": "صوتك"
   ,"trustVoiceBody": "تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته."
@@ -3774,6 +3774,7 @@
   ,"audioDownloadsJuz": "الجزء {number}"
   ,"@audioDownloadsJuz": {"placeholders": {"number": {"type": "String"}}}
   ,"audioDownloadsWifiOnly": "عبر Wi-Fi فقط"
+  ,"audioDownloadsWaitingForWifi": "أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط»."
   ,"audioDownloadsWifiUnavailable": "لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة."
   ,"audioDownloadsSpaceUnknown": "لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات."
   ,"audioDownloadsNetworkWarning": "لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل."

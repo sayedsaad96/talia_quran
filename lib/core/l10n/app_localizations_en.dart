@@ -8857,19 +8857,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trustCenterTitle => 'How we protect content and your privacy';
 
   @override
-  String get trustSourcesTitle => 'Verified sources';
+  String get trustSourcesTitle => 'Content sources';
 
   @override
   String get trustSourcesBody =>
-      'Talia contains no generated religious text. Every text has a source and a reference.';
+      'Talia contains no generated religious text. Every text is copied as-is from a named source, and documentation such as source links and hadith grades is still being completed for some azkar and hadith.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countText sources',
-      one: '1 source',
+      other: '$countText datasets',
+      one: '1 dataset',
     );
     return 'Data version $version • $_temp0';
   }
@@ -9142,6 +9142,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioDownloadsWifiOnly => 'Wi-Fi only';
+
+  @override
+  String get audioDownloadsWaitingForWifi =>
+      'You\'re on a network that may count against your data plan. Connect to Wi-Fi, or turn off Wi-Fi only.';
 
   @override
   String get audioDownloadsWifiUnavailable =>

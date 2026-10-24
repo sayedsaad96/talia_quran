@@ -41,6 +41,9 @@ class AudioDownloadsCubit extends Cubit<AudioDownloadsState> {
     }
   }
 
+  /// Network type as the device reports it; null when unknown.
+  Future<bool?> probeUnmeteredNetwork() => _manager.isOnUnmeteredNetwork();
+
   Future<void> start({
     required QuranReciter reciter,
     required bool wifiOnly,

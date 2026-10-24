@@ -66,21 +66,21 @@ void main() {
             summaryFuture: Future.value(
               const ContentManifestSummary(
                 datasetVersion: 'v9',
-                sourceCount: 4,
+                datasetCount: 4,
               ),
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Verified sources'), findsOneWidget);
+      expect(find.text('Content sources'), findsOneWidget);
       expect(find.text('Your voice'), findsOneWidget);
       expect(
         find.textContaining('may send the audio to its provider'),
         findsOneWidget,
       );
       expect(find.text('Your data'), findsOneWidget);
-      expect(find.text('Data version v9 • 4 sources'), findsOneWidget);
+      expect(find.text('Data version v9 • 4 datasets'), findsOneWidget);
 
       await tester.tap(find.text('View sources and licenses'));
       await tester.pumpAndSettle();
@@ -100,20 +100,20 @@ void main() {
     expect(find.text('privacy-page'), findsOneWidget);
   });
 
-  testWidgets('meta line uses the singular form for one source', (
+  testWidgets('meta line uses the singular form for one dataset', (
     tester,
   ) async {
     await tester.pumpWidget(
       _app(
         TrustCenterPage(
           summaryFuture: Future.value(
-            const ContentManifestSummary(datasetVersion: 'v9', sourceCount: 1),
+            const ContentManifestSummary(datasetVersion: 'v9', datasetCount: 1),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Data version v9 • 1 source'), findsOneWidget);
+    expect(find.text('Data version v9 • 1 dataset'), findsOneWidget);
   });
 
   testWidgets('meta line hidden when summary is null', (tester) async {
@@ -122,7 +122,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('Data version'), findsNothing);
-    expect(find.text('Verified sources'), findsOneWidget);
+    expect(find.text('Content sources'), findsOneWidget);
   });
 
   Future<void> pumpAbout(WidgetTester tester) async {

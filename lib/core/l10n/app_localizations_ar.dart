@@ -8860,22 +8860,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trustCenterTitle => 'كيف نحفظ المحتوى وخصوصيتك';
 
   @override
-  String get trustSourcesTitle => 'مصادر موثّقة';
+  String get trustSourcesTitle => 'مصادر المحتوى';
 
   @override
   String get trustSourcesBody =>
-      'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.';
+      'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countText مصدرًا',
-      many: '$countText مصدرًا',
-      few: '$countText مصادر',
-      two: 'مصدران',
-      one: 'مصدر واحد',
+      other: '$countText مجموعة بيانات',
+      many: '$countText مجموعة بيانات',
+      few: '$countText مجموعات بيانات',
+      two: 'مجموعتا بيانات',
+      one: 'مجموعة بيانات واحدة',
     );
     return 'إصدار البيانات $version • $_temp0';
   }
@@ -9152,6 +9152,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get audioDownloadsWifiOnly => 'عبر Wi-Fi فقط';
+
+  @override
+  String get audioDownloadsWaitingForWifi =>
+      'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».';
 
   @override
   String get audioDownloadsWifiUnavailable =>

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/azkar/domain/services/after_prayer_azkar_window.dart';
@@ -60,10 +62,57 @@ void main() {
     );
   });
 
-  test('loadAfterPrayerAzkarIds from the real bundled asset returns the 4 '
-      'approved ids', () async {
-    final ids = await loadAfterPrayerAzkarIds(rootBundle);
-    expect(ids, hasLength(4));
-    expect(ids.toSet(), hasLength(4));
+  test('loadAfterPrayerAzkarIds keeps only records that pass the release '
+      'notification gate', () async {
+    final ids = await loadAfterPrayerAzkarIds(
+      _FakeBundle(
+        jsonEncode({
+          'general': [
+            _record('graded', grade: 'sahih'),
+            _record('ungraded'),
+            _record('other', grade: 'sahih', subcategory: 'أذكار النوم'),
+          ],
+        }),
+      ),
+    );
+    expect(ids, ['graded']);
   });
+
+  test('loadAfterPrayerAzkarIds from the real bundled asset fails closed on '
+      'ungraded hadith', () async {
+    // The bundled after-prayer records carry no authenticityGrade yet, so the
+    // card stays hidden until they are graded in azkar_release.json.
+    final ids = await loadAfterPrayerAzkarIds(rootBundle);
+    expect(ids, isEmpty);
+  });
+}
+
+Map<String, dynamic> _record(
+  String id, {
+  String? grade,
+  String subcategory = afterPrayerAzkarSubcategory,
+}) => {
+  'id': id,
+  'text': 'نص',
+  'count': 1,
+  'subcategory': subcategory,
+  'sourceType': 'hadith',
+  'reviewStatus': 'approved',
+  'citation': 'مرجع',
+  'sourceUrl': 'https://example.org/$id',
+  'datasetVersion': 'test-1',
+  'authenticityGrade': ?grade,
+};
+
+final class _FakeBundle extends CachingAssetBundle {
+  _FakeBundle(this._source);
+
+  final String _source;
+
+  @override
+  Future<ByteData> load(String key) async =>
+      ByteData.sublistView(utf8.encode(_source));
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async => _source;
 }

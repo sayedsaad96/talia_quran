@@ -266,20 +266,26 @@ void main() {
   group('guardian promise', () {
     late _FakeRewardRepo rewardRepo;
     var enabled = true;
+    var remoteEnabled = false;
     var ayahsDone = 6;
 
-    ParentReward promise(String id, int? surahId, {ParentRewardStatus? status}) =>
-        ParentReward(
-          id: id,
-          origin: ParentRewardOrigin.local,
-          title: 'وعد $id',
-          status: status ?? ParentRewardStatus.locked,
-          createdAt: DateTime.utc(2026, 10, 1),
-          milestoneSurahId: surahId,
-        );
+    ParentReward promise(
+      String id,
+      int? surahId, {
+      ParentRewardStatus? status,
+      ParentRewardOrigin origin = ParentRewardOrigin.local,
+    }) => ParentReward(
+      id: id,
+      origin: origin,
+      title: 'وعد $id',
+      status: status ?? ParentRewardStatus.locked,
+      createdAt: DateTime.utc(2026, 10, 1),
+      milestoneSurahId: surahId,
+    );
 
     setUp(() {
       enabled = true;
+      remoteEnabled = false;
       ayahsDone = 6;
       rewardRepo = _FakeRewardRepo([promise('p1', 114)]);
       when(() => memRepo.getKidsSessionLogs()).thenAnswer(
@@ -296,6 +302,41 @@ void main() {
       certificatesLoader: () => const [],
       rewards: ParentRewardUsecase(rewardRepo),
       promiseEnabled: () => enabled,
+      remotePromiseEnabled: () => remoteEnabled,
+    );
+
+    test(
+      'remote promise alone retries cloud gifts but not local ones',
+      () async {
+        enabled = false;
+        remoteEnabled = true;
+        rewardRepo.rewards = [
+          promise('cloud', 114, origin: ParentRewardOrigin.cloud),
+          promise('local', 114),
+        ];
+        final cubit = buildPromise();
+        addTearDown(cubit.close);
+        await cubit.load();
+
+        expect(rewardRepo.unlocks, [('|cloud|cloud', null)]);
+        final state = cubit.state as KidsTreasuresLoaded;
+        expect(state.promiseUnlockedIds, {'cloud'});
+      },
+    );
+
+    test(
+      'local promise alone leaves cloud gifts to the remote switch',
+      () async {
+        rewardRepo.rewards = [
+          promise('cloud', 114, origin: ParentRewardOrigin.cloud),
+        ];
+        final cubit = buildPromise();
+        addTearDown(cubit.close);
+        await cubit.load();
+
+        expect(rewardRepo.unlocks, isEmpty);
+        expect((cubit.state as KidsTreasuresLoaded).milestoneProgress, isEmpty);
+      },
     );
 
     test('opens the gift once its surah is memorized, locally', () async {
@@ -518,7 +559,9 @@ class _FakeRewardRepo implements ParentRewardRepository {
     if (unlockFailure != null) return Left(unlockFailure!);
     rewards = [
       for (final r in rewards)
-        r.storageIdentity == id ? r.copyWith(status: ParentRewardStatus.unlocked) : r,
+        r.storageIdentity == id
+            ? r.copyWith(status: ParentRewardStatus.unlocked)
+            : r,
     ];
     return Right(rewards);
   }

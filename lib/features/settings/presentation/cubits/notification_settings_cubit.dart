@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/notification_service.dart';
@@ -22,6 +23,21 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   /// Read-only access for widgets that need to read a preference that is
   /// not part of [NotificationSettingsState] (e.g. muezzin selection).
   SharedPreferences get prefs => _prefs;
+
+  /// Same audience and rollout gate the scheduler applies, so the settings
+  /// never offer a forecast reminder that cannot fire.
+  Future<bool> _forecastAvailable() async {
+    try {
+      if (!ExperienceFlags.fromPreferences(
+        _prefs,
+      ).isEnabled(ExperienceFeature.forgettingForecast)) {
+        return false;
+      }
+      return await forecastAudienceIsAdultFromPreferences(_prefs);
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// Loads all notification settings from persistent preferences and OS permission state.
   Future<void> load() async {
@@ -59,8 +75,12 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         _prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
         true;
     final forgettingForecast =
-        _prefs.getBool(TaliaNotificationService.forgettingForecastPreferenceKey) ??
+        _prefs.getBool(
+          TaliaNotificationService.forgettingForecastPreferenceKey,
+        ) ??
         false;
+    final forgettingForecastAvailable = await _forecastAvailable();
+    if (isClosed) return;
     final tahajjud =
         _prefs.getBool(TaliaNotificationService.tahajjudPreferenceKey) ?? false;
     final khatmahReminder =
@@ -120,6 +140,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         fridayKahf: fridayKahf,
         weeklyImpact: weeklyImpact,
         forgettingForecast: forgettingForecast,
+        forgettingForecastAvailable: forgettingForecastAvailable,
         tahajjud: tahajjud,
         khatmahReminder: khatmahReminder,
         prayerNotifications: prayerNotifications,
@@ -255,9 +276,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
         weeklyImpact: persistedValue,
       ),
-      TaliaNotificationService.forgettingForecastPreferenceKey => state.copyWith(
-        forgettingForecast: persistedValue,
-      ),
+      TaliaNotificationService.forgettingForecastPreferenceKey =>
+        state.copyWith(forgettingForecast: persistedValue),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjud: persistedValue,
       ),
@@ -422,9 +442,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
         weeklyImpactTime: persistedTime,
       ),
-      TaliaNotificationService.forgettingForecastPreferenceKey => state.copyWith(
-        forgettingForecastTime: persistedTime,
-      ),
+      TaliaNotificationService.forgettingForecastPreferenceKey =>
+        state.copyWith(forgettingForecastTime: persistedTime),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjudTime: persistedTime,
       ),
@@ -446,7 +465,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     AppLocalizations? l10n,
   }) async {
     if (weekday < DateTime.monday || weekday > DateTime.sunday) return;
-    const key = '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday';
+    const key =
+        '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday';
     final saved = await _writeInt(key, weekday);
     if (!saved) {
       _emitFeedback(state, NotificationSettingsFeedback.saveFailed);

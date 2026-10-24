@@ -6,18 +6,18 @@ import 'package:flutter/services.dart';
 import '../utils/talia_logger.dart';
 
 /// Read-only digest of `assets/data/content_manifest.json`: which dataset
-/// version ships and how many governed sources it lists. The manifest itself
+/// version ships and how many governed data files it lists. The manifest itself
 /// is never modified.
 final class ContentManifestSummary extends Equatable {
   const ContentManifestSummary({
     required this.datasetVersion,
-    required this.sourceCount,
+    required this.datasetCount,
   });
 
   static const assetPath = 'assets/data/content_manifest.json';
 
   final String? datasetVersion;
-  final int sourceCount;
+  final int datasetCount;
 
   /// Returns null when [json] is malformed or has no `items` list.
   static ContentManifestSummary? parse(String json) {
@@ -29,7 +29,7 @@ final class ContentManifestSummary extends Equatable {
       final version = decoded['datasetVersion'];
       return ContentManifestSummary(
         datasetVersion: version is String ? version : null,
-        sourceCount: items.length,
+        datasetCount: items.length,
       );
     } catch (_) {
       return null;
@@ -37,7 +37,7 @@ final class ContentManifestSummary extends Equatable {
   }
 
   @override
-  List<Object?> get props => [datasetVersion, sourceCount];
+  List<Object?> get props => [datasetVersion, datasetCount];
 }
 
 /// Loads the bundled manifest summary; any failure yields null.
