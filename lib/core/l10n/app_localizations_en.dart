@@ -8953,7 +8953,39 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ramadanLastTen => 'The last ten nights';
+  String ramadanLastTenCountdown(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The last ten nights begin in $countText days',
+      one: 'The last ten nights begin tomorrow evening',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLastTenTonight =>
+      'The last ten nights begin tonight after Maghrib';
+
+  @override
+  String ramadanLastTenDay(String day) {
+    return 'Day $day of the last ten';
+  }
+
+  @override
+  String get ramadanTemplateTwoHint =>
+      'Start with the first; when you finish it, we suggest the second over the days left in the month.';
+
+  @override
+  String ramadanStartNextKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Start the second khatmah in $countText days',
+      one: 'Start the second khatmah in 1 day',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get ramadanSummaryTitle => 'Your Ramadan';

@@ -21,6 +21,8 @@ class KhatmahPlanModel {
     this.dailyTargetEndPage,
     this.pausedAt,
     this.wirdUnit = 'pages',
+    this.portionsPerDay = 1,
+    this.seasonLink,
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
@@ -45,6 +47,8 @@ class KhatmahPlanModel {
   final int? dailyTargetEndPage;
   final DateTime? pausedAt;
   final String wirdUnit;
+  final int portionsPerDay;
+  final KhatmahSeasonLink? seasonLink;
 
   factory KhatmahPlanModel.fromJson(Map<String, dynamic> json) {
     final rawCompletedPages = json['completedPages'];
@@ -77,7 +81,30 @@ class KhatmahPlanModel {
       dailyTargetStartPage: json['dailyTargetStartPage'] as int?,
       dailyTargetEndPage: json['dailyTargetEndPage'] as int?,
       wirdUnit: json['wirdUnit'] as String? ?? 'pages',
+      portionsPerDay: _parsePortions(json['portionsPerDay']),
+      seasonLink: _parseSeasonLink(json['seasonLink']),
     );
+  }
+
+  /// Older plans have no value; anything but 1–5 reads as 1.
+  static int _parsePortions(Object? raw) =>
+      raw is int && raw >= 1 && raw <= 5 ? raw : 1;
+
+  /// Malformed links are dropped: they only gate an optional offer.
+  static KhatmahSeasonLink? _parseSeasonLink(Object? raw) {
+    if (raw is! Map<String, dynamic>) return null;
+    final round = raw['round'];
+    final rounds = raw['rounds'];
+    final lastDay = DateTime.tryParse(raw['lastDay'] as String? ?? '');
+    if (round is! int ||
+        rounds is! int ||
+        lastDay == null ||
+        round < 1 ||
+        rounds < round ||
+        rounds > 5) {
+      return null;
+    }
+    return KhatmahSeasonLink(round: round, rounds: rounds, lastDay: lastDay);
   }
 
   Map<String, dynamic> toJson() => {
@@ -98,6 +125,16 @@ class KhatmahPlanModel {
     'dailyTargetEndPage': dailyTargetEndPage,
     'pausedAt': pausedAt?.toIso8601String(),
     'wirdUnit': wirdUnit,
+    if (portionsPerDay != 1) 'portionsPerDay': portionsPerDay,
+    if (seasonLink case final link?)
+      'seasonLink': {
+        'round': link.round,
+        'rounds': link.rounds,
+        'lastDay':
+            '${link.lastDay.year.toString().padLeft(4, '0')}-'
+            '${link.lastDay.month.toString().padLeft(2, '0')}-'
+            '${link.lastDay.day.toString().padLeft(2, '0')}',
+      },
   };
 
   factory KhatmahPlanModel.fromEntity(KhatmahPlan entity) {
@@ -118,6 +155,8 @@ class KhatmahPlanModel {
       dailyTargetEndPage: entity.dailyTargetEndPage,
       pausedAt: entity.pausedAt,
       wirdUnit: entity.wirdUnit.name,
+      portionsPerDay: entity.portionsPerDay,
+      seasonLink: entity.seasonLink,
     );
   }
 
@@ -143,6 +182,8 @@ class KhatmahPlanModel {
     wirdUnit:
         KhatmahWirdUnit.values.where((u) => u.name == wirdUnit).firstOrNull ??
         KhatmahWirdUnit.pages,
+    portionsPerDay: portionsPerDay,
+    seasonLink: seasonLink,
   );
 
   static Set<int> _legacyCompletedPages(int startPage, int currentPage) {

@@ -220,7 +220,7 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
         title = l10n.ramadanDayTitle(
           LocaleNumberFormatter.number(info.day ?? 0, lang),
         );
-        if (info.phase == RamadanPhase.lastTen) body = l10n.ramadanLastTen;
+        body = _lastTenLine(context, info, lang);
         actions
           ..add(_button(l10n.ramadanOpenKhatmah, _openKhatmah, 'khatmah'))
           ..add(_button(l10n.ramadanLogTarawih, _logTarawih, 'tarawih'));
@@ -312,6 +312,29 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Countdown to the last ten nights during days 1–20, then the day within
+  /// them. Calendar only: no religious text.
+  static String? _lastTenLine(
+    BuildContext context,
+    RamadanInfo info,
+    String lang,
+  ) {
+    final l10n = context.l10n;
+    final inLastTen = lastTenDayNumber(info);
+    if (inLastTen != null) {
+      return l10n.ramadanLastTenDay(
+        LocaleNumberFormatter.number(inLastTen, lang),
+      );
+    }
+    final until = daysUntilLastTenEve(info);
+    if (until == null) return null;
+    if (until == 0) return l10n.ramadanLastTenTonight;
+    return l10n.ramadanLastTenCountdown(
+      until,
+      LocaleNumberFormatter.number(until, lang),
     );
   }
 

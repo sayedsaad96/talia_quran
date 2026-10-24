@@ -15040,11 +15040,35 @@ abstract class AppLocalizations {
   /// **'اليوم {day} من رمضان'**
   String ramadanDayTitle(String day);
 
-  /// No description provided for @ramadanLastTen.
+  /// No description provided for @ramadanLastTenCountdown.
   ///
   /// In ar, this message translates to:
-  /// **'العشر الأواخر'**
-  String get ramadanLastTen;
+  /// **'{count, plural, =1{تبدأ العشر الأواخر مساء الغد} =2{تبدأ العشر الأواخر بعد يومين} few{تبدأ العشر الأواخر بعد {countText} أيام} many{تبدأ العشر الأواخر بعد {countText} يومًا} other{تبدأ العشر الأواخر بعد {countText} يوم}}'**
+  String ramadanLastTenCountdown(int count, String countText);
+
+  /// No description provided for @ramadanLastTenTonight.
+  ///
+  /// In ar, this message translates to:
+  /// **'تبدأ العشر الأواخر الليلة بعد المغرب'**
+  String get ramadanLastTenTonight;
+
+  /// No description provided for @ramadanLastTenDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم {day} من العشر الأواخر'**
+  String ramadanLastTenDay(String day);
+
+  /// No description provided for @ramadanTemplateTwoHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.'**
+  String get ramadanTemplateTwoHint;
+
+  /// No description provided for @ramadanStartNextKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{ابدأ الختمة الثانية في يوم واحد} =2{ابدأ الختمة الثانية في يومين} few{ابدأ الختمة الثانية في {countText} أيام} many{ابدأ الختمة الثانية في {countText} يومًا} other{ابدأ الختمة الثانية في {countText} يوم}}'**
+  String ramadanStartNextKhatmah(int count, String countText);
 
   /// No description provided for @ramadanSummaryTitle.
   ///

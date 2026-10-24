@@ -99,6 +99,8 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
     int? targetDays,
     int startPage = 1,
     KhatmahWirdUnit wirdUnit = KhatmahWirdUnit.pages,
+    int portionsPerDay = 1,
+    KhatmahSeasonLink? seasonLink,
   }) async {
     if (isClosed || state is KhatmahSetupSaving) return;
     emit(const KhatmahSetupSaving());
@@ -126,6 +128,8 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
         dedication: dedication,
         authority: _authority,
         wirdUnit: wirdUnit,
+        portionsPerDay: portionsPerDay,
+        seasonLink: seasonLink,
       );
 
       await _createKhatmah(plan);

@@ -74,6 +74,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
   RamadanKhatmahTemplate? _template;
   KhatmahTemplateParams? _templateParams;
 
+  /// Series link carried from a finished khatmah (its next round).
+  KhatmahSeasonLink? _prefillLink;
+
   static RamadanInfo? _resolveRamadan(DateTime now, RamadanInfo? override) {
     try {
       if (!getIt.isRegistered<ExperienceFlags>() ||
@@ -120,6 +123,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     if (prefill != null) {
       _selectedPages = prefill.pagesPerDay;
       _selectedDays = prefill.targetDays;
+      _prefillLink = prefill.seasonLink;
       if (prefill.targetDays == null &&
           !_presets.contains(prefill.pagesPerDay)) {
         _customController.text = '${prefill.pagesPerDay}';
@@ -203,8 +207,23 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
     }
   }
 
+  /// Links the first of two Ramadan khatmahs to the month's last day, so the
+  /// second is offered when it completes. A chosen template replaces a link
+  /// carried from a finished khatmah.
+  KhatmahSeasonLink? get _seasonLink {
+    final template = _template;
+    final last = _ramadan?.lastDay;
+    if (template == null) return _prefillLink;
+    if (template != RamadanKhatmahTemplate.twoInMonth || last == null) {
+      return null;
+    }
+    return KhatmahSeasonLink(round: 1, rounds: 2, lastDay: last);
+  }
+
   void _onSubmit() {
     _cubit.createPlan(
+      portionsPerDay: _templateParams?.portionsPerDay ?? 1,
+      seasonLink: _seasonLink,
       pagesPerDay: _selectedPages,
       dedication: _dedication,
       targetDays: _selectedDays,
@@ -315,6 +334,17 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
               color: context.tokens.textSecondary,
             ),
           ),
+          if (_template == RamadanKhatmahTemplate.twoInMonth)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                l10n.ramadanTemplateTwoHint,
+                key: const Key('khatmah_setup_ramadan_two_hint'),
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.tokens.textSecondary,
+                ),
+              ),
+            ),
           for (var i = 0; i < portions.length; i++)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),

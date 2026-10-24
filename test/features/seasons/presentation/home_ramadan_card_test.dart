@@ -187,11 +187,19 @@ void main() {
 
     await pump(tester, info(RamadanPhase.ramadan, day: 5));
     expect(find.textContaining('من رمضان'), findsOneWidget);
-    expect(find.text('العشر الأواخر'), findsNothing);
+    expect(find.textContaining('تبدأ العشر الأواخر بعد'), findsOneWidget);
+    expect(find.textContaining('من العشر الأواخر'), findsNothing);
     expect(find.byKey(const ValueKey('home_ramadan_tarawih')), findsOneWidget);
 
+    await pump(tester, info(RamadanPhase.ramadan, day: 19));
+    expect(find.text('تبدأ العشر الأواخر مساء الغد'), findsOneWidget);
+
+    await pump(tester, info(RamadanPhase.ramadan, day: 20));
+    expect(find.text('تبدأ العشر الأواخر الليلة بعد المغرب'), findsOneWidget);
+
     await pump(tester, info(RamadanPhase.lastTen, day: 25));
-    expect(find.text('العشر الأواخر'), findsOneWidget);
+    expect(find.textContaining('من العشر الأواخر'), findsOneWidget);
+    expect(find.textContaining('تبدأ العشر الأواخر'), findsNothing);
 
     await tester.runAsync(() async {
       await tarawih.upsert(

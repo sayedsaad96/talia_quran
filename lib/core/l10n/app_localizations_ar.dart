@@ -8961,7 +8961,44 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get ramadanLastTen => 'العشر الأواخر';
+  String ramadanLastTenCountdown(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبدأ العشر الأواخر بعد $countText يوم',
+      many: 'تبدأ العشر الأواخر بعد $countText يومًا',
+      few: 'تبدأ العشر الأواخر بعد $countText أيام',
+      two: 'تبدأ العشر الأواخر بعد يومين',
+      one: 'تبدأ العشر الأواخر مساء الغد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLastTenTonight => 'تبدأ العشر الأواخر الليلة بعد المغرب';
+
+  @override
+  String ramadanLastTenDay(String day) {
+    return 'اليوم $day من العشر الأواخر';
+  }
+
+  @override
+  String get ramadanTemplateTwoHint =>
+      'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.';
+
+  @override
+  String ramadanStartNextKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ابدأ الختمة الثانية في $countText يوم',
+      many: 'ابدأ الختمة الثانية في $countText يومًا',
+      few: 'ابدأ الختمة الثانية في $countText أيام',
+      two: 'ابدأ الختمة الثانية في يومين',
+      one: 'ابدأ الختمة الثانية في يوم واحد',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get ramadanSummaryTitle => 'حصاد رمضان';

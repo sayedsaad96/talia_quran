@@ -27,9 +27,13 @@ class KhatmahCompletionPage extends StatefulWidget {
     this.onReadDua,
     this.onShare,
     this.onHome,
+    this.now,
   });
 
   final KhatmahReadingResult? completion;
+
+  /// Clock for the Ramadan next-round offer; defaults to [DateTime.now].
+  final DateTime Function()? now;
   final bool enableConfetti;
   final VoidCallback? onReadDua;
   final VoidCallback? onShare;
@@ -447,6 +451,37 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                   ),
 
                   const SizedBox(height: AppSpacing.md),
+
+                  // The first of two Ramadan khatmahs: offer the second over
+                  // the days left in the month.
+                  if (KhatmahSetupPrefill.nextRound(
+                        plan,
+                        (widget.now ?? DateTime.now)(),
+                      )
+                      case final next?) ...[
+                    FilledButton.icon(
+                      key: const Key('khatmah_completion_next_round_button'),
+                      onPressed: () =>
+                          context.go(AppRoutes.khatmahSetup, extra: next),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: gold,
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(TaliaIcons.reading),
+                      label: Text(
+                        context.l10n.ramadanStartNextKhatmah(
+                          next.targetDays!,
+                          context.numText(next.targetDays!),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
 
                   // The natural next step after a khatmah is the next one.
                   OutlinedButton.icon(
