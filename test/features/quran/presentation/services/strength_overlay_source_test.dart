@@ -65,4 +65,29 @@ void main() {
     source.clear();
     expect(source.bandsForPage(2, _now), isEmpty);
   });
+
+  test('a page open past a due time is recomputed, otherwise it stays cached',
+      () {
+    final soon = AyahReviewRecord(
+      surahId: 2,
+      ayahNumber: 1,
+      strengthLevel: 6,
+      intervalDays: 1,
+      lastReviewedAt: _now.subtract(const Duration(days: 1)),
+      nextReviewDate: _now.add(const Duration(hours: 2)),
+      totalReviews: 3,
+      lastRating: PerformanceRating.excellent,
+    );
+    source.setRecords([soon]);
+    expect(source.bandsForPage(2, _now)[(surah: 2, ayah: 1)],
+        StrengthBand.solid);
+    source.bandsForPage(2, _now.add(const Duration(hours: 1)));
+    expect(calls, 1);
+    expect(
+      source.bandsForPage(2, _now.add(const Duration(hours: 3)))[
+          (surah: 2, ayah: 1)],
+      StrengthBand.due,
+    );
+    expect(calls, 2);
+  });
 }

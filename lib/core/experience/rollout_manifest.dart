@@ -62,11 +62,6 @@ abstract final class RolloutManifest {
       'The derived index awaits human review (E0); the feature only says '
       '"not approved yet".',
     ),
-    ExperienceFeature.groupKhatmah => _off(
-      f.storageKey,
-      'No self-service eligibility on the server yet (phase 4 L5); every '
-      'action would be refused.',
-    ),
     ExperienceFeature.tabletSpread => _off(
       f.storageKey,
       'Not wired into the reader (H3 waits on the H2 tablet measurement).',

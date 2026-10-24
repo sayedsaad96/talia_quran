@@ -15,6 +15,8 @@ import '../memorization/memorization_path_resolver.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/group_khatmah_environment.dart';
 import '../sync/group_khatmah_wake_scheduler.dart';
+import '../../features/memorization_plus/data/repositories/collaborators/memorization_profile_service.dart';
+import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 Future<void> registerGroupKhatmah(GetIt getIt) async {
   final prefs = getIt<SharedPreferences>();
@@ -38,7 +40,23 @@ Future<void> registerGroupKhatmah(GetIt getIt) async {
     final supabase = SupabaseGroupKhatmahRemote(Supabase.instance.client);
     remote = EligibilityRequestingRemote(
       supabase,
-      requestEligibility: supabase.requestEligibility,
+      requestEligibility: (ownerId) async {
+        // The server decides from the synced memorization path. Older
+        // installs may never have pushed it, so push an adult's path first.
+        try {
+          if ((await path.currentProfile())?.isAdult == true &&
+              getIt.isRegistered<MemorizationPlusRepository>()) {
+            await prefs.setBool(
+              MemorizationProfileService.kIdentityCloudDirty,
+              true,
+            );
+            await getIt<MemorizationPlusRepository>().pushIdentityToCloud();
+          }
+        } catch (_) {
+          // The request below still runs; the server may then refuse.
+        }
+        return supabase.requestEligibility(ownerId);
+      },
     );
   } catch (_) {
     remote = const _UnavailableGroupRemote();
