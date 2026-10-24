@@ -56,6 +56,9 @@ class ControlledAudioPlayer extends Mock implements AudioPlayer {
   Stream<int?> get currentIndexStream => _currentIndexController.stream;
 
   @override
+  int? get currentIndex => _currentIndex;
+
+  @override
   Future<void> play() async {
     _playCallCount++;
     _playerStateController.add(PlayerState(true, ProcessingState.ready));

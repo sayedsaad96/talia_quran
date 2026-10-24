@@ -155,6 +155,7 @@ flutter:
     # Runtime image assets. Keep this list explicit so generator input and
     # legacy artwork do not become part of the release bundle accidentally.
     - assets/images/logo_new_padded.png
+    - assets/images/launcher_icon_full.png
     - assets/images/logo_new.png
     - assets/images/logo.png
     - assets/images/certificate.png

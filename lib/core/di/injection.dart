@@ -39,6 +39,7 @@ import '../services/notification_service.dart';
 import '../services/notification_scheduler.dart';
 import '../services/khatmah_reminder_sync.dart';
 import '../services/quran_continuous_player_service.dart';
+import '../services/quran_media_metadata.dart';
 import '../services/quran_reciter_service.dart';
 import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../services/streak_reader.dart';
@@ -684,6 +685,9 @@ Future<void> configureDependencies({bool background = false}) async {
         quranRepository: getIt<QuranRepository>(),
         reciterService: getIt<QuranReciterService>(),
         enableBackgroundAudioIntegration: true,
+        mediaMetadata: QuranMediaMetadata(
+          locale: () => getIt<LocaleCubit>().state,
+        ),
       );
       // Attach after the player exists — never during configureDependencies.
       // Constructing AudioPlayer() while splash init is still running can

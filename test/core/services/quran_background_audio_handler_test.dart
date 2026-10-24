@@ -20,6 +20,9 @@ void main() {
     Duration? seekPosition;
 
     when(() => player.playbackEventStream).thenAnswer((_) => events.stream);
+    when(
+      () => player.playerStateStream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => player.currentIndex).thenReturn(0);
     when(() => player.playing).thenReturn(true);
     when(() => player.processingState).thenReturn(ProcessingState.ready);
@@ -55,7 +58,6 @@ void main() {
     expect(
       handler.playbackState.value.controls,
       containsAll([
-        MediaControl.skipToPrevious,
         MediaControl.pause,
         MediaControl.stop,
         MediaControl.skipToNext,

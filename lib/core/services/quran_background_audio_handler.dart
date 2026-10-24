@@ -19,7 +19,12 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
     required this._onPrevious,
     required this._onSeek,
   }) {
-    _playbackSubscription = _player.playbackEventStream.listen(_broadcastState);
+    _playbackSubscription = _player.playbackEventStream.listen(
+      (_) => _broadcastState(),
+    );
+    _playerStateSubscription = _player.playerStateStream.listen(
+      (_) => _broadcastState(),
+    );
   }
 
   final AudioPlayer _player;
@@ -30,6 +35,12 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   final Future<void> Function() _onPrevious;
   final Future<void> Function(Duration position) _onSeek;
   StreamSubscription<PlaybackEvent>? _playbackSubscription;
+  StreamSubscription<PlayerState>? _playerStateSubscription;
+  bool _disposed = false;
+  bool _queuePending = false;
+  int? _queueIndex;
+  bool? _hasNext;
+  bool? _hasPrevious;
   HandsFreeMediaDelegate? _mediaDelegate;
   Object? _mediaOwner;
   PlaybackState? _readerState;
@@ -95,14 +106,73 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  void setQueueItems(List<MediaItem> items) {
+  void prepareQueue(
+    List<MediaItem> items, {
+    required int initialIndex,
+    required bool hasNext,
+    required bool hasPrevious,
+  }) {
+    _queuePending = true;
+    setQueueItems(
+      items,
+      currentIndex: initialIndex,
+      hasNext: hasNext,
+      hasPrevious: hasPrevious,
+    );
+    _publishLoading();
+  }
+
+  void commitQueue() {
+    if (_disposed) return;
+    _queuePending = false;
+    _refreshState();
+  }
+
+  void setQueueItems(
+    List<MediaItem> items, {
+    int? currentIndex,
+    bool? hasNext,
+    bool? hasPrevious,
+  }) {
+    if (_disposed) return;
+    _queueIndex = currentIndex ?? _player.currentIndex;
+    _hasNext = hasNext;
+    _hasPrevious = hasPrevious;
     queue.add(List<MediaItem>.unmodifiable(items));
-    _publishCurrentItem(_player.currentIndex);
+    _publishCurrentItem(_queueIndex);
+  }
+
+  void updateTransport({required bool hasNext, required bool hasPrevious}) {
+    _hasNext = hasNext;
+    _hasPrevious = hasPrevious;
+    if (!_queuePending) _refreshState();
+  }
+
+  void _refreshState() {
+    if (_disposed || _mediaDelegate != null || queue.value.isEmpty) return;
+    _broadcastState();
+  }
+
+  void _publishLoading() {
+    if (_disposed || _mediaDelegate != null) return;
+    playbackState.add(
+      PlaybackState(
+        processingState: AudioProcessingState.loading,
+        queueIndex: _queueIndex,
+      ),
+    );
   }
 
   void clearQueue() {
+    _queuePending = false;
+    _queueIndex = null;
     queue.add(const <MediaItem>[]);
-    if (_mediaDelegate == null) mediaItem.add(null);
+    if (_mediaDelegate == null) {
+      mediaItem.add(null);
+      playbackState.add(
+        PlaybackState(processingState: AudioProcessingState.idle),
+      );
+    }
   }
 
   @override
@@ -171,20 +241,29 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_mediaDelegate == null) await _onSeek(position);
   }
 
-  void _broadcastState(PlaybackEvent event) {
-    if (_mediaDelegate != null) return;
-    _publishCurrentItem(event.currentIndex);
-    final playing = _player.playing;
+  void _broadcastState() {
+    if (_disposed || _mediaDelegate != null || queue.value.isEmpty) return;
+    if (_queuePending) return _publishLoading();
+    // Events already queued by the previous source may arrive after commit.
+    // The live player's index belongs to the installed source list.
+    _queueIndex = _player.currentIndex;
+    _publishCurrentItem(_queueIndex);
+    final isPlaying = _player.playing;
+    final controls = <MediaControl>[
+      if (_hasPrevious ?? ((_queueIndex ?? 0) > 0)) MediaControl.skipToPrevious,
+      if (isPlaying) MediaControl.pause else MediaControl.play,
+      MediaControl.stop,
+      if (_hasNext ?? ((_queueIndex ?? 0) < queue.value.length - 1))
+        MediaControl.skipToNext,
+    ];
     playbackState.add(
       playbackState.value.copyWith(
-        controls: [
-          MediaControl.skipToPrevious,
-          if (playing) MediaControl.pause else MediaControl.play,
-          MediaControl.stop,
-          MediaControl.skipToNext,
-        ],
+        controls: controls,
         systemActions: const {MediaAction.seek},
-        androidCompactActionIndices: const [0, 1, 3],
+        androidCompactActionIndices: [
+          for (var i = 0; i < controls.length; i++)
+            if (controls[i] != MediaControl.stop) i,
+        ],
         processingState: switch (_player.processingState) {
           ProcessingState.idle => AudioProcessingState.idle,
           ProcessingState.loading => AudioProcessingState.loading,
@@ -192,11 +271,11 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
           ProcessingState.ready => AudioProcessingState.ready,
           ProcessingState.completed => AudioProcessingState.completed,
         },
-        playing: playing,
+        playing: isPlaying,
         updatePosition: _player.position,
         bufferedPosition: _player.bufferedPosition,
         speed: _player.speed,
-        queueIndex: event.currentIndex,
+        queueIndex: _queueIndex,
       ),
     );
   }
@@ -206,15 +285,20 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
     final items = queue.value;
     if (index == null || index < 0 || index >= items.length) return;
     final item = items[index];
-    if (mediaItem.value?.id != item.id) mediaItem.add(item);
+    if (!identical(mediaItem.value, item)) mediaItem.add(item);
   }
 
   Future<void> disposeHandler() async {
+    if (_disposed) return;
+    _disposed = true;
     final delegate = _mediaDelegate;
     _mediaOwner = null;
     _mediaDelegate = null;
     delegate?.onInterrupted();
+    clearQueue();
     await _playbackSubscription?.cancel();
     _playbackSubscription = null;
+    await _playerStateSubscription?.cancel();
+    _playerStateSubscription = null;
   }
 }

@@ -29,6 +29,9 @@ void main() {
     events = StreamController<PlaybackEvent>.broadcast();
     readerCalls = [];
     when(() => player.playbackEventStream).thenAnswer((_) => events.stream);
+    when(
+      () => player.playerStateStream,
+    ).thenAnswer((_) => const Stream.empty());
     handler = QuranBackgroundAudioHandler(
       player: player,
       onPlay: () async => readerCalls.add('play'),

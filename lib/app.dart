@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:audio_service/audio_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ import 'core/l10n/digit_material_localizations.dart';
 import 'core/router/app_router.dart';
 import 'features/memorization_plus/presentation/world/kids_world_phase_controller.dart';
 import 'core/router/launch_destination.dart';
+import 'core/router/quran_audio_notification_controller.dart';
+import 'core/services/quran_continuous_player_service.dart';
 
 import 'core/services/app_session_service.dart';
 import 'core/home_widget/home_widget_publisher.dart';
@@ -57,12 +60,21 @@ class TaliaApp extends StatefulWidget {
 class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   HomeWidgetLaunchController? _widgetLaunch;
   int _widgetNavigationEpoch = 0;
+  QuranAudioNotificationController? _audioNotificationController;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     appInitializedNotifier.addListener(_onInitialized);
     if (!kIsWeb && Platform.isAndroid) {
+      _audioNotificationController = QuranAudioNotificationController(
+        notificationClicks: AudioService.notificationClicked,
+        currentState: () => getIt<QuranContinuousPlayerService>().state,
+        canOpenReader: _canOpenAudioReader,
+        currentLocation: () =>
+            AppRouter.router.routerDelegate.currentConfiguration.uri.toString(),
+        onOpen: (location) => AppRouter.router.go(location),
+      )..start();
       _widgetLaunch = HomeWidgetLaunchController(
         events: HomeWidget.widgetClicked,
         initial: HomeWidget.initiallyLaunchedFromHomeWidget,
@@ -71,11 +83,20 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     }
   }
 
+  bool _canOpenAudioReader() {
+    if (!AppInitializer.isInitialized) return false;
+    final path = AppRouter.router.routerDelegate.currentConfiguration.uri.path;
+    // Kids listening keeps its existing reader context when the app is opened.
+    if (path.startsWith(AppRoutes.memorizationPlusKids)) return false;
+    return getIt<QuranContinuousPlayerService>().canOpenReaderFromNotification;
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     appInitializedNotifier.removeListener(_onInitialized);
     unawaited(_widgetLaunch?.dispose());
+    unawaited(_audioNotificationController?.dispose());
     super.dispose();
   }
 
@@ -92,6 +113,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     getIt<AppUpdateCubit>().setForeground(state == AppLifecycleState.resumed);
 
     if (state == AppLifecycleState.resumed) {
+      _audioNotificationController?.setReady(_fullAppWired);
       if (getIt.isRegistered<HomeWidgetPublisher>()) {
         unawaited(getIt<HomeWidgetPublisher>().refresh());
       }
@@ -111,6 +133,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
+      _audioNotificationController?.setReady(false);
       _saveCurrentLocation();
     }
   }
@@ -157,6 +180,11 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
       // Theme, locale, and profile are already loaded during AppInitializer.
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _audioNotificationController?.setReady(
+          mounted &&
+              WidgetsBinding.instance.lifecycleState ==
+                  AppLifecycleState.resumed,
+        );
         unawaited(_startPostInitializationTasks(notificationService));
       });
     }
@@ -191,6 +219,12 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         },
         child: BlocListener<LocaleCubit, Locale>(
           listener: (_, locale) {
+            if (getIt
+                .checkLazySingletonInstanceExists<
+                  QuranContinuousPlayerService
+                >()) {
+              getIt<QuranContinuousPlayerService>().refreshMediaMetadata();
+            }
             unawaited(
               getIt<NotificationScheduler>().refreshNotifications(
                 lookupAppLocalizations(locale),

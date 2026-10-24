@@ -8,6 +8,9 @@ import '../constants/surah_names.dart';
 import '../utils/talia_logger.dart';
 import 'audio_lifecycle_manager.dart';
 import 'quran_background_audio_handler.dart';
+import 'quran_reader_media_session.dart';
+import 'quran_media_artwork.dart';
+import 'quran_media_metadata.dart';
 import 'hands_free_media_owner.dart';
 import 'quran_audio_service.dart';
 import 'reader_repeat_plan.dart';
@@ -114,7 +117,11 @@ class QuranContinuousPlayerService {
     AudioPlayer? player,
     this._enableBackgroundAudioIntegration = false,
     this._backgroundAudioInitializer,
-  }) : _player = player ?? AudioPlayer() {
+    QuranMediaMetadata? mediaMetadata,
+    QuranMediaArtwork? mediaArtwork,
+  }) : _player = player ?? AudioPlayer(),
+       _mediaMetadata = mediaMetadata ?? QuranMediaMetadata(),
+       _mediaArtwork = mediaArtwork ?? QuranMediaArtwork() {
     _sleepTimer = SleepTimer(
       setVolume: (volume) {
         unawaited(_player.setVolume(volume));
@@ -157,20 +164,40 @@ class QuranContinuousPlayerService {
   final QuranReciterService _reciterService;
   final bool _enableBackgroundAudioIntegration;
   final AudioPlayer _player;
-  final Future<QuranBackgroundAudioHandler?> Function()? _backgroundAudioInitializer;
+  final Future<QuranBackgroundAudioHandler?> Function()?
+  _backgroundAudioInitializer;
   final _handsFreeOwner = HandsFreeMediaOwner();
 
   void cancelHandsFreeAcquisition(HandsFreeMediaDelegate delegate) =>
       _handsFreeOwner.cancelPending(delegate);
 
-  Future<HandsFreeMediaLease?> acquireHandsFreeMedia(HandsFreeMediaDelegate delegate) =>
-      _handsFreeOwner.acquire(delegate, stopReader: () async {
-        await _stopReader();
-        if (_player.playing) throw StateError('Reader did not stop');
-      }, initialize: _ensureBackgroundAudioHandler);
+  Future<HandsFreeMediaLease?> acquireHandsFreeMedia(
+    HandsFreeMediaDelegate delegate,
+  ) => _handsFreeOwner.acquire(
+    delegate,
+    stopReader: () async {
+      await _stopReader();
+      if (_player.playing) throw StateError('Reader did not stop');
+    },
+    initialize: _ensureBackgroundAudioHandler,
+  );
 
   QuranBackgroundAudioHandler? _backgroundAudioHandler;
   Future<QuranBackgroundAudioHandler?>? _backgroundAudioInitialization;
+  final _mediaSession = QuranReaderMediaSession();
+  final QuranMediaMetadata _mediaMetadata;
+  final QuranMediaArtwork _mediaArtwork;
+
+  void refreshMediaMetadata() {
+    if (_handsFreeOwner.isDisposed ||
+        _mediaSession.generation != _playbackGeneration) {
+      return;
+    }
+    _mediaSession.replaceItems(_buildMediaItems(_activeReciterOrDefault()));
+  }
+
+  bool get canOpenReaderFromNotification =>
+      !_handsFreeOwner.isReserved && !_surahQueueMode && state.hasActiveAudio;
 
   final ValueNotifier<ContinuousPlaybackState> _stateNotifier =
       ValueNotifier<ContinuousPlaybackState>(const ContinuousPlaybackState());
@@ -215,6 +242,8 @@ class QuranContinuousPlayerService {
   void _initPlayerListeners() {
     // Track which item in the playlist is now playing.
     _currentIndexSub = _player.currentIndexStream.listen((index) {
+      if (_mediaSession.isLoading || _handsFreeOwner.isDisposed) return;
+      if (index != _player.currentIndex) return;
       if (index == null || index < 0 || index >= _queue.length) return;
       if (index == _currentIndex) return;
       _currentIndex = index;
@@ -232,6 +261,7 @@ class QuranContinuousPlayerService {
     });
 
     _playerStateSub = _player.playerStateStream.listen((playerState) {
+      if (_handsFreeOwner.isDisposed || _mediaSession.isLoading) return;
       switch (playerState.processingState) {
         case ProcessingState.loading:
         case ProcessingState.buffering:
@@ -262,11 +292,19 @@ class QuranContinuousPlayerService {
   }
 
   void _emitState(ContinuousPlaybackState newState) {
+    if (_handsFreeOwner.isDisposed) return;
     _stateNotifier.value = newState.copyWith(
       repeat: _repeat,
       sleepChoice: _sleepChoice,
       isSurahQueue: _surahQueueMode,
     );
+    if (_mediaSession.generation == _playbackGeneration) {
+      _mediaSession.updateIndex(
+        _currentIndex,
+        hasNext: newState.hasNext,
+        hasPrevious: newState.hasPrevious,
+      );
+    }
   }
 
   int get _perAyah => _repeat.perAyah.clamp(1, 10);
@@ -405,6 +443,7 @@ class QuranContinuousPlayerService {
     _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return false;
     final generation = ++_playbackGeneration;
+    _mediaSession.retainForGeneration(generation);
     final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
     if (generation != _playbackGeneration) return false;
     final surahDetail = surahDetailResult.fold((_) => null, (d) => d);
@@ -627,13 +666,15 @@ class QuranContinuousPlayerService {
 
     // Surah continuation mode: if same surah is already queued, jump directly.
     if (!wasReset &&
+        !_mediaSession.isLoading &&
         _activeScope == PlayScope.surah &&
         _activeSurahId == surahId &&
         _queue.isNotEmpty) {
       final index = _queue.indexWhere((a) => a.numberInSurah == ayahNumber);
       if (index >= 0) {
-        _currentIndex = index;
+        _mediaSession.retainForGeneration(generation);
         await _player.seek(Duration.zero, index: index);
+        if (generation != _playbackGeneration) return;
         unawaited(_player.play());
         return;
       }
@@ -690,10 +731,6 @@ class QuranContinuousPlayerService {
         _tail = _queue.sublist(last + 1);
         _queue = _queue.sublist(0, last + 1);
       }
-      final backgroundHandler = await _ensureBackgroundAudioHandler();
-      await _player.stop();
-      if (await _loadSuperseded(generation)) return false;
-
       final mediaItems = _buildMediaItems(activeReciter);
       final audioSources = _buildAudioSources(activeReciter, mediaItems);
 
@@ -708,7 +745,13 @@ class QuranContinuousPlayerService {
       }
 
       _currentIndex = startIndex;
-      backgroundHandler?.setQueueItems(mediaItems);
+      _mediaSession.prepare(
+        generation: generation,
+        items: mediaItems,
+        index: startIndex,
+        hasNext: _hasNextAyah(),
+        hasPrevious: _hasPreviousAyah(),
+      );
 
       final firstAyah = _queue[startIndex];
       _emitState(
@@ -725,6 +768,11 @@ class QuranContinuousPlayerService {
         ),
       );
 
+      await _ensureBackgroundAudioHandler();
+      if (await _loadSuperseded(generation)) return false;
+      await _player.stop();
+      if (await _loadSuperseded(generation)) return false;
+
       // setAudioSources is the just_audio 0.10+ replacement for
       // ConcatenatingAudioSource — hands the engine a playlist so it can
       // pre-buffer the next item while the current one plays.
@@ -734,6 +782,7 @@ class QuranContinuousPlayerService {
         initialPosition: Duration.zero,
       );
       if (await _loadSuperseded(generation)) return false;
+      _mediaSession.commit(generation);
 
       if (_playerSettingsTouched || !_repeat.isDefault || _endOfSurahActive) {
         _playerSettingsTouched = true;
@@ -761,6 +810,7 @@ class QuranContinuousPlayerService {
     } catch (e, stack) {
       TaliaLogger.w('Continuous player failed to load playlist', e, stack);
       if (generation != _playbackGeneration) return false;
+      _mediaSession.clear();
       _emitState(
         _stateNotifier.value.copyWith(
           status: PlaybackStatus.error,
@@ -776,6 +826,7 @@ class QuranContinuousPlayerService {
   /// unloaded and the idle state restored (setAudioSources may have reported
   /// ready in the meantime).
   Future<bool> _loadSuperseded(int generation) async {
+    if (_handsFreeOwner.isDisposed) return true;
     if (generation == _playbackGeneration) return false;
     if (_queue.isEmpty) {
       try {
@@ -789,17 +840,7 @@ class QuranContinuousPlayerService {
   }
 
   List<MediaItem> _buildMediaItems(QuranReciter activeReciter) {
-    return _queue
-        .map((ayah) {
-          final surahName = SurahNames.arabic[ayah.surahId] ?? 'القرآن الكريم';
-          return MediaItem(
-            id: '${ayah.surahId}_${ayah.numberInSurah}',
-            album: 'القرآن الكريم',
-            title: 'سورة $surahName — الآية ${ayah.numberInSurah}',
-            artist: activeReciter.name,
-          );
-        })
-        .toList(growable: false);
+    return _mediaMetadata.build(_queue, activeReciter);
   }
 
   /// Builds the just_audio playlist. Metadata is also handed explicitly to
@@ -980,9 +1021,7 @@ class QuranContinuousPlayerService {
         }
         rethrow;
       }
-      _backgroundAudioHandler?.setQueueItems(
-        _buildMediaItems(_activeReciterOrDefault()),
-      );
+      _mediaSession.replaceItems(_buildMediaItems(_activeReciterOrDefault()));
     }
     if (loopWasAll && !loopSet) {
       _playerSettingsTouched = true;
@@ -1008,7 +1047,7 @@ class QuranContinuousPlayerService {
         final items = _buildMediaItems(reciter);
         final sources = _buildAudioSources(reciter, items);
         await _player.addAudioSources(sources.sublist(offset));
-        _backgroundAudioHandler?.setQueueItems(items);
+        _mediaSession.replaceItems(items);
       } catch (_) {
         _queue = previousQueue;
         _tail = previousTail;
@@ -1102,12 +1141,14 @@ class QuranContinuousPlayerService {
   /// cleared after the player stops, unless a play request started meanwhile
   /// (that request owns the session now and keeps its state).
   Future<void> stop() async {
+    if (_handsFreeOwner.isDisposed) return;
     _handsFreeOwner.interrupt();
     await _stopReader();
   }
 
   Future<void> _stopReader() async {
     final generation = ++_playbackGeneration;
+    _mediaSession.clear();
     _resetSession();
     try {
       await _player.stop();
@@ -1123,7 +1164,6 @@ class QuranContinuousPlayerService {
     _surahQueueMode = false;
     _queue = [];
     _currentIndex = -1;
-    _backgroundAudioHandler?.clearQueue();
     _emitState(const ContinuousPlaybackState(status: PlaybackStatus.idle));
   }
 
@@ -1151,6 +1191,9 @@ class QuranContinuousPlayerService {
   }
 
   void dispose() {
+    if (_handsFreeOwner.isDisposed) return;
+    ++_playbackGeneration;
+    _mediaSession.clear();
     _handsFreeOwner.dispose();
     AudioLifecycleManager.instance.unregister(_player);
     if (_sleepChoice != SleepTimerChoice.off) _sleepTimer.cancel();
@@ -1165,24 +1208,32 @@ class QuranContinuousPlayerService {
     if (!_enableBackgroundAudioIntegration) {
       return Future<QuranBackgroundAudioHandler?>.value(null);
     }
-    if (_backgroundAudioHandler != null) return Future.value(_backgroundAudioHandler);
+    if (_backgroundAudioHandler != null) {
+      return Future.value(_backgroundAudioHandler);
+    }
     // The init future is cached un-timed so a slow AudioService.init still
     // attaches its handler later; each caller only bounds its own wait.
     final init = _backgroundAudioInitialization ??=
-        (_backgroundAudioInitializer ?? _initializeBackgroundAudio)().then((handler) async {
-      if (_handsFreeOwner.isDisposed) {
-        _backgroundAudioHandler = null;
-        await handler?.disposeHandler();
-        return null;
-      }
-      _backgroundAudioHandler = handler;
-      return handler;
-    });
+        (_backgroundAudioInitializer ?? _initializeBackgroundAudio)().then((
+          handler,
+        ) async {
+          if (_handsFreeOwner.isDisposed) {
+            _backgroundAudioHandler = null;
+            await handler?.disposeHandler();
+            return null;
+          }
+          _backgroundAudioHandler = handler;
+          if (handler != null) _mediaSession.attach(handler);
+          return handler;
+        });
     return init.timeout(const Duration(seconds: 5), onTimeout: () => null);
   }
 
   Future<QuranBackgroundAudioHandler?> _initializeBackgroundAudio() async {
     try {
+      _mediaMetadata.artworkUri = await _mediaArtwork.load();
+      if (_handsFreeOwner.isDisposed) return null;
+      refreshMediaMetadata();
       final handler = await AudioService.init<QuranBackgroundAudioHandler>(
         builder: () => QuranBackgroundAudioHandler(
           player: _player,
@@ -1193,15 +1244,16 @@ class QuranContinuousPlayerService {
           onPrevious: previousAyah,
           onSeek: seek,
         ),
-        config: const AudioServiceConfig(
+        config: AudioServiceConfig(
           androidNotificationChannelId: 'com.talia.quran.channel.audio',
-          androidNotificationChannelName: 'تلاوة القرآن الكريم',
+          androidNotificationChannelName: _mediaMetadata.channelName,
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
           androidNotificationIcon: 'drawable/ic_notification',
+          artDownscaleWidth: 512,
+          artDownscaleHeight: 512,
         ),
       );
-      _backgroundAudioHandler = handler;
       return handler;
     } catch (error, stack) {
       TaliaLogger.w(
