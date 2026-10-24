@@ -49,4 +49,20 @@ void main() {
       isNull,
     );
   });
+  test('an Isha after midnight keeps the day its times belong to', () {
+    final late = {
+      ...times,
+      PrayerKey.fajr: DateTime(2026, 6, 20, 3, 10),
+      PrayerKey.isha: DateTime(2026, 6, 21, 0, 20),
+    };
+    final result = prayerReviewHomeOccurrence(
+      ownerId: 'owner',
+      times: late,
+      now: DateTime(2026, 6, 21, 0, 10),
+      preparationNotificationsEnabled: false,
+      preparationMinutes: 0,
+    );
+    expect(result?.prayerKey, PrayerKey.isha);
+    expect(result?.localDate, DateTime(2026, 6, 20));
+  });
 }
