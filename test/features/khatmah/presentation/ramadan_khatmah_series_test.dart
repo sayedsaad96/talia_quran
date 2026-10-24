@@ -57,6 +57,9 @@ void main() {
       final restored = KhatmahPlanModel.fromJson(json).toEntity();
       expect(restored.portionsPerDay, 1);
       expect(restored.seasonLink, isNull);
+      final numericDay = KhatmahPlanModel.fromEntity(plan()).toJson()
+        ..['seasonLink'] = {'round': 1, 'rounds': 2, 'lastDay': 123};
+      expect(KhatmahPlanModel.fromJson(numericDay).toEntity().seasonLink, isNull);
     });
   });
 

@@ -42,10 +42,13 @@ Future<void> registerGroupKhatmah(GetIt getIt) async {
       supabase,
       requestEligibility: (ownerId) async {
         // The server decides from the synced memorization path. Older
-        // installs may never have pushed it, so push an adult's path first.
+        // installs may never have pushed it, so push an adult's path, but
+        // only when the server holds none: a path set from another device
+        // is never overwritten here.
         try {
           if ((await path.currentProfile())?.isAdult == true &&
-              getIt.isRegistered<MemorizationPlusRepository>()) {
+              getIt.isRegistered<MemorizationPlusRepository>() &&
+              await _serverPathMissing(ownerId)) {
             await prefs.setBool(
               MemorizationProfileService.kIdentityCloudDirty,
               true,
@@ -92,4 +95,21 @@ final class _UnavailableGroupRemote implements GroupKhatmahRemote {
     required String ownerId,
     required String groupId,
   }) async => throw const NetworkFailure();
+}
+
+/// True when the account's server profile has no memorization path yet.
+/// Any read failure counts as "not missing", so nothing is pushed blindly.
+Future<bool> _serverPathMissing(String ownerId) async {
+  try {
+    final client = Supabase.instance.client;
+    if (client.auth.currentUser?.id != ownerId) return false;
+    final row = await client
+        .from('profiles')
+        .select('selected_path')
+        .eq('id', ownerId)
+        .maybeSingle();
+    return row == null || row['selected_path'] == null;
+  } catch (_) {
+    return false;
+  }
 }

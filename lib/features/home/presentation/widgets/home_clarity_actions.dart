@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
@@ -53,12 +54,7 @@ class HomeClarityActions extends StatelessWidget {
             _ClarityButton(
               key: const ValueKey('home_clarity_prayer'),
               icon: TaliaIcons.bell,
-              label: l10n.clarityNextPrayer(
-                snapshot.nextName,
-                MaterialLocalizations.of(context).formatTimeOfDay(
-                  TimeOfDay.fromDateTime(snapshot.nextTime.toLocal()),
-                ),
-              ),
+              label: clarityNextPrayerLabel(context, snapshot),
               skin: skin,
               onPressed: () => showHomePrayerTimesSheet(
                 context,
@@ -72,6 +68,37 @@ class HomeClarityActions extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Next prayer: `name` `time`" with the localized prayer name. Sunrise is
+/// not a prayer, so between Fajr and sunrise the label points to Dhuhr.
+@visibleForTesting
+String clarityNextPrayerLabel(
+  BuildContext context,
+  PrayerTimesSnapshot snapshot,
+) {
+  final l10n = context.l10n;
+  var key = snapshot.nextName;
+  var time = snapshot.nextTime;
+  if (key == 'sunrise' && snapshot.dhuhr != null) {
+    key = 'dhuhr';
+    time = snapshot.dhuhr!;
+  }
+  final name = switch (key) {
+    'fajr' => l10n.prayerFajr,
+    'sunrise' => l10n.prayerSunrise,
+    'dhuhr' => l10n.prayerDhuhr,
+    'asr' => l10n.prayerAsr,
+    'maghrib' => l10n.prayerMaghrib,
+    'isha' => l10n.prayerIsha,
+    _ => key,
+  };
+  return l10n.clarityNextPrayer(
+    name,
+    MaterialLocalizations.of(context).formatTimeOfDay(
+      TimeOfDay.fromDateTime(time.toLocal()),
+    ),
+  );
 }
 
 class _ClarityButton extends StatelessWidget {

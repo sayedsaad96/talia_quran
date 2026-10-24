@@ -95,7 +95,8 @@ class KhatmahPlanModel {
     if (raw is! Map<String, dynamic>) return null;
     final round = raw['round'];
     final rounds = raw['rounds'];
-    final lastDay = DateTime.tryParse(raw['lastDay'] as String? ?? '');
+    final rawDay = raw['lastDay'];
+    final lastDay = rawDay is String ? DateTime.tryParse(rawDay) : null;
     if (round is! int ||
         rounds is! int ||
         lastDay == null ||

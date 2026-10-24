@@ -1002,8 +1002,6 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     );
   }
 
-  /// Back affordance for a dashboard opened without history (null keeps the
-  /// AppBar's default back button when there is a route to pop to).
   /// The day's wird split over the five prayers, when the plan asks for it
   /// (Ramadan "split by prayers"). Display only: the wird range and the
   /// recorded pages are the plan's own. A portion is ticked once all its
@@ -1065,6 +1063,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
     return true;
   }
 
+  /// Back affordance for a dashboard opened without history (null keeps the
+  /// AppBar's default back button when there is a route to pop to).
   Widget? _fallbackBackButton(bool hasHistory) {
     if (hasHistory) return null;
     return IconButton(

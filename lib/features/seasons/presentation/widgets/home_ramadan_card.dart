@@ -16,6 +16,7 @@ import '../../../../core/seasons/season_calendar.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/services/notification_scheduler.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -219,17 +220,37 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     if (!await prefs.setBool(lastTenReminderPreferenceKey, on)) return;
     if (!mounted) return;
     setState(() => _reminderOn = on);
-    (widget.onReminderChanged ?? _refreshNotifications)(context);
+    final custom = widget.onReminderChanged;
+    if (custom != null) {
+      custom(context);
+    } else {
+      _applyReminder(context, askPermission: on);
+    }
   }
 
-  static void _refreshNotifications(BuildContext context) {
+  /// Opting in asks for notification permission first (Android 13+), so the
+  /// reminder can actually arrive; either way notifications are rescheduled.
+  static void _applyReminder(
+    BuildContext context, {
+    required bool askPermission,
+  }) {
     if (!getIt.isRegistered<NotificationScheduler>()) return;
-    unawaited(
-      getIt<NotificationScheduler>().refreshNotifications(
-        context.l10n,
+    final l10n = context.l10n;
+    Future<void> apply() async {
+      if (askPermission && getIt.isRegistered<TaliaNotificationService>()) {
+        try {
+          await getIt<TaliaNotificationService>().requestPermissions();
+        } catch (_) {
+          // Scheduling below still runs; a denied permission shows nothing.
+        }
+      }
+      await getIt<NotificationScheduler>().refreshNotifications(
+        l10n,
         force: true,
-      ),
-    );
+      );
+    }
+
+    unawaited(apply());
   }
 
   void _logTarawih() {

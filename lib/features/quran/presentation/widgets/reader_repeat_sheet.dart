@@ -104,7 +104,9 @@ class ReaderRepeatSheet extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (state.currentSurahId != null &&
+                  // Bedtime listening owns its queue, so no range there.
+                  if (!state.isSurahQueue &&
+                      state.currentSurahId != null &&
                       state.currentAyahNumber != null)
                     _RangeSection(
                       key: ValueKey('repeat-manual-${state.currentSurahId}'),

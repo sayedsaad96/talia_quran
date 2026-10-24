@@ -260,9 +260,17 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
       MemorizationPlusLocalDatasourceImpl._kParentSettings,
       ownerId,
     );
-    if (raw == null) return const ParentSettingsModel.defaults();
-    return _tryParse(raw, ParentSettingsModel.fromJson) ??
-        const ParentSettingsModel.defaults();
+    final stored = raw == null
+        ? const ParentSettingsModel.defaults()
+        : _tryParse(raw, ParentSettingsModel.fromJson) ??
+              const ParentSettingsModel.defaults();
+    // The effective kids V2 switch is its own preference (shipped default
+    // on). Report it, so saving other settings never writes a stale value.
+    final effective = KidsHifzFeatureFlags.isEnabled(_prefs);
+    if (stored.kidsHifzV2Enabled == effective) return stored;
+    return ParentSettingsModel.fromEntity(
+      stored.copyWith(kidsHifzV2Enabled: effective),
+    );
   }
 
   Future<void> saveParentSettings(ParentSettingsModel settings) {

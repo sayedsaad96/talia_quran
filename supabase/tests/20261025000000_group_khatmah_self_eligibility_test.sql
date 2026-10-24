@@ -88,6 +88,22 @@ BEGIN
     'refusals write nothing');
 END $$;
 
+-- User 1 claims part 1 of its group while still eligible.
+CREATE TEMP TABLE gk_exit_state AS
+  SELECT g.id AS group_id, m.membership_epoch AS epoch
+  FROM public.group_khatmah g JOIN public.group_khatmah_member m
+    ON m.group_id = g.id AND m.user_id = g.owner_id
+  WHERE g.owner_id = '71000000-0000-0000-0000-000000000001';
+DO $$
+DECLARE v_result jsonb;
+BEGIN
+  PERFORM pg_temp.as_user(1);
+  v_result := public.claim_group_part((SELECT group_id FROM gk_exit_state),
+    1::smallint,1::bigint,(SELECT epoch FROM gk_exit_state),
+    '73000000-0000-0000-0000-000000000010');
+  PERFORM pg_temp.gk_assert(v_result->>'code' = 'claimed','eligible member claims');
+END $$;
+
 -- A self-grant is withdrawn live when the account later becomes a linked
 -- child or switches to the child path; a trusted grant is not.
 DO $$
@@ -110,9 +126,33 @@ BEGIN
   PERFORM pg_temp.gk_assert(v_result = '{"eligible": false}'::jsonb,
     'linked later: request answers false');
 
+  -- Exits stay open to a member who lost eligibility; claims do not.
+  v_result := public.claim_group_part((SELECT group_id FROM gk_exit_state),
+    2::smallint,1::bigint,(SELECT epoch FROM gk_exit_state),
+    '73000000-0000-0000-0000-000000000011');
+  PERFORM pg_temp.gk_assert(v_result->>'code' = 'not_eligible','linked later: claim refused');
+  v_result := public.release_group_part((SELECT group_id FROM gk_exit_state),
+    1::smallint,2::bigint,(SELECT epoch FROM gk_exit_state),
+    '73000000-0000-0000-0000-000000000012');
+  PERFORM pg_temp.gk_assert(v_result->>'code' = 'released','linked later: release allowed');
+  v_result := public.leave_group_khatmah((SELECT group_id FROM gk_exit_state),
+    (SELECT epoch FROM gk_exit_state),'73000000-0000-0000-0000-000000000013');
+  PERFORM pg_temp.gk_assert(v_result->>'code' = 'group_deleted',
+    'linked later: sole owner may still leave');
+
   PERFORM private.group_khatmah_provision('71000000-0000-0000-0000-000000000004',true,1);
   PERFORM pg_temp.gk_assert(private.group_khatmah_adult(
     '71000000-0000-0000-0000-000000000004'),'trusted grant ignores the live check');
+END $$;
+
+DO $$
+BEGIN
+  BEGIN
+    PERFORM private.group_khatmah_provision('71000000-0000-0000-0000-000000000003',true,2);
+    RAISE EXCEPTION 'group khatmah eligibility: provisioning wrote policy 2';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'invalid_eligibility' THEN RAISE; END IF;
+  END;
 END $$;
 
 DO $$
