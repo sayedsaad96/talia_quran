@@ -1,5 +1,6 @@
 <resources>
     <string name="widget_empty_hint">Open Talia to see today’s summary</string>
+    <string name="widget_empty_adult">Nothing due right now</string>
     <string name="widget_prayer_fajr">Fajr</string>
     <string name="widget_prayer_dhuhr">Dhuhr</string>
     <string name="widget_prayer_asr">Asr</string>

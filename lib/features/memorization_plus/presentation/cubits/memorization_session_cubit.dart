@@ -37,6 +37,7 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
 import '../../../../core/privacy/recitation_voice_consent.dart';
 import '../../../../core/services/app_session_service.dart';
+import '../../data/listening/listening_recitation_capture.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/utils/talia_logger.dart';
@@ -309,6 +310,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     try {
       await _player.stop();
     } catch (_) {}
+    SpeechCallbackRouter.of(_speechToText).deactivate(this);
     try {
       await _speechToText.cancel();
     } catch (_) {}
@@ -330,7 +332,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   Future<void> _initSpeech() async {
     try {
-      _speechEnabled = await _speechToText.initialize(
+      _speechEnabled = await SpeechCallbackRouter.of(_speechToText).initialize(
+        _speechToText,
+        this,
         onError: _handleSpeechError,
         onStatus: _handleSpeechStatus,
       );
@@ -842,6 +846,12 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (!_speechEnabled) await _initSpeech();
 
     if (_speechEnabled) {
+      // The engine keeps the first initializer's listeners; claim them.
+      SpeechCallbackRouter.of(_speechToText).activate(
+        this,
+        onError: _handleSpeechError,
+        onStatus: _handleSpeechStatus,
+      );
       // Sized to the recitation so long block reviews are not cut off (A6).
       final budget = V2ListenBudget.forState(st.sessionState);
       emit(
@@ -1118,6 +1128,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     } catch (error, stack) {
       TaliaLogger.w('Session player dispose failed', error, stack);
     }
+    SpeechCallbackRouter.of(_speechToText).deactivate(this);
     try {
       await _speechToText.cancel();
     } catch (error, stack) {

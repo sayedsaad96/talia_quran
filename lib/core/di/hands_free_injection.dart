@@ -59,6 +59,13 @@ void registerHandsFreeReview(GetIt getIt) {
       isEnabled: () =>
           getIt<ExperienceFlags>().isEnabled(ExperienceFeature.handsFreeReview),
       authorityChanges: [barrier.changes, path.changes],
+      // Streams also fire for unrelated writes; only a real owner, lease
+      // generation or adult-path difference ends the round.
+      authoritySnapshot: () async {
+        final profile = await path.currentProfile();
+        return '${getIt<RecordOwnerProvider>().currentOwnerId}|'
+            '${barrier.generation}|${profile?.isAdult == true}';
+      },
     );
   });
 }

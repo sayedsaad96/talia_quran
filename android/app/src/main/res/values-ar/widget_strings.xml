@@ -1,5 +1,6 @@
 <resources>
     <string name="widget_empty_hint">افتح تالية لرؤية ملخص اليوم</string>
+    <string name="widget_empty_adult">لا شيء مستحق الآن</string>
     <string name="widget_prayer_fajr">الفجر</string>
     <string name="widget_prayer_dhuhr">الظهر</string>
     <string name="widget_prayer_asr">العصر</string>

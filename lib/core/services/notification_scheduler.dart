@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -897,7 +898,15 @@ class NotificationScheduler {
       throw StateError('One or more prayer notification updates failed');
     }
     if (shouldRefreshRolling) _lastRollingDateKey = todayKey;
-    await onPrayerScheduleUpdated?.call();
+    // The widget redraw must never delay or fail the reminder refresh queue.
+    final scheduleUpdated = onPrayerScheduleUpdated;
+    if (scheduleUpdated != null) {
+      unawaited(
+        scheduleUpdated().catchError((Object error, StackTrace stack) {
+          TaliaLogger.w('Prayer schedule observer failed', error, stack);
+        }),
+      );
+    }
   }
 
   /// Legacy (V1) FLN prayer scheduling. Moved verbatim from the previous

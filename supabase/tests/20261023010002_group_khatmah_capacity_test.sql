@@ -105,6 +105,32 @@ BEGIN
     WHERE id=v_group),'denials and receipt replay do not advance revision');
 END $$;
 
+-- Create shares the join throttle (five calls per minute; this user already
+-- spent one on joining), and replays are free.
+DO $$
+DECLARE v_result jsonb;
+DECLARE v_i integer;
+BEGIN
+  PERFORM set_config('request.jwt.claims',pg_catalog.jsonb_build_object(
+    'sub','61000000-0000-0000-0000-000000000005',
+    'session_id','62000000-0000-0000-0000-000000000005')::text,true);
+  FOR v_i IN 1..4 LOOP
+    v_result := public.create_group_khatmah('Throttled '||v_i,'Creator',
+      ('69000000-0000-0000-0000-'||lpad(v_i::text,12,'0'))::uuid);
+    PERFORM pg_temp.gk_assert(v_result->>'code'='created','create within budget');
+  END LOOP;
+  v_result := public.create_group_khatmah('Throttled 5','Creator',
+    '69000000-0000-0000-0000-000000000005');
+  PERFORM pg_temp.gk_assert(v_result->>'code'='rate_limited',
+    'fifth call in a minute denied');
+  PERFORM pg_temp.gk_assert(NOT EXISTS (SELECT 1 FROM public.group_khatmah
+    WHERE title='Throttled 5'),'rate limited create writes no group');
+  v_result := public.create_group_khatmah('Throttled 1','Creator',
+    '69000000-0000-0000-0000-000000000001');
+  PERFORM pg_temp.gk_assert(v_result->>'code'='created'
+    AND v_result->>'group_id' IS NOT NULL,'create replay is not throttled');
+END $$;
+
 DELETE FROM auth.sessions WHERE id='62000000-0000-0000-0000-000000000031';
 SELECT set_config('request.jwt.claims',
   '{"sub":"61000000-0000-0000-0000-000000000031","session_id":"62000000-0000-0000-0000-000000000031"}',true);

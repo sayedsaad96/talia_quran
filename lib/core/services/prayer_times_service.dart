@@ -380,6 +380,18 @@ class PrayerTimesService {
     );
   }
 
+  /// Fajr of the next calendar day in the selected city, for surfaces (such as
+  /// the home widget) that must keep a future prayer after today's Isha.
+  Future<DateTime?> tomorrowFajr() async {
+    if (!isEnabled) return null;
+    final city = await selectedCity();
+    if (city == null) return null;
+    final location = tz.getLocation(city.timeZone);
+    final now = tz.TZDateTime.from(_now(), location);
+    final tomorrow = tz.TZDateTime(location, now.year, now.month, now.day + 1);
+    return _calculate(city, tomorrow).fajr;
+  }
+
   ({
     DateTime fajr,
     DateTime sunrise,

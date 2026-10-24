@@ -273,6 +273,26 @@ void main() {
       expect(prefs.getString('prayer_review_lengths|user-c'), '{"fajr":7}');
     });
 
+    test('a failing native widget clear still wipes the stores and fails closed', () async {
+      await prefs.setString('read_pages', '[1]');
+      await prefs.setString('mem_plus_probe', 'x');
+      final reset = AccountDataReset(
+        isar,
+        prefs,
+        documentsDirectory: () async => dir,
+        clearHomeWidget: () async => throw StateError('native widget unavailable'),
+      );
+      await expectLater(reset.clearAccountOwnedData(), throwsStateError);
+      expect(prefs.containsKey('read_pages'), isFalse);
+      expect(prefs.containsKey('mem_plus_probe'), isFalse);
+      await prefs.setString('read_pages', '[2]');
+      await expectLater(
+        reset.eraseDeletedAccountLocally(departingOwnerId: 'user-a'),
+        throwsStateError,
+      );
+      expect(prefs.containsKey('read_pages'), isFalse);
+    });
+
     test('pending encouragement receipts preserve recovery owner and erase exact encoded owner', () async {
       const protected = 'user-b/recovery';
       final protectedKey = 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(protected)}';

@@ -54,6 +54,166 @@ void main() {
       },
     );
 
+    test(
+      'production after-isha snapshot keeps tomorrow fajr from nextTime',
+      () {
+        // PrayerTimesService.current() after Isha: every field of today is past
+        // and only nextName/nextTime point at tomorrow's Fajr.
+        final tomorrowFajr = DateTime(2026, 10, 24, 4, 58);
+        final afterIsha = _snapshot(
+          now,
+          nextName: 'fajr',
+          nextTime: tomorrowFajr,
+        );
+        final snapshot = buildWidgetSnapshot(
+          enabled: true,
+          isAdult: true,
+          signedOutOrSwitching: false,
+          today: afterIsha,
+          tomorrow: null,
+          dueReviewCount: 0,
+          activePlan: null,
+          now: now,
+        );
+
+        expect(snapshot.nextPrayerKey, 'fajr');
+        expect(snapshot.nextPrayerAt, tomorrowFajr);
+        expect(snapshot.upcomingPrayers, [(key: 'fajr', at: tomorrowFajr)]);
+        expect(snapshot.isEmpty, isFalse);
+        expect(snapshot.adultNoData, isFalse);
+      },
+    );
+
+    test('lists today remaining fard prayers then tomorrow fajr only', () {
+      final midday = DateTime(2026, 10, 23, 12, 30);
+      final tomorrowFajr = DateTime(2026, 10, 24, 5);
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: _snapshot(
+          midday,
+          nextName: 'asr',
+          nextTime: DateTime(2026, 10, 23, 15),
+        ),
+        tomorrow: null,
+        tomorrowFajr: tomorrowFajr,
+        dueReviewCount: 0,
+        activePlan: null,
+        now: midday,
+      );
+
+      expect(snapshot.upcomingPrayers.map((p) => p.key), [
+        'asr',
+        'maghrib',
+        'isha',
+        'fajr',
+      ]);
+      expect(snapshot.upcomingPrayers.last.at, tomorrowFajr);
+      expect(snapshot.nextPrayerKey, 'asr');
+      expect(
+        snapshot.redrawTimes(midday),
+        [
+          DateTime(2026, 10, 23, 15),
+          DateTime(2026, 10, 23, 18),
+          DateTime(2026, 10, 23, 21),
+          tomorrowFajr,
+          DateTime(2026, 10, 24),
+        ]..sort(),
+      );
+    });
+
+    test('never lists sunrise or an unknown prayer key', () {
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: _snapshot(
+          DateTime(2026, 10, 23, 4),
+          nextName: 'sunrise',
+          nextTime: DateTime(2026, 10, 23, 6),
+        ),
+        tomorrow: null,
+        dueReviewCount: 0,
+        activePlan: null,
+        now: DateTime(2026, 10, 23, 4),
+      );
+
+      expect(
+        snapshot.upcomingPrayers.map((p) => p.key),
+        everyElement(isIn(WidgetSnapshot.fardPrayerKeys)),
+      );
+    });
+
+    test('an adult with nothing to show is an explicit empty state', () {
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: null,
+        tomorrow: null,
+        dueReviewCount: 0,
+        activePlan: null,
+        now: now,
+        languageCode: 'en',
+      );
+
+      expect(snapshot.isEmpty, isTrue);
+      expect(snapshot.adultNoData, isTrue);
+      expect(snapshot.clearsNative, isFalse);
+      expect(snapshot.toJson(), {
+        'schemaVersion': 1,
+        'isEmpty': true,
+        'adultNoData': true,
+        'locale': 'en',
+        'expiresAt': DateTime(2026, 10, 24).millisecondsSinceEpoch,
+      });
+      expect(const WidgetSnapshot.empty().clearsNative, isTrue);
+    });
+
+    test('serializes the app language and upcoming prayers additively', () {
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: _snapshot(
+          now,
+          nextName: 'fajr',
+          nextTime: DateTime(2026, 10, 24, 5),
+        ),
+        tomorrow: null,
+        dueReviewCount: 1,
+        activePlan: null,
+        now: now,
+        languageCode: 'ar',
+      );
+      final json = snapshot.toJson();
+
+      expect(json['schemaVersion'], 1);
+      expect(json['locale'], 'ar');
+      expect(json['nextPrayerKey'], 'fajr');
+      expect(json['upcomingPrayers'], [
+        {
+          'key': 'fajr',
+          'at': DateTime(2026, 10, 24, 5).millisecondsSinceEpoch,
+          'offsetMinutes': DateTime(2026, 10, 24, 5).timeZoneOffset.inMinutes,
+        },
+      ]);
+
+      final unknown = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: null,
+        tomorrow: null,
+        dueReviewCount: 1,
+        activePlan: null,
+        now: now,
+        languageCode: 'fr',
+      );
+      expect(unknown.toJson().containsKey('locale'), isFalse);
+    });
+
     test('excludes a prayer due at the exact current instant', () {
       final instant = DateTime(2026, 10, 23, 12);
       final snapshot = buildWidgetSnapshot(
@@ -209,7 +369,7 @@ void main() {
         );
         expect(
           stringEntries.map((entry) => entry.key),
-          everyElement(isIn({'nextPrayerKey', 'wirdSurahName'})),
+          everyElement(isIn({'nextPrayerKey', 'wirdSurahName', 'locale'})),
         );
         expect(json.containsKey('id'), isFalse);
         expect(json.containsKey('title'), isFalse);
@@ -220,7 +380,11 @@ void main() {
   });
 }
 
-PrayerTimesSnapshot _snapshot(DateTime date) {
+PrayerTimesSnapshot _snapshot(
+  DateTime date, {
+  String nextName = 'fajr',
+  DateTime? nextTime,
+}) {
   DateTime at(int hour) => DateTime(date.year, date.month, date.day, hour);
   return PrayerTimesSnapshot(
     city: const PrayerCity(
@@ -235,8 +399,8 @@ PrayerTimesSnapshot _snapshot(DateTime date) {
       countryEn: 'Country',
       defaultMethod: 'muslim_world_league',
     ),
-    nextName: 'fajr',
-    nextTime: at(5),
+    nextName: nextName,
+    nextTime: nextTime ?? at(5),
     minutesUntil: 0,
     fajr: at(5),
     sunrise: at(6),

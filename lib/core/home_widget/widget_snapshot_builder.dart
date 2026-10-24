@@ -14,21 +14,38 @@ WidgetSnapshot buildWidgetSnapshot({
   required int dueReviewCount,
   required KhatmahPlan? activePlan,
   required DateTime now,
+  DateTime? tomorrowFajr,
+  String? languageCode,
 }) {
   if (!enabled || !isAdult || signedOutOrSwitching) {
     return const WidgetSnapshot.empty();
   }
-  final next = _nextPrayer(now, [today, tomorrow]);
+  final upcoming = _upcomingPrayers(now, today, tomorrow, tomorrowFajr);
+  final next = upcoming.isEmpty ? null : upcoming.first;
   final wird = _wird(activePlan, now);
+  final expiresAt = DateTime(
+    now.toLocal().year,
+    now.toLocal().month,
+    now.toLocal().day + 1,
+  );
+  final language = languageCode == 'ar' || languageCode == 'en'
+      ? languageCode
+      : null;
+  final reviews = dueReviewCount < 0 ? 0 : dueReviewCount;
+  if (next == null && reviews == 0 && wird == null) {
+    return WidgetSnapshot(
+      expiresAt: expiresAt,
+      languageCode: language,
+      adultNoData: true,
+    );
+  }
   return WidgetSnapshot(
-    expiresAt: DateTime(
-      now.toLocal().year,
-      now.toLocal().month,
-      now.toLocal().day + 1,
-    ),
+    expiresAt: expiresAt,
+    languageCode: language,
     nextPrayerKey: next?.key,
     nextPrayerAt: next?.at,
-    dueReviewCount: dueReviewCount < 0 ? 0 : dueReviewCount,
+    upcomingPrayers: upcoming,
+    dueReviewCount: reviews,
     wirdFromPage: wird?.from,
     wirdToPage: wird?.to,
     wirdDonePages: wird?.done,
@@ -36,39 +53,44 @@ WidgetSnapshot buildWidgetSnapshot({
   );
 }
 
-({String key, DateTime at})? _nextPrayer(
+/// Today's remaining fard prayers and the next Fajr, ascending and distinct.
+/// The production after-Isha snapshot carries tomorrow's Fajr only as
+/// `nextName`/`nextTime`, so that pair is a candidate too.
+List<WidgetPrayerTime> _upcomingPrayers(
   DateTime now,
-  List<PrayerTimesSnapshot?> snapshots,
+  PrayerTimesSnapshot? today,
+  PrayerTimesSnapshot? tomorrow,
+  DateTime? tomorrowFajr,
 ) {
-  final candidates = <({String key, DateTime at})>[];
-  for (final snapshot in snapshots) {
-    if (snapshot == null) continue;
-    _addCandidates(candidates, snapshot, now);
+  final candidates = <WidgetPrayerTime>[];
+  void add(String key, DateTime? at) {
+    if (!WidgetSnapshot.fardPrayerKeys.contains(key) ||
+        at == null ||
+        !at.isAfter(now)) {
+      return;
+    }
+    final exists = candidates.any(
+      (candidate) =>
+          candidate.key == key &&
+          candidate.at.millisecondsSinceEpoch == at.millisecondsSinceEpoch,
+    );
+    if (!exists) candidates.add((key: key, at: at));
   }
-  if (candidates.isEmpty) return null;
-  candidates.sort((left, right) => left.at.compareTo(right.at));
-  return candidates.first;
-}
 
-void _addCandidates(
-  List<({String key, DateTime at})> candidates,
-  PrayerTimesSnapshot snapshot,
-  DateTime now,
-) {
-  const fard = {'fajr', 'dhuhr', 'asr', 'maghrib', 'isha'};
-  final fields = <(String, DateTime?)>[
-    ('fajr', snapshot.fajr),
-    ('dhuhr', snapshot.dhuhr),
-    ('asr', snapshot.asr),
-    ('maghrib', snapshot.maghrib),
-    ('isha', snapshot.isha),
-    (snapshot.nextName, snapshot.nextTime),
-  ];
-  for (final field in fields) {
-    if (fard.contains(field.$1) && field.$2 != null && field.$2!.isAfter(now)) {
-      candidates.add((key: field.$1, at: field.$2!));
+  for (final snapshot in [today, tomorrow]) {
+    if (snapshot == null) continue;
+    add('fajr', snapshot.fajr);
+    if (identical(snapshot, today)) {
+      add('dhuhr', snapshot.dhuhr);
+      add('asr', snapshot.asr);
+      add('maghrib', snapshot.maghrib);
+      add('isha', snapshot.isha);
+      add(snapshot.nextName, snapshot.nextTime);
     }
   }
+  add('fajr', tomorrowFajr);
+  candidates.sort((left, right) => left.at.compareTo(right.at));
+  return List.unmodifiable(candidates);
 }
 
 ({int from, int to, int done, String surahName})? _wird(

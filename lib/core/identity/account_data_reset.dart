@@ -77,6 +77,20 @@ class AccountDataReset {
 
   Future<void> clearAccountWidget() async => _clearHomeWidget?.call();
 
+  /// A failing or hung native widget clear must not keep the account's data on
+  /// disk. Returns the failure so the caller can wipe first and then rethrow,
+  /// which leaves the barrier blocked (fail closed).
+  Future<(Object, StackTrace)?> _clearWidgetBounded() async {
+    try {
+      await clearAccountWidget().timeout(_widgetClearBound);
+      return null;
+    } catch (error, stack) {
+      return (error, stack);
+    }
+  }
+
+  static const _widgetClearBound = Duration(seconds: 12);
+
   /// Individual account-owned preference keys.
   static const Set<String> clearedPreferenceKeys = {
     // Copied from the authenticated Supabase display name on login.
@@ -175,7 +189,7 @@ class AccountDataReset {
     required bool preservePendingBookmarkRecovery,
   }) async {
     final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
-    await clearAccountWidget();
+    final widgetFailure = await _clearWidgetBounded();
     if (!preservePendingBookmarkRecovery && ownerId != null) {
       await PendingBookmarkRecoveryMarker.clear(_prefs, ownerId);
     }
@@ -193,6 +207,9 @@ class AccountDataReset {
       ownerId,
       preserve: ownerId != null && protectedOwners.contains(ownerId),
     );
+    if (widgetFailure != null) {
+      throw AccountProjectionClearFailure(widgetFailure.$1, widgetFailure.$2);
+    }
   }
 
   /// Erases data attributable to a deleted account. This is deliberately
@@ -204,7 +221,7 @@ class AccountDataReset {
       ).clear(() => _eraseDeletedAccountLocally(departingOwnerId));
 
   Future<void> _eraseDeletedAccountLocally(String ownerId) async {
-    await clearAccountWidget();
+    final widgetFailure = await _clearWidgetBounded();
     await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     await _audioResumeStore?.stopPlaybackForAccountReset();
     await _deleteBookmarksForOwner?.call(ownerId);
@@ -215,6 +232,9 @@ class AccountDataReset {
     await _deleteHifzMigrationBackup();
     await _clearDeletedAccountPreferences(ownerId);
     await _eraseDeletedAccountCollections(ownerId);
+    if (widgetFailure != null) {
+      throw AccountProjectionClearFailure(widgetFailure.$1, widgetFailure.$2);
+    }
   }
 
   Future<void> _deleteHifzMigrationBackup() async {

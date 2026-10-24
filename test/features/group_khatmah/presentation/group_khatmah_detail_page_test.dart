@@ -197,6 +197,8 @@ class FakeGroupRepository implements GroupKhatmahRepository {
   @override
   Future<bool> hasRunnablePending() async => false;
   @override
+  Future<bool> hasDeliverablePending() async => false;
+  @override
   Future<void> dispose() => controller.close();
 }
 
@@ -285,6 +287,99 @@ void main() {
     await tester.tap(find.byKey(const Key('group-part-claim-3')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('group-khatmah-error')), findsOneWidget);
+  });
+
+  for (final entry in <(String, Failure, String)>[
+    (
+      'claimed by someone else',
+      const GroupPartConflictFailure(claimedByOther: true),
+      'Someone else claimed it. The group has been refreshed.',
+    ),
+    (
+      'generic change',
+      const GroupPartConflictFailure(),
+      'This part changed. The group has been refreshed.',
+    ),
+    (
+      'unknown outcome',
+      const GroupKhatmahFailure('outcome_pending'),
+      'Your request is being sent and will be confirmed automatically when you are back online. There is no need to repeat it.',
+    ),
+    (
+      'completed group',
+      const GroupKhatmahFailure('group_completed'),
+      'This Khatmah is complete and its parts can no longer change.',
+    ),
+    (
+      'stale operation',
+      const GroupKhatmahFailure('stale_operation'),
+      'Your membership in the group changed before this request finished. The data has been refreshed.',
+    ),
+    (
+      'invalid input',
+      const GroupKhatmahFailure('invalid_input'),
+      'The entered details were not accepted. Check them and try again.',
+    ),
+    (
+      'not eligible',
+      const GroupKhatmahFailure('not_eligible'),
+      'Group Khatmah is unavailable for this account.',
+    ),
+  ]) {
+    testWidgets('error text for ${entry.$1}', (tester) async {
+      final repo = FakeGroupRepository(sampleGroup());
+      final cubit = GroupKhatmahCubit(
+        repository: repo,
+        owner: const FixedRecordOwnerProvider(ownerId),
+      )..start();
+      addTearDown(() async {
+        await cubit.close();
+        await repo.dispose();
+      });
+      await pumpDetail(tester, cubit);
+      repo.nextFailure = entry.$2;
+      await tester.ensureVisible(find.byKey(const Key('group-part-claim-3')));
+      await tester.tap(find.byKey(const Key('group-part-claim-3')));
+      await tester.pumpAndSettle();
+      expect(find.text(entry.$3), findsOneWidget);
+    });
+  }
+
+  testWidgets('display name rejects C1 control characters', (tester) async {
+    final repo = FakeGroupRepository(sampleGroup());
+    final cubit = GroupKhatmahCubit(
+      repository: repo,
+      owner: const FixedRecordOwnerProvider(ownerId),
+    );
+    addTearDown(() async {
+      await cubit.close();
+      await repo.dispose();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: GroupKhatmahJoinSheet(cubit: cubit, isCreate: true),
+        ),
+      ),
+    );
+    await tester.enterText(
+      find.byKey(const Key('group-khatmah-first-input')),
+      'Shared reading',
+    );
+    await tester.enterText(
+      find.byKey(const Key('group-khatmah-name-input')),
+      'Reder',
+    );
+    await tester.tap(find.byKey(const Key('group-khatmah-submit')));
+    await tester.pumpAndSettle();
+    expect(repo.createCalls, 0);
+    expect(
+      find.text('Use 2–24 characters for the display name.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('share callback gets only invitation code', (tester) async {

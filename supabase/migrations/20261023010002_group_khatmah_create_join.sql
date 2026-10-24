@@ -21,6 +21,10 @@ BEGIN
     pg_catalog.jsonb_build_array('create',p_title,p_display_name)::text,'UTF8')),'hex');
   v_replay := private.group_khatmah_replay(v_actor,'create',p_operation_id,v_fp);
   IF v_replay IS NOT NULL THEN RETURN v_replay; END IF;
+  -- Shares the per-user budget with join; replays above are never throttled.
+  IF NOT private.group_khatmah_throttle(v_actor) THEN
+    RETURN pg_catalog.jsonb_build_object('applied',false,'code','rate_limited');
+  END IF;
   p_title := pg_catalog.btrim(p_title);
   p_display_name := pg_catalog.btrim(p_display_name);
   IF NOT private.group_khatmah_valid_label(p_title,1,80)

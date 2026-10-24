@@ -16003,8 +16003,8 @@ abstract class AppLocalizations {
   /// No description provided for @groupKhatmahCompletedCount.
   ///
   /// In ar, this message translates to:
-  /// **'{count, plural, =0{لم يكتمل أي جزء} =1{اكتمل جزء واحد من ٣٠} =2{اكتمل جزءان من ٣٠} few{اكتملت {count} أجزاء من ٣٠} many{اكتمل {count} جزءًا من ٣٠} other{اكتمل {count} جزء من ٣٠}}'**
-  String groupKhatmahCompletedCount(int count);
+  /// **'{count, plural, =0{لم يكتمل أي جزء} =1{اكتمل جزء واحد من {total}} =2{اكتمل جزءان من {total}} few{اكتملت {count} أجزاء من {total}} many{اكتمل {count} جزءًا من {total}} other{اكتمل {count} جزء من {total}}}'**
+  String groupKhatmahCompletedCount(int count, int total);
 
   /// No description provided for @groupKhatmahJuz.
   ///
@@ -16107,6 +16107,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تغيّر هذا الجزء. حُدّثت بيانات المجموعة.'**
   String get groupKhatmahConflict;
+
+  /// No description provided for @groupKhatmahConflictClaimed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حجزه غيرك. حُدّثت بيانات المجموعة.'**
+  String get groupKhatmahConflictClaimed;
+
+  /// No description provided for @groupKhatmahOutcomePending.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطلب قيد الإرسال وسيُؤكَّد تلقائيًا عند عودة الاتصال. لا حاجة إلى إعادته.'**
+  String get groupKhatmahOutcomePending;
+
+  /// No description provided for @groupKhatmahGroupCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتملت هذه الختمة ولا يمكن تغيير أجزائها.'**
+  String get groupKhatmahGroupCompleted;
+
+  /// No description provided for @groupKhatmahStaleOperation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيّرت عضويتك في المجموعة قبل اكتمال هذا الطلب. حُدّثت البيانات.'**
+  String get groupKhatmahStaleOperation;
+
+  /// No description provided for @groupKhatmahInvalidInput.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر قبول البيانات المدخلة. راجعها وحاول مرة أخرى.'**
+  String get groupKhatmahInvalidInput;
 
   /// No description provided for @groupKhatmahNetwork.
   ///

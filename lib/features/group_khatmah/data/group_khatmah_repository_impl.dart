@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +51,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
   final GroupKhatmahCloudMerge _merge = const GroupKhatmahCloudMerge();
   final Set<Future<void> Function(bool)> _watchCancels = {};
   bool _disposed = false;
+  Future<Either<Failure, void>>? _flushing;
   final Map<String, int> _groupInvalidations = {};
 
   bool get _allowed =>
@@ -72,7 +74,9 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
     if (!_allowed) throw const AccountDataUnavailableException();
   }
 
-  Failure _failure(Object error) => error is _GroupPublicationSuperseded
+  Failure _failure(Object error) => error is _OutcomePending
+      ? const GroupKhatmahFailure('outcome_pending')
+      : error is _GroupPublicationSuperseded
       ? const GroupKhatmahFailure('stale_operation')
       : error is AccountDataUnavailableException
       ? const GroupKhatmahFailure('not_available')
@@ -197,6 +201,21 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
     try {
       final scope = _scope();
       if (!_environment.isOnline) return const Left(NetworkFailure());
+      final outstanding = _cache
+          .read(scope.ownerId)
+          .intents
+          .where((i) => i.action == 'create' || i.action == 'join');
+      if (outstanding.isNotEmpty) {
+        // An earlier create/join may already have been applied; a second one
+        // could produce a duplicate group or membership.
+        return Left(
+          GroupKhatmahFailure(
+            outstanding.any((i) => i.deadLetter)
+                ? 'recovery_required'
+                : 'outcome_pending',
+          ),
+        );
+      }
       await _preflight(scope);
       final operationId = _operationId();
       final args = action == 'create'
@@ -211,7 +230,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
               'p_operation_id': operationId,
             };
       final intent = await _record(scope, action, args, null);
-      final response = await _send(scope, intent);
+      final response = await _sendJournaled(scope, intent);
       if (response['applied'] != true) {
         await _replace(scope, operationId);
         return Left(GroupKhatmahFailure(response['code'] as String));
@@ -316,7 +335,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
         'p_membership_epoch': group.membershipEpoch,
         'p_operation_id': operationId,
       }, groupId);
-      final response = await _send(scope, intent);
+      final response = await _sendJournaled(scope, intent);
       if (response['applied'] != true) {
         await _terminal(scope, intent, response);
         return Left(GroupKhatmahFailure(response['code'] as String));
@@ -396,9 +415,22 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
       final ownerId = _owner.currentOwnerId;
       final lease = _barrier.capture();
       lease.checkOwner(ownerId);
+      // Normal sign-out wipes the whole group cache, so every intent counts
+      // (dead letters and intents of a disabled feature included): the user
+      // gets the pending-data warning and may force sign-out.
       return _cache.read(ownerId).intents.isNotEmpty;
     } catch (_) {
       return true;
+    }
+  }
+
+  @override
+  Future<bool> hasDeliverablePending() async {
+    try {
+      final scope = _scope();
+      return _cache.read(scope.ownerId).intents.any((i) => !i.deadLetter);
+    } catch (_) {
+      return false;
     }
   }
 
@@ -432,6 +464,10 @@ class _Scope {
   const _Scope(this.ownerId, this.lease);
   final String ownerId;
   final AccountDataLease lease;
+}
+
+class _OutcomePending implements Exception {
+  const _OutcomePending();
 }
 
 class _Offline implements Exception {

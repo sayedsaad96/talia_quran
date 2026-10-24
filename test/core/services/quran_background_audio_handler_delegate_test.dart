@@ -9,12 +9,15 @@ class _Player extends Mock implements AudioPlayer {}
 
 class _Delegate implements HandsFreeMediaDelegate {
   int primary = 0, secondary = 0, interrupted = 0;
+  final hardware = <bool>[];
   @override
   void onPrimary() => primary++;
   @override
   void onSecondary() => secondary++;
   @override
   void onInterrupted() => interrupted++;
+  @override
+  void onHardwareButton({required bool primary}) => hardware.add(primary);
 }
 
 void main() {
@@ -57,10 +60,39 @@ void main() {
     await handler.seek(const Duration(seconds: 2));
     await handler.skipToPrevious();
     await handler.stop();
-    expect(delegate.primary, 2);
+    expect(delegate.primary, 1);
     expect(delegate.secondary, 1);
+    expect(delegate.interrupted, 2); // pause and stop both end the round
+    expect(readerCalls, isEmpty);
+  });
+
+  test('pause during practice ends the round without grading', () async {
+    final delegate = _Delegate();
+    handler.setMediaDelegate(delegate);
+    await handler.pause();
+    expect(delegate.primary, 0);
+    expect(delegate.secondary, 0);
     expect(delegate.interrupted, 1);
     expect(readerCalls, isEmpty);
+  });
+
+  test('physical keys reach the delegate as hardware buttons only', () async {
+    final delegate = _Delegate();
+    handler.setMediaDelegate(delegate);
+    // audio_service maps PLAY, PAUSE, PLAY_PAUSE and HEADSETHOOK to media.
+    await handler.click(MediaButton.media);
+    await handler.click(MediaButton.next);
+    await handler.click(MediaButton.previous);
+    expect(delegate.hardware, [true, false]);
+    expect(delegate.primary, 0);
+    expect(delegate.secondary, 0);
+    expect(delegate.interrupted, 0);
+    expect(readerCalls, isEmpty);
+  });
+
+  test('physical keys keep reader behavior without a delegate', () async {
+    await handler.click(MediaButton.next);
+    expect(readerCalls, ['next']);
   });
 
   test('an old owner cannot detach a replacement delegate', () async {

@@ -69,6 +69,81 @@ void main() {
       await session.dispose();
     });
 
+    test('ducking never interrupts the round', () async {
+      final session = createSession();
+      var interruptions = 0;
+      final subscription = session.interruptions.listen((_) => interruptions++);
+      await session.activate();
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.duck),
+      );
+      session.setCaptureActive(true);
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.duck),
+      );
+      expect(interruptions, 0);
+      await subscription.cancel();
+      await session.dispose();
+    });
+
+    test('transient focus loss from our own capture is ignored', () async {
+      final session = createSession();
+      var interruptions = 0;
+      final subscription = session.interruptions.listen((_) => interruptions++);
+      await session.activate();
+      session.setCaptureActive(true);
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.pause),
+      );
+      expect(interruptions, 0);
+      session.setCaptureActive(false);
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.pause),
+      );
+      expect(interruptions, 1);
+      await subscription.cancel();
+      await session.dispose();
+    });
+
+    test('transient loss after the capture grace window interrupts', () async {
+      var now = DateTime(2026);
+      final session = PlatformHandsFreeAudioSession(
+        sessionResolver: () async => audioSession,
+        clock: () => now,
+      );
+      var interruptions = 0;
+      final subscription = session.interruptions.listen((_) => interruptions++);
+      await session.activate();
+      session.setCaptureActive(true);
+      now = now.add(const Duration(milliseconds: 1000));
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.pause),
+      );
+      expect(interruptions, 0);
+      now = now.add(const Duration(milliseconds: 1000));
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.pause),
+      );
+      expect(interruptions, 1);
+      await subscription.cancel();
+      await session.dispose();
+    });
+
+    test('permanent focus loss interrupts even during capture', () async {
+      final session = createSession();
+      var interruptions = 0;
+      final subscription = session.interruptions.listen((_) => interruptions++);
+      await session.activate();
+      session.setCaptureActive(true);
+      interruptionEvents.add(
+        AudioInterruptionEvent(true, AudioInterruptionType.unknown),
+      );
+      noisyEvents.add(null);
+      expect(interruptions, 2);
+      await subscription.cancel();
+      await session.dispose();
+    });
+
     test('release deactivates and restores the prior configuration', () async {
       final session = createSession();
 

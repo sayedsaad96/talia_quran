@@ -138,6 +138,7 @@ class _GroupKhatmahListPageState extends State<GroupKhatmahListPage> {
           group.parts
               .where((part) => part.status == GroupPartStatus.completed)
               .length,
+          group.parts.length,
         ),
       ),
       trailing: const Icon(TaliaIcons.chevronForward),

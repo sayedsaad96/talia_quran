@@ -35,7 +35,9 @@ class _GroupKhatmahJoinSheetState extends State<GroupKhatmahJoinSheet> {
     final trimmed = value.trim();
     return trimmed.runes.length >= min &&
         trimmed.runes.length <= max &&
-        !RegExp(r'[\x00-\x1F\x7F\u202A-\u202E\u2066-\u2069]').hasMatch(trimmed);
+        !RegExp(
+          r'[\x00-\x1F\x7F-\x9F\u202A-\u202E\u2066-\u2069]',
+        ).hasMatch(trimmed);
   }
 
   Future<void> _submit() async {

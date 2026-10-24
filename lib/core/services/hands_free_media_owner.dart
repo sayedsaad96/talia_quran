@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'quran_background_audio_handler.dart';
 
@@ -59,13 +61,20 @@ final class HandsFreeMediaOwner {
     Future<void> Function() stopReader,
   ) async {
     _stopping = true;
-    await stopReader()
-        .then((_) {
-          if (!identical(token, _token)) return;
-          _stopping = false;
-          if (_cancelled) _release(token);
-        })
-        .timeout(acquisitionTimeout);
+    final stop = Future<void>.sync(stopReader);
+    // Success clears a cancelled reservation; a failed stop means the reader
+    // still owns transport, so the reservation must not outlive the attempt.
+    unawaited(stop.then(
+      (_) {
+        if (!identical(token, _token)) return;
+        _stopping = false;
+        if (_cancelled) _release(token);
+      },
+      onError: (Object _, StackTrace _) {
+        if (identical(token, _token)) _release(token);
+      },
+    ));
+    await stop.timeout(acquisitionTimeout);
   }
 
   bool _current(Object token) =>

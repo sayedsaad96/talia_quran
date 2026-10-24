@@ -13,6 +13,7 @@ class GroupIntent {
     required this.groupId,
     required this.createdAt,
     this.attemptCount = 0,
+    this.deferralCount = 0,
     this.nextRetryAt,
     this.deadLetter = false,
   });
@@ -23,6 +24,10 @@ class GroupIntent {
   final String? groupId;
   final DateTime createdAt;
   final int attemptCount;
+
+  /// Transport/auth deferrals. Counted separately from [attemptCount] so they
+  /// drive backoff without spending the attempt budget.
+  final int deferralCount;
   final DateTime? nextRetryAt;
   final bool deadLetter;
 
@@ -36,28 +41,39 @@ class GroupIntent {
       groupId: groupId,
       createdAt: createdAt,
       attemptCount: attempts,
+      deferralCount: deferralCount,
       nextRetryAt: now.add(Duration(seconds: seconds.clamp(30, 3600).toInt())),
       deadLetter: attempts >= 8,
     );
   }
 
-  GroupIntent deferred(DateTime now) => GroupIntent(
-    operationId: operationId,
-    action: action,
-    args: args,
-    groupId: groupId,
-    createdAt: createdAt,
-    attemptCount: attemptCount,
-    nextRetryAt: now.add(const Duration(seconds: 30)),
-    deadLetter: deadLetter,
-  );
+  /// An intent that stays undeliverable this long needs the user: it becomes a
+  /// dead letter (recovery-required) instead of deferring forever.
+  static const maxDeferredAge = Duration(hours: 48);
 
-  GroupIntent reactivated() => GroupIntent(
+  GroupIntent deferred(DateTime now) {
+    final count = deferralCount + 1;
+    final seconds = 30 * (1 << (count - 1).clamp(0, 7).toInt());
+    return GroupIntent(
+      operationId: operationId,
+      action: action,
+      args: args,
+      groupId: groupId,
+      createdAt: createdAt,
+      attemptCount: attemptCount,
+      deferralCount: count,
+      nextRetryAt: now.add(Duration(seconds: seconds.clamp(30, 3600).toInt())),
+      deadLetter: deadLetter || now.difference(createdAt) > maxDeferredAge,
+    );
+  }
+
+  /// Recovery restarts the age clock so a user retry gets a fresh window.
+  GroupIntent reactivated(DateTime now) => GroupIntent(
     operationId: operationId,
     action: action,
     args: args,
     groupId: groupId,
-    createdAt: createdAt,
+    createdAt: now,
   );
 
   bool due(DateTime now) =>
@@ -70,6 +86,7 @@ class GroupIntent {
     groupId: json['groupId'] as String?,
     createdAt: DateTime.parse(json['createdAt'] as String).toUtc(),
     attemptCount: (json['attemptCount'] as num?)?.toInt() ?? 0,
+    deferralCount: (json['deferralCount'] as num?)?.toInt() ?? 0,
     nextRetryAt: json['nextRetryAt'] == null
         ? null
         : DateTime.parse(json['nextRetryAt'] as String).toUtc(),
@@ -83,6 +100,7 @@ class GroupIntent {
     'groupId': groupId,
     'createdAt': createdAt.toIso8601String(),
     'attemptCount': attemptCount,
+    'deferralCount': deferralCount,
     'nextRetryAt': nextRetryAt?.toIso8601String(),
     'deadLetter': deadLetter,
   };

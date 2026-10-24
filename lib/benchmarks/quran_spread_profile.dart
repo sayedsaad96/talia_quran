@@ -211,6 +211,10 @@ class _QuranSpreadProfileState extends State<QuranSpreadProfile> {
     await file.writeAsString(jsonEncode(evidence), flush: true);
     // Raw frames go to a file: Android can truncate a large single log line.
     debugPrint('QURAN_PROFILE_FILE ${file.path}');
+    // Devices without run-as cannot read the file; log the aggregates too.
+    final summary = Map<String, Object?>.of(evidence)
+      ..removeWhere((_, value) => value is List);
+    debugPrint('QURAN_PROFILE_SUMMARY ${jsonEncode(summary)}');
   }
 
   Widget _page(int page) => QuranPagePaneViewport(

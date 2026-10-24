@@ -4,7 +4,14 @@ import '../../../../core/error/app_failure.dart';
 import '../entities/group_khatmah.dart';
 
 class GroupPartConflictFailure extends Failure {
-  const GroupPartConflictFailure() : super('groupKhatmahConflict');
+  const GroupPartConflictFailure({this.claimedByOther = false})
+    : super('groupKhatmahConflict');
+
+  /// True when, after the refresh, another member holds the part.
+  final bool claimedByOther;
+
+  @override
+  List<Object> get props => [message, claimedByOther];
 }
 
 class GroupKhatmahFailure extends Failure {
@@ -50,5 +57,10 @@ abstract interface class GroupKhatmahRepository {
 
   /// A non-dead-letter intent whose backoff has expired.
   Future<bool> hasRunnablePending();
+
+  /// A non-dead-letter intent that a flush could deliver now or after backoff:
+  /// the feature is available and the profile is adult. Dead letters and
+  /// intents of an unavailable feature never gate a password update.
+  Future<bool> hasDeliverablePending();
   Future<void> dispose();
 }

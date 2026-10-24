@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:shimmer/shimmer.dart';
@@ -34,12 +36,20 @@ class QuranPageFontGuard extends StatefulWidget {
     required this.isDark,
     required this.child,
     this.fontLoader = const QcfPageFontLoader(),
+    this.retryDelays = defaultRetryDelays,
   });
+
+  /// Bounded automatic retries (one per entry) after a failed font load.
+  static const defaultRetryDelays = [
+    Duration(milliseconds: 500),
+    Duration(seconds: 2),
+  ];
 
   final int pageNumber;
   final bool isDark;
   final Widget child;
   final QuranPageFontLoader fontLoader;
+  final List<Duration> retryDelays;
 
   @override
   State<QuranPageFontGuard> createState() => _QuranPageFontGuardState();
@@ -49,6 +59,7 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
   int _requestGeneration = 0;
   int? _readyPage;
   QuranPageFontLoader? _readyLoader;
+  Timer? _retryTimer;
 
   @override
   void initState() {
@@ -66,25 +77,63 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
   }
 
   void _checkAndLoadFont() {
+    _retryTimer?.cancel();
     final generation = ++_requestGeneration;
     final page = widget.pageNumber;
     final loader = widget.fontLoader;
     _readyPage = null;
     _readyLoader = null;
+    _load(generation, page, loader, 0);
+  }
 
+  void _load(
+    int generation,
+    int page,
+    QuranPageFontLoader loader,
+    int attempt,
+  ) {
     if (loader.isFontLoaded(page)) {
       _markReady(generation, page, loader);
       return;
     }
 
     try {
-      loader.ensureFontLoaded(page).then(
-        (_) => _markReady(generation, page, loader),
-        onError: (Object error, StackTrace stack) => _markFailed(generation, page, loader),
-      );
+      loader
+          .ensureFontLoaded(page)
+          .then(
+            (_) => _attemptDone(generation, page, loader, attempt, ok: true),
+            onError: (Object error, StackTrace stack) =>
+                _attemptDone(generation, page, loader, attempt, ok: false),
+          );
     } catch (_) {
-      _markFailed(generation, page, loader);
+      _attemptDone(generation, page, loader, attempt, ok: false);
     }
+  }
+
+  /// Fail-closed: the page only shows once the loader confirms registration.
+  /// An unconfirmed or failed attempt retries a bounded number of times.
+  void _attemptDone(
+    int generation,
+    int page,
+    QuranPageFontLoader loader,
+    int attempt, {
+    required bool ok,
+  }) {
+    if (!_isCurrentRequest(generation, page, loader)) return;
+    if (ok && loader.isFontLoaded(page)) {
+      _markReady(generation, page, loader);
+      return;
+    }
+    if (attempt < widget.retryDelays.length) {
+      _retryTimer?.cancel();
+      _retryTimer = Timer(widget.retryDelays[attempt], () {
+        if (_isCurrentRequest(generation, page, loader)) {
+          _load(generation, page, loader, attempt + 1);
+        }
+      });
+      return;
+    }
+    _markFailed(generation, page, loader);
   }
 
   bool _isCurrentRequest(
@@ -118,6 +167,7 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
 
   @override
   void dispose() {
+    _retryTimer?.cancel();
     _requestGeneration++;
     super.dispose();
   }

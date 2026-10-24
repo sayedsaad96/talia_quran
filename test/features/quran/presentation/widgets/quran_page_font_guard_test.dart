@@ -167,4 +167,58 @@ void main() {
       await tester.pump();
     },
   );
+
+  testWidgets('retries a failed load and shows the page once registered', (
+    tester,
+  ) async {
+    final loader = _FakeFontLoader();
+    await pumpGuard(tester, page: 1, loader: loader);
+    loader.fail(1, 0);
+    await tester.pump();
+    expect(loader.requests[1], hasLength(1));
+
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(loader.requests[1], hasLength(2));
+    expect(find.byType(QuranPageSkeletonLoader), findsOneWidget);
+    loader.complete(1, 1);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('page_1')), findsOneWidget);
+  });
+
+  testWidgets('retries are bounded and stay fail-closed', (tester) async {
+    final loader = _FakeFontLoader();
+    await pumpGuard(tester, page: 1, loader: loader);
+    loader.fail(1, 0);
+    await tester.pump(const Duration(milliseconds: 500));
+    loader.fail(1, 1);
+    await tester.pump(const Duration(seconds: 2));
+    loader.fail(1, 2);
+    await tester.pump(const Duration(seconds: 30));
+
+    expect(loader.requests[1], hasLength(3));
+    expect(find.byType(QuranPageSkeletonLoader), findsOneWidget);
+    expect(find.byKey(const ValueKey('page_1')), findsNothing);
+  });
+
+  testWidgets('an unregistered success is retried, never trusted', (
+    tester,
+  ) async {
+    final loader = _FakeFontLoader();
+    await pumpGuard(tester, page: 1, loader: loader);
+    loader.complete(1, 0, register: false);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(loader.requests[1], hasLength(2));
+    expect(find.byKey(const ValueKey('page_1')), findsNothing);
+  });
+
+  testWidgets('a pending retry for an old page never fires', (tester) async {
+    final loader = _FakeFontLoader();
+    await pumpGuard(tester, page: 1, loader: loader);
+    loader.fail(1, 0);
+    await tester.pump();
+    await pumpGuard(tester, page: 2, loader: loader);
+    await tester.pump(const Duration(seconds: 5));
+    expect(loader.requests[1], hasLength(1));
+    expect(loader.requests[2], hasLength(1));
+  });
 }

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/home_widget/home_widget_publisher.dart';
+import 'package:talia_quran/core/home_widget/widget_snapshot.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue.dart';
@@ -27,6 +29,18 @@ class _WidgetBridge implements HomeWidgetBridge {
   String? value;
   @override Future<void> save(String key, String? json) async { value = json; }
   @override Future<void> requestUpdate() async {}
+  @override Future<void> scheduleUpdates(List<DateTime> times) async {}
+  @override Future<void> cancelScheduledUpdates() async {}
+  @override Future<void> setReceiverEnabled(bool enabled) async {}
+}
+
+class _SwitchableOwner implements RecordOwnerProvider {
+  _SwitchableOwner(this.id);
+  String id;
+  @override
+  String get currentOwnerId => id;
+  @override
+  bool get isSignedIn => true;
 }
 
 AyahReviewRecordModel _record({
@@ -131,6 +145,39 @@ void main() {
       });
       await AuthCubit.resolveOwnerChange(prefs: prefs, userId: 'user-b',
         onDepartingAccount: reset.clearAccountOwnedData);
+      expect(bridge.value, isNull);
+      expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'user-b');
+    });
+
+    test('real publisher as barrier participant wipes the widget on switch', () async {
+      final bridge = _WidgetBridge();
+      final owner = _SwitchableOwner('user-a');
+      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+      final publisher = HomeWidgetPublisher(
+        bridge: bridge,
+        owner: owner,
+        barrier: barrier,
+        load: (lease, id) async => const WidgetSnapshot(dueReviewCount: 77),
+      );
+      await publisher.start();
+      addTearDown(publisher.dispose);
+      await publisher.refresh();
+      expect(bridge.value, contains('77'));
+      await prefs.setString(AuthCubit.lastSignedInUserIdKey, 'user-a');
+
+      final reset = AccountDataReset(
+        isar,
+        prefs,
+        owner: owner,
+        clearHomeWidget: publisher.clearForAccountTransition,
+      );
+      await AuthCubit.resolveOwnerChange(
+        prefs: prefs,
+        userId: 'user-b',
+        onDepartingAccount: reset.clearAccountOwnedData,
+      );
+      owner.id = 'user-b';
+      // Cleared before the arriving owner may publish anything.
       expect(bridge.value, isNull);
       expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'user-b');
     });

@@ -1,7 +1,18 @@
 part of 'group_khatmah_repository_impl.dart';
 
 extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
-  Future<Either<Failure, void>> _flushPendingImpl() async {
+  /// Concurrent callers (resume, wake, sign-out) await the same run.
+  Future<Either<Failure, void>> _flushPendingImpl() {
+    final running = _flushing;
+    if (running != null) return running;
+    final run = _flushRun();
+    _flushing = run;
+    return run.whenComplete(() {
+      if (identical(_flushing, run)) _flushing = null;
+    });
+  }
+
+  Future<Either<Failure, void>> _flushRun() async {
     try {
       final scope = _scope();
       if (!_environment.isOnline) {
@@ -61,10 +72,61 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
       await _replace(
         scope,
         intent.operationId,
-        intent: _authInterrupted(error)
+        intent: _authInterrupted(error) || _isTransport(error)
             ? intent.deferred(_clock().toUtc())
             : intent.failed(_clock().toUtc()),
       );
+    }
+  }
+
+  /// Connectivity failures say nothing about the request, so they never spend
+  /// attempts: the intent stays retryable with the same operation ID.
+  bool _isTransport(Object error) =>
+      error is _Offline ||
+      error is SocketException ||
+      error is TimeoutException ||
+      // package:http is dev-only here, so match its exception by name.
+      error.runtimeType.toString() == 'ClientException' ||
+      error is AuthRetryableFetchException ||
+      (error is PostgrestException &&
+          error.code == null &&
+          (error.message.contains('SocketException') ||
+              error.message.contains('ClientException') ||
+              error.message.contains('Failed host lookup')));
+
+  /// Sends an intent that was just journaled by an online-only action. Any
+  /// failure leaves the outcome unknown (the server may have applied it), so
+  /// the intent stays queued for an idempotent replay and the caller reports a
+  /// pending outcome instead of a hard failure.
+  Future<Map<String, dynamic>> _sendJournaled(
+    _Scope scope,
+    GroupIntent intent,
+  ) async {
+    try {
+      return await _send(scope, intent);
+    } on AccountDataUnavailableException {
+      rethrow;
+    } on _GroupPublicationSuperseded {
+      rethrow;
+    } on _Offline {
+      // Nothing was sent: keep the journal entry for replay without spending
+      // an attempt, and tell the caller plainly that it is offline.
+      await _replace(
+        scope,
+        intent.operationId,
+        intent: intent.deferred(_clock().toUtc()),
+      );
+      rethrow;
+    } catch (error) {
+      final now = _clock().toUtc();
+      await _replace(
+        scope,
+        intent.operationId,
+        intent: _authInterrupted(error) || _isTransport(error)
+            ? intent.deferred(now)
+            : intent.failed(now),
+      );
+      throw const _OutcomePending();
     }
   }
 

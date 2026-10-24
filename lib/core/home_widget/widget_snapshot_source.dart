@@ -18,7 +18,9 @@ final class WidgetSnapshotSource {
     required this.khatmah,
     required this.isEnabled,
     DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+    String Function()? languageCode,
+  }) : now = now ?? DateTime.now,
+       languageCode = languageCode ?? (() => 'ar');
   final RecordOwnerProvider owner;
   final MemorizationPlusRepository records;
   final MemorizationPathResolver path;
@@ -27,9 +29,14 @@ final class WidgetSnapshotSource {
   final bool Function() isEnabled;
   final DateTime Function() now;
 
+  /// App language (`ar`/`en`) the native renderer should use.
+  final String Function() languageCode;
+
   Future<WidgetSnapshot> load(AccountDataLease lease, String ownerId) async {
     lease.checkOwner(ownerId);
-    if (!isEnabled() || !owner.isSignedIn) return const WidgetSnapshot.empty();
+    // Guests and local-only adults are served too: the barrier lease above
+    // already proves this owner is the one the local stores belong to.
+    if (!isEnabled()) return const WidgetSnapshot.empty();
     final profile = await path.currentProfile();
     lease.checkOwner(ownerId);
     if (profile?.isAdult != true) return const WidgetSnapshot.empty();
@@ -43,6 +50,8 @@ final class WidgetSnapshotSource {
     );
     final prayer = await prayers.current(isArabic: true);
     lease.checkOwner(ownerId);
+    final tomorrowFajr = await _tomorrowFajr();
+    lease.checkOwner(ownerId);
     final plan = await khatmah.getActivePlan();
     lease.checkOwner(ownerId);
     final instant = now();
@@ -53,12 +62,23 @@ final class WidgetSnapshotSource {
     return buildWidgetSnapshot(
       enabled: isEnabled(),
       isAdult: true,
-      signedOutOrSwitching: !owner.isSignedIn,
+      signedOutOrSwitching: false,
       today: prayer,
       tomorrow: null,
+      tomorrowFajr: tomorrowFajr,
+      languageCode: languageCode(),
       dueReviewCount: metrics.dueReviews,
       activePlan: plan,
       now: instant,
     );
+  }
+
+  Future<DateTime?> _tomorrowFajr() async {
+    try {
+      return await prayers.tomorrowFajr();
+    } catch (_) {
+      // Without it the widget only loses the post-Isha prayer line.
+      return null;
+    }
   }
 }

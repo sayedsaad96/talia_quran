@@ -297,6 +297,7 @@ class GroupKhatmahCubit extends Cubit<GroupKhatmahState> {
   }
 
   String _code(Failure failure) => switch (failure) {
+    GroupPartConflictFailure(claimedByOther: true) => 'conflict_claimed',
     GroupPartConflictFailure() => 'conflict',
     GroupKhatmahFailure(:final code) => code,
     NetworkFailure() => 'network',

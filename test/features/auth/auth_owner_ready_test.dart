@@ -80,7 +80,7 @@ class _ForcedPreserveCoordinator extends CloudSyncCoordinator {
   bool flushResult = false;
 
   @override
-  Future<bool> flushBeforeSignOut() async => flushResult;
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async => flushResult;
 
   @override
   Future<void> preservePendingSignOutWork() async {}
@@ -180,6 +180,81 @@ void main() {
       await signOut;
     },
   );
+
+  test(
+    'forced sign-out fails closed when the widget clear throws',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+        'khatmah_owner': 'a',
+        'khatmah_active_plan': 'private-a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('a');
+      final auth = _Auth();
+      final reset = _Reset();
+      when(
+        () => reset.clearAccountWidget(),
+      ).thenAnswer((_) async => throw StateError('widget clear timed out'));
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      final cubit = AuthCubit(
+        auth,
+        null,
+        null,
+        null,
+        null,
+        prefs,
+        reset,
+        _ForcedPreserveCoordinator(auth),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.signOut(force: true);
+
+      expect(cubit.state, isA<AuthOwnerDataFailure>());
+      expect(barrier.isReady, isFalse);
+      verifyNever(() => auth.signOut(preserveAccountData: true));
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+    },
+  );
+
+  test('app resume retries a failed widget clear and unblocks the barrier', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final barrier = AccountDataBarrier.forPreferences(prefs)
+      ..owner = _Owner('local');
+    final auth = _Auth();
+    final reset = _Reset();
+    when(() => auth.currentUser).thenReturn(null);
+    when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+    when(
+      () => auth.passwordRecoveryChanges,
+    ).thenAnswer((_) => const Stream.empty());
+    final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
+    addTearDown(cubit.close);
+    await expectLater(
+      barrier.clear(
+        () async => throw AccountProjectionClearFailure(
+          StateError('widget'),
+          StackTrace.current,
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(barrier.isReady, isFalse);
+
+    cubit.resyncOnResume();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(barrier.isReady, isTrue);
+    verify(() => reset.clearAccountWidget()).called(1);
+  });
 
   test(
     'failed forced-preserve signout restores fresh authority for the same session',

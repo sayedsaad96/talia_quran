@@ -10,6 +10,8 @@ class _Delegate implements HandsFreeMediaDelegate {
   void onSecondary() {}
   @override
   void onInterrupted() {}
+  @override
+  void onHardwareButton({required bool primary}) {}
 }
 
 void main() {
@@ -73,4 +75,47 @@ void main() {
       expect(initialized, isFalse);
     });
   }
+  test('a failed reader stop releases the reservation', () async {
+    final owner = HandsFreeMediaOwner();
+    var initialized = false;
+    final lease = await owner.acquire(
+      _Delegate(),
+      stopReader: () async => throw StateError('Reader did not stop'),
+      initialize: () async {
+        initialized = true;
+        return null;
+      },
+    );
+    expect(lease, isNull);
+    expect(owner.isReserved, isFalse);
+    expect(initialized, isFalse);
+    // A later acquisition is not locked out.
+    expect(
+      await owner.acquire(
+        _Delegate(),
+        stopReader: () async {},
+        initialize: () async => null,
+      ),
+      isNull,
+    );
+    expect(owner.isReserved, isFalse);
+  });
+  test('a late reader stop failure also releases a timed-out wait', () async {
+    final owner = HandsFreeMediaOwner(
+      acquisitionTimeout: const Duration(milliseconds: 5),
+    );
+    final stopping = Completer<void>();
+    expect(
+      await owner.acquire(
+        _Delegate(),
+        stopReader: () => stopping.future,
+        initialize: () async => null,
+      ),
+      isNull,
+    );
+    expect(owner.isReserved, isTrue);
+    stopping.completeError(StateError('late failure'));
+    await Future<void>.delayed(Duration.zero);
+    expect(owner.isReserved, isFalse);
+  });
 }

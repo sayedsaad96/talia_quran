@@ -29,7 +29,7 @@ extension _GroupKhatmahRecovery on GroupKhatmahRepositoryImpl {
         for (final intent in state.intents) {
           if (intent.operationId == operationId && intent.deadLetter) {
             found = true;
-            if (!discard) intents.add(intent.reactivated());
+            if (!discard) intents.add(intent.reactivated(_clock().toUtc()));
           } else {
             intents.add(intent);
           }
@@ -79,7 +79,9 @@ extension _GroupKhatmahRecovery on GroupKhatmahRepositoryImpl {
         return state.copyWith(
           intents: [
             for (final intent in state.intents)
-              intent.operationId == operationId ? intent.reactivated() : intent,
+              intent.operationId == operationId
+                  ? intent.reactivated(_clock().toUtc())
+                  : intent,
           ],
         );
       });

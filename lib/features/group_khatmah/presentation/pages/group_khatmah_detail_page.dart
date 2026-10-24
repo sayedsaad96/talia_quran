@@ -181,7 +181,7 @@ class _GroupKhatmahDetailPageState extends State<GroupKhatmahDetailPage> {
         .where((part) => part.status == GroupPartStatus.completed)
         .length;
     return [
-      Text(l10n.groupKhatmahCompletedCount(completed)),
+      Text(l10n.groupKhatmahCompletedCount(completed, group.parts.length)),
       Text(l10n.groupKhatmahMembersCount(group.members.length)),
       if (state.errorCode != null)
         Padding(

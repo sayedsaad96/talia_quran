@@ -67,6 +67,7 @@ class _FakeAuthRepository implements AuthRepository {
 
 class _GroupRepository implements GroupKhatmahRepository {
   bool pending = false;
+  bool? deliverablePending;
   int pulls = 0, pushes = 0, reconciliations = 0;
   @override
   Future<Either<Failure, void>> reconcilePendingWake() async {
@@ -81,6 +82,8 @@ class _GroupRepository implements GroupKhatmahRepository {
   Future<bool> hasPending() async => pending;
   @override
   Future<bool> hasRunnablePending() async => pending;
+  @override
+  Future<bool> hasDeliverablePending() async => deliverablePending ?? pending;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -188,6 +191,20 @@ void main() {
     addTearDown(coordinator.dispose);
     expect(await coordinator.flushBeforeSignOut(), isFalse);
     expect(groups.pushes, 1);
+  });
+
+  test('password-update gate ignores group intents that cannot be delivered', () async {
+    final groups = _GroupRepository()
+      ..pending = true
+      ..deliverablePending = false;
+    final coordinator = CloudSyncCoordinator(authRepository: authRepository,
+      groupKhatmahRepository: groups);
+    addTearDown(coordinator.dispose);
+    expect(await coordinator.flushBeforeSignOut(forPasswordUpdate: true), isTrue);
+    expect(groups.pushes, 0);
+    expect(await coordinator.flushBeforeSignOut(), isFalse);
+    groups.deliverablePending = true;
+    expect(await coordinator.flushBeforeSignOut(forPasswordUpdate: true), isFalse);
   });
 
   test('resume repairs group wake even when no journal entry is due', () async {

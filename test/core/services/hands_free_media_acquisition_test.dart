@@ -18,12 +18,19 @@ class _MediaPlayer extends ControlledAudioPlayer {
   Stream<PlaybackEvent> get playbackEventStream => const Stream.empty();
 }
 
+class _StuckPlayer extends _MediaPlayer {
+  @override
+  bool get playing => true;
+}
+
 class _Delegate implements HandsFreeMediaDelegate {
   int interrupted = 0;
   @override
   void onPrimary() {}
   @override
   void onSecondary() {}
+  @override
+  void onHardwareButton({required bool primary}) {}
   @override
   void onInterrupted() {
     interrupted++;
@@ -92,6 +99,25 @@ void main() {
     service.dispose();
     pending.complete(null);
     expect(await acquiring, isNull);
+    await player.closeControllers();
+  });
+
+  test('failed reader stop releases the reservation', () async {
+    SharedPreferences.setMockInitialValues({});
+    final player = _StuckPlayer();
+    final service = QuranContinuousPlayerService(
+      quranRepository: _Repository(),
+      reciterService: QuranReciterService(
+        await SharedPreferences.getInstance(),
+      ),
+      player: player,
+      enableBackgroundAudioIntegration: true,
+      backgroundAudioInitializer: () async => null,
+    );
+    expect(await service.acquireHandsFreeMedia(_Delegate()), isNull);
+    await service.resume();
+    expect(player.playCallCount, 1);
+    service.dispose();
     await player.closeControllers();
   });
 }

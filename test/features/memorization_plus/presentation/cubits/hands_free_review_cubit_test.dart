@@ -17,6 +17,8 @@ class _Audio implements HandsFreePracticeAudio {
   Completer<bool>? prompt;
   int stops = 0;
   Completer<void>? shutdown;
+  bool failStop = false;
+  int disposes = 0;
   @override
   Future<bool> playPrompt(ListeningAyahRef ref) async =>
       prompt == null ? true : prompt!.future;
@@ -29,15 +31,24 @@ class _Audio implements HandsFreePracticeAudio {
   Future<void> stop() async {
     stops++;
     await shutdown?.future;
+    if (failStop) throw StateError('stop failed');
   }
 
   @override
-  Future<void> dispose() async {}
+  Future<void> dispose() async {
+    disposes++;
+  }
 }
 
-class _Capture implements ListeningRecitationCapture, ListeningCaptureHealth {
+class _Capture
+    implements
+        ListeningRecitationCapture,
+        ListeningCaptureHealth,
+        ListeningCaptureFault {
   @override
   bool hadError = false;
+  @override
+  bool audioBusy = false;
   ListeningCaptureReadiness readiness = ListeningCaptureReadiness.ready;
   void Function()? ended;
   String words = 'sample target';
@@ -64,14 +75,26 @@ class _Capture implements ListeningRecitationCapture, ListeningCaptureHealth {
 
 class _Session implements HandsFreeAudioSession {
   final events = StreamController<void>.broadcast(sync: true);
+  bool captureActive = false;
+  bool failRelease = false, failDispose = false;
+  int disposes = 0;
   @override
   Stream<void> get interruptions => events.stream;
   @override
+  void setCaptureActive(bool active) => captureActive = active;
+  @override
   Future<void> activate() async {}
   @override
-  Future<void> release() async {}
+  Future<void> release() async {
+    if (failRelease) throw StateError('focus release denied');
+  }
+
   @override
-  Future<void> dispose() => events.close();
+  Future<void> dispose() async {
+    disposes++;
+    await events.close();
+    if (failDispose) throw StateError('dispose failed');
+  }
 }
 
 class _Lease implements HandsFreeMediaLease {
@@ -120,19 +143,11 @@ void main() {
     ],
     isCurrent: () => authority,
   );
-  setUp(() {
-    authority = true;
-    cancellations = 0;
-    acquiring = null;
-    warningAccepted = false;
-    warningSaves = 0;
-    savingWarning = null;
-    authorityEvents = StreamController<void>.broadcast(sync: true);
-    audio = _Audio();
-    capture = _Capture();
-    session = _Session();
-    lease = _Lease();
-    cubit = HandsFreeReviewCubit(
+  HandsFreeReviewCubit make({
+    Future<Object?> Function()? snapshot,
+    Duration cleanupTimeout = const Duration(seconds: 5),
+  }) {
+    return HandsFreeReviewCubit(
       load: () async => material(),
       audio: audio,
       capture: capture,
@@ -149,7 +164,36 @@ void main() {
       now: () => now,
       firstUseWarningPending: false,
       mediaTitle: (_) => 'test practice',
+      authoritySnapshot: snapshot,
+      cleanupTimeout: cleanupTimeout,
     );
+  }
+
+  Future<void> remake({
+    Future<Object?> Function()? snapshot,
+    Duration cleanupTimeout = const Duration(seconds: 5),
+  }) async {
+    await cubit.close();
+    authorityEvents = StreamController<void>.broadcast(sync: true);
+    audio.disposes = 0;
+    session.disposes = 0;
+    lease = _Lease();
+    cubit = make(snapshot: snapshot, cleanupTimeout: cleanupTimeout);
+  }
+
+  setUp(() {
+    authority = true;
+    cancellations = 0;
+    acquiring = null;
+    warningAccepted = false;
+    warningSaves = 0;
+    savingWarning = null;
+    authorityEvents = StreamController<void>.broadcast(sync: true);
+    audio = _Audio();
+    capture = _Capture();
+    session = _Session();
+    lease = _Lease();
+    cubit = make();
   });
   tearDown(() async {
     await cubit.close();
@@ -178,6 +222,55 @@ void main() {
     await settle();
     expect(audio.tones, [HandsFreeGrade.review]);
   });
+  test('a physical key grades only after the settle window', () async {
+    await cubit.close();
+    session = _Session();
+    cubit = HandsFreeReviewCubit(
+      load: () async => material(),
+      audio: audio,
+      capture: capture,
+      session: session,
+      acquireMedia: (_) async => lease,
+      mediaTitle: (_) => 'test practice',
+      firstUseWarningPending: false,
+      now: () => now,
+      hardwareButtonSettle: const Duration(milliseconds: 40),
+    );
+    await cubit.start();
+    cubit.onHardwareButton(primary: false);
+    await settle();
+    expect(audio.tones, isEmpty);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await settle();
+    expect(audio.tones, [HandsFreeGrade.review]);
+  });
+  test(
+    'an interruption right after a physical key cancels its grade',
+    () async {
+      await cubit.close();
+      session = _Session();
+      cubit = HandsFreeReviewCubit(
+        load: () async => material(),
+        audio: audio,
+        capture: capture,
+        session: session,
+        acquireMedia: (_) async => lease,
+        mediaTitle: (_) => 'test practice',
+        firstUseWarningPending: false,
+        now: () => now,
+        hardwareButtonSettle: const Duration(milliseconds: 40),
+      );
+      await cubit.start();
+      // Earbud removal: PAUSE key (reported as a click), then becoming noisy.
+      cubit.onHardwareButton(primary: true);
+      session.events.add(null);
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      await settle();
+      expect(audio.tones, isEmpty);
+      expect(cubit.state.round!.grades.every((g) => g == null), isTrue);
+      expect(cubit.state.round!.phase, HandsFreePhase.paused);
+    },
+  );
   test(
     'noisy interruption prevents a late prompt from starting capture',
     () async {
@@ -225,6 +318,19 @@ void main() {
     expect(audio.tones, isEmpty);
     expect(cubit.state.micAvailable, isFalse);
   });
+  test(
+    'audio-busy recognizer error interrupts the round without grading',
+    () async {
+      await cubit.start();
+      capture.hadError = true;
+      capture.audioBusy = true;
+      capture.ended!();
+      await settle();
+      expect(audio.tones, isEmpty);
+      expect(cubit.state.round!.phase, HandsFreePhase.paused);
+      expect(cubit.state.round!.grades.every((g) => g == null), isTrue);
+    },
+  );
   test('unused page never resolves reader media while closing', () async {
     await cubit.close();
     expect(cancellations, 0);
@@ -289,6 +395,128 @@ void main() {
     await settle();
     expect(cubit.state.round, isNull);
     expect(cubit.state.summary.reviewCount, 0);
+    expect(lease.isCurrent, isFalse);
+  });
+
+  test(
+    'permanent focus loss during a user turn is ungraded and silent',
+    () async {
+      await cubit.start();
+      expect(cubit.state.round!.phase, HandsFreePhase.userTurn);
+      expect(session.captureActive, isTrue);
+      session.events.add(null);
+      await settle();
+      expect(cubit.state.round!.phase, HandsFreePhase.paused);
+      expect(cubit.state.round!.grades.every((g) => g == null), isTrue);
+      expect(audio.tones, isEmpty);
+      expect(lease.isCurrent, isFalse);
+      expect(session.captureActive, isFalse);
+    },
+  );
+  test('capture flag is cleared when the recognizer ends', () async {
+    await cubit.start();
+    expect(session.captureActive, isTrue);
+    capture.ended!();
+    expect(session.captureActive, isFalse);
+    await settle();
+  });
+  test('unrelated authority signals keep the round and the warning', () async {
+    var owner = 'a';
+    await remake(snapshot: () async => owner);
+    await cubit.start();
+    authorityEvents.add(null);
+    authorityEvents.add(null);
+    await settle();
+    expect(cubit.state.round!.phase, HandsFreePhase.userTurn);
+    expect(cubit.state.firstUseWarningPending, isFalse);
+    expect(lease.isCurrent, isTrue);
+    owner = 'b';
+    authorityEvents.add(null);
+    await settle();
+    expect(cubit.state.round, isNull);
+    expect(lease.isCurrent, isFalse);
+  });
+  test('real authority change re-reads the warning flag', () async {
+    var owner = 'a';
+    warningAccepted = true;
+    await remake(snapshot: () async => owner);
+    await cubit.initializeWarning();
+    expect(cubit.state.firstUseWarningPending, isFalse);
+    owner = 'b';
+    authorityEvents.add(null);
+    await settle();
+    expect(cubit.state.firstUseWarningPending, isFalse);
+    warningAccepted = false;
+    owner = 'c';
+    authorityEvents.add(null);
+    await settle();
+    expect(cubit.state.firstUseWarningPending, isTrue);
+  });
+  test('failed focus release still frees the media lease', () async {
+    await cubit.start();
+    session.failRelease = true;
+    await cubit.stopRound();
+    expect(lease.isCurrent, isFalse);
+    capture.ended = null;
+    lease = _Lease();
+    await cubit.start();
+    expect(capture.ended, isNotNull);
+  });
+  test('unconfirmed audio stop keeps the lease until close frees it', () async {
+    await cubit.start();
+    audio.failStop = true;
+    await cubit.stopRound();
+    expect(lease.isCurrent, isTrue);
+    await cubit.start();
+    expect(cubit.state.round!.phase, HandsFreePhase.paused);
+    await cubit.close();
+    expect(lease.isCurrent, isFalse);
+    expect(audio.disposes, 1);
+  });
+  test('a late successful drain lifts the restart block', () async {
+    await remake(cleanupTimeout: const Duration(milliseconds: 20));
+    await cubit.start();
+    audio.shutdown = Completer<void>();
+    await cubit.stopRound();
+    expect(lease.isCurrent, isTrue);
+    audio.shutdown!.complete();
+    await settle();
+    audio.shutdown = null;
+    capture.ended = null;
+    lease = _Lease();
+    await cubit.start();
+    expect(capture.ended, isNotNull);
+    expect(cubit.state.round!.phase, HandsFreePhase.userTurn);
+  });
+  test('an empty attempt only falls back for that item', () async {
+    capture.words = '';
+    await cubit.start();
+    capture.ended!();
+    await settle();
+    expect(cubit.state.micAvailable, isFalse);
+    capture.ended = null;
+    cubit.onSecondary();
+    await settle();
+    expect(audio.tones, [HandsFreeGrade.review]);
+    expect(cubit.state.round!.currentIndex, 1);
+    expect(cubit.state.micAvailable, isTrue);
+    expect(capture.ended, isNotNull);
+  });
+  test('close always disposes audio and session despite failures', () async {
+    await cubit.start();
+    audio.failStop = true;
+    session.failDispose = true;
+    await cubit.close();
+    expect(audio.disposes, 1);
+    expect(session.disposes, 1);
+    expect(lease.isCurrent, isFalse);
+  });
+  test('close is bounded when cleanup hangs', () async {
+    await remake(cleanupTimeout: const Duration(milliseconds: 20));
+    await cubit.start();
+    audio.shutdown = Completer<void>();
+    await cubit.close().timeout(const Duration(seconds: 2));
+    expect(audio.disposes, 1);
     expect(lease.isCurrent, isFalse);
   });
 }

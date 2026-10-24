@@ -23,13 +23,21 @@ extension _GroupKhatmahParts on GroupKhatmahRepositoryImpl {
         'p_membership_epoch': group.membershipEpoch,
         'p_operation_id': operationId,
       }, groupId);
-      final response = await _send(scope, intent);
+      final response = await _sendJournaled(scope, intent);
       return await _partResponse(scope, intent, group, part, response);
     } on _Offline {
       return const Left(NetworkFailure());
     } catch (error) {
       return Left(_failure(error));
     }
+  }
+
+  bool _claimedByOther(_Scope scope, String groupId, int juz) {
+    final current = _group(scope, groupId)?.part(juz);
+    return current != null &&
+        current.status == GroupPartStatus.claimed &&
+        current.claimedBy != null &&
+        current.claimedBy != scope.ownerId;
   }
 
   Future<Either<Failure, GroupPart>> _partResponse(
@@ -42,8 +50,22 @@ extension _GroupKhatmahParts on GroupKhatmahRepositoryImpl {
     if (response['applied'] != true) {
       await _terminal(scope, intent, response);
       if (response['code'] == 'conflict') {
-        await _loadGroup(scope, group.id, expectedEpoch: group.membershipEpoch);
-        return const Left(GroupPartConflictFailure());
+        try {
+          await _loadGroup(
+            scope,
+            group.id,
+            expectedEpoch: group.membershipEpoch,
+          );
+        } on AccountDataUnavailableException {
+          rethrow;
+        } catch (_) {
+          // The conflict is authoritative; the cubit refreshes again.
+        }
+        return Left(
+          GroupPartConflictFailure(
+            claimedByOther: _claimedByOther(scope, group.id, part.juz),
+          ),
+        );
       }
       return Left(GroupKhatmahFailure(response['code'] as String));
     }

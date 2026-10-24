@@ -8,6 +8,7 @@ import '../home_widget/platform_home_widget_bridge.dart';
 import '../home_widget/widget_snapshot_source.dart';
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
+import '../l10n/locale_cubit.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
@@ -18,14 +19,16 @@ Future<void> registerHomeWidget(GetIt getIt) async {
   final path = getIt<MemorizationPathResolver>();
   final barrier = AccountDataBarrier.forPreferences(getIt<SharedPreferences>());
   final khatmah = getIt<KhatmahRepository>();
+  bool flagOn() =>
+      getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget);
   final source = WidgetSnapshotSource(
     owner: owner,
     records: getIt<MemorizationPlusRepository>(),
     path: path,
     prayers: getIt<PrayerTimesService>(),
     khatmah: khatmah,
-    isEnabled: () =>
-        getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget),
+    isEnabled: flagOn,
+    languageCode: () => getIt<LocaleCubit>().state.languageCode,
   );
   final publisher = HomeWidgetPublisher(
     bridge: PlatformHomeWidgetBridge(),
@@ -33,6 +36,12 @@ Future<void> registerHomeWidget(GetIt getIt) async {
     owner: owner,
     barrier: barrier,
     authorityChanges: [path.changes],
+    isEnabled: flagOn,
+    // ExperienceFlags has no change signal; the publisher re-reads the flag on
+    // every refresh (start, resume, progress) and applies off -> clear and
+    // disable receiver, on -> enable receiver. A future signal plugs into
+    // `flagChanges` without further wiring.
+    audience: () async => (await path.currentProfile())?.isAdult == true,
     refreshTriggers: [
       getIt<ProgressEventsBus>().changes
           .where(
@@ -42,6 +51,8 @@ Future<void> registerHomeWidget(GetIt getIt) async {
           )
           .map<void>((_) {}),
       ?khatmah.changes,
+      // The widget follows the app language, not the device language.
+      getIt<LocaleCubit>().stream.map<void>((_) {}),
     ],
   );
   getIt.registerSingleton<HomeWidgetPublisher>(

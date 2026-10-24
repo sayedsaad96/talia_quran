@@ -9551,15 +9551,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String groupKhatmahCompletedCount(int count) {
+  String groupKhatmahCompletedCount(int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'اكتمل $count جزء من ٣٠',
-      many: 'اكتمل $count جزءًا من ٣٠',
-      few: 'اكتملت $count أجزاء من ٣٠',
-      two: 'اكتمل جزءان من ٣٠',
-      one: 'اكتمل جزء واحد من ٣٠',
+      other: 'اكتمل $count جزء من $total',
+      many: 'اكتمل $count جزءًا من $total',
+      few: 'اكتملت $count أجزاء من $total',
+      two: 'اكتمل جزءان من $total',
+      one: 'اكتمل جزء واحد من $total',
       zero: 'لم يكتمل أي جزء',
     );
     return '$_temp0';
@@ -9619,6 +9619,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupKhatmahConflict => 'تغيّر هذا الجزء. حُدّثت بيانات المجموعة.';
+
+  @override
+  String get groupKhatmahConflictClaimed =>
+      'حجزه غيرك. حُدّثت بيانات المجموعة.';
+
+  @override
+  String get groupKhatmahOutcomePending =>
+      'الطلب قيد الإرسال وسيُؤكَّد تلقائيًا عند عودة الاتصال. لا حاجة إلى إعادته.';
+
+  @override
+  String get groupKhatmahGroupCompleted =>
+      'اكتملت هذه الختمة ولا يمكن تغيير أجزائها.';
+
+  @override
+  String get groupKhatmahStaleOperation =>
+      'تغيّرت عضويتك في المجموعة قبل اكتمال هذا الطلب. حُدّثت البيانات.';
+
+  @override
+  String get groupKhatmahInvalidInput =>
+      'تعذّر قبول البيانات المدخلة. راجعها وحاول مرة أخرى.';
 
   @override
   String get groupKhatmahNetwork => 'اتصل بالإنترنت ثم حاول مرة أخرى.';

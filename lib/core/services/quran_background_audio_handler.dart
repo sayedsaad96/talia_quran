@@ -40,7 +40,9 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   bool attachMediaDelegate(Object token, HandsFreeMediaDelegate delegate) {
     if (_mediaOwner != null) return false;
     _readerState = playbackState.value.copyWith(
-      playing: false, processingState: AudioProcessingState.idle);
+      playing: false,
+      processingState: AudioProcessingState.idle,
+    );
     _readerItem = mediaItem.value;
     _mediaOwner = token;
     _mediaDelegate = delegate;
@@ -79,13 +81,18 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   void publishPractice(Object token, {MediaItem? item, required bool playing}) {
     if (!ownsMedia(token)) return;
     if (item != null) mediaItem.add(item);
-    playbackState.add(PlaybackState(
-      controls: [playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.skipToNext, MediaControl.stop],
-      androidCompactActionIndices: const [0, 1, 2],
-      processingState: AudioProcessingState.ready,
-      playing: playing,
-    ));
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
+          MediaControl.stop,
+        ],
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: AudioProcessingState.ready,
+        playing: playing,
+      ),
+    );
   }
 
   void setQueueItems(List<MediaItem> items) {
@@ -101,28 +108,56 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> play() async {
     final delegate = _mediaDelegate;
-    if (delegate != null) { delegate.onPrimary(); return; }
+    if (delegate != null) {
+      delegate.onPrimary();
+      return;
+    }
     await _onPlay();
   }
 
   @override
-  Future<void> pause() async {
+  Future<void> click([MediaButton button = MediaButton.media]) async {
     final delegate = _mediaDelegate;
-    if (delegate != null) { delegate.onPrimary(); return; }
+    if (delegate == null) return super.click(button);
+    switch (button) {
+      case MediaButton.media:
+        delegate.onHardwareButton(primary: true);
+      case MediaButton.next:
+        delegate.onHardwareButton(primary: false);
+      case MediaButton.previous:
+        break;
+    }
+  }
+
+  @override
+  Future<void> pause() async {
+    // The notification/lock-screen pause action (not a physical key, which
+    // arrives through [click]) ends the hands-free round without grading.
+    final delegate = _mediaDelegate;
+    if (delegate != null) {
+      delegate.onInterrupted();
+      return;
+    }
     await _onPause();
   }
 
   @override
   Future<void> stop() async {
     final delegate = _mediaDelegate;
-    if (delegate != null) { delegate.onInterrupted(); return; }
+    if (delegate != null) {
+      delegate.onInterrupted();
+      return;
+    }
     await _onStop();
   }
 
   @override
   Future<void> skipToNext() async {
     final delegate = _mediaDelegate;
-    if (delegate != null) { delegate.onSecondary(); return; }
+    if (delegate != null) {
+      delegate.onSecondary();
+      return;
+    }
     await _onNext();
   }
 

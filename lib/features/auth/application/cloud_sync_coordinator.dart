@@ -152,10 +152,17 @@ class CloudSyncCoordinator {
   /// This is the single authoritative all-domain pending-work decision: it
   /// covers bookmarks, memorization, and auth progress (V1-M5). Omitting any
   /// dirty domain here would let sign-out destroy unsynced user data.
-  Future<bool> flushBeforeSignOut() async {
+  ///
+  /// [forPasswordUpdate] gates on group intents that can actually be delivered:
+  /// dead letters and intents of an unavailable feature cannot be flushed, so
+  /// they must not block a password update (sign-out still counts them all).
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async {
     try {
       final groups = _groupKhatmahRepository;
-      if (groups != null && await groups.hasPending()) {
+      Future<bool> groupsPending() => forPasswordUpdate
+          ? groups!.hasDeliverablePending()
+          : groups!.hasPending();
+      if (groups != null && await groupsPending()) {
         await groups.flushPending();
       }
       final bookmarks = _bookmarkService;
@@ -198,7 +205,7 @@ class CloudSyncCoordinator {
       final memorizationPending =
           memorization != null && await memorization.hasPendingCloudWork();
       return !memorizationPending &&
-          !(groups != null && await groups.hasPending()) &&
+          !(groups != null && await groupsPending()) &&
           !(bookmarks != null &&
               await bookmarks.hasPendingCloudWorkDurably()) &&
           !await _authRepository.hasPendingCloudPush();

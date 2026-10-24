@@ -2,7 +2,6 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layoutDirection="locale"
     android:background="@drawable/talia_home_widget_background"
     android:gravity="center_vertical"
     android:orientation="vertical">
@@ -11,6 +10,7 @@
         android:id="@+id/widget_prayer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="left"
         android:textAppearance="@android:style/TextAppearance.Material.Medium"
         android:textColor="#FF173B32" />
 
@@ -19,6 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:gravity="left"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
         android:textColor="#FF355C50" />
 
@@ -27,6 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:gravity="left"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
         android:textColor="#FF355C50" />
 

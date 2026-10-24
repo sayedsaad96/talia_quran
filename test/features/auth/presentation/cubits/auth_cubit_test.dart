@@ -999,7 +999,7 @@ class _GateTrackingCloudSyncCoordinator extends CloudSyncCoordinator {
   }
 
   @override
-  Future<bool> flushBeforeSignOut() async => true;
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async => true;
 
   @override
   Future<void> run() async {}
@@ -1010,7 +1010,7 @@ class _PendingWorkCloudSyncCoordinator extends CloudSyncCoordinator {
     : super(authRepository: authRepository);
 
   @override
-  Future<bool> flushBeforeSignOut() async => false;
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async => false;
 }
 
 class _BlockingRunCloudSyncCoordinator extends CloudSyncCoordinator {

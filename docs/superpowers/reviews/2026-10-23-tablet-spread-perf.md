@@ -138,6 +138,34 @@ text, source data, or persisted page identifiers are changed by the prototype.
   suite was not run; the command above states the tested scope.
 - H2 Step 3 is ready; H2 measurement/decision and H3 remain pending.
 
+## Emulator measurement attempt: 2026-10-24 (Claude)
+
+Target: `127.0.0.1:5555`, x86_64 emulator reporting model `NE2211`, API 28,
+profile builds of the harness (revision `9248bc03` plus uncommitted review
+fixes), Flutter `android_x64`. The harness now also logs a
+`QURAN_PROFILE_SUMMARY` line (aggregates only) because this target has no
+`run-as` access to the JSON file.
+
+The emulator cannot produce the required viewport: the app always reports
+DPR 1.5 whatever `wm density` says, and `wm size` is capped at 1440 px wide,
+so the largest landscape viewport is **960 × 600 logical** (`targetViewport:
+false`). Display overrides were reset afterwards.
+
+| Run (960 × 600, 30 turns) | Mean frame | Max frame | p95 | Frames > 50 ms | Peak RSS |
+|---|---|---|---|---|---|
+| single (run 1) | 22.7 ms | 141 ms | 67 ms | 48 | 317 MB |
+| single (run 2) | 26.5 ms | 183 ms | 89 ms | 71 | 316 MB |
+| single (run 3) | 26.9 ms | 192 ms | 94 ms | 71 | 316 MB |
+| spread | 40.4 ms | 408 ms | 193 ms | 98 | 340 MB |
+
+Reading: the single-page baseline already fails the 16 ms / 50 ms thresholds
+on this software-rendered emulator, so the run cannot certify or reject H2.
+Relative to the baseline, the spread costs about 1.5× mean frame time and
+1.07× memory (memory gate would pass). The final spread frame showed page 61
+(Aal Imran 84–91) on the right and page 62 (92–100) on the left, matching R3,
+with correct QCF glyphs. **Decision unchanged: H2 pending a real tablet; H3
+not started.**
+
 ## Phase checkpoint: 2026-10-24
 
 The 269-test result above belongs to the renderer increment. Later phase-wide

@@ -67,11 +67,21 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <receiver android:name="com.talia.quran.widget.TaliaHomeWidgetProvider" android:exported="false">
+        <!-- Disabled until the home-widget flag is on; MainActivity toggles it at runtime
+             (PackageManager.setComponentEnabledSetting, DONT_KILL_APP). -->
+        <receiver android:name="com.talia.quran.widget.TaliaHomeWidgetProvider" android:exported="false" android:enabled="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/talia_home_widget_info"/>
+        </receiver>
+        <!-- Delivers the prayer-time and expiry redraw alarms scheduled by home_widget. -->
+        <receiver android:name="es.antonborri.home_widget.HomeWidgetScheduledUpdateReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
         </receiver>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">

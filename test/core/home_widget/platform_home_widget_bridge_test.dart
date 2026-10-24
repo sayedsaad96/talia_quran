@@ -46,10 +46,49 @@ void main() {
       throwsStateError,
     );
   });
+  test('schedules redraws for the provider, empty list cancels', () async {
+    final bridge = PlatformHomeWidgetBridge(supported: true);
+    final at = DateTime.fromMillisecondsSinceEpoch(1900000000000);
+    await bridge.scheduleUpdates([at]);
+    await bridge.scheduleUpdates(const []);
+    await bridge.cancelScheduledUpdates();
+    expect(calls.map((c) => c.method), [
+      'scheduleWidgetUpdates',
+      'cancelScheduledWidgetUpdates',
+      'cancelScheduledWidgetUpdates',
+    ]);
+    expect(calls.first.arguments['updateTimes'], [1900000000000]);
+    expect(
+      calls.first.arguments['qualifiedAndroidName'],
+      'com.talia.quran.widget.TaliaHomeWidgetProvider',
+    );
+  });
+  test('receiver state goes through the component channel', () async {
+    const component = MethodChannel('talia/home_widget_component');
+    final componentCalls = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(component, (call) async {
+          componentCalls.add(call);
+          return succeeds;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(component, null),
+    );
+    final bridge = PlatformHomeWidgetBridge(supported: true);
+    await bridge.setReceiverEnabled(true);
+    expect(componentCalls.single.method, 'setProviderEnabled');
+    expect(componentCalls.single.arguments, {'enabled': true});
+    succeeds = false;
+    await expectLater(bridge.setReceiverEnabled(false), throwsStateError);
+  });
   test('unsupported platforms never call the plugin', () async {
     final bridge = PlatformHomeWidgetBridge(supported: false);
     await bridge.save('key', null);
     await bridge.requestUpdate();
+    await bridge.scheduleUpdates([DateTime.now()]);
+    await bridge.cancelScheduledUpdates();
+    await bridge.setReceiverEnabled(true);
     expect(calls, isEmpty);
   });
 }

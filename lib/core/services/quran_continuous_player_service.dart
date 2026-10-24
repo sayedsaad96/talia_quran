@@ -1094,15 +1094,19 @@ class QuranContinuousPlayerService {
       return Future<QuranBackgroundAudioHandler?>.value(null);
     }
     if (_backgroundAudioHandler != null) return Future.value(_backgroundAudioHandler);
-    return _backgroundAudioInitialization ??=
+    // The init future is cached un-timed so a slow AudioService.init still
+    // attaches its handler later; each caller only bounds its own wait.
+    final init = _backgroundAudioInitialization ??=
         (_backgroundAudioInitializer ?? _initializeBackgroundAudio)().then((handler) async {
       if (_handsFreeOwner.isDisposed) {
+        _backgroundAudioHandler = null;
         await handler?.disposeHandler();
         return null;
       }
       _backgroundAudioHandler = handler;
       return handler;
-    }).timeout(const Duration(seconds: 5), onTimeout: () => null);
+    });
+    return init.timeout(const Duration(seconds: 5), onTimeout: () => null);
   }
 
   Future<QuranBackgroundAudioHandler?> _initializeBackgroundAudio() async {

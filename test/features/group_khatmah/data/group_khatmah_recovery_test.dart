@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -51,7 +50,8 @@ void main() {
     remote.groups[groupA] = fixture(groupA, ownerA, epochA);
     await repository.refreshMine();
     await repository.completeLocally(groupA, 1);
-    remote.onRpc = (_) async => throw TimeoutException('unavailable');
+    remote.onRpc = (_) async =>
+        throw const PostgrestException(message: 'boom', code: 'XX000');
     for (var attempt = 0; attempt < 8; attempt++) {
       await repository.flushPending();
       now = now.add(const Duration(hours: 2));
@@ -113,7 +113,7 @@ void main() {
     'lost create acknowledgement exposes recovery before any group is known',
     () async {
       remote.onRpc = (_) async =>
-          throw TimeoutException('lost create response');
+          throw const PostgrestException(message: 'boom', code: 'XX000');
       await repository.create('Shared reading', 'Reader');
       for (var attempt = 0; attempt < 8; attempt++) {
         await repository.flushPending();

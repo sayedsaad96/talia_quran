@@ -6,6 +6,16 @@ class AccountDataUnavailableException implements Exception {
   const AccountDataUnavailableException();
 }
 
+/// Thrown by a store wipe that completed everything except a native
+/// projection (e.g. the home widget). The barrier stays blocked but may retry
+/// just the projection later ([AccountDataBarrier.retryFailedClear]). It is
+/// unwrapped before reaching callers.
+class AccountProjectionClearFailure implements Exception {
+  const AccountProjectionClearFailure(this.cause, this.stackTrace);
+  final Object cause;
+  final StackTrace stackTrace;
+}
+
 /// Local account authority shared by reset and account-owned writers.
 /// Invalidation is synchronous; clearing is serialized after accepted I/O.
 class AccountDataBarrier {
@@ -23,6 +33,8 @@ class AccountDataBarrier {
   final _invalidationParticipants = <Future<void> Function()>{};
   Future<void> _invalidation = Future.value();
   bool _invalidationFailed = false;
+  bool _clearFailed = false;
+  bool _retryingClear = false;
 
   /// Native projections must clear before an account becomes locally ready.
   void Function() addInvalidationParticipant(Future<void> Function() clear) {
@@ -31,6 +43,9 @@ class AccountDataBarrier {
   }
   final _changes = StreamController<void>.broadcast(sync: true);
   Stream<void> get changes => _changes.stream;
+
+  /// Bumps on every invalidation; read-only, for change detection.
+  int get generation => _generation;
   AccountDataLease get snapshot {
     _checkOwner();
     return AccountDataLease._(this, _generation);
@@ -109,6 +124,7 @@ class AccountDataBarrier {
     _generation++;
     _blocked = true;
     _invalidationFailed = false;
+    _clearFailed = false;
     final generation = _generation;
     _invalidation = Future.wait<void>([
       for (final clear in _invalidationParticipants.toList()) Future<void>.sync(clear),
@@ -140,13 +156,70 @@ class AccountDataBarrier {
     return result;
   }
 
+  /// Bounded recovery after a [clear] that wiped the stores but failed to clear
+  /// a native projection. Re-runs the projections once; only a fully
+  /// successful run unblocks (fail closed otherwise). Any newer invalidation
+  /// supersedes it. Returns whether the barrier was unblocked.
+  Future<bool> retryFailedClear({Future<void> Function()? projection}) async {
+    if (!_clearFailed || _retryingClear) return false;
+    _retryingClear = true;
+    final generation = _generation;
+    try {
+      await _tail;
+      if (generation != _generation || !_clearFailed) return false;
+      await Future.wait<void>([
+        for (final clear in _invalidationParticipants.toList())
+          Future<void>.sync(clear),
+        if (projection != null) Future<void>.sync(projection),
+      ]);
+      if (generation != _generation) return false;
+      _clearFailed = false;
+      _invalidationFailed = false;
+      _readyOwner = owner?.currentOwnerId;
+      _blocked = _preparingOwner != null;
+      notifyChanged();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _retryingClear = false;
+    }
+  }
+
   Future<void> clear(Future<void> Function() clearStores) {
     invalidate();
     final generation = _generation;
     final invalidation = _invalidation;
     final result = _tail.then((_) async {
-      await invalidation;
-      await clearStores();
+      // A failed invalidation participant (for example a native projection)
+      // must not keep stale account data on disk: always wipe the stores, then
+      // surface the failure and stay blocked so nothing is published or
+      // activated for the next owner (fail closed).
+      Object? invalidationError;
+      StackTrace? invalidationStack;
+      try {
+        await invalidation;
+      } catch (error, stack) {
+        invalidationError = error;
+        invalidationStack = stack;
+      }
+      AccountProjectionClearFailure? projectionFailure;
+      try {
+        await clearStores();
+      } on AccountProjectionClearFailure catch (failure) {
+        projectionFailure = failure;
+      }
+      if (invalidationError != null) {
+        if (generation == _generation) _clearFailed = true;
+        Error.throwWithStackTrace(invalidationError, invalidationStack!);
+      }
+      if (projectionFailure != null) {
+        if (generation == _generation) _clearFailed = true;
+        Error.throwWithStackTrace(
+          projectionFailure.cause,
+          projectionFailure.stackTrace,
+        );
+      }
       if (generation == _generation) {
         _readyOwner = owner?.currentOwnerId;
         _blocked = _preparingOwner != null;

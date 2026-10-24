@@ -214,4 +214,116 @@ class WidgetSnapshotFormatterTest {
 
         assertEquals("Morning prayer · 05:03", rows.prayerLine)
     }
+
+    @Test
+    fun `render picks the first upcoming prayer still in the future`() {
+        val json = """{
+          "schemaVersion":1,
+          "isEmpty":false,
+          "nextPrayerKey":"dhuhr",
+          "nextPrayerAt":3600000,
+          "upcomingPrayers":[
+            {"key":"dhuhr","at":3600000,"offsetMinutes":0},
+            {"key":"asr","at":7200000,"offsetMinutes":0},
+            {"key":"maghrib","at":10800000,"offsetMinutes":0}
+          ]
+        }""".trimIndent()
+
+        assertEquals("Dhuhr · 01:00", WidgetSnapshotFormatter.format(json, labels, false, 0L).prayerLine)
+        assertEquals("Asr · 02:00", WidgetSnapshotFormatter.format(json, labels, false, 3_600_000L).prayerLine)
+        assertEquals("Maghrib · 03:00", WidgetSnapshotFormatter.format(json, labels, false, 7_200_000L).prayerLine)
+        assertNull(WidgetSnapshotFormatter.format(json, labels, false, 10_800_000L).prayerLine)
+    }
+
+    @Test
+    fun `upcoming list ignores unknown keys and invalid entries`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "upcomingPrayers":[
+                {"key":"sunrise","at":1000},
+                {"key":"fajr","at":"soon"},
+                "fajr",
+                {"key":"isha","at":9000000,"offsetMinutes":99999},
+                {"key":"asr","at":7200000,"offsetMinutes":60}
+              ]
+            }""".trimIndent(),
+            labels,
+            false,
+            0L,
+        )
+
+        assertEquals("Asr · 03:00", rows.prayerLine)
+    }
+
+    @Test
+    fun `tomorrow fajr is chosen once every prayer of today has passed`() {
+        val json = """{
+          "schemaVersion":1,
+          "upcomingPrayers":[
+            {"key":"isha","at":1000,"offsetMinutes":0},
+            {"key":"fajr","at":18180000,"offsetMinutes":0}
+          ]
+        }""".trimIndent()
+
+        assertEquals("Fajr · 05:03", WidgetSnapshotFormatter.format(json, labels, false, 2000L).prayerLine)
+    }
+
+    @Test
+    fun `expiry hides rows even when a prayer would still be upcoming`() {
+        val json = """{
+          "schemaVersion":1,
+          "expiresAt":5000,
+          "dueReviewCount":1,
+          "upcomingPrayers":[{"key":"fajr","at":18180000,"offsetMinutes":0}]
+        }""".trimIndent()
+
+        assertFalse(WidgetSnapshotFormatter.format(json, labels, false, 4999L).empty)
+        assertTrue(WidgetSnapshotFormatter.format(json, labels, false, 5000L).empty)
+    }
+
+    @Test
+    fun `snapshots without the upcoming list still parse`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{"schemaVersion":1,"nextPrayerKey":"fajr","nextPrayerAt":18180000}""",
+            labels,
+            false,
+            0L,
+        )
+
+        assertEquals("Fajr · 05:03", rows.prayerLine)
+    }
+
+    @Test
+    fun `language comes only from the allow-listed locale field`() {
+        assertEquals("ar", WidgetSnapshotFormatter.language("""{"schemaVersion":1,"locale":"ar"}"""))
+        assertEquals("en", WidgetSnapshotFormatter.language("""{"schemaVersion":1,"locale":"en"}"""))
+        assertNull(WidgetSnapshotFormatter.language("""{"schemaVersion":1,"locale":"fr"}"""))
+        assertNull(WidgetSnapshotFormatter.language("""{"schemaVersion":1}"""))
+        assertNull(WidgetSnapshotFormatter.language(null))
+        assertNull(WidgetSnapshotFormatter.language("{"))
+    }
+
+    @Test
+    fun `adult without data is distinct from a cleared snapshot`() {
+        val adult = WidgetSnapshotFormatter.format(
+            """{"schemaVersion":1,"isEmpty":true,"adultNoData":true,"locale":"ar"}""",
+            labels,
+            true,
+            0L,
+        )
+        val cleared = WidgetSnapshotFormatter.format("""{"schemaVersion":1,"isEmpty":true}""", labels, true, 0L)
+        val expired = WidgetSnapshotFormatter.format(
+            """{"schemaVersion":1,"isEmpty":true,"adultNoData":true,"expiresAt":0}""",
+            labels,
+            true,
+            0L,
+        )
+
+        assertTrue(adult.empty)
+        assertTrue(adult.adultNoData)
+        assertTrue(cleared.empty)
+        assertFalse(cleared.adultNoData)
+        assertFalse(expired.adultNoData)
+    }
 }

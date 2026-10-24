@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/features/group_khatmah/data/group_khatmah_remote.dart';
@@ -370,7 +371,7 @@ void main() {
       environment.isOnline = true;
       remote.onRpc = (call) async {
         if (call.args['p_group_id'] == groupA) {
-          throw TimeoutException('A unavailable');
+          throw const PostgrestException(message: 'boom', code: 'XX000');
         }
         return {
           'applied': true,
@@ -391,9 +392,14 @@ void main() {
         8,
       );
 
+      // Normal sign-out wipes the cache, so dead letters still warn it, but
+      // they never gate delivery (password update).
+      expect(await repository.hasPending(), isTrue);
+      expect(await repository.hasDeliverablePending(), isFalse);
       environment.setFeatureEnabled(false);
       expect(await repository.hasPending(), isTrue);
       environment.setFeatureEnabled(true);
+      expect(repository.failedOperations(), hasLength(1));
 
       environment.isOnline = false;
       await repository.completeLocally(groupB, 1);

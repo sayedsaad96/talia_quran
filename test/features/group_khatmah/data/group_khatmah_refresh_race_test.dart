@@ -373,6 +373,7 @@ void main() {
         wake: FakeWake(),
         environment: environment,
         operationId: () => operation2,
+        clock: () => DateTime.now().add(const Duration(hours: 1)),
       );
       remote.onPage = (_, _) async => throw TimeoutException('refresh offline');
       expect((await repository.refreshMine()).isLeft(), isTrue);

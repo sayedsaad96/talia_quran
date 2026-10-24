@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.view.View
@@ -12,6 +13,7 @@ import com.talia.quran.MainActivity
 import com.talia.quran.R
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetPlugin
+import java.util.Locale
 
 class TaliaHomeWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
@@ -20,19 +22,31 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray,
     ) {
         val json = snapshotJson(context)
-        val arabic = isArabic(context)
-        val rows = WidgetSnapshotFormatter.format(json, labels(context), arabic, System.currentTimeMillis())
+        // The widget follows the app language written into the snapshot and
+        // falls back to the device language (cleared or older snapshots).
+        val language = WidgetSnapshotFormatter.language(json) ?: deviceLanguage(context)
+        val arabic = language == "ar"
+        val localized = localizedContext(context, language)
+        val rows = WidgetSnapshotFormatter.format(json, labels(localized), arabic, System.currentTimeMillis())
         for (widgetId in appWidgetIds) {
-            appWidgetManager.updateAppWidget(widgetId, views(context, rows))
+            appWidgetManager.updateAppWidget(widgetId, views(context, localized, rows, arabic))
         }
     }
 
-    private fun views(context: Context, rows: WidgetRows): RemoteViews {
-        val views = RemoteViews(context.packageName, R.layout.talia_home_widget)
+    // The app does not declare supportsRtl, so layoutDirection and textAlignment
+    // are ignored. Arabic therefore uses a separate layout with absolute
+    // right gravity (absolute gravity works without RTL support).
+    private fun views(context: Context, localized: Context, rows: WidgetRows, arabic: Boolean): RemoteViews {
+        val layout = if (arabic) R.layout.talia_home_widget_rtl else R.layout.talia_home_widget
+        val views = RemoteViews(context.packageName, layout)
         setRow(views, R.id.widget_prayer, rows.prayerLine, link(context, "prayer"))
         setRow(views, R.id.widget_review, rows.reviewLine, link(context, "review"))
         setRow(views, R.id.widget_wird, rows.wirdLine, link(context, "khatmah"))
         views.setViewVisibility(R.id.widget_empty, if (rows.empty) View.VISIBLE else View.GONE)
+        views.setTextViewText(
+            R.id.widget_empty,
+            localized.getString(if (rows.adultNoData) R.string.widget_empty_adult else R.string.widget_empty_hint),
+        )
         views.setOnClickPendingIntent(R.id.widget_empty, link(context, ""))
         return views
     }
@@ -55,7 +69,7 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
             context, MainActivity::class.java, Uri.parse("talia://widget/$destination"),
         )
 
-    private fun isArabic(context: Context): Boolean {
+    private fun deviceLanguage(context: Context): String {
         val configuration = context.resources.configuration
         val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             configuration.locales[0]
@@ -63,7 +77,14 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
             @Suppress("DEPRECATION")
             configuration.locale
         }
-        return locale.language == "ar"
+        return locale.language
+    }
+
+    private fun localizedContext(context: Context, language: String): Context {
+        if (language != "ar" && language != "en") return context
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(Locale(language))
+        return context.createConfigurationContext(configuration)
     }
 
     private fun labels(context: Context) = WidgetSnapshotLabels(

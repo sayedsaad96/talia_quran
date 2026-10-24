@@ -11,6 +11,8 @@ data class WidgetRows(
     val reviewLine: String?,
     val wirdLine: String?,
     val empty: Boolean,
+    // An adult with nothing to show, as opposed to a cleared or expired widget.
+    val adultNoData: Boolean = false,
 )
 
 data class WidgetSnapshotLabels(
@@ -21,6 +23,7 @@ data class WidgetSnapshotLabels(
 
 object WidgetSnapshotFormatter {
     private const val schemaVersion = 1
+    private const val maxUpcoming = 12
     private val fardPrayerKeys = setOf("fajr", "dhuhr", "asr", "maghrib", "isha")
     // Copied from SurahNames.arabic. The Dart contract test keeps this exact
     // native allow-list aligned with the canonical source of truth.
@@ -44,10 +47,15 @@ object WidgetSnapshotFormatter {
         nowMillis: Long,
     ): WidgetRows {
         val objectValue = parse(json) ?: return emptyRows()
-        if (integer(objectValue, "schemaVersion") != schemaVersion || objectValue.optBoolean("isEmpty", false)) {
-            return emptyRows()
-        }
+        if (integer(objectValue, "schemaVersion") != schemaVersion) return emptyRows()
         if (isExpired(objectValue, nowMillis)) return emptyRows()
+        if (objectValue.optBoolean("isEmpty", false)) {
+            return if (objectValue.optBoolean("adultNoData", false)) {
+                WidgetRows(null, null, null, true, adultNoData = true)
+            } else {
+                emptyRows()
+            }
+        }
         val prayer = prayerLine(objectValue, labels, arabic, nowMillis)
         val review = reviewLine(objectValue, labels, arabic)
         val wird = wirdLine(objectValue, labels, arabic)
@@ -60,19 +68,45 @@ object WidgetSnapshotFormatter {
         null
     }
 
+    /** App language the snapshot was written for (`ar` or `en`); null means use the device. */
+    fun language(json: String?): String? {
+        val value = parse(json)?.optString("locale")
+        return value?.takeIf { it == "ar" || it == "en" }
+    }
+
+    /**
+     * The first allow-listed prayer still in the future at draw time, chosen
+     * from the upcoming list and the legacy next-prayer fields.
+     */
+    internal fun nextPrayer(objectValue: JSONObject, nowMillis: Long): Triple<String, Long, Int>? {
+        val defaultOffset = integer(objectValue, "nextPrayerOffsetMinutes") ?: 0
+        val candidates = mutableListOf<Triple<String, Long, Int>>()
+        val key = objectValue.optString("nextPrayerKey")
+        val at = long(objectValue, "nextPrayerAt")
+        if (key in fardPrayerKeys && at != null) candidates.add(Triple(key, at, defaultOffset))
+        val list = objectValue.optJSONArray("upcomingPrayers")
+        if (list != null) {
+            for (index in 0 until minOf(list.length(), maxUpcoming)) {
+                val entry = list.optJSONObject(index) ?: continue
+                val entryKey = entry.optString("key")
+                val entryAt = long(entry, "at")
+                if (entryKey !in fardPrayerKeys || entryAt == null) continue
+                candidates.add(Triple(entryKey, entryAt, integer(entry, "offsetMinutes") ?: defaultOffset))
+            }
+        }
+        return candidates
+            .filter { it.second > nowMillis && it.third in -14 * 60..14 * 60 }
+            .minByOrNull { it.second }
+    }
+
     private fun prayerLine(
         objectValue: JSONObject,
         labels: WidgetSnapshotLabels,
         arabic: Boolean,
         nowMillis: Long,
     ): String? {
-        val key = objectValue.optString("nextPrayerKey")
-        if (key !in fardPrayerKeys) return null
+        val (key, at, offset) = nextPrayer(objectValue, nowMillis) ?: return null
         val name = labels.prayerNames[key] ?: return null
-        val at = long(objectValue, "nextPrayerAt") ?: return null
-        if (at <= nowMillis) return null
-        val offset = integer(objectValue, "nextPrayerOffsetMinutes") ?: 0
-        if (offset !in -14 * 60..14 * 60) return null
         return "$name · ${formatTime(at, offset, arabic)}"
     }
 

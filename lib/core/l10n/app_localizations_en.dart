@@ -9536,12 +9536,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupKhatmahCompletedCount(int count) {
+  String groupKhatmahCompletedCount(int count, int total) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count of 30 parts completed',
-      one: '1 of 30 parts completed',
+      other: '$count of $total parts completed',
+      one: '1 of $total parts completed',
       zero: 'No parts completed',
     );
     return '$_temp0';
@@ -9602,6 +9602,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get groupKhatmahConflict =>
       'This part changed. The group has been refreshed.';
+
+  @override
+  String get groupKhatmahConflictClaimed =>
+      'Someone else claimed it. The group has been refreshed.';
+
+  @override
+  String get groupKhatmahOutcomePending =>
+      'Your request is being sent and will be confirmed automatically when you are back online. There is no need to repeat it.';
+
+  @override
+  String get groupKhatmahGroupCompleted =>
+      'This Khatmah is complete and its parts can no longer change.';
+
+  @override
+  String get groupKhatmahStaleOperation =>
+      'Your membership in the group changed before this request finished. The data has been refreshed.';
+
+  @override
+  String get groupKhatmahInvalidInput =>
+      'The entered details were not accepted. Check them and try again.';
 
   @override
   String get groupKhatmahNetwork => 'Connect to the internet and try again.';

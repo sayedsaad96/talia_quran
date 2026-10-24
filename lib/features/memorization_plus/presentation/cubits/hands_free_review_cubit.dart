@@ -31,7 +31,11 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     void Function(HandsFreeMediaDelegate)? cancelMediaAcquisition,
     bool firstUseWarningPending = true,
     List<Stream<void>> authorityChanges = const [],
-  }) : now = now ?? DateTime.now,
+    Future<Object?> Function()? authoritySnapshot,
+    this.cleanupTimeout = const Duration(seconds: 5),
+    this.hardwareButtonSettle = const Duration(milliseconds: 700),
+  }) : _authoritySnapshot = authoritySnapshot,
+       now = now ?? DateTime.now,
        isEnabled = isEnabled ?? _alwaysEnabled,
        warningAccepted = warningAccepted ?? _warningNotAccepted,
        saveWarning = saveWarning ?? _noSave,
@@ -40,8 +44,11 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
          HandsFreeReviewState(firstUseWarningPending: firstUseWarningPending),
        ) {
     _subscriptions.add(session.interruptions.listen((_) => onInterrupted()));
+    if (authoritySnapshot != null && authorityChanges.isNotEmpty) {
+      _authorityBaseline = _readSnapshot();
+    }
     for (final changes in authorityChanges) {
-      _subscriptions.add(changes.listen((_) => _authorityChanged()));
+      _subscriptions.add(changes.listen((_) => _authoritySignal()));
     }
     final Object status = audio;
     if (status is HandsFreePlaybackStatus) {
@@ -71,6 +78,11 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
   final bool Function() warningAccepted;
   final Future<void> Function() saveWarning;
   final void Function(HandsFreeMediaDelegate) cancelMediaAcquisition;
+  final Duration cleanupTimeout;
+  final Duration hardwareButtonSettle;
+  Timer? _hardwareGrade;
+  final Future<Object?> Function()? _authoritySnapshot;
+  Future<Object?>? _authorityBaseline;
   static bool _alwaysEnabled() => true;
   static bool _warningNotAccepted() => false;
   static Future<void> _noSave() async {}
@@ -86,6 +98,7 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
   int _epoch = 0;
   int? _acquisitionEpoch;
   bool _grading = false, _closing = false, _blocked = false;
+  bool _micReady = false, _hardBlocked = false;
 
   Future<void> initializeWarning() async {
     if (_closing || isClosed) return;
@@ -103,7 +116,10 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
   }
 
   Future<void> acceptWarning() async {
-    if (!state.firstUseWarningPending || state.loading || _closing || isClosed) {
+    if (!state.firstUseWarningPending ||
+        state.loading ||
+        _closing ||
+        isClosed) {
       return;
     }
     final epoch = _epoch;
@@ -171,13 +187,8 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     await _sessionPending.timeout(const Duration(seconds: 5));
     if (!_valid(epoch)) return;
     _capturePending = capture.prepare().then((readiness) {
-      if (_valid(epoch)) {
-        emit(
-          state.copyWith(
-            micAvailable: readiness == ListeningCaptureReadiness.ready,
-          ),
-        );
-      }
+      _micReady = readiness == ListeningCaptureReadiness.ready;
+      if (_valid(epoch)) emit(state.copyWith(micAvailable: _micReady));
     });
     await _capturePending;
   }
@@ -204,7 +215,13 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     if (!_valid(epoch)) return;
     if (!played) throw StateError('Practice prompt did not complete');
     _publish(ref, false);
-    emit(state.copyWith(round: _engine!.onPromptFinished(state.round!)));
+    // A silent or failed attempt only falls back for that item; retry next.
+    emit(
+      state.copyWith(
+        round: _engine!.onPromptFinished(state.round!),
+        micAvailable: _micReady,
+      ),
+    );
     if (state.micAvailable) await _listen(epoch);
   }
 
@@ -212,17 +229,23 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     if (!_valid(epoch)) return;
     final pending = Completer<void>();
     _capturePending = pending.future;
+    session.setCaptureActive(true);
     try {
       await capture.start(
         (_) {},
         onStopped: () {
+          session.setCaptureActive(false);
           if (_valid(epoch)) unawaited(_automatic(epoch));
         },
       );
       pending.complete();
-      if (!_valid(epoch)) await capture.cancel();
+      if (!_valid(epoch)) {
+        await capture.cancel();
+        session.setCaptureActive(false);
+      }
     } catch (error, stack) {
       pending.complete();
+      session.setCaptureActive(false);
       if (_valid(epoch)) {
         await capture.cancel();
         emit(state.copyWith(micAvailable: false));
@@ -250,6 +273,12 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
       final Object health = capture;
       if (health is ListeningCaptureHealth && health.hadError) {
         _grading = false;
+        // Microphone taken by another app (e.g. a call): stop, do not grade.
+        final Object fault = capture;
+        if (fault is ListeningCaptureFault && fault.audioBusy) {
+          onInterrupted();
+          return;
+        }
         emit(state.copyWith(micAvailable: false));
         return;
       }
@@ -279,6 +308,7 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
       await capture.cancel();
       await _capturePending;
       await capture.cancel();
+      session.setCaptureActive(false);
       if (_valid(epoch)) await _grade(epoch, grade);
     } catch (error, stack) {
       await _fail(epoch, error, stack);
@@ -315,18 +345,62 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
   @override
   void onSecondary() => unawaited(_manual(HandsFreeGrade.review));
   @override
-  void onInterrupted() => unawaited(stopRound());
+  void onInterrupted() {
+    _hardwareGrade?.cancel();
+    unawaited(stopRound());
+  }
+
+  /// Physical keys wait [hardwareButtonSettle] so a disconnect or focus loss
+  /// that follows the key (earbud removal, Bluetooth drop) cancels the grade.
+  @override
+  void onHardwareButton({required bool primary}) {
+    if (state.round?.phase != HandsFreePhase.userTurn) return;
+    _hardwareGrade?.cancel();
+    final epoch = _epoch;
+    _hardwareGrade = Timer(hardwareButtonSettle, () {
+      _hardwareGrade = null;
+      if (!_valid(epoch)) return;
+      primary ? onPrimary() : onSecondary();
+    });
+  }
+
+  Future<Object?> _readSnapshot() async {
+    try {
+      return await _authoritySnapshot!();
+    } catch (_) {
+      return Object(); // Unreadable authority never compares equal.
+    }
+  }
+
+  /// A signal is only an authority change when the account, lease generation
+  /// or profile path actually differs (barrier/path streams also fire for
+  /// unrelated writes such as Khatmah saves or owner-ready marks).
+  Future<void> _authoritySignal() async {
+    if (_authoritySnapshot == null) {
+      _authorityChanged();
+      return;
+    }
+    final previous = await (_authorityBaseline ??= _readSnapshot());
+    final next = await _readSnapshot();
+    if (_closing || isClosed || next == previous) return;
+    _authorityBaseline = Future.value(next);
+    _authorityChanged();
+  }
 
   void _authorityChanged() {
     _epoch++;
     _material = null;
     _engine = null;
-    if (!isClosed) emit(const HandsFreeReviewState());
+    if (isClosed) return;
+    emit(const HandsFreeReviewState());
     unawaited(stopRound());
+    unawaited(initializeWarning());
   }
 
   Future<void> stopRound() async {
     _epoch++;
+    _hardwareGrade?.cancel();
+    _hardwareGrade = null;
     if (_acquisitionEpoch != null) {
       cancelMediaAcquisition(this);
       _acquisitionEpoch = null;
@@ -341,9 +415,15 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
       );
     }
     try {
-      await _clean().timeout(const Duration(seconds: 5));
+      await _clean().timeout(cleanupTimeout);
+    } on TimeoutException catch (error, stack) {
+      // A late successful drain lifts the block (see _clean).
+      _blocked = true;
+      if (!isClosed) emit(state.copyWith(hasError: true));
+      TaliaLogger.w('Hands-free cleanup slow; restart blocked', error, stack);
     } catch (error, stack) {
       _blocked = true;
+      if (!isClosed) emit(state.copyWith(hasError: true));
       TaliaLogger.w(
         'Hands-free cleanup incomplete; restart blocked',
         error,
@@ -352,27 +432,53 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     }
   }
 
-  Future<void> _clean() => _cleanup ??= _drain();
+  Future<void> _clean() {
+    final existing = _cleanup;
+    if (existing != null) return existing;
+    final run = _drain();
+    _cleanup = run;
+    run.then<void>((_) {
+      if (_hardBlocked) return;
+      final wasBlocked = _blocked;
+      _blocked = false;
+      if (wasBlocked && !isClosed && !_closing) {
+        emit(state.copyWith(hasError: false));
+      }
+    }, onError: (Object _, StackTrace _) {});
+    return run;
+  }
 
   Future<void> _drain() async {
     // Invalidation happens before these awaits; ownership stays until drained.
+    session.setCaptureActive(false);
     final audioStop = _safely(audio.stop);
-    var safe = await _safely(capture.cancel);
+    var captureSafe = await _safely(capture.cancel);
     try {
       await _capturePending;
     } catch (_) {}
-    safe = await _safely(capture.cancel) && safe;
-    safe = await audioStop && safe;
+    captureSafe = await _safely(capture.cancel) && captureSafe;
+    final audioSafe = await audioStop;
     try {
       await _sessionPending;
     } catch (_) {}
-    safe = await _safely(session.release) && safe;
-    if (!safe) {
+    // Focus release failing must not strand the media session: the lease is
+    // freed once sound and microphone are confirmed stopped.
+    final sessionSafe = await _safely(session.release);
+    if (!audioSafe || !captureSafe) {
+      _hardBlocked = true;
       _blocked = true;
       throw StateError('Practice cleanup failed');
     }
-    await _media?.release();
+    await _releaseMedia();
+    if (!sessionSafe) {
+      TaliaLogger.w('Hands-free audio focus release failed; lease freed');
+    }
+  }
+
+  Future<void> _releaseMedia() async {
+    final media = _media;
     _media = null;
+    await _safely(() async => await media?.release());
   }
 
   Future<bool> _safely(Future<void> Function() work) async {
@@ -401,17 +507,15 @@ class HandsFreeReviewCubit extends Cubit<HandsFreeReviewState>
     }
     await _playbackSubscription?.cancel();
     try {
-      await (_cleanup ?? Future<void>.value());
-      await audio.dispose();
-      await session.dispose();
+      await (_cleanup ?? Future<void>.value()).timeout(cleanupTimeout);
     } catch (error, stack) {
-      _blocked = true;
-      TaliaLogger.w(
-        'Hands-free disposal incomplete; media stays reserved',
-        error,
-        stack,
-      );
+      TaliaLogger.w('Hands-free cleanup incomplete at close', error, stack);
     }
+    // Always dispose and drop the delegate lease so a closed cubit never
+    // stays attached to the media session.
+    await _safely(audio.dispose);
+    await _safely(session.dispose);
+    await _releaseMedia();
     return super.close();
   }
 }

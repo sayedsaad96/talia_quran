@@ -6,23 +6,51 @@ typedef AudioSessionResolver = Future<AudioSession> Function();
 
 abstract interface class HandsFreeAudioSession {
   Stream<void> get interruptions;
+
+  /// True while our own recognizer owns (or is starting to own) the
+  /// microphone. Its transient focus request is not an interruption.
+  void setCaptureActive(bool active);
   Future<void> activate();
   Future<void> release();
   Future<void> dispose();
 }
 
 final class PlatformHandsFreeAudioSession implements HandsFreeAudioSession {
-  PlatformHandsFreeAudioSession({AudioSessionResolver? sessionResolver})
-    : _sessionResolver = sessionResolver ?? (() => AudioSession.instance);
+  PlatformHandsFreeAudioSession({
+    AudioSessionResolver? sessionResolver,
+    DateTime Function()? clock,
+  }) : _sessionResolver = sessionResolver ?? (() => AudioSession.instance),
+       _clock = clock ?? DateTime.now;
+
+  /// Our recognizer's own transient focus request lands right after capture
+  /// starts; a transient loss later (an incoming call) is a real interruption.
+  static const captureFocusGrace = Duration(milliseconds: 1500);
 
   final AudioSessionResolver _sessionResolver;
+  final DateTime Function() _clock;
+  DateTime? _captureStartedAt;
   final _events = StreamController<void>.broadcast(sync: true);
   final _subscriptions = <StreamSubscription<dynamic>>[];
   AudioSession? _session;
   AudioSessionConfiguration? _previous;
+  bool _captureActive = false;
 
   @override
   Stream<void> get interruptions => _events.stream;
+
+  @override
+  void setCaptureActive(bool active) {
+    if (active && !_captureActive) _captureStartedAt = _clock();
+    if (!active) _captureStartedAt = null;
+    _captureActive = active;
+  }
+
+  bool get _withinCaptureGrace {
+    final startedAt = _captureStartedAt;
+    return _captureActive &&
+        startedAt != null &&
+        _clock().difference(startedAt) <= captureFocusGrace;
+  }
 
   @override
   Future<void> activate() async {
@@ -31,7 +59,17 @@ final class PlatformHandsFreeAudioSession implements HandsFreeAudioSession {
     _previous = session.configuration;
     _subscriptions.add(
       session.interruptionEventStream.listen((event) {
-        if (event.begin && !_events.isClosed) _events.add(null);
+        if (!event.begin || _events.isClosed) return;
+        switch (event.type) {
+          case AudioInterruptionType.duck:
+            return; // Lowered volume only (e.g. navigation prompts).
+          case AudioInterruptionType.pause:
+            // The recognizer takes transient focus as each user turn starts.
+            if (_withinCaptureGrace) return;
+          case AudioInterruptionType.unknown:
+            break; // Permanent loss always ends the round.
+        }
+        _events.add(null);
       }),
     );
     _subscriptions.add(
@@ -45,6 +83,8 @@ final class PlatformHandsFreeAudioSession implements HandsFreeAudioSession {
 
   @override
   Future<void> release() async {
+    _captureActive = false;
+    _captureStartedAt = null;
     for (final sub in _subscriptions) {
       await sub.cancel();
     }
