@@ -19,7 +19,19 @@ Future<void> registerHomeWidget(GetIt getIt) async {
   final path = getIt<MemorizationPathResolver>();
   final barrier = AccountDataBarrier.forPreferences(getIt<SharedPreferences>());
   final khatmah = getIt<KhatmahRepository>();
+  // The widget is adult-only: a child or guardian-less kids device must not
+  // be offered it in the launcher, so the receiver also needs an adult.
+  var adult = (await path.currentProfile())?.isAdult == true;
+  // Audience changes reach the publisher only after [adult] is updated.
+  final audienceChanges = path.changes.asyncMap((_) async {
+    try {
+      adult = (await path.currentProfile())?.isAdult == true;
+    } catch (_) {
+      adult = false;
+    }
+  }).asBroadcastStream();
   bool flagOn() =>
+      adult &&
       getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget);
   final source = WidgetSnapshotSource(
     owner: owner,
@@ -35,7 +47,7 @@ Future<void> registerHomeWidget(GetIt getIt) async {
     load: source.load,
     owner: owner,
     barrier: barrier,
-    authorityChanges: [path.changes],
+    authorityChanges: [audienceChanges],
     isEnabled: flagOn,
     // ExperienceFlags has no change signal; the publisher re-reads the flag on
     // every refresh (start, resume, progress) and applies off -> clear and

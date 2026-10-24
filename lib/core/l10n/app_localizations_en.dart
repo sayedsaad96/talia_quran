@@ -6061,6 +6061,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String guardianNewsPromise(String child, String title) {
+    return 'Your promise to $child is due: \"$title\"';
+  }
+
+  @override
   String guardianNewsWeek(String child) {
     return '$child completed the weekly goal';
   }
@@ -8362,7 +8367,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureBody =>
-      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers; only the assessment result is saved with your progress. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
+      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
 
   @override
   String get recitationVoiceDisclosureGuardian =>
@@ -8840,6 +8845,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerRepeatSpeed => 'Recitation speed';
 
   @override
+  String get readerRepeatManualRange => 'Play a range of ayahs';
+
+  @override
+  String get readerRepeatFromAyah => 'From ayah';
+
+  @override
+  String get readerRepeatToAyah => 'To ayah';
+
+  @override
+  String get readerRepeatPlayRange => 'Play range';
+
+  @override
   String get readerSleepTimer => 'Sleep timer';
 
   @override
@@ -8857,19 +8874,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trustCenterTitle => 'How we protect content and your privacy';
 
   @override
-  String get trustSourcesTitle => 'Verified sources';
+  String get trustSourcesTitle => 'Content sources';
 
   @override
   String get trustSourcesBody =>
-      'Talia contains no generated religious text. Every text has a source and a reference.';
+      'Talia contains no generated religious text. Every text is copied as-is from a named source, and documentation such as source links and hadith grades is still being completed for some azkar and hadith.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countText sources',
-      one: '1 source',
+      other: '$countText datasets',
+      one: '1 dataset',
     );
     return 'Data version $version • $_temp0';
   }
@@ -8900,6 +8917,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clarityModeSubtitle =>
       'Larger text, higher contrast and a simpler home';
+
+  @override
+  String get clarityContinueReading => 'Continue reading';
+
+  @override
+  String get clarityTodayReview => 'Today\'s review';
+
+  @override
+  String clarityNextPrayer(String prayer, String time) {
+    return 'Next prayer: $prayer $time';
+  }
 
   @override
   String get afterPrayerAzkarTitle => 'After-prayer adhkar';
@@ -8953,7 +8981,51 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ramadanLastTen => 'The last ten nights';
+  String ramadanLastTenCountdown(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The last ten nights begin in $countText days',
+      one: 'The last ten nights begin tomorrow evening',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLastTenTonight =>
+      'The last ten nights begin tonight after Maghrib';
+
+  @override
+  String get ramadanLastTenRemind => 'Remind me before they begin';
+
+  @override
+  String get ramadanLastTenReminderOn => 'We\'ll remind you before they begin';
+
+  @override
+  String get ramadanLastTenReminderOnHint => 'Tap to cancel the reminder';
+
+  @override
+  String get notificationLastTenTitle => 'The last ten nights';
+
+  @override
+  String ramadanLastTenDay(String day) {
+    return 'Day $day of the last ten';
+  }
+
+  @override
+  String get ramadanTemplateTwoHint =>
+      'Start with the first; when you finish it, we suggest the second over the days left in the month.';
+
+  @override
+  String ramadanStartNextKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Start the second khatmah in $countText days',
+      one: 'Start the second khatmah in 1 day',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get ramadanSummaryTitle => 'Your Ramadan';
@@ -9142,6 +9214,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioDownloadsWifiOnly => 'Wi-Fi only';
+
+  @override
+  String get audioDownloadsWaitingForWifi =>
+      'You\'re on a network that may count against your data plan. Connect to Wi-Fi, or turn off Wi-Fi only.';
 
   @override
   String get audioDownloadsWifiUnavailable =>
@@ -9689,4 +9765,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupKhatmahFailedRequests => 'Requests needing your attention';
+
+  @override
+  String get khatmahFinishedReadingPage => 'Finished reading this page';
 }

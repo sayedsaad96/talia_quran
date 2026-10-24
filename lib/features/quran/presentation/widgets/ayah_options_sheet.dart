@@ -9,6 +9,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
+import 'audio_downloads_access.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/router/app_router.dart';
@@ -51,6 +52,21 @@ class AyahOptionsSheet extends StatefulWidget {
 }
 
 class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
+  /// Notes are adult-only; hidden until the profile check resolves.
+  bool _notesAllowed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      adultExperienceAvailable(ExperienceFeature.ayahNotes).then((allowed) {
+        if (mounted && allowed != _notesAllowed) {
+          setState(() => _notesAllowed = allowed);
+        }
+      }),
+    );
+  }
+
   Future<void> _playAyah() async {
     final cubit = context.read<QuranAudioPlayerCubit>();
     if (cubit.state.scope == PlayScope.singleAyah &&
@@ -217,10 +233,7 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                         ).toString()));
                       },
                     ),
-                  if (getIt.isRegistered<ExperienceFlags>() &&
-                      getIt<ExperienceFlags>().isEnabled(
-                        ExperienceFeature.ayahNotes,
-                      ))
+                  if (_notesAllowed)
                     AyahOptionButton(
                       key: const Key('ayah-note-action'),
                       icon: TaliaIcons.bookmark,

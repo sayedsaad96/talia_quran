@@ -113,4 +113,18 @@ void main() {
     );
     expect(a.day, 1);
   });
+
+  test('last-ten countdown and day number follow the Ramadan day', () {
+    RamadanInfo at(RamadanPhase phase, int day) =>
+        RamadanInfo(phase: phase, day: day, monthLength: 30);
+    expect(daysUntilLastTenEve(at(RamadanPhase.ramadan, 1)), 19);
+    expect(daysUntilLastTenEve(at(RamadanPhase.ramadan, 19)), 1);
+    expect(daysUntilLastTenEve(at(RamadanPhase.ramadan, 20)), 0);
+    expect(daysUntilLastTenEve(at(RamadanPhase.lastTen, 21)), isNull);
+    expect(daysUntilLastTenEve(const RamadanInfo(phase: RamadanPhase.invite)),
+        isNull);
+    expect(lastTenDayNumber(at(RamadanPhase.lastTen, 21)), 1);
+    expect(lastTenDayNumber(at(RamadanPhase.lastTen, 29)), 9);
+    expect(lastTenDayNumber(at(RamadanPhase.ramadan, 20)), isNull);
+  });
 }

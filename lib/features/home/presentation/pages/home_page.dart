@@ -30,6 +30,7 @@ import '../widgets/home_activity_feed.dart';
 import '../widgets/home_after_prayer_azkar_card.dart';
 import '../widgets/prayer_review_home_slot.dart';
 import '../widgets/home_ayah_of_day.dart';
+import '../widgets/home_clarity_actions.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
 import '../widgets/home_prayer_times_sheet.dart';
@@ -322,6 +323,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
 
   Widget _buildLoaded(BuildContext context, {required bool clarityOn}) {
     final isDark = widget.skin.isDark;
+    final isAdult = !widget.state.isKids && !widget.state.isParentMode;
     final journeyEnabled =
         JourneyFeatureFlags.unifiedJourneyEnabled &&
         widget.state.unifiedJourneyEnabled;
@@ -370,18 +372,30 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
               ),
             )
           else ...[
-            SliverToBoxAdapter(
-              child: StaggeredFadeSlide(
-                delay: const Duration(milliseconds: 0),
-                child: _PrimaryAction(state: widget.state, skin: widget.skin),
+            // Clarity mode: three large actions replace the hero and its
+            // cards; the time-bound cards below still appear in their window.
+            if (clarityOn)
+              SliverToBoxAdapter(
+                child: HomeClarityActions(
+                  state: widget.state,
+                  skin: widget.skin,
+                ),
+              )
+            else
+              SliverToBoxAdapter(
+                child: StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 0),
+                  child: _PrimaryAction(state: widget.state, skin: widget.skin),
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: HomeAfterPrayerAzkarCard(
-                skin: widget.skin,
-                snapshot: widget.state.prayerSnapshot,
+            // Roadmap cards are adult-only, like the slots below them.
+            if (isAdult)
+              SliverToBoxAdapter(
+                child: HomeAfterPrayerAzkarCard(
+                  skin: widget.skin,
+                  snapshot: widget.state.prayerSnapshot,
+                ),
               ),
-            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -389,7 +403,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 ),
                 child: PrayerReviewHomeSlot(
                   skin: widget.skin,
-                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  isAdult: isAdult,
                   isEnabled:
                       getIt.isRegistered<ExperienceFlags>() &&
                       getIt<ExperienceFlags>().isEnabled(
@@ -398,7 +412,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(child: _ramadanCard()),
+            if (isAdult) SliverToBoxAdapter(child: _ramadanCard()),
             if (getIt.isRegistered<ExperienceFlags>() &&
                 getIt<ExperienceFlags>().isEnabled(
                   ExperienceFeature.hijriYearRecap,
@@ -406,7 +420,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
               SliverToBoxAdapter(
                 child: HijriYearRecapSlot(
                   enabled: true,
-                  isAdult: !widget.state.isKids && !widget.state.isParentMode,
+                  isAdult: isAdult,
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
                     AppSpacing.md,
@@ -415,7 +429,8 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                   ),
                 ),
               ),
-            if (journeyEnabled &&
+            if (!clarityOn &&
+                journeyEnabled &&
                 widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(
                       unifiedJourneyEnabled: journeyEnabled,
@@ -454,7 +469,7 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     ),
                   );
                 },
-                child: widget.state.activeSlot != null
+                child: !clarityOn && widget.state.activeSlot != null
                     ? Padding(
                         key: ValueKey(widget.state.activeSlot!.kind),
                         padding: const EdgeInsets.fromLTRB(
@@ -490,8 +505,9 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 ),
               ),
             // "لمحة مراجعة": quiet surprise-recall ayah; renders nothing for
-            // users without memorized ayahs.
-            SliverToBoxAdapter(
+            // users without memorized ayahs. Hidden in clarity mode.
+            if (!clarityOn)
+              SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 280),
                 child: Padding(

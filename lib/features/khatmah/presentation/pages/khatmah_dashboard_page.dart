@@ -16,6 +16,7 @@ import '../../../../core/utils/locale_numeric_input_formatter.dart';
 import '../../../../core/widgets/fallback_pop_scope.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_plan_template.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
@@ -759,6 +760,12 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                 color: context.tokens.textSecondary,
                               ),
                             ),
+                            ..._prayerPortions(
+                              context,
+                              plan,
+                              wirdStartPage,
+                              wirdEndPage,
+                            ),
                             const SizedBox(height: AppSpacing.md),
                             FilledButton.icon(
                               key: const Key(
@@ -993,6 +1000,67 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
         ),
       ),
     );
+  }
+
+  /// The day's wird split over the five prayers, when the plan asks for it
+  /// (Ramadan "split by prayers"). Display only: the wird range and the
+  /// recorded pages are the plan's own. A portion is ticked once all its
+  /// pages are read.
+  List<Widget> _prayerPortions(
+    BuildContext context,
+    KhatmahPlan plan,
+    int from,
+    int to,
+  ) {
+    if (plan.portionsPerDay <= 1 || plan.wirdUnit != KhatmahWirdUnit.pages) {
+      return const [];
+    }
+    final l10n = context.l10n;
+    final names = [
+      l10n.prayerFajr,
+      l10n.prayerDhuhr,
+      l10n.prayerAsr,
+      l10n.prayerMaghrib,
+      l10n.prayerIsha,
+    ];
+    final portions = splitPagesIntoPortions(from, to, plan.portionsPerDay);
+    return [
+      const SizedBox(height: AppSpacing.sm),
+      for (var i = 0; i < portions.length && i < names.length; i++)
+        Padding(
+          key: Key('khatmah_dashboard_portion_$i'),
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: Row(
+            children: [
+              Icon(
+                _portionRead(plan, portions[i])
+                    ? TaliaIcons.checkCircle
+                    : TaliaIcons.circle,
+                size: 18,
+                color: AppColors.gold,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  l10n.ramadanPortion(
+                    names[i],
+                    context.numText(portions[i].from),
+                    context.numText(portions[i].to),
+                  ),
+                  style: AppTypography.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  static bool _portionRead(KhatmahPlan plan, ({int from, int to}) portion) {
+    for (var page = portion.from; page <= portion.to; page++) {
+      if (!plan.completedPages.contains(page)) return false;
+    }
+    return true;
   }
 
   /// Back affordance for a dashboard opened without history (null keeps the

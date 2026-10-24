@@ -17,6 +17,7 @@ class NotificationSettingsState extends Equatable {
     this.fridayKahf = true,
     this.weeklyImpact = true,
     this.forgettingForecast = false,
+    this.forgettingForecastAvailable = false,
     this.tahajjud = false,
     this.khatmahReminder = true,
     this.prayerNotifications = false,
@@ -63,6 +64,10 @@ class NotificationSettingsState extends Equatable {
   final bool fridayKahf;
   final bool weeklyImpact;
   final bool forgettingForecast;
+
+  /// Whether the forecast reminder can fire here: its rollout flag is on and
+  /// the profile is adult. Unavailable reminders are hidden and not counted.
+  final bool forgettingForecastAvailable;
   final bool tahajjud;
   final bool khatmahReminder;
 
@@ -111,14 +116,14 @@ class NotificationSettingsState extends Equatable {
     if (kidsReminder) count++;
     if (fridayKahf) count++;
     if (weeklyImpact) count++;
-    if (forgettingForecast) count++;
+    if (forgettingForecastAvailable && forgettingForecast) count++;
     if (tahajjud) count++;
     if (khatmahReminder) count++;
     return count;
   }
 
   /// Total number of customizable notification categories.
-  int get totalCount => 11;
+  int get totalCount => forgettingForecastAvailable ? 12 : 11;
 
   /// Returns true if system-level notifications are blocked by the OS.
   bool get isSystemPermissionBlocked => !hasSystemPermission;
@@ -136,6 +141,7 @@ class NotificationSettingsState extends Equatable {
     bool? fridayKahf,
     bool? weeklyImpact,
     bool? forgettingForecast,
+    bool? forgettingForecastAvailable,
     bool? tahajjud,
     bool? khatmahReminder,
     bool? prayerNotifications,
@@ -180,6 +186,8 @@ class NotificationSettingsState extends Equatable {
       fridayKahf: fridayKahf ?? this.fridayKahf,
       weeklyImpact: weeklyImpact ?? this.weeklyImpact,
       forgettingForecast: forgettingForecast ?? this.forgettingForecast,
+      forgettingForecastAvailable:
+          forgettingForecastAvailable ?? this.forgettingForecastAvailable,
       tahajjud: tahajjud ?? this.tahajjud,
       khatmahReminder: khatmahReminder ?? this.khatmahReminder,
       prayerNotifications: prayerNotifications ?? this.prayerNotifications,
@@ -229,6 +237,7 @@ class NotificationSettingsState extends Equatable {
     fridayKahf,
     weeklyImpact,
     forgettingForecast,
+    forgettingForecastAvailable,
     tahajjud,
     khatmahReminder,
     prayerNotifications,

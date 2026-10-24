@@ -25,7 +25,10 @@ import '../../features/prayer_companion/domain/services/prayer_companion_schedul
 
 import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
+import 'hijri_date_adjustment.dart';
 import 'prayer_times_service.dart';
+import '../seasons/season_calendar.dart';
+import '../../features/seasons/domain/last_ten_reminder.dart';
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
 typedef ForecastAudienceResolver = Future<bool> Function(SharedPreferences prefs);
@@ -112,6 +115,7 @@ class NotificationScheduler {
   final ForecastAudienceResolver _forecastAudienceIsAdult;
   final PrayerReviewPreparationBodyLoader? _prayerReviewBodyLoader;
   final DateTime Function() _prayerReviewNow;
+  final DateTime Function() _seasonNow;
   final Future<int?> Function()? _kidsPracticeDaysLoader;
 
   /// Prayer V2 delivery coordinator. Non-null on Android only (created with
@@ -133,7 +137,9 @@ class NotificationScheduler {
     this._kidsPracticeDaysLoader,
     DateTime Function()? prayerReviewNow,
     this.onPrayerScheduleUpdated,
+    DateTime Function()? seasonNow,
   }) : _prayerReviewNow = prayerReviewNow ?? DateTime.now,
+       _seasonNow = seasonNow ?? DateTime.now,
        _forecastAudienceIsAdult =
            forecastAudienceIsAdult ?? forecastAudienceIsAdultFromPreferences,
        _prayerDeliveryCoordinator =
@@ -141,6 +147,56 @@ class NotificationScheduler {
            (Platform.isAndroid
                ? PrayerDeliveryCoordinator(AndroidPrayerDeliveryScheduler())
                : null);
+
+  /// The opt-in Ramadan reminder for the evening the last ten nights begin.
+  /// Needs the seasonal flag and an adult profile, like the Ramadan card that
+  /// offers it; anything else cancels it.
+  Future<void> _refreshLastTenReminder(
+    AppLocalizations l10n,
+    SharedPreferences prefs,
+    bool adultAudience,
+  ) async {
+    final optedIn = prefs.getBool(lastTenReminderPreferenceKey) ?? false;
+    final flagOn = ExperienceFlags.fromPreferences(
+      prefs,
+    ).isEnabled(ExperienceFeature.seasonalRamadan);
+    DateTime? at;
+    if (optedIn && flagOn && adultAudience) {
+      final now = _seasonNow();
+      final info = ramadanInfoAt(
+        now,
+        adjustmentDays: HijriDateAdjustment(prefs).days,
+      );
+      final eve = lastTenEveDate(info);
+      DateTime? maghrib;
+      if (eve != null) {
+        try {
+          final service =
+              _prayerTimesService ??
+              (getIt.isRegistered<PrayerTimesService>()
+                  ? getIt<PrayerTimesService>()
+                  : null);
+          final times = await service?.timesForDate(eve);
+          maghrib = times
+              ?.where((prayer) => prayer.key == 'maghrib')
+              .firstOrNull
+              ?.time;
+        } catch (error, stack) {
+          TaliaLogger.w('Last-ten reminder uses its fallback time', error, stack);
+        }
+      }
+      at = lastTenReminderAt(info: info, now: now, maghrib: maghrib);
+    }
+    if (at == null) {
+      await _service.cancelLastTenReminder();
+      return;
+    }
+    await _service.scheduleLastTenReminder(
+      title: l10n.notificationLastTenTitle,
+      body: l10n.ramadanLastTenTonight,
+      at: at,
+    );
+  }
 
   String? _lastRollingDateKey;
   final Future<void> Function()? onPrayerScheduleUpdated;
@@ -687,6 +743,8 @@ class NotificationScheduler {
     } else {
       await _service.cancelForgettingForecastReminder();
     }
+
+    await _refreshLastTenReminder(l10n, prefs, adultAudience);
 
     // Tahajjud / Qiyam Al-Layl Reminder
     final tahajjudEnabled =

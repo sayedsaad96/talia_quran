@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/memorization/kids_hifz_feature_flags.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
@@ -75,7 +76,10 @@ void main() {
       datasource.saveParentSettings(ParentSettingsModel.fromEntity(settings));
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
+    // The effective kids V2 switch matches the seeded settings (off).
+    SharedPreferences.setMockInitialValues({
+      KidsHifzFeatureFlags.enabledKey: false,
+    });
     prefs = await SharedPreferences.getInstance();
     owner = _MutableOwner(ownerId);
     datasource = MemorizationPlusLocalDatasourceImpl(prefs, owner: owner);

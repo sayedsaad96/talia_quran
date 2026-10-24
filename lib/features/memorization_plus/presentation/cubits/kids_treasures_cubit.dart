@@ -127,6 +127,7 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
     this._homeMissions,
     this._homeMissionsEnabled,
     this._promiseEnabled,
+    this._remotePromiseEnabled,
   }) : super(const KidsTreasuresLoading());
 
   final MemorizationPlusRepository _memorizationRepository;
@@ -138,8 +139,13 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
   /// The guardian policy switch; missing means on.
   final bool Function()? _homeMissionsEnabled;
 
-  /// The guardian-promise rollout switch; missing means off.
+  /// The guardian-promise rollout switch (local gifts); missing means off.
   final bool Function()? _promiseEnabled;
+
+  /// The remote-promise rollout switch (cloud gifts); missing means off. It
+  /// keeps cloud gifts whose unlock failed at completion retrying here even
+  /// when local promises are off.
+  final bool Function()? _remotePromiseEnabled;
   final _requesting = <String>{};
 
   /// A failed read only hides the badge.
@@ -189,13 +195,15 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
       var rewards = await _loadRewards();
       var promiseUnlockedIds = const <String>{};
       var milestoneProgress = const <int, ({int done, int total})>{};
-      if (_promiseOn()) {
+      final origins = _promiseOrigins();
+      if (origins.isNotEmpty) {
         final ayahCounts = {
           for (final surah in surahs) surah.id: surah.ayahCount,
         };
-        promiseUnlockedIds = await _keepPromises(rewards, memorized);
+        promiseUnlockedIds = await _keepPromises(rewards, memorized, origins);
         if (promiseUnlockedIds.isNotEmpty) rewards = await _loadRewards();
         milestoneProgress = _milestoneProgress(
+          origins,
           rewards,
           kidsMemorizedAyahCounts(logs, ayahCounts),
           ayahCounts,
@@ -228,28 +236,35 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
     }
   }
 
-  bool _promiseOn() {
+  /// Gift origins whose surah promise is kept here, by rollout switch.
+  Set<ParentRewardOrigin> _promiseOrigins() => {
+    if (_switchOn(_promiseEnabled)) ParentRewardOrigin.local,
+    if (_switchOn(_remotePromiseEnabled)) ParentRewardOrigin.cloud,
+  };
+
+  static bool _switchOn(bool Function()? enabled) {
     try {
-      return _promiseEnabled?.call() ?? false;
+      return enabled?.call() ?? false;
     } catch (_) {
       return false;
     }
   }
 
-  /// Opens, locally and without a PIN, every locked gift whose surah is now
-  /// memorized (the condition is the guardian's own promise, already met).
-  /// Gifts without a surah, and the guardian's cloud-owned gifts (which never
-  /// carry one), are left alone. A refused step just leaves the gift locked.
+  /// Opens, without a PIN, every locked gift of an enabled [origins] whose
+  /// surah is now memorized (the condition is the guardian's own promise,
+  /// already met). Gifts without a surah or of another origin are left alone.
+  /// A refused step just leaves the gift locked; the next load tries again.
   Future<Set<String>> _keepPromises(
     List<ParentReward> rewards,
     Set<int> memorized,
+    Set<ParentRewardOrigin> origins,
   ) async {
     final unlock = _rewards;
     final opened = <String>{};
     if (unlock == null) return opened;
     for (final reward in rewards) {
       final surahId = reward.milestoneSurahId;
-      if (reward.origin == ParentRewardOrigin.unknown ||
+      if (!origins.contains(reward.origin) ||
           reward.status != ParentRewardStatus.locked ||
           surahId == null ||
           !memorized.contains(surahId)) {
@@ -266,12 +281,14 @@ class KidsTreasuresCubit extends Cubit<KidsTreasuresState> {
   }
 
   Map<int, ({int done, int total})> _milestoneProgress(
+    Set<ParentRewardOrigin> origins,
     List<ParentReward> rewards,
     Map<int, int> doneBySurah,
     Map<int, int> totalBySurah,
   ) => {
     for (final reward in rewards)
-      if (reward.status == ParentRewardStatus.locked &&
+      if (origins.contains(reward.origin) &&
+          reward.status == ParentRewardStatus.locked &&
           reward.milestoneSurahId != null &&
           (totalBySurah[reward.milestoneSurahId] ?? 0) > 0)
         reward.milestoneSurahId!: (

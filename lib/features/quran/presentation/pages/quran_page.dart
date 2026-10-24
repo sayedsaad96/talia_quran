@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/icons/talia_icons.dart';
 import '../widgets/surah_memorization_badge.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
+import '../widgets/audio_downloads_access.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
@@ -59,11 +62,21 @@ class _QuranViewState extends State<_QuranView>
   List<Surah>? _summarySource;
   List<JuzSummary>? _summaries;
 
+  /// Notes are adult-only; hidden until the profile check resolves.
+  bool _notesAllowed = false;
+
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
     _tabCtrl.addListener(_onTabChanged);
+    unawaited(
+      adultExperienceAvailable(ExperienceFeature.ayahNotes).then((allowed) {
+        if (mounted && allowed != _notesAllowed) {
+          setState(() => _notesAllowed = allowed);
+        }
+      }),
+    );
   }
 
   @override
@@ -244,8 +257,7 @@ class _QuranViewState extends State<_QuranView>
         style: AppTypography.headlineMedium.copyWith(color: Colors.white),
       ),
       actions: [
-        if (getIt.isRegistered<ExperienceFlags>() &&
-            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.ayahNotes))
+        if (_notesAllowed)
           IconButton(
             tooltip: context.l10n.ayahNotesTitle,
             icon: const Icon(TaliaIcons.note),

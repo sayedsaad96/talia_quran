@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/group_khatmah/data/group_khatmah_remote.dart';
 import '../../features/group_khatmah/data/group_khatmah_repository_impl.dart';
+import '../../features/group_khatmah/data/eligibility_requesting_remote.dart';
 import '../../features/group_khatmah/data/supabase_group_khatmah_remote.dart';
 import '../../features/group_khatmah/domain/entities/group_khatmah.dart';
 import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
@@ -14,6 +15,8 @@ import '../memorization/memorization_path_resolver.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/group_khatmah_environment.dart';
 import '../sync/group_khatmah_wake_scheduler.dart';
+import '../../features/memorization_plus/data/repositories/collaborators/memorization_profile_service.dart';
+import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 Future<void> registerGroupKhatmah(GetIt getIt) async {
   final prefs = getIt<SharedPreferences>();
@@ -34,7 +37,30 @@ Future<void> registerGroupKhatmah(GetIt getIt) async {
   );
   GroupKhatmahRemote remote;
   try {
-    remote = SupabaseGroupKhatmahRemote(Supabase.instance.client);
+    final supabase = SupabaseGroupKhatmahRemote(Supabase.instance.client);
+    remote = EligibilityRequestingRemote(
+      supabase,
+      requestEligibility: (ownerId) async {
+        // The server decides from the synced memorization path. Older
+        // installs may never have pushed it, so push an adult's path, but
+        // only when the server holds none: a path set from another device
+        // is never overwritten here.
+        try {
+          if ((await path.currentProfile())?.isAdult == true &&
+              getIt.isRegistered<MemorizationPlusRepository>() &&
+              await _serverPathMissing(ownerId)) {
+            await prefs.setBool(
+              MemorizationProfileService.kIdentityCloudDirty,
+              true,
+            );
+            await getIt<MemorizationPlusRepository>().pushIdentityToCloud();
+          }
+        } catch (_) {
+          // The request below still runs; the server may then refuse.
+        }
+        return supabase.requestEligibility(ownerId);
+      },
+    );
   } catch (_) {
     remote = const _UnavailableGroupRemote();
   }
@@ -69,4 +95,21 @@ final class _UnavailableGroupRemote implements GroupKhatmahRemote {
     required String ownerId,
     required String groupId,
   }) async => throw const NetworkFailure();
+}
+
+/// True when the account's server profile has no memorization path yet.
+/// Any read failure counts as "not missing", so nothing is pushed blindly.
+Future<bool> _serverPathMissing(String ownerId) async {
+  try {
+    final client = Supabase.instance.client;
+    if (client.auth.currentUser?.id != ownerId) return false;
+    final row = await client
+        .from('profiles')
+        .select('selected_path')
+        .eq('id', ownerId)
+        .maybeSingle();
+    return row == null || row['selected_path'] == null;
+  } catch (_) {
+    return false;
+  }
 }

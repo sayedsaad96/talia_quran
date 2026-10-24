@@ -75,6 +75,7 @@ void _stubCancellations() {
     () => mockNotificationService.cancelKhatmahReminder(),
     () => mockNotificationService.cancelSmartReminder(),
     () => mockNotificationService.cancelForgettingForecastReminder(),
+    () => mockNotificationService.cancelLastTenReminder(),
     () => mockNotificationService.cancelPrayerTimesReminders(),
     () => mockNotificationService.cancelPrayerCompanionReminders(),
   ];

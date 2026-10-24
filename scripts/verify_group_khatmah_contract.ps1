@@ -6,7 +6,8 @@ $groupKhatmahRpcs = @(
   'public.claim_group_part(uuid,smallint,bigint,uuid,uuid)',
   'public.complete_group_part(uuid,smallint,bigint,uuid,uuid)',
   'public.release_group_part(uuid,smallint,bigint,uuid,uuid)',
-  'public.leave_group_khatmah(uuid,uuid,uuid)'
+  'public.leave_group_khatmah(uuid,uuid,uuid)',
+  'public.request_group_khatmah_eligibility()'
 )
 foreach ($signature in $groupKhatmahRpcs) {
   Check "group khatmah RPC shape $signature" "SELECT NOT prosecdef AND pg_get_function_result(oid)='jsonb' AND proconfig=ARRAY['search_path=' || chr(34) || chr(34)]::text[] FROM pg_proc WHERE oid='$signature'::regprocedure"

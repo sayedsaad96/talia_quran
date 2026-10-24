@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/content/approved_azkar_content.dart';
 import '../../data/models/zikr_model.dart';
 import '../entities/azkar_entities.dart';
 
@@ -62,7 +63,7 @@ AfterPrayerWindow? activeAfterPrayerWindow({
 
 /// Ids of approved release records whose subcategory is exactly
 /// [afterPrayerAzkarSubcategory] (searched in the general list). Records are
-/// never rewritten; only ids are returned.
+/// never rewritten; only ids are returned. An empty result hides the card.
 Future<List<String>> loadAfterPrayerAzkarIds(AssetBundle bundle) async {
   try {
     final source = await bundle.loadString('assets/data/azkar_release.json');
@@ -82,9 +83,11 @@ Future<List<String>> loadAfterPrayerAzkarIds(AssetBundle bundle) async {
   }
 }
 
-/// Same acceptance rule the azkar pages apply when parsing the release file:
-/// [ZikrModel.fromJson] only accepts approved, fully-sourced records.
+/// A reminder card prompts the user unasked, so it uses the notification
+/// gate ([isApprovedAzkarReleaseRecord], which also requires a hadith grade)
+/// on top of the rule the azkar pages apply when parsing ([ZikrModel.fromJson]).
 bool _isShownApproved(Map<String, dynamic> record) {
+  if (!isApprovedAzkarReleaseRecord(record)) return false;
   try {
     ZikrModel.fromJson(record, AzkarCategory.general);
     return true;

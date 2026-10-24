@@ -152,6 +152,28 @@ void main() {
     },
   );
 
+  testWidgets('a split plan shows the wird after each prayer', (
+    tester,
+  ) async {
+    // Pages 1-20 are read, so the day's wird is 21-40 (20 pages, 4 each).
+    when(() => mockGetActive()).thenAnswer(
+      (_) async => testPlan.copyWith(targetPagesPerDay: 20, portionsPerDay: 5),
+    );
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 5; i++) {
+      expect(find.byKey(Key('khatmah_dashboard_portion_$i')), findsOneWidget);
+    }
+    expect(find.byKey(const Key('khatmah_dashboard_portion_5')), findsNothing);
+  });
+
+  testWidgets('an unsplit plan shows no prayer portions', (tester) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    await tester.pumpWidget(buildWidget(cubit: buildCubit()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('khatmah_dashboard_portion_0')), findsNothing);
+  });
+
   testWidgets('catching up offers every option with its preview', (
     tester,
   ) async {

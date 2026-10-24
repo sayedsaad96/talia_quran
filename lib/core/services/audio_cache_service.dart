@@ -38,6 +38,7 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    reciter?.requireAvailable();
     final durable = await _durablePath(surahId, ayahNumber, reciter);
     if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
@@ -62,6 +63,7 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    reciter?.requireAvailable();
     final durable = await _durablePath(surahId, ayahNumber, reciter);
     if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
@@ -85,6 +87,7 @@ class AudioCacheService {
     int ayahNumber, {
     QuranReciter? reciter,
   }) async {
+    reciter?.requireAvailable();
     final durable = await _durablePath(surahId, ayahNumber, reciter);
     if (durable != null) return durable;
     final url = QuranAudioService.buildUrl(
@@ -104,6 +107,7 @@ class AudioCacheService {
     required List<int> ayahNumbers,
     QuranReciter? reciter,
   }) async {
+    reciter?.requireAvailable();
     const int batchSize = 5;
     for (int i = 0; i < ayahNumbers.length; i += batchSize) {
       final end = (i + batchSize < ayahNumbers.length)

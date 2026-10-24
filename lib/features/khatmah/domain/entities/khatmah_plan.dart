@@ -11,6 +11,42 @@ enum QuranReaderMode { free, khatmah }
 /// How a day's wird is measured: a page count, or one juz a day (Ramadan).
 enum KhatmahWirdUnit { pages, juz }
 
+/// Marks a plan as [round] of [rounds] consecutive khatmahs that should all
+/// finish by [lastDay] (the "two khatmahs in Ramadan" template). The next
+/// round is offered when this one completes; nothing else reads it.
+final class KhatmahSeasonLink extends Equatable {
+  KhatmahSeasonLink({
+    required this.round,
+    required this.rounds,
+    required DateTime lastDay,
+  }) : lastDay = DateTime(lastDay.year, lastDay.month, lastDay.day);
+
+  final int round;
+  final int rounds;
+
+  /// Local calendar date the whole series should be finished by.
+  final DateTime lastDay;
+
+  bool get hasNextRound => round >= 1 && round < rounds;
+
+  /// Days from [today] through [lastDay] inclusive; 0 once it has passed.
+  int daysLeft(DateTime today) {
+    final t = KhatmahSchedulingEngine.localDate(today);
+    final days =
+        DateTime.utc(lastDay.year, lastDay.month, lastDay.day)
+            .difference(DateTime.utc(t.year, t.month, t.day))
+            .inDays +
+        1;
+    return days < 0 ? 0 : days;
+  }
+
+  KhatmahSeasonLink next() =>
+      KhatmahSeasonLink(round: round + 1, rounds: rounds, lastDay: lastDay);
+
+  @override
+  List<Object?> get props => [round, rounds, lastDay];
+}
+
 class KhatmahPlan extends Equatable {
   /// Stable storage value for a system-created plan without a recipient title.
   /// Presentation localizes this value at display time, so changing the app
@@ -44,7 +80,10 @@ class KhatmahPlan extends Equatable {
     this.pausedAt,
     this.authority,
     this.wirdUnit = KhatmahWirdUnit.pages,
-  }) : completedPages = Set.unmodifiable(
+    int portionsPerDay = 1,
+    this.seasonLink,
+  }) : portionsPerDay = portionsPerDay.clamp(1, 5),
+       completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
        currentPage = _lastContiguousPage(
@@ -69,6 +108,11 @@ class KhatmahPlan extends Equatable {
   final int? dailyTargetEndPage;
   final DateTime? pausedAt;
   final KhatmahWirdUnit wirdUnit;
+
+  /// Parts the daily wird is shown in: 1, or 5 (one after each prayer).
+  /// Display only; the wird range and scheduling are unchanged.
+  final int portionsPerDay;
+  final KhatmahSeasonLink? seasonLink;
 
   /// Runtime-only authority of the load; never serialized or shared.
   final Object? authority;
@@ -284,6 +328,8 @@ class KhatmahPlan extends Equatable {
     bool clearPausedAt = false,
     Object? authority,
     KhatmahWirdUnit? wirdUnit,
+    int? portionsPerDay,
+    KhatmahSeasonLink? seasonLink,
   }) {
     return KhatmahPlan(
       id: id ?? this.id,
@@ -303,6 +349,8 @@ class KhatmahPlan extends Equatable {
       pausedAt: clearPausedAt ? null : (pausedAt ?? this.pausedAt),
       authority: authority ?? this.authority,
       wirdUnit: wirdUnit ?? this.wirdUnit,
+      portionsPerDay: portionsPerDay ?? this.portionsPerDay,
+      seasonLink: seasonLink ?? this.seasonLink,
     );
   }
 
@@ -363,5 +411,7 @@ class KhatmahPlan extends Equatable {
     dailyTargetEndPage,
     pausedAt,
     wirdUnit,
+    portionsPerDay,
+    seasonLink,
   ];
 }

@@ -18,16 +18,20 @@ PrayerOccurrence? prayerReviewHomeOccurrence({
   final minutes = preparationMinutes == 0 ? 15 : preparationMinutes;
   final ordered = times.entries.toList()
     ..sort((a, b) => a.value.compareTo(b.value));
+  // The occurrence belongs to the day the times were computed for (its
+  // Fajr), as in the prayer companion, so an Isha after midnight keeps the
+  // previous day's key instead of opening a second occurrence.
+  final fajr = (times[PrayerKey.fajr] ?? ordered.first.value).toLocal();
+  final day = DateTime(fajr.year, fajr.month, fajr.day);
   for (final entry in ordered) {
     final time = entry.value;
     if (!now.isBefore(time) ||
         now.isBefore(time.subtract(Duration(minutes: minutes)))) {
       continue;
     }
-    final local = time.toLocal();
     return PrayerOccurrence(
       ownerId: ownerId,
-      localDate: DateTime(local.year, local.month, local.day),
+      localDate: day,
       prayerKey: entry.key,
       scheduledAt: time,
     );

@@ -45,8 +45,8 @@ class _TrustCenterPageState extends State<TrustCenterPage> {
                   ? null
                   : l10n.trustSourcesMeta(
                       version,
-                      summary.sourceCount,
-                      context.numText(summary.sourceCount),
+                      summary.datasetCount,
+                      context.numText(summary.datasetCount),
                     ),
               actionLabel: l10n.trustViewSources,
               onAction: () => context.push(AppRoutes.sourcesLicenses),

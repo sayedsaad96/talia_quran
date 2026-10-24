@@ -2,6 +2,7 @@ package com.talia.quran.widget
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.After
@@ -292,6 +293,59 @@ class WidgetSnapshotFormatterTest {
         )
 
         assertEquals("Fajr · 05:03", rows.prayerLine)
+    }
+
+    @Test
+    fun `after local midnight the prayer row follows the list and day rows hide`() {
+        // Monday snapshot (UTC day 0); dayEndsAt is Tuesday 00:00, now Tuesday 00:30.
+        val json = """{
+          "schemaVersion":1,
+          "isEmpty":false,
+          "expiresAt":172800000,
+          "dayEndsAt":86400000,
+          "dueReviewCount":2,
+          "wirdFromPage":10,
+          "wirdToPage":12,
+          "wirdDonePages":1,
+          "wirdSurahName":"الفاتحة",
+          "upcomingPrayers":[
+            {"key":"isha","at":79200000,"offsetMinutes":0},
+            {"key":"fajr","at":104580000,"offsetMinutes":0}
+          ]
+        }""".trimIndent()
+
+        val before = WidgetSnapshotFormatter.format(json, labels, false, 80_000_000L)
+        val rows = WidgetSnapshotFormatter.format(json, labels, false, 88_200_000L)
+
+        assertNotNull(before.reviewLine)
+        assertNotNull(before.wirdLine)
+        assertEquals("Fajr · 05:03", rows.prayerLine)
+        assertNull(rows.reviewLine)
+        assertNull(rows.wirdLine)
+        assertFalse(rows.empty)
+    }
+
+    @Test
+    fun `snapshot without dayEndsAt keeps the review and wird rows`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "isEmpty":false,
+              "dueReviewCount":2,
+              "wirdFromPage":10,
+              "wirdToPage":12,
+              "wirdDonePages":1,
+              "wirdSurahName":"الفاتحة",
+              "upcomingPrayers":[{"key":"fajr","at":104580000,"offsetMinutes":0}]
+            }""".trimIndent(),
+            labels,
+            false,
+            88_200_000L,
+        )
+
+        assertEquals("Fajr · 05:03", rows.prayerLine)
+        assertNotNull(rows.reviewLine)
+        assertNotNull(rows.wirdLine)
     }
 
     @Test

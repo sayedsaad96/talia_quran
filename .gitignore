@@ -70,3 +70,5 @@ marketing/**/*.zip
 *.jks
 *.keystore
 **/key.properties
+# Security audit reports stay local: the repository is public.
+audit_artifacts/security_*/

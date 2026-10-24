@@ -8,6 +8,9 @@ enum DownloadPhase {
   completed,
   cancelled,
   failed,
+
+  /// Wi-Fi only was requested and the device reports a metered network.
+  waitingForWifi,
 }
 
 enum DownloadError { metadata, download }

@@ -19,7 +19,7 @@ void main() {
 }''';
     final summary = ContentManifestSummary.parse(json);
     expect(summary?.datasetVersion, 'v1-owner-approved-1');
-    expect(summary?.sourceCount, 4);
+    expect(summary?.datasetCount, 4);
   });
 
   test('malformed / missing items -> null', () {
@@ -37,7 +37,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     final summary = await loadContentManifestSummary(rootBundle);
     expect(summary, isNotNull);
-    expect(summary!.sourceCount, 4);
+    expect(summary!.datasetCount, 4);
     expect(summary.datasetVersion, isNotNull);
   });
 }

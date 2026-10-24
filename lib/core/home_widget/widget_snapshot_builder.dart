@@ -15,18 +15,32 @@ WidgetSnapshot buildWidgetSnapshot({
   required KhatmahPlan? activePlan,
   required DateTime now,
   DateTime? tomorrowFajr,
+  List<WidgetPrayerTime> tomorrowPrayers = const [],
   String? languageCode,
 }) {
   if (!enabled || !isAdult || signedOutOrSwitching) {
     return const WidgetSnapshot.empty();
   }
-  final upcoming = _upcomingPrayers(now, today, tomorrow, tomorrowFajr);
+  final upcoming = _upcomingPrayers(
+    now,
+    today,
+    tomorrow,
+    tomorrowFajr,
+    tomorrowPrayers,
+  );
   final next = upcoming.isEmpty ? null : upcoming.first;
   final wird = _wird(activePlan, now);
-  final expiresAt = DateTime(
+  final dayEndsAt = DateTime(
     now.toLocal().year,
     now.toLocal().month,
     now.toLocal().day + 1,
+  );
+  // The prayer list outlives the day, so the snapshot itself stays valid until
+  // the end of tomorrow; the review and wird rows stop at [dayEndsAt].
+  final expiresAt = DateTime(
+    now.toLocal().year,
+    now.toLocal().month,
+    now.toLocal().day + 2,
   );
   final language = languageCode == 'ar' || languageCode == 'en'
       ? languageCode
@@ -34,13 +48,14 @@ WidgetSnapshot buildWidgetSnapshot({
   final reviews = dueReviewCount < 0 ? 0 : dueReviewCount;
   if (next == null && reviews == 0 && wird == null) {
     return WidgetSnapshot(
-      expiresAt: expiresAt,
+      expiresAt: dayEndsAt,
       languageCode: language,
       adultNoData: true,
     );
   }
   return WidgetSnapshot(
     expiresAt: expiresAt,
+    dayEndsAt: dayEndsAt,
     languageCode: language,
     nextPrayerKey: next?.key,
     nextPrayerAt: next?.at,
@@ -53,7 +68,8 @@ WidgetSnapshot buildWidgetSnapshot({
   );
 }
 
-/// Today's remaining fard prayers and the next Fajr, ascending and distinct.
+/// Today's remaining fard prayers and tomorrow's, ascending and distinct, so
+/// the widget stays right after midnight before the app reopens.
 /// The production after-Isha snapshot carries tomorrow's Fajr only as
 /// `nextName`/`nextTime`, so that pair is a candidate too.
 List<WidgetPrayerTime> _upcomingPrayers(
@@ -61,6 +77,7 @@ List<WidgetPrayerTime> _upcomingPrayers(
   PrayerTimesSnapshot? today,
   PrayerTimesSnapshot? tomorrow,
   DateTime? tomorrowFajr,
+  List<WidgetPrayerTime> tomorrowPrayers,
 ) {
   final candidates = <WidgetPrayerTime>[];
   void add(String key, DateTime? at) {
@@ -89,6 +106,9 @@ List<WidgetPrayerTime> _upcomingPrayers(
     }
   }
   add('fajr', tomorrowFajr);
+  for (final prayer in tomorrowPrayers) {
+    add(prayer.key, prayer.at);
+  }
   candidates.sort((left, right) => left.at.compareTo(right.at));
   return List.unmodifiable(candidates);
 }

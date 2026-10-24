@@ -242,6 +242,9 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
           certificates: certificates,
           weeklyGoalSessions: goal,
           now: now,
+          rewards: entry.isLocal
+              ? (entry.localData?.rewards ?? const [])
+              : summary!.rewards,
         );
         final childKey = entry.isLocal ? 'local' : entry.childUserId;
         final fresh = await store.unseen(childKey, detected.map((m) => m.id));

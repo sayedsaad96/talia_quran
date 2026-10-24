@@ -138,4 +138,57 @@ void main() {
       expect(ranges[i].$1, ranges[i - 1].$2 + 1);
     }
   });
+
+  Future<KhatmahPlan> submitTemplate(
+    WidgetTester tester,
+    RamadanKhatmahTemplate template,
+  ) async {
+    final chip = find.byKey(Key('khatmah_setup_ramadan_${template.name}'));
+    await tester.ensureVisible(chip);
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    final submit = find.byKey(const Key('khatmah_setup_submit_button'));
+    await tester.ensureVisible(submit);
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    return verify(() => create(captureAny())).captured.single as KhatmahPlan;
+  }
+
+  testWidgets('splitByPrayers persists five portions per day', (tester) async {
+    setFlag(true);
+    when(() => create(any())).thenAnswer((_) async {});
+    await pump(tester, RamadanPhase.ramadan);
+    final plan = await submitTemplate(
+      tester,
+      RamadanKhatmahTemplate.splitByPrayers,
+    );
+    expect(plan.portionsPerDay, 5);
+    expect(plan.seasonLink, isNull);
+  });
+
+  testWidgets('twoInMonth links the first khatmah to the last Ramadan day', (
+    tester,
+  ) async {
+    setFlag(true);
+    when(() => create(any())).thenAnswer((_) async {});
+    await pump(tester, RamadanPhase.ramadan);
+    final chip = find.byKey(const Key('khatmah_setup_ramadan_twoInMonth'));
+    await tester.ensureVisible(chip);
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('khatmah_setup_ramadan_two_hint')),
+      findsOneWidget,
+    );
+    final plan = await submitTemplate(
+      tester,
+      RamadanKhatmahTemplate.twoInMonth,
+    );
+    expect(plan.targetDays, 15);
+    expect(plan.portionsPerDay, 1);
+    expect(
+      plan.seasonLink,
+      KhatmahSeasonLink(round: 1, rounds: 2, lastDay: DateTime(2027, 3, 9)),
+    );
+  });
 }

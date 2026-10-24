@@ -70,6 +70,70 @@ void main() {
   });
 
   test(
+    'queued automatic page cannot complete a target without confirmation',
+    () async {
+      final today = DateTime(2026, 10, 24);
+      final plan = activePlan.copyWith(
+        completedPages: {3, 4},
+        dailyTargetDate: today,
+        dailyTargetStartPage: 1,
+        dailyTargetEndPage: 4,
+      );
+      when(() => getActive()).thenAnswer((_) async => plan);
+      final firstSave = Completer<KhatmahReadingResult>();
+      when(
+        () => recordReading(
+          any(),
+          1,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      ).thenAnswer((_) => firstSave.future);
+      final cubit = KhatmahCubit(
+        getActive,
+        recordReading,
+        pauseResume,
+        deleteKhatmah,
+        now: () => today,
+      );
+      await cubit.load();
+      final first = cubit.recordDigitalPage(1, isExplicit: false);
+      final last = cubit.recordDigitalPage(2, isExplicit: false);
+      final afterFirst = plan.copyWith(completedPages: {1, 3, 4});
+      firstSave.complete(
+        KhatmahReadingResult(plan: afterFirst, newlyCompletedPages: {1}),
+      );
+      expect(await first, isTrue);
+      expect(await last, isFalse);
+      expect(cubit.state, isA<KhatmahActive>());
+      verifyNever(
+        () => recordReading(
+          any(),
+          2,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      );
+      when(
+        () => recordReading(
+          any(),
+          2,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      ).thenAnswer(
+        (_) async => KhatmahReadingResult(
+          plan: afterFirst.copyWith(completedPages: {1, 2, 3, 4}),
+          newlyCompletedPages: {2},
+        ),
+      );
+      expect(await cubit.recordDigitalPage(2), isTrue);
+      expect(cubit.state, isA<KhatmahWirdCompleted>());
+      await cubit.close();
+    },
+  );
+
+  test(
     'keep-end-date preview works when the pace is above the boost cap',
     () async {
       final today = DateTime(2026, 3, 1);

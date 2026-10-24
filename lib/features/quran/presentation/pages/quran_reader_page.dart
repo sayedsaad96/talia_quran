@@ -47,9 +47,11 @@ import '../widgets/reader_top_bar.dart';
 import '../widgets/strength_overlay_legend.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
+import '../../../khatmah/domain/entities/khatmah_read_confirmation_policy.dart';
 import '../../../khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
+import '../../../khatmah/presentation/widgets/khatmah_page_confirmation.dart';
 
 const Map<StrengthBand, Color> _defaultStrengthColors = {
   StrengthBand.due: AppColors.warning,
@@ -57,6 +59,23 @@ const Map<StrengthBand, Color> _defaultStrengthColors = {
   StrengthBand.building: AppColors.info,
   StrengthBand.solid: AppColors.success,
 };
+
+/// qcf repaints every highlight at a fixed 0.4 opacity, replacing any alpha
+/// passed in. Blending the band toward the page background first keeps the
+/// visible tint at about 0.4 × [kStrengthBlend] = 0.18, the spec's 0.15–0.22
+/// range, so the ayah text stays clear in light and dark themes.
+const double kStrengthBlend = 0.45;
+
+@visibleForTesting
+Color strengthHighlightColor(Color band, Color? pageBackground) {
+  final opaque = band.withValues(alpha: 1);
+  if (pageBackground == null) return opaque.withValues(alpha: 0.4);
+  return Color.lerp(
+    pageBackground.withValues(alpha: 1),
+    opaque,
+    kStrengthBlend,
+  )!.withValues(alpha: 0.4);
+}
 
 /// Strength overlay colours from the active theme tokens.
 Map<StrengthBand, Color> strengthColorsFor(TaliaTokens tokens) => {
@@ -80,6 +99,7 @@ List<qcf.HighlightVerse> readerHighlights({
   ({int surah, int ayah})? selected,
   Map<({int surah, int ayah}), StrengthBand> strengthBands = const {},
   Map<StrengthBand, Color>? strengthColors,
+  Color? pageBackground,
 }) {
   final palette = strengthColors ?? _defaultStrengthColors;
   return [
@@ -91,9 +111,7 @@ List<qcf.HighlightVerse> readerHighlights({
           surah: entry.key.surah,
           verseNumber: entry.key.ayah,
           page: page,
-          // qcf repaints highlights at a fixed opacity, so one alpha for all
-          // bands; the bands differ by colour only.
-          color: palette[entry.value]!.withValues(alpha: 0.40),
+          color: strengthHighlightColor(palette[entry.value]!, pageBackground),
         ),
     if (audio != null)
       qcf.HighlightVerse(
@@ -230,6 +248,17 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     _khatmahSubscription = _khatmahCubit?.stream.listen((state) {
       if (mounted) {
         _handleKhatmahState(context, state);
+        final detail = _currentDetail;
+        if (detail == null) return;
+        // A running countdown continues across ordinary updates (a save
+        // finishing, a calendar refresh); it stops only when this page now
+        // needs the explicit button, and starts if none is running.
+        if (widget.readerMode == QuranReaderMode.khatmah &&
+            _requiresExplicitKhatmahConfirmation(detail.pageNumber)) {
+          _cancelReadTimer();
+        } else {
+          _startReadTimer(detail);
+        }
       }
     });
 
@@ -273,14 +302,12 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       return false;
     }
     try {
-      final result = await getIt<MemorizationPlusRepository>()
-          .getAllReviewRecords(scope: ReviewRecordReadScope.adult);
-      final found = result.fold<bool>(
-        (_) => false,
-        (records) =>
-            records.any((r) => r.surahId == surah && r.ayahNumber == ayah),
+      final result = await getIt<MemorizationPlusRepository>().getReviewRecord(
+        surah,
+        ayah,
+        scope: ReviewRecordReadScope.adult,
       );
-      return found;
+      return result.fold<bool>((_) => false, (record) => record != null);
     } catch (_) {
       return false;
     }
@@ -439,6 +466,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
   void _confirmReadIfReady(int pageNumber) {
     if (!mounted || _currentPageNumber != pageNumber) return;
+    if (widget.readerMode == QuranReaderMode.khatmah &&
+        _requiresExplicitKhatmahConfirmation(pageNumber)) {
+      return;
+    }
     if (!_readConfirmationGate.shouldConfirm(pageNumber)) {
       return;
     }
@@ -446,7 +477,39 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     unawaited(_confirmThenRecordKhatmah(pageNumber));
   }
 
-  Future<void> _confirmThenRecordKhatmah(int pageNumber) async {
+  /// Same plans the cubit records against: a failed save keeps its active
+  /// plan, so one failure never stops recording the pages read after it.
+  KhatmahPlan? get _readableKhatmahPlan => switch (_khatmahCubit?.state) {
+    KhatmahActive(:final plan) => plan,
+    KhatmahWirdCompleted(:final plan) => plan,
+    KhatmahProgressFailure(:final plan?)
+        when plan.status == KhatmahStatus.active =>
+      plan,
+    _ => null,
+  };
+
+  bool _requiresExplicitKhatmahConfirmation(int pageNumber) {
+    final plan = _readableKhatmahPlan;
+    return plan == null ||
+        requiresKhatmahReadConfirmation(
+          plan,
+          pageNumber,
+          _khatmahCubit!.displayDate,
+        );
+  }
+
+  Future<void> _confirmThenRecordKhatmah(
+    int pageNumber, {
+    bool isExplicit = false,
+  }) async {
+    final loaded = _quranPageCubit.state;
+    if (loaded is! QuranPageLoaded ||
+        loaded.detail.pageNumber != pageNumber ||
+        _currentPageNumber != pageNumber) {
+      return;
+    }
+    final planId = _readableKhatmahPlan?.id;
+    if (widget.readerMode == QuranReaderMode.khatmah && planId == null) return;
     final confirmed = await _quranPageCubit.confirmRead(
       pageNumber,
       recordOrdinaryReading: widget.readerMode != QuranReaderMode.khatmah,
@@ -462,12 +525,28 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       _readConfirmationGate.markConfirmed(pageNumber);
     }
     if (widget.readerMode == QuranReaderMode.khatmah) {
-      await _khatmahCubit?.recordDigitalPage(pageNumber);
+      await _recordConfirmedKhatmahPage(pageNumber, planId!, isExplicit);
     } else {
       // Free mode: only pages that belong to today's wird advance it, so
       // browsing any surah never moves tomorrow's wird. Khatmah progress is
       // separate and never touched here.
       unawaited(getIt<AppSessionService>().advanceDailyWird(pageNumber));
+    }
+  }
+
+  Future<void> _recordConfirmedKhatmahPage(
+    int pageNumber,
+    String planId,
+    bool isExplicit,
+  ) async {
+    if (_readableKhatmahPlan?.id != planId) return;
+    if (!isExplicit && _requiresExplicitKhatmahConfirmation(pageNumber)) return;
+    final saved = await _khatmahCubit!.recordDigitalPage(
+      pageNumber,
+      isExplicit: isExplicit,
+    );
+    if (saved && mounted && _currentPageNumber == pageNumber) {
+      _showReadConfirmed();
     }
   }
 
@@ -566,6 +645,10 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
   void _startReadTimer(QuranPageDetail detail) {
     final pageNumber = detail.pageNumber;
+    if (widget.readerMode == QuranReaderMode.khatmah &&
+        _requiresExplicitKhatmahConfirmation(pageNumber)) {
+      return;
+    }
     if (!mounted ||
         _currentPageNumber != pageNumber ||
         _readConfirmationGate.hasConfirmed(pageNumber) ||
@@ -762,7 +845,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                   state.detail.pageNumber,
                 );
                 _cancelReadTimer();
-                if (isNewlyConfirmed) {
+                if (isNewlyConfirmed &&
+                    widget.readerMode != QuranReaderMode.khatmah) {
                   _showReadConfirmed();
                 }
               } else {
@@ -830,6 +914,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                   strengthBands:
                       _strengthCubit?.bandsForPage(pageNumber) ?? const {},
                   strengthColors: strengthColorsFor(context.tokens),
+                  pageBackground: bg,
                 );
 
                 return Scaffold(
@@ -983,6 +1068,23 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const ReaderDockedAudioBar(),
+                                      if (_khatmahCubit != null)
+                                        KhatmahPageConfirmation(
+                                          key: ValueKey(
+                                            'khatmah_confirmation_$pageNumber',
+                                          ),
+                                          cubit: _khatmahCubit!,
+                                          pageNumber: pageNumber,
+                                          enabled:
+                                              state is QuranPageLoaded &&
+                                              state.detail.pageNumber ==
+                                                  _currentPageNumber,
+                                          onConfirm: () =>
+                                              _confirmThenRecordKhatmah(
+                                                pageNumber,
+                                                isExplicit: true,
+                                              ),
+                                        ),
                                       if (!isFocusMode)
                                         ValueListenableBuilder<Duration?>(
                                           valueListenable:

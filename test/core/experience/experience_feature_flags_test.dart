@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
+import 'package:talia_quran/core/experience/rollout_manifest.dart';
 
 void main() {
   test('missing / non-bool / throwing read -> false', () async {
@@ -23,7 +24,11 @@ void main() {
     );
     expect(flags.isEnabled(ExperienceFeature.trustCenter), isFalse);
     expect(flags.isEnabled(ExperienceFeature.readerRepeat), isTrue);
-    expect(flags.isEnabled(ExperienceFeature.strengthOverlay), isFalse);
+    // Missing values fall back to the shipped rollout default.
+    expect(
+      flags.isEnabled(ExperienceFeature.strengthOverlay),
+      RolloutManifest.defaultFor(ExperienceFeature.strengthOverlay.storageKey),
+    );
   });
 
   test('storage keys are experience_flag_<name> and unique', () {

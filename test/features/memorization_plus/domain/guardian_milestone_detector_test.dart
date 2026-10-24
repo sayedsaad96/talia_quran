@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_log.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/parent_dashboard.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/guardian_milestone_detector.dart';
 
 KidsSessionLog _log(
@@ -105,5 +106,39 @@ void main() {
     ];
     expect(_detect(logs: logs), isEmpty);
     expect(_detect(logs: logs, goal: 2).single.id, 'week:2026-10-05');
+  });
+
+  test('a promise whose surah is complete is due once, until claimed', () {
+    ParentReward gift(String id, ParentRewardStatus status, {int? surah}) =>
+        ParentReward(
+          id: id,
+          title: 'نزهة $id',
+          status: status,
+          createdAt: DateTime.utc(2026, 10, 1),
+          milestoneSurahId: surah,
+        );
+    final milestones = detectGuardianMilestones(
+      logs: [
+        _log('a', 114, 1, DateTime.utc(2026, 10, 14)),
+        _log('b', 114, 2, DateTime.utc(2026, 10, 14)),
+      ],
+      ayahCountBySurah: const {114: 2, 113: 5},
+      certificates: const [],
+      weeklyGoalSessions: 0,
+      now: _now,
+      rewards: [
+        gift('due', ParentRewardStatus.locked, surah: 114),
+        gift('due', ParentRewardStatus.locked, surah: 114),
+        gift('asked', ParentRewardStatus.requested, surah: 114),
+        gift('kept', ParentRewardStatus.claimed, surah: 114),
+        gift('later', ParentRewardStatus.locked, surah: 113),
+        gift('plain', ParentRewardStatus.locked),
+      ],
+    );
+    expect(
+      milestones.whereType<PromiseMetMilestone>().map((m) => m.id),
+      ['promise:due', 'promise:asked'],
+    );
+    expect(milestones.first, const SurahCompletedMilestone(114));
   });
 }

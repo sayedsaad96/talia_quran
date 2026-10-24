@@ -57,8 +57,10 @@ object WidgetSnapshotFormatter {
             }
         }
         val prayer = prayerLine(objectValue, labels, arabic, nowMillis)
-        val review = reviewLine(objectValue, labels, arabic)
-        val wird = wirdLine(objectValue, labels, arabic)
+        // Review and wird describe the snapshot's day; the prayer list outlives it.
+        val dayEnded = hasDayEnded(objectValue, nowMillis)
+        val review = if (dayEnded) null else reviewLine(objectValue, labels, arabic)
+        val wird = if (dayEnded) null else wirdLine(objectValue, labels, arabic)
         return WidgetRows(prayer, review, wird, prayer == null && review == null && wird == null)
     }
 
@@ -167,6 +169,13 @@ object WidgetSnapshotFormatter {
         if (!objectValue.has("expiresAt")) return false
         val expiresAt = long(objectValue, "expiresAt") ?: return true
         return expiresAt <= nowMillis
+    }
+
+    // Snapshots written before dayEndsAt existed have no day end.
+    private fun hasDayEnded(objectValue: JSONObject, nowMillis: Long): Boolean {
+        if (!objectValue.has("dayEndsAt")) return false
+        val dayEndsAt = long(objectValue, "dayEndsAt") ?: return true
+        return nowMillis >= dayEndsAt
     }
 
     private fun emptyRows() = WidgetRows(null, null, null, true)

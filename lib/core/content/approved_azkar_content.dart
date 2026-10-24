@@ -44,6 +44,11 @@ Map<String, int> _approvedIdCounts(Map<String, dynamic> source) {
   return counts;
 }
 
+/// Whether [record] satisfies the release contract that gates religious
+/// notifications and reminder cards. Does not check id uniqueness.
+bool isApprovedAzkarReleaseRecord(Map<String, dynamic> record) =>
+    _isApprovedReleaseRecord(record);
+
 bool _isApprovedReleaseRecord(Map<String, dynamic> record) {
   if (record['reviewStatus'] != 'approved') return false;
   if (!_hasText(record, 'id') ||

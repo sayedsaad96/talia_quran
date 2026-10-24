@@ -295,10 +295,13 @@ class QuranContinuousPlayerService {
   }
 
   /// Last index endOfSurah may play when anchored at [from]: the end of the
-  /// current surah run, or the end of the whole queue in [playSurahQueue].
+  /// current surah run within the current repeat pass, or the end of the
+  /// whole queue in [playSurahQueue].
   int _endOfSurahLastIndex(int from) {
     if (_surahQueueMode) return _queue.length - 1;
-    return _lastIndexOfSurahRun(from, _queue[from].surahId);
+    final runEnd = _lastIndexOfSurahRun(from, _queue[from].surahId);
+    final passEnd = passEndIndexOf(from, _baseQueue.length, _repeat);
+    return passEnd < runEnd ? passEnd : runEnd;
   }
 
   /// Resets reader settings when [applyReaderSettings] is false, or when a
@@ -316,7 +319,9 @@ class QuranContinuousPlayerService {
   }
 
   QuranReciter _resolveReciter(QuranReciter? reciter) {
-    return reciter ?? _reciterService.currentReciter.value;
+    final active = reciter ?? _reciterService.currentReciter.value;
+    active.requireAvailable();
+    return active;
   }
 
   // ---------------------------------------------------------------------------
@@ -334,6 +339,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
@@ -378,6 +384,68 @@ class QuranContinuousPlayerService {
     );
   }
 
+  /// Ayah count of [surahId] from the repository, or null when unavailable.
+  Future<int?> surahAyahCount(int surahId) async {
+    final result = await _quranRepository.getSurahDetail(surahId);
+    return result.fold((_) => null, (d) => d.surah.ayahCount);
+  }
+
+  /// Plays ayahs [startAyah]..[endAyah] (inclusive) of [surahId] with the
+  /// current repeat settings, through the same queue as [playSurah].
+  ///
+  /// [endAyah] is clamped to the surah's ayah count. Returns false, leaving
+  /// the current session untouched, when the range is invalid (start below 1,
+  /// after the last ayah, or after end) or the surah cannot be loaded.
+  Future<bool> playAyahRange(
+    int surahId,
+    int startAyah,
+    int endAyah, {
+    QuranReciter? reciter,
+  }) async {
+    _resolveReciter(reciter);
+    if (_handsFreeOwner.isReserved) return false;
+    final generation = ++_playbackGeneration;
+    final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
+    if (generation != _playbackGeneration) return false;
+    final surahDetail = surahDetailResult.fold((_) => null, (d) => d);
+    if (surahDetail == null) return false;
+    final range = clampAyahRange(
+      startAyah,
+      endAyah,
+      surahDetail.surah.ayahCount,
+    );
+    if (range == null) return false;
+    final ayahs = surahDetail.ayahs
+        .where(
+          (a) => a.numberInSurah >= range.start && a.numberInSurah <= range.end,
+        )
+        .toList(growable: false);
+    if (ayahs.isEmpty) return false;
+
+    await _prepareSession(true);
+    if (generation != _playbackGeneration) return false;
+    final activeReciter = _resolveReciter(reciter);
+    _activeScope = PlayScope.surah;
+    _activeSurahId = surahId;
+
+    _emitState(
+      ContinuousPlaybackState(
+        status: PlaybackStatus.loading,
+        currentSurahId: surahId,
+        currentAyahNumber: range.start,
+        reciter: activeReciter,
+        scope: PlayScope.surah,
+      ),
+    );
+
+    _setQueueFromBase(ayahs);
+    return _loadPlaylistAndPlay(
+      startIndex: 0,
+      activeReciter: activeReciter,
+      generation: generation,
+    );
+  }
+
   /// Plays [surahIds] in order (each whole surah), resetting reader repeat and
   /// speed, then applies [sleep]. [SleepTimerChoice.endOfSurah] here means the
   /// end of the LAST surah, i.e. the end of the queue. The session's settings
@@ -386,6 +454,7 @@ class QuranContinuousPlayerService {
     List<int> surahIds, {
     SleepTimerChoice sleep = SleepTimerChoice.off,
   }) async {
+    _resolveReciter(null);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(false);
@@ -446,6 +515,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
@@ -500,6 +570,7 @@ class QuranContinuousPlayerService {
     PlayScope scope = PlayScope.singleAyah,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     final wasReset = await _prepareSession(applyReaderSettings);
@@ -593,6 +664,7 @@ class QuranContinuousPlayerService {
     bool play = true,
     int? generation,
   }) async {
+    activeReciter.requireAvailable();
     final claimed = generation ?? ++_playbackGeneration;
     if (claimed != _playbackGeneration) return false;
     return _loadClaimedPlaylist(
@@ -810,12 +882,11 @@ class QuranContinuousPlayerService {
         var baseIndex = _baseQueue.indexOf(current);
         if (baseIndex < 0) baseIndex = 0;
         final wasPaused = _stateNotifier.value.isPaused;
-        _queue = expandRepeatQueue<Ayah>(
-          _baseQueue.sublist(baseIndex),
-          _repeat,
-        );
+        // Rebuild the whole range so later passes still start at its first
+        // ayah; playback resumes at the current ayah in the first pass.
+        _queue = expandRepeatQueue<Ayah>(_baseQueue, _repeat);
         await _loadPlaylistAndPlay(
-          startIndex: 0,
+          startIndex: firstPassIndexOf(baseIndex, _repeat),
           activeReciter: _resolveReciter(_stateNotifier.value.reciter),
           play: !wasPaused,
         );
@@ -1061,6 +1132,7 @@ class QuranContinuousPlayerService {
   }
 
   Future<void> changeReciter(QuranReciter reciter) async {
+    reciter.requireAvailable();
     if (_handsFreeOwner.isReserved) return;
     if (_stateNotifier.value.reciter == reciter) return;
     _emitState(_stateNotifier.value.copyWith(reciter: reciter));

@@ -10354,6 +10354,12 @@ abstract class AppLocalizations {
   /// **'{child} حصل على شهادة: {title}'**
   String guardianNewsCertificate(String child, String title);
 
+  /// What's new: the surah a guardian's promise depends on is complete
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقّق شرط وعدك لـ{child}: «{title}»'**
+  String guardianNewsPromise(String child, String title);
+
   /// What's new: a child met the weekly goal
   ///
   /// In ar, this message translates to:
@@ -14029,7 +14035,7 @@ abstract class AppLocalizations {
   /// No description provided for @recitationVoiceDisclosureBody.
   ///
   /// In ar, this message translates to:
-  /// **'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.'**
+  /// **'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.'**
   String get recitationVoiceDisclosureBody;
 
   /// No description provided for @recitationVoiceDisclosureGuardian.
@@ -14872,6 +14878,30 @@ abstract class AppLocalizations {
   /// **'سرعة التلاوة'**
   String get readerRepeatSpeed;
 
+  /// No description provided for @readerRepeatManualRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل مدى من الآيات'**
+  String get readerRepeatManualRange;
+
+  /// No description provided for @readerRepeatFromAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من الآية'**
+  String get readerRepeatFromAyah;
+
+  /// No description provided for @readerRepeatToAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى الآية'**
+  String get readerRepeatToAyah;
+
+  /// No description provided for @readerRepeatPlayRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل المدى'**
+  String get readerRepeatPlayRange;
+
   /// No description provided for @readerSleepTimer.
   ///
   /// In ar, this message translates to:
@@ -14905,19 +14935,19 @@ abstract class AppLocalizations {
   /// No description provided for @trustSourcesTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مصادر موثّقة'**
+  /// **'مصادر المحتوى'**
   String get trustSourcesTitle;
 
   /// No description provided for @trustSourcesBody.
   ///
   /// In ar, this message translates to:
-  /// **'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.'**
+  /// **'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.'**
   String get trustSourcesBody;
 
   /// No description provided for @trustSourcesMeta.
   ///
   /// In ar, this message translates to:
-  /// **'إصدار البيانات {version} • {count, plural, =1{مصدر واحد} =2{مصدران} few{{countText} مصادر} many{{countText} مصدرًا} other{{countText} مصدرًا}}'**
+  /// **'إصدار البيانات {version} • {count, plural, =1{مجموعة بيانات واحدة} =2{مجموعتا بيانات} few{{countText} مجموعات بيانات} many{{countText} مجموعة بيانات} other{{countText} مجموعة بيانات}}'**
   String trustSourcesMeta(String version, int count, String countText);
 
   /// No description provided for @trustVoiceTitle.
@@ -14967,6 +14997,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'خط أكبر، تباين أعلى، ورئيسية أبسط'**
   String get clarityModeSubtitle;
+
+  /// No description provided for @clarityContinueReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل القراءة'**
+  String get clarityContinueReading;
+
+  /// No description provided for @clarityTodayReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة اليوم'**
+  String get clarityTodayReview;
+
+  /// No description provided for @clarityNextPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصلاة القادمة: {prayer} {time}'**
+  String clarityNextPrayer(String prayer, String time);
 
   /// No description provided for @afterPrayerAzkarTitle.
   ///
@@ -15040,11 +15088,59 @@ abstract class AppLocalizations {
   /// **'اليوم {day} من رمضان'**
   String ramadanDayTitle(String day);
 
-  /// No description provided for @ramadanLastTen.
+  /// No description provided for @ramadanLastTenCountdown.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{تبدأ العشر الأواخر مساء الغد} =2{تبدأ العشر الأواخر بعد يومين} few{تبدأ العشر الأواخر بعد {countText} أيام} many{تبدأ العشر الأواخر بعد {countText} يومًا} other{تبدأ العشر الأواخر بعد {countText} يوم}}'**
+  String ramadanLastTenCountdown(int count, String countText);
+
+  /// No description provided for @ramadanLastTenTonight.
+  ///
+  /// In ar, this message translates to:
+  /// **'تبدأ العشر الأواخر الليلة بعد المغرب'**
+  String get ramadanLastTenTonight;
+
+  /// No description provided for @ramadanLastTenRemind.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكّرني قبل بدئها'**
+  String get ramadanLastTenRemind;
+
+  /// No description provided for @ramadanLastTenReminderOn.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنذكّرك قبل بدئها'**
+  String get ramadanLastTenReminderOn;
+
+  /// No description provided for @ramadanLastTenReminderOnHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط لإلغاء التذكير'**
+  String get ramadanLastTenReminderOnHint;
+
+  /// No description provided for @notificationLastTenTitle.
   ///
   /// In ar, this message translates to:
   /// **'العشر الأواخر'**
-  String get ramadanLastTen;
+  String get notificationLastTenTitle;
+
+  /// No description provided for @ramadanLastTenDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم {day} من العشر الأواخر'**
+  String ramadanLastTenDay(String day);
+
+  /// No description provided for @ramadanTemplateTwoHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.'**
+  String get ramadanTemplateTwoHint;
+
+  /// No description provided for @ramadanStartNextKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{ابدأ الختمة الثانية في يوم واحد} =2{ابدأ الختمة الثانية في يومين} few{ابدأ الختمة الثانية في {countText} أيام} many{ابدأ الختمة الثانية في {countText} يومًا} other{ابدأ الختمة الثانية في {countText} يوم}}'**
+  String ramadanStartNextKhatmah(int count, String countText);
 
   /// No description provided for @ramadanSummaryTitle.
   ///
@@ -15357,6 +15453,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'عبر Wi-Fi فقط'**
   String get audioDownloadsWifiOnly;
+
+  /// No description provided for @audioDownloadsWaitingForWifi.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».'**
+  String get audioDownloadsWaitingForWifi;
 
   /// No description provided for @audioDownloadsWifiUnavailable.
   ///
@@ -16251,6 +16353,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'طلبات تحتاج إلى مراجعتك'**
   String get groupKhatmahFailedRequests;
+
+  /// No description provided for @khatmahFinishedReadingPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت قراءة الصفحة'**
+  String get khatmahFinishedReadingPage;
 }
 
 class _AppLocalizationsDelegate

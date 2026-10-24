@@ -26,7 +26,7 @@ class AudioStoragePage extends StatelessWidget {
                 title: Text(context.l10n.tryAgain),
                 onTap: () => context.read<AudioDownloadsCubit>().loadStorage(),
               ),
-            for (final reciter in QuranReciter.values)
+            for (final reciter in QuranReciter.availableValues)
               ListTile(
                 title: Text(context.isArabic ? reciter.nameAr : reciter.nameEn),
                 subtitle: !state.bytes.containsKey(reciter)

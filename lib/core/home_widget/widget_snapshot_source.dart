@@ -52,9 +52,11 @@ final class WidgetSnapshotSource {
     lease.checkOwner(ownerId);
     final tomorrowFajr = await _tomorrowFajr();
     lease.checkOwner(ownerId);
+    final instant = now();
+    final tomorrowPrayers = await _tomorrowPrayers(instant);
+    lease.checkOwner(ownerId);
     final plan = await khatmah.getActivePlan();
     lease.checkOwner(ownerId);
-    final instant = now();
     final metrics = const ProgressMetricsService().calculate(
       records: reviewRecords,
       now: instant,
@@ -66,11 +68,31 @@ final class WidgetSnapshotSource {
       today: prayer,
       tomorrow: null,
       tomorrowFajr: tomorrowFajr,
+      tomorrowPrayers: tomorrowPrayers,
       languageCode: languageCode(),
       dueReviewCount: metrics.dueReviews,
       activePlan: plan,
       now: instant,
     );
+  }
+
+  /// Tomorrow's five fard prayers so the widget survives local midnight.
+  Future<List<WidgetPrayerTime>> _tomorrowPrayers(DateTime instant) async {
+    try {
+      final local = instant.toLocal();
+      // Noon keeps the calendar date unambiguous across time zones.
+      final times = await prayers.timesForDate(
+        DateTime(local.year, local.month, local.day + 1, 12),
+      );
+      return [
+        for (final prayer in times)
+          if (WidgetSnapshot.fardPrayerKeys.contains(prayer.key))
+            (key: prayer.key, at: prayer.time),
+      ];
+    } catch (_) {
+      // Without them the widget falls back to tomorrow's Fajr only.
+      return const [];
+    }
   }
 
   Future<DateTime?> _tomorrowFajr() async {

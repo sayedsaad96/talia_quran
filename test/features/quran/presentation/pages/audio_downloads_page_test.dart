@@ -62,6 +62,33 @@ void main() {
     await cubit.close();
   });
 
+  test('new reciter cubit start invokes download manager', () async {
+    final cubit = AudioDownloadsCubit(downloads);
+    await cubit.start(
+      reciter: QuranReciter.maher,
+      wifiOnly: false,
+      allowUnverifiedNetwork: true,
+      surah: 1,
+    );
+    expect(cubit.state.busy, isTrue);
+    expect(downloads.requestedReciters.single, QuranReciter.maher);
+    await cubit.close();
+  });
+
+  testWidgets('download reciter menu includes all new reciters', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(const AudioDownloadsPage()));
+    await tester.pumpAndSettle();
+    final menu = tester.widget<DropdownButton<QuranReciter>>(
+      find.descendant(
+        of: find.byType(DropdownButtonFormField<QuranReciter>),
+        matching: find.byType(DropdownButton<QuranReciter>),
+      ),
+    );
+    expect(menu.items!.map((item) => item.value), QuranReciter.values);
+  });
+
   testWidgets(
     'reciter sheet scrolls on a short Arabic screen with large text',
     (tester) async {
@@ -104,8 +131,50 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text(QuranReciter.shuraim.nameAr), findsOneWidget);
+      expect(find.text(QuranReciter.maher.nameAr), findsOneWidget);
     },
   );
+
+  testWidgets('English large-text sheet includes new reciter', (tester) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    getIt.registerSingleton<QuranReciterService>(
+      QuranReciterService(await SharedPreferences.getInstance()),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.7)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => ReciterSelectorSheet.show(context),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text(QuranReciter.shuraim.nameEn), findsOneWidget);
+    expect(find.text(QuranReciter.maher.nameEn), findsOneWidget);
+  });
 
   testWidgets('unknown storage never appears as measured zero', (tester) async {
     downloads.bytesResult = Completer<int>();
@@ -154,6 +223,38 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pump();
     expect(downloads.cancelCalls, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a detected network skips the confirmation dialog', (
+    tester,
+  ) async {
+    downloads.unmetered = false;
+    await tester.pumpWidget(app(const AudioDownloadsPage(initialSurah: 2)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Download or resume'));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue downloading'), findsNothing);
+    // The manager makes the Wi-Fi decision itself; nothing is pre-approved.
+    expect(downloads.requests.single, (
+      surah: 2,
+      juz: null,
+      wifi: true,
+      allowed: false,
+    ));
+    downloads.events.add(
+      const DownloadProgress(
+        phase: DownloadPhase.waitingForWifi,
+        completedAyahs: 0,
+        totalAyahs: 0,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.textContaining('Connect to Wi-Fi, or turn off'),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -247,7 +348,21 @@ void main() {
   ) async {
     await tester.pumpWidget(app(const AudioStoragePage()));
     await tester.pumpAndSettle();
-    expect(find.text('128 bytes'), findsNWidgets(QuranReciter.values.length));
+    expect(find.text('128 bytes'), findsWidgets);
+    for (final reciter in QuranReciter.values.skip(6)) {
+      await tester.scrollUntilVisible(
+        find.text(reciter.nameEn),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text(reciter.nameEn), findsOneWidget);
+    }
+    await tester.scrollUntilVisible(
+      find.text(QuranReciter.alafasy.nameEn),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip("Delete this reciter's downloads").first);
     await tester.pumpAndSettle();
     expect(downloads.deleted, isEmpty);
@@ -261,9 +376,14 @@ class _Downloads extends QuranAudioDownloadManager {
   _Downloads(SharedPreferences prefs) : super(prefs, _Quran());
   final events = StreamController<DownloadProgress>.broadcast();
   final requests = <({int? surah, int? juz, bool wifi, bool allowed})>[];
+  final requestedReciters = <QuranReciter>[];
   final deleted = <QuranReciter>[];
   int cancelCalls = 0;
   Completer<int>? bytesResult;
+  bool? unmetered;
+
+  @override
+  Future<bool?> isOnUnmeteredNetwork() async => unmetered;
 
   @override
   Stream<DownloadProgress> downloadSurahs(
@@ -272,6 +392,7 @@ class _Downloads extends QuranAudioDownloadManager {
     bool wifiOnly = true,
     bool allowUnverifiedNetwork = false,
   }) {
+    requestedReciters.add(reciter);
     requests.add((
       surah: surahIds.single,
       juz: null,
@@ -288,6 +409,7 @@ class _Downloads extends QuranAudioDownloadManager {
     bool wifiOnly = true,
     bool allowUnverifiedNetwork = false,
   }) {
+    requestedReciters.add(reciter);
     requests.add((
       surah: null,
       juz: juz,

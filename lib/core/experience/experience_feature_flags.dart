@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'rollout_manifest.dart';
+
 /// Independently switchable parts of the roadmap batch A experience rollout.
 ///
 /// Names are stable and each storage key is derived from the [name], so never
@@ -33,15 +35,18 @@ enum ExperienceFeature {
   String get storageKey => '${ExperienceFlags.keyPrefix}$name';
 }
 
-/// Rollout switches for [ExperienceFeature]. Every part is off until
-/// explicitly enabled, and a missing, mistyped or unreadable value counts as
-/// off. Turning one off restores the previous UI and never deletes data.
+/// Rollout switches for [ExperienceFeature]. A stored value wins; otherwise
+/// [ExperienceFlags.fromPreferences] falls back to the shipped default in
+/// [RolloutManifest]. An unreadable value counts as off. Turning one off
+/// restores the previous UI and never deletes data.
 class ExperienceFlags {
+  /// Reads only [_readBool]: a missing value is off (tests, explicit wiring).
   const ExperienceFlags(this._readBool);
 
-  /// Reads from [prefs], treating any read failure as "off".
+  /// Reads from [prefs], then the shipped default; read failures are "off".
   ExperienceFlags.fromPreferences(SharedPreferences prefs)
-    : _readBool = prefs.getBool;
+    : _readBool = ((key) =>
+          prefs.getBool(key) ?? RolloutManifest.defaultFor(key));
 
   static const keyPrefix = 'experience_flag_';
 

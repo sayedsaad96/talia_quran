@@ -81,3 +81,23 @@ RamadanInfo ramadanInfoAt(DateTime now, {required int adjustmentDays}) {
   } catch (_) {}
   return const RamadanInfo(phase: RamadanPhase.none);
 }
+
+/// Ramadan day whose evening begins the last ten nights (night 21 starts at
+/// Maghrib of day 20).
+const int lastTenEveDay = 20;
+
+/// Days from today until the evening the last ten nights begin: 0 on day 20
+/// itself, null outside Ramadan days 1–20.
+int? daysUntilLastTenEve(RamadanInfo info) {
+  final day = info.day;
+  if (info.phase != RamadanPhase.ramadan || day == null || day < 1) return null;
+  if (day > lastTenEveDay) return null;
+  return lastTenEveDay - day;
+}
+
+/// 1-based day within the last ten (day 21 is 1), or null outside them.
+int? lastTenDayNumber(RamadanInfo info) {
+  final day = info.day;
+  if (info.phase != RamadanPhase.lastTen || day == null) return null;
+  return day - lastTenEveDay;
+}

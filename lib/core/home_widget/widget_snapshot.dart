@@ -18,6 +18,7 @@ final class WidgetSnapshot extends Equatable {
     this.wirdDonePages,
     this.wirdSurahName,
     this.expiresAt,
+    this.dayEndsAt,
     this.upcomingPrayers = const [],
     this.languageCode,
     this.adultNoData = false,
@@ -31,6 +32,7 @@ final class WidgetSnapshot extends Equatable {
       wirdToPage = null,
       wirdDonePages = null,
       expiresAt = null,
+      dayEndsAt = null,
       wirdSurahName = null,
       upcomingPrayers = const [],
       languageCode = null,
@@ -49,7 +51,12 @@ final class WidgetSnapshot extends Equatable {
   final String? wirdSurahName;
   final DateTime? expiresAt;
 
-  /// Today's remaining fard prayers plus tomorrow's Fajr, ascending. The native
+  /// End of the snapshot's local day. From then on the native side hides the
+  /// review and wird rows (they describe that day) but keeps the prayer row.
+  /// Missing in older snapshots, which means no day end.
+  final DateTime? dayEndsAt;
+
+  /// Today's remaining fard prayers plus tomorrow's five, ascending. The native
   /// side picks the first one still in the future whenever it draws.
   final List<WidgetPrayerTime> upcomingPrayers;
 
@@ -74,11 +81,12 @@ final class WidgetSnapshot extends Equatable {
   bool get clearsNative => isEmpty && !adultNoData;
 
   /// Instants after [now] at which the widget must redraw: each upcoming
-  /// prayer and the expiry.
+  /// prayer, the day end and the expiry.
   List<DateTime> redrawTimes(DateTime now) {
     final times = <DateTime>{
       for (final prayer in upcomingPrayers) prayer.at,
       ?nextPrayerAt,
+      ?dayEndsAt,
       ?expiresAt,
     }.where((time) => time.isAfter(now)).toList()..sort();
     return List.unmodifiable(times);
@@ -115,6 +123,7 @@ final class WidgetSnapshot extends Equatable {
     ];
     if (prayers.isNotEmpty) json['upcomingPrayers'] = prayers;
     _put(json, 'expiresAt', expiresAt?.millisecondsSinceEpoch);
+    _put(json, 'dayEndsAt', dayEndsAt?.millisecondsSinceEpoch);
     _put(json, 'wirdFromPage', wirdFromPage);
     _put(json, 'wirdToPage', wirdToPage);
     _put(json, 'wirdDonePages', wirdDonePages);
@@ -139,6 +148,7 @@ final class WidgetSnapshot extends Equatable {
     wirdDonePages,
     wirdSurahName,
     expiresAt,
+    dayEndsAt,
     upcomingPrayers,
     languageCode,
     adultNoData,

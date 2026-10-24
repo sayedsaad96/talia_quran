@@ -6040,6 +6040,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String guardianNewsPromise(String child, String title) {
+    return 'تحقّق شرط وعدك لـ$child: «$title»';
+  }
+
+  @override
   String guardianNewsWeek(String child) {
     return '$child أكمل هدف الأسبوع';
   }
@@ -8372,7 +8377,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureBody =>
-      'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
+      'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
 
   @override
   String get recitationVoiceDisclosureGuardian =>
@@ -8843,6 +8848,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readerRepeatSpeed => 'سرعة التلاوة';
 
   @override
+  String get readerRepeatManualRange => 'تشغيل مدى من الآيات';
+
+  @override
+  String get readerRepeatFromAyah => 'من الآية';
+
+  @override
+  String get readerRepeatToAyah => 'إلى الآية';
+
+  @override
+  String get readerRepeatPlayRange => 'تشغيل المدى';
+
+  @override
   String get readerSleepTimer => 'مؤقت النوم';
 
   @override
@@ -8860,22 +8877,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trustCenterTitle => 'كيف نحفظ المحتوى وخصوصيتك';
 
   @override
-  String get trustSourcesTitle => 'مصادر موثّقة';
+  String get trustSourcesTitle => 'مصادر المحتوى';
 
   @override
   String get trustSourcesBody =>
-      'لا يوجد في تالية أي نص ديني مولَّد. كل نص له مصدر ومرجع.';
+      'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countText مصدرًا',
-      many: '$countText مصدرًا',
-      few: '$countText مصادر',
-      two: 'مصدران',
-      one: 'مصدر واحد',
+      other: '$countText مجموعة بيانات',
+      many: '$countText مجموعة بيانات',
+      few: '$countText مجموعات بيانات',
+      two: 'مجموعتا بيانات',
+      one: 'مجموعة بيانات واحدة',
     );
     return 'إصدار البيانات $version • $_temp0';
   }
@@ -8905,6 +8922,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clarityModeSubtitle => 'خط أكبر، تباين أعلى، ورئيسية أبسط';
+
+  @override
+  String get clarityContinueReading => 'أكمل القراءة';
+
+  @override
+  String get clarityTodayReview => 'مراجعة اليوم';
+
+  @override
+  String clarityNextPrayer(String prayer, String time) {
+    return 'الصلاة القادمة: $prayer $time';
+  }
 
   @override
   String get afterPrayerAzkarTitle => 'أذكار بعد الصلاة';
@@ -8961,7 +8989,56 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get ramadanLastTen => 'العشر الأواخر';
+  String ramadanLastTenCountdown(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبدأ العشر الأواخر بعد $countText يوم',
+      many: 'تبدأ العشر الأواخر بعد $countText يومًا',
+      few: 'تبدأ العشر الأواخر بعد $countText أيام',
+      two: 'تبدأ العشر الأواخر بعد يومين',
+      one: 'تبدأ العشر الأواخر مساء الغد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ramadanLastTenTonight => 'تبدأ العشر الأواخر الليلة بعد المغرب';
+
+  @override
+  String get ramadanLastTenRemind => 'ذكّرني قبل بدئها';
+
+  @override
+  String get ramadanLastTenReminderOn => 'سنذكّرك قبل بدئها';
+
+  @override
+  String get ramadanLastTenReminderOnHint => 'اضغط لإلغاء التذكير';
+
+  @override
+  String get notificationLastTenTitle => 'العشر الأواخر';
+
+  @override
+  String ramadanLastTenDay(String day) {
+    return 'اليوم $day من العشر الأواخر';
+  }
+
+  @override
+  String get ramadanTemplateTwoHint =>
+      'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.';
+
+  @override
+  String ramadanStartNextKhatmah(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ابدأ الختمة الثانية في $countText يوم',
+      many: 'ابدأ الختمة الثانية في $countText يومًا',
+      few: 'ابدأ الختمة الثانية في $countText أيام',
+      two: 'ابدأ الختمة الثانية في يومين',
+      one: 'ابدأ الختمة الثانية في يوم واحد',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get ramadanSummaryTitle => 'حصاد رمضان';
@@ -9152,6 +9229,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get audioDownloadsWifiOnly => 'عبر Wi-Fi فقط';
+
+  @override
+  String get audioDownloadsWaitingForWifi =>
+      'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».';
 
   @override
   String get audioDownloadsWifiUnavailable =>
@@ -9704,4 +9785,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupKhatmahFailedRequests => 'طلبات تحتاج إلى مراجعتك';
+
+  @override
+  String get khatmahFinishedReadingPage => 'أتممت قراءة الصفحة';
 }
