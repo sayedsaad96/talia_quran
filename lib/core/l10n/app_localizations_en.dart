@@ -8968,6 +8968,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'The last ten nights begin tonight after Maghrib';
 
   @override
+  String get ramadanLastTenRemind => 'Remind me before they begin';
+
+  @override
+  String get ramadanLastTenReminderOn => 'We\'ll remind you before they begin';
+
+  @override
+  String get ramadanLastTenReminderOnHint => 'Tap to cancel the reminder';
+
+  @override
+  String get notificationLastTenTitle => 'The last ten nights';
+
+  @override
   String ramadanLastTenDay(String day) {
     return 'Day $day of the last ten';
   }

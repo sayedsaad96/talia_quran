@@ -375,6 +375,7 @@ class TaliaNotificationService {
   static const int _fridayKahfId = 1060;
   static const int _weeklyImpactId = 1064;
   static const int _forgettingForecastId = 1065;
+  static const int _lastTenReminderId = 1066;
   static const int _tahajjudId = 1061;
   static const int _khatmahReminderId = 1062;
   static const int _khatmahReminderBaseId = 1110;
@@ -1871,6 +1872,33 @@ class TaliaNotificationService {
   Future<void> cancelForgettingForecastReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _forgettingForecastId);
+  }
+
+  // ─── Ramadan: last ten nights ───────────────────────────────────────────────
+
+  /// One-off reminder on the evening the last ten nights of Ramadan begin.
+  /// Rescheduled on every refresh, so a changed date or opt-out replaces it.
+  Future<void> scheduleLastTenReminder({
+    required String title,
+    required String body,
+    required DateTime at,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelLastTenReminder();
+    await _zonedSchedule(
+      id: _lastTenReminderId,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(at, tz.local),
+      notificationDetails: _milestoneCelebrationNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: '/',
+    );
+  }
+
+  Future<void> cancelLastTenReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _lastTenReminderId);
   }
 
   // ─── Tahajjud / Qiyam Al-Layl Reminder ──────────────────────────────────────

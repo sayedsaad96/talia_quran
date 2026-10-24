@@ -12,6 +12,7 @@ import 'package:talia_quran/core/seasons/season_calendar.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/seasons/data/ramadan_card_dismiss_store.dart';
 import 'package:talia_quran/features/seasons/data/tarawih_log_store.dart';
+import 'package:talia_quran/features/seasons/domain/last_ten_reminder.dart';
 import 'package:talia_quran/features/seasons/presentation/widgets/home_ramadan_card.dart';
 
 class _MutableOwner implements RecordOwnerProvider {
@@ -92,6 +93,8 @@ void main() {
     bool active = false,
     bool routed = false,
     Locale locale = const Locale('ar'),
+    SharedPreferences? reminderPrefs,
+    void Function(BuildContext context)? onReminderChanged,
   }) async {
     final body = Scaffold(
       body: SingleChildScrollView(
@@ -104,6 +107,8 @@ void main() {
           tarawihStore: tarawihStore ?? tarawih,
           loadKhatmahCompletions: completions ?? () async => [],
           hasActiveKhatmah: () async => active,
+          prefs: reminderPrefs,
+          onReminderChanged: onReminderChanged,
         ),
       ),
     );
@@ -176,6 +181,47 @@ void main() {
       });
     }
   }
+
+  testWidgets('the last-ten reminder is off until tapped, then toggles', (
+    tester,
+  ) async {
+    flag(true);
+    var changes = 0;
+    const toggle = ValueKey('home_ramadan_last_ten_reminder');
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      reminderPrefs: prefs,
+      onReminderChanged: (_) => changes++,
+    );
+    expect(find.text('ذكّرني قبل بدئها'), findsOneWidget);
+    expect(prefs.getBool(lastTenReminderPreferenceKey), isNull);
+
+    await tester.tap(find.byKey(toggle));
+    await tester.pumpAndSettle();
+    expect(prefs.getBool(lastTenReminderPreferenceKey), isTrue);
+    expect(find.text('سنذكّرك قبل بدئها'), findsOneWidget);
+
+    await tester.tap(find.byKey(toggle));
+    await tester.pumpAndSettle();
+    expect(prefs.getBool(lastTenReminderPreferenceKey), isFalse);
+    expect(changes, 2);
+  });
+
+  testWidgets('no reminder toggle once the last ten have begun', (
+    tester,
+  ) async {
+    flag(true);
+    await pump(
+      tester,
+      info(RamadanPhase.lastTen, day: 22),
+      reminderPrefs: prefs,
+    );
+    expect(
+      find.byKey(const ValueKey('home_ramadan_last_ten_reminder')),
+      findsNothing,
+    );
+  });
 
   testWidgets('each phase renders its card; none and flag off render nothing', (
     tester,

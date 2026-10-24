@@ -88,6 +88,7 @@ void main() {
     when(
       () => service.cancelForgettingForecastReminder(),
     ).thenAnswer((_) async {});
+    when(() => service.cancelLastTenReminder()).thenAnswer((_) async {});
     when(() => service.cancelFridayKahfReminder()).thenAnswer((_) async {});
     when(() => service.cancelWeeklyImpactReminder()).thenAnswer((_) async {});
     when(

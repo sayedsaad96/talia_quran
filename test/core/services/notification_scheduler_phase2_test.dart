@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/seasons/season_calendar.dart';
+import 'package:talia_quran/features/seasons/domain/last_ten_reminder.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
@@ -31,6 +33,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(FakeScheduledPrayerNotification());
     registerFallbackValue(<ScheduledPrayerNotification>[]);
+    registerFallbackValue(DateTime(2000));
   });
 
   late MockTaliaNotificationService mockNotificationService;
@@ -84,6 +87,16 @@ void main() {
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelForgettingForecastReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelLastTenReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleLastTenReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        at: any(named: 'at'),
+      ),
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleForgettingForecastReminder(
@@ -355,6 +368,68 @@ void main() {
         ),
       );
     });
+  });
+
+  group('Last-ten reminder', () {
+    // Ramadan 1448 by the tabular calendar; asserted below, not assumed.
+    final now = DateTime(2027, 2, 12, 9);
+    final info = ramadanInfoAt(now, adjustmentDays: 0);
+
+    NotificationScheduler scheduler({bool adult = true}) =>
+        NotificationScheduler(
+          mockNotificationService,
+          forecastAudienceIsAdult: (_) async => adult,
+          seasonNow: () => now,
+        );
+
+    test('an opted-in adult gets one reminder on the evening of day 20', () async {
+      expect(info.phase, RamadanPhase.ramadan);
+      SharedPreferences.setMockInitialValues({
+        lastTenReminderPreferenceKey: true,
+        ExperienceFeature.seasonalRamadan.storageKey: true,
+      });
+      await scheduler().refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+      final first = info.firstDay!;
+      // No prayer times without a city, so the fallback time applies.
+      final expected = DateTime(first.year, first.month, first.day + 19, 17, 30);
+      verify(
+        () => mockNotificationService.scheduleLastTenReminder(
+          title: 'العشر الأواخر',
+          body: 'تبدأ العشر الأواخر الليلة بعد المغرب',
+          at: expected,
+        ),
+      ).called(1);
+    });
+
+    for (final (label, prefs, adult) in [
+      ('not opted in', {ExperienceFeature.seasonalRamadan.storageKey: true}, true),
+      ('flag off', {lastTenReminderPreferenceKey: true}, true),
+      (
+        'a child profile',
+        {
+          lastTenReminderPreferenceKey: true,
+          ExperienceFeature.seasonalRamadan.storageKey: true,
+        },
+        false,
+      ),
+    ]) {
+      test('$label cancels and never schedules', () async {
+        SharedPreferences.setMockInitialValues(prefs);
+        await scheduler(adult: adult).refreshNotifications(
+          lookupAppLocalizations(const Locale('ar')),
+        );
+        verify(() => mockNotificationService.cancelLastTenReminder()).called(1);
+        verifyNever(
+          () => mockNotificationService.scheduleLastTenReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            at: any(named: 'at'),
+          ),
+        );
+      });
+    }
   });
 
   group('Forgetting forecast reminder', () {

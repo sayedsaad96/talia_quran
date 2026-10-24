@@ -15052,6 +15052,30 @@ abstract class AppLocalizations {
   /// **'تبدأ العشر الأواخر الليلة بعد المغرب'**
   String get ramadanLastTenTonight;
 
+  /// No description provided for @ramadanLastTenRemind.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكّرني قبل بدئها'**
+  String get ramadanLastTenRemind;
+
+  /// No description provided for @ramadanLastTenReminderOn.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنذكّرك قبل بدئها'**
+  String get ramadanLastTenReminderOn;
+
+  /// No description provided for @ramadanLastTenReminderOnHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط لإلغاء التذكير'**
+  String get ramadanLastTenReminderOnHint;
+
+  /// No description provided for @notificationLastTenTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر الأواخر'**
+  String get notificationLastTenTitle;
+
   /// No description provided for @ramadanLastTenDay.
   ///
   /// In ar, this message translates to:

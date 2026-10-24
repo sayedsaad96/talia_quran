@@ -8978,6 +8978,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ramadanLastTenTonight => 'تبدأ العشر الأواخر الليلة بعد المغرب';
 
   @override
+  String get ramadanLastTenRemind => 'ذكّرني قبل بدئها';
+
+  @override
+  String get ramadanLastTenReminderOn => 'سنذكّرك قبل بدئها';
+
+  @override
+  String get ramadanLastTenReminderOnHint => 'اضغط لإلغاء التذكير';
+
+  @override
+  String get notificationLastTenTitle => 'العشر الأواخر';
+
+  @override
   String ramadanLastTenDay(String day) {
     return 'اليوم $day من العشر الأواخر';
   }

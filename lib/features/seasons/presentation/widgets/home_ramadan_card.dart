@@ -13,7 +13,9 @@ import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/seasons/season_calendar.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/hijri_date_adjustment.dart';
+import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -22,6 +24,7 @@ import '../../../home/presentation/widgets/glass_panel.dart';
 import '../../../khatmah/domain/repositories/khatmah_repository.dart';
 import '../../data/ramadan_card_dismiss_store.dart';
 import '../../data/tarawih_log_store.dart';
+import '../../domain/last_ten_reminder.dart';
 import 'tarawih_log_sheet.dart';
 
 /// Ramadan card on the home page, by phase. Renders nothing unless the
@@ -37,6 +40,8 @@ class HomeRamadanCard extends StatefulWidget {
     this.tarawihStore,
     this.loadKhatmahCompletions,
     this.hasActiveKhatmah,
+    this.prefs,
+    this.onReminderChanged,
   });
 
   final HomeSkin skin;
@@ -51,6 +56,12 @@ class HomeRamadanCard extends StatefulWidget {
   final Future<List<DateTime>> Function()? loadKhatmahCompletions;
   final Future<bool> Function()? hasActiveKhatmah;
 
+  /// Holds the last-ten reminder opt-in; defaults to get_it.
+  final SharedPreferences? prefs;
+
+  /// Runs after the opt-in changes; defaults to rescheduling notifications.
+  final void Function(BuildContext context)? onReminderChanged;
+
   @override
   State<HomeRamadanCard> createState() => _HomeRamadanCardState();
 }
@@ -64,6 +75,7 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
   int _pages = 0;
   int _khatmahs = 0;
   bool _summaryLoaded = false;
+  bool _reminderOn = false;
 
   static bool get _flagOn =>
       getIt.isRegistered<ExperienceFlags>() &&
@@ -102,6 +114,7 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
           ).hYear;
     _dismissed = _dismissStore?.isDismissed(info.phase, _year) ?? false;
     if (_dismissed) return;
+    _reminderOn = _prefs?.getBool(lastTenReminderPreferenceKey) ?? false;
     if (info.phase == RamadanPhase.afterEid) {
       unawaited(_loadSummary(info));
     } else if (info.phase != RamadanPhase.invite) {
@@ -193,6 +206,32 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     );
   }
 
+  SharedPreferences? get _prefs =>
+      widget.prefs ??
+      (getIt.isRegistered<SharedPreferences>()
+          ? getIt<SharedPreferences>()
+          : null);
+
+  Future<void> _toggleReminder() async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    final on = !_reminderOn;
+    if (!await prefs.setBool(lastTenReminderPreferenceKey, on)) return;
+    if (!mounted) return;
+    setState(() => _reminderOn = on);
+    (widget.onReminderChanged ?? _refreshNotifications)(context);
+  }
+
+  static void _refreshNotifications(BuildContext context) {
+    if (!getIt.isRegistered<NotificationScheduler>()) return;
+    unawaited(
+      getIt<NotificationScheduler>().refreshNotifications(
+        context.l10n,
+        force: true,
+      ),
+    );
+  }
+
   void _logTarawih() {
     final store = _tarawih;
     if (store == null) return;
@@ -215,6 +254,7 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
         title = l10n.ramadanInviteTitle;
         body = l10n.ramadanInviteBody;
         actions.add(_button(l10n.ramadanOpenKhatmah, _openKhatmah, 'khatmah'));
+        _addReminderToggle(actions, info, skin, l10n);
       case RamadanPhase.ramadan:
       case RamadanPhase.lastTen:
         title = l10n.ramadanDayTitle(
@@ -224,6 +264,7 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
         actions
           ..add(_button(l10n.ramadanOpenKhatmah, _openKhatmah, 'khatmah'))
           ..add(_button(l10n.ramadanLogTarawih, _logTarawih, 'tarawih'));
+        _addReminderToggle(actions, info, skin, l10n);
       case RamadanPhase.afterEid:
         if (!_summaryLoaded) return const SizedBox.shrink();
         title = l10n.ramadanSummaryTitle;
@@ -310,6 +351,32 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Opt-in for the evening the last ten nights begin, offered only while
+  /// that evening is still ahead.
+  void _addReminderToggle(
+    List<Widget> actions,
+    RamadanInfo info,
+    HomeSkin skin,
+    AppLocalizations l10n,
+  ) {
+    if (lastTenEveDate(info) == null || _prefs == null) return;
+    actions.add(
+      Semantics(
+        toggled: _reminderOn,
+        hint: _reminderOn ? l10n.ramadanLastTenReminderOnHint : null,
+        child: TextButton.icon(
+          key: const ValueKey('home_ramadan_last_ten_reminder'),
+          onPressed: () => unawaited(_toggleReminder()),
+          icon: Icon(TaliaIcons.bell, size: 18, color: skin.gold),
+          label: Text(
+            _reminderOn ? l10n.ramadanLastTenReminderOn : l10n.ramadanLastTenRemind,
+            style: AppTypography.labelSmall.copyWith(color: skin.textOnHero),
+          ),
         ),
       ),
     );
