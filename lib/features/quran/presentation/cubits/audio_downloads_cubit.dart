@@ -30,7 +30,7 @@ class AudioDownloadsCubit extends Cubit<AudioDownloadsState> {
     emit(AudioDownloadsState(bytes: state.bytes, busy: true));
     try {
       final bytes = <QuranReciter, int>{};
-      for (final reciter in QuranReciter.values) {
+      for (final reciter in QuranReciter.availableValues) {
         bytes[reciter] = await _manager.usedBytes(reciter: reciter);
       }
       if (!isClosed) emit(AudioDownloadsState(bytes: bytes));
@@ -51,6 +51,7 @@ class AudioDownloadsCubit extends Cubit<AudioDownloadsState> {
     int? surah,
     int? juz,
   }) async {
+    reciter.requireAvailable();
     if (isClosed || state.busy) return;
     emit(AudioDownloadsState(bytes: state.bytes, busy: true));
     await _subscription?.cancel();

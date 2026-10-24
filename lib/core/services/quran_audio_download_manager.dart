@@ -111,6 +111,7 @@ class QuranAudioDurableCache implements QuranAudioDurableLookup {
     QuranReciter? reciter,
   }) async {
     final actual = reciter ?? QuranReciter.alafasy;
+    actual.requireAvailable();
     final url = QuranAudioService.buildUrl(
       surahId,
       ayahNumber,
@@ -120,10 +121,12 @@ class QuranAudioDurableCache implements QuranAudioDurableLookup {
     return await _validPath(info?.file);
   }
 
-  Future<File> fetch(QuranReciter reciter, int surahId, int ayahNumber) =>
-      cacheFor(reciter).getSingleFile(
-        QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter),
-      );
+  Future<File> fetch(QuranReciter reciter, int surahId, int ayahNumber) {
+    reciter.requireAvailable();
+    return cacheFor(reciter).getSingleFile(
+      QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter),
+    );
+  }
 
   Future<void> deleteReciter(QuranReciter reciter) =>
       cacheFor(reciter).emptyCache();
@@ -260,6 +263,7 @@ class QuranAudioDownloadManager {
   }
 
   Future<bool> isDownloaded(QuranReciter reciter, int surahId) async {
+    if (!reciter.isAvailable) return false;
     final row = _manifest[reciter.id]?[surahId.toString()];
     if (row?.completed != true) return false;
     final expected = (await _detail(surahId)).ayahs;
@@ -272,7 +276,8 @@ class QuranAudioDownloadManager {
   }
 
   Future<int> usedBytes({QuranReciter? reciter}) async {
-    final reciters = reciter == null ? QuranReciter.values : [reciter];
+    if (reciter != null && !reciter.isAvailable) return 0;
+    final reciters = reciter == null ? QuranReciter.availableValues : [reciter];
     for (final value in reciters) {
       if (_unverifiedReciters.contains(value.id)) {
         await _recoverFromFiles(value);
@@ -347,6 +352,7 @@ class QuranAudioDownloadManager {
     required bool wifiOnly,
     required bool allowUnverifiedNetwork,
   }) async* {
+    reciter.requireAvailable();
     final run = _DownloadRun(reciter, ++_generation);
     yield run.progress(DownloadPhase.checking);
     try {

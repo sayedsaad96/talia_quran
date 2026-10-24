@@ -72,9 +72,13 @@ class AudioResumeStore {
     final raw = _prefs.getString(_key);
     if (raw == null) return null;
     try {
-      return AudioResumePosition.fromJson(
+      final position = AudioResumePosition.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
+      if (position.reciter != null && !position.reciter!.isAvailable) {
+        return null;
+      }
+      return position;
     } catch (_) {
       return null;
     }
@@ -103,6 +107,7 @@ class AudioResumeStore {
   }
 
   Future<void> save(AudioResumePosition position) async {
+    position.reciter?.requireAvailable();
     final authority = _barrier.capture();
     await _save(position, authority);
   }
@@ -146,6 +151,7 @@ class AudioResumeStore {
     AudioResumePosition position,
     AccountDataLease authority,
   ) => _barrier.run<void>((lease) async {
+    position.reciter?.requireAvailable();
     await _prefs.setString(_key, jsonEncode(position.toJson()));
     lease.check();
   }, authority: authority);

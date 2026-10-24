@@ -3922,4 +3922,5 @@
   ,"groupKhatmahRetryRequest": "Retry request"
   ,"groupKhatmahDiscardRequestConfirm": "Discard this local request? It may already have reached the group. Discarding will not undo any server changes."
   ,"groupKhatmahFailedRequests": "Requests needing your attention"
+  ,"khatmahFinishedReadingPage": "Finished reading this page"
 }

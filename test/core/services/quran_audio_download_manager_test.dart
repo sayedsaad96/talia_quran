@@ -30,6 +30,56 @@ void main() {
   });
 
   test(
+    'new reciters download completely into independent durable stores',
+    () async {
+      for (final reciter in [QuranReciter.maher, QuranReciter.basfar]) {
+        final result = await manager.downloadSurahs(reciter, [
+          1,
+        ], allowUnverifiedNetwork: true).toList();
+        expect(result.last.phase, DownloadPhase.completed);
+        expect(await manager.isDownloaded(reciter, 1), isTrue);
+        expect(await manager.usedBytes(reciter: reciter), greaterThan(0));
+      }
+      expect(cache.fetchCalls, 4);
+      final maher = await cache.getValidFilePath(
+        1,
+        1,
+        reciter: QuranReciter.maher,
+      );
+      final basfar = await cache.getValidFilePath(
+        1,
+        1,
+        reciter: QuranReciter.basfar,
+      );
+      expect(maher, isNotNull);
+      expect(basfar, isNotNull);
+      expect(maher, isNot(basfar));
+    },
+  );
+
+  test('new reciter cached sources use their own durable files', () async {
+    await manager.downloadSurahs(QuranReciter.maher, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    await manager.downloadSurahs(QuranReciter.basfar, [
+      1,
+    ], allowUnverifiedNetwork: true).drain();
+    final audio = AudioCacheService(durableLookup: cache);
+    final maher = await audio.getAudioSource(1, 1, reciter: QuranReciter.maher);
+    final basfar = await audio.getAudioSource(
+      1,
+      1,
+      reciter: QuranReciter.basfar,
+    );
+    expect(maher, isNot(basfar));
+    expect(await audio.getAudioPath(1, 1, reciter: QuranReciter.maher), maher);
+    expect(
+      await audio.getCachedFilePath(1, 1, reciter: QuranReciter.basfar),
+      basfar,
+    );
+  });
+
+  test(
     'waits for an explicit decision when Wi-Fi type is unavailable',
     () async {
       final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
@@ -265,16 +315,19 @@ void main() {
     expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
   });
 
-  test('one failed ayah request does not abort the rest of the queue', () async {
-    cache.failingAyahs = {1};
-    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
-      1,
-    ], allowUnverifiedNetwork: true).toList();
-    expect(cache.fetchCalls, 2);
-    expect(progress.last.phase, DownloadPhase.failed);
-    expect(progress.last.completedAyahs, 1);
-    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
-  });
+  test(
+    'one failed ayah request does not abort the rest of the queue',
+    () async {
+      cache.failingAyahs = {1};
+      final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+        1,
+      ], allowUnverifiedNetwork: true).toList();
+      expect(cache.fetchCalls, 2);
+      expect(progress.last.phase, DownloadPhase.failed);
+      expect(progress.last.completedAyahs, 1);
+      expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+    },
+  );
 
   test('three failures in a row stop the run', () async {
     repository.surahOneAyahs = 6;
@@ -282,10 +335,7 @@ void main() {
     final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
       1,
     ], allowUnverifiedNetwork: true).toList();
-    expect(
-      cache.fetchCalls,
-      QuranAudioDownloadManager.maxConsecutiveFailures,
-    );
+    expect(cache.fetchCalls, QuranAudioDownloadManager.maxConsecutiveFailures);
     expect(progress.last.phase, DownloadPhase.failed);
   });
 

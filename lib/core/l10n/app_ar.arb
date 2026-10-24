@@ -3961,4 +3961,5 @@
   ,"groupKhatmahRetryRequest": "إعادة إرسال الطلب"
   ,"groupKhatmahDiscardRequestConfirm": "حذف هذا الطلب المحلي؟ ربما وصل إلى المجموعة بالفعل. حذفه لن يتراجع عن أي تغييرات حُفظت على الخادم."
   ,"groupKhatmahFailedRequests": "طلبات تحتاج إلى مراجعتك"
+  ,"khatmahFinishedReadingPage": "أتممت قراءة الصفحة"
 }

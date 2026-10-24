@@ -35,6 +35,7 @@ import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_playe
 import 'package:talia_quran/features/quran/presentation/cubits/quran_page_cubit.dart';
 import 'package:talia_quran/features/quran/presentation/pages/quran_reader_page.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_view.dart';
+import 'package:talia_quran/features/quran/presentation/widgets/reader_top_bar.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
 
 class MockAppSessionService extends Mock implements AppSessionService {}
@@ -314,6 +315,214 @@ void main() {
       },
     );
 
+    for (final endPage in [5, 604]) {
+      testWidgets(
+        'daily final page $endPage waits for explicit reading confirmation',
+        (tester) async {
+          final today = DateTime(2026, 10, 24);
+          final startPage = endPage - 4;
+          final plan = testPlan.copyWith(
+            targetPagesPerDay: 5,
+            completedPages: {
+              for (var page = startPage; page < endPage; page++) page,
+            },
+            dailyTargetDate: today,
+            dailyTargetStartPage: startPage,
+            dailyTargetEndPage: endPage,
+          );
+          final detail = QuranPageDetail(
+            pageNumber: endPage,
+            surahs: testPage.surahs,
+            ayahs: const [],
+          );
+          when(
+            () => mockQuranRepo.getQuranPage(endPage),
+          ).thenAnswer((_) async => Right(detail));
+          final fixture = await buildRealKhatmahCubit(
+            plan: plan,
+            now: () => today,
+          );
+          final saving = Completer<KhatmahReadingResult>();
+          when(
+            () => fixture.record(
+              any(),
+              endPage,
+              source: KhatmahReadingSource.digital,
+              readAt: today,
+            ),
+          ).thenAnswer((_) => saving.future);
+          await tester.pumpWidget(
+            buildReaderApp(
+              pageNumber: endPage,
+              readerMode: QuranReaderMode.khatmah,
+              khatmahCubit: fixture.cubit,
+            ),
+          );
+          await tester.pump();
+          if (endPage == 604) {
+            final topBar = tester.widget<ReaderTopBar>(
+              find.byType(ReaderTopBar),
+            );
+            topBar.onOpenMenu();
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 300));
+            final context = tester.element(find.byType(QuranReaderPage));
+            await tester.tap(
+              find.text(AppLocalizations.of(context).enterFocusMode),
+            );
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 300));
+            expect(find.byType(ReaderTopBar), findsNothing);
+          }
+          await tester.pump(const Duration(seconds: 30));
+
+          expect(fixture.cubit.state, isA<KhatmahActive>());
+          verifyNever(
+            () => fixture.record(
+              any(),
+              endPage,
+              source: KhatmahReadingSource.digital,
+              readAt: today,
+            ),
+          );
+          expect(
+            find.byKey(const Key('khatmah_wird_closing_moment')),
+            findsNothing,
+          );
+          final button = find.byKey(const Key('khatmah_confirm_page_button'));
+          expect(button, findsOneWidget);
+          await tester.tap(button);
+          await tester.pump();
+          await tester.tap(button);
+          await tester.pump();
+          verify(
+            () => fixture.record(
+              any(),
+              endPage,
+              source: KhatmahReadingSource.digital,
+              readAt: today,
+            ),
+          ).called(1);
+
+          saving.complete(
+            KhatmahReadingResult(
+              plan: plan.copyWith(
+                completedPages: {...plan.completedPages, endPage},
+              ),
+              newlyCompletedPages: {endPage},
+            ),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(fixture.cubit.state, isA<KhatmahWirdCompleted>());
+          expect(
+            find.byKey(const Key('khatmah_wird_closing_moment')),
+            findsOneWidget,
+          );
+          await tester.pumpWidget(const SizedBox.shrink());
+          await fixture.cubit.close();
+        },
+      );
+    }
+
+    testWidgets('earlier unread page still counts automatically in khatmah', (
+      tester,
+    ) async {
+      final today = DateTime(2026, 10, 24);
+      final plan = testPlan.copyWith(
+        completedPages: {},
+        dailyTargetDate: today,
+        dailyTargetStartPage: 40,
+        dailyTargetEndPage: 44,
+      );
+      final fixture = await buildRealKhatmahCubit(plan: plan, now: () => today);
+      when(
+        () => fixture.record(
+          any(),
+          42,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      ).thenAnswer(
+        (_) async => KhatmahReadingResult(
+          plan: plan.copyWith(completedPages: {42}),
+          newlyCompletedPages: {42},
+        ),
+      );
+      await tester.pumpWidget(
+        buildReaderApp(
+          pageNumber: 42,
+          readerMode: QuranReaderMode.khatmah,
+          khatmahCubit: fixture.cubit,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 30));
+      expect((fixture.cubit.state as KhatmahActive).plan.completedPages, {42});
+      expect(
+        find.byKey(const Key('khatmah_confirm_page_button')),
+        findsNothing,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await fixture.cubit.close();
+    });
+
+    testWidgets('explicit final-page save failure can be retried', (
+      tester,
+    ) async {
+      final today = DateTime(2026, 10, 24);
+      final plan = testPlan.copyWith(
+        completedPages: {40, 41, 43, 44},
+        dailyTargetDate: today,
+        dailyTargetStartPage: 40,
+        dailyTargetEndPage: 44,
+      );
+      final fixture = await buildRealKhatmahCubit(plan: plan, now: () => today);
+      when(
+        () => fixture.record(
+          any(),
+          42,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      ).thenThrow(Exception('disk unavailable'));
+      await tester.pumpWidget(
+        buildReaderApp(
+          pageNumber: 42,
+          readerMode: QuranReaderMode.khatmah,
+          khatmahCubit: fixture.cubit,
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Finished reading this page'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('khatmah_confirm_page_button')));
+      await tester.pump();
+      expect(fixture.cubit.state, isA<KhatmahProgressFailure>());
+      expect(
+        find.byKey(const Key('khatmah_wird_closing_moment')),
+        findsNothing,
+      );
+      when(
+        () => fixture.record(
+          any(),
+          42,
+          source: KhatmahReadingSource.digital,
+          readAt: today,
+        ),
+      ).thenAnswer(
+        (_) async => KhatmahReadingResult(
+          plan: plan.copyWith(completedPages: {40, 41, 42, 43, 44}),
+          newlyCompletedPages: {42},
+        ),
+      );
+      await tester.tap(find.widgetWithText(TextButton, 'Retry').first);
+      await tester.pump();
+      expect(fixture.cubit.state, isA<KhatmahWirdCompleted>());
+      await tester.pumpWidget(const SizedBox.shrink());
+      await fixture.cubit.close();
+    });
+
     testWidgets(
       'generic confirmation success records the current Khatmah page exactly once',
       (tester) async {
@@ -365,10 +574,7 @@ void main() {
       final fixture = await buildRealKhatmahCubit();
 
       await tester.pumpWidget(
-        buildReaderApp(
-          pageNumber: 42,
-          readerMode: QuranReaderMode.free,
-        ),
+        buildReaderApp(pageNumber: 42, readerMode: QuranReaderMode.free),
       );
       await tester.pump();
       await triggerReadConfirmation(tester);

@@ -9785,4 +9785,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupKhatmahFailedRequests => 'طلبات تحتاج إلى مراجعتك';
+
+  @override
+  String get khatmahFinishedReadingPage => 'أتممت قراءة الصفحة';
 }

@@ -31,9 +31,7 @@ class ControlledAudioPlayer extends Mock implements AudioPlayer {
 
   /// Simulates the engine finishing the current track and moving to the next.
   void finishCurrentTrack() {
-    _playerStateController.add(
-      PlayerState(true, ProcessingState.completed),
-    );
+    _playerStateController.add(PlayerState(true, ProcessingState.completed));
   }
 
   Future<void> closeControllers() async {
@@ -335,6 +333,38 @@ void main() {
     const newReciter = QuranReciter.alafasy;
     await service.changeReciter(newReciter);
     expect(service.state.reciter?.id, 'alafasy');
+  });
+
+  test('new reciter plays from every public playback entry', () async {
+    await service.playSurah(1, reciter: QuranReciter.maher);
+    expect(service.state.reciter, QuranReciter.maher);
+    expect(service.state.isPlaying, isTrue);
+    expect(
+      await service.playAyahRange(1, 1, 2, reciter: QuranReciter.maher),
+      isTrue,
+    );
+    expect(service.state.reciter, QuranReciter.maher);
+    await service.playPage(1, reciter: QuranReciter.maher);
+    expect(service.state.reciter, QuranReciter.maher);
+    await service.playAyah(1, 1, reciter: QuranReciter.maher);
+    expect(service.state.reciter, QuranReciter.maher);
+    await reciterService.setReciter(QuranReciter.maher);
+    await service.playSurahQueue([1]);
+    expect(service.state.reciter, QuranReciter.maher);
+    expect(service.state.isSurahQueue, isTrue);
+  });
+
+  test('new reciter switches active and paused playlists', () async {
+    await service.playSurah(1);
+    await service.changeReciter(QuranReciter.maher);
+    expect(service.state.reciter, QuranReciter.maher);
+    expect(service.state.isPlaying, isTrue);
+    await service.pause();
+    final plays = audioPlayer.playCallCount;
+    await service.changeReciter(QuranReciter.basfar);
+    expect(service.state.reciter, QuranReciter.basfar);
+    expect(service.state.isPaused, isTrue);
+    expect(audioPlayer.playCallCount, plays);
   });
 
   test('stop resets state to idle', () async {

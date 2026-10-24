@@ -8,6 +8,7 @@ import '../../../../core/identity/account_data_barrier.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_read_confirmation_policy.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../../domain/usecases/delete_khatmah_usecase.dart';
@@ -111,31 +112,39 @@ class KhatmahCompleted extends KhatmahState {
 }
 
 class _RecordRequestKey {
-  const _RecordRequestKey(this.planId, this.source, this.pageNumber);
+  const _RecordRequestKey(
+    this.planId,
+    this.source,
+    this.pageNumber,
+    this.isExplicit,
+  );
 
   final String planId;
   final KhatmahReadingSource source;
   final int pageNumber;
+  final bool isExplicit;
 
   @override
   bool operator ==(Object other) =>
       other is _RecordRequestKey &&
       other.planId == planId &&
       other.source == source &&
-      other.pageNumber == pageNumber;
+      other.pageNumber == pageNumber &&
+      other.isExplicit == isExplicit;
 
   @override
-  int get hashCode => Object.hash(planId, source, pageNumber);
+  int get hashCode => Object.hash(planId, source, pageNumber, isExplicit);
 }
 
 class _RecordRequest {
-  _RecordRequest(this.plan, this.source, this.pageNumber)
-    : key = _RecordRequestKey(plan.id, source, pageNumber);
+  _RecordRequest(this.plan, this.source, this.pageNumber, this.isExplicit)
+    : key = _RecordRequestKey(plan.id, source, pageNumber, isExplicit);
   final KhatmahPlan plan;
 
   final KhatmahReadingSource source;
   final int pageNumber;
   final _RecordRequestKey key;
+  final bool isExplicit;
   final Completer<bool> completer = Completer<bool>();
   bool succeeded = false;
 }
@@ -418,14 +427,22 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     }
   }
 
-  Future<bool> recordDigitalPage(int pageNumber) =>
-      _recordCurrent(pageNumber, KhatmahReadingSource.digital);
+  Future<bool> recordDigitalPage(int pageNumber, {bool isExplicit = true}) =>
+      _recordCurrent(
+        pageNumber,
+        KhatmahReadingSource.digital,
+        isExplicit: isExplicit,
+      );
 
   Future<bool> recordPhysicalThroughPage(int pageNumber) =>
       _recordCurrent(pageNumber, KhatmahReadingSource.physical);
 
   Future<bool> recordPhysicalRange(KhatmahPlan confirmedPlan, int pageNumber) =>
-      _recordCurrent(pageNumber, KhatmahReadingSource.physical, confirmedPlan);
+      _recordCurrent(
+        pageNumber,
+        KhatmahReadingSource.physical,
+        confirmedPlan: confirmedPlan,
+      );
 
   /// Legacy dashboard entry point. A physical logger records an explicit range,
   /// never a fabricated cursor jump.
@@ -448,7 +465,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       await _recordCurrent(
         failed.request.pageNumber,
         failed.request.source,
-        failed.request.plan,
+        confirmedPlan: failed.request.plan,
+        // Retry is a deliberate user action, including when another queued
+        // save has since made this the final missing page.
+        isExplicit: true,
       );
     } else {
       await load();
@@ -457,18 +477,19 @@ class KhatmahCubit extends Cubit<KhatmahState> {
 
   Future<bool> _recordCurrent(
     int pageNumber,
-    KhatmahReadingSource source, [
+    KhatmahReadingSource source, {
     KhatmahPlan? confirmedPlan,
-  ]) {
+    bool isExplicit = true,
+  }) {
     if (_closing || isClosed) return Future<bool>.value(false);
     final plan = confirmedPlan ?? _recordingPlan;
     if (plan == null) return Future<bool>.value(false);
 
-    final key = _RecordRequestKey(plan.id, source, pageNumber);
+    final key = _RecordRequestKey(plan.id, source, pageNumber, isExplicit);
     final pending = _pendingRecordRequests[key];
     if (pending != null) return pending.future;
 
-    final request = _RecordRequest(plan, source, pageNumber);
+    final request = _RecordRequest(plan, source, pageNumber, isExplicit);
     _pendingRecordRequests[key] = request.completer;
     final operationTail = _recordTail.then((_) => _executeRecord(request));
     _recordTail = operationTail.then<void>(
@@ -514,6 +535,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
           ? request.plan
           : (_recordingPlan ?? request.plan);
       if (_recordingPlan?.id != request.key.planId) return false;
+      // Earlier queued pages can make this the final missing page by the time
+      // it reaches persistence. Only a deliberate confirmation may finish it.
+      if (!request.isExplicit &&
+          requiresKhatmahReadConfirmation(plan, request.pageNumber, _now())) {
+        return false;
+      }
 
       final operation = _readingClock == null
           ? _recordReading(plan, request.pageNumber, source: request.source)

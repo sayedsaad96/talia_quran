@@ -103,7 +103,7 @@ class ReciterSelectorSheet extends StatelessWidget {
               valueListenable: reciterService.currentReciter,
               builder: (context, current, _) {
                 return Column(
-                  children: QuranReciter.values.map((reciter) {
+                  children: QuranReciter.availableValues.map((reciter) {
                     final isSelected = reciter == current;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),

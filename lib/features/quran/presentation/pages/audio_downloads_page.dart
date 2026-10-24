@@ -175,7 +175,7 @@ class _DownloadViewState extends State<_DownloadView> {
     initialValue: _reciter,
     isExpanded: true,
     decoration: InputDecoration(labelText: context.l10n.selectReciter),
-    items: QuranReciter.values
+    items: QuranReciter.availableValues
         .map(
           (reciter) => DropdownMenuItem(
             value: reciter,

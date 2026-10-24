@@ -16353,6 +16353,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'طلبات تحتاج إلى مراجعتك'**
   String get groupKhatmahFailedRequests;
+
+  /// No description provided for @khatmahFinishedReadingPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت قراءة الصفحة'**
+  String get khatmahFinishedReadingPage;
 }
 
 class _AppLocalizationsDelegate

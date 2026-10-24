@@ -319,7 +319,9 @@ class QuranContinuousPlayerService {
   }
 
   QuranReciter _resolveReciter(QuranReciter? reciter) {
-    return reciter ?? _reciterService.currentReciter.value;
+    final active = reciter ?? _reciterService.currentReciter.value;
+    active.requireAvailable();
+    return active;
   }
 
   // ---------------------------------------------------------------------------
@@ -337,6 +339,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
@@ -399,6 +402,7 @@ class QuranContinuousPlayerService {
     int endAyah, {
     QuranReciter? reciter,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return false;
     final generation = ++_playbackGeneration;
     final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
@@ -450,6 +454,7 @@ class QuranContinuousPlayerService {
     List<int> surahIds, {
     SleepTimerChoice sleep = SleepTimerChoice.off,
   }) async {
+    _resolveReciter(null);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(false);
@@ -510,6 +515,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
@@ -564,6 +570,7 @@ class QuranContinuousPlayerService {
     PlayScope scope = PlayScope.singleAyah,
     bool applyReaderSettings = false,
   }) async {
+    _resolveReciter(reciter);
     if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     final wasReset = await _prepareSession(applyReaderSettings);
@@ -657,6 +664,7 @@ class QuranContinuousPlayerService {
     bool play = true,
     int? generation,
   }) async {
+    activeReciter.requireAvailable();
     final claimed = generation ?? ++_playbackGeneration;
     if (claimed != _playbackGeneration) return false;
     return _loadClaimedPlaylist(
@@ -1124,6 +1132,7 @@ class QuranContinuousPlayerService {
   }
 
   Future<void> changeReciter(QuranReciter reciter) async {
+    reciter.requireAvailable();
     if (_handsFreeOwner.isReserved) return;
     if (_stateNotifier.value.reciter == reciter) return;
     _emitState(_stateNotifier.value.copyWith(reciter: reciter));

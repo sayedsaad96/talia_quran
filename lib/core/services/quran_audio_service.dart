@@ -8,6 +8,7 @@ class QuranAudioService {
   /// If [reciter] is provided, uses that reciter's base URL.
   /// Otherwise defaults to [AppConstants.audioBaseUrl].
   static String buildUrl(int surahId, int ayahNumber, {QuranReciter? reciter}) {
+    reciter?.requireAvailable();
     final s = surahId.toString().padLeft(3, '0');
     final a = ayahNumber.toString().padLeft(3, '0');
     final baseUrl = reciter?.baseUrl ?? AppConstants.audioBaseUrl;
