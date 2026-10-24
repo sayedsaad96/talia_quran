@@ -350,7 +350,7 @@
   - JSON تالف ← `empty = true` دون استثناء.
 - [ ] **Step 2:** `cd android; ./gradlew :app:testDebugUnitTest --tests '*WidgetSnapshotFormatterTest*'`. المتوقع: FAIL.
 - [x] **Step 3:** التنفيذ. التخطيط بـ`layoutDirection="locale"`. والنقر على كل سطر `PendingIntent` لرابطه.
-- [ ] **Step 4:** نفس الأمر، ثم `widget_deep_link_test.dart` (رابط غير معروف ← الرئيسية). المتوقع: PASS.
+- [x] **Step 4:** نجح `:app:testDebugUnitTest` كاملًا، 41 اختبارًا منها 9 للودجت، بإعداد مجلد اتصال Java مؤقت للعملية. اختبار الرابط غير المعروف ناجح ضمن فحص Flutter الشامل؛ تفاصيل الأمر في تقرير الودجت.
 - [ ] **Step 5:** على الإيميوليتر: إضافة الودجت، وتسجيل الخروج يفرّغه، وكل سطر يفتح مساره. تُدوَّن النتيجة في مصفوفة الأعلام.
 - [x] **Step 6:** Commit `feat(widget): Android home-screen widget with RTL rows and deep links`.
 - [x] **Step 7:** مراجعة Opus (`opus-architecture-reviewer`) لعزل الحسابات والكود الأصلي.
@@ -491,13 +491,14 @@
 
 ## 2. التحقق النهائي للمرحلة
 
-- [ ] `flutter analyze` بلا ملاحظات، و`flutter test` كاملاً ناجح، و`./gradlew :app:testDebugUnitTest` ناجح.
+- [x] `flutter analyze` بلا ملاحظات، و`flutter test` كاملاً ناجح (5170، بمهلة `2x` وتوازي 4)، و`./gradlew :app:testDebugUnitTest` ناجح (41، بإعداد Java مؤقت موثق).
 - [x] `scripts/verify_v1_release.ps1` ناجح محليًا بخياري `-TestConcurrency 4 -TestTimeout 2x`: `LOCAL PASS — RELEASE NO-GO`؛ لا بناء إصدار أو فحص قاعدة بعيدة.
 - [x] تقرير [حالة المرحلة](../reviews/2026-10-24-roadmap-phase-3-status.md) بالمُصلَح والمفتوح والتقارير التفصيلية.
 - [x] صفوف جديدة في `docs/release/flag-device-test-matrix.md` للأعلام الأربعة، مع توضيح أن تجربة الجهاز لم تنفذ.
 - [x] القيم الافتراضية لكل الأعلام مطفأة، ولم يفعّلها هذا التنفيذ. وتفعيل أي علم مشروط بالقسم 0 وبتجربة جهاز حقيقي.
 
-إعادة Gradle في 2026-10-24 انتهت قبل التجميع بخطأ
-`Unable to establish loopback connection`؛ يبقى بند التحقق الأول مفتوحًا رغم
-نجاح التحليل وجميع اختبارات Flutter. تبقى H2/H3 وI4 وبوابات الجهاز والخادم
-وK5 مفتوحة وفق شروطها أعلاه.
+تجاوز فحص Gradle عائق Java بإعداد مؤقت خاص بالعملية، ثم نجح بعد جلب أدوات
+التبعية المحددة. لا يثبت ذلك تجربة المشغّل أو بناء إصدار موقع. تبقى H2/H3
+وI4 وبوابات الجهاز والخادم وK5 مفتوحة وفق شروطها أعلاه. لم يثبت فشل اختبارات
+الودجت عبر Gradle قبل التنفيذ في J3 Step 2؛ إثبات الفشل/النجاح المعزول
+للمنسّق موثق، وعائق Java السابق ليس فشلًا سلوكيًا للاختبارات.

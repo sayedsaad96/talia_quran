@@ -59,9 +59,10 @@ workload difference when interpreting retained-font memory.
 - These commands required access to Flutter's SDK cache outside the workspace.
 - The original check had no Android target. A read-only ADB recheck on
   2026-10-24 found `127.0.0.1:5555`, API 28, reported model `NE2211`.
-  Its device type and suitability for a 1280 × 800 logical viewport have not
-  been verified, and no harness was installed or measured on it. The gate
-  remains pending.
+  A later read-only `wm` query reported physical size 720 × 1280 and density
+  240; its current configuration does not meet the required 1280 × 800 logical
+  viewport. Its device type remains unverified. No display setting was changed
+  and no harness was installed or measured on it. The gate remains pending.
 
 ## Required measurement before H3
 
