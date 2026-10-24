@@ -248,9 +248,17 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     _khatmahSubscription = _khatmahCubit?.stream.listen((state) {
       if (mounted) {
         _handleKhatmahState(context, state);
-        _cancelReadTimer();
         final detail = _currentDetail;
-        if (detail != null) _startReadTimer(detail);
+        if (detail == null) return;
+        // A running countdown continues across ordinary updates (a save
+        // finishing, a calendar refresh); it stops only when this page now
+        // needs the explicit button, and starts if none is running.
+        if (widget.readerMode == QuranReaderMode.khatmah &&
+            _requiresExplicitKhatmahConfirmation(detail.pageNumber)) {
+          _cancelReadTimer();
+        } else {
+          _startReadTimer(detail);
+        }
       }
     });
 
@@ -469,9 +477,14 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     unawaited(_confirmThenRecordKhatmah(pageNumber));
   }
 
+  /// Same plans the cubit records against: a failed save keeps its active
+  /// plan, so one failure never stops recording the pages read after it.
   KhatmahPlan? get _readableKhatmahPlan => switch (_khatmahCubit?.state) {
     KhatmahActive(:final plan) => plan,
     KhatmahWirdCompleted(:final plan) => plan,
+    KhatmahProgressFailure(:final plan?)
+        when plan.status == KhatmahStatus.active =>
+      plan,
     _ => null,
   };
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_read_confirmation_policy.dart';
 import '../cubits/khatmah_cubit.dart';
 
@@ -44,6 +45,10 @@ class _KhatmahPageConfirmationState extends State<KhatmahPageConfirmation> {
       final plan = switch (state) {
         KhatmahActive(:final plan) => plan,
         KhatmahWirdCompleted(:final plan) => plan,
+        // After a failed save the plan is still active: keep the button.
+        KhatmahProgressFailure(:final plan?)
+            when plan.status == KhatmahStatus.active =>
+          plan,
         _ => null,
       };
       if (plan == null ||
