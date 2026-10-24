@@ -57,7 +57,11 @@ workload difference when interpreting retained-font memory.
 - `flutter devices`: exit 0; Windows desktop, Chrome and Edge only.
 - `flutter emulators`: exit 0; no emulators available.
 - These commands required access to Flutter's SDK cache outside the workspace.
-- No Android tablet or Android emulator is available for the planned profile run.
+- The original check had no Android target. A read-only ADB recheck on
+  2026-10-24 found `127.0.0.1:5555`, API 28, reported model `NE2211`.
+  Its device type and suitability for a 1280 × 800 logical viewport have not
+  been verified, and no harness was installed or measured on it. The gate
+  remains pending.
 
 ## Required measurement before H3
 
@@ -132,3 +136,12 @@ text, source data, or persisted page identifiers are changed by the prototype.
   measurement or memory comparison was performed. The full application test
   suite was not run; the command above states the tested scope.
 - H2 Step 3 is ready; H2 measurement/decision and H3 remain pending.
+
+## Phase checkpoint: 2026-10-24
+
+The 269-test result above belongs to the renderer increment. Later phase-wide
+verification passed all **5,170 tests** with concurrency 4 and a bounded `2x`
+test-timeout multiplier; analysis reported no issues. This supplies no frame,
+glyph or memory measurement. H2 remains pending. See the
+[current phase status](2026-10-24-roadmap-phase-3-status.md) for native build,
+device and server gates.

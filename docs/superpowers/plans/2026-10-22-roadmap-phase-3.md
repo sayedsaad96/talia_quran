@@ -4,7 +4,7 @@
 
 **الهدف:** أربعة بنود من المرحلة 3 في خارطة التميّز، كلها خلف أعلام مطفأة:
 
-| البند | الاسم | العلم (موجود في `ExperienceFeature` ولا يقرؤه أي كود بعد) |
+| البند | الاسم | العلم في `ExperienceFeature`، مطفأ افتراضيًا |
 |---|---|---|
 | 7 | ودجت الشاشة الرئيسية (Android) | `homeWidget` |
 | 8 | المراجعة الصوتية دون شاشة «سمّع لي» | `handsFreeReview` |
@@ -281,16 +281,16 @@
   - `const WidgetSnapshot.empty()`
   - `WidgetSnapshot buildWidgetSnapshot({required bool enabled, required bool isAdult, required bool signedOutOrSwitching, PrayerTimesDay? today, PrayerTimesDay? tomorrow, required int dueReviewCount, KhatmahPlan? activePlan, required DateTime now})`. يُوجَّه المنفّذ إلى الأنواع الفعلية في `prayer_times_service.dart` و`khatmah_plan.dart`.
 
-- [ ] **Step 1: الاختبارات الفاشلة:**
+- [x] **Step 1: الاختبارات الفاشلة:**
   - علم مطفأ، أو ملف طفل (R6)، أو `signedOutOrSwitching` ← `WidgetSnapshot.empty()`.
   - بعد العشاء ← الصلاة القادمة فجر الغد.
   - `dueReviewCount < 0` ← 0.
   - لا خطة ختمة نشطة ← حقول الورد `null`.
   - `toJson()` لا يحتوي أي مفتاح نصي فيه نص آية. يُفحص بأن القيم النصية الوحيدة هي `nextPrayerKey` و`wirdSurahName`، وأن `wirdSurahName` من `SurahNames`.
-- [ ] **Step 2:** `flutter test test/core/home_widget`. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ.
-- [ ] **Step 4:** نفس الأمر. المتوقع: PASS.
-- [ ] **Step 5:** Commit `feat(widget): pure home-widget snapshot`.
+- [x] **Step 2:** `flutter test test/core/home_widget`. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ.
+- [x] **Step 4:** نفس الأمر. المتوقع: PASS.
+- [x] **Step 5:** Commit `feat(widget): pure home-widget snapshot`.
 
 ### Task J2: النشر والتحديث وعزل الحسابات
 
@@ -315,17 +315,17 @@
     - بعد جدولة الصلوات في `notification_scheduler`.
     - المهمة الدورية.
 
-- [ ] **Step 1: الاختبارات الفاشلة (بجسر وهمي):**
+- [x] **Step 1: الاختبارات الفاشلة (بجسر وهمي):**
   1. `refresh()` بعلم مفعّل وبالغ ← حفظ JSON غير فارغ، ثم `requestUpdate`.
   2. تبديل الحساب عبر `AccountDataBarrier.prepareOwner` ← `clear()` يُستدعى **قبل** أي `refresh` للحساب الجديد. **(Review Focus 1)**
   3. تسجيل الخروج ← لقطة فارغة.
   4. خطأ من الجسر ← يُسجَّل ولا يُرمى، فلا يُكسر الاستئناف.
   5. حالة العزل في `account_switch_isolation_test.dart`: لقطة الحساب A لا تبقى بعد الدخول بالحساب B.
-- [ ] **Step 2:** تشغيلها. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ.
-- [ ] **Step 4:** تشغيلها، ثم `test/core` و`test/integration`. المتوقع: PASS.
-- [ ] **Step 5:** تحديث `scripts/verify_v1_release.ps1` إن لزم بسبب التبعية الجديدة، وتشغيله دون `-BuildAndroidRelease` للتحقق من خطوة `pub get --enforce-lockfile`.
-- [ ] **Step 6:** Commit `feat(widget): publisher, refresh triggers, cleared on account change`.
+- [x] **Step 2:** تشغيلها. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ.
+- [x] **Step 4:** تشغيلها، ثم `test/core` و`test/integration`: ناجحان ضمن الفحص الشامل، 5170 اختبارًا.
+- [x] **Step 5:** `scripts/verify_v1_release.ps1` دون `-BuildAndroidRelease`: نجحت استعادة التبعيات مع ثبات القفل؛ التحقق محلي فقط.
+- [x] **Step 6:** Commit `feat(widget): publisher, refresh triggers, cleared on account change`.
 
 ### Task J3: الكود الأصلي
 
@@ -343,21 +343,31 @@
   - `data class WidgetRows(val prayerLine: String?, val reviewLine: String?, val wirdLine: String?, val empty: Boolean)`
   - `fun format(json: String?, arabic: Boolean, nowMillis: Long): WidgetRows`
 
-- [ ] **Step 1: اختبارات JVM فاشلة:**
+- [x] **Step 1: اختبارات JVM فاشلة:**
   - `json == null` أو مخطط غير معروف ← `empty = true`.
   - العربية ← أرقام عربية-هندية واسم الصلاة بالعربية.
   - `dueReviewCount = 0` ← `reviewLine == null`.
   - JSON تالف ← `empty = true` دون استثناء.
 - [ ] **Step 2:** `cd android; ./gradlew :app:testDebugUnitTest --tests '*WidgetSnapshotFormatterTest*'`. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ. التخطيط بـ`layoutDirection="locale"`. والنقر على كل سطر `PendingIntent` لرابطه.
+- [x] **Step 3:** التنفيذ. التخطيط بـ`layoutDirection="locale"`. والنقر على كل سطر `PendingIntent` لرابطه.
 - [ ] **Step 4:** نفس الأمر، ثم `widget_deep_link_test.dart` (رابط غير معروف ← الرئيسية). المتوقع: PASS.
 - [ ] **Step 5:** على الإيميوليتر: إضافة الودجت، وتسجيل الخروج يفرّغه، وكل سطر يفتح مساره. تُدوَّن النتيجة في مصفوفة الأعلام.
-- [ ] **Step 6:** Commit `feat(widget): Android home-screen widget with RTL rows and deep links`.
-- [ ] **Step 7:** مراجعة Opus (`opus-architecture-reviewer`) لعزل الحسابات والكود الأصلي.
+- [x] **Step 6:** Commit `feat(widget): Android home-screen widget with RTL rows and deep links`.
+- [x] **Step 7:** مراجعة Opus (`opus-architecture-reviewer`) لعزل الحسابات والكود الأصلي.
 
 ---
 
 # الدفعة K: الختمة الجماعية (البند 10). عالية المخاطرة
+
+**تحديث 2026-10-24:** اعتمد المالك التصميم والتنفيذ المحلي. K1 محفوظة في
+`143a0add`، ونُفّذت K2/K3 خلف العلم مع مراجعة Sol مستقلة وإصلاح ملاحظاتها.
+نجح فحص النطاق المتأثر بـ174 اختبارًا، ثم نجحت اختبارات السباقات الستة بعد
+إصلاح سباق زوال العضوية. اكتمل الفحص الشامل بـ5163 اختبارًا ناجحًا، والتحليل
+بلا ملاحظات، وفحص الإصدار `LOCAL PASS — RELEASE NO-GO`.
+تفاصيل التنفيذ والحدود في [تقرير الختمة الجماعية](../reviews/2026-10-23-group-khatmah.md).
+فحوص K1 المحلية استخدمت PGlite المثبت، وشغلت الهجرات مرتين وثلاثة ملفات SQL
+و34 فحص كتالوج بنجاح؛ هذا بديل محلي محدود، ولا يغلق بوابة مخطط Supabase
+الكامل أو التزامن متعدد الاتصالات. لا نشر أو تفعيل للأعلام.
 
 ### Task K0: تصميم Opus (لا كود)
 
@@ -385,7 +395,7 @@
 - **القراءة:** `select` مقيَّد بالعضوية النشطة. والبريد لا يُكشف أبداً، فلا join مع `auth.users`.
 - **المؤشرات والطابور:** نوعا طابور جديدان `group_khatmah_pull` و`group_khatmah_push`.
 
-- [ ] مراجعة `opus-architecture-reviewer` للتصميم، ثم **موافقة المالك على التصميم (R4)**.
+- [x] مراجعة `opus-architecture-reviewer` للتصميم، ثم **موافقة المالك على التصميم (R4)**. تصميم Astra ومراجعة Sol المستقلة وإصلاح الملاحظات، ثم اعتماد المالك الصريح للتصميم والتنفيذ المحلي في 2026-10-23: `../specs/2026-10-23-group-khatmah-design.md`.
 
 ### Task K1: الهجرة وفحوص العقد
 
@@ -404,10 +414,10 @@
   - إعادة تشغيل الهجرة مرتين دون خطأ.
   - الدوال بلا منح لـ`anon`.
 - [ ] **Step 2:** `scripts/verify_supabase_migrations.ps1` على قاعدة محلية مُرحَّلة. المتوقع: FAIL.
-- [ ] **Step 3:** كتابة الهجرة.
+- [x] **Step 3:** كتابة الهجرة.
 - [ ] **Step 4:** نفس الأمر، ثم `flutter test test/supabase/group_khatmah_contract_test.dart`. المتوقع: PASS.
-- [ ] **Step 5:** مراجعة `opus-architecture-reviewer` **إلزامية**.
-- [ ] **Step 6:** Commit `feat(supabase): group khatmah schema, RLS and CAS RPCs (not deployed)`.
+- [x] **Step 5:** مراجعة `opus-architecture-reviewer` **إلزامية**.
+- [x] **Step 6:** Commit `feat(supabase): group khatmah schema, RLS and CAS RPCs (not deployed)`.
 
 ### Task K2: المستودع والتخزين المحلي والدمج والطابور
 
@@ -431,7 +441,7 @@
   - `Stream<List<GroupKhatmah>> watchMine()`
   - الكاش: SharedPreferences تحت `group_khatmah_cache_v1|<owner>` بمؤشرات ومفاتيح متسخة على نمط `*_cloud_merge.dart`. **لا مخطط Isar جديد.**
 
-- [ ] **Step 1: الاختبارات الفاشلة (بعميل Supabase وهمي):**
+- [x] **Step 1: الاختبارات الفاشلة (بعميل Supabase وهمي):**
   - الحجز دون اتصال ← `NetworkFailure`، ولا تغيير محلي.
   - تعارض الحجز ← `GroupPartConflictFailure`، ثم سحب للتحديث. **(Review Focus 3)**
   - الإكمال دون اتصال ← محفوظ محلياً، ومُدرَج في الطابور، ويُرسَل عند الاتصال بـ`expected_version` الصحيح.
@@ -439,10 +449,10 @@
   - الدمج: صف أحدث من الخادم يفوز إلا على مفتاح متسخ لم يُؤكَّد.
   - تبديل الحساب: لا يرى B كاش A.
   - **الختمة الشخصية لا تتغير بأي عملية جماعية**: لا استدعاء لمستودع الختمة الشخصية.
-- [ ] **Step 2:** تشغيلها. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ.
-- [ ] **Step 4:** تشغيلها، ثم `test/core/sync` و`test/integration`. المتوقع: PASS.
-- [ ] **Step 5:** Commit `feat(group-khatmah): repository, local cache, merge and sync queue`.
+- [x] **Step 2:** تشغيلها. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ.
+- [x] **Step 4:** تشغيلها، ثم `test/core/sync` و`test/integration`. المتوقع: PASS.
+- [x] **Step 5:** Commit `476b1563` — المستودع والسجل الدائم والطابور وعزل الحساب.
 
 ### Task K3: الواجهات
 
@@ -454,22 +464,22 @@
 - ARB: مفاتيح `groupKhatmah*`. والأعداد، مثل «N من 30 جزءاً» و«N أعضاء»، بـICU plural.
 - Test: `test/features/group_khatmah/presentation/group_khatmah_detail_page_test.dart`
 
-- [ ] **Step 1: الاختبارات الفاشلة:**
+- [x] **Step 1: الاختبارات الفاشلة:**
   - شبكة الأجزاء الثلاثين بحالاتها، واسم العرض فقط دون أي بريد.
   - مشاركة الرمز.
   - رسالة التعارض.
   - بطاقة الإكمال تعرض دعاء الختم من `KhatmDuaDatasource`. وإن كان المحتوى غير معتمد فلا دعاء، على نمط اختبار `an unapproved khatm dua record opens nothing`.
   - شاشة 320dp دون تجاوز.
   - العلم مطفأ ← لا مدخل.
-- [ ] **Step 2:** تشغيلها. المتوقع: FAIL.
-- [ ] **Step 3:** التنفيذ.
-- [ ] **Step 4:** تشغيلها، ثم `flutter analyze`. المتوقع: PASS ولا ملاحظات.
-- [ ] **Step 5:** Commit `feat(group-khatmah): list, detail, join and completion UI behind groupKhatmah`.
+- [x] **Step 2:** تشغيلها. المتوقع: FAIL.
+- [x] **Step 3:** التنفيذ.
+- [x] **Step 4:** تشغيلها، ثم `flutter analyze`. المتوقع: PASS ولا ملاحظات.
+- [x] **Step 5:** Commit `168c6b84` — الواجهات والحراسة والاستعادة، خلف العلم المطفأ.
 
 ### Task K4: مراجعة الدفعة
 
-- [ ] `opus-architecture-reviewer` على K1 وK2 وK3 معاً: العزل، والتعارضات، والطابور، والفصل عن الختمة الشخصية.
-- [ ] `flutter test` كاملاً.
+- [x] مراجعة معمارية: Astra على تصميم K1 ثم K4 وحواجز الردود المتأخرة، مع خطة إصلاح نفذها الجذر وفحص Sol مستقل. اختبارات فشل ثم نجاح لتبديل العضوية والردود القديمة؛ لا ملاحظات قابلة للإجراء في المتابعة المركزة.
+- [x] `flutter test` كاملاً: 5170 اختبارًا ناجحًا على إصلاح `b817c83c`، بالتوازي 4 ومضاعف المهلة المحدود `2x`. الأمر الافتراضي لم يتغير؛ المحاولات السابقة المتعثرة موثقة في التقرير.
 
 ### Task K5: التشغيل التجريبي ثم النشر (Opus، بموافقة المالك)
 
@@ -482,7 +492,12 @@
 ## 2. التحقق النهائي للمرحلة
 
 - [ ] `flutter analyze` بلا ملاحظات، و`flutter test` كاملاً ناجح، و`./gradlew :app:testDebugUnitTest` ناجح.
-- [ ] `scripts/verify_v1_release.ps1` ناجح.
-- [ ] تقرير مراجعة في `docs/superpowers/reviews/` بالمُصلَح والمفتوح، على نمط تقرير المرحلة 2.
-- [ ] صفوف جديدة في `docs/release/flag-device-test-matrix.md` للأعلام الأربعة.
-- [ ] كل الأعلام مطفأة. وتفعيل أي علم مشروط بالقسم 0 وبتجربة جهاز حقيقي.
+- [x] `scripts/verify_v1_release.ps1` ناجح محليًا بخياري `-TestConcurrency 4 -TestTimeout 2x`: `LOCAL PASS — RELEASE NO-GO`؛ لا بناء إصدار أو فحص قاعدة بعيدة.
+- [x] تقرير [حالة المرحلة](../reviews/2026-10-24-roadmap-phase-3-status.md) بالمُصلَح والمفتوح والتقارير التفصيلية.
+- [x] صفوف جديدة في `docs/release/flag-device-test-matrix.md` للأعلام الأربعة، مع توضيح أن تجربة الجهاز لم تنفذ.
+- [x] القيم الافتراضية لكل الأعلام مطفأة، ولم يفعّلها هذا التنفيذ. وتفعيل أي علم مشروط بالقسم 0 وبتجربة جهاز حقيقي.
+
+إعادة Gradle في 2026-10-24 انتهت قبل التجميع بخطأ
+`Unable to establish loopback connection`؛ يبقى بند التحقق الأول مفتوحًا رغم
+نجاح التحليل وجميع اختبارات Flutter. تبقى H2/H3 وI4 وبوابات الجهاز والخادم
+وK5 مفتوحة وفق شروطها أعلاه.
