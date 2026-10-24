@@ -13,6 +13,7 @@ import 'package:talia_quran/core/security/encrypted_account_preferences_store.da
 import 'package:talia_quran/core/sync/cloud_sync_queue.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/auth/application/cloud_sync_coordinator.dart';
+import 'package:talia_quran/features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
@@ -60,6 +61,29 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   AppUser? get currentUser => user;
 
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _GroupRepository implements GroupKhatmahRepository {
+  bool pending = false;
+  bool? deliverablePending;
+  int pulls = 0, pushes = 0, reconciliations = 0;
+  @override
+  Future<Either<Failure, void>> reconcilePendingWake() async {
+    reconciliations++;
+    return const Right(null);
+  }
+  @override
+  Future<Either<Failure, void>> refreshMine() async { pulls++; return const Right(null); }
+  @override
+  Future<Either<Failure, void>> flushPending() async { pushes++; return const Right(null); }
+  @override
+  Future<bool> hasPending() async => pending;
+  @override
+  Future<bool> hasRunnablePending() async => pending;
+  @override
+  Future<bool> hasDeliverablePending() async => deliverablePending ?? pending;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -147,6 +171,77 @@ void main() {
   setUp(() {
     authRepository = _FakeAuthRepository();
     memorizationRepository = _FakeMemorizationCloudRepository();
+  });
+
+  test('group queue kinds dispatch to the separate group repository', () async {
+    final groups = _GroupRepository();
+    final coordinator = CloudSyncCoordinator(authRepository: authRepository,
+      groupKhatmahRepository: groups);
+    addTearDown(coordinator.dispose);
+    expect(await coordinator.retryQueueKindForTesting(CloudSyncQueueKind.groupKhatmahPull), isTrue);
+    expect(await coordinator.retryQueueKindForTesting(CloudSyncQueueKind.groupKhatmahPush), isTrue);
+    expect(groups.pulls, 1);
+    expect(groups.pushes, 1);
+  });
+
+  test('unacknowledged group work blocks destructive signout after attempted flush', () async {
+    final groups = _GroupRepository()..pending = true;
+    final coordinator = CloudSyncCoordinator(authRepository: authRepository,
+      groupKhatmahRepository: groups);
+    addTearDown(coordinator.dispose);
+    expect(await coordinator.flushBeforeSignOut(), isFalse);
+    expect(groups.pushes, 1);
+  });
+
+  test('password-update gate ignores group intents that cannot be delivered', () async {
+    final groups = _GroupRepository()
+      ..pending = true
+      ..deliverablePending = false;
+    final coordinator = CloudSyncCoordinator(authRepository: authRepository,
+      groupKhatmahRepository: groups);
+    addTearDown(coordinator.dispose);
+    expect(await coordinator.flushBeforeSignOut(forPasswordUpdate: true), isTrue);
+    expect(groups.pushes, 0);
+    expect(await coordinator.flushBeforeSignOut(), isFalse);
+    groups.deliverablePending = true;
+    expect(await coordinator.flushBeforeSignOut(forPasswordUpdate: true), isFalse);
+  });
+
+  test('resume repairs group wake even when no journal entry is due', () async {
+    final groups = _GroupRepository();
+    final coordinator = CloudSyncCoordinator(
+      authRepository: authRepository, groupKhatmahRepository: groups,
+    );
+    addTearDown(coordinator.dispose);
+    await coordinator.resumeIfNeeded();
+    expect(groups.reconciliations, 1);
+    expect(groups.pulls, 0);
+    expect(groups.pushes, 0);
+  });
+
+  test('disabled group feature preserves pull wake and its retry budget', () async {
+    await _initializeIsarCoreForTests();
+    final directory = await Directory.systemTemp.createTemp('group_kill_');
+    final isar = await Isar.open([CloudSyncQueueItemSchema],
+      directory: directory.path, name: 'group_kill');
+    final queue = CloudSyncQueue(isar,
+      const FixedRecordOwnerProvider('coordinator-user'));
+    final groups = _GroupRepository();
+    final coordinator = CloudSyncCoordinator(authRepository: authRepository,
+      cloudSyncQueue: queue, groupKhatmahRepository: groups,
+      groupKhatmahAvailable: () => false);
+    try {
+      await queue.enqueue(CloudSyncQueueKind.groupKhatmahPull);
+      await coordinator.run();
+      final row = (await isar.cloudSyncQueueItems.where().findAll()).single;
+      expect(row.kind, CloudSyncQueueKind.groupKhatmahPull);
+      expect(row.attemptCount, 0);
+      expect(groups.pulls, 0);
+    } finally {
+      await coordinator.dispose();
+      await isar.close(deleteFromDisk: true);
+      await directory.delete(recursive: true);
+    }
   });
 
   test('run pulls cloud progress before pushing local progress', () async {

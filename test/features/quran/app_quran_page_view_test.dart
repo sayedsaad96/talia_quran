@@ -4,6 +4,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/services/get_page.dart';
 import 'package:talia_quran/core/accessibility/clarity_mode.dart';
+import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_content.dart';
 import 'package:talia_quran/features/quran/domain/services/quran_page_order_policy.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_view.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_page_font_guard.dart';
@@ -93,8 +94,8 @@ void main() {
     final firstPage = delegate.builder(pageViewContext, 0)!;
     final secondPage = delegate.builder(pageViewContext, 1)!;
 
-    final firstContent = _singlePageContent(firstPage);
-    final secondContent = _singlePageContent(secondPage);
+    final firstContent = _singlePageContent(firstPage, pageViewContext);
+    final secondContent = _singlePageContent(secondPage, pageViewContext);
     expect(firstContent.guard.pageNumber, 1);
     expect(firstContent.quranPage.pageIndex, 1);
     expect(firstContent.quranPage.page.pageNumber, 1);
@@ -165,10 +166,11 @@ void main() {
     final pageView = tester.widget<PageView>(find.byType(PageView));
     final delegate = pageView.childrenDelegate as SliverChildBuilderDelegate;
     final built = delegate.builder(tester.element(find.byType(PageView)), 0)!;
-    final scaled = (((built as Column).children.last as Expanded).child
-            as QuranPageFontGuard)
-        .child as RepaintBoundary;
-
+    final content = ((built as Column).children.last as Expanded).child
+        as AppQuranPageContent;
+    final guard = content.build(tester.element(find.byType(PageView)))
+        as QuranPageFontGuard;
+    final scaled = guard.child as RepaintBoundary;
     double? pageScale;
     await tester.pumpWidget(
       MediaQuery(
@@ -216,10 +218,10 @@ void main() {
 }
 
 ({QuranPageFontGuard guard, qcf.QuranSinglePageWidget quranPage})
-_singlePageContent(Widget page) {
+_singlePageContent(Widget page, BuildContext context) {
   final column = page as Column;
   final expanded = column.children.single as Expanded;
-  final guard = expanded.child as QuranPageFontGuard;
+  final guard = (expanded.child as AppQuranPageContent).build(context) as QuranPageFontGuard;
   final repaintBoundary = guard.child as RepaintBoundary;
   final scale = repaintBoundary.child as SystemTextScale;
   final zoomablePage = scale.child as MushafZoomablePage;

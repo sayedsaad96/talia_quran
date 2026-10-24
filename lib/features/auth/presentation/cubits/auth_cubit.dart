@@ -296,6 +296,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
     barrier.prepareOwner(userId);
     try {
+      await reset.clearAccountWidget();
       final switched = await resolveOwnerChange(
         prefs: prefs,
         userId: userId,
@@ -336,6 +337,16 @@ class AuthCubit extends Cubit<AuthState> {
   /// resume). Runs only when the outbox has pending work or a pull cursor
   /// is stale; debounced to avoid resume storms.
   void resyncOnResume({bool force = false}) {
+    final prefs = _prefs;
+    if (prefs != null) {
+      // A failed native-widget clear leaves the barrier blocked; resume gives
+      // it one bounded retry (still fail closed when it fails again).
+      unawaited(
+        AccountDataBarrier.forPreferences(
+          prefs,
+        ).retryFailedClear(projection: _accountDataReset?.clearAccountWidget),
+      );
+    }
     if (state is! AuthAuthenticated) return;
     unawaited(_cloudSyncCoordinator.resumeIfNeeded(force: force));
   }
@@ -574,6 +585,15 @@ class AuthCubit extends Cubit<AuthState> {
         if (prefs != null && preservedOwnerId != null) {
           preservedDataBarrier = AccountDataBarrier.forPreferences(prefs);
           preservedDataBarrier.prepareOwner(preservedOwnerId);
+          try {
+            await _accountDataReset?.clearAccountWidget();
+          } catch (error) {
+            // Fail closed: the widget may still show this account.
+            preservedDataBarrier.invalidate();
+            _ownerReadyFailure = error;
+            if (!isClosed) emit(const AuthOwnerDataFailure());
+            return;
+          }
         }
         await _cloudSyncCoordinator.preservePendingSignOutWork();
       }
@@ -740,7 +760,9 @@ class AuthCubit extends Cubit<AuthState> {
     _isUpdatingPassword = true;
     await _beginControlledIdentityTransition();
     try {
-      final flushed = await _flushBeforeExplicitSignOut();
+      final flushed = await _cloudSyncCoordinator.flushBeforeSignOut(
+        forPasswordUpdate: true,
+      );
       if (!flushed) {
         if (!isClosed) {
           emit(AuthError(AuthErrorCode.networkError.name));

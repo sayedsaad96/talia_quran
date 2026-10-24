@@ -9442,4 +9442,266 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get similarAyahIndexUnavailable =>
       'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
+
+  @override
+  String get handsFreeTitle => 'سمّع لي';
+
+  @override
+  String get handsFreeDrivingWarning => 'لا تستخدم الشاشة أثناء القيادة';
+
+  @override
+  String get handsFreeAcceptWarning => 'فهمت';
+
+  @override
+  String get handsFreeStart => 'ابدأ';
+
+  @override
+  String get handsFreeCorrect => 'صح';
+
+  @override
+  String get handsFreeReview => 'راجع';
+
+  @override
+  String handsFreeSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قُيّمت $count آية',
+      many: 'قُيّمت $count آية',
+      few: 'قُيّمت $count آيات',
+      two: 'قُيّمت آيتان',
+      one: 'قُيّمت آية واحدة',
+      zero: 'لم تُقيّم آيات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get handsFreeNoDue => 'لا توجد مراجعات مستحقة الآن.';
+
+  @override
+  String get handsFreeMicFallback =>
+      'التعرّف على الصوت غير متاح. استخدم الأزرار أدناه.';
+
+  @override
+  String get handsFreeDescription =>
+      'استمع إلى بداية قصيرة ثم سمّع. هذا التدريب لا يغيّر تقدّم حفظك.';
+
+  @override
+  String get handsFreePrompt => 'استمع إلى البداية';
+
+  @override
+  String get handsFreeYourTurn => 'دورك للتسميع';
+
+  @override
+  String get handsFreeFeedback => 'تم تقييم إجابتك';
+
+  @override
+  String get handsFreePaused => 'توقفت الجولة';
+
+  @override
+  String get handsFreeError => 'تعذّر الاستمرار. حاول مجددًا.';
+
+  @override
+  String get groupKhatmahTitle => 'الختمة الجماعية';
+
+  @override
+  String get groupKhatmahCreate => 'إنشاء مجموعة';
+
+  @override
+  String get groupKhatmahJoin => 'الانضمام إلى مجموعة';
+
+  @override
+  String get groupKhatmahEmpty => 'لا توجد ختمة جماعية بعد';
+
+  @override
+  String get groupKhatmahRefresh => 'تحديث المجموعات';
+
+  @override
+  String get groupKhatmahGroupTitle => 'عنوان المجموعة';
+
+  @override
+  String get groupKhatmahDisplayName => 'اسم العرض الذي يراه أعضاء المجموعة';
+
+  @override
+  String get groupKhatmahInviteCode => 'رمز الدعوة';
+
+  @override
+  String get groupKhatmahInvalidTitle => 'اكتب عنوانًا من حرف إلى ٨٠ حرفًا.';
+
+  @override
+  String get groupKhatmahInvalidName => 'اكتب اسم عرض من حرفين إلى ٢٤ حرفًا.';
+
+  @override
+  String get groupKhatmahInvalidCode => 'اكتب رمز الدعوة المكوّن من ستة أحرف.';
+
+  @override
+  String groupKhatmahMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عضو',
+      many: '$count عضوًا',
+      few: '$count أعضاء',
+      two: 'عضوان',
+      one: 'عضو واحد',
+      zero: 'لا أعضاء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupKhatmahCompletedCount(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'اكتمل $count جزء من $total',
+      many: 'اكتمل $count جزءًا من $total',
+      few: 'اكتملت $count أجزاء من $total',
+      two: 'اكتمل جزءان من $total',
+      one: 'اكتمل جزء واحد من $total',
+      zero: 'لم يكتمل أي جزء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupKhatmahJuz(int number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String get groupKhatmahOpen => 'متاح';
+
+  @override
+  String get groupKhatmahClaimed => 'محجوز';
+
+  @override
+  String get groupKhatmahCompleted => 'مكتمل';
+
+  @override
+  String get groupKhatmahPending => 'الإكمال بانتظار التأكيد';
+
+  @override
+  String get groupKhatmahClaim => 'احجز';
+
+  @override
+  String get groupKhatmahComplete => 'أكملت الجزء';
+
+  @override
+  String get groupKhatmahRelease => 'ألغِ الحجز';
+
+  @override
+  String get groupKhatmahShare => 'مشاركة رمز الدعوة';
+
+  @override
+  String get groupKhatmahLeave => 'مغادرة المجموعة';
+
+  @override
+  String get groupKhatmahDelete => 'حذف المجموعة';
+
+  @override
+  String get groupKhatmahLeaveConfirm =>
+      'هل تريد مغادرة المجموعة؟ ستُحرّر الأجزاء التي حجزتها ولم تكملها.';
+
+  @override
+  String get groupKhatmahDeleteConfirm =>
+      'هل تريد حذف المجموعة لجميع الأعضاء؟ سيُحذف تقدمها المشترك.';
+
+  @override
+  String get groupKhatmahCancel => 'إلغاء';
+
+  @override
+  String get groupKhatmahConfirm => 'تأكيد';
+
+  @override
+  String get groupKhatmahError => 'تعذّر تحديث المجموعة. حاول مرة أخرى.';
+
+  @override
+  String get groupKhatmahConflict => 'تغيّر هذا الجزء. حُدّثت بيانات المجموعة.';
+
+  @override
+  String get groupKhatmahConflictClaimed =>
+      'حجزه غيرك. حُدّثت بيانات المجموعة.';
+
+  @override
+  String get groupKhatmahOutcomePending =>
+      'الطلب قيد الإرسال وسيُؤكَّد تلقائيًا عند عودة الاتصال. لا حاجة إلى إعادته.';
+
+  @override
+  String get groupKhatmahGroupCompleted =>
+      'اكتملت هذه الختمة ولا يمكن تغيير أجزائها.';
+
+  @override
+  String get groupKhatmahStaleOperation =>
+      'تغيّرت عضويتك في المجموعة قبل اكتمال هذا الطلب. حُدّثت البيانات.';
+
+  @override
+  String get groupKhatmahInvalidInput =>
+      'تعذّر قبول البيانات المدخلة. راجعها وحاول مرة أخرى.';
+
+  @override
+  String get groupKhatmahNetwork => 'اتصل بالإنترنت ثم حاول مرة أخرى.';
+
+  @override
+  String get groupKhatmahNotMember => 'لم تعد عضوًا في هذه المجموعة.';
+
+  @override
+  String get groupKhatmahNotEligible =>
+      'الختمة الجماعية غير متاحة لهذا الحساب.';
+
+  @override
+  String get groupKhatmahFull => 'اكتمل عدد أعضاء هذه المجموعة.';
+
+  @override
+  String get groupKhatmahInvalidInvite => 'رمز الدعوة غير متاح.';
+
+  @override
+  String get groupKhatmahRateLimited => 'محاولات كثيرة. حاول لاحقًا.';
+
+  @override
+  String get groupKhatmahOwnerHasMembers =>
+      'يجب أن يغادر الأعضاء الآخرون قبل حذف المجموعة.';
+
+  @override
+  String get groupKhatmahDuaOpen => 'قراءة دعاء الختم';
+
+  @override
+  String get groupKhatmahDuaUnavailable =>
+      'دعاء الختم غير متاح حتى اعتماد نصه ومصدره.';
+
+  @override
+  String get groupKhatmahStale =>
+      'هذه آخر بيانات محفوظة؛ اتصل للتحقق من العضوية.';
+
+  @override
+  String get groupKhatmahAccountDeletionWarning =>
+      'حذف حسابك سيحذف كل ختمة جماعية تملكها لجميع أعضائها.';
+
+  @override
+  String get groupKhatmahCompletionFailed => 'إكمال الجزء يحتاج إلى مراجعتك';
+
+  @override
+  String get groupKhatmahRetryCompletion => 'إعادة محاولة الإكمال';
+
+  @override
+  String get groupKhatmahDiscardCompletion => 'حذف الطلب المحلي';
+
+  @override
+  String get groupKhatmahDiscardConfirm =>
+      'هل تريد حذف طلب الإكمال المحلي؟ ربما وصل إلى المجموعة بالفعل. لن يؤدي هذا إلى التراجع عن إكمال أكده الخادم.';
+
+  @override
+  String get groupKhatmahRecoveryRequired =>
+      'تعذّر إرسال إكمال الجزء. أعد المحاولة أو احذف الطلب المحلي.';
+
+  @override
+  String get groupKhatmahRetryRequest => 'إعادة إرسال الطلب';
+
+  @override
+  String get groupKhatmahDiscardRequestConfirm =>
+      'حذف هذا الطلب المحلي؟ ربما وصل إلى المجموعة بالفعل. حذفه لن يتراجع عن أي تغييرات حُفظت على الخادم.';
+
+  @override
+  String get groupKhatmahFailedRequests => 'طلبات تحتاج إلى مراجعتك';
 }

@@ -59,6 +59,7 @@ class AccountDataReset {
     this._deleteBookmarksForOwner,
     Future<Directory> Function()? documentsDirectory,
     this._cancelAccountNotifications,
+    this._clearHomeWidget,
   }) : _documentsDirectory =
            documentsDirectory ?? getApplicationDocumentsDirectory;
 
@@ -72,6 +73,23 @@ class AccountDataReset {
   final Future<void> Function(String ownerId)? _deleteBookmarksForOwner;
   final Future<Directory> Function() _documentsDirectory;
   final Future<void> Function()? _cancelAccountNotifications;
+  final Future<void> Function()? _clearHomeWidget;
+
+  Future<void> clearAccountWidget() async => _clearHomeWidget?.call();
+
+  /// A failing or hung native widget clear must not keep the account's data on
+  /// disk. Returns the failure so the caller can wipe first and then rethrow,
+  /// which leaves the barrier blocked (fail closed).
+  Future<(Object, StackTrace)?> _clearWidgetBounded() async {
+    try {
+      await clearAccountWidget().timeout(_widgetClearBound);
+      return null;
+    } catch (error, stack) {
+      return (error, stack);
+    }
+  }
+
+  static const _widgetClearBound = Duration(seconds: 12);
 
   /// Individual account-owned preference keys.
   static const Set<String> clearedPreferenceKeys = {
@@ -115,6 +133,8 @@ class AccountDataReset {
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
   /// also removes `mem_plus_local_records_claimed_by` and every migration flag.
   static const Set<String> clearedPreferencePrefixes = {
+    'group_khatmah_cache_v1|',
+    'hands_free_warning_seen|',
     'prayer_review_lengths|',
     'kids_encouragement_pending_seen_v1_',
     'mem_plus_',
@@ -169,6 +189,7 @@ class AccountDataReset {
     required bool preservePendingBookmarkRecovery,
   }) async {
     final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
+    final widgetFailure = await _clearWidgetBounded();
     if (!preservePendingBookmarkRecovery && ownerId != null) {
       await PendingBookmarkRecoveryMarker.clear(_prefs, ownerId);
     }
@@ -186,6 +207,9 @@ class AccountDataReset {
       ownerId,
       preserve: ownerId != null && protectedOwners.contains(ownerId),
     );
+    if (widgetFailure != null) {
+      throw AccountProjectionClearFailure(widgetFailure.$1, widgetFailure.$2);
+    }
   }
 
   /// Erases data attributable to a deleted account. This is deliberately
@@ -197,6 +221,7 @@ class AccountDataReset {
       ).clear(() => _eraseDeletedAccountLocally(departingOwnerId));
 
   Future<void> _eraseDeletedAccountLocally(String ownerId) async {
+    final widgetFailure = await _clearWidgetBounded();
     await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     await _audioResumeStore?.stopPlaybackForAccountReset();
     await _deleteBookmarksForOwner?.call(ownerId);
@@ -207,6 +232,9 @@ class AccountDataReset {
     await _deleteHifzMigrationBackup();
     await _clearDeletedAccountPreferences(ownerId);
     await _eraseDeletedAccountCollections(ownerId);
+    if (widgetFailure != null) {
+      throw AccountProjectionClearFailure(widgetFailure.$1, widgetFailure.$2);
+    }
   }
 
   Future<void> _deleteHifzMigrationBackup() async {

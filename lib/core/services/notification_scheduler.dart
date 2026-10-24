@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,6 +132,7 @@ class NotificationScheduler {
     this._prayerReviewBodyLoader,
     this._kidsPracticeDaysLoader,
     DateTime Function()? prayerReviewNow,
+    this.onPrayerScheduleUpdated,
   }) : _prayerReviewNow = prayerReviewNow ?? DateTime.now,
        _forecastAudienceIsAdult =
            forecastAudienceIsAdult ?? forecastAudienceIsAdultFromPreferences,
@@ -141,6 +143,7 @@ class NotificationScheduler {
                : null);
 
   String? _lastRollingDateKey;
+  final Future<void> Function()? onPrayerScheduleUpdated;
   Future<void> _refreshQueue = Future<void>.value();
 
   Future<T> _enqueueRefresh<T>(Future<T> Function() refresh) {
@@ -895,6 +898,15 @@ class NotificationScheduler {
       throw StateError('One or more prayer notification updates failed');
     }
     if (shouldRefreshRolling) _lastRollingDateKey = todayKey;
+    // The widget redraw must never delay or fail the reminder refresh queue.
+    final scheduleUpdated = onPrayerScheduleUpdated;
+    if (scheduleUpdated != null) {
+      unawaited(
+        scheduleUpdated().catchError((Object error, StackTrace stack) {
+          TaliaLogger.w('Prayer schedule observer failed', error, stack);
+        }),
+      );
+    }
   }
 
   /// Legacy (V1) FLN prayer scheduling. Moved verbatim from the previous

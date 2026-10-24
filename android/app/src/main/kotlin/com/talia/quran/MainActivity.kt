@@ -1,9 +1,12 @@
 package com.talia.quran
 
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
 import com.talia.quran.prayer.AdhanClipResolver
 import com.talia.quran.prayer.AdhanPreviewBridge
+import com.talia.quran.widget.TaliaHomeWidgetProvider
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -14,6 +17,41 @@ class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         registerAdhanPreviewChannel(flutterEngine.dartExecutor.binaryMessenger)
+        registerHomeWidgetComponentChannel(flutterEngine.dartExecutor.binaryMessenger)
+    }
+
+    /**
+     * The widget receiver ships disabled in the manifest and is only offered
+     * to the user while its feature flag is on. Pure component toggle: it never
+     * reads or writes widget data.
+     */
+    private fun registerHomeWidgetComponentChannel(messenger: io.flutter.plugin.common.BinaryMessenger) {
+        MethodChannel(messenger, "talia/home_widget_component").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setProviderEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled")
+                    if (enabled == null) {
+                        result.error("bad_args", "enabled is required", null)
+                    } else {
+                        try {
+                            packageManager.setComponentEnabledSetting(
+                                ComponentName(this, TaliaHomeWidgetProvider::class.java),
+                                if (enabled) {
+                                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                                } else {
+                                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                                },
+                                PackageManager.DONT_KILL_APP,
+                            )
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("component_failed", e.message, null)
+                        }
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 
     /**

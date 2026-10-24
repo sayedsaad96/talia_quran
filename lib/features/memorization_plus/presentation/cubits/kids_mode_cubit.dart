@@ -26,6 +26,7 @@ import '../../../../core/utils/talia_logger.dart';
 import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../data/datasources/kids_streak_store.dart';
+import '../../data/listening/listening_recitation_capture.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/services/kids_daily_budget.dart';
 import '../../domain/services/kids_recalled_words.dart';
@@ -1486,6 +1487,16 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       return const KidsRecitationCaptureResult.unavailable();
     }
 
+    // The engine keeps the first initializer's listeners; claim them for this
+    // capture (another feature may have listened since).
+    SpeechCallbackRouter.of(_speechToText).activate(
+      this,
+      onError: (SpeechRecognitionError error) {
+        _onSpeechError?.call(error);
+      },
+      onStatus: (status) {},
+    );
+
     final internalCompleter = Completer<KidsRecitationCaptureResult>();
 
     void completeInternal(KidsRecitationCaptureResult result) {
@@ -1524,6 +1535,7 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
         ),
       );
     } catch (_) {
+      SpeechCallbackRouter.of(_speechToText).deactivate(this);
       _completeIfOpen(
         externalCompleter,
         const KidsRecitationCaptureResult.unavailable(),
@@ -1559,6 +1571,7 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       return result;
     } finally {
       _onSpeechError = null;
+      SpeechCallbackRouter.of(_speechToText).deactivate(this);
     }
   }
 
@@ -1594,7 +1607,9 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
 
   Future<bool> _initializeSpeech() async {
     try {
-      return await _speechToText.initialize(
+      return await SpeechCallbackRouter.of(_speechToText).initialize(
+        _speechToText,
+        this,
         onError: (SpeechRecognitionError error) {
           _onSpeechError?.call(error);
         },
@@ -1606,5 +1621,8 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   }
 
   @override
-  Future<void> dispose() => _speechToText.cancel();
+  Future<void> dispose() {
+    SpeechCallbackRouter.of(_speechToText).deactivate(this);
+    return _speechToText.cancel();
+  }
 }

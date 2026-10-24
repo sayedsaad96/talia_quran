@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/services/get_page.dart';
-// ignore: implementation_imports
-import 'package:qcf_quran_plus/src/widgets/bsmallah_widget.dart' as qcf_widgets;
 
-import '../../../../core/accessibility/clarity_mode.dart';
+import 'app_quran_page_content.dart';
+
 import 'mushaf_page_flip_physics.dart';
-import 'quran_page_font_guard.dart';
+
 import '../../domain/services/quran_page_order_policy.dart';
+
+export 'mushaf_zoomable_page.dart';
 
 /// A wrapper around QuranPageView that ensures QCF fonts for each page are
 /// fully loaded before rendering, preventing broken font glyphs on initial page load.
@@ -32,7 +33,7 @@ class AppQuranPageView extends StatefulWidget {
     this.pageBackgroundColor,
     this.isTajweed = true,
     required this.isDarkMode,
-  }) : basmallahBuilder = _structuralBasmallahBuilder(basmallahBuilder);
+  }) : basmallahBuilder = structuralBasmallahBuilder(basmallahBuilder);
 
   final PageController pageController;
   final Function(int)? onPageChanged;
@@ -54,23 +55,6 @@ class AppQuranPageView extends StatefulWidget {
   final TextStyle? ayahStyle;
   final Color? pageBackgroundColor;
   final bool isTajweed;
-
-  static Widget Function(BuildContext, int) _structuralBasmallahBuilder(
-    Widget Function(BuildContext context, int surahNumber)? customBuilder,
-  ) {
-    return (context, surahNumber) {
-      if (surahNumber == 1 || surahNumber == 9) {
-        return const SizedBox.shrink();
-      }
-
-      return KeyedSubtree(
-        key: ValueKey('app_structural_basmallah_$surahNumber'),
-        child:
-            customBuilder?.call(context, surahNumber) ??
-            qcf_widgets.BasmallahWidget(surahNumber),
-      );
-    };
-  }
 
   @override
   State<AppQuranPageView> createState() => _AppQuranPageViewState();
@@ -157,33 +141,22 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
                   // ignore: use_null_aware_elements
                   if (widget.topBar != null) widget.topBar!,
                   Expanded(
-                    child: QuranPageFontGuard(
-                      pageNumber: pageNum,
-                      isDark: widget.isDarkMode,
-                      child: RepaintBoundary(
-                        child: SystemTextScale(
-                          child: MushafZoomablePage(
-                            onZoomChanged: (zoomed) {
-                              if (mounted && _pageZoomed != zoomed) {
-                                setState(() => _pageZoomed = zoomed);
-                              }
-                            },
-                            child: qcf.QuranSinglePageWidget(
-                              key: ValueKey('page_content_$pageNum'),
-                              isTajweed: widget.isTajweed,
-                              page: _pages[pageNum - 1],
-                              pageIndex: pageNum,
-                              highlights: widget.highlights,
-                              onLongPress: widget.onLongPress,
-                              pageController: widget.pageController,
-                              surahHeaderBuilder: widget.surahHeaderBuilder,
-                              basmallahBuilder: widget.basmallahBuilder,
-                              ayahStyle: widget.ayahStyle,
-                              isDark: widget.isDarkMode,
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: AppQuranPageContent(
+                      key: ValueKey('guarded_page_$pageNum'),
+                      page: _pages[pageNum - 1],
+                      pageController: widget.pageController,
+                      highlights: widget.highlights,
+                      isDarkMode: widget.isDarkMode,
+                      isTajweed: widget.isTajweed,
+                      onLongPress: widget.onLongPress,
+                      surahHeaderBuilder: widget.surahHeaderBuilder,
+                      basmallahBuilder: widget.basmallahBuilder,
+                      ayahStyle: widget.ayahStyle,
+                      onZoomChanged: (zoomed) {
+                        if (mounted && _pageZoomed != zoomed) {
+                          setState(() => _pageZoomed = zoomed);
+                        }
+                      },
                     ),
                   ),
                   // Pinned build_runner analyzer cannot parse null-aware elements.
@@ -195,98 +168,6 @@ class _AppQuranPageViewState extends State<AppQuranPageView> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Pinch-zoom and double-tap zoom for a mushaf page.
-///
-/// Pan stays disabled at rest so single-finger swipes keep turning pages;
-/// it is only enabled while zoomed, when the drag belongs to the content.
-/// Double-tap toggles between 1x and a reading-friendly 2.25x centered on
-/// the tapped point.
-class MushafZoomablePage extends StatefulWidget {
-  const MushafZoomablePage({
-    super.key,
-    required this.child,
-    this.onZoomChanged,
-  });
-
-  final Widget child;
-  final ValueChanged<bool>? onZoomChanged;
-
-  @override
-  State<MushafZoomablePage> createState() => _MushafZoomablePageState();
-}
-
-class _MushafZoomablePageState extends State<MushafZoomablePage> {
-  static const _maxScale = 3.0;
-  static const _doubleTapScale = 2.25;
-
-  final TransformationController _controller = TransformationController();
-  Offset? _doubleTapPosition;
-  bool _lastZoomed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_reportZoomChange);
-  }
-
-  void _reportZoomChange() {
-    final zoomed = _isZoomed(_controller.value);
-    if (zoomed == _lastZoomed) return;
-    _lastZoomed = zoomed;
-    widget.onZoomChanged?.call(zoomed);
-  }
-
-  bool _isZoomed(Matrix4 matrix) => matrix.getMaxScaleOnAxis() > 1.01;
-
-  void _handleDoubleTap() {
-    final position = _doubleTapPosition;
-    if (_isZoomed(_controller.value)) {
-      _controller.value = Matrix4.identity();
-      return;
-    }
-    if (position == null) {
-      _controller.value = Matrix4.identity()
-        ..scaleByDouble(_doubleTapScale, _doubleTapScale, 1, 1);
-      return;
-    }
-    // Scale around the tapped point: T(p) · S(s) · T(-p).
-    _controller.value = Matrix4.identity()
-      ..translateByDouble(position.dx, position.dy, 0, 1)
-      ..scaleByDouble(_doubleTapScale, _doubleTapScale, 1, 1)
-      ..translateByDouble(-position.dx, -position.dy, 0, 1);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_reportZoomChange);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<Matrix4>(
-      valueListenable: _controller,
-      builder: (context, matrix, child) {
-        return InteractiveViewer(
-          transformationController: _controller,
-          panEnabled: _isZoomed(matrix),
-          scaleEnabled: true,
-          minScale: 1.0,
-          maxScale: _maxScale,
-          child: GestureDetector(
-            onDoubleTapDown: (details) =>
-                _doubleTapPosition = details.localPosition,
-            onDoubleTap: _handleDoubleTap,
-            child: child,
-          ),
-        );
-      },
-      child: widget.child,
     );
   }
 }

@@ -1,5 +1,9 @@
 param(
   [string] $EvidenceDirectory,
+  [ValidateRange(1, 32)]
+  [Nullable[int]] $TestConcurrency,
+  [ValidatePattern('^[1-9][0-9]*(ms|s|m|x)$')]
+  [string] $TestTimeout,
   [switch] $BuildAndroidRelease,
   # Build a guest-only artifact without cloud accounts. Without this switch a
   # release build requires TALIA_RELEASE_DART_DEFINES_FILE.
@@ -408,7 +412,14 @@ try {
   Assert-GeneratedFilesUnchanged $generatedBefore $generatedAfter
 
   Invoke-Flutter 'Static analysis' @('analyze', '--no-pub')
-  Invoke-Flutter 'Complete Flutter test suite' @('test', '--no-pub', '--reporter', 'expanded')
+  $testArguments = @('test', '--no-pub', '--reporter', 'expanded')
+  if ($null -ne $TestConcurrency) {
+    $testArguments += @('--concurrency', $TestConcurrency.ToString())
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TestTimeout)) {
+    $testArguments += @('--timeout', $TestTimeout)
+  }
+  Invoke-Flutter 'Complete Flutter test suite' $testArguments
 
   if ($BuildAndroidRelease) {
     $defineFileItem = Get-Item -LiteralPath 'Env:TALIA_RELEASE_DART_DEFINES_FILE' -ErrorAction SilentlyContinue

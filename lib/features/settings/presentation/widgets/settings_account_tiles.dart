@@ -810,7 +810,17 @@ class DeleteAccountTile extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.settingsDeleteAccountTitle),
-        content: Text(context.l10n.settingsDeleteAccountWarning(email)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.settingsDeleteAccountWarning(email)),
+              const SizedBox(height: AppSpacing.md),
+              Text(context.l10n.groupKhatmahAccountDeletionWarning),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),

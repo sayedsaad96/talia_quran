@@ -1,0 +1,18 @@
+<resources>
+    <string name="widget_empty_hint">افتح تالية لرؤية ملخص اليوم</string>
+    <string name="widget_empty_adult">لا شيء مستحق الآن</string>
+    <string name="widget_prayer_fajr">الفجر</string>
+    <string name="widget_prayer_dhuhr">الظهر</string>
+    <string name="widget_prayer_asr">العصر</string>
+    <string name="widget_prayer_maghrib">المغرب</string>
+    <string name="widget_prayer_isha">العشاء</string>
+    <string name="widget_wird_progress">%1$s · %2$d/%3$d صفحة</string>
+    <plurals name="widget_reviews_due">
+        <item quantity="zero">لا مراجعات مستحقة</item>
+        <item quantity="one">مراجعة واحدة مستحقة</item>
+        <item quantity="two">مراجعتان مستحقتان</item>
+        <item quantity="few">%d مراجعات مستحقة</item>
+        <item quantity="many">%d مراجعة مستحقة</item>
+        <item quantity="other">%d مراجعة مستحقة</item>
+    </plurals>
+</resources>

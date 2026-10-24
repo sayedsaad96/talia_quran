@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
@@ -30,6 +32,7 @@ import '../widgets/prayer_review_home_slot.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_micro_review_card.dart';
+import '../widgets/home_prayer_times_sheet.dart';
 import '../widgets/home_continue_card.dart';
 import '../widgets/home_contextual_slot.dart';
 import '../widgets/home_first_run.dart';
@@ -45,13 +48,21 @@ import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
 import '../../../progress/presentation/widgets/hijri_year_recap_slot.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, this.requestDailyAyahShare = false});
+  const HomePage({
+    super.key,
+    this.requestDailyAyahShare = false,
+    this.requestPrayerTimes = false,
+    this.prayerRequestId,
+  });
 
   final bool requestDailyAyahShare;
+  final bool requestPrayerTimes;
+  final String? prayerRequestId;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool _wasInBackground = false;
   late final HomeCubit _homeCubit;
@@ -59,6 +70,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   StreamSubscription<HomeState>? _homeSubscription;
   bool _shareDailyAyahWhenReady = false;
   bool _isOpeningDailyAyahShare = false;
+  bool _openPrayerWhenReady = false;
+  bool _prayerOpeningScheduled = false;
 
   @override
   void initState() {
@@ -66,6 +79,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _homeCubit = getIt<HomeCubit>();
     _homeSubscription = _homeCubit.stream.listen(_onHomeStateChanged);
     _shareDailyAyahWhenReady = widget.requestDailyAyahShare;
+    _openPrayerWhenReady = widget.requestPrayerTimes;
     _homeCubit.load();
     _streakCubit = getIt<StreakCubit>()..loadStreak();
     WidgetsBinding.instance.addObserver(this);
@@ -94,6 +108,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(HomePage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.requestPrayerTimes &&
+        (!oldWidget.requestPrayerTimes ||
+            widget.prayerRequestId != oldWidget.prayerRequestId)) {
+      _openPrayerWhenReady = true;
+      _reloadProgress();
+    }
     if (widget.requestDailyAyahShare && !oldWidget.requestDailyAyahShare) {
       _shareDailyAyahWhenReady = true;
       _reloadProgress();
@@ -101,6 +121,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _onHomeStateChanged(HomeState state) {
+    _openRequestedPrayerTimes(state);
     if (!_shareDailyAyahWhenReady || _isOpeningDailyAyahShare) return;
     if (state is! HomeLoaded || state.isRefreshing || state.ayahOfDay == null) {
       return;
@@ -124,6 +145,54 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _isOpeningDailyAyahShare = false;
         if (mounted) AppRouter.router.go(AppRoutes.home);
       }
+    });
+  }
+
+  void _openRequestedPrayerTimes(HomeState state) {
+    if (!_openPrayerWhenReady || _prayerOpeningScheduled) return;
+    if (state is HomeLoaded &&
+        !state.isRefreshing &&
+        state.prayerSnapshot == null) {
+      // Prayer times are unavailable: drop the request so it cannot open a
+      // sheet later, after an unrelated reload brings a snapshot.
+      _openPrayerWhenReady = false;
+      return;
+    }
+    if (state is! HomeLoaded || state.isRefreshing) return;
+    final AccountDataLease lease;
+    try {
+      lease = AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ).capture();
+    } on AccountDataUnavailableException {
+      _openPrayerWhenReady = false;
+      return;
+    }
+    _prayerOpeningScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prayerOpeningScheduled = false;
+      if (!mounted) return;
+      try {
+        lease.check();
+      } on AccountDataUnavailableException {
+        _openPrayerWhenReady = false;
+        return;
+      }
+      final latest = _homeCubit.state;
+      if (latest is! HomeLoaded || latest.isRefreshing) return;
+      _openPrayerWhenReady = false;
+      if (latest.prayerSnapshot == null) return;
+      if (!getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget) ||
+          latest.isKids) {
+        return;
+      }
+      unawaited(
+        showHomePrayerTimesSheet(
+          context,
+          snapshot: latest.prayerSnapshot!,
+          hijriLabel: latest.hijriLabel,
+        ),
+      );
     });
   }
 
@@ -158,6 +227,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 }
+
 class _HomeView extends StatelessWidget {
   const _HomeView();
 
@@ -196,6 +266,7 @@ class _HomeView extends StatelessWidget {
     );
   }
 }
+
 class HomeLoadedView extends StatefulWidget {
   const HomeLoadedView({
     super.key,
@@ -230,10 +301,8 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: ClarityModeController.maybeInstance() ?? _noClarityChanges,
-      builder: (context, _) => _buildLoaded(
-        context,
-        clarityOn: ClarityModeController.isActive,
-      ),
+      builder: (context, _) =>
+          _buildLoaded(context, clarityOn: ClarityModeController.isActive),
     );
   }
 
@@ -254,7 +323,8 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
   Widget _buildLoaded(BuildContext context, {required bool clarityOn}) {
     final isDark = widget.skin.isDark;
     final journeyEnabled =
-        JourneyFeatureFlags.unifiedJourneyEnabled && widget.state.unifiedJourneyEnabled;
+        JourneyFeatureFlags.unifiedJourneyEnabled &&
+        widget.state.unifiedJourneyEnabled;
     return RefreshIndicator(
       color: widget.skin.accent,
       onRefresh: () => context.read<HomeCubit>().load(),
@@ -320,7 +390,8 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 child: PrayerReviewHomeSlot(
                   skin: widget.skin,
                   isAdult: !widget.state.isKids && !widget.state.isParentMode,
-                  isEnabled: getIt.isRegistered<ExperienceFlags>() &&
+                  isEnabled:
+                      getIt.isRegistered<ExperienceFlags>() &&
                       getIt<ExperienceFlags>().isEnabled(
                         ExperienceFeature.prayerReview,
                       ),
@@ -360,7 +431,10 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: HomeStartKhatmahCard(skin: widget.skin, isDark: isDark),
+                  child: HomeStartKhatmahCard(
+                    skin: widget.skin,
+                    isDark: isDark,
+                  ),
                 ),
               ),
             SliverToBoxAdapter(
@@ -389,26 +463,32 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                           AppSpacing.pagePadding,
                           0,
                         ),
-                        child: HomeContextualSlot(state: widget.state, skin: widget.skin),
+                        child: HomeContextualSlot(
+                          state: widget.state,
+                          skin: widget.skin,
+                        ),
                       )
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
             if (!clarityOn)
-            SliverToBoxAdapter(
-              child: StaggeredFadeSlide(
-                delay: const Duration(milliseconds: 240),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.md,
-                    AppSpacing.pagePadding,
-                    0,
+              SliverToBoxAdapter(
+                child: StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 240),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.md,
+                      AppSpacing.pagePadding,
+                      0,
+                    ),
+                    child: HomeUnifiedProgress(
+                      state: widget.state,
+                      skin: widget.skin,
+                    ),
                   ),
-                  child: HomeUnifiedProgress(state: widget.state, skin: widget.skin),
                 ),
               ),
-            ),
             // "لمحة مراجعة": quiet surprise-recall ayah; renders nothing for
             // users without memorized ayahs.
             SliverToBoxAdapter(
@@ -447,20 +527,23 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                 ),
               ),
             if (!clarityOn)
-            SliverToBoxAdapter(
-              child: StaggeredFadeSlide(
-                delay: const Duration(milliseconds: 400),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.md,
-                    AppSpacing.pagePadding,
-                    0,
+              SliverToBoxAdapter(
+                child: StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 400),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.md,
+                      AppSpacing.pagePadding,
+                      0,
+                    ),
+                    child: HomeActivityFeed(
+                      state: widget.state,
+                      skin: widget.skin,
+                    ),
                   ),
-                  child: HomeActivityFeed(state: widget.state, skin: widget.skin),
                 ),
               ),
-            ),
           ],
           SliverToBoxAdapter(
             child: Padding(
@@ -504,7 +587,8 @@ class _PrimaryAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = skin.isDark;
     final journeyEnabled =
-        JourneyFeatureFlags.unifiedJourneyEnabled && state.unifiedJourneyEnabled;
+        JourneyFeatureFlags.unifiedJourneyEnabled &&
+        state.unifiedJourneyEnabled;
     const resolver = HomePrimaryActionResolver();
     final kind = resolver.resolve(
       unifiedJourneyEnabled: journeyEnabled,
@@ -527,8 +611,7 @@ class _PrimaryAction extends StatelessWidget {
           ],
         ],
       );
-    } else if (kind == HomePrimaryActionKind.startKhatmah &&
-        journeyEnabled) {
+    } else if (kind == HomePrimaryActionKind.startKhatmah && journeyEnabled) {
       child = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -543,8 +626,7 @@ class _PrimaryAction extends StatelessWidget {
       // Interim (Tasks 1-3): preserves today's rendering exactly.
       // Task 5 replaces the startKhatmah case with HomeStartKhatmahCard
       // and adds the invitation below the journey hero (plan step 3.4).
-      if (journeyEnabled &&
-          state.heroAction != null) {
+      if (journeyEnabled && state.heroAction != null) {
         child = _JourneyHeroAction(state: state, isDark: isDark);
       } else if (state.lastRestorableLocation != null) {
         child = ResumeSessionCard(

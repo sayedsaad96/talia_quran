@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'hands_free_media_delegate.dart';
+export 'hands_free_media_delegate.dart';
 
 /// Bridges only the continuous Quran player to the platform media session.
 ///
@@ -28,6 +30,70 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   final Future<void> Function() _onPrevious;
   final Future<void> Function(Duration position) _onSeek;
   StreamSubscription<PlaybackEvent>? _playbackSubscription;
+  HandsFreeMediaDelegate? _mediaDelegate;
+  Object? _mediaOwner;
+  PlaybackState? _readerState;
+  MediaItem? _readerItem;
+
+  bool ownsMedia(Object token) => identical(token, _mediaOwner);
+
+  bool attachMediaDelegate(Object token, HandsFreeMediaDelegate delegate) {
+    if (_mediaOwner != null) return false;
+    _readerState = playbackState.value.copyWith(
+      playing: false,
+      processingState: AudioProcessingState.idle,
+    );
+    _readerItem = mediaItem.value;
+    _mediaOwner = token;
+    _mediaDelegate = delegate;
+    mediaItem.add(null);
+    publishPractice(token, playing: false);
+    return true;
+  }
+
+  bool detachMediaDelegate(Object token) {
+    if (!ownsMedia(token)) return false;
+    _mediaOwner = null;
+    _mediaDelegate = null;
+    mediaItem.add(_readerItem);
+    if (_readerState != null) playbackState.add(_readerState!);
+    _readerState = null;
+    _readerItem = null;
+    return true;
+  }
+
+  void setMediaDelegate(HandsFreeMediaDelegate? delegate) {
+    final old = _mediaDelegate;
+    if (identical(old, delegate)) return;
+    if (_mediaOwner != null && !identical(_mediaOwner, old)) return;
+    final token = _mediaOwner;
+    if (token != null) detachMediaDelegate(token);
+    if (delegate != null) attachMediaDelegate(delegate, delegate);
+    old?.onInterrupted();
+  }
+
+  void clearMediaDelegate(HandsFreeMediaDelegate delegate) {
+    if (identical(_mediaDelegate, delegate) && _mediaOwner != null) {
+      detachMediaDelegate(_mediaOwner!);
+    }
+  }
+
+  void publishPractice(Object token, {MediaItem? item, required bool playing}) {
+    if (!ownsMedia(token)) return;
+    if (item != null) mediaItem.add(item);
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
+          MediaControl.stop,
+        ],
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: AudioProcessingState.ready,
+        playing: playing,
+      ),
+    );
+  }
 
   void setQueueItems(List<MediaItem> items) {
     queue.add(List<MediaItem>.unmodifiable(items));
@@ -36,28 +102,77 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void clearQueue() {
     queue.add(const <MediaItem>[]);
-    mediaItem.add(null);
+    if (_mediaDelegate == null) mediaItem.add(null);
   }
 
   @override
-  Future<void> play() => _onPlay();
+  Future<void> play() async {
+    final delegate = _mediaDelegate;
+    if (delegate != null) {
+      delegate.onPrimary();
+      return;
+    }
+    await _onPlay();
+  }
 
   @override
-  Future<void> pause() => _onPause();
+  Future<void> click([MediaButton button = MediaButton.media]) async {
+    final delegate = _mediaDelegate;
+    if (delegate == null) return super.click(button);
+    switch (button) {
+      case MediaButton.media:
+        delegate.onHardwareButton(primary: true);
+      case MediaButton.next:
+        delegate.onHardwareButton(primary: false);
+      case MediaButton.previous:
+        break;
+    }
+  }
 
   @override
-  Future<void> stop() => _onStop();
+  Future<void> pause() async {
+    // The notification/lock-screen pause action (not a physical key, which
+    // arrives through [click]) ends the hands-free round without grading.
+    final delegate = _mediaDelegate;
+    if (delegate != null) {
+      delegate.onInterrupted();
+      return;
+    }
+    await _onPause();
+  }
 
   @override
-  Future<void> skipToNext() => _onNext();
+  Future<void> stop() async {
+    final delegate = _mediaDelegate;
+    if (delegate != null) {
+      delegate.onInterrupted();
+      return;
+    }
+    await _onStop();
+  }
 
   @override
-  Future<void> skipToPrevious() => _onPrevious();
+  Future<void> skipToNext() async {
+    final delegate = _mediaDelegate;
+    if (delegate != null) {
+      delegate.onSecondary();
+      return;
+    }
+    await _onNext();
+  }
 
   @override
-  Future<void> seek(Duration position) => _onSeek(position);
+  Future<void> skipToPrevious() async {
+    if (_mediaDelegate == null) await _onPrevious();
+  }
+
+  @override
+  Future<void> seek(Duration position) async {
+    if (_mediaDelegate == null) await _onSeek(position);
+  }
 
   void _broadcastState(PlaybackEvent event) {
+    if (_mediaDelegate != null) return;
     _publishCurrentItem(event.currentIndex);
     final playing = _player.playing;
     playbackState.add(
@@ -87,6 +202,7 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void _publishCurrentItem(int? index) {
+    if (_mediaDelegate != null) return;
     final items = queue.value;
     if (index == null || index < 0 || index >= items.length) return;
     final item = items[index];
@@ -94,6 +210,10 @@ class QuranBackgroundAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> disposeHandler() async {
+    final delegate = _mediaDelegate;
+    _mediaOwner = null;
+    _mediaDelegate = null;
+    delegate?.onInterrupted();
     await _playbackSubscription?.cancel();
     _playbackSubscription = null;
   }

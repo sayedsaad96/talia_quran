@@ -20,6 +20,7 @@ import '../../domain/entities/khatmah_reading_result.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
 import '../widgets/khatmah_dedication_form.dart';
+import '../widgets/group_khatmah_entry.dart';
 import '../widgets/khatmah_juz_map.dart';
 import '../widgets/khatmah_progress_gauge.dart';
 
@@ -42,6 +43,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
   bool _adjusting = false;
 
   List<Widget> _historyAction(BuildContext context) => [
+    const GroupKhatmahEntry(),
     IconButton(
       key: const Key('khatmah_dashboard_history_button'),
       tooltip: context.l10n.khatmahRecentCompletions,

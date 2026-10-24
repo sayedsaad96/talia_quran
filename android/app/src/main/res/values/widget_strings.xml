@@ -1,0 +1,14 @@
+<resources>
+    <string name="widget_empty_hint">Open Talia to see today’s summary</string>
+    <string name="widget_empty_adult">Nothing due right now</string>
+    <string name="widget_prayer_fajr">Fajr</string>
+    <string name="widget_prayer_dhuhr">Dhuhr</string>
+    <string name="widget_prayer_asr">Asr</string>
+    <string name="widget_prayer_maghrib">Maghrib</string>
+    <string name="widget_prayer_isha">Isha</string>
+    <string name="widget_wird_progress">%1$s · %2$d/%3$d pages</string>
+    <plurals name="widget_reviews_due">
+        <item quantity="one">%d review due</item>
+        <item quantity="other">%d reviews due</item>
+    </plurals>
+</resources>

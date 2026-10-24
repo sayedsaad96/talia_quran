@@ -9430,4 +9430,263 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get similarAyahIndexUnavailable =>
       'The similar-ayah list has not been approved yet, so it is not available here.';
+
+  @override
+  String get handsFreeTitle => 'Hands-free Review';
+
+  @override
+  String get handsFreeDrivingWarning =>
+      'For your safety, do not use this while driving.';
+
+  @override
+  String get handsFreeAcceptWarning => 'I understand';
+
+  @override
+  String get handsFreeStart => 'Start';
+
+  @override
+  String get handsFreeCorrect => 'Correct';
+
+  @override
+  String get handsFreeReview => 'Review';
+
+  @override
+  String handsFreeSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ayahs graded',
+      one: '1 ayah graded',
+      zero: 'No ayahs graded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get handsFreeNoDue => 'No review is due right now.';
+
+  @override
+  String get handsFreeMicFallback =>
+      'Speech recognition is unavailable. Use the buttons below.';
+
+  @override
+  String get handsFreeDescription =>
+      'Listen to a short prompt, then recite. This practice does not change your memorization progress.';
+
+  @override
+  String get handsFreePrompt => 'Listen to the prompt';
+
+  @override
+  String get handsFreeYourTurn => 'Your turn to recite';
+
+  @override
+  String get handsFreeFeedback => 'Your answer has been graded';
+
+  @override
+  String get handsFreePaused => 'Round stopped';
+
+  @override
+  String get handsFreeError => 'Could not continue. Try again.';
+
+  @override
+  String get groupKhatmahTitle => 'Group Khatmah';
+
+  @override
+  String get groupKhatmahCreate => 'Create group';
+
+  @override
+  String get groupKhatmahJoin => 'Join group';
+
+  @override
+  String get groupKhatmahEmpty => 'No group Khatmah yet';
+
+  @override
+  String get groupKhatmahRefresh => 'Refresh groups';
+
+  @override
+  String get groupKhatmahGroupTitle => 'Group title';
+
+  @override
+  String get groupKhatmahDisplayName => 'Display name visible to group members';
+
+  @override
+  String get groupKhatmahInviteCode => 'Invitation code';
+
+  @override
+  String get groupKhatmahInvalidTitle => 'Use 1–80 characters for the title.';
+
+  @override
+  String get groupKhatmahInvalidName =>
+      'Use 2–24 characters for the display name.';
+
+  @override
+  String get groupKhatmahInvalidCode =>
+      'Enter the six-character invitation code.';
+
+  @override
+  String groupKhatmahMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupKhatmahCompletedCount(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count of $total parts completed',
+      one: '1 of $total parts completed',
+      zero: 'No parts completed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupKhatmahJuz(int number) {
+    return 'Part $number';
+  }
+
+  @override
+  String get groupKhatmahOpen => 'Open';
+
+  @override
+  String get groupKhatmahClaimed => 'Claimed';
+
+  @override
+  String get groupKhatmahCompleted => 'Completed';
+
+  @override
+  String get groupKhatmahPending => 'Completion pending confirmation';
+
+  @override
+  String get groupKhatmahClaim => 'Claim';
+
+  @override
+  String get groupKhatmahComplete => 'Mark complete';
+
+  @override
+  String get groupKhatmahRelease => 'Release';
+
+  @override
+  String get groupKhatmahShare => 'Share invitation code';
+
+  @override
+  String get groupKhatmahLeave => 'Leave group';
+
+  @override
+  String get groupKhatmahDelete => 'Delete group';
+
+  @override
+  String get groupKhatmahLeaveConfirm =>
+      'Leave this group? Your unfinished claims will be released.';
+
+  @override
+  String get groupKhatmahDeleteConfirm =>
+      'Delete this group for every member? Its shared progress will be removed.';
+
+  @override
+  String get groupKhatmahCancel => 'Cancel';
+
+  @override
+  String get groupKhatmahConfirm => 'Confirm';
+
+  @override
+  String get groupKhatmahError => 'Could not update the group. Try again.';
+
+  @override
+  String get groupKhatmahConflict =>
+      'This part changed. The group has been refreshed.';
+
+  @override
+  String get groupKhatmahConflictClaimed =>
+      'Someone else claimed it. The group has been refreshed.';
+
+  @override
+  String get groupKhatmahOutcomePending =>
+      'Your request is being sent and will be confirmed automatically when you are back online. There is no need to repeat it.';
+
+  @override
+  String get groupKhatmahGroupCompleted =>
+      'This Khatmah is complete and its parts can no longer change.';
+
+  @override
+  String get groupKhatmahStaleOperation =>
+      'Your membership in the group changed before this request finished. The data has been refreshed.';
+
+  @override
+  String get groupKhatmahInvalidInput =>
+      'The entered details were not accepted. Check them and try again.';
+
+  @override
+  String get groupKhatmahNetwork => 'Connect to the internet and try again.';
+
+  @override
+  String get groupKhatmahNotMember =>
+      'You are no longer a member of this group.';
+
+  @override
+  String get groupKhatmahNotEligible =>
+      'Group Khatmah is unavailable for this account.';
+
+  @override
+  String get groupKhatmahFull => 'This group is full.';
+
+  @override
+  String get groupKhatmahInvalidInvite =>
+      'This invitation code is unavailable.';
+
+  @override
+  String get groupKhatmahRateLimited => 'Too many attempts. Try again later.';
+
+  @override
+  String get groupKhatmahOwnerHasMembers =>
+      'Other members must leave before you can delete this group.';
+
+  @override
+  String get groupKhatmahDuaOpen => 'Read Khatmah supplication';
+
+  @override
+  String get groupKhatmahDuaUnavailable =>
+      'The Khatmah supplication is unavailable until its text and source are approved.';
+
+  @override
+  String get groupKhatmahStale =>
+      'Last saved group data; reconnect to check membership.';
+
+  @override
+  String get groupKhatmahAccountDeletionWarning =>
+      'Deleting your account will delete every group Khatmah you own for all its members.';
+
+  @override
+  String get groupKhatmahCompletionFailed => 'Completion needs your attention';
+
+  @override
+  String get groupKhatmahRetryCompletion => 'Retry completion';
+
+  @override
+  String get groupKhatmahDiscardCompletion => 'Discard local request';
+
+  @override
+  String get groupKhatmahDiscardConfirm =>
+      'Discard this local completion request? It may already have reached the group. This will not undo a server-confirmed completion.';
+
+  @override
+  String get groupKhatmahRecoveryRequired =>
+      'This completion could not be sent. Retry it or discard the local request.';
+
+  @override
+  String get groupKhatmahRetryRequest => 'Retry request';
+
+  @override
+  String get groupKhatmahDiscardRequestConfirm =>
+      'Discard this local request? It may already have reached the group. Discarding will not undo any server changes.';
+
+  @override
+  String get groupKhatmahFailedRequests => 'Requests needing your attention';
 }

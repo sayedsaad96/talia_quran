@@ -97,6 +97,12 @@
       "skillPath": "skills/dart-use-pattern-matching/SKILL.md",
       "computedHash": "4900ea465cfec31cd83d8786491609dc94e338ec8c424a1530773b2aaa0832ff"
     },
+    "design-taste-frontend": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "65049e1890f5fedf8f8e1144848f07bcda788e51c22bac78afbd073aeb486725"
+    },
     "docs-guard": {
       "source": "amElnagdy/guard-skills",
       "sourceType": "github",

@@ -13,6 +13,11 @@ import '../constants/app_constants.dart';
 import '../constants/surah_names.dart';
 import '../di/injection.dart';
 import '../experience/experience_feature_flags.dart';
+import '../identity/record_owner_provider.dart';
+import '../sync/group_khatmah_environment.dart';
+import '../../features/group_khatmah/data/group_khatmah_remote.dart';
+import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
+import 'group_khatmah_route_page.dart';
 import '../l10n/app_localizations.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../memorization/learning_launch_context.dart';
@@ -43,6 +48,7 @@ import '../../features/khatmah/presentation/khatmah_setup_prefill.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/memorization_plus/presentation/pages/listening_review_page.dart';
+import '../../features/memorization_plus/presentation/pages/hands_free_review_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
@@ -103,6 +109,7 @@ abstract class AppRoutes {
   static const String quranBookmarks = '/quran/bookmarks';
   static const String quranNotes = '/quran/notes';
   static const String similarAyahTrainer = '/memorization-plus/similar-ayahs';
+  static const String handsFreeReview = '/memorization-plus/hands-free';
   static const String prayerReview = '/memorization-plus/prayer-review';
   static const String audioDownloads = '/quran/downloads';
   static const String audioStorage = '/settings/audio-storage';
@@ -163,6 +170,7 @@ abstract class AppRoutes {
   static const String backup = '/settings/backup';
   static const String khatmahSetup = '/khatmah/setup';
   static const String khatmahDashboard = '/khatmah/dashboard';
+  static const String groupKhatmah = '/khatmah/group';
   static const String khatmDua = '/quran/khatm-dua';
   static const String khatmahCompletion = '/khatmah/completion';
   static const String khatmahHistory = '/khatmah/history';
@@ -195,6 +203,11 @@ String? similarAyahTrainerRedirect(ExperienceFlags? flags) =>
     flags?.isEnabled(ExperienceFeature.similarAyahTrainer) == true
         ? null
         : AppRoutes.memorizationHub;
+
+@visibleForTesting
+String? handsFreeReviewRedirect(ExperienceFlags? flags, {required bool isAdult}) =>
+    flags?.isEnabled(ExperienceFeature.handsFreeReview) == true && isAdult
+        ? null : AppRoutes.memorizationHub;
 
 @visibleForTesting
 String? prayerReviewRedirect(ExperienceFlags? flags, Object? occurrence) {
@@ -276,6 +289,7 @@ final _publicRoutes = <String>[
   AppRoutes.hifz,
   AppRoutes.hifzPracticeSurah,
   AppRoutes.listeningReview,
+  AppRoutes.handsFreeReview,
   AppRoutes.memorizationHub,
   AppRoutes.azkar,
   AppRoutes.progress,
@@ -293,7 +307,18 @@ final _publicRoutes = <String>[
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
-final _remoteProtectedRoutes = <String>[AppRoutes.familyDashboard];
+String? groupKhatmahRedirect(
+  GroupKhatmahEnvironment? environment, RecordOwnerProvider? owner,
+) {
+  if (environment?.featureEnabled != true || environment?.isAdult != true) {
+    return AppRoutes.khatmahDashboard;
+  }
+  return owner?.isSignedIn == true ? null : AppRoutes.login;
+}
+
+final _remoteProtectedRoutes = <String>[
+  AppRoutes.familyDashboard, AppRoutes.groupKhatmah,
+];
 
 class MemorizationRouteGuard {
   const MemorizationRouteGuard._();
@@ -345,6 +370,13 @@ class MemorizationRouteGuard {
   static Future<String?> adultOnlyRedirect() async {
     final profile = await _readProfile();
     return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
+  }
+
+  static Future<String?> handsFreeRedirect(ExperienceFlags? flags) async {
+    final disabled = handsFreeReviewRedirect(flags, isAdult: true);
+    if (disabled != null) return disabled;
+    final profile = await _readProfile();
+    return handsFreeReviewRedirect(flags, isAdult: profile?.isAdult == true);
   }
 
   /// Guard for the V2 memorization session route.
@@ -806,6 +838,13 @@ abstract class AppRouter {
         ),
         GoRoute(
           parentNavigatorKey: _rootNavigatorKey,
+          path: AppRoutes.handsFreeReview,
+          redirect: (context, state) => MemorizationRouteGuard.handsFreeRedirect(
+            getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null),
+          builder: (context, state) => const HandsFreeReviewPage(),
+        ),
+        GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
           path: AppRoutes.similarAyahTrainer,
           redirect: (context, state) async =>
               similarAyahTrainerRedirect(
@@ -980,6 +1019,21 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahDashboard,
         builder: (context, state) => const KhatmahDashboardPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.groupKhatmah,
+        redirect: (context, state) => groupKhatmahRedirect(
+          getIt.isRegistered<GroupKhatmahAppEnvironment>()
+              ? getIt<GroupKhatmahAppEnvironment>() : null,
+          getIt.isRegistered<RecordOwnerProvider>()
+              ? getIt<RecordOwnerProvider>() : null,
+        ),
+        builder: (context, state) => GroupKhatmahRoutePage(
+          environment: getIt<GroupKhatmahAppEnvironment>(),
+          owner: getIt<RecordOwnerProvider>(),
+          repository: getIt<GroupKhatmahRepository>(),
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -1363,6 +1417,8 @@ abstract class AppRouter {
                 path: AppRoutes.home,
                 pageBuilder: (_, state) => NoTransitionPage(
                   child: HomePage(
+                    requestPrayerTimes: state.uri.queryParameters['widgetPrayer']=='1',
+                    prayerRequestId: state.uri.queryParameters['widgetTap'],
                     requestDailyAyahShare:
                         state.uri.queryParameters['dailyAyahAction'] == 'share',
                   ),

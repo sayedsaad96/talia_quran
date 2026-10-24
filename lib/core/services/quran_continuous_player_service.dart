@@ -8,6 +8,7 @@ import '../constants/surah_names.dart';
 import '../utils/talia_logger.dart';
 import 'audio_lifecycle_manager.dart';
 import 'quran_background_audio_handler.dart';
+import 'hands_free_media_owner.dart';
 import 'quran_audio_service.dart';
 import 'reader_repeat_plan.dart';
 import 'sleep_timer.dart';
@@ -112,6 +113,7 @@ class QuranContinuousPlayerService {
     required this._reciterService,
     AudioPlayer? player,
     this._enableBackgroundAudioIntegration = false,
+    this._backgroundAudioInitializer,
   }) : _player = player ?? AudioPlayer() {
     _sleepTimer = SleepTimer(
       setVolume: (volume) {
@@ -155,6 +157,18 @@ class QuranContinuousPlayerService {
   final QuranReciterService _reciterService;
   final bool _enableBackgroundAudioIntegration;
   final AudioPlayer _player;
+  final Future<QuranBackgroundAudioHandler?> Function()? _backgroundAudioInitializer;
+  final _handsFreeOwner = HandsFreeMediaOwner();
+
+  void cancelHandsFreeAcquisition(HandsFreeMediaDelegate delegate) =>
+      _handsFreeOwner.cancelPending(delegate);
+
+  Future<HandsFreeMediaLease?> acquireHandsFreeMedia(HandsFreeMediaDelegate delegate) =>
+      _handsFreeOwner.acquire(delegate, stopReader: () async {
+        await _stopReader();
+        if (_player.playing) throw StateError('Reader did not stop');
+      }, initialize: _ensureBackgroundAudioHandler);
+
   QuranBackgroundAudioHandler? _backgroundAudioHandler;
   Future<QuranBackgroundAudioHandler?>? _backgroundAudioInitialization;
 
@@ -320,6 +334,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
     if (generation != _playbackGeneration) return;
@@ -371,6 +386,7 @@ class QuranContinuousPlayerService {
     List<int> surahIds, {
     SleepTimerChoice sleep = SleepTimerChoice.off,
   }) async {
+    if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(false);
     if (generation != _playbackGeneration) return;
@@ -430,6 +446,7 @@ class QuranContinuousPlayerService {
     QuranReciter? reciter,
     bool applyReaderSettings = false,
   }) async {
+    if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     await _prepareSession(applyReaderSettings);
     if (generation != _playbackGeneration) return;
@@ -483,6 +500,7 @@ class QuranContinuousPlayerService {
     PlayScope scope = PlayScope.singleAyah,
     bool applyReaderSettings = false,
   }) async {
+    if (_handsFreeOwner.isReserved) return;
     final generation = ++_playbackGeneration;
     final wasReset = await _prepareSession(applyReaderSettings);
     if (generation != _playbackGeneration) return;
@@ -734,6 +752,7 @@ class QuranContinuousPlayerService {
   // ---------------------------------------------------------------------------
 
   Future<void> nextAyah() async {
+    if (_handsFreeOwner.isReserved) return;
     if (_hasRepeats) {
       final target = nextDistinctIndex<Ayah>(_queue, _currentIndex);
       if (target != null) await _player.seek(Duration.zero, index: target);
@@ -745,6 +764,7 @@ class QuranContinuousPlayerService {
   }
 
   Future<void> previousAyah() async {
+    if (_handsFreeOwner.isReserved) return;
     if (_hasRepeats) {
       final target = previousDistinctIndex<Ayah>(_queue, _currentIndex);
       if (target != null) await _player.seek(Duration.zero, index: target);
@@ -767,6 +787,7 @@ class QuranContinuousPlayerService {
   /// playback the queue is rebuilt from the current ayah to the end of the
   /// scope that started playback.
   Future<void> setRepeat(ReaderRepeatSettings settings) async {
+    if (_handsFreeOwner.isReserved) return;
     final previous = _repeat;
     if (settings == previous) return;
     _repeat = settings;
@@ -970,6 +991,7 @@ class QuranContinuousPlayerService {
   // ---------------------------------------------------------------------------
 
   Future<void> pause() async {
+    if (_handsFreeOwner.isReserved) return;
     try {
       await _player.pause();
       _emitState(_stateNotifier.value.copyWith(status: PlaybackStatus.paused));
@@ -979,6 +1001,7 @@ class QuranContinuousPlayerService {
   }
 
   Future<void> resume() async {
+    if (_handsFreeOwner.isReserved) return;
     try {
       unawaited(_player.play());
       _emitState(_stateNotifier.value.copyWith(status: PlaybackStatus.playing));
@@ -988,6 +1011,7 @@ class QuranContinuousPlayerService {
   }
 
   Future<void> togglePlayPause() async {
+    if (_handsFreeOwner.isReserved) return;
     final currentStatus = _stateNotifier.value.status;
     switch (currentStatus) {
       case PlaybackStatus.playing:
@@ -1007,6 +1031,11 @@ class QuranContinuousPlayerService {
   /// cleared after the player stops, unless a play request started meanwhile
   /// (that request owns the session now and keeps its state).
   Future<void> stop() async {
+    _handsFreeOwner.interrupt();
+    await _stopReader();
+  }
+
+  Future<void> _stopReader() async {
     final generation = ++_playbackGeneration;
     _resetSession();
     try {
@@ -1027,9 +1056,12 @@ class QuranContinuousPlayerService {
     _emitState(const ContinuousPlaybackState(status: PlaybackStatus.idle));
   }
 
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) async {
+    if (!_handsFreeOwner.isReserved) await _player.seek(position);
+  }
 
   Future<void> changeReciter(QuranReciter reciter) async {
+    if (_handsFreeOwner.isReserved) return;
     if (_stateNotifier.value.reciter == reciter) return;
     _emitState(_stateNotifier.value.copyWith(reciter: reciter));
     if (_stateNotifier.value.hasActiveAudio && _currentIndex >= 0) {
@@ -1047,6 +1079,7 @@ class QuranContinuousPlayerService {
   }
 
   void dispose() {
+    _handsFreeOwner.dispose();
     AudioLifecycleManager.instance.unregister(_player);
     if (_sleepChoice != SleepTimerChoice.off) _sleepTimer.cancel();
     _currentIndexSub?.cancel();
@@ -1060,7 +1093,20 @@ class QuranContinuousPlayerService {
     if (!_enableBackgroundAudioIntegration) {
       return Future<QuranBackgroundAudioHandler?>.value(null);
     }
-    return _backgroundAudioInitialization ??= _initializeBackgroundAudio();
+    if (_backgroundAudioHandler != null) return Future.value(_backgroundAudioHandler);
+    // The init future is cached un-timed so a slow AudioService.init still
+    // attaches its handler later; each caller only bounds its own wait.
+    final init = _backgroundAudioInitialization ??=
+        (_backgroundAudioInitializer ?? _initializeBackgroundAudio)().then((handler) async {
+      if (_handsFreeOwner.isDisposed) {
+        _backgroundAudioHandler = null;
+        await handler?.disposeHandler();
+        return null;
+      }
+      _backgroundAudioHandler = handler;
+      return handler;
+    });
+    return init.timeout(const Duration(seconds: 5), onTimeout: () => null);
   }
 
   Future<QuranBackgroundAudioHandler?> _initializeBackgroundAudio() async {

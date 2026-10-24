@@ -1,0 +1,43 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/talia_home_widget_background"
+    android:gravity="center_vertical"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/widget_prayer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:textColor="#FF173B32" />
+
+    <TextView
+        android:id="@+id/widget_review"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="left"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textColor="#FF355C50" />
+
+    <TextView
+        android:id="@+id/widget_wird"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="left"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textColor="#FF355C50" />
+
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/widget_empty_hint"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textColor="#FF355C50" />
+</LinearLayout>

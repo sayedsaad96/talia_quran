@@ -7,6 +7,7 @@ import '../../../core/sync/cloud_sync_queue.dart';
 import '../../../core/utils/talia_logger.dart';
 import '../../memorization_plus/domain/repositories/memorization_cloud_repository.dart';
 import '../../quran/data/datasources/bookmark_service.dart';
+import '../../group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import '../domain/repositories/auth_repository.dart';
 
 /// Owns authenticated cloud synchronization without depending on auth UI state.
@@ -22,6 +23,8 @@ class CloudSyncCoordinator {
     this._achievementService,
     this._cloudSyncQueue,
     this._bookmarkService,
+    this._groupKhatmahRepository,
+    this._groupKhatmahAvailable,
     this._onMemorizationIdentityChanged,
     this._syncBookmarks = true,
     this._localChangeDebounce = const Duration(seconds: 2),
@@ -37,6 +40,8 @@ class CloudSyncCoordinator {
   final AchievementService? _achievementService;
   final CloudSyncQueue? _cloudSyncQueue;
   final BookmarkService? _bookmarkService;
+  final GroupKhatmahRepository? _groupKhatmahRepository;
+  final bool Function()? _groupKhatmahAvailable;
   final void Function()? _onMemorizationIdentityChanged;
   final bool _syncBookmarks;
   final Duration _localChangeDebounce;
@@ -124,6 +129,8 @@ class CloudSyncCoordinator {
   /// an explicit recovery action and are never silently re-armed by an
   /// application lifecycle event.
   Future<void> resumeIfNeeded({bool force = false}) async {
+    if (_identityTransitionDepth > 0) return;
+    await _groupKhatmahRepository?.reconcilePendingWake();
     final now = DateTime.now();
     if (!force &&
         _lastResumeSyncAt != null &&
@@ -145,8 +152,19 @@ class CloudSyncCoordinator {
   /// This is the single authoritative all-domain pending-work decision: it
   /// covers bookmarks, memorization, and auth progress (V1-M5). Omitting any
   /// dirty domain here would let sign-out destroy unsynced user data.
-  Future<bool> flushBeforeSignOut() async {
+  ///
+  /// [forPasswordUpdate] gates on group intents that can actually be delivered:
+  /// dead letters and intents of an unavailable feature cannot be flushed, so
+  /// they must not block a password update (sign-out still counts them all).
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async {
     try {
+      final groups = _groupKhatmahRepository;
+      Future<bool> groupsPending() => forPasswordUpdate
+          ? groups!.hasDeliverablePending()
+          : groups!.hasPending();
+      if (groups != null && await groupsPending()) {
+        await groups.flushPending();
+      }
       final bookmarks = _bookmarkService;
       if (bookmarks != null && await bookmarks.hasPendingCloudWorkDurably()) {
         await bookmarks.pushToCloud();
@@ -187,6 +205,7 @@ class CloudSyncCoordinator {
       final memorizationPending =
           memorization != null && await memorization.hasPendingCloudWork();
       return !memorizationPending &&
+          !(groups != null && await groupsPending()) &&
           !(bookmarks != null &&
               await bookmarks.hasPendingCloudWorkDurably()) &&
           !await _authRepository.hasPendingCloudPush();
@@ -231,7 +250,18 @@ class CloudSyncCoordinator {
   bool _ownerIsStillActive(String? ownerId) =>
       ownerId != null && _authRepository.currentUser?.id == ownerId;
 
+  bool get _groupsCanSync => _groupKhatmahRepository != null &&
+      (_groupKhatmahAvailable?.call() ?? true);
+
   Future<void> _perform(String? ownerId) async {
+    if (!_ownerIsStillActive(ownerId)) return;
+    final groups = _groupKhatmahRepository;
+    if (groups != null && _groupsCanSync) {
+      await groups.reconcilePendingWake();
+      await groups.refreshMine();
+      if (!_ownerIsStillActive(ownerId)) return;
+      await groups.flushPending();
+    }
     if (!_ownerIsStillActive(ownerId)) return;
     final bookmarks = _bookmarkService;
     if (_syncBookmarks && bookmarks != null) {
@@ -538,6 +568,7 @@ class CloudSyncCoordinator {
   }
 
   Future<bool> _hasPendingSyncWork() async {
+    if (await _groupKhatmahRepository?.hasRunnablePending() ?? false) return true;
     final queue = _cloudSyncQueue;
     if (queue != null && await queue.hasPending()) return true;
     final bookmarks = _bookmarkService;
@@ -555,6 +586,10 @@ class CloudSyncCoordinator {
     final queue = _cloudSyncQueue;
     if (queue == null) return;
     for (final item in await queue.dueItems()) {
+      if ((item.kind == CloudSyncQueueKind.groupKhatmahPull ||
+          item.kind == CloudSyncQueueKind.groupKhatmahPush) && !_groupsCanSync) {
+        continue;
+      }
       final memorization = _memorizationCloudRepository;
       if ((item.kind == CloudSyncQueueKind.reviewEvidencePull ||
               item.kind == CloudSyncQueueKind.reviewEvidencePush) &&
@@ -570,6 +605,12 @@ class CloudSyncCoordinator {
       if (!_syncBookmarks &&
           (item.kind == CloudSyncQueueKind.bookmarkPull ||
               item.kind == CloudSyncQueueKind.bookmarkPush)) {
+        continue;
+      }
+      if (item.kind == CloudSyncQueueKind.groupKhatmahPush) {
+        // The group journal owns per-operation budgets and its next wake.
+        // Generic acknowledgement here could delete a later retry it saved.
+        await _groupKhatmahRepository?.flushPending();
         continue;
       }
       bool completed;
@@ -597,6 +638,12 @@ class CloudSyncCoordinator {
   Future<bool> _retryQueueKind(String kind) async {
     final memorization = _memorizationCloudRepository;
     switch (kind) {
+      case CloudSyncQueueKind.groupKhatmahPull:
+        final groups = _groupKhatmahRepository;
+        return groups != null && (await groups.refreshMine()).isRight();
+      case CloudSyncQueueKind.groupKhatmahPush:
+        final groups = _groupKhatmahRepository;
+        return groups != null && (await groups.flushPending()).isRight();
       case CloudSyncQueueKind.authPull:
         return (await _authRepository.pullProgressFromCloud()).isRight();
       case CloudSyncQueueKind.authPush:
