@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/group_khatmah/data/group_khatmah_remote.dart';
 import '../../features/group_khatmah/data/group_khatmah_repository_impl.dart';
+import '../../features/group_khatmah/data/eligibility_requesting_remote.dart';
 import '../../features/group_khatmah/data/supabase_group_khatmah_remote.dart';
 import '../../features/group_khatmah/domain/entities/group_khatmah.dart';
 import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
@@ -34,7 +35,11 @@ Future<void> registerGroupKhatmah(GetIt getIt) async {
   );
   GroupKhatmahRemote remote;
   try {
-    remote = SupabaseGroupKhatmahRemote(Supabase.instance.client);
+    final supabase = SupabaseGroupKhatmahRemote(Supabase.instance.client);
+    remote = EligibilityRequestingRemote(
+      supabase,
+      requestEligibility: supabase.requestEligibility,
+    );
   } catch (_) {
     remote = const _UnavailableGroupRemote();
   }

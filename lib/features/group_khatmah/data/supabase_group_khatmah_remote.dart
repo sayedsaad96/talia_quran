@@ -51,6 +51,19 @@ class SupabaseGroupKhatmahRemote implements GroupKhatmahRemote {
     return result;
   }
 
+  /// Self-service eligibility (`request_group_khatmah_eligibility`). True
+  /// when the server holds this account as eligible.
+  Future<bool> requestEligibility(String ownerId) async {
+    final value = await _forOwner(
+      ownerId,
+      () => _client.rpc('request_group_khatmah_eligibility'),
+    );
+    if (value is! Map || value['eligible'] is! bool) {
+      throw const FormatException('eligibility envelope');
+    }
+    return value['eligible'] as bool;
+  }
+
   @override
   Future<GroupKhatmahPage> fetchMine({
     required String ownerId,
