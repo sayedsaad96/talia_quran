@@ -119,7 +119,56 @@ void main() {
           DateTime(2026, 10, 23, 21),
           tomorrowFajr,
           DateTime(2026, 10, 24),
+          DateTime(2026, 10, 25),
         ]..sort(),
+      );
+    });
+
+    test('lists tomorrow five prayers once, ordered, with the day end', () {
+      final midday = DateTime(2026, 10, 23, 12, 30);
+      DateTime tomorrowAt(int hour) => DateTime(2026, 10, 24, hour);
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: _snapshot(
+          midday,
+          nextName: 'asr',
+          nextTime: DateTime(2026, 10, 23, 15),
+        ),
+        tomorrow: null,
+        tomorrowFajr: tomorrowAt(5),
+        tomorrowPrayers: [
+          (key: 'isha', at: tomorrowAt(21)),
+          (key: 'fajr', at: tomorrowAt(5)),
+          (key: 'dhuhr', at: tomorrowAt(12)),
+          (key: 'maghrib', at: tomorrowAt(18)),
+          (key: 'asr', at: tomorrowAt(15)),
+          (key: 'sunrise', at: tomorrowAt(6)),
+        ],
+        dueReviewCount: 1,
+        activePlan: null,
+        now: midday,
+      );
+
+      expect(snapshot.upcomingPrayers.map((p) => p.key), [
+        'asr',
+        'maghrib',
+        'isha',
+        'fajr',
+        'dhuhr',
+        'asr',
+        'maghrib',
+        'isha',
+      ]);
+      final instants = snapshot.upcomingPrayers.map((p) => p.at).toList();
+      expect(instants, [...instants]..sort());
+      expect(instants.toSet(), hasLength(instants.length));
+      expect(snapshot.dayEndsAt, DateTime(2026, 10, 24));
+      expect(snapshot.expiresAt, DateTime(2026, 10, 25));
+      expect(
+        snapshot.toJson()['dayEndsAt'],
+        DateTime(2026, 10, 24).millisecondsSinceEpoch,
       );
     });
 
@@ -364,8 +413,12 @@ void main() {
           snapshot.nextPrayerAt!.timeZoneOffset.inMinutes,
         );
         expect(
-          json['expiresAt'],
+          json['dayEndsAt'],
           DateTime(now.year, now.month, now.day + 1).millisecondsSinceEpoch,
+        );
+        expect(
+          json['expiresAt'],
+          DateTime(now.year, now.month, now.day + 2).millisecondsSinceEpoch,
         );
         expect(
           stringEntries.map((entry) => entry.key),

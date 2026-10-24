@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/experience/rollout_manifest.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/core/memorization/kids_hifz_feature_flags.dart';
@@ -12,15 +13,20 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   }
 
-  test('missingFlagIsOff', () async {
+  test('a missing flag takes its shipped rollout default', () async {
     await seed({});
     final flags = KidsEnrichmentFlags.fromPreferences(prefs);
     for (final feature in KidsEnrichmentFeature.values) {
-      expect(flags.isEnabled(feature), isFalse, reason: feature.name);
+      expect(
+        flags.isEnabled(feature),
+        RolloutManifest.defaultFor(feature.storageKey),
+        reason: feature.name,
+      );
     }
+    expect(flags.isEnabled(KidsEnrichmentFeature.learningLessons), isFalse);
   });
 
-  test('roadmap flags are appended in order and off by default', () async {
+  test('roadmap flags are appended in order with their shipped default', () async {
     expect(KidsEnrichmentFeature.values.map((e) => e.name).toList(), [
       'homeMissionTemplates',
       'effortAchievements',
@@ -61,12 +67,20 @@ void main() {
         (e) => e.name == name,
       );
       expect(feature.storageKey, 'kids_enrichment_$name');
-      expect(flags.isEnabled(feature), isFalse, reason: name);
+      expect(
+        flags.isEnabled(feature),
+        RolloutManifest.defaultFor(feature.storageKey),
+        reason: name,
+      );
     }
   });
 
   test('a flag turns on only its own feature', () async {
-    await seed({KidsEnrichmentFeature.homeMissionTemplates.storageKey: true});
+    // Every other flag is stored off, so the shipped defaults do not apply.
+    await seed({
+      for (final f in KidsEnrichmentFeature.values) f.storageKey: false,
+      KidsEnrichmentFeature.homeMissionTemplates.storageKey: true,
+    });
     final flags = KidsEnrichmentFlags.fromPreferences(prefs);
     expect(flags.isEnabled(KidsEnrichmentFeature.homeMissionTemplates), isTrue);
     for (final feature in KidsEnrichmentFeature.values.where(

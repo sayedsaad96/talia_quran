@@ -34,6 +34,10 @@ class GuardianNewsSection extends StatelessWidget {
           name,
           l10n.localeName == 'ar' ? titleAr : (titleEn ?? titleAr),
         ),
+      PromiseMetMilestone(:final title) => l10n.guardianNewsPromise(
+        name,
+        title,
+      ),
       WeekCompletedMilestone() => l10n.guardianNewsWeek(name),
     };
   }

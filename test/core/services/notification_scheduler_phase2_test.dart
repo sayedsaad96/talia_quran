@@ -405,7 +405,14 @@ void main() {
 
     for (final (label, prefs, adult) in [
       ('not opted in', {ExperienceFeature.seasonalRamadan.storageKey: true}, true),
-      ('flag off', {lastTenReminderPreferenceKey: true}, true),
+      (
+        'flag off',
+        {
+          lastTenReminderPreferenceKey: true,
+          ExperienceFeature.seasonalRamadan.storageKey: false,
+        },
+        true,
+      ),
       (
         'a child profile',
         {

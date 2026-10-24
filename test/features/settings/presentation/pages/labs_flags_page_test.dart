@@ -26,7 +26,8 @@ void main() {
     await tester.pump();
     await tester.tap(tile);
     await tester.pump();
-    expect(prefs.getBool(key), isFalse);
+    // On by default, so two taps end back on.
+    expect(prefs.getBool(key), isTrue);
     expect(refreshes, 2);
   });
 
@@ -57,8 +58,9 @@ void main() {
         await tester.pump();
       }
 
+      // Shipped on by default, so the first tap stores off.
       await toggle('kids_enrichment_homeMissionTemplates');
-      expect(prefs.getBool('kids_enrichment_homeMissionTemplates'), isTrue);
+      expect(prefs.getBool('kids_enrichment_homeMissionTemplates'), isFalse);
 
       // The Quran journey is on by default, so the switch starts on.
       final journeyTile = tester.widget<SwitchListTile>(
@@ -71,10 +73,35 @@ void main() {
       expect(prefs.getBool(KidsHifzFeatureFlags.quranJourneyKey), isFalse);
 
       await toggle(ExperienceFeature.strengthOverlay.storageKey);
-      expect(prefs.getBool('experience_flag_strengthOverlay'), isTrue);
+      expect(prefs.getBool('experience_flag_strengthOverlay'), isFalse);
 
       await toggle(ExperienceFeature.strengthOverlay.storageKey);
-      expect(prefs.getBool('experience_flag_strengthOverlay'), isFalse);
+      expect(prefs.getBool('experience_flag_strengthOverlay'), isTrue);
     },
   );
+
+  testWidgets('shows the default, marks a local change and resets it', (
+    tester,
+  ) async {
+    final key = ExperienceFeature.similarAyahTrainer.storageKey;
+    SharedPreferences.setMockInitialValues({key: true});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      MaterialApp(home: LabsFlagsPage(prefs: prefs, onFlagChanged: (_) {})),
+    );
+    final tile = find.byKey(ValueKey('labs_flag_$key'));
+    await tester.scrollUntilVisible(
+      tile,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('default: off · changed locally'), findsOne);
+    expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+
+    await tester.tap(find.byKey(ValueKey('labs_reset_$key')));
+    await tester.pump();
+    expect(prefs.containsKey(key), isFalse);
+    expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+    expect(find.byKey(ValueKey('labs_reset_$key')), findsNothing);
+  });
 }

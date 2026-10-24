@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../experience/rollout_manifest.dart';
+
 /// Independently switchable parts of the kids enrichment roadmap
 /// (`docs/superpowers/plans/2026-10-11-kids-enrichment-roadmap.md`).
 ///
@@ -73,9 +75,9 @@ enum KidsEnrichmentFeature {
   String get storageKey => '${KidsEnrichmentFlags.keyPrefix}$name';
 }
 
-/// Rollout switches for [KidsEnrichmentFeature]. Every feature is off until
-/// it is explicitly enabled, and a missing, mistyped or unreadable value
-/// counts as off. Turning one off never touches the existing kids journey,
+/// Rollout switches for [KidsEnrichmentFeature]. A stored value wins;
+/// otherwise [KidsEnrichmentFlags.fromPreferences] uses the shipped default in
+/// [RolloutManifest]. An unreadable value counts as off. Turning one off never touches the existing kids journey,
 /// [KidsHifzFeatureFlags] or data the feature already stored.
 ///
 /// The keys are device-level rollout switches (like
@@ -85,9 +87,10 @@ enum KidsEnrichmentFeature {
 class KidsEnrichmentFlags {
   const KidsEnrichmentFlags(this._readBool);
 
-  /// Reads from [prefs], treating any read failure as "off".
+  /// Reads from [prefs], then the shipped default; read failures are "off".
   KidsEnrichmentFlags.fromPreferences(SharedPreferences prefs)
-    : _readBool = prefs.getBool;
+    : _readBool = ((key) =>
+          prefs.getBool(key) ?? RolloutManifest.defaultFor(key));
 
   static const keyPrefix = 'kids_enrichment_';
 

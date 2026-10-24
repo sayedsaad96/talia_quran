@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/experience/rollout_manifest.dart';
+
 /// Independently switchable parts of Adult Journey Package 1
 /// (`docs/superpowers/plans/2026-10-11-adult-journey-package-1.md`).
 ///
@@ -19,8 +21,8 @@ enum AdultJourneyFeature {
 }
 
 /// Rollout switches for [AdultJourneyFeature], following
-/// `KidsEnrichmentFlags`. Every part is off until explicitly enabled, and a
-/// missing, mistyped or unreadable value counts as off. Turning one off
+/// `KidsEnrichmentFlags`: a stored value wins, then the shipped default in
+/// [RolloutManifest]; an unreadable value counts as off. Turning one off
 /// restores the existing Home and never deletes stored preferences.
 ///
 /// The keys are device-level rollout switches: [keyPrefix] deliberately does
@@ -29,9 +31,10 @@ enum AdultJourneyFeature {
 class AdultJourneyFlags {
   const AdultJourneyFlags(this._readBool);
 
-  /// Reads from [prefs], treating any read failure as "off".
+  /// Reads from [prefs], then the shipped default; read failures are "off".
   AdultJourneyFlags.fromPreferences(SharedPreferences prefs)
-    : _readBool = prefs.getBool;
+    : _readBool = ((key) =>
+          prefs.getBool(key) ?? RolloutManifest.defaultFor(key));
 
   static const keyPrefix = 'adult_journey_flag_';
 

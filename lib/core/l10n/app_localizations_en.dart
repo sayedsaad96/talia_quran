@@ -6061,6 +6061,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String guardianNewsPromise(String child, String title) {
+    return 'Your promise to $child is due: \"$title\"';
+  }
+
+  @override
   String guardianNewsWeek(String child) {
     return '$child completed the weekly goal';
   }
@@ -8362,7 +8367,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureBody =>
-      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers; only the assessment result is saved with your progress. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
+      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
 
   @override
   String get recitationVoiceDisclosureGuardian =>
@@ -8900,6 +8905,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clarityModeSubtitle =>
       'Larger text, higher contrast and a simpler home';
+
+  @override
+  String get clarityContinueReading => 'Continue reading';
+
+  @override
+  String get clarityTodayReview => 'Today\'s review';
+
+  @override
+  String clarityNextPrayer(String prayer, String time) {
+    return 'Next prayer: $prayer $time';
+  }
 
   @override
   String get afterPrayerAzkarTitle => 'After-prayer adhkar';

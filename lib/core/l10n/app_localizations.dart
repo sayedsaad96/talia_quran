@@ -10354,6 +10354,12 @@ abstract class AppLocalizations {
   /// **'{child} حصل على شهادة: {title}'**
   String guardianNewsCertificate(String child, String title);
 
+  /// What's new: the surah a guardian's promise depends on is complete
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقّق شرط وعدك لـ{child}: «{title}»'**
+  String guardianNewsPromise(String child, String title);
+
   /// What's new: a child met the weekly goal
   ///
   /// In ar, this message translates to:
@@ -14029,7 +14035,7 @@ abstract class AppLocalizations {
   /// No description provided for @recitationVoiceDisclosureBody.
   ///
   /// In ar, this message translates to:
-  /// **'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.'**
+  /// **'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.'**
   String get recitationVoiceDisclosureBody;
 
   /// No description provided for @recitationVoiceDisclosureGuardian.
@@ -14967,6 +14973,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'خط أكبر، تباين أعلى، ورئيسية أبسط'**
   String get clarityModeSubtitle;
+
+  /// No description provided for @clarityContinueReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل القراءة'**
+  String get clarityContinueReading;
+
+  /// No description provided for @clarityTodayReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة اليوم'**
+  String get clarityTodayReview;
+
+  /// No description provided for @clarityNextPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصلاة القادمة: {prayer} {time}'**
+  String clarityNextPrayer(String prayer, String time);
 
   /// No description provided for @afterPrayerAzkarTitle.
   ///

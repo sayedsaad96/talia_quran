@@ -6040,6 +6040,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String guardianNewsPromise(String child, String title) {
+    return 'تحقّق شرط وعدك لـ$child: «$title»';
+  }
+
+  @override
   String guardianNewsWeek(String child) {
     return '$child أكمل هدف الأسبوع';
   }
@@ -8372,7 +8377,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recitationVoiceDisclosureBody =>
-      'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
+      'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
 
   @override
   String get recitationVoiceDisclosureGuardian =>
@@ -8905,6 +8910,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clarityModeSubtitle => 'خط أكبر، تباين أعلى، ورئيسية أبسط';
+
+  @override
+  String get clarityContinueReading => 'أكمل القراءة';
+
+  @override
+  String get clarityTodayReview => 'مراجعة اليوم';
+
+  @override
+  String clarityNextPrayer(String prayer, String time) {
+    return 'الصلاة القادمة: $prayer $time';
+  }
 
   @override
   String get afterPrayerAzkarTitle => 'أذكار بعد الصلاة';

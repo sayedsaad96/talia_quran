@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../entities/kids_session_log.dart';
+import '../entities/parent_dashboard.dart';
 import 'kids_adventure_regions.dart';
 
 /// Something worth telling the guardian about a child. [id] is stable across
@@ -44,6 +45,28 @@ final class CertificateEarnedMilestone extends GuardianMilestone {
   List<Object?> get props => [certificateId, titleAr, titleEn];
 }
 
+/// The surah a guardian's promise (gift) depends on is now complete, so the
+/// guardian can keep the promise. Not raised once the gift is claimed.
+final class PromiseMetMilestone extends GuardianMilestone {
+  const PromiseMetMilestone({
+    required this.rewardId,
+    required this.title,
+    required this.surahId,
+  });
+
+  final String rewardId;
+
+  /// The guardian's own words for the gift.
+  final String title;
+  final int surahId;
+
+  @override
+  String get id => 'promise:$rewardId';
+
+  @override
+  List<Object?> get props => [rewardId, title, surahId];
+}
+
 /// The child met the weekly goal in the last full week (Monday to Sunday,
 /// UTC, the same week the dashboard counts). [weekStart] is that Monday.
 final class WeekCompletedMilestone extends GuardianMilestone {
@@ -62,20 +85,40 @@ final class WeekCompletedMilestone extends GuardianMilestone {
 }
 
 /// Pure: everything the guardian could be told about a child right now.
-/// The caller subtracts what was already seen. Surahs ascending, then
-/// certificates newest first, then the week.
+/// The caller subtracts what was already seen. Surahs ascending, then met
+/// promises, then certificates newest first, then the week.
 List<GuardianMilestone> detectGuardianMilestones({
   required List<KidsSessionLog> logs,
   required Map<int, int> ayahCountBySurah,
   required List<CertificateAward> certificates,
   required int weeklyGoalSessions,
   required DateTime now,
+  List<ParentReward> rewards = const [],
 }) {
   final result = <GuardianMilestone>[];
 
   final surahs = kidsMemorizedSurahIds(logs, ayahCountBySurah).toList()..sort();
   for (final surahId in surahs) {
     result.add(SurahCompletedMilestone(surahId));
+  }
+
+  final memorized = surahs.toSet();
+  final seenRewards = <String>{};
+  for (final reward in rewards) {
+    final surahId = reward.milestoneSurahId;
+    if (surahId == null ||
+        !memorized.contains(surahId) ||
+        reward.status == ParentRewardStatus.claimed ||
+        !seenRewards.add(reward.id)) {
+      continue;
+    }
+    result.add(
+      PromiseMetMilestone(
+        rewardId: reward.id,
+        title: reward.title,
+        surahId: surahId,
+      ),
+    );
   }
 
   final newestFirst = [...certificates]

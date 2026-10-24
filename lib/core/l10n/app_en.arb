@@ -2529,6 +2529,14 @@
       }
     }
   },
+  "guardianNewsPromise": "Your promise to {child} is due: \"{title}\"",
+  "@guardianNewsPromise": {
+    "description": "What's new: the surah a guardian's promise depends on is complete",
+    "placeholders": {
+      "child": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
   "guardianNewsWeek": "{child} completed the weekly goal",
   "@guardianNewsWeek": {
     "description": "What's new: a child met the weekly goal",
@@ -3496,7 +3504,7 @@
   ,"guardianPinCreateReason": "This is a guardian action. Create a 4-digit PIN to protect it; you will be asked for it next time."
   ,"childSetupPinOptionalHelp": "Optional: create it now or the first time a guardian action needs it."
   ,"recitationVoiceDisclosureTitle": "Before you recite"
-  ,"recitationVoiceDisclosureBody": "To check your recitation, the app uses the microphone and your device's built-in speech recognition service (such as Google's). That service may send the audio to its provider's servers to turn it into text, under the provider's policies. Talia does not keep the recording or send it to Talia servers; only the assessment result is saved with your progress. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings."
+  ,"recitationVoiceDisclosureBody": "To check your recitation, the app uses the microphone and your device's built-in speech recognition service (such as Google's). That service may send the audio to its provider's servers to turn it into text, under the provider's policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings."
   ,"recitationVoiceDisclosureGuardian": "If the user is a child, a parent or guardian should read this and decide."
   ,"recitationVoiceDisclosureAccept": "Agree, use the microphone"
   ,"recitationVoiceDisclosureDecline": "No, I'll grade myself"
@@ -3663,6 +3671,10 @@
   ,"trustViewPrivacy": "Privacy policy"
   ,"clarityModeTitle": "Clarity mode"
   ,"clarityModeSubtitle": "Larger text, higher contrast and a simpler home"
+  ,"clarityContinueReading": "Continue reading"
+  ,"clarityTodayReview": "Today's review"
+  ,"clarityNextPrayer": "Next prayer: {prayer} {time}"
+  ,"@clarityNextPrayer": {"placeholders": {"prayer": {"type": "String"}, "time": {"type": "String"}}}
   ,"afterPrayerAzkarTitle": "After-prayer adhkar"
   ,"afterPrayerAzkarSubtitle": "After {prayer} prayer"
   ,"afterPrayerAzkarOpen": "Start"

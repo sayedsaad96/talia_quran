@@ -2557,6 +2557,14 @@
       }
     }
   },
+  "guardianNewsPromise": "تحقّق شرط وعدك لـ{child}: «{title}»",
+  "@guardianNewsPromise": {
+    "description": "What's new: the surah a guardian's promise depends on is complete",
+    "placeholders": {
+      "child": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
   "guardianNewsWeek": "{child} أكمل هدف الأسبوع",
   "@guardianNewsWeek": {
     "description": "What's new: a child met the weekly goal",
@@ -3534,7 +3542,7 @@
   ,"guardianPinCreateReason": "هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة."
   ,"childSetupPinOptionalHelp": "اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر."
   ,"recitationVoiceDisclosureTitle": "قبل بدء التسميع"
-  ,"recitationVoiceDisclosureBody": "لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها؛ تُحفظ نتيجة التقييم فقط ضمن تقدّمك. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز."
+  ,"recitationVoiceDisclosureBody": "لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز."
   ,"recitationVoiceDisclosureGuardian": "إذا كان المستخدم طفلًا، فليقرأ وليّ الأمر هذا البيان ويقرّر."
   ,"recitationVoiceDisclosureAccept": "موافق، استخدم الميكروفون"
   ,"recitationVoiceDisclosureDecline": "لا، سأقيّم بنفسي"
@@ -3701,6 +3709,10 @@
   ,"trustViewPrivacy": "سياسة الخصوصية"
   ,"clarityModeTitle": "وضع الوضوح"
   ,"clarityModeSubtitle": "خط أكبر، تباين أعلى، ورئيسية أبسط"
+  ,"clarityContinueReading": "أكمل القراءة"
+  ,"clarityTodayReview": "مراجعة اليوم"
+  ,"clarityNextPrayer": "الصلاة القادمة: {prayer} {time}"
+  ,"@clarityNextPrayer": {"placeholders": {"prayer": {"type": "String"}, "time": {"type": "String"}}}
   ,"afterPrayerAzkarTitle": "أذكار بعد الصلاة"
   ,"afterPrayerAzkarSubtitle": "بعد صلاة {prayer}"
   ,"@afterPrayerAzkarSubtitle": {"placeholders": {"prayer": {"type": "String"}}}

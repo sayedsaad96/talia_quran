@@ -152,7 +152,18 @@ void main() {
     await pumpHome(tester, clarity: true);
     expect(find.byType(HomeUnifiedProgress), findsNothing);
     expect(find.byType(HomeActivityFeed), findsNothing);
-    expect(find.byType(HomeContinueCard), findsOneWidget);
+    // Three large actions replace the hero; next prayer needs prayer times.
+    expect(find.byType(HomeContinueCard), findsNothing);
+    expect(find.text('أكمل القراءة'), findsOneWidget);
+    expect(find.text('مراجعة اليوم'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('home_clarity_prayer')),
+      findsNothing,
+    );
+    final button = tester.getSize(
+      find.byKey(const ValueKey('home_clarity_continue')),
+    );
+    expect(button.height, greaterThanOrEqualTo(72));
   });
 
   testWidgets('home is unchanged when clarity is off', (tester) async {
