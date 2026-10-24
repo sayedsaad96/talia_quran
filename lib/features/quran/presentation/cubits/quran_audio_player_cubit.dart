@@ -172,6 +172,18 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
     await _playerService.setRepeat(settings);
   }
 
+  /// Ayah count of [surahId], or null when it cannot be loaded.
+  Future<int?> surahAyahCount(int surahId) =>
+      _playerService.surahAyahCount(surahId);
+
+  /// Plays ayahs [startAyah]..[endAyah] of [surahId] with the current repeat
+  /// settings. Returns false for an invalid range. A no-op (false) while a
+  /// bedtime surah queue owns playback.
+  Future<bool> playAyahRange(int surahId, int startAyah, int endAyah) async {
+    if (_playerService.state.isSurahQueue) return false;
+    return _playerService.playAyahRange(surahId, startAyah, endAyah);
+  }
+
   /// A no-op while a bedtime surah queue owns playback: its timer belongs to
   /// the bedtime session.
   Future<void> setSleepTimer(SleepTimerChoice choice) async {

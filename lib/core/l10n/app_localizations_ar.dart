@@ -8848,6 +8848,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readerRepeatSpeed => 'سرعة التلاوة';
 
   @override
+  String get readerRepeatManualRange => 'تشغيل مدى من الآيات';
+
+  @override
+  String get readerRepeatFromAyah => 'من الآية';
+
+  @override
+  String get readerRepeatToAyah => 'إلى الآية';
+
+  @override
+  String get readerRepeatPlayRange => 'تشغيل المدى';
+
+  @override
   String get readerSleepTimer => 'مؤقت النوم';
 
   @override

@@ -147,6 +147,39 @@ void main() {
     );
   });
 
+  testWidgets('manual range section plays the chosen ayahs', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await build();
+    await tester.pumpWidget(host(flag: true));
+    await tester.tap(find.byKey(const ValueKey('reader-repeat-button')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('repeat-per-ayah-2')));
+    await settle(tester);
+
+    // Collapsed by default.
+    expect(find.byKey(const ValueKey('repeat-manual-play')), findsNothing);
+    await tester.tap(find.text('Play a range of ayahs'));
+    await settle(tester);
+
+    await tester.tap(find.byKey(const ValueKey('repeat-manual-to-1')));
+    await settle(tester);
+    await tester.tap(find.text('2').last);
+    await settle(tester);
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('repeat-manual-play')),
+    );
+    await tester.tap(find.byKey(const ValueKey('repeat-manual-play')));
+    await settle(tester);
+
+    // Ayahs 1..2 of Al-Fatihah, two plays each.
+    expect(player.lastSources.length, 4);
+    expect(cubit.state.currentSurahId, 1);
+    expect(cubit.state.repeat.perAyah, 2);
+  });
+
   group('while a bedtime surah queue owns playback', () {
     testWidgets('the cubit state carries isSurahQueue', (tester) async {
       await build();

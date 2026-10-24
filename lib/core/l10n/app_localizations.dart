@@ -14878,6 +14878,30 @@ abstract class AppLocalizations {
   /// **'سرعة التلاوة'**
   String get readerRepeatSpeed;
 
+  /// No description provided for @readerRepeatManualRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل مدى من الآيات'**
+  String get readerRepeatManualRange;
+
+  /// No description provided for @readerRepeatFromAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من الآية'**
+  String get readerRepeatFromAyah;
+
+  /// No description provided for @readerRepeatToAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى الآية'**
+  String get readerRepeatToAyah;
+
+  /// No description provided for @readerRepeatPlayRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل المدى'**
+  String get readerRepeatPlayRange;
+
   /// No description provided for @readerSleepTimer.
   ///
   /// In ar, this message translates to:

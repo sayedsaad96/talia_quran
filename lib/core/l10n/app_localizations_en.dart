@@ -8845,6 +8845,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerRepeatSpeed => 'Recitation speed';
 
   @override
+  String get readerRepeatManualRange => 'Play a range of ayahs';
+
+  @override
+  String get readerRepeatFromAyah => 'From ayah';
+
+  @override
+  String get readerRepeatToAyah => 'To ayah';
+
+  @override
+  String get readerRepeatPlayRange => 'Play range';
+
+  @override
   String get readerSleepTimer => 'Sleep timer';
 
   @override

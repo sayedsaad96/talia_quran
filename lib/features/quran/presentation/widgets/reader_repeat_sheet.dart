@@ -10,9 +10,9 @@ import '../cubits/quran_audio_player_cubit.dart';
 
 /// Repeat, speed and sleep timer controls for the reader's audio player.
 ///
-/// Session-only: nothing here is persisted. v1 repeats from the current ayah
-/// to the end of the page or surah that started playback; there is no manual
-/// "from ayah to ayah" range.
+/// Session-only: nothing here is persisted. Repeat covers the page or surah
+/// that started playback, or a manual "from ayah to ayah" range inside the
+/// playing surah.
 class ReaderRepeatSheet extends StatelessWidget {
   const ReaderRepeatSheet({super.key});
 
@@ -104,6 +104,13 @@ class ReaderRepeatSheet extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (state.currentSurahId != null &&
+                      state.currentAyahNumber != null)
+                    _RangeSection(
+                      key: ValueKey('repeat-manual-${state.currentSurahId}'),
+                      surahId: state.currentSurahId!,
+                      initialAyah: state.currentAyahNumber!,
+                    ),
                   _Section(
                     title: l10n.readerRepeatSpeed,
                     children: [
@@ -177,6 +184,126 @@ class ReaderRepeatSheet extends StatelessWidget {
       label: label,
       selected: state.sleepChoice == choice,
       onSelected: () => cubit.setSleepTimer(choice),
+    );
+  }
+}
+
+/// Collapsed by default: a manual "from ayah to ayah" range inside the surah
+/// that is playing. Both pickers start at the current ayah.
+class _RangeSection extends StatefulWidget {
+  const _RangeSection({
+    super.key,
+    required this.surahId,
+    required this.initialAyah,
+  });
+
+  final int surahId;
+  final int initialAyah;
+
+  @override
+  State<_RangeSection> createState() => _RangeSectionState();
+}
+
+class _RangeSectionState extends State<_RangeSection> {
+  int? _ayahCount;
+  late int _from = widget.initialAyah;
+  late int _to = widget.initialAyah;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<QuranAudioPlayerCubit>();
+    cubit.surahAyahCount(widget.surahId).then((count) {
+      if (!mounted || count == null || count < 1) return;
+      setState(() {
+        _ayahCount = count;
+        _from = _from.clamp(1, count);
+        _to = _to.clamp(_from, count);
+      });
+    });
+  }
+
+  Widget _picker(
+    BuildContext context, {
+    required Key key,
+    required String label,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    final count = _ayahCount!;
+    return Expanded(
+      child: DropdownButtonFormField<int>(
+        key: key,
+        initialValue: value,
+        isExpanded: true,
+        decoration: InputDecoration(labelText: label, isDense: true),
+        items: [
+          for (var n = 1; n <= count; n++)
+            DropdownMenuItem(value: n, child: Text(context.numText(n))),
+        ],
+        onChanged: (n) {
+          if (n != null) onChanged(n);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final count = _ayahCount;
+    if (count == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: ExpansionTile(
+        key: const ValueKey('repeat-manual-range'),
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: EdgeInsets.zero,
+        title: Text(
+          l10n.readerRepeatManualRange,
+          style: AppTypography.titleSmall.copyWith(
+            color: context.tokens.textSecondary,
+          ),
+        ),
+        children: [
+          Row(
+            children: [
+              _picker(
+                context,
+                key: ValueKey('repeat-manual-from-$_from'),
+                label: l10n.readerRepeatFromAyah,
+                value: _from,
+                onChanged: (n) => setState(() {
+                  _from = n;
+                  if (_to < n) _to = n;
+                }),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _picker(
+                context,
+                key: ValueKey('repeat-manual-to-$_to'),
+                label: l10n.readerRepeatToAyah,
+                value: _to,
+                onChanged: (n) => setState(() {
+                  _to = n;
+                  if (_from > n) _from = n;
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FilledButton(
+              key: const ValueKey('repeat-manual-play'),
+              onPressed: () => context
+                  .read<QuranAudioPlayerCubit>()
+                  .playAyahRange(widget.surahId, _from, _to),
+              child: Text(l10n.readerRepeatPlayRange),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

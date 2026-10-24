@@ -381,6 +381,67 @@ class QuranContinuousPlayerService {
     );
   }
 
+  /// Ayah count of [surahId] from the repository, or null when unavailable.
+  Future<int?> surahAyahCount(int surahId) async {
+    final result = await _quranRepository.getSurahDetail(surahId);
+    return result.fold((_) => null, (d) => d.surah.ayahCount);
+  }
+
+  /// Plays ayahs [startAyah]..[endAyah] (inclusive) of [surahId] with the
+  /// current repeat settings, through the same queue as [playSurah].
+  ///
+  /// [endAyah] is clamped to the surah's ayah count. Returns false, leaving
+  /// the current session untouched, when the range is invalid (start below 1,
+  /// after the last ayah, or after end) or the surah cannot be loaded.
+  Future<bool> playAyahRange(
+    int surahId,
+    int startAyah,
+    int endAyah, {
+    QuranReciter? reciter,
+  }) async {
+    if (_handsFreeOwner.isReserved) return false;
+    final generation = ++_playbackGeneration;
+    final surahDetailResult = await _quranRepository.getSurahDetail(surahId);
+    if (generation != _playbackGeneration) return false;
+    final surahDetail = surahDetailResult.fold((_) => null, (d) => d);
+    if (surahDetail == null) return false;
+    final range = clampAyahRange(
+      startAyah,
+      endAyah,
+      surahDetail.surah.ayahCount,
+    );
+    if (range == null) return false;
+    final ayahs = surahDetail.ayahs
+        .where(
+          (a) => a.numberInSurah >= range.start && a.numberInSurah <= range.end,
+        )
+        .toList(growable: false);
+    if (ayahs.isEmpty) return false;
+
+    await _prepareSession(true);
+    if (generation != _playbackGeneration) return false;
+    final activeReciter = _resolveReciter(reciter);
+    _activeScope = PlayScope.surah;
+    _activeSurahId = surahId;
+
+    _emitState(
+      ContinuousPlaybackState(
+        status: PlaybackStatus.loading,
+        currentSurahId: surahId,
+        currentAyahNumber: range.start,
+        reciter: activeReciter,
+        scope: PlayScope.surah,
+      ),
+    );
+
+    _setQueueFromBase(ayahs);
+    return _loadPlaylistAndPlay(
+      startIndex: 0,
+      activeReciter: activeReciter,
+      generation: generation,
+    );
+  }
+
   /// Plays [surahIds] in order (each whole surah), resetting reader repeat and
   /// speed, then applies [sleep]. [SleepTimerChoice.endOfSurah] here means the
   /// end of the LAST surah, i.e. the end of the queue. The session's settings

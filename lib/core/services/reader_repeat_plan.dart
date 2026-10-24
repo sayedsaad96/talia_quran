@@ -47,6 +47,17 @@ List<T> expandRepeatQueue<T>(List<T> ayahs, ReaderRepeatSettings s) {
   return out;
 }
 
+/// Validates a manual "from ayah to ayah" range inside one surah of
+/// [ayahCount] ayahs. Returns the range with [end] clamped to [ayahCount], or
+/// null when it is invalid (start below 1, start after the surah's last ayah,
+/// or start after end).
+({int start, int end})? clampAyahRange(int start, int end, int ayahCount) {
+  if (ayahCount < 1 || start < 1 || start > ayahCount || start > end) {
+    return null;
+  }
+  return (start: start, end: end > ayahCount ? ayahCount : end);
+}
+
 /// Queue index where base ayah [baseIndex] first plays in the queue that
 /// [expandRepeatQueue] builds with [s] (its first pass).
 int firstPassIndexOf(int baseIndex, ReaderRepeatSettings s) =>

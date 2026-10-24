@@ -95,4 +95,14 @@ void main() {
     expect(passEndIndexOf(7, 3, s), 11);
     expect(passEndIndexOf(4, 0, s), 4);
   });
+
+  test('clampAyahRange clamps the end and rejects invalid ranges', () {
+    expect(clampAyahRange(2, 4, 7), (start: 2, end: 4));
+    expect(clampAyahRange(3, 3, 7), (start: 3, end: 3));
+    expect(clampAyahRange(5, 99, 7), (start: 5, end: 7));
+    expect(clampAyahRange(0, 3, 7), isNull);
+    expect(clampAyahRange(4, 3, 7), isNull);
+    expect(clampAyahRange(8, 9, 7), isNull);
+    expect(clampAyahRange(1, 1, 0), isNull);
+  });
 }
