@@ -12,6 +12,16 @@ class GroupKhatmahRecoveryPanel extends StatelessWidget {
   final GroupKhatmahCubit cubit;
   final GroupKhatmahState state;
 
+  String _requestLabel(AppLocalizations l10n, String action) =>
+      switch (action) {
+        'create' => l10n.groupKhatmahCreate,
+        'join' => l10n.groupKhatmahJoin,
+        'claim_group_part' => l10n.groupKhatmahClaim,
+        'release_group_part' => l10n.groupKhatmahRelease,
+        'leave_group_khatmah' => l10n.groupKhatmahLeave,
+        _ => l10n.groupKhatmahComplete,
+      };
+
   Future<void> _discard(BuildContext context, String id) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -50,14 +60,7 @@ class GroupKhatmahRecoveryPanel extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(switch (failed.action) {
-                    'create' => l10n.groupKhatmahCreate,
-                    'join' => l10n.groupKhatmahJoin,
-                    'claim_group_part' => l10n.groupKhatmahClaim,
-                    'release_group_part' => l10n.groupKhatmahRelease,
-                    'leave_group_khatmah' => l10n.groupKhatmahLeave,
-                    _ => l10n.groupKhatmahComplete,
-                  }),
+                  Text(_requestLabel(l10n, failed.action)),
                   Wrap(
                     spacing: 8,
                     children: [

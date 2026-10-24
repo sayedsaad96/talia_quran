@@ -20,6 +20,7 @@ part 'group_khatmah_repository_parts.dart';
 part 'group_khatmah_repository_recovery.dart';
 part 'group_khatmah_repository_sync.dart';
 part 'group_khatmah_repository_watch.dart';
+part 'group_khatmah_repository_load.dart';
 
 class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
   GroupKhatmahRepositoryImpl({
@@ -49,6 +50,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
   final GroupKhatmahCloudMerge _merge = const GroupKhatmahCloudMerge();
   final Set<Future<void> Function(bool)> _watchCancels = {};
   bool _disposed = false;
+  final Map<String, int> _groupInvalidations = {};
 
   bool get _allowed =>
       !_disposed &&
@@ -70,7 +72,9 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
     if (!_allowed) throw const AccountDataUnavailableException();
   }
 
-  Failure _failure(Object error) => error is AccountDataUnavailableException
+  Failure _failure(Object error) => error is _GroupPublicationSuperseded
+      ? const GroupKhatmahFailure('stale_operation')
+      : error is AccountDataUnavailableException
       ? const GroupKhatmahFailure('not_available')
       : error is FormatException
       ? const ParseFailure()
@@ -103,12 +107,20 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
     String operationId, {
     GroupIntent? intent,
     GroupKhatmah? group,
-    bool removeGroup = false,
   }) async {
     await _cache.update(scope.ownerId, scope.lease, (state) {
       final groups = Map<String, GroupKhatmah>.of(state.groups);
-      if (removeGroup) groups.remove(group?.id);
-      if (group != null && !removeGroup) {
+      if (group != null) {
+        final pending = state.intents
+            .where((i) => i.operationId == operationId)
+            .firstOrNull;
+        final current = groups[group.id];
+        if (pending == null ||
+            current == null ||
+            current.membershipEpoch != group.membershipEpoch ||
+            pending.args['p_membership_epoch'] != current.membershipEpoch) {
+          throw const _GroupPublicationSuperseded();
+        }
         groups[group.id] = _merge.newer(groups[group.id], group);
       }
       final intents = [
@@ -143,34 +155,6 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
 
   GroupKhatmah? _group(_Scope scope, String groupId) =>
       _cache.read(scope.ownerId).groups[groupId];
-
-  Future<GroupKhatmah?> _loadGroup(
-    _Scope scope,
-    String groupId, {
-    int? minVersion,
-  }) async {
-    _check(scope);
-    final group = await _remote.fetchGroup(
-      ownerId: scope.ownerId,
-      groupId: groupId,
-    );
-    _check(scope);
-    if (group == null) return null;
-    if (minVersion != null && group.version < minVersion) {
-      throw const FormatException('stale group snapshot');
-    }
-    final saved = await _cache.update(
-      scope.ownerId,
-      scope.lease,
-      (state) => state.copyWith(
-        groups: {
-          ...state.groups,
-          groupId: _merge.newer(state.groups[groupId], group),
-        },
-      ),
-    );
-    return saved.groups[groupId];
-  }
 
   Future<Map<String, dynamic>> _send(_Scope scope, GroupIntent intent) async {
     if (!_environment.isOnline) throw const _Offline();
@@ -237,10 +221,17 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
         scope,
         groupId,
         minVersion: (response['group_version'] as num).toInt(),
+        operationId: operationId,
+        admission: true,
+        expectedEpoch: response['membership_epoch'] as String?,
       );
       if (group == null) return const Left(ParseFailure());
       await _replace(scope, operationId);
-      return Right(group);
+      final current = _group(scope, groupId);
+      if (current?.membershipEpoch != group.membershipEpoch) {
+        return const Left(GroupKhatmahFailure('stale_operation'));
+      }
+      return Right(current!);
     } on _Offline {
       return const Left(NetworkFailure());
     } catch (error) {
@@ -330,7 +321,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
         await _terminal(scope, intent, response);
         return Left(GroupKhatmahFailure(response['code'] as String));
       }
-      await _purge(scope, groupId);
+      await _purge(scope, intent);
       return const Right(null);
     } on _Offline {
       return const Left(NetworkFailure());
@@ -339,14 +330,11 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
     }
   }
 
-  Future<void> _purge(_Scope scope, String groupId) async {
+  Future<void> _purge(_Scope scope, GroupIntent intent) async {
     await _cache.update(
       scope.ownerId,
       scope.lease,
-      (state) => state.copyWith(
-        groups: {...state.groups}..remove(groupId),
-        intents: state.intents.where((i) => i.groupId != groupId).toList(),
-      ),
+      (state) => _removeIntentMembership(scope, state, intent),
     );
     await _schedule(scope);
   }
@@ -358,7 +346,7 @@ class GroupKhatmahRepositoryImpl implements GroupKhatmahRepository {
   ) async {
     final code = response['code'];
     if ((code == 'not_member' || code == 'gone') && intent.groupId != null) {
-      await _purge(scope, intent.groupId!);
+      await _purge(scope, intent);
       return;
     }
     await _replace(scope, intent.operationId);

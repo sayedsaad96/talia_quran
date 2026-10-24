@@ -32,7 +32,7 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
         } else if (intent.action == 'leave_group_khatmah') {
           final id = intent.groupId ?? response['group_id'] as String?;
           if (id == null) throw const FormatException('missing left group');
-          await _purge(scope, id);
+          await _purge(scope, intent);
         } else {
           final id = response['group_id'] as String?;
           if (id == null) throw const FormatException('missing group');
@@ -40,6 +40,11 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
             scope,
             id,
             minVersion: (response['group_version'] as num).toInt(),
+            operationId: intent.operationId,
+            admission: intent.action == 'create' || intent.action == 'join',
+            expectedEpoch:
+                intent.args['p_membership_epoch'] as String? ??
+                response['membership_epoch'] as String?,
           );
           if (group == null) throw const FormatException('missing group');
           await _replace(scope, intent.operationId);
@@ -48,6 +53,8 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
         await _terminal(scope, intent, response);
         await _refreshAfterConflict(scope, intent, response['code']);
       }
+    } on _GroupPublicationSuperseded {
+      await _replace(scope, intent.operationId);
     } on AccountDataUnavailableException {
       rethrow;
     } catch (error) {
@@ -79,7 +86,11 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
       return;
     }
     try {
-      await _loadGroup(scope, intent.groupId!);
+      await _loadGroup(
+        scope,
+        intent.groupId!,
+        expectedEpoch: intent.args['p_membership_epoch'] as String?,
+      );
     } on AccountDataUnavailableException {
       rethrow;
     } catch (_) {
@@ -127,7 +138,13 @@ extension GroupKhatmahRepositorySync on GroupKhatmahRepositoryImpl {
     }
     final id = intent.groupId;
     if (id == null) throw const FormatException('missing completion group');
-    final latest = await _loadGroup(scope, id, minVersion: newGroupVersion);
+    final latest = await _loadGroup(
+      scope,
+      id,
+      minVersion: newGroupVersion,
+      operationId: intent.operationId,
+      expectedEpoch: intent.args['p_membership_epoch'] as String?,
+    );
     if (latest == null) throw const FormatException('missing accepted group');
     await _replace(scope, intent.operationId);
   }

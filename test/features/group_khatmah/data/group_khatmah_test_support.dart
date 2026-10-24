@@ -132,11 +132,12 @@ GroupKhatmah fixture(
   GroupPartStatus secondStatus = GroupPartStatus.open,
   int secondVersion = 1,
   int groupVersion = 2,
+  String? groupOwner,
 }) => GroupKhatmah(
   id: id,
   code: 'ABC234',
   title: 'Shared reading',
-  ownerId: owner,
+  ownerId: groupOwner ?? owner,
   maxMembers: 30,
   status: GroupKhatmahStatus.active,
   version: groupVersion,

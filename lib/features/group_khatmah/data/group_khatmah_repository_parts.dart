@@ -24,29 +24,39 @@ extension _GroupKhatmahParts on GroupKhatmahRepositoryImpl {
         'p_operation_id': operationId,
       }, groupId);
       final response = await _send(scope, intent);
-      if (response['applied'] != true) {
-        await _terminal(scope, intent, response);
-        if (response['code'] == 'conflict') {
-          await _loadGroup(scope, groupId);
-          return const Left(GroupPartConflictFailure());
-        }
-        return Left(GroupKhatmahFailure(response['code'] as String));
-      }
-      return Right(
-        await _acceptPartMutation(
-          scope,
-          operationId,
-          action,
-          group,
-          part,
-          response,
-        ),
-      );
+      return await _partResponse(scope, intent, group, part, response);
     } on _Offline {
       return const Left(NetworkFailure());
     } catch (error) {
       return Left(_failure(error));
     }
+  }
+
+  Future<Either<Failure, GroupPart>> _partResponse(
+    _Scope scope,
+    GroupIntent intent,
+    GroupKhatmah group,
+    GroupPart part,
+    Map<String, dynamic> response,
+  ) async {
+    if (response['applied'] != true) {
+      await _terminal(scope, intent, response);
+      if (response['code'] == 'conflict') {
+        await _loadGroup(scope, group.id, expectedEpoch: group.membershipEpoch);
+        return const Left(GroupPartConflictFailure());
+      }
+      return Left(GroupKhatmahFailure(response['code'] as String));
+    }
+    return Right(
+      await _acceptPartMutation(
+        scope,
+        intent.operationId,
+        intent.action,
+        group,
+        part,
+        response,
+      ),
+    );
   }
 
   Future<GroupPart> _acceptPartMutation(
@@ -63,6 +73,8 @@ extension _GroupKhatmahParts on GroupKhatmahRepositoryImpl {
         scope,
         group.id,
         minVersion: responseVersion,
+        operationId: operationId,
+        expectedEpoch: group.membershipEpoch,
       );
       final confirmed = latest?.part(part.juz);
       if (confirmed == null ||

@@ -6,6 +6,7 @@ extension _GroupKhatmahRefresh on GroupKhatmahRepositoryImpl {
       final scope = _scope();
       if (!_environment.isOnline) return const Left(NetworkFailure());
       final baseline = _cache.read(scope.ownerId);
+      final generations = Map<String, int>.of(_groupInvalidations);
       final found = await _fetchAllMine(scope);
       for (final id in baseline.groups.keys.where(
         (id) => !found.containsKey(id),
@@ -18,7 +19,7 @@ extension _GroupKhatmahRefresh on GroupKhatmahRepositoryImpl {
         _check(scope);
         if (current != null) found[id] = current;
       }
-      await _commitRefresh(scope, baseline, found);
+      await _commitRefresh(scope, baseline, found, generations);
       await _schedule(scope);
       return const Right(null);
     } catch (error) {
@@ -52,33 +53,10 @@ extension _GroupKhatmahRefresh on GroupKhatmahRepositoryImpl {
     _Scope scope,
     GroupCacheState baseline,
     Map<String, GroupKhatmah> found,
+    Map<String, int> generations,
   ) async {
     await _cache.update(scope.ownerId, scope.lease, (state) {
-      final merged = <String, GroupKhatmah>{};
-      for (final group in found.values) {
-        final before = baseline.groups[group.id];
-        final now = state.groups[group.id];
-        if (before != null && now == null) {
-          continue;
-        }
-        if (before != null &&
-            now != null &&
-            now.membershipEpoch != before.membershipEpoch) {
-          merged[group.id] = now;
-        } else {
-          merged[group.id] = _merge.newer(now, group);
-        }
-      }
-      for (final entry in state.groups.entries) {
-        if (found.containsKey(entry.key)) {
-          continue;
-        }
-        final before = baseline.groups[entry.key];
-        if (before == null ||
-            entry.value.membershipEpoch != before.membershipEpoch) {
-          merged[entry.key] = entry.value;
-        }
-      }
+      final merged = _refreshGroups(scope, baseline, state, found, generations);
       final intents = state.intents.where(
         (intent) =>
             (intent.groupId == null || merged.containsKey(intent.groupId)) &&
@@ -90,7 +68,47 @@ extension _GroupKhatmahRefresh on GroupKhatmahRepositoryImpl {
                   scope.ownerId,
                 )),
       );
+      for (final id in baseline.groups.keys) {
+        if (!merged.containsKey(id)) _invalidateGroup(scope, id);
+      }
       return state.copyWith(groups: merged, intents: intents.toList());
     });
+  }
+
+  Map<String, GroupKhatmah> _refreshGroups(
+    _Scope scope, GroupCacheState baseline, GroupCacheState state,
+    Map<String, GroupKhatmah> found, Map<String, int> generations,
+  ) {
+    final merged = <String, GroupKhatmah>{};
+    for (final group in found.values) {
+      final before = baseline.groups[group.id];
+      final now = state.groups[group.id];
+      if (_groupGeneration(scope, group.id) !=
+          (generations[_invalidationKey(scope, group.id)] ?? 0)) {
+        if (now != null) merged[group.id] = now;
+        continue;
+      }
+      if (before != null && now == null) {
+        continue;
+      }
+      if (before != null &&
+          now != null &&
+          now.membershipEpoch != before.membershipEpoch) {
+        merged[group.id] = now;
+      } else {
+        merged[group.id] = _merge.newer(now, group);
+      }
+    }
+    for (final entry in state.groups.entries) {
+      if (found.containsKey(entry.key)) {
+        continue;
+      }
+      final before = baseline.groups[entry.key];
+      if (before == null ||
+          entry.value.membershipEpoch != before.membershipEpoch) {
+        merged[entry.key] = entry.value;
+      }
+    }
+    return merged;
   }
 }

@@ -73,65 +73,9 @@ class _GroupKhatmahJoinSheetState extends State<GroupKhatmahJoinSheet> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('group-khatmah-first-input'),
-                  controller: _first,
-                  textCapitalization: widget.isCreate
-                      ? TextCapitalization.sentences
-                      : TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    labelText: widget.isCreate
-                        ? l10n.groupKhatmahGroupTitle
-                        : l10n.groupKhatmahInviteCode,
-                  ),
-                  validator: (value) {
-                    final text = (value ?? '').trim();
-                    if (widget.isCreate) {
-                      return _validLabel(text, 1, 80)
-                          ? null
-                          : l10n.groupKhatmahInvalidTitle;
-                    }
-                    return RegExp(
-                          r'^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$',
-                        ).hasMatch(text.toUpperCase())
-                        ? null
-                        : l10n.groupKhatmahInvalidCode;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('group-khatmah-name-input'),
-                  controller: _name,
-                  decoration: InputDecoration(
-                    labelText: l10n.groupKhatmahDisplayName,
-                  ),
-                  validator: (value) => _validLabel(value ?? '', 2, 24)
-                      ? null
-                      : l10n.groupKhatmahInvalidName,
-                ),
+                ..._fields(l10n),
                 const SizedBox(height: 16),
-                BlocBuilder<GroupKhatmahCubit, GroupKhatmahState>(
-                  bloc: widget.cubit,
-                  builder: (context, state) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (state.errorCode != null)
-                        Text(
-                          localizedGroupKhatmahError(l10n, state.errorCode!),
-                          key: const Key('group-khatmah-sheet-error'),
-                        ),
-                      FilledButton(
-                        key: const Key('group-khatmah-submit'),
-                        onPressed: state.busy ? null : _submit,
-                        child: Text(
-                          widget.isCreate
-                              ? l10n.groupKhatmahCreate
-                              : l10n.groupKhatmahJoin,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _submitActions(l10n),
               ],
             ),
           ),
@@ -139,4 +83,64 @@ class _GroupKhatmahJoinSheetState extends State<GroupKhatmahJoinSheet> {
       ),
     );
   }
+
+  Widget _submitActions(AppLocalizations l10n) =>
+      BlocBuilder<GroupKhatmahCubit, GroupKhatmahState>(
+        bloc: widget.cubit,
+        builder: (context, state) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (state.errorCode != null)
+              Text(
+                localizedGroupKhatmahError(l10n, state.errorCode!),
+                key: const Key('group-khatmah-sheet-error'),
+              ),
+            FilledButton(
+              key: const Key('group-khatmah-submit'),
+              onPressed: state.busy ? null : _submit,
+              child: Text(
+                widget.isCreate
+                    ? l10n.groupKhatmahCreate
+                    : l10n.groupKhatmahJoin,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  List<Widget> _fields(AppLocalizations l10n) => [
+    TextFormField(
+      key: const Key('group-khatmah-first-input'),
+      controller: _first,
+      textCapitalization: widget.isCreate
+          ? TextCapitalization.sentences
+          : TextCapitalization.characters,
+      decoration: InputDecoration(
+        labelText: widget.isCreate
+            ? l10n.groupKhatmahGroupTitle
+            : l10n.groupKhatmahInviteCode,
+      ),
+      validator: (value) {
+        final text = (value ?? '').trim();
+        if (widget.isCreate) {
+          return _validLabel(text, 1, 80)
+              ? null
+              : l10n.groupKhatmahInvalidTitle;
+        }
+        return RegExp(
+              r'^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$',
+            ).hasMatch(text.toUpperCase())
+            ? null
+            : l10n.groupKhatmahInvalidCode;
+      },
+    ),
+    const SizedBox(height: 12),
+    TextFormField(
+      key: const Key('group-khatmah-name-input'),
+      controller: _name,
+      decoration: InputDecoration(labelText: l10n.groupKhatmahDisplayName),
+      validator: (value) =>
+          _validLabel(value ?? '', 2, 24) ? null : l10n.groupKhatmahInvalidName,
+    ),
+  ];
 }
