@@ -47,6 +47,20 @@ List<T> expandRepeatQueue<T>(List<T> ayahs, ReaderRepeatSettings s) {
   return out;
 }
 
+/// Queue index where base ayah [baseIndex] first plays in the queue that
+/// [expandRepeatQueue] builds with [s] (its first pass).
+int firstPassIndexOf(int baseIndex, ReaderRepeatSettings s) =>
+    baseIndex * s.perAyah.clamp(1, 10);
+
+/// Last queue index of the pass containing queue index [index], for a base
+/// of [baseLength] ayahs expanded with [s]. Equals [index] when the base is
+/// empty.
+int passEndIndexOf(int index, int baseLength, ReaderRepeatSettings s) {
+  final passLength = baseLength * s.perAyah.clamp(1, 10);
+  if (passLength <= 0) return index;
+  return (index ~/ passLength + 1) * passLength - 1;
+}
+
 bool _eq<T>(T a, T b) => a == b;
 
 /// Index of the first queue item of the next distinct ayah, or null.

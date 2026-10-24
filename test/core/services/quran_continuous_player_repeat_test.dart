@@ -113,7 +113,8 @@ void main() {
   );
 
   test(
-    'setRepeat(perAyah 3) rebuilds the queue from the current ayah',
+    'setRepeat(perAyah 3) rebuilds the whole range and resumes at the '
+    'current ayah',
     () async {
       await service.playPage(2);
       player.advanceToIndex(1);
@@ -124,16 +125,51 @@ void main() {
       await service.setRepeat(const ReaderRepeatSettings(perAyah: 3));
       await Future<void>.delayed(Duration.zero);
 
-      // Current ayah (s2:1) and the one after it, three times each.
-      expect(player.lastSources.length, 6);
+      // All three ayahs, three times each; playback resumes at s2:1.
+      expect(player.lastSources.length, 9);
       expect(service.state.currentSurahId, 2);
       expect(service.state.currentAyahNumber, 1);
-      player.advanceToIndex(4);
+      player.advanceToIndex(6);
       await Future<void>.delayed(Duration.zero);
       expect(service.state.currentAyahNumber, 2);
       expect(service.state.repeat.perAyah, 3);
     },
   );
+
+  test('a passage repeat chosen mid-range replays the whole range', () async {
+    await service.playPage(2);
+    player.advanceToIndex(1);
+    await Future<void>.delayed(Duration.zero);
+
+    await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 2));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(player.lastSources.length, 6);
+    expect(service.state.currentSurahId, 2);
+    expect(service.state.currentAyahNumber, 1);
+    // The second pass starts again at the first ayah of the range.
+    player.advanceToIndex(3);
+    await Future<void>.delayed(Duration.zero);
+    expect(service.state.currentSurahId, 1);
+    expect(service.state.currentAyahNumber, 7);
+  });
+
+  test('endOfSurah with passage repeats stops at the end of the current '
+      'pass', () async {
+    repository.pageDetails[3] = QuranPageDetail(
+      pageNumber: 3,
+      surahs: const [],
+      ayahs: [_ayah(2, 3, 10), _ayah(2, 4, 11)],
+    );
+    await service.playPage(3);
+    await service.setRepeat(const ReaderRepeatSettings(rangeTimes: 3));
+    await Future<void>.delayed(Duration.zero);
+    expect(player.lastSources.length, 6);
+
+    await service.setSleepTimer(SleepTimerChoice.endOfSurah);
+    // One surah across all passes: only the first pass (2 items) is kept.
+    expect(player.sources.length, 2);
+  });
 
   test('nextAyah with repeats jumps to the next distinct ayah', () async {
     await service.setRepeat(const ReaderRepeatSettings(perAyah: 3));

@@ -58,6 +58,23 @@ const Map<StrengthBand, Color> _defaultStrengthColors = {
   StrengthBand.solid: AppColors.success,
 };
 
+/// qcf repaints every highlight at a fixed 0.4 opacity, replacing any alpha
+/// passed in. Blending the band toward the page background first keeps the
+/// visible tint at about 0.4 × [kStrengthBlend] = 0.18, the spec's 0.15–0.22
+/// range, so the ayah text stays clear in light and dark themes.
+const double kStrengthBlend = 0.45;
+
+@visibleForTesting
+Color strengthHighlightColor(Color band, Color? pageBackground) {
+  final opaque = band.withValues(alpha: 1);
+  if (pageBackground == null) return opaque.withValues(alpha: 0.4);
+  return Color.lerp(
+    pageBackground.withValues(alpha: 1),
+    opaque,
+    kStrengthBlend,
+  )!.withValues(alpha: 0.4);
+}
+
 /// Strength overlay colours from the active theme tokens.
 Map<StrengthBand, Color> strengthColorsFor(TaliaTokens tokens) => {
   StrengthBand.due: tokens.warning,
@@ -80,6 +97,7 @@ List<qcf.HighlightVerse> readerHighlights({
   ({int surah, int ayah})? selected,
   Map<({int surah, int ayah}), StrengthBand> strengthBands = const {},
   Map<StrengthBand, Color>? strengthColors,
+  Color? pageBackground,
 }) {
   final palette = strengthColors ?? _defaultStrengthColors;
   return [
@@ -91,9 +109,10 @@ List<qcf.HighlightVerse> readerHighlights({
           surah: entry.key.surah,
           verseNumber: entry.key.ayah,
           page: page,
-          // qcf repaints highlights at a fixed opacity, so one alpha for all
-          // bands; the bands differ by colour only.
-          color: palette[entry.value]!.withValues(alpha: 0.40),
+          color: strengthHighlightColor(
+            palette[entry.value]!,
+            pageBackground,
+          ),
         ),
     if (audio != null)
       qcf.HighlightVerse(
@@ -274,13 +293,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     }
     try {
       final result = await getIt<MemorizationPlusRepository>()
-          .getAllReviewRecords(scope: ReviewRecordReadScope.adult);
-      final found = result.fold<bool>(
-        (_) => false,
-        (records) =>
-            records.any((r) => r.surahId == surah && r.ayahNumber == ayah),
-      );
-      return found;
+          .getReviewRecord(surah, ayah, scope: ReviewRecordReadScope.adult);
+      return result.fold<bool>((_) => false, (record) => record != null);
     } catch (_) {
       return false;
     }
@@ -830,6 +844,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                   strengthBands:
                       _strengthCubit?.bandsForPage(pageNumber) ?? const {},
                   strengthColors: strengthColorsFor(context.tokens),
+                  pageBackground: bg,
                 );
 
                 return Scaffold(

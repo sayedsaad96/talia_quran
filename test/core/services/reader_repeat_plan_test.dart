@@ -85,4 +85,14 @@ void main() {
       2,
     );
   });
+
+  test('firstPassIndexOf and passEndIndexOf follow the expanded queue', () {
+    const s = ReaderRepeatSettings(perAyah: 2, rangeTimes: 3);
+    final q = expandRepeatQueue(['a', 'b', 'c'], s);
+    expect(q[firstPassIndexOf(1, s)], 'b');
+    expect(firstPassIndexOf(1, s), q.indexOf('b'));
+    expect(passEndIndexOf(0, 3, s), 5);
+    expect(passEndIndexOf(7, 3, s), 11);
+    expect(passEndIndexOf(4, 0, s), 4);
+  });
 }

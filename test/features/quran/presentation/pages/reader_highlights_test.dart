@@ -74,6 +74,23 @@ void main() {
     expect(colorFor(StrengthBand.solid).a, closeTo(0.40, 0.01));
   });
 
+  test('strength tint stays within the spec range once qcf applies 0.4', () {
+    // qcf paints highlight.color.withOpacity(0.4) over the page.
+    double visible(Color band, Color page) {
+      final c = strengthHighlightColor(band, page).withValues(alpha: 1);
+      final painted = Color.lerp(page, c, 0.4)!;
+      // Share of the band's distance from the page that remains visible.
+      return (painted.r - page.r) / (band.r - page.r);
+    }
+
+    const lightPage = Color(0xFFFFF8E7);
+    const darkPage = Color(0xFF1A1A1A);
+    const band = Color(0xFFE53935);
+    expect(visible(band, lightPage), inInclusiveRange(0.15, 0.22));
+    expect(visible(band, darkPage), inInclusiveRange(0.15, 0.22));
+    expect(strengthHighlightColor(band, lightPage).a, closeTo(0.40, 0.01));
+  });
+
   test('empty strengthBands equals the previous output', () {
     List<(int, int, Color)> view(List<dynamic> hs) =>
         [for (final h in hs) (h.surah as int, h.verseNumber as int, h.color as Color)];

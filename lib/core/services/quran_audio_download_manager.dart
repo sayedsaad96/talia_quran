@@ -153,6 +153,7 @@ class QuranAudioDownloadManager {
     Future<int?> Function()? freeBytes,
     Future<bool?> Function()? unmeteredNetwork,
     this.estimatedBytesPerAyah = 80 * 1024,
+    this.fetchTimeout = const Duration(seconds: 60),
   }) : _cache = cache ?? QuranAudioDurableCache(),
        _freeBytes = freeBytes ?? _unknownFreeBytes,
        _unmeteredNetwork = unmeteredNetwork ?? _unknownNetwork {
@@ -167,6 +168,14 @@ class QuranAudioDownloadManager {
   final Future<bool?> Function() _unmeteredNetwork;
   static Future<bool?> _unknownNetwork() async => null;
   final int estimatedBytesPerAyah;
+
+  /// Upper bound for one ayah request, so a stalled connection can neither
+  /// hang the queue nor [cancel].
+  final Duration fetchTimeout;
+
+  /// A run stops after this many failed ayahs in a row (usually the network
+  /// is down) instead of trying every remaining ayah.
+  static const maxConsecutiveFailures = 3;
   late final Map<String, Map<String, _SurahManifest>> _manifest;
   final Set<String> _unverifiedReciters = {};
   Future<void> _tail = Future.value();
@@ -380,19 +389,24 @@ class QuranAudioDownloadManager {
 
   Stream<DownloadProgress> _downloadQueue(_DownloadRun run) async* {
     try {
+      var failedInARow = 0;
       for (var i = 0; i < run.queue.length; i++) {
         final ref = run.queue[i];
         if (await _downloadAyah(run, ref)) {
           run.completed++;
+          failedInARow = 0;
         } else {
           run.failed++;
+          failedInARow++;
         }
         final lastOfSurah =
             i == run.queue.length - 1 ||
             run.queue[i + 1].surahId != ref.surahId;
         // Persist at most once per surah instead of twice per ayah.
-        if (lastOfSurah) await _enqueue(_writeManifest);
+        final stopping = failedInARow >= maxConsecutiveFailures;
+        if (lastOfSurah || stopping) await _enqueue(_writeManifest);
         yield run.progress(DownloadPhase.downloading, surahId: ref.surahId);
+        if (stopping) break;
       }
       await _enqueue(() async {
         _checkGeneration(run.generation);
@@ -419,8 +433,9 @@ class QuranAudioDownloadManager {
     }
   }
 
-  /// Returns false when the response was not audio (it is evicted and the
-  /// ayah is not recorded as downloaded).
+  /// Returns false when the request failed or the response was not audio (it
+  /// is evicted and the ayah is not recorded as downloaded). Cancellation
+  /// still propagates.
   Future<bool> _downloadAyah(_DownloadRun run, _AyahRef ref) async {
     _checkGeneration(run.generation);
     final existing = await _cache.getValidFilePath(
@@ -436,17 +451,26 @@ class QuranAudioDownloadManager {
         _checkGeneration(run.generation);
         _record(run.reciter, ref);
       });
-      final fetched = await _enqueue(() {
-        _checkGeneration(run.generation);
-        return _cache.fetch(run.reciter, ref.surahId, ref.ayahNumber);
-      });
+      File? fetched;
+      try {
+        fetched = await _enqueue(() {
+          _checkGeneration(run.generation);
+          return _cache
+              .fetch(run.reciter, ref.surahId, ref.ayahNumber)
+              .timeout(fetchTimeout);
+        });
+      } on _DownloadCancelled {
+        rethrow;
+      } catch (error) {
+        TaliaLogger.w('Ayah download failed', error);
+      }
       _checkGeneration(run.generation);
-      if (!await looksLikeMp3(fetched)) {
+      if (fetched == null || !await looksLikeMp3(fetched)) {
         await _enqueue(() async {
           try {
             await _cache.evict(run.reciter, ref.surahId, ref.ayahNumber);
           } catch (error) {
-            TaliaLogger.w('Could not evict a non-audio download', error);
+            TaliaLogger.w('Could not evict a failed download', error);
           }
           _unrecord(run.reciter, ref);
         });

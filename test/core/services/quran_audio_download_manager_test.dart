@@ -265,6 +265,49 @@ void main() {
     expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
   });
 
+  test('one failed ayah request does not abort the rest of the queue', () async {
+    cache.failingAyahs = {1};
+    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(cache.fetchCalls, 2);
+    expect(progress.last.phase, DownloadPhase.failed);
+    expect(progress.last.completedAyahs, 1);
+    expect(await manager.isDownloaded(QuranReciter.alafasy, 1), isFalse);
+  });
+
+  test('three failures in a row stop the run', () async {
+    repository.surahOneAyahs = 6;
+    cache.failingAyahs = {1, 2, 3, 4, 5, 6};
+    final progress = await manager.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    expect(
+      cache.fetchCalls,
+      QuranAudioDownloadManager.maxConsecutiveFailures,
+    );
+    expect(progress.last.phase, DownloadPhase.failed);
+  });
+
+  test('a stalled request times out instead of hanging cancel', () async {
+    cache.pending = Completer<File>();
+    final stalled = QuranAudioDownloadManager(
+      await SharedPreferences.getInstance(),
+      repository,
+      cache: cache,
+      freeBytes: () async => 500 * 1024 * 1024,
+      estimatedBytesPerAyah: 1,
+      fetchTimeout: const Duration(milliseconds: 20),
+    );
+    final finished = stalled.downloadSurahs(QuranReciter.alafasy, [
+      1,
+    ], allowUnverifiedNetwork: true).toList();
+    await cache.started.future;
+    await stalled.cancel().timeout(const Duration(seconds: 2));
+    final progress = await finished.timeout(const Duration(seconds: 2));
+    expect(progress.last.phase, DownloadPhase.cancelled);
+  });
+
   test(
     'durable audio wins for every lookup with explicit and default reciters',
     () async {
@@ -290,6 +333,9 @@ class _DurableCache extends QuranAudioDurableCache {
   List<int>? payload;
   final evicted = <String>[];
 
+  /// Ayahs whose request throws, as a network error would.
+  Set<int> failingAyahs = {};
+
   String _key(int surah, int ayah, QuranReciter? reciter) =>
       '${reciter?.id}:$surah:$ayah';
 
@@ -304,6 +350,9 @@ class _DurableCache extends QuranAudioDurableCache {
   Future<File> fetch(QuranReciter reciter, int surahId, int ayahNumber) async {
     fetchCalls++;
     if (!started.isCompleted) started.complete();
+    if (failingAyahs.contains(ayahNumber)) {
+      throw const SocketException('offline');
+    }
     final waiting = pending;
     if (waiting != null) return waiting.future;
     return _create(reciter, surahId, ayahNumber);
@@ -373,13 +422,22 @@ class _Lookup implements QuranAudioDurableLookup {
 }
 
 class _QuranRepository implements QuranRepository {
+  int surahOneAyahs = 2;
+
   @override
   Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
     if (surahId != 1) return Right(_detail(surahId, const []));
     return Right(
-      _detail(1, const [
-        Ayah(number: 1, surahId: 1, text: '', numberInSurah: 1, juz: 1),
-        Ayah(number: 2, surahId: 1, text: '', numberInSurah: 2, juz: 2),
+      _detail(1, [
+        for (var n = 1; n <= surahOneAyahs; n++)
+          // Ayah 1 is in juz 1 and the rest in juz 2, so juz 1 splits it.
+          Ayah(
+            number: n,
+            surahId: 1,
+            text: '',
+            numberInSurah: n,
+            juz: n == 1 ? 1 : 2,
+          ),
       ]),
     );
   }

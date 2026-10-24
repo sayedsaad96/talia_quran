@@ -1,18 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/memorization/kids_hifz_feature_flags.dart';
+import '../../../../core/services/notification_scheduler.dart';
 import '../../../adult_journey/adult_journey_feature_flags.dart';
 
 /// Debug-only developer page: one switch per flag of every rollout family.
 /// Each switch writes straight to SharedPreferences with the exact key the
 /// family's flag reads. Titles are fixed technical English on purpose.
 class LabsFlagsPage extends StatefulWidget {
-  const LabsFlagsPage({super.key, required this.prefs});
+  const LabsFlagsPage({super.key, required this.prefs, this.onFlagChanged});
 
   final SharedPreferences prefs;
+
+  /// Runs after every switch. Defaults to rescheduling notifications, since
+  /// several flags gate reminders that are only cancelled on a refresh.
+  final void Function(BuildContext context)? onFlagChanged;
 
   @override
   State<LabsFlagsPage> createState() => _LabsFlagsPageState();
@@ -41,7 +50,17 @@ class _LabsFlagsPageState extends State<LabsFlagsPage> {
 
   Future<void> _set(String key, bool value) async {
     await widget.prefs.setBool(key, value);
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    (widget.onFlagChanged ?? _refreshNotifications)(context);
+  }
+
+  static void _refreshNotifications(BuildContext context) {
+    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations);
+    if (l10n == null || !getIt.isRegistered<NotificationScheduler>()) return;
+    unawaited(
+      getIt<NotificationScheduler>().refreshNotifications(l10n, force: true),
+    );
   }
 
   @override

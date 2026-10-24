@@ -295,10 +295,13 @@ class QuranContinuousPlayerService {
   }
 
   /// Last index endOfSurah may play when anchored at [from]: the end of the
-  /// current surah run, or the end of the whole queue in [playSurahQueue].
+  /// current surah run within the current repeat pass, or the end of the
+  /// whole queue in [playSurahQueue].
   int _endOfSurahLastIndex(int from) {
     if (_surahQueueMode) return _queue.length - 1;
-    return _lastIndexOfSurahRun(from, _queue[from].surahId);
+    final runEnd = _lastIndexOfSurahRun(from, _queue[from].surahId);
+    final passEnd = passEndIndexOf(from, _baseQueue.length, _repeat);
+    return passEnd < runEnd ? passEnd : runEnd;
   }
 
   /// Resets reader settings when [applyReaderSettings] is false, or when a
@@ -810,12 +813,11 @@ class QuranContinuousPlayerService {
         var baseIndex = _baseQueue.indexOf(current);
         if (baseIndex < 0) baseIndex = 0;
         final wasPaused = _stateNotifier.value.isPaused;
-        _queue = expandRepeatQueue<Ayah>(
-          _baseQueue.sublist(baseIndex),
-          _repeat,
-        );
+        // Rebuild the whole range so later passes still start at its first
+        // ayah; playback resumes at the current ayah in the first pass.
+        _queue = expandRepeatQueue<Ayah>(_baseQueue, _repeat);
         await _loadPlaylistAndPlay(
-          startIndex: 0,
+          startIndex: firstPassIndexOf(baseIndex, _repeat),
           activeReciter: _resolveReciter(_stateNotifier.value.reciter),
           play: !wasPaused,
         );

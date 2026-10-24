@@ -6,6 +6,30 @@ import 'package:talia_quran/core/memorization/kids_hifz_feature_flags.dart';
 import 'package:talia_quran/features/settings/presentation/pages/labs_flags_page.dart';
 
 void main() {
+  testWidgets('every toggle asks for a notification refresh', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    var refreshes = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LabsFlagsPage(prefs: prefs, onFlagChanged: (_) => refreshes++),
+      ),
+    );
+    final key = ExperienceFeature.forgettingForecast.storageKey;
+    final tile = find.byKey(ValueKey('labs_flag_$key'));
+    await tester.scrollUntilVisible(
+      tile,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(tile);
+    await tester.pump();
+    await tester.tap(tile);
+    await tester.pump();
+    expect(prefs.getBool(key), isFalse);
+    expect(refreshes, 2);
+  });
+
   testWidgets(
     'labs page lists every family and toggling writes the exact key',
     (tester) async {
