@@ -92,10 +92,45 @@ void main() {
     await cubit.close();
   });
 
+  test('a load whose progress reads failed never touches the store', () async {
+    // Houses built without progress would record "nothing completed" and
+    // later celebrate every finished surah at once.
+    for (final failLogs in [true, false]) {
+      if (failLogs) {
+        when(
+          () => repo.getKidsSessionLogs(),
+        ).thenAnswer((_) async => const Left(CacheFailure()));
+      } else {
+        when(
+          () => repo.getKidsSessionLogs(),
+        ).thenAnswer((_) async => const Right(<KidsSessionLog>[]));
+        when(
+          () => repo.getAllReviewRecords(scope: ReviewRecordReadScope.kids),
+        ).thenAnswer((_) async => const Left(CacheFailure()));
+      }
+      final store = _FakeCelebrationStore({3});
+      final cubit = KidsQuranJourneyCubit(repo, quran, celebrationStore: store);
+      await cubit.load();
+      final loaded = cubit.state as KidsQuranJourneyLoaded;
+      expect(loaded.celebratedSurahIds, isEmpty, reason: 'failLogs $failLogs');
+      expect(store.lastHouses, isNull, reason: 'failLogs $failLogs');
+      await cubit.close();
+    }
+  });
+
+  test('a cubit closed mid-load does not consume the celebration', () async {
+    final store = _FakeCelebrationStore({3});
+    final cubit = KidsQuranJourneyCubit(repo, quran, celebrationStore: store);
+    final loading = cubit.load();
+    await cubit.close();
+    await loading;
+    expect(store.lastHouses, isNull);
+  });
+
   test('a new child opens on the guardian starting surah', () async {
-    when(() => repo.getParentSettings()).thenAnswer(
-      (_) async => const Right(ParentSettings(startingSurahId: 67)),
-    );
+    when(
+      () => repo.getParentSettings(),
+    ).thenAnswer((_) async => const Right(ParentSettings(startingSurahId: 67)));
     final cubit = KidsQuranJourneyCubit(repo, quran);
     await cubit.load();
     expect((cubit.state as KidsQuranJourneyLoaded).currentSurahId, 67);

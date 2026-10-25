@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/kids_quran_map_celebration_store.dart';
@@ -178,6 +179,31 @@ void main() {
           house(2, KidsSurahHouseStatus.completed),
         ]),
         {2},
+      );
+    });
+
+    test('its key is cleared with the account data', () {
+      expect(
+        AccountDataReset.clearedPreferencePrefixes,
+        contains(KidsQuranMapCelebrationStore.keyPrefix),
+      );
+    });
+
+    test("a new child's very first completion still glows", () async {
+      // An empty first visit is recorded, so finishing the first surah is
+      // a real "since last visit" completion.
+      final store = await storeFor('owner-a');
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.notStarted, completedCount: 0),
+        ]),
+        isEmpty,
+      );
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+        ]),
+        {1},
       );
     });
 

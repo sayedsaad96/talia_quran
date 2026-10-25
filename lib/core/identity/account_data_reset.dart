@@ -149,6 +149,8 @@ class AccountDataReset {
     'kids_support_profile_',
     // Guardian-confirmed family-practice receipts (owner-scoped).
     'kids_family_practice_',
+    // Surahs the child already saw completed on the Quran journey map.
+    'kids_quran_map_seen_completed_',
     // Adult journey goal/today/return preferences (owner-scoped, local only).
     'adult_journey_v1_',
     // Opt-in Prayer Companion settings are account-owned device data.

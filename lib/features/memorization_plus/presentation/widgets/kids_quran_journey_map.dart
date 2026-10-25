@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -125,6 +127,7 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
                 celebratedIndexes: celebratedIndexes,
                 currentIndex: currentIndex,
               ),
+              walkKey: widget.celebratedSurahIds,
               direction: Directionality.of(context),
             ),
           ),
@@ -272,7 +275,11 @@ class _IslandSprite extends StatelessWidget {
       kidsIslandForRow(index).asset,
       fit: BoxFit.contain,
       alignment: Alignment.bottomCenter,
-      cacheWidth: (width * MediaQuery.devicePixelRatioOf(context)).round(),
+      // Image asserts cacheWidth > 0; a zero-width layout pass must not trip it.
+      cacheWidth: math.max(
+        1,
+        (width * MediaQuery.devicePixelRatioOf(context)).round(),
+      ),
       errorBuilder: (_, _, _) => const SizedBox.shrink(),
     );
   }

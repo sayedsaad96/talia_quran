@@ -49,6 +49,7 @@ class KidsQuranTaliaOverlay extends StatefulWidget {
     required this.currentIndex,
     required this.walkFromIndex,
     required this.direction,
+    this.walkKey,
   });
 
   final ScrollController controller;
@@ -61,6 +62,12 @@ class KidsQuranTaliaOverlay extends StatefulWidget {
   final int? walkFromIndex;
 
   final TextDirection direction;
+
+  /// Identity of the celebration that produced [walkFromIndex] (the map
+  /// passes the loaded `celebratedSurahIds` set). Talia walks once per
+  /// distinct key, so a second completion on the same live map walks again
+  /// while a plain rebuild never replays a walk.
+  final Object? walkKey;
 
   @override
   State<KidsQuranTaliaOverlay> createState() => _KidsQuranTaliaOverlayState();
@@ -80,7 +87,11 @@ class _KidsQuranTaliaOverlayState extends State<KidsQuranTaliaOverlay>
   late final AnimationController _breath;
   late final AnimationController _walk;
   Timer? _walkTimer;
-  bool _walkScheduled = false;
+
+  /// The [KidsQuranTaliaOverlay.walkKey] whose walk was already scheduled;
+  /// starts as a private sentinel so even a null key walks once.
+  Object? _walkedFor = _notWalked;
+  static const _notWalked = Object();
 
   @override
   void initState() {
@@ -91,9 +102,11 @@ class _KidsQuranTaliaOverlayState extends State<KidsQuranTaliaOverlay>
   }
 
   void _scheduleWalk() {
-    if (!mounted || _walkScheduled || widget.walkFromIndex == null) return;
+    if (!mounted || widget.walkFromIndex == null) return;
+    if (identical(_walkedFor, widget.walkKey)) return;
     if (MediaQuery.disableAnimationsOf(context)) return;
-    _walkScheduled = true;
+    _walkedFor = widget.walkKey;
+    _walkTimer?.cancel();
     _walkTimer = Timer(_starPopDelay, () {
       if (!mounted || MediaQuery.disableAnimationsOf(context)) return;
       unawaited(_walk.forward(from: 0));
@@ -109,12 +122,10 @@ class _KidsQuranTaliaOverlayState extends State<KidsQuranTaliaOverlay>
   @override
   void didUpdateWidget(covariant KidsQuranTaliaOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The map reloads its cubit while mounted, so the walk origin can arrive
-    // on a widget update, not only on first mount. `_scheduleWalk` keeps the
-    // once-only semantics through `_walkScheduled`.
-    if (oldWidget.walkFromIndex == null && widget.walkFromIndex != null) {
-      _scheduleWalk();
-    }
+    // The map reloads its cubit while mounted, so a walk origin can arrive
+    // on a widget update, not only on first mount. `_scheduleWalk` walks
+    // once per celebration through `_walkedFor`.
+    _scheduleWalk();
   }
 
   void _syncBreath() {

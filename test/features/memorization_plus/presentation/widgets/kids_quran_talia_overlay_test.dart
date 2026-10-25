@@ -57,6 +57,7 @@ void main() {
     Widget harness({
       required int currentIndex,
       int? walkFromIndex,
+      Object? walkKey,
       bool disableAnimations = false,
       ScrollController? controller,
     }) {
@@ -86,6 +87,7 @@ void main() {
                     controller: controller,
                     currentIndex: currentIndex,
                     walkFromIndex: walkFromIndex,
+                    walkKey: walkKey,
                     direction: TextDirection.ltr,
                   ),
                 ),
@@ -100,6 +102,7 @@ void main() {
       WidgetTester tester, {
       required int currentIndex,
       int? walkFromIndex,
+      Object? walkKey,
       bool disableAnimations = false,
       ScrollController? controller,
     }) async {
@@ -110,6 +113,7 @@ void main() {
         harness(
           currentIndex: currentIndex,
           walkFromIndex: walkFromIndex,
+          walkKey: walkKey,
           disableAnimations: disableAnimations,
           controller: controller,
         ),
@@ -230,11 +234,7 @@ void main() {
       await tester.pump();
 
       await tester.pumpWidget(
-        harness(
-          currentIndex: 3,
-          walkFromIndex: 2,
-          controller: controller,
-        ),
+        harness(currentIndex: 3, walkFromIndex: 2, controller: controller),
       );
 
       // The walk starts after the star-pop's 600 ms delay. At walk t = 0 she
@@ -277,6 +277,59 @@ void main() {
       final position = taliaPosition(tester);
       expect(position.left, 268);
       expect(position.top, 604);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a second celebration on the same live overlay walks again', (
+      tester,
+    ) async {
+      // The child finishes surah A, returns (walk), then finishes surah B
+      // without leaving the map: each completion gets its own walk.
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      final first = <int>{2};
+      await pumpHarness(
+        tester,
+        currentIndex: 3,
+        walkFromIndex: 2,
+        walkKey: first,
+        controller: controller,
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 1600));
+      taliaImage(tester, 'talia_reading_quran.png');
+
+      // A return with no completion: no origin, nothing replays.
+      await tester.pumpWidget(
+        harness(
+          currentIndex: 3,
+          walkKey: const <int>{},
+          controller: controller,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      taliaImage(tester, 'talia_reading_quran.png');
+
+      final second = <int>{3};
+      await tester.pumpWidget(
+        harness(
+          currentIndex: 4,
+          walkFromIndex: 3,
+          walkKey: second,
+          controller: controller,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      taliaImage(tester, 'talia_celebrate.png');
+      var position = taliaPosition(tester);
+      expect(position.left, 268); // row 3 foot x (304) - 36
+      expect(position.top, 604); // 3 * 200 + 76 - 72
+
+      await tester.pump(const Duration(milliseconds: 1600));
+      taliaImage(tester, 'talia_reading_quran.png');
+      position = taliaPosition(tester);
+      expect(position.top, 804); // row 4: 4 * 200 + 76 - 72
 
       await tester.pumpWidget(const SizedBox());
     });

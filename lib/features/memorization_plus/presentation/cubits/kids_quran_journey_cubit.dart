@@ -86,16 +86,19 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
         _emit(generation, const KidsQuranJourneyError());
         return;
       }
-      final logs = (await _repository.getKidsSessionLogs()).getOrElse(
-        () => const <KidsSessionLog>[],
+      final logsResult = await _repository.getKidsSessionLogs();
+      final logs = logsResult.getOrElse(() => const <KidsSessionLog>[]);
+      final recordsResult = await _repository.getAllReviewRecords(
+        scope: ReviewRecordReadScope.kids,
       );
-      final records =
-          (await _repository.getAllReviewRecords(
-                scope: ReviewRecordReadScope.kids,
-              ))
-              .getOrElse(() => const <AyahReviewRecord>[])
-              .where(ReviewRecordFilters.isKidsSource)
-              .toList();
+      final records = recordsResult
+          .getOrElse(() => const <AyahReviewRecord>[])
+          .where(ReviewRecordFilters.isKidsSource)
+          .toList();
+      // Houses built after a failed progress read look unfinished; feeding
+      // them to the celebration store would make the next good load
+      // celebrate every finished surah at once.
+      final progressDegraded = logsResult.isLeft() || recordsResult.isLeft();
       final settings = (await _repository.getParentSettings()).fold(
         (_) => const ParentSettings(),
         (value) => value,
@@ -118,9 +121,16 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
         defaultStageSize: defaultStageSize,
         now: _clock(),
       );
-      final celebratedSurahIds = _celebrationStore == null
+      // The store records the visit as it answers, so skip it for a load
+      // that can no longer emit (closed cubit or a newer load running).
+      final store = _celebrationStore;
+      final celebratedSurahIds =
+          store == null ||
+              progressDegraded ||
+              isClosed ||
+              generation != _generation
           ? const <int>{}
-          : await _celebrationStore.takeNewlyCompleted(houses);
+          : await store.takeNewlyCompleted(houses);
       _emit(
         generation,
         KidsQuranJourneyLoaded(

@@ -13,7 +13,11 @@ class KidsQuranMapCelebrationStore {
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
 
-  String get _key => 'kids_quran_map_seen_completed_${_owner.currentOwnerId}';
+  /// Followed by the owner id. Cleared with the account data and backed up
+  /// as an owner-suffixed family.
+  static const keyPrefix = 'kids_quran_map_seen_completed_';
+
+  String get _key => '$keyPrefix${_owner.currentOwnerId}';
 
   /// The surahs completed since the last visit; records this visit.
   ///
