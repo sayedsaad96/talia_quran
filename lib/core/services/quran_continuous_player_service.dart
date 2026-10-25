@@ -745,14 +745,8 @@ class QuranContinuousPlayerService {
         _queue = _queue.sublist(0, last + 1);
       }
       final mediaItems = _buildMediaItems(activeReciter);
-      final audioSources = await _buildAudioSources(activeReciter, mediaItems);
-      if (await _loadSuperseded(generation)) return false;
-      startStreams =
-          startIndex >= 0 &&
-          startIndex < audioSources.length &&
-          (audioSources[startIndex] as UriAudioSource).uri.scheme != 'file';
 
-      if (audioSources.isEmpty) {
+      if (_queue.isEmpty) {
         _emitState(
           _stateNotifier.value.copyWith(
             status: PlaybackStatus.error,
@@ -785,6 +779,20 @@ class QuranContinuousPlayerService {
           hasPrevious: _hasPreviousAyah(),
         ),
       );
+
+      // The file lookups wait until the session is marked loading, so the
+      // listeners and the playAyah shortcut never act on the old playlist
+      // against the new queue in the meantime.
+      final audioSources = await _buildAudioSources(
+        activeReciter,
+        _queue,
+        mediaItems,
+      );
+      if (await _loadSuperseded(generation)) return false;
+      startStreams =
+          startIndex >= 0 &&
+          startIndex < audioSources.length &&
+          (audioSources[startIndex] as UriAudioSource).uri.scheme != 'file';
 
       await _ensureBackgroundAudioHandler();
       if (await _loadSuperseded(generation)) return false;
@@ -869,23 +877,30 @@ class QuranContinuousPlayerService {
   /// cached file when one exists, so downloaded surahs work offline, and
   /// streams otherwise. Metadata is also handed explicitly to the scoped
   /// [QuranBackgroundAudioHandler] for platform media controls.
+  ///
+  /// [mediaItems] is aligned with [ayahs]. Repeated ayahs are looked up once.
   Future<List<AudioSource>> _buildAudioSources(
     QuranReciter activeReciter,
-    List<MediaItem> mediaItems, {
-    int from = 0,
-  }) async {
-    final queue = _queue;
-    final paths = await Future.wait([
-      for (var index = from; index < queue.length; index++)
-        _localPath(queue[index], activeReciter),
-    ]);
+    List<Ayah> ayahs,
+    List<MediaItem> mediaItems,
+  ) async {
+    final lookups = <(int, int), Future<String?>>{};
+    for (final ayah in ayahs) {
+      lookups.putIfAbsent((
+        ayah.surahId,
+        ayah.numberInSurah,
+      ), () => _localPath(ayah, activeReciter));
+    }
+    final keys = lookups.keys.toList();
+    final found = await Future.wait(lookups.values);
+    final paths = {for (var i = 0; i < keys.length; i++) keys[i]: found[i]};
     final sources = <AudioSource>[];
-    for (var i = 0; i < paths.length; i++) {
-      final ayah = queue[from + i];
-      final path = paths[i];
+    for (var i = 0; i < ayahs.length; i++) {
+      final ayah = ayahs[i];
+      final path = paths[(ayah.surahId, ayah.numberInSurah)];
       sources.add(
         path != null
-            ? AudioSource.file(path, tag: mediaItems[from + i])
+            ? AudioSource.file(path, tag: mediaItems[i])
             : AudioSource.uri(
                 Uri.parse(
                   QuranAudioService.buildUrl(
@@ -894,7 +909,7 @@ class QuranContinuousPlayerService {
                     reciter: activeReciter,
                   ),
                 ),
-                tag: mediaItems[from + i],
+                tag: mediaItems[i],
               ),
       );
     }
@@ -1092,11 +1107,22 @@ class QuranContinuousPlayerService {
       final previousQueue = _queue;
       final previousTail = _tail;
       final offset = previousQueue.length;
-      _queue = [...previousQueue, ...previousTail];
+      final restored = [...previousQueue, ...previousTail];
+      final items = _mediaMetadata.build(restored, reciter);
+      // Resolve the files before touching the queue. A load or stop during
+      // the lookups replaces the queue; the old tail then no longer applies.
+      final sources = await _buildAudioSources(
+        reciter,
+        previousTail,
+        items.sublist(offset),
+      );
+      if (!identical(_queue, previousQueue) ||
+          !identical(_tail, previousTail)) {
+        return;
+      }
+      _queue = restored;
       _tail = [];
       try {
-        final items = _buildMediaItems(reciter);
-        final sources = await _buildAudioSources(reciter, items, from: offset);
         await _player.addAudioSources(sources);
         _mediaSession.replaceItems(items);
       } catch (_) {

@@ -689,9 +689,10 @@ Future<void> configureDependencies({bool background = false}) async {
         mediaMetadata: QuranMediaMetadata(
           locale: () => getIt<LocaleCubit>().state,
         ),
-        // Downloaded or cached ayahs play from disk, so they work offline.
+        // Downloaded ayahs play from disk, so they work offline. Only the
+        // durable store: its files were checked as MP3 when downloaded.
         localAudio: (surahId, ayahNumber, reciter) =>
-            getIt<AudioCacheService>().getCachedFilePath(
+            QuranAudioDurableCache.instance.getValidFilePath(
               surahId,
               ayahNumber,
               reciter: reciter,

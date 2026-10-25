@@ -463,6 +463,33 @@ void main() {
       },
     );
 
+    test('a play-from-ayah tap during the lookups never seeks the old '
+        'playlist', () async {
+      Completer<void>? gate;
+      build((_, _, _) async {
+        await gate?.future;
+        return null;
+      });
+      await offlineService.playSurah(1);
+      recordingPlayer.seekIndexes.clear();
+
+      gate = Completer<void>();
+      final reload = offlineService.playSurah(1);
+      await Future<void>.delayed(Duration.zero);
+      expect(offlineService.state.status, PlaybackStatus.loading);
+
+      final tap = offlineService.playAyah(1, 2, scope: PlayScope.surah);
+      await Future<void>.delayed(Duration.zero);
+      gate.complete();
+      await reload;
+      await tap;
+
+      expect(recordingPlayer.seekIndexes, isEmpty);
+      expect(recordingPlayer.lastInitialIndex, 1);
+      expect(offlineService.state.currentAyahNumber, 2);
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
     test('a local first ayah that fails keeps the generic error', () async {
       build((_, _, _) async => '/downloads/file.mp3');
       recordingPlayer.failLoads = true;
@@ -479,7 +506,15 @@ void main() {
 /// with no network.
 class _RecordingAudioPlayer extends ControlledAudioPlayer {
   List<AudioSource> lastSources = const [];
+  int? lastInitialIndex;
+  final seekIndexes = <int>[];
   bool failLoads = false;
+
+  @override
+  Future<void> seek(Duration? position, {int? index}) {
+    if (index != null) seekIndexes.add(index);
+    return super.seek(position, index: index);
+  }
 
   @override
   Future<Duration?> setAudioSources(
@@ -490,6 +525,7 @@ class _RecordingAudioPlayer extends ControlledAudioPlayer {
     ShuffleOrder? shuffleOrder,
   }) {
     lastSources = sources;
+    lastInitialIndex = initialIndex;
     if (failLoads) {
       throw PlayerException(0, 'Source error', 0);
     }
