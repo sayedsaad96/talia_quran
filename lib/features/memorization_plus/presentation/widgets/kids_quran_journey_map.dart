@@ -257,8 +257,8 @@ class _MapRow extends StatelessWidget {
   }
 }
 
-/// The island sprite for a row. The artwork lands in a later task; until
-/// then the error builder keeps the row clean.
+/// The island sprite for a row. A missing or undecodable image leaves the
+/// row without an island rather than breaking it.
 class _IslandSprite extends StatelessWidget {
   const _IslandSprite({required this.index, required this.width});
 
