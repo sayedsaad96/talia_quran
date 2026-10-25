@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -173,8 +175,10 @@ class KidsSurahHouseCard extends StatelessWidget {
 }
 
 /// The three progress stars of a house card: gold when earned, faded
-/// parchment when not.
-class _StarRow extends StatelessWidget {
+/// parchment when not. When [popStars] is true and animations are allowed,
+/// each filled star pops in (elastic scale 0 → past 1 → 1) with a 150 ms
+/// stagger after each other.
+class _StarRow extends StatefulWidget {
   const _StarRow({
     required this.stars,
     required this.surahId,
@@ -186,18 +190,78 @@ class _StarRow extends StatelessWidget {
   final bool popStars;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      key: ValueKey('kids-quran-stars-$surahId'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < 3; i++)
-          TaliaIcon(
-            i < stars ? TaliaKidsIcons.starFilled : TaliaKidsIcons.star,
-            color: i < stars ? KidsTheme.goldStar : KidsTheme.parchmentEdge,
-            size: 14,
+  State<_StarRow> createState() => _StarRowState();
+}
+
+class _StarRowState extends State<_StarRow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pop;
+  bool _popping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Each filled star's own pop lasts 300 ms; stars are staggered 150 ms.
+    _pop = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 300 + 150 * (widget.stars - 1).clamp(0, 2),
+      ),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_popping &&
+        widget.popStars &&
+        widget.stars > 0 &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _popping = true;
+      unawaited(_pop.forward());
+    }
+  }
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
+  Widget _star(int index) {
+    final filled = index < widget.stars;
+    final icon = TaliaIcon(
+      filled ? TaliaKidsIcons.starFilled : TaliaKidsIcons.star,
+      color: filled ? KidsTheme.goldStar : KidsTheme.parchmentEdge,
+      size: 14,
+    );
+    if (!filled || !_popping) return icon;
+    final total = _pop.duration!.inMilliseconds;
+    final scale =
+        Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+            parent: _pop,
+            curve: Interval(
+              150 * index / total,
+              (150 * index + 300) / total,
+              curve: Curves.elasticOut,
+            ),
           ),
-      ],
+        ).value;
+    return Transform.scale(scale: scale, child: icon);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pop,
+      builder: (context, _) => Row(
+        key: ValueKey('kids-quran-stars-${widget.surahId}'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < 3; i++) _star(i),
+        ],
+      ),
     );
   }
 }

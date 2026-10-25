@@ -157,6 +157,7 @@ class KidsQuranJourneyContent extends StatelessWidget {
               child: KidsQuranJourneyMap(
                 houses: state.houses,
                 currentSurahId: state.currentSurahId,
+                celebratedSurahIds: state.celebratedSurahIds,
                 nameOf: (id) => _nameOf(context, id),
                 onHouseTap: (house) => _onHouseTap(context, house),
               ),

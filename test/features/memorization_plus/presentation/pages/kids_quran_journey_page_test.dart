@@ -12,6 +12,7 @@ import 'package:talia_quran/features/memorization_plus/domain/services/kids_worl
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_quran_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_quran_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_journey_map.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_row_layout.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_road_painter.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_surah_house_card.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
@@ -32,10 +33,12 @@ KidsQuranJourneyLoaded _state({
   List<KidsSurahHouse>? houses,
   int current = 1,
   Map<int, String>? surahNames,
+  Set<int> celebrated = const {},
 }) => KidsQuranJourneyLoaded(
   houses: houses ?? _houses(),
   currentSurahId: current,
   surahNames: surahNames ?? {for (var id = 1; id <= 114; id++) id: 'ar$id'},
+  celebratedSurahIds: celebrated,
 );
 
 Widget _app(
@@ -110,6 +113,7 @@ void main() {
   _ayahCountTests();
   _islandRowTests();
   _roadTests();
+  _taliaTests();
   testWidgets('builds lazily: fewer than 20 house cards in the tree for 114 '
       'houses', (tester) async {
     await _pump(tester, _state());
@@ -579,6 +583,53 @@ void _roadTests() {
 
     expect(find.byKey(const ValueKey('kids-quran-halo-1')), findsNothing);
     expect(find.byKey(const ValueKey('kids-quran-halo-2')), findsNothing);
+  });
+}
+
+void _taliaTests() {
+  bool isTaliaImage(Widget w) =>
+      w is Image &&
+      w.image is AssetImage &&
+      (w.image as AssetImage).assetName.startsWith('assets/images/talia/');
+
+  Finder cardOf(int surahId) => find.ancestor(
+    of: find.text(SurahNames.english[surahId]!),
+    matching: find.byType(KidsSurahHouseCard),
+  );
+
+  testWidgets('a current surah missing from the houses shows no Talia', (
+    tester,
+  ) async {
+    await _pump(tester, _state(current: 999));
+    expect(find.byWidgetPredicate(isTaliaImage), findsNothing);
+  });
+
+  testWidgets('a celebrated house pops its stars once', (tester) async {
+    await _pump(tester, _state(celebrated: {2}));
+
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(2)).popStars, isTrue);
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(1)).popStars, isFalse);
+
+    // Scroll row 1 out of view and back: the pop must not replay.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(find.text(SurahNames.english[2]!), findsNothing);
+    await tester.drag(find.byType(ListView).first, const Offset(0, 2000));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(2)).popStars, isFalse);
+  });
+
+  testWidgets('opening with the current house places its row near the '
+  'viewport centre', (tester) async {
+    await _pump(tester, _state(current: 60));
+
+    final viewport = tester.getRect(find.byType(ListView).first);
+    final card = tester.getRect(cardOf(60));
+    expect(
+      (card.center.dy - viewport.center.dy).abs(),
+      lessThanOrEqualTo(kKidsQuranJourneyItemExtent),
+    );
   });
 }
 

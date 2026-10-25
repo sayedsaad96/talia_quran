@@ -10,6 +10,7 @@ import '../theme/kids_theme.dart';
 import '../world/kids_world_palette.dart';
 import 'kids_quran_road_painter.dart';
 import 'kids_quran_row_layout.dart';
+import 'kids_quran_talia_overlay.dart';
 import 'kids_surah_house_card.dart';
 
 /// The lazily built map of surah islands.
@@ -20,12 +21,18 @@ class KidsQuranJourneyMap extends StatefulWidget {
     required this.currentSurahId,
     required this.nameOf,
     required this.onHouseTap,
+    this.celebratedSurahIds = const {},
   });
 
   final List<KidsSurahHouse> houses;
   final int currentSurahId;
   final String Function(int surahId) nameOf;
   final ValueChanged<KidsSurahHouse> onHouseTap;
+
+  /// Surahs completed since the last visit: their stars pop once when their
+  /// row first shows, and Talia may walk from the nearest one to the current
+  /// house.
+  final Set<int> celebratedSurahIds;
 
   @override
   State<KidsQuranJourneyMap> createState() => _KidsQuranJourneyMapState();
@@ -34,16 +41,40 @@ class KidsQuranJourneyMap extends StatefulWidget {
 class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
   late final ScrollController _controller;
 
+  /// Surahs whose star pop has already played; rows are rebuilt as they
+  /// scroll, but each pop must play only once.
+  final Set<int> _popped = {};
+
   @override
   void initState() {
     super.initState();
-    final index = widget.houses.indexWhere(
-      (h) => h.surahId == widget.currentSurahId,
-    );
+    final index = _currentIndex();
     _controller = ScrollController(
       initialScrollOffset:
           (index < 0 ? 0 : index) * kKidsQuranJourneyItemExtent,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _centreOnCurrent(index);
+    });
+  }
+
+  int _currentIndex() => widget.houses.indexWhere(
+    (h) => h.surahId == widget.currentSurahId,
+  );
+
+  /// Puts the current row near the viewport centre; [initialScrollOffset]
+  /// above keeps the very first frame at the row's top so nothing jumps.
+  void _centreOnCurrent(int index) {
+    if (index < 0 || !_controller.hasClients) return;
+    final position = _controller.position;
+    final target =
+        index * kKidsQuranJourneyItemExtent -
+        (position.viewportDimension - kKidsQuranJourneyItemExtent) / 2;
+    final clamped = target.clamp(0.0, position.maxScrollExtent).toDouble();
+    // Skip the no-op jump: it would still churn the scroll activity and
+    // rebuild the visible rows.
+    if (clamped == position.pixels) return;
+    _controller.jumpTo(clamped);
   }
 
   @override
@@ -55,28 +86,49 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
   @override
   Widget build(BuildContext context) {
     final houses = widget.houses;
-    final currentIndex = houses.indexWhere(
-      (h) => h.surahId == widget.currentSurahId,
-    );
-    return ListView.builder(
-      controller: _controller,
-      itemExtent: kKidsQuranJourneyItemExtent,
-      itemCount: houses.length,
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-      itemBuilder: (context, index) {
-        final house = houses[index];
-        final firstOfJuz = index == 0 || houses[index - 1].juz != house.juz;
-        return _MapRow(
-          index: index,
-          isLast: index == houses.length - 1,
-          showJuz: firstOfJuz,
-          currentIndex: currentIndex,
-          isCurrent: house.surahId == widget.currentSurahId,
-          house: house,
-          name: widget.nameOf(house.surahId),
-          onTap: () => widget.onHouseTap(house),
-        );
-      },
+    final currentIndex = _currentIndex();
+    final celebratedIndexes = <int>[
+      for (var i = 0; i < houses.length; i++)
+        if (widget.celebratedSurahIds.contains(houses[i].surahId)) i,
+    ];
+    return Stack(
+      children: [
+        ListView.builder(
+          controller: _controller,
+          itemExtent: kKidsQuranJourneyItemExtent,
+          itemCount: houses.length,
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+          itemBuilder: (context, index) {
+            final house = houses[index];
+            final firstOfJuz = index == 0 || houses[index - 1].juz != house.juz;
+            return _MapRow(
+              index: index,
+              isLast: index == houses.length - 1,
+              showJuz: firstOfJuz,
+              currentIndex: currentIndex,
+              isCurrent: house.surahId == widget.currentSurahId,
+              house: house,
+              name: widget.nameOf(house.surahId),
+              popStars:
+                  widget.celebratedSurahIds.contains(house.surahId) &&
+                  _popped.add(house.surahId),
+              onTap: () => widget.onHouseTap(house),
+            );
+          },
+        ),
+        if (currentIndex >= 0)
+          Positioned.fill(
+            child: KidsQuranTaliaOverlay(
+              controller: _controller,
+              currentIndex: currentIndex,
+              walkFromIndex: kidsQuranWalkOrigin(
+                celebratedIndexes: celebratedIndexes,
+                currentIndex: currentIndex,
+              ),
+              direction: Directionality.of(context),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -92,6 +144,7 @@ class _MapRow extends StatelessWidget {
     required this.isCurrent,
     required this.house,
     required this.name,
+    required this.popStars,
     required this.onTap,
   });
 
@@ -105,6 +158,7 @@ class _MapRow extends StatelessWidget {
   final bool isCurrent;
   final KidsSurahHouse house;
   final String name;
+  final bool popStars;
   final VoidCallback onTap;
 
   @override
@@ -192,6 +246,7 @@ class _MapRow extends StatelessWidget {
                 house: house,
                 name: name,
                 isCurrent: isCurrent,
+                popStars: popStars,
                 onTap: onTap,
               ),
             ),
