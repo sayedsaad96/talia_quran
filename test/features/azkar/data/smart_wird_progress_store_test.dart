@@ -10,7 +10,13 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
-    store = SmartWirdProgressStore(prefs);
+    // A fixed clock on the day the tests' dates use: the history window and
+    // the active-session day key are relative to now, so the real clock made
+    // these tests start failing once the dates fell out of the window.
+    store = SmartWirdProgressStore(
+      prefs,
+      now: () => DateTime(2026, 9, 25, 20),
+    );
   });
 
   test('active session starts null, saves, and resumes with same counts', () async {
