@@ -8,10 +8,13 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/utils/locale_number_formatter.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_quran_map_visuals.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_surah_house_summary_builder.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_world_phase.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_quran_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_quran_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_journey_map.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_road_painter.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_surah_house_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
 
 List<KidsSurahHouse> _houses({KidsSurahHouseStatus Function(int id)? status}) =>
     [
@@ -88,10 +91,25 @@ Future<void> _pump(
   await tester.pump();
 }
 
+Future<void> _scrollToTop(WidgetTester tester) async {
+  await tester.drag(find.byType(ListView).first, const Offset(0, 3000));
+  await tester.pump();
+}
+
+List<KidsQuranRoadPainter> _roadPainters(WidgetTester tester) => tester
+    .widgetList<CustomPaint>(
+      find.byWidgetPredicate(
+        (w) => w is CustomPaint && w.painter is KidsQuranRoadPainter,
+      ),
+    )
+    .map((paint) => paint.painter! as KidsQuranRoadPainter)
+    .toList();
+
 void main() {
   _semanticsTests();
   _ayahCountTests();
   _islandRowTests();
+  _roadTests();
   testWidgets('builds lazily: fewer than 20 house cards in the tree for 114 '
       'houses', (tester) async {
     await _pump(tester, _state());
@@ -448,6 +466,119 @@ void _islandRowTests() {
       textScaler: TextScaler.linear(1.3),
     );
     expect(tester.takeException(), isNull);
+  });
+}
+
+void _roadTests() {
+  void replaceOne(List<KidsSurahHouse> houses, KidsSurahHouse replacement) {
+    houses[replacement.surahId - 1] = replacement;
+  }
+
+  KidsSurahHouse completedHouse(int id) => _house(
+    id,
+    status: KidsSurahHouseStatus.completed,
+    completedCount: 5,
+  );
+
+  testWidgets('the road is lit up to the current house', (tester) async {
+    await _pump(tester, _state(current: 3));
+    await _scrollToTop(tester);
+
+    final painters = _roadPainters(tester);
+    KidsQuranRoadPainter row(int index) =>
+        painters.firstWhere((p) => p.seed == index);
+    expect(row(0).outgoingLit, isTrue);
+    expect(row(1).outgoingLit, isTrue);
+    expect(row(2).incomingLit, isTrue);
+    expect(row(2).outgoingLit, isFalse);
+  });
+
+  testWidgets('a current surah missing from the houses lights no road', (
+    tester,
+  ) async {
+    await _pump(tester, _state(current: 999));
+
+    final painters = _roadPainters(tester);
+    expect(painters, isNotEmpty);
+    for (final painter in painters) {
+      expect(painter.incomingLit, isFalse, reason: 'row ${painter.seed}');
+      expect(painter.outgoingLit, isFalse, reason: 'row ${painter.seed}');
+    }
+  });
+
+  // The page's KidsBackground publishes its own phase scope (night when no
+  // controller is registered), so phase overriding is tested on the map
+  // itself, which is what reads KidsWorldPhaseScope.phaseOf.
+  Future<void> pumpMap(
+    WidgetTester tester, {
+    required List<KidsSurahHouse> houses,
+    required int current,
+    KidsWorldPhase? phase,
+  }) async {
+    Widget map = KidsQuranJourneyMap(
+      houses: houses,
+      currentSurahId: current,
+      nameOf: (id) => 'ar$id',
+      onHouseTap: (_) {},
+    );
+    if (phase != null) {
+      map = KidsWorldPhaseScope(phase: phase, child: map);
+    }
+    await tester.pumpWidget(_app(SizedBox(width: 800, height: 1000, child: map)));
+    await tester.pump();
+  }
+
+  testWidgets('no phase scope means night; a day scope means day', (
+    tester,
+  ) async {
+    await pumpMap(tester, houses: _houses(), current: 1);
+    expect(_roadPainters(tester), isNotEmpty);
+    expect(_roadPainters(tester).every((painter) => painter.night), isTrue);
+
+    await pumpMap(
+      tester,
+      houses: _houses(),
+      current: 1,
+      phase: KidsWorldPhase.day,
+    );
+    expect(_roadPainters(tester), isNotEmpty);
+    expect(_roadPainters(tester).every((painter) => painter.night), isFalse);
+  });
+
+  testWidgets('at night a halo marks completed and current houses only', (
+    tester,
+  ) async {
+    final houses = _houses();
+    replaceOne(houses, completedHouse(1));
+    replaceOne(houses, completedHouse(2));
+    await _pump(tester, _state(houses: houses, current: 2));
+    await _scrollToTop(tester);
+
+    for (final surahId in [1, 2]) {
+      final halo = find.byKey(ValueKey('kids-quran-halo-$surahId'));
+      expect(halo, findsOneWidget);
+      final decoration = tester.widget<DecoratedBox>(halo).decoration;
+      expect(decoration, isA<BoxDecoration>());
+      expect((decoration as BoxDecoration).gradient, isA<RadialGradient>());
+    }
+    // Not completed and not current: no halo.
+    expect(find.byKey(const ValueKey('kids-quran-halo-3')), findsNothing);
+    expect(find.byKey(const ValueKey('kids-quran-halo-4')), findsNothing);
+  });
+
+  testWidgets('by day there is no halo', (tester) async {
+    final houses = _houses();
+    replaceOne(houses, completedHouse(1));
+    replaceOne(houses, completedHouse(2));
+    await pumpMap(
+      tester,
+      houses: houses,
+      current: 1,
+      phase: KidsWorldPhase.day,
+    );
+
+    expect(find.byKey(const ValueKey('kids-quran-halo-1')), findsNothing);
+    expect(find.byKey(const ValueKey('kids-quran-halo-2')), findsNothing);
   });
 }
 

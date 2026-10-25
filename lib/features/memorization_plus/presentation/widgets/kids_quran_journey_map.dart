@@ -5,7 +5,10 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/services/kids_quran_map_visuals.dart';
 import '../../domain/services/kids_surah_house_summary_builder.dart';
+import '../../domain/services/kids_world_phase.dart';
 import '../theme/kids_theme.dart';
+import '../world/kids_world_palette.dart';
+import 'kids_quran_road_painter.dart';
 import 'kids_quran_row_layout.dart';
 import 'kids_surah_house_card.dart';
 
@@ -52,6 +55,9 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
   @override
   Widget build(BuildContext context) {
     final houses = widget.houses;
+    final currentIndex = houses.indexWhere(
+      (h) => h.surahId == widget.currentSurahId,
+    );
     return ListView.builder(
       controller: _controller,
       itemExtent: kKidsQuranJourneyItemExtent,
@@ -64,6 +70,7 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
           index: index,
           isLast: index == houses.length - 1,
           showJuz: firstOfJuz,
+          currentIndex: currentIndex,
           isCurrent: house.surahId == widget.currentSurahId,
           house: house,
           name: widget.nameOf(house.surahId),
@@ -81,6 +88,7 @@ class _MapRow extends StatelessWidget {
     required this.index,
     required this.isLast,
     required this.showJuz,
+    required this.currentIndex,
     required this.isCurrent,
     required this.house,
     required this.name,
@@ -90,6 +98,10 @@ class _MapRow extends StatelessWidget {
   final int index;
   final bool isLast;
   final bool showJuz;
+
+  /// Index of the current house in the houses list, or -1 when it is not
+  /// present (then no road segment is lit).
+  final int currentIndex;
   final bool isCurrent;
   final KidsSurahHouse house;
   final String name;
@@ -98,6 +110,8 @@ class _MapRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final direction = Directionality.of(context);
+    final night = KidsWorldPhaseScope.phaseOf(context) == KidsWorldPhase.night;
+    final animationsDisabled = MediaQuery.disableAnimationsOf(context);
     final islandOnStart = index.isEven;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -107,19 +121,57 @@ class _MapRow extends StatelessWidget {
           direction: direction,
           showJuz: showJuz,
         );
+        Offset neighbourFoot(int rowIndex) => kidsQuranRowLayout(
+          index: rowIndex,
+          size: Size(constraints.maxWidth, kKidsQuranJourneyItemExtent),
+          direction: direction,
+          showJuz: false,
+        ).taliaFoot;
+        KidsQuranRoadPainter roadPainter(double shimmer) =>
+            KidsQuranRoadPainter(
+              hereX: layout.taliaFoot.dx,
+              previousX: index == 0 ? 0 : neighbourFoot(index - 1).dx,
+              nextX: isLast ? 0 : neighbourFoot(index + 1).dx,
+              isFirst: index == 0,
+              isLast: isLast,
+              incomingLit: currentIndex >= 0 && index <= currentIndex && index > 0,
+              outgoingLit: currentIndex >= 0 && index < currentIndex,
+              night: night,
+              seed: index,
+              shimmer: shimmer,
+            );
+        // One shimmer flash (0 → 1 over 600 ms) when the row is built; the
+        // painter maps it to the coin highlight. Fixed at 0 when animations
+        // are disabled.
+        final road = animationsDisabled
+            ? RepaintBoundary(
+                child: CustomPaint(painter: roadPainter(0)),
+              )
+            : TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                builder: (context, shimmer, _) => RepaintBoundary(
+                  child: CustomPaint(painter: roadPainter(shimmer)),
+                ),
+              );
         return Stack(
           children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: KidsQuranRoadPainter(
-                  towardEnd: !islandOnStart,
-                  isRtl: direction == TextDirection.rtl,
-                  isFirst: index == 0,
-                  isLast: isLast,
-                  done: house.status == KidsSurahHouseStatus.completed,
+            Positioned.fill(child: road),
+            if (night && (house.status == KidsSurahHouseStatus.completed || isCurrent))
+              Positioned.fromRect(
+                rect: layout.island,
+                child: DecoratedBox(
+                  key: ValueKey('kids-quran-halo-${house.surahId}'),
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        KidsTheme.goldLight.withValues(alpha: 0.35),
+                        KidsTheme.goldLight.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
             Positioned.fromRect(
               rect: layout.island,
               child: ExcludeSemantics(
@@ -247,52 +299,4 @@ class _RibbonFoldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RibbonFoldPainter old) => old.tailAtLeft != tailAtLeft;
-}
-
-/// A simple winding road segment: enters from the previous row's side, bends
-/// through this row's side, and leaves toward the next row's side.
-class KidsQuranRoadPainter extends CustomPainter {
-  const KidsQuranRoadPainter({
-    required this.towardEnd,
-    required this.isRtl,
-    required this.isFirst,
-    required this.isLast,
-    required this.done,
-  });
-
-  /// True when this row's house sits on the end side (right in LTR).
-  final bool towardEnd;
-  final bool isRtl;
-  final bool isFirst;
-  final bool isLast;
-  final bool done;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rightHere = isRtl ? !towardEnd : towardEnd;
-    final here = size.width * (rightHere ? 0.7 : 0.3);
-    final other = size.width * (rightHere ? 0.3 : 0.7);
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..strokeCap = StrokeCap.round
-      ..color = done
-          ? KidsTheme.goldStar.withValues(alpha: 0.55)
-          : KidsTheme.mapSurface;
-    final midY = size.height / 2;
-    final path = Path()..moveTo(isFirst ? here : other, isFirst ? midY : 0);
-    if (!isFirst) path.quadraticBezierTo(other, midY * 0.5, here, midY);
-    if (!isLast) {
-      path.quadraticBezierTo(here, midY * 1.5, other, size.height);
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(KidsQuranRoadPainter old) =>
-      old.towardEnd != towardEnd ||
-      old.isRtl != isRtl ||
-      old.isFirst != isFirst ||
-      old.isLast != isLast ||
-      old.done != done;
 }
