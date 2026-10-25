@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/services/kids_quran_map_visuals.dart';
 import '../../domain/services/kids_surah_house_summary_builder.dart';
 import '../theme/kids_theme.dart';
-import 'kids_talia_companion.dart';
+import 'kids_quran_row_layout.dart';
+import 'kids_surah_house_card.dart';
 
-/// Fixed height of one map row. A fixed extent keeps the 114-house list cheap
-/// and lets the map open on the current house with plain arithmetic.
-const double kKidsQuranJourneyItemExtent = 132;
-
-/// The lazily built map of surah houses.
+/// The lazily built map of surah islands.
 class KidsQuranJourneyMap extends StatefulWidget {
   const KidsQuranJourneyMap({
     super.key,
@@ -77,6 +74,8 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
   }
 }
 
+/// One map row: road segment, island sprite, parchment card and an optional
+/// juz ribbon, all placed by the shared [kidsQuranRowLayout] geometry.
 class _MapRow extends StatelessWidget {
   const _MapRow({
     required this.index,
@@ -98,43 +97,45 @@ class _MapRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alignEnd = index.isOdd;
-    final alignment = alignEnd
-        ? AlignmentDirectional.centerEnd
-        : AlignmentDirectional.centerStart;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: CustomPaint(
-            painter: KidsQuranRoadPainter(
-              towardEnd: alignEnd,
-              isRtl: Directionality.of(context) == TextDirection.rtl,
-              isFirst: index == 0,
-              isLast: isLast,
-              done: house.status == KidsSurahHouseStatus.completed,
+    final direction = Directionality.of(context);
+    final islandOnStart = index.isEven;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layout = kidsQuranRowLayout(
+          index: index,
+          size: Size(constraints.maxWidth, kKidsQuranJourneyItemExtent),
+          direction: direction,
+          showJuz: showJuz,
+        );
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: KidsQuranRoadPainter(
+                  towardEnd: !islandOnStart,
+                  isRtl: direction == TextDirection.rtl,
+                  isFirst: index == 0,
+                  isLast: isLast,
+                  done: house.status == KidsSurahHouseStatus.completed,
+                ),
+              ),
             ),
-          ),
-        ),
-        if (showJuz)
-          Positioned(
-            top: 2,
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
-            child: Align(
-              alignment: alignment,
-              child: _JuzSignpost(juz: house.juz),
+            Positioned.fromRect(
+              rect: layout.island,
+              child: ExcludeSemantics(
+                child: _IslandSprite(
+                  index: index,
+                  width: layout.island.width,
+                ),
+              ),
             ),
-          ),
-        Positioned(
-          top: 28,
-          bottom: 8,
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          child: Align(
-            alignment: alignment,
-            child: FractionallySizedBox(
-              widthFactor: 0.78,
-              heightFactor: 1,
+            if (showJuz && layout.juzRibbon != null)
+              Positioned.fromRect(
+                rect: layout.juzRibbon!,
+                child: _JuzRibbon(juz: house.juz, tailOnEnd: islandOnStart),
+              ),
+            Positioned.fromRect(
+              rect: layout.card,
               child: KidsSurahHouseCard(
                 house: house,
                 name: name,
@@ -142,6 +143,81 @@ class _MapRow extends StatelessWidget {
                 onTap: onTap,
               ),
             ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The island sprite for a row. The artwork lands in a later task; until
+/// then the error builder keeps the row clean.
+class _IslandSprite extends StatelessWidget {
+  const _IslandSprite({required this.index, required this.width});
+
+  final int index;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      kidsIslandForRow(index).asset,
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter,
+      cacheWidth: (width * MediaQuery.devicePixelRatioOf(context)).round(),
+      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// The gold juz ribbon above the card's far edge, with a folded tail.
+class _JuzRibbon extends StatelessWidget {
+  const _JuzRibbon({required this.juz, required this.tailOnEnd});
+
+  final int juz;
+
+  /// Whether the folded tail hangs on the ribbon's end side (right in LTR).
+  final bool tailOnEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final tailAtLeft =
+        tailOnEnd != (Directionality.of(context) == TextDirection.rtl);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          height: 28,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 2),
+          decoration: BoxDecoration(
+            color: KidsTheme.goldStar,
+            borderRadius: BorderRadius.horizontal(
+              left: tailAtLeft
+                  ? Radius.zero
+                  : const Radius.circular(AppSpacing.radiusMd),
+              right: tailAtLeft
+                  ? const Radius.circular(AppSpacing.radiusMd)
+                  : Radius.zero,
+            ),
+            boxShadow: KidsTheme.card25DShadow,
+          ),
+          child: Text(
+            context.l10n.kidsQuranJourneyJuz(context.numText(juz)),
+            style: AppTypography.labelMedium.copyWith(
+              color: KidsTheme.inkOnParchment,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 24,
+          left: tailAtLeft ? 0 : null,
+          right: tailAtLeft ? null : 0,
+          child: CustomPaint(
+            size: const Size(14, 8),
+            painter: _RibbonFoldPainter(tailAtLeft: tailAtLeft),
           ),
         ),
       ],
@@ -149,166 +225,28 @@ class _MapRow extends StatelessWidget {
   }
 }
 
-class _JuzSignpost extends StatelessWidget {
-  const _JuzSignpost({required this.juz});
+/// The darker fold under the ribbon's tail.
+class _RibbonFoldPainter extends CustomPainter {
+  const _RibbonFoldPainter({required this.tailAtLeft});
 
-  final int juz;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-      decoration: BoxDecoration(
-        color: KidsTheme.goldStar,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Text(
-        context.l10n.kidsQuranJourneyJuz(context.numText(juz)),
-        style: AppTypography.labelMedium.copyWith(
-          color: KidsTheme.inkOnParchment,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0,
-        ),
-      ),
-    );
-  }
-}
-
-/// One surah house: name, ayah count, status icon and progress bar.
-class KidsSurahHouseCard extends StatelessWidget {
-  const KidsSurahHouseCard({
-    super.key,
-    required this.house,
-    required this.name,
-    required this.isCurrent,
-    required this.onTap,
-  });
-
-  final KidsSurahHouse house;
-  final String name;
-  final bool isCurrent;
-  final VoidCallback onTap;
-
-  static IconData _icon(KidsSurahHouseStatus status) => switch (status) {
-    KidsSurahHouseStatus.completed => TaliaKidsIcons.checkCircleFilled,
-    KidsSurahHouseStatus.needsReview => TaliaKidsIcons.refresh,
-    KidsSurahHouseStatus.inProgress => TaliaKidsIcons.reading,
-    KidsSurahHouseStatus.notStarted => TaliaKidsIcons.circle,
-  };
-
-  static Color _color(KidsSurahHouseStatus status) => switch (status) {
-    KidsSurahHouseStatus.completed => KidsTheme.successGreen,
-    KidsSurahHouseStatus.needsReview => KidsTheme.reviewPurple,
-    KidsSurahHouseStatus.inProgress => KidsTheme.goldStar,
-    KidsSurahHouseStatus.notStarted => KidsTheme.lockedGrey,
-  };
+  final bool tailAtLeft;
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final countText = l10n.countAyahs(
-      house.ayahCount,
-      context.numText(house.ayahCount),
-    );
-    final statusColor = _color(house.status);
-    final statusText = switch (house.status) {
-      KidsSurahHouseStatus.completed => l10n.kidsHouseStatusCompleted,
-      KidsSurahHouseStatus.needsReview => l10n.kidsHouseStatusNeedsReview,
-      KidsSurahHouseStatus.inProgress => l10n.kidsHouseStatusInProgress,
-      KidsSurahHouseStatus.notStarted => l10n.kidsHouseStatusNotStarted,
-    };
-    return Semantics(
-      button: true,
-      container: true,
-      label: [
-        name,
-        countText,
-        statusText,
-        if (isCurrent) l10n.kidsHouseCurrentMarker,
-      ].join('. '),
-      onTap: onTap,
-      child: ExcludeSemantics(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: KidsTheme.cardRadius,
-            onTap: onTap,
-            child: Ink(
-              decoration: BoxDecoration(
-                gradient: KidsTheme.parchmentGradient,
-                borderRadius: KidsTheme.cardRadius,
-                border: Border.all(
-                  color: isCurrent
-                      ? KidsTheme.goldStar
-                      : KidsTheme.parchmentEdge,
-                  width: isCurrent ? 3 : 1.5,
-                ),
-                boxShadow: KidsTheme.card25DShadow,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  if (isCurrent) ...[
-                    Image.asset(
-                      KidsTaliaPose.pointRight.asset,
-                      width: 40,
-                      height: 40,
-                      errorBuilder: (_, _, _) => const SizedBox(width: 40),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                  ],
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: KidsTheme.inkOnParchment,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                        Text(
-                          countText,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: KidsTheme.inkOnParchment,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-                          child: LinearProgressIndicator(
-                            value: house.progress.clamp(0.0, 1.0),
-                            minHeight: 6,
-                            color: statusColor,
-                            backgroundColor: KidsTheme.parchmentEdge,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  TaliaIcon(
-                    _icon(house.status),
-                    color: statusColor,
-                    size: 28,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final fold = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0);
+    if (tailAtLeft) {
+      fold.lineTo(0, size.height);
+    } else {
+      fold.lineTo(size.width, size.height);
+    }
+    fold.close();
+    canvas.drawPath(fold, Paint()..color = KidsTheme.houseBrown);
   }
+
+  @override
+  bool shouldRepaint(_RibbonFoldPainter old) => old.tailAtLeft != tailAtLeft;
 }
 
 /// A simple winding road segment: enters from the previous row's side, bends
