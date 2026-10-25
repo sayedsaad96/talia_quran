@@ -106,6 +106,17 @@ class _KidsQuranTaliaOverlayState extends State<KidsQuranTaliaOverlay>
     _syncBreath();
   }
 
+  @override
+  void didUpdateWidget(covariant KidsQuranTaliaOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The map reloads its cubit while mounted, so the walk origin can arrive
+    // on a widget update, not only on first mount. `_scheduleWalk` keeps the
+    // once-only semantics through `_walkScheduled`.
+    if (oldWidget.walkFromIndex == null && widget.walkFromIndex != null) {
+      _scheduleWalk();
+    }
+  }
+
   void _syncBreath() {
     if (MediaQuery.disableAnimationsOf(context)) {
       _walkTimer?.cancel();

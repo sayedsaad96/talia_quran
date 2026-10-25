@@ -1,8 +1,10 @@
 import 'dart:ui' show SemanticsAction;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/surah_names.dart';
+import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/icons/talia_icon_data.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/utils/locale_number_formatter.dart';
@@ -45,6 +47,7 @@ Widget _app(
   Widget child, {
   Locale locale = const Locale('en'),
   TextScaler? textScaler,
+  bool disableAnimations = true,
 }) => MaterialApp(
   locale: locale,
   localizationsDelegates: const [
@@ -54,11 +57,11 @@ Widget _app(
     GlobalCupertinoLocalizations.delegate,
   ],
   supportedLocales: AppLocalizations.supportedLocales,
-  // Animations off so pumpAndSettle stays valid around the new ring and
-  // ribbon widgets.
+  // Animations off by default so pumpAndSettle stays valid around the new
+  // ring and ribbon widgets; the celebration tests opt back in.
   home: MediaQuery(
     data: MediaQueryData(
-      disableAnimations: true,
+      disableAnimations: disableAnimations,
       textScaler: textScaler ?? TextScaler.noScaling,
     ),
     child: Scaffold(body: child),
@@ -592,6 +595,32 @@ void _taliaTests() {
       w.image is AssetImage &&
       (w.image as AssetImage).assetName.startsWith('assets/images/talia/');
 
+  bool isTaliaPose(Widget w, String pose) =>
+      w is Image &&
+      w.image is AssetImage &&
+      (w.image as AssetImage).assetName == 'assets/images/talia/$pose';
+
+  /// The horizontal scale of the [index]-th filled star of [surahId]'s card,
+  /// or null when the star is not wrapped in a Transform (not popping).
+  double? starScale(WidgetTester tester, int surahId, int index) {
+    final icons = find
+        .descendant(
+          of: find.byKey(ValueKey('kids-quran-stars-$surahId')),
+          matching: find.byIcon(TaliaKidsIcons.starFilled),
+        )
+        .at(index);
+    if (icons.evaluate().isEmpty) return null;
+    final transforms = find.ancestor(
+      of: icons,
+      matching: find.byType(Transform),
+    );
+    if (transforms.evaluate().isEmpty) return null;
+    return tester
+        .widget<Transform>(transforms.first)
+        .transform
+        .storage[0];
+  }
+
   Finder cardOf(int surahId) => find.ancestor(
     of: find.text(SurahNames.english[surahId]!),
     matching: find.byType(KidsSurahHouseCard),
@@ -618,6 +647,53 @@ void _taliaTests() {
     await tester.pumpAndSettle();
 
     expect(tester.widget<KidsSurahHouseCard>(cardOf(2)).popStars, isFalse);
+  });
+
+  testWidgets('a celebration arriving while the map is mounted pops the '
+  'stars and starts the walk', (tester) async {
+    // The real scenario: the child completes a surah, returns to the map,
+    // and the page reloads its cubit while the map stays mounted. The map
+    // must celebrate on the widget update, not only on first mount.
+    await getIt.reset();
+    addTearDown(getIt.reset);
+    final cubit = _SeededKidsQuranJourneyCubit(_state());
+    getIt.registerFactory<KidsQuranJourneyCubit>(() => cubit);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(const KidsQuranJourneyPage(), disableAnimations: false),
+    );
+    // Past the road shimmer's one-off 600 ms so the map itself is settled
+    // before the celebration arrives. Talia's breathing never ends here, so
+    // only bounded pumps are used.
+    await tester.pump(const Duration(milliseconds: 700));
+
+    // The reload reports surah 2 newly completed and celebrated.
+    final houses = _houses();
+    houses[1] = _house(
+      2,
+      status: KidsSurahHouseStatus.completed,
+      completedCount: 5,
+    );
+    cubit.emit(_state(houses: houses, celebrated: {2}));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Row 1's stars are mid-pop on the already-mounted card.
+    expect(starScale(tester, 2, 0), isNotNull);
+    expect(starScale(tester, 2, 0)!, isNot(1.0));
+
+    // After the star pop's 600 ms delay Talia walks from the celebrated row.
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(
+      find.byWidgetPredicate((w) => isTaliaPose(w, 'talia_celebrate.png')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(
+      find.byWidgetPredicate((w) => isTaliaPose(w, 'talia_reading_quran.png')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opening with the current house places its row near the '
@@ -663,4 +739,14 @@ void _semanticsTests() {
     await _pump(tester, _state(current: 60));
     expect(find.text(SurahNames.english[60]!), findsOneWidget);
   });
+}
+
+/// A cubit seeded with its first [KidsQuranJourneyLoaded] so the page can be
+/// pumped without stubbing the repositories behind `load()`.
+class _SeededKidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState>
+    implements KidsQuranJourneyCubit {
+  _SeededKidsQuranJourneyCubit(super.initialState);
+
+  @override
+  Future<void> load() async {}
 }

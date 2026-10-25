@@ -58,9 +58,14 @@ void main() {
       required int currentIndex,
       int? walkFromIndex,
       bool disableAnimations = false,
+      ScrollController? controller,
     }) {
-      final controller = ScrollController();
-      addTearDown(controller.dispose);
+      // A caller-supplied controller may outlive this pumpWidget (the
+      // walk-arrival tests rebuild the same overlay), so only a controller
+      // created here is torn down here.
+      final ownsController = controller == null;
+      controller ??= ScrollController();
+      if (ownsController) addTearDown(controller.dispose);
       return MediaQuery(
         data: MediaQueryData(disableAnimations: disableAnimations),
         child: Directionality(
@@ -96,6 +101,7 @@ void main() {
       required int currentIndex,
       int? walkFromIndex,
       bool disableAnimations = false,
+      ScrollController? controller,
     }) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(400, 1000);
@@ -105,6 +111,7 @@ void main() {
           currentIndex: currentIndex,
           walkFromIndex: walkFromIndex,
           disableAnimations: disableAnimations,
+          controller: controller,
         ),
       );
     }
@@ -208,6 +215,66 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1600));
       taliaImage(tester, 'talia_reading_quran.png');
       position = taliaPosition(tester);
+      expect(position.left, 268);
+      expect(position.top, 604);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a walk origin arriving on a live overlay still plays the '
+        'walk', (tester) async {
+      // The map reloads its cubit while mounted, so the overlay receives
+      // walkFromIndex on a widget update, not on first mount.
+      final controller = ScrollController();
+      await pumpHarness(tester, currentIndex: 3, controller: controller);
+      await tester.pump();
+
+      await tester.pumpWidget(
+        harness(
+          currentIndex: 3,
+          walkFromIndex: 2,
+          controller: controller,
+        ),
+      );
+
+      // The walk starts after the star-pop's 600 ms delay. At walk t = 0 she
+      // celebrates on row 2's foot.
+      await tester.pump(const Duration(milliseconds: 700));
+      taliaImage(tester, 'talia_celebrate.png');
+      var position = taliaPosition(tester);
+      expect(position.left, 60); // row 2 foot x (96) - 36
+      expect(position.top, 404); // 2 * 200 + 76 - 72
+
+      // 700 ms + 1500 ms walk < 2300 ms, so the walk has ended and she
+      // reads on row 3's foot.
+      await tester.pump(const Duration(milliseconds: 1600));
+      taliaImage(tester, 'talia_reading_quran.png');
+      position = taliaPosition(tester);
+      expect(position.left, 268);
+      expect(position.top, 604);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a repeated rebuild with the same walk origin does not '
+        'replay the walk', (tester) async {
+      final controller = ScrollController();
+      await pumpHarness(tester, currentIndex: 3, controller: controller);
+      await tester.pump();
+      await tester.pumpWidget(
+        harness(currentIndex: 3, walkFromIndex: 2, controller: controller),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 1600));
+      taliaImage(tester, 'talia_reading_quran.png');
+
+      // Same walkFromIndex again (no null -> set flip): no second walk.
+      await tester.pumpWidget(
+        harness(currentIndex: 3, walkFromIndex: 2, controller: controller),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      taliaImage(tester, 'talia_reading_quran.png');
+      final position = taliaPosition(tester);
       expect(position.left, 268);
       expect(position.top, 604);
 

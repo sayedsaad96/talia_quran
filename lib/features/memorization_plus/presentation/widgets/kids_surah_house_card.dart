@@ -201,25 +201,48 @@ class _StarRowState extends State<_StarRow>
   @override
   void initState() {
     super.initState();
-    // Each filled star's own pop lasts 300 ms; stars are staggered 150 ms.
-    _pop = AnimationController(
-      vsync: this,
-      duration: Duration(
-        milliseconds: 300 + 150 * (widget.stars - 1).clamp(0, 2),
-      ),
-    );
+    _pop = AnimationController(vsync: this, duration: _popDuration);
   }
+
+  /// Each filled star's own pop lasts 300 ms; stars are staggered 150 ms.
+  Duration get _popDuration => Duration(
+    milliseconds: 300 + 150 * (widget.stars - 1).clamp(0, 2),
+  );
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_popping &&
-        widget.popStars &&
-        widget.stars > 0 &&
-        !MediaQuery.disableAnimationsOf(context)) {
-      _popping = true;
-      unawaited(_pop.forward());
+    if (_popping) {
+      if (MediaQuery.disableAnimationsOf(context)) {
+        // Reduce motion kicked in mid-pop: land the final state immediately.
+        _pop
+          ..stop()
+          ..value = _pop.upperBound;
+      }
+    } else {
+      _maybeStartPop();
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant _StarRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.stars != oldWidget.stars) {
+      // The stagger intervals are derived from the total duration, so a
+      // star count that changes while mounted (the map reload after the
+      // surah was completed) must refresh it or an interval can exceed 1.0.
+      _pop.duration = _popDuration;
+    }
+    // The celebration can arrive while the row is already mounted: the map
+    // reloads its cubit and the card flips popStars from false to true.
+    _maybeStartPop();
+  }
+
+  void _maybeStartPop() {
+    if (_popping || !widget.popStars || widget.stars <= 0) return;
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    _popping = true;
+    unawaited(_pop.forward());
   }
 
   @override
