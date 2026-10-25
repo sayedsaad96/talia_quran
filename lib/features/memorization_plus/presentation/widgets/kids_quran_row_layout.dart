@@ -6,6 +6,10 @@ import 'dart:ui' show Offset, Rect, Size, TextDirection;
 /// arithmetic. Raised from 132 to 200 for the cartoon island rows.
 const double kKidsQuranJourneyItemExtent = 200;
 
+/// Talia's square size on the map; her foot is never placed higher than
+/// this below the row top, so her head is never clipped.
+const double kKidsQuranTaliaSize = 72;
+
 /// Where the island, card, juz ribbon and Talia's foot sit inside one row
 /// of the Quran journey map. Pure geometry shared by the row, the road
 /// painter and the Talia overlay.
@@ -23,7 +27,8 @@ class KidsQuranRowLayout {
   /// The parchment card, overlapping the island so it rests on it.
   final Rect card;
 
-  /// Talia's anchor: the island top-centre nudged 12 px down.
+  /// Talia's anchor: the island top-centre nudged 12 px down, but never
+  /// less than [kKidsQuranTaliaSize] below the row top.
   final Offset taliaFoot;
 
   /// The juz ribbon: a tab on the card's top near its far edge, or null
@@ -86,7 +91,12 @@ KidsQuranRowLayout kidsQuranRowLayout({
   return KidsQuranRowLayout(
     island: island,
     card: card,
-    taliaFoot: Offset(island.center.dx, island.top + 12),
+    // Wide screens give a 144-tall island whose top + 12 would lift a 72 px
+    // Talia above the row; keep her head inside it.
+    taliaFoot: Offset(
+      island.center.dx,
+      math.max(island.top + 12, kKidsQuranTaliaSize),
+    ),
     juzRibbon: ribbon,
   );
 }

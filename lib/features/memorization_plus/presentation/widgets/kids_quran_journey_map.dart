@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -47,6 +48,10 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
   /// scroll, but each pop must play only once.
   final Set<int> _popped = {};
 
+  /// Rows whose coin shimmer has already played: it flashes the first time a
+  /// row appears, not every time the row scrolls back in.
+  final Set<int> _shimmered = {};
+
   @override
   void initState() {
     super.initState();
@@ -64,9 +69,23 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
     (h) => h.surahId == widget.currentSurahId,
   );
 
+  @override
+  void didUpdateWidget(covariant KidsQuranJourneyMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The page reloads its cubit after a surah while the map stays mounted;
+    // when that moves the current house, bring it into view.
+    if (oldWidget.currentSurahId == widget.currentSurahId) return;
+    final index = _currentIndex();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _centreOnCurrent(index, animate: true);
+    });
+  }
+
   /// Puts the current row near the viewport centre; [initialScrollOffset]
   /// above keeps the very first frame at the row's top so nothing jumps.
-  void _centreOnCurrent(int index) {
+  /// With [animate] (a reload, not the first open) it glides there unless
+  /// animations are disabled.
+  void _centreOnCurrent(int index, {bool animate = false}) {
     if (index < 0 || !_controller.hasClients) return;
     final position = _controller.position;
     final target =
@@ -76,7 +95,17 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
     // Skip the no-op jump: it would still churn the scroll activity and
     // rebuild the visible rows.
     if (clamped == position.pixels) return;
-    _controller.jumpTo(clamped);
+    if (animate && !MediaQuery.disableAnimationsOf(context)) {
+      unawaited(
+        _controller.animateTo(
+          clamped,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeInOut,
+        ),
+      );
+    } else {
+      _controller.jumpTo(clamped);
+    }
   }
 
   @override
@@ -114,6 +143,7 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
               popStars:
                   widget.celebratedSurahIds.contains(house.surahId) &&
                   _popped.add(house.surahId),
+              shimmer: _shimmered.add(index),
               onTap: () => widget.onHouseTap(house),
             );
           },
@@ -148,6 +178,7 @@ class _MapRow extends StatelessWidget {
     required this.house,
     required this.name,
     required this.popStars,
+    required this.shimmer,
     required this.onTap,
   });
 
@@ -162,6 +193,9 @@ class _MapRow extends StatelessWidget {
   final KidsSurahHouse house;
   final String name;
   final bool popStars;
+
+  /// Whether this is the row's first appearance, when its coin flashes once.
+  final bool shimmer;
   final VoidCallback onTap;
 
   @override
@@ -184,7 +218,7 @@ class _MapRow extends StatelessWidget {
           direction: direction,
           showJuz: false,
         ).taliaFoot;
-        KidsQuranRoadPainter roadPainter(double shimmer) =>
+        KidsQuranRoadPainter roadPainter(double flash) =>
             KidsQuranRoadPainter(
               hereX: layout.taliaFoot.dx,
               previousX: index == 0 ? 0 : neighbourFoot(index - 1).dx,
@@ -195,20 +229,20 @@ class _MapRow extends StatelessWidget {
               outgoingLit: currentIndex >= 0 && index < currentIndex,
               night: night,
               seed: index,
-              shimmer: shimmer,
+              shimmer: flash,
             );
-        // One shimmer flash (0 → 1 over 600 ms) when the row is built; the
-        // painter maps it to the coin highlight. Fixed at 0 when animations
-        // are disabled.
-        final road = animationsDisabled
+        // One shimmer flash (0 → 1 over 600 ms) the first time the row
+        // appears; the painter maps it to the coin highlight. Fixed at 0 when
+        // animations are disabled or the row has already flashed.
+        final road = animationsDisabled || !shimmer
             ? RepaintBoundary(
                 child: CustomPaint(painter: roadPainter(0)),
               )
             : TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: const Duration(milliseconds: 600),
-                builder: (context, shimmer, _) => RepaintBoundary(
-                  child: CustomPaint(painter: roadPainter(shimmer)),
+                builder: (context, flash, _) => RepaintBoundary(
+                  child: CustomPaint(painter: roadPainter(flash)),
                 ),
               );
         return Stack(

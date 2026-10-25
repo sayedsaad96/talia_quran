@@ -149,7 +149,9 @@ class AccountDataReset {
     'kids_support_profile_',
     // Guardian-confirmed family-practice receipts (owner-scoped).
     'kids_family_practice_',
-    // Surahs the child already saw completed on the Quran journey map.
+    // Houses and surahs the child already saw completed on the journey maps
+    // (display state only).
+    'kids_map_seen_completed_',
     'kids_quran_map_seen_completed_',
     // Adult journey goal/today/return preferences (owner-scoped, local only).
     'adult_journey_v1_',
@@ -260,6 +262,12 @@ class AccountDataReset {
       if (key.startsWith('quran_bookmarks_owner_')) {
         return key == 'quran_bookmarks_owner_$ownerId' ||
             key == 'quran_bookmarks_owner_${ownerId}_migrated';
+      }
+      // The kids streak and achievements are local-only, so a sign-out keeps
+      // them for the account's return; a deleted account takes its own.
+      if (key == 'kids_streak_$ownerId' ||
+          key == 'kids_achievements_$ownerId') {
+        return true;
       }
       return key == 'auth_last_signed_in_user_id' ||
           clearedPreferenceKeys.contains(key) ||

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -60,12 +61,15 @@ void main() {
       }
     });
 
-    test('taliaFoot is the island top-centre nudged 12 down, inside the '
-        'island', () {
+    test('taliaFoot is the island top-centre nudged 12 down (never higher '
+        'than her height), inside the island', () {
       for (final index in [0, 1]) {
         for (final direction in TextDirection.values) {
           final layout = layoutFor(index: index, direction: direction);
-          expect(layout.taliaFoot.dy, layout.island.top + 12);
+          expect(
+            layout.taliaFoot.dy,
+            math.max(layout.island.top + 12, kKidsQuranTaliaSize),
+          );
           expect(layout.taliaFoot.dx, layout.island.center.dx);
           expect(
             layout.island.contains(layout.taliaFoot),
@@ -73,6 +77,20 @@ void main() {
             reason: 'index $index $direction',
           );
         }
+      }
+    });
+
+    test("Talia's head stays inside the row on wide screens", () {
+      // At 450+ dp the island is 144 tall, so its top-centre + 12 would put
+      // a 72 px Talia 12 px above the row (clipped on the first row).
+      for (final width in [320.0, 400.0, 450.0, 800.0]) {
+        final layout = layoutFor(size: Size(width, 200));
+        expect(
+          layout.taliaFoot.dy - kKidsQuranTaliaSize,
+          greaterThanOrEqualTo(0),
+          reason: 'width $width',
+        );
+        expect(layout.island.contains(layout.taliaFoot), isTrue);
       }
     });
 

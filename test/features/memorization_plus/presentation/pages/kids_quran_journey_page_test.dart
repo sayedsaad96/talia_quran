@@ -707,6 +707,65 @@ void _taliaTests() {
       lessThanOrEqualTo(kKidsQuranJourneyItemExtent),
     );
   });
+
+  testWidgets('a reload that moves the current house re-centres on it', (
+    tester,
+  ) async {
+    // The child returns from a surah and the cubit reloads while the map
+    // stays mounted: the new current house must be brought into view.
+    await _pump(tester, _state(current: 5));
+    await tester.pumpWidget(
+      _app(
+        KidsQuranJourneyContent(
+          state: _state(current: 60),
+          onBack: () {},
+          onOpenSurah: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final viewport = tester.getRect(find.byType(ListView).first);
+    final card = tester.getRect(cardOf(60));
+    expect(
+      (card.center.dy - viewport.center.dy).abs(),
+      lessThanOrEqualTo(kKidsQuranJourneyItemExtent),
+    );
+  });
+
+  testWidgets('the coin shimmer plays only the first time a row appears', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      tester.view.reset();
+    });
+    await tester.pumpWidget(
+      _app(
+        KidsQuranJourneyContent(
+          state: _state(),
+          onBack: () {},
+          onOpenSurah: (_) {},
+        ),
+        disableAnimations: false,
+      ),
+    );
+    final shimmers = find.byType(TweenAnimationBuilder<double>);
+    expect(shimmers, findsWidgets);
+    // Talia keeps breathing, so only bounded pumps here.
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await tester.drag(find.byType(ListView).first, const Offset(0, -3000));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.drag(find.byType(ListView).first, const Offset(0, 3000));
+    await tester.pump();
+
+    // Back at the top: every visible row was built before, so none shimmers.
+    expect(find.text(SurahNames.english[1]!), findsOneWidget);
+    expect(shimmers, findsNothing);
+  });
 }
 
 void _semanticsTests() {

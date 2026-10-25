@@ -82,7 +82,7 @@ class _KidsQuranTaliaOverlayState extends State<KidsQuranTaliaOverlay>
   /// the walk starts after 600 ms to let it finish first.
   static const _starPopDelay = Duration(milliseconds: 600);
 
-  static const _size = 72.0;
+  static const _size = kKidsQuranTaliaSize;
 
   late final AnimationController _breath;
   late final AnimationController _walk;
