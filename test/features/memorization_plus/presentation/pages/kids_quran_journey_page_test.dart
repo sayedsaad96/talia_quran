@@ -1,14 +1,23 @@
 import 'dart:ui' show SemanticsAction;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/surah_names.dart';
+import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/icons/talia_icon_data.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/utils/locale_number_formatter.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_quran_map_visuals.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_surah_house_summary_builder.dart';
+import 'package:talia_quran/features/memorization_plus/domain/services/kids_world_phase.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_quran_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_quran_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_journey_map.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_row_layout.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_road_painter.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_surah_house_card.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/world/kids_world_palette.dart';
 
 List<KidsSurahHouse> _houses({KidsSurahHouseStatus Function(int id)? status}) =>
     [
@@ -25,13 +34,21 @@ List<KidsSurahHouse> _houses({KidsSurahHouseStatus Function(int id)? status}) =>
 KidsQuranJourneyLoaded _state({
   List<KidsSurahHouse>? houses,
   int current = 1,
+  Map<int, String>? surahNames,
+  Set<int> celebrated = const {},
 }) => KidsQuranJourneyLoaded(
   houses: houses ?? _houses(),
   currentSurahId: current,
-  surahNames: {for (var id = 1; id <= 114; id++) id: 'ar$id'},
+  surahNames: surahNames ?? {for (var id = 1; id <= 114; id++) id: 'ar$id'},
+  celebratedSurahIds: celebrated,
 );
 
-Widget _app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
+Widget _app(
+  Widget child, {
+  Locale locale = const Locale('en'),
+  TextScaler? textScaler,
+  bool disableAnimations = true,
+}) => MaterialApp(
   locale: locale,
   localizationsDelegates: const [
     AppLocalizations.delegate,
@@ -40,16 +57,28 @@ Widget _app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
     GlobalCupertinoLocalizations.delegate,
   ],
   supportedLocales: AppLocalizations.supportedLocales,
-  home: Scaffold(body: child),
+  // Animations off by default so pumpAndSettle stays valid around the new
+  // ring and ribbon widgets; the celebration tests opt back in.
+  home: MediaQuery(
+    data: MediaQueryData(
+      disableAnimations: disableAnimations,
+      textScaler: textScaler ?? TextScaler.noScaling,
+    ),
+    child: Scaffold(body: child),
+  ),
 );
 
 Future<void> _pump(
   WidgetTester tester,
   KidsQuranJourneyLoaded state, {
   ValueChanged<int>? onOpen,
+  Locale locale = const Locale('en'),
+  TextScaler? textScaler,
 }) async {
   tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = const Size(800, 1200);
+  // Tall enough that the first three juz ribbons stay visible at the 200 px
+  // row extent.
+  tester.view.physicalSize = const Size(800, 2000);
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox());
     tester.view.reset();
@@ -61,14 +90,33 @@ Future<void> _pump(
         onBack: () {},
         onOpenSurah: onOpen ?? (_) {},
       ),
+      locale: locale,
+      textScaler: textScaler,
     ),
   );
   await tester.pump();
 }
 
+Future<void> _scrollToTop(WidgetTester tester) async {
+  await tester.drag(find.byType(ListView).first, const Offset(0, 3000));
+  await tester.pump();
+}
+
+List<KidsQuranRoadPainter> _roadPainters(WidgetTester tester) => tester
+    .widgetList<CustomPaint>(
+      find.byWidgetPredicate(
+        (w) => w is CustomPaint && w.painter is KidsQuranRoadPainter,
+      ),
+    )
+    .map((paint) => paint.painter! as KidsQuranRoadPainter)
+    .toList();
+
 void main() {
   _semanticsTests();
   _ayahCountTests();
+  _islandRowTests();
+  _roadTests();
+  _taliaTests();
   testWidgets('builds lazily: fewer than 20 house cards in the tree for 114 '
       'houses', (tester) async {
     await _pump(tester, _state());
@@ -206,6 +254,520 @@ void _ayahCountTests() {
   });
 }
 
+KidsSurahHouse _house(
+  int id, {
+  required KidsSurahHouseStatus status,
+  int ayahCount = 5,
+  int completedCount = 0,
+}) => KidsSurahHouse(
+  surahId: id,
+  ayahCount: ayahCount,
+  juz: 1 + (id - 1) ~/ 3,
+  status: status,
+  completedCount: completedCount,
+);
+
+void _islandRowTests() {
+  void replaceOne(List<KidsSurahHouse> houses, KidsSurahHouse replacement) {
+    houses[replacement.surahId - 1] = replacement;
+  }
+
+  testWidgets('a completed house shows three filled stars and no empty '
+  'ones', (tester) async {
+    final houses = _houses();
+    replaceOne(
+      houses,
+      _house(1, status: KidsSurahHouseStatus.completed, completedCount: 5),
+    );
+    await _pump(tester, _state(houses: houses));
+
+    final starsRow = find.byKey(const ValueKey('kids-quran-stars-1'));
+    expect(starsRow, findsOneWidget);
+    expect(
+      find.descendant(
+        of: starsRow,
+        matching: find.byIcon(TaliaKidsIcons.starFilled),
+      ),
+      findsNWidgets(kidsSurahStars(houses[0])),
+    );
+    expect(
+      find.descendant(of: starsRow, matching: find.byIcon(TaliaKidsIcons.star)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('a third of the progress earns one filled star', (tester) async {
+    final houses = _houses();
+    replaceOne(
+      houses,
+      _house(
+        1,
+        status: KidsSurahHouseStatus.inProgress,
+        completedCount: 2,
+        ayahCount: 6,
+      ),
+    );
+    await _pump(tester, _state(houses: houses));
+
+    final starsRow = find.byKey(const ValueKey('kids-quran-stars-1'));
+    expect(
+      find.descendant(
+        of: starsRow,
+        matching: find.byIcon(TaliaKidsIcons.starFilled),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: starsRow, matching: find.byIcon(TaliaKidsIcons.star)),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('not started houses show a lock glyph in the ring', (
+    tester,
+  ) async {
+    await _pump(tester, _state());
+    expect(find.byIcon(TaliaKidsIcons.lock), findsWidgets);
+  });
+
+  testWidgets('a house needing review shows the refresh glyph in the ring', (
+    tester,
+  ) async {
+    final houses = _houses();
+    replaceOne(
+      houses,
+      _house(1, status: KidsSurahHouseStatus.needsReview, completedCount: 3),
+    );
+    await _pump(tester, _state(houses: houses));
+    final ring = find.byKey(const ValueKey('kids-quran-ring-1'));
+    expect(ring, findsOneWidget);
+    expect(
+      find.descendant(of: ring, matching: find.byIcon(TaliaKidsIcons.refresh)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a completed house shows the star glyph in the ring', (
+    tester,
+  ) async {
+    final houses = _houses();
+    replaceOne(
+      houses,
+      _house(1, status: KidsSurahHouseStatus.completed, completedCount: 5),
+    );
+    await _pump(tester, _state(houses: houses));
+    final ring = find.byKey(const ValueKey('kids-quran-ring-1'));
+    expect(ring, findsOneWidget);
+    expect(
+      find.descendant(
+        of: ring,
+        matching: find.byIcon(TaliaKidsIcons.starFilled),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('card semantics announce the earned stars', (tester) async {
+    final handle = tester.ensureSemantics();
+    final houses = _houses();
+    replaceOne(
+      houses,
+      _house(
+        1,
+        status: KidsSurahHouseStatus.inProgress,
+        ayahCount: 3,
+        completedCount: 2,
+      ),
+    );
+    await _pump(tester, _state(houses: houses));
+
+    final node = tester.getSemantics(
+      find.ancestor(
+        of: find.text(SurahNames.english[1]!),
+        matching: find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.button == true,
+        ),
+      ),
+    );
+    expect(node.getSemanticsData().label, contains('2 of 3 stars'));
+    handle.dispose();
+  });
+
+  testWidgets('each visible island renders one decorative island image', (
+    tester,
+  ) async {
+    await _pump(tester, _state());
+
+    String? islandAssetName(Image image) {
+      final provider = image.image;
+      if (provider is AssetImage) return provider.assetName;
+      // cacheWidth wraps the asset provider in a ResizeImage.
+      if (provider is ResizeImage) {
+        final inner = provider.imageProvider;
+        return inner is AssetImage ? inner.assetName : null;
+      }
+      return null;
+    }
+
+    final islands =
+        tester
+            .widgetList<Image>(
+              find.byWidgetPredicate(
+                (w) =>
+                    w is Image &&
+                    (islandAssetName(w)?.startsWith(
+                          'assets/images/kids/islands/',
+                        ) ??
+                        false),
+              ),
+            )
+            .toList();
+    expect(islands, isNotEmpty);
+    for (final island in islands) {
+      expect(island.errorBuilder, isNotNull);
+      expect(
+        find.ancestor(
+          of: find.byWidget(island),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsWidgets,
+      );
+    }
+  });
+
+  testWidgets('no overflow in English LTR at 1.3 text scale with a long '
+  'name', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        Center(
+          child: SizedBox(
+            width: 380,
+            height: 104,
+            child: KidsSurahHouseCard(
+              house: _house(
+                108,
+                status: KidsSurahHouseStatus.inProgress,
+                ayahCount: 20,
+                completedCount: 7,
+              ),
+              name: 'A' * 30,
+              isCurrent: false,
+              onTap: () {},
+            ),
+          ),
+        ),
+        textScaler: const TextScaler.linear(1.3),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('no overflow in Arabic RTL at 1.3 text scale with a long '
+  'name', (tester) async {
+    final longName = 'س' * 30;
+    final names = {for (var id = 1; id <= 114; id++) id: longName};
+    await _pump(
+      tester,
+      _state(houses: _houses(), surahNames: names),
+      locale: const Locale('ar'),
+      textScaler: const TextScaler.linear(1.3),
+    );
+    expect(tester.takeException(), isNull);
+  });
+}
+
+void _roadTests() {
+  void replaceOne(List<KidsSurahHouse> houses, KidsSurahHouse replacement) {
+    houses[replacement.surahId - 1] = replacement;
+  }
+
+  KidsSurahHouse completedHouse(int id) => _house(
+    id,
+    status: KidsSurahHouseStatus.completed,
+    completedCount: 5,
+  );
+
+  testWidgets('the road is lit up to the current house', (tester) async {
+    await _pump(tester, _state(current: 3));
+    await _scrollToTop(tester);
+
+    final painters = _roadPainters(tester);
+    KidsQuranRoadPainter row(int index) =>
+        painters.firstWhere((p) => p.seed == index);
+    expect(row(0).outgoingLit, isTrue);
+    expect(row(1).outgoingLit, isTrue);
+    expect(row(2).incomingLit, isTrue);
+    expect(row(2).outgoingLit, isFalse);
+  });
+
+  testWidgets('a current surah missing from the houses lights no road', (
+    tester,
+  ) async {
+    await _pump(tester, _state(current: 999));
+
+    final painters = _roadPainters(tester);
+    expect(painters, isNotEmpty);
+    for (final painter in painters) {
+      expect(painter.incomingLit, isFalse, reason: 'row ${painter.seed}');
+      expect(painter.outgoingLit, isFalse, reason: 'row ${painter.seed}');
+    }
+  });
+
+  // The page's KidsBackground publishes its own phase scope (night when no
+  // controller is registered), so phase overriding is tested on the map
+  // itself, which is what reads KidsWorldPhaseScope.phaseOf.
+  Future<void> pumpMap(
+    WidgetTester tester, {
+    required List<KidsSurahHouse> houses,
+    required int current,
+    KidsWorldPhase? phase,
+  }) async {
+    Widget map = KidsQuranJourneyMap(
+      houses: houses,
+      currentSurahId: current,
+      nameOf: (id) => 'ar$id',
+      onHouseTap: (_) {},
+    );
+    if (phase != null) {
+      map = KidsWorldPhaseScope(phase: phase, child: map);
+    }
+    await tester.pumpWidget(_app(SizedBox(width: 800, height: 1000, child: map)));
+    await tester.pump();
+  }
+
+  testWidgets('no phase scope means night; a day scope means day', (
+    tester,
+  ) async {
+    await pumpMap(tester, houses: _houses(), current: 1);
+    expect(_roadPainters(tester), isNotEmpty);
+    expect(_roadPainters(tester).every((painter) => painter.night), isTrue);
+
+    await pumpMap(
+      tester,
+      houses: _houses(),
+      current: 1,
+      phase: KidsWorldPhase.day,
+    );
+    expect(_roadPainters(tester), isNotEmpty);
+    expect(_roadPainters(tester).every((painter) => painter.night), isFalse);
+  });
+
+  testWidgets('at night a halo marks completed and current houses only', (
+    tester,
+  ) async {
+    final houses = _houses();
+    replaceOne(houses, completedHouse(1));
+    replaceOne(houses, completedHouse(2));
+    await _pump(tester, _state(houses: houses, current: 2));
+    await _scrollToTop(tester);
+
+    for (final surahId in [1, 2]) {
+      final halo = find.byKey(ValueKey('kids-quran-halo-$surahId'));
+      expect(halo, findsOneWidget);
+      final decoration = tester.widget<DecoratedBox>(halo).decoration;
+      expect(decoration, isA<BoxDecoration>());
+      expect((decoration as BoxDecoration).gradient, isA<RadialGradient>());
+    }
+    // Not completed and not current: no halo.
+    expect(find.byKey(const ValueKey('kids-quran-halo-3')), findsNothing);
+    expect(find.byKey(const ValueKey('kids-quran-halo-4')), findsNothing);
+  });
+
+  testWidgets('by day there is no halo', (tester) async {
+    final houses = _houses();
+    replaceOne(houses, completedHouse(1));
+    replaceOne(houses, completedHouse(2));
+    await pumpMap(
+      tester,
+      houses: houses,
+      current: 1,
+      phase: KidsWorldPhase.day,
+    );
+
+    expect(find.byKey(const ValueKey('kids-quran-halo-1')), findsNothing);
+    expect(find.byKey(const ValueKey('kids-quran-halo-2')), findsNothing);
+  });
+}
+
+void _taliaTests() {
+  bool isTaliaImage(Widget w) =>
+      w is Image &&
+      w.image is AssetImage &&
+      (w.image as AssetImage).assetName.startsWith('assets/images/talia/');
+
+  bool isTaliaPose(Widget w, String pose) =>
+      w is Image &&
+      w.image is AssetImage &&
+      (w.image as AssetImage).assetName == 'assets/images/talia/$pose';
+
+  /// The horizontal scale of the [index]-th filled star of [surahId]'s card,
+  /// or null when the star is not wrapped in a Transform (not popping).
+  double? starScale(WidgetTester tester, int surahId, int index) {
+    final icons = find
+        .descendant(
+          of: find.byKey(ValueKey('kids-quran-stars-$surahId')),
+          matching: find.byIcon(TaliaKidsIcons.starFilled),
+        )
+        .at(index);
+    if (icons.evaluate().isEmpty) return null;
+    final transforms = find.ancestor(
+      of: icons,
+      matching: find.byType(Transform),
+    );
+    if (transforms.evaluate().isEmpty) return null;
+    return tester
+        .widget<Transform>(transforms.first)
+        .transform
+        .storage[0];
+  }
+
+  Finder cardOf(int surahId) => find.ancestor(
+    of: find.text(SurahNames.english[surahId]!),
+    matching: find.byType(KidsSurahHouseCard),
+  );
+
+  testWidgets('a current surah missing from the houses shows no Talia', (
+    tester,
+  ) async {
+    await _pump(tester, _state(current: 999));
+    expect(find.byWidgetPredicate(isTaliaImage), findsNothing);
+  });
+
+  testWidgets('a celebrated house pops its stars once', (tester) async {
+    await _pump(tester, _state(celebrated: {2}));
+
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(2)).popStars, isTrue);
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(1)).popStars, isFalse);
+
+    // Scroll row 1 out of view and back: the pop must not replay.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(find.text(SurahNames.english[2]!), findsNothing);
+    await tester.drag(find.byType(ListView).first, const Offset(0, 2000));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<KidsSurahHouseCard>(cardOf(2)).popStars, isFalse);
+  });
+
+  testWidgets('a celebration arriving while the map is mounted pops the '
+  'stars and starts the walk', (tester) async {
+    // The real scenario: the child completes a surah, returns to the map,
+    // and the page reloads its cubit while the map stays mounted. The map
+    // must celebrate on the widget update, not only on first mount.
+    await getIt.reset();
+    addTearDown(getIt.reset);
+    final cubit = _SeededKidsQuranJourneyCubit(_state());
+    getIt.registerFactory<KidsQuranJourneyCubit>(() => cubit);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(const KidsQuranJourneyPage(), disableAnimations: false),
+    );
+    // Past the road shimmer's one-off 600 ms so the map itself is settled
+    // before the celebration arrives. Talia's breathing never ends here, so
+    // only bounded pumps are used.
+    await tester.pump(const Duration(milliseconds: 700));
+
+    // The reload reports surah 2 newly completed and celebrated.
+    final houses = _houses();
+    houses[1] = _house(
+      2,
+      status: KidsSurahHouseStatus.completed,
+      completedCount: 5,
+    );
+    cubit.emit(_state(houses: houses, celebrated: {2}));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Row 1's stars are mid-pop on the already-mounted card.
+    expect(starScale(tester, 2, 0), isNotNull);
+    expect(starScale(tester, 2, 0)!, isNot(1.0));
+
+    // After the star pop's 600 ms delay Talia walks from the celebrated row.
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(
+      find.byWidgetPredicate((w) => isTaliaPose(w, 'talia_celebrate.png')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(
+      find.byWidgetPredicate((w) => isTaliaPose(w, 'talia_reading_quran.png')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('opening with the current house places its row near the '
+  'viewport centre', (tester) async {
+    await _pump(tester, _state(current: 60));
+
+    final viewport = tester.getRect(find.byType(ListView).first);
+    final card = tester.getRect(cardOf(60));
+    expect(
+      (card.center.dy - viewport.center.dy).abs(),
+      lessThanOrEqualTo(kKidsQuranJourneyItemExtent),
+    );
+  });
+
+  testWidgets('a reload that moves the current house re-centres on it', (
+    tester,
+  ) async {
+    // The child returns from a surah and the cubit reloads while the map
+    // stays mounted: the new current house must be brought into view.
+    await _pump(tester, _state(current: 5));
+    await tester.pumpWidget(
+      _app(
+        KidsQuranJourneyContent(
+          state: _state(current: 60),
+          onBack: () {},
+          onOpenSurah: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final viewport = tester.getRect(find.byType(ListView).first);
+    final card = tester.getRect(cardOf(60));
+    expect(
+      (card.center.dy - viewport.center.dy).abs(),
+      lessThanOrEqualTo(kKidsQuranJourneyItemExtent),
+    );
+  });
+
+  testWidgets('the coin shimmer plays only the first time a row appears', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      tester.view.reset();
+    });
+    await tester.pumpWidget(
+      _app(
+        KidsQuranJourneyContent(
+          state: _state(),
+          onBack: () {},
+          onOpenSurah: (_) {},
+        ),
+        disableAnimations: false,
+      ),
+    );
+    final shimmers = find.byType(TweenAnimationBuilder<double>);
+    expect(shimmers, findsWidgets);
+    // Talia keeps breathing, so only bounded pumps here.
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await tester.drag(find.byType(ListView).first, const Offset(0, -3000));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.drag(find.byType(ListView).first, const Offset(0, 3000));
+    await tester.pump();
+
+    // Back at the top: every visible row was built before, so none shimmers.
+    expect(find.text(SurahNames.english[1]!), findsOneWidget);
+    expect(shimmers, findsNothing);
+  });
+}
+
 void _semanticsTests() {
   testWidgets('house card is activatable and announces status and current', (
     tester,
@@ -236,4 +798,14 @@ void _semanticsTests() {
     await _pump(tester, _state(current: 60));
     expect(find.text(SurahNames.english[60]!), findsOneWidget);
   });
+}
+
+/// A cubit seeded with its first [KidsQuranJourneyLoaded] so the page can be
+/// pumped without stubbing the repositories behind `load()`.
+class _SeededKidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState>
+    implements KidsQuranJourneyCubit {
+  _SeededKidsQuranJourneyCubit(super.initialState);
+
+  @override
+  Future<void> load() async {}
 }

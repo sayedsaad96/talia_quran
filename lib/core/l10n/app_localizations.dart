@@ -14794,6 +14794,12 @@ abstract class AppLocalizations {
   /// **'أنت هنا'**
   String get kidsHouseCurrentMarker;
 
+  /// No description provided for @kidsHouseStarsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'{earned} من {total} نجوم'**
+  String kidsHouseStarsLabel(String earned, String total);
+
   /// No description provided for @kidsSplitTitle.
   ///
   /// In ar, this message translates to:

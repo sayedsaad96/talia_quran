@@ -8791,6 +8791,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHouseCurrentMarker => 'أنت هنا';
 
   @override
+  String kidsHouseStarsLabel(String earned, String total) {
+    return '$earned من $total نجوم';
+  }
+
+  @override
   String get kidsSplitTitle => 'كيف تحب أن تحفظها؟';
 
   @override

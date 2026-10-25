@@ -3674,6 +3674,8 @@
   ,"kidsHouseStatusNeedsReview": "تحتاج مراجعة"
   ,"kidsHouseStatusCompleted": "مكتملة"
   ,"kidsHouseCurrentMarker": "أنت هنا"
+  ,"kidsHouseStarsLabel": "{earned} من {total} نجوم"
+  ,"@kidsHouseStarsLabel": {"placeholders": {"earned": {"type": "String"}, "total": {"type": "String"}}}
   ,"kidsSplitTitle": "كيف تحب أن تحفظها؟"
   ,"kidsSplitWhole": "كاملة مرة واحدة"
   ,"kidsSplitStaged": "على مراحل"

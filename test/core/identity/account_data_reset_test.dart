@@ -273,6 +273,32 @@ void main() {
       expect(prefs.getString('prayer_review_lengths|user-c'), '{"fajr":7}');
     });
 
+    test('kids map display state is cleared; the kids streak and achievements '
+        'survive a sign-out and are erased only with a deleted account', () async {
+      await prefs.setStringList('kids_map_seen_completed_user-a_1', ['1']);
+      await prefs.setStringList('kids_quran_map_seen_completed_user-a', ['1']);
+      for (final owner in ['user-a', 'user-b']) {
+        await prefs.setString('kids_streak_$owner', '{}');
+        await prefs.setString('kids_achievements_$owner', '[]');
+      }
+      final reset = AccountDataReset(isar, prefs, documentsDirectory: () async => dir);
+
+      await reset.clearAccountOwnedData(departingOwnerId: 'user-a');
+      expect(prefs.containsKey('kids_map_seen_completed_user-a_1'), isFalse);
+      expect(prefs.containsKey('kids_quran_map_seen_completed_user-a'), isFalse);
+      // Local-only and owner-keyed: a sign-out must not wipe the child's
+      // streak or achievements; they return when the account signs back in.
+      expect(prefs.getString('kids_streak_user-a'), '{}');
+      expect(prefs.getString('kids_achievements_user-a'), '[]');
+
+      await reset.eraseDeletedAccountLocally(departingOwnerId: 'user-a');
+      expect(prefs.containsKey('kids_streak_user-a'), isFalse);
+      expect(prefs.containsKey('kids_achievements_user-a'), isFalse);
+      // Only the deleted owner's: another account on the device keeps its own.
+      expect(prefs.getString('kids_streak_user-b'), '{}');
+      expect(prefs.getString('kids_achievements_user-b'), '[]');
+    });
+
     test('a failing native widget clear still wipes the stores and fails closed', () async {
       await prefs.setString('read_pages', '[1]');
       await prefs.setString('mem_plus_probe', 'x');

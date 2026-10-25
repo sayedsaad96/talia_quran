@@ -8791,6 +8791,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHouseCurrentMarker => 'You are here';
 
   @override
+  String kidsHouseStarsLabel(String earned, String total) {
+    return '$earned of $total stars';
+  }
+
+  @override
   String get kidsSplitTitle => 'How would you like to memorize it?';
 
   @override

@@ -3636,6 +3636,8 @@
   ,"kidsHouseStatusNeedsReview": "Needs review"
   ,"kidsHouseStatusCompleted": "Completed"
   ,"kidsHouseCurrentMarker": "You are here"
+  ,"kidsHouseStarsLabel": "{earned} of {total} stars"
+  ,"@kidsHouseStarsLabel": {"placeholders": {"earned": {"type": "String"}, "total": {"type": "String"}}}
   ,"kidsSplitTitle": "How would you like to memorize it?"
   ,"kidsSplitWhole": "All at once"
   ,"kidsSplitStaged": "In stages"

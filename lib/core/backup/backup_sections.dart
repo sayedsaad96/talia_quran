@@ -112,6 +112,7 @@ abstract final class BackupPreferencePolicy {
     'kids_streak_': null,
     'kids_achievements_': null,
     'kids_map_seen_completed_': RegExp(r'^_\d+$'),
+    'kids_quran_map_seen_completed_': null,
     'adult_journey_v1_': null,
   };
 
@@ -355,6 +356,7 @@ abstract final class BackupPreferencePolicy {
     final family = _familyOf(base);
     if (family != null) {
       if (family == 'kids_map_seen_completed_') return _intStringList;
+      if (family == 'kids_quran_map_seen_completed_') return _intStringList;
       if (family == 'adult_journey_v1_') return _string();
       return _string(_anyJson);
     }

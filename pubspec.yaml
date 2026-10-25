@@ -172,6 +172,14 @@ flutter:
     - assets/images/kids/house_library.png
     - assets/images/kids/ribbon_banner.png
     - assets/images/kids/star_reward.png
+    - assets/images/kids/islands/island_palmsLantern.png
+    - assets/images/kids/islands/island_domeHouse.png
+    - assets/images/kids/islands/island_waterfall.png
+    - assets/images/kids/islands/island_sandFort.png
+    - assets/images/kids/islands/island_camel.png
+    - assets/images/kids/islands/island_mushafStand.png
+    - assets/images/kids/islands/island_oasisTent.png
+    - assets/images/kids/islands/island_flowerGarden.png
     - assets/images/talia/talia_avatar.png
     - assets/images/talia/talia_celebrate.png
     - assets/images/talia/talia_encourage.png
