@@ -395,4 +395,146 @@ void main() {
 
     expect(service.state.currentAyahNumber, 2);
   });
+
+  group('offline playback', () {
+    late _RecordingAudioPlayer recordingPlayer;
+    late QuranContinuousPlayerService offlineService;
+    final lookups = <String>[];
+
+    QuranContinuousPlayerService build(QuranAyahLocalAudioLookup lookup) {
+      recordingPlayer = _RecordingAudioPlayer();
+      return offlineService = QuranContinuousPlayerService(
+        quranRepository: repository,
+        reciterService: reciterService,
+        player: recordingPlayer,
+        localAudio: lookup,
+      );
+    }
+
+    setUp(lookups.clear);
+
+    tearDown(() async {
+      offlineService.dispose();
+      await recordingPlayer.closeControllers();
+    });
+
+    test('downloaded ayahs play from disk and the rest stream', () async {
+      build((surahId, ayahNumber, reciter) async {
+        lookups.add('$surahId:$ayahNumber:${reciter.id}');
+        return ayahNumber == 1 ? '/downloads/001001.mp3' : null;
+      });
+
+      await offlineService.playSurah(1);
+
+      final sources = recordingPlayer.lastSources;
+      expect(sources, isNotEmpty);
+      final first = sources.first as UriAudioSource;
+      expect(first.uri.scheme, 'file');
+      expect(first.uri.path, endsWith('/downloads/001001.mp3'));
+      for (final source in sources.skip(1)) {
+        expect((source as UriAudioSource).uri.scheme, 'https');
+      }
+      expect(lookups, contains('1:1:${QuranReciter.alafasy.id}'));
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
+    test('a failing lookup falls back to streaming', () async {
+      build((_, _, _) async => throw StateError('cache unavailable'));
+
+      await offlineService.playSurah(1);
+
+      expect(recordingPlayer.lastSources, isNotEmpty);
+      for (final source in recordingPlayer.lastSources) {
+        expect((source as UriAudioSource).uri.scheme, 'https');
+      }
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
+    test(
+      'a streamed first ayah that fails says it is not downloaded',
+      () async {
+        build((_, _, _) async => null);
+        recordingPlayer.failLoads = true;
+
+        await offlineService.playSurah(1);
+
+        expect(offlineService.state.status, PlaybackStatus.error);
+        expect(offlineService.state.errorMessage, contains('غير محمّلة'));
+      },
+    );
+
+    test('a play-from-ayah tap during the lookups never seeks the old '
+        'playlist', () async {
+      Completer<void>? gate;
+      build((_, _, _) async {
+        await gate?.future;
+        return null;
+      });
+      await offlineService.playSurah(1);
+      recordingPlayer.seekIndexes.clear();
+
+      gate = Completer<void>();
+      final reload = offlineService.playSurah(1);
+      await Future<void>.delayed(Duration.zero);
+      expect(offlineService.state.status, PlaybackStatus.loading);
+
+      final tap = offlineService.playAyah(1, 2, scope: PlayScope.surah);
+      await Future<void>.delayed(Duration.zero);
+      gate.complete();
+      await reload;
+      await tap;
+
+      expect(recordingPlayer.seekIndexes, isEmpty);
+      expect(recordingPlayer.lastInitialIndex, 1);
+      expect(offlineService.state.currentAyahNumber, 2);
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
+    test('a local first ayah that fails keeps the generic error', () async {
+      build((_, _, _) async => '/downloads/file.mp3');
+      recordingPlayer.failLoads = true;
+
+      await offlineService.playSurah(1);
+
+      expect(offlineService.state.status, PlaybackStatus.error);
+      expect(offlineService.state.errorMessage, 'تعذر تشغيل التلاوة');
+    });
+  });
+}
+
+/// Records the playlist it receives and can fail loading like a player
+/// with no network.
+class _RecordingAudioPlayer extends ControlledAudioPlayer {
+  List<AudioSource> lastSources = const [];
+  int? lastInitialIndex;
+  final seekIndexes = <int>[];
+  bool failLoads = false;
+
+  @override
+  Future<void> seek(Duration? position, {int? index}) {
+    if (index != null) seekIndexes.add(index);
+    return super.seek(position, index: index);
+  }
+
+  @override
+  Future<Duration?> setAudioSources(
+    List<AudioSource> sources, {
+    bool preload = true,
+    int? initialIndex,
+    Duration? initialPosition,
+    ShuffleOrder? shuffleOrder,
+  }) {
+    lastSources = sources;
+    lastInitialIndex = initialIndex;
+    if (failLoads) {
+      throw PlayerException(0, 'Source error', 0);
+    }
+    return super.setAudioSources(
+      sources,
+      preload: preload,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+      shuffleOrder: shuffleOrder,
+    );
+  }
 }
