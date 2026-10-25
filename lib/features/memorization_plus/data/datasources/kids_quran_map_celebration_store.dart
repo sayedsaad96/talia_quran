@@ -18,13 +18,14 @@ class KidsQuranMapCelebrationStore {
   /// The surahs completed since the last visit; records this visit.
   Future<Set<int>> takeNewlyCompleted(List<KidsSurahHouse> houses) async {
     try {
-      final stored = _prefs.getStringList(_key);
+      final key = _key;
+      final stored = _prefs.getStringList(key);
       final seen = stored?.map(int.parse).toSet();
       final celebrate = kidsSurahsToCelebrate(
         seenCompleted: seen,
         houses: houses,
       );
-      await _prefs.setStringList(_key, [
+      await _prefs.setStringList(key, [
         for (final id in kidsCompletedSurahs(houses)) '$id',
       ]);
       return celebrate;
