@@ -1,3 +1,5 @@
+import 'dart:ui' show Offset, Path, Size;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_road_painter.dart';
 
@@ -49,6 +51,33 @@ void main() {
       final old = _painter(seed: 3, night: true, shimmer: 0.5);
       final next = _painter(seed: 3, night: true, shimmer: 0.5);
       expect(next.shouldRepaint(old), isFalse);
+    });
+  });
+
+  group('KidsQuranRoadPainter road continuity', () {
+    Offset first(Path path) =>
+        path.computeMetrics().first.getTangentForOffset(0)!.position;
+    Offset last(Path path) {
+      final metric = path.computeMetrics().last;
+      return metric.getTangentForOffset(metric.length)!.position;
+    }
+
+    test("a row's road leaves where the next row's road enters", () {
+      const size = Size(400, 200);
+      final row0 = _painter(hereX: 96, previousX: 0, nextX: 304, isFirst: true);
+      final row1 = _painter(hereX: 304, previousX: 96, nextX: 96);
+      final end = last(row0.outgoingPath(size));
+      final start = first(row1.incomingPath(size));
+      expect(end.dx, closeTo(start.dx, 0.01));
+      expect(end.dy, closeTo(size.height, 0.01));
+      expect(start.dy, closeTo(0, 0.01));
+    });
+
+    test("the road passes through this row's foot", () {
+      const size = Size(400, 200);
+      final row = _painter(hereX: 304, previousX: 96, nextX: 96);
+      expect(last(row.incomingPath(size)), const Offset(304, 100));
+      expect(first(row.outgoingPath(size)), const Offset(304, 100));
     });
   });
 }

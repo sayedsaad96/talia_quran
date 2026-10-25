@@ -16,18 +16,26 @@ class KidsQuranMapCelebrationStore {
   String get _key => 'kids_quran_map_seen_completed_${_owner.currentOwnerId}';
 
   /// The surahs completed since the last visit; records this visit.
+  ///
+  /// The record only grows: a load that misses progress (a transient read
+  /// failure shows every house as not started) must not erase it, or the
+  /// next good load would celebrate every finished surah at once. An
+  /// unreadable record counts as a first visit: nothing glows now, and the
+  /// rewrite lets later completions glow again.
   Future<Set<int>> takeNewlyCompleted(List<KidsSurahHouse> houses) async {
     try {
       final key = _key;
       final stored = _prefs.getStringList(key);
-      final seen = stored?.map(int.parse).toSet();
+      final parsed = stored?.map(int.tryParse).toList();
+      final seen = parsed == null || parsed.contains(null)
+          ? null
+          : parsed.whereType<int>().toSet();
       final celebrate = kidsSurahsToCelebrate(
         seenCompleted: seen,
         houses: houses,
       );
-      await _prefs.setStringList(key, [
-        for (final id in kidsCompletedSurahs(houses)) '$id',
-      ]);
+      final record = {...?seen, ...kidsCompletedSurahs(houses)};
+      await _prefs.setStringList(key, [for (final id in record) '$id']);
       return celebrate;
     } catch (_) {
       return const {};

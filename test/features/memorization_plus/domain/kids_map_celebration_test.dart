@@ -171,6 +171,39 @@ void main() {
         ]),
         isEmpty,
       );
+      // The visit rewrote the record, so the next completion glows again.
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+          house(2, KidsSurahHouseStatus.completed),
+        ]),
+        {2},
+      );
+    });
+
+    test('a load that misses progress does not erase what was seen', () async {
+      final store = await storeFor('owner-a');
+      await store.takeNewlyCompleted([
+        house(1, KidsSurahHouseStatus.completed),
+        house(2, KidsSurahHouseStatus.completed),
+      ]);
+
+      // A transient read failure shows every house as not started.
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.notStarted, completedCount: 0),
+          house(2, KidsSurahHouseStatus.notStarted, completedCount: 0),
+        ]),
+        isEmpty,
+      );
+      // The next good load must not burst both surahs into glow again.
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+          house(2, KidsSurahHouseStatus.completed),
+        ]),
+        isEmpty,
+      );
     });
 
     test('another account on the device starts fresh', () async {

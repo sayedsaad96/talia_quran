@@ -28,10 +28,10 @@ class KidsQuranRoadPainter extends CustomPainter {
   /// Talia's foot x in this row (the road's bend point).
   final double hereX;
 
-  /// Talia's foot x in the previous row (where the road enters).
+  /// Talia's foot x in the previous row (the road enters halfway to it).
   final double previousX;
 
-  /// Talia's foot x in the next row (where the road leaves).
+  /// Talia's foot x in the next row (the road leaves halfway to it).
   final double nextX;
 
   final bool isFirst;
@@ -54,21 +54,38 @@ class KidsQuranRoadPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (!night) _drawGroundShadow(canvas, size);
-    final midY = size.height / 2;
     if (!isFirst) {
-      final incoming = Path()
-        ..moveTo(previousX, 0)
-        ..quadraticBezierTo(previousX, midY * 0.5, hereX, midY);
-      _drawDashes(canvas, incoming, lit: incomingLit);
+      _drawDashes(canvas, incomingPath(size), lit: incomingLit);
     }
     if (!isLast) {
-      final outgoing = Path()
-        ..moveTo(hereX, midY)
-        ..quadraticBezierTo(nextX, midY * 1.5, nextX, size.height);
-      _drawDashes(canvas, outgoing, lit: outgoingLit);
-      if (outgoingLit) _drawCoin(canvas, midY, size.height);
+      _drawDashes(canvas, outgoingPath(size), lit: outgoingLit);
+      if (outgoingLit) _drawCoin(canvas, size);
     }
     if (night) _drawFireflies(canvas, size);
+  }
+
+  /// Rows meet halfway between their feet, so the segment one row leaves on
+  /// is exactly where the next row's segment enters. Both curves are
+  /// vertical at that boundary, so the road reads as one smooth line.
+  double get _enterX => (previousX + hereX) / 2;
+  double get _leaveX => (hereX + nextX) / 2;
+
+  /// From the boundary with the previous row to this row's foot.
+  @visibleForTesting
+  Path incomingPath(Size size) {
+    final midY = size.height / 2;
+    return Path()
+      ..moveTo(_enterX, 0)
+      ..quadraticBezierTo(_enterX, midY, hereX, midY);
+  }
+
+  /// From this row's foot to the boundary with the next row.
+  @visibleForTesting
+  Path outgoingPath(Size size) {
+    final midY = size.height / 2;
+    return Path()
+      ..moveTo(hereX, midY)
+      ..quadraticBezierTo(_leaveX, midY, _leaveX, size.height);
   }
 
   /// Splits the segment into 14 px dashes with 10 px gaps.
@@ -95,11 +112,12 @@ class KidsQuranRoadPainter extends CustomPainter {
   }
 
   /// A gold coin at the outgoing curve's midpoint.
-  void _drawCoin(Canvas canvas, double midY, double height) {
-    // Quadratic Bezier point at t = 0.5.
+  void _drawCoin(Canvas canvas, Size size) {
+    // Quadratic Bezier point at t = 0.5 of [outgoingPath].
+    final midY = size.height / 2;
     final start = Offset(hereX, midY);
-    final control = Offset(nextX, midY * 1.5);
-    final end = Offset(nextX, height);
+    final control = Offset(_leaveX, midY);
+    final end = Offset(_leaveX, size.height);
     final center = Offset(
       (start.dx + 2 * control.dx + end.dx) / 4,
       (start.dy + 2 * control.dy + end.dy) / 4,

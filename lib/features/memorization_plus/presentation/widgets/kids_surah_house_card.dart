@@ -30,9 +30,8 @@ class KidsSurahHouseCard extends StatelessWidget {
   final VoidCallback onTap;
 
   /// Whether the filled stars should pop in one by one (the celebration of a
-  /// surah completed since the last visit). Declared here so the card owns
-  /// its celebration visuals; the pop animation is wired by the journey map
-  /// when the Talia overlay lands.
+  /// surah completed since the last visit). The journey map sets it once per
+  /// surah, so the pop never replays when the row scrolls back in.
   final bool popStars;
 
   static IconData _glyph(KidsSurahHouseStatus status) => switch (status) {
