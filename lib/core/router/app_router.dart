@@ -31,6 +31,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
+import '../widgets/keep_screen_awake.dart';
 import '../../features/quran/presentation/pages/quran_search_page.dart';
 import '../../features/quran/presentation/pages/bookmarks_page.dart';
 import '../../features/quran/presentation/pages/ayah_notes_page.dart';
@@ -771,7 +772,7 @@ abstract class AppRouter {
         builder: (context, state) {
           final surahId =
               int.tryParse(state.pathParameters['surahId'] ?? '1') ?? 1;
-          return QuranReaderPage(surahId: surahId);
+          return KeepScreenAwake(child: QuranReaderPage(surahId: surahId));
         },
       ),
       GoRoute(
@@ -935,10 +936,12 @@ abstract class AppRouter {
                   ayahNumber: targetAyah,
                 )
               : null;
-          return QuranReaderPage(
-            pageNumber: pageNumber,
-            readerMode: mode,
-            initialTarget: initialTarget,
+          return KeepScreenAwake(
+            child: QuranReaderPage(
+              pageNumber: pageNumber,
+              readerMode: mode,
+              initialTarget: initialTarget,
+            ),
           );
         },
       ),
@@ -1194,13 +1197,17 @@ abstract class AppRouter {
             state.uri.queryParameters['pageNumber'] ?? '',
           );
           final validSurahId = _isValidSurahId(surahId) ? surahId : null;
-          return KidsQuranReaderPage(
-            surahId: validSurahId,
-            pageNumber: pageNumber,
-            // The reader validates the ayah against the Mushaf itself.
-            ayahNumber: validSurahId == null
-                ? null
-                : int.tryParse(state.uri.queryParameters['ayahNumber'] ?? ''),
+          return KeepScreenAwake(
+            child: KidsQuranReaderPage(
+              surahId: validSurahId,
+              pageNumber: pageNumber,
+              // The reader validates the ayah against the Mushaf itself.
+              ayahNumber: validSurahId == null
+                  ? null
+                  : int.tryParse(
+                      state.uri.queryParameters['ayahNumber'] ?? '',
+                    ),
+            ),
           );
         },
       ),
