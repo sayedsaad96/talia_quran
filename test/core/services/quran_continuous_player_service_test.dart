@@ -395,4 +395,110 @@ void main() {
 
     expect(service.state.currentAyahNumber, 2);
   });
+
+  group('offline playback', () {
+    late _RecordingAudioPlayer recordingPlayer;
+    late QuranContinuousPlayerService offlineService;
+    final lookups = <String>[];
+
+    QuranContinuousPlayerService build(QuranAyahLocalAudioLookup lookup) {
+      recordingPlayer = _RecordingAudioPlayer();
+      return offlineService = QuranContinuousPlayerService(
+        quranRepository: repository,
+        reciterService: reciterService,
+        player: recordingPlayer,
+        localAudio: lookup,
+      );
+    }
+
+    setUp(lookups.clear);
+
+    tearDown(() async {
+      offlineService.dispose();
+      await recordingPlayer.closeControllers();
+    });
+
+    test('downloaded ayahs play from disk and the rest stream', () async {
+      build((surahId, ayahNumber, reciter) async {
+        lookups.add('$surahId:$ayahNumber:${reciter.id}');
+        return ayahNumber == 1 ? '/downloads/001001.mp3' : null;
+      });
+
+      await offlineService.playSurah(1);
+
+      final sources = recordingPlayer.lastSources;
+      expect(sources, isNotEmpty);
+      final first = sources.first as UriAudioSource;
+      expect(first.uri.scheme, 'file');
+      expect(first.uri.path, endsWith('/downloads/001001.mp3'));
+      for (final source in sources.skip(1)) {
+        expect((source as UriAudioSource).uri.scheme, 'https');
+      }
+      expect(lookups, contains('1:1:${QuranReciter.alafasy.id}'));
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
+    test('a failing lookup falls back to streaming', () async {
+      build((_, _, _) async => throw StateError('cache unavailable'));
+
+      await offlineService.playSurah(1);
+
+      expect(recordingPlayer.lastSources, isNotEmpty);
+      for (final source in recordingPlayer.lastSources) {
+        expect((source as UriAudioSource).uri.scheme, 'https');
+      }
+      expect(offlineService.state.status, PlaybackStatus.playing);
+    });
+
+    test(
+      'a streamed first ayah that fails says it is not downloaded',
+      () async {
+        build((_, _, _) async => null);
+        recordingPlayer.failLoads = true;
+
+        await offlineService.playSurah(1);
+
+        expect(offlineService.state.status, PlaybackStatus.error);
+        expect(offlineService.state.errorMessage, contains('غير محمّلة'));
+      },
+    );
+
+    test('a local first ayah that fails keeps the generic error', () async {
+      build((_, _, _) async => '/downloads/file.mp3');
+      recordingPlayer.failLoads = true;
+
+      await offlineService.playSurah(1);
+
+      expect(offlineService.state.status, PlaybackStatus.error);
+      expect(offlineService.state.errorMessage, 'تعذر تشغيل التلاوة');
+    });
+  });
+}
+
+/// Records the playlist it receives and can fail loading like a player
+/// with no network.
+class _RecordingAudioPlayer extends ControlledAudioPlayer {
+  List<AudioSource> lastSources = const [];
+  bool failLoads = false;
+
+  @override
+  Future<Duration?> setAudioSources(
+    List<AudioSource> sources, {
+    bool preload = true,
+    int? initialIndex,
+    Duration? initialPosition,
+    ShuffleOrder? shuffleOrder,
+  }) {
+    lastSources = sources;
+    if (failLoads) {
+      throw PlayerException(0, 'Source error', 0);
+    }
+    return super.setAudioSources(
+      sources,
+      preload: preload,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+      shuffleOrder: shuffleOrder,
+    );
+  }
 }

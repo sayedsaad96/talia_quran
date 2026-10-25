@@ -689,6 +689,13 @@ Future<void> configureDependencies({bool background = false}) async {
         mediaMetadata: QuranMediaMetadata(
           locale: () => getIt<LocaleCubit>().state,
         ),
+        // Downloaded or cached ayahs play from disk, so they work offline.
+        localAudio: (surahId, ayahNumber, reciter) =>
+            getIt<AudioCacheService>().getCachedFilePath(
+              surahId,
+              ayahNumber,
+              reciter: reciter,
+            ),
       );
       // Attach after the player exists — never during configureDependencies.
       // Constructing AudioPlayer() while splash init is still running can
