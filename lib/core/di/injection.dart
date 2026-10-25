@@ -176,6 +176,7 @@ import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
+import '../../features/memorization_plus/data/datasources/kids_quran_map_celebration_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_achievement_store.dart';
 import '../../features/memorization_plus/data/datasources/kids_family_practice_store.dart';
@@ -1241,6 +1242,14 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
     ),
   );
+  // Which surahs the child already saw completed on the whole-Quran map
+  // (display state).
+  getIt.registerLazySingleton<KidsQuranMapCelebrationStore>(
+    () => KidsQuranMapCelebrationStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   // The kids track's own streak (owner-scoped). The shared StreakService is
   // the primary (adult) learner's, shown on home and "تقدمي".
   getIt.registerLazySingleton<KidsStreakStore>(
@@ -1534,6 +1543,7 @@ Future<void> configureDependencies({bool background = false}) async {
     () => KidsQuranJourneyCubit(
       getIt<MemorizationPlusRepository>(),
       getIt<QuranRepository>(),
+      celebrationStore: getIt<KidsQuranMapCelebrationStore>(),
     ),
   );
   getIt.registerFactory<KidsJourneyCubit>(

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../data/datasources/kids_quran_map_celebration_store.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/kids_journey_path_definition.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -30,6 +31,7 @@ final class KidsQuranJourneyLoaded extends KidsQuranJourneyState {
     required this.houses,
     required this.currentSurahId,
     required this.surahNames,
+    this.celebratedSurahIds = const {},
   });
 
   final List<KidsSurahHouse> houses;
@@ -39,8 +41,17 @@ final class KidsQuranJourneyLoaded extends KidsQuranJourneyState {
   /// locales use the localized canonical name table in the UI.
   final Map<int, String> surahNames;
 
+  /// Surahs completed since the child's last visit to the map, to light up
+  /// once. Empty when no celebration store is available.
+  final Set<int> celebratedSurahIds;
+
   @override
-  List<Object?> get props => [houses, currentSurahId, surahNames];
+  List<Object?> get props => [
+    houses,
+    currentSurahId,
+    surahNames,
+    celebratedSurahIds,
+  ];
 }
 
 /// Loads the whole-Quran journey map: one house per surah of the selected path.
@@ -48,12 +59,15 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
   KidsQuranJourneyCubit(
     this._repository,
     this._quranRepository, {
+    KidsQuranMapCelebrationStore? celebrationStore,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _celebrationStore = celebrationStore,
+       _clock = clock ?? DateTime.now,
        super(const KidsQuranJourneyLoading());
 
   final MemorizationPlusRepository _repository;
   final QuranRepository _quranRepository;
+  final KidsQuranMapCelebrationStore? _celebrationStore;
   final DateTime Function() _clock;
 
   int _generation = 0;
@@ -102,6 +116,9 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
         defaultStageSize: defaultStageSize,
         now: _clock(),
       );
+      final celebratedSurahIds = _celebrationStore == null
+          ? const <int>{}
+          : await _celebrationStore.takeNewlyCompleted(houses);
       _emit(
         generation,
         KidsQuranJourneyLoaded(
@@ -112,6 +129,7 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
             startingSurahId: settings.startingSurahId,
           ),
           surahNames: {for (final s in surahs) s.id: s.nameAr},
+          celebratedSurahIds: celebratedSurahIds,
         ),
       );
     } catch (error, stackTrace) {

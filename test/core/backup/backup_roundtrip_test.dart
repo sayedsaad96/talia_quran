@@ -296,6 +296,7 @@ void main() {
     'kids_streak_user-a': '{"current":3}',
     'kids_achievements_user-a': '{"first":"2026-09-01"}',
     'kids_map_seen_completed_user-a_67': <String>['1', '2'],
+    'kids_quran_map_seen_completed_user-a': <String>['1', '2'],
     'adult_journey_v1_user-a': '{"v":1}',
     'daily_wird_target_2026-09-08': 12,
     'hifz_pace': 1.5,
@@ -406,6 +407,10 @@ void main() {
       '{"first":"2026-09-01"}',
     );
     expect(prefsB.getStringList('kids_map_seen_completed_user-b_67'), [
+      '1',
+      '2',
+    ]);
+    expect(prefsB.getStringList('kids_quran_map_seen_completed_user-b'), [
       '1',
       '2',
     ]);
@@ -592,6 +597,7 @@ void main() {
       'kids_streak_{owner}',
       'kids_achievements_{owner}',
       'kids_map_seen_completed_{owner}_67',
+      'kids_quran_map_seen_completed_{owner}',
       'adult_journey_v1_{owner}',
       'daily_wird_target_2026-09-08',
       'hifz_pace',

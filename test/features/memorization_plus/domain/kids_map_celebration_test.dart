@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/kids_map_celebration_store.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/kids_quran_map_celebration_store.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_map_celebration.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_surah_house_summary_builder.dart';
@@ -105,6 +106,81 @@ void main() {
         await b.takeNewlyCompleted(114, [
           _stage(1, status: _done),
           _stage(2, status: _done),
+        ]),
+        isEmpty, // b's first visit
+      );
+    });
+  });
+
+  group('KidsQuranMapCelebrationStore (Quran journey)', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    KidsSurahHouse house(
+      int surahId,
+      KidsSurahHouseStatus status, {
+      int ayahCount = 7,
+      int completedCount = 7,
+    }) => KidsSurahHouse(
+      surahId: surahId,
+      ayahCount: ayahCount,
+      juz: 1,
+      status: status,
+      completedCount: completedCount,
+    );
+
+    Future<KidsQuranMapCelebrationStore> storeFor(String owner) async =>
+        KidsQuranMapCelebrationStore(
+          await SharedPreferences.getInstance(),
+          FixedRecordOwnerProvider(owner),
+        );
+
+    test('each new surah completion glows exactly once', () async {
+      final store = await storeFor('owner-a');
+
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+        ]),
+        isEmpty, // first visit
+      );
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+          house(2, KidsSurahHouseStatus.needsReview),
+        ]),
+        {2},
+      );
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+          house(2, KidsSurahHouseStatus.needsReview),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('unreadable stored data means no glow (fails closed)', () async {
+      SharedPreferences.setMockInitialValues({
+        'kids_quran_map_seen_completed_owner-a': <String>['x'],
+      });
+      final store = await storeFor('owner-a');
+
+      expect(
+        await store.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('another account on the device starts fresh', () async {
+      final a = await storeFor('owner-a');
+      await a.takeNewlyCompleted([house(1, KidsSurahHouseStatus.completed)]);
+      final b = await storeFor('owner-b');
+
+      expect(
+        await b.takeNewlyCompleted([
+          house(1, KidsSurahHouseStatus.completed),
         ]),
         isEmpty, // b's first visit
       );
