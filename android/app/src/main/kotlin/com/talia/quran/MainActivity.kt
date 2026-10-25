@@ -16,6 +16,11 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : AudioServiceActivity() {
+    companion object {
+        /** Last state asked for over talia/screen_awake; read on the main thread. */
+        private var keepScreenOn = false
+    }
+
     private var previewPlayer: MediaPlayer? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -29,6 +34,8 @@ class MainActivity : AudioServiceActivity() {
     /**
      * Keeps the display on while a reading screen is open. Window flag only:
      * it applies while the window is visible and needs no wake-lock permission.
+     * The requested state outlives this activity (the Flutter engine does too),
+     * so a recreated activity re-applies it in [onResume].
      */
     private fun registerScreenAwakeChannel(messenger: io.flutter.plugin.common.BinaryMessenger) {
         MethodChannel(messenger, "talia/screen_awake").setMethodCallHandler { call, result ->
@@ -38,11 +45,8 @@ class MainActivity : AudioServiceActivity() {
                     if (enabled == null) {
                         result.error("bad_args", "enabled is required", null)
                     } else {
-                        if (enabled) {
-                            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        } else {
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        }
+                        keepScreenOn = enabled
+                        applyKeepScreenOn()
                         result.success(null)
                     }
                 }
@@ -149,6 +153,19 @@ class MainActivity : AudioServiceActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun applyKeepScreenOn() {
+        if (keepScreenOn) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyKeepScreenOn()
     }
 
     @Synchronized
