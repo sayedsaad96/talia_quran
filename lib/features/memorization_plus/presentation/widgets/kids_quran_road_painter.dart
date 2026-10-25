@@ -111,17 +111,23 @@ class KidsQuranRoadPainter extends CustomPainter {
     }
   }
 
-  /// A gold coin at the outgoing curve's midpoint.
-  void _drawCoin(Canvas canvas, Size size) {
-    // Quadratic Bezier point at t = 0.5 of [outgoingPath].
+  /// Where the coin sits: low on [outgoingPath] (t = 0.9), in the gap
+  /// between this row's card and the next, so the cards never hide it.
+  @visibleForTesting
+  Offset coinCenter(Size size) {
+    const t = 0.9;
     final midY = size.height / 2;
     final start = Offset(hereX, midY);
     final control = Offset(_leaveX, midY);
     final end = Offset(_leaveX, size.height);
-    final center = Offset(
-      (start.dx + 2 * control.dx + end.dx) / 4,
-      (start.dy + 2 * control.dy + end.dy) / 4,
-    );
+    return start * ((1 - t) * (1 - t)) +
+        control * (2 * t * (1 - t)) +
+        end * (t * t);
+  }
+
+  /// A gold coin on the outgoing road.
+  void _drawCoin(Canvas canvas, Size size) {
+    final center = coinCenter(size);
     if (night) {
       canvas.drawCircle(
         center,

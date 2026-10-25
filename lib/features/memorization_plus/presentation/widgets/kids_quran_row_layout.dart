@@ -26,8 +26,8 @@ class KidsQuranRowLayout {
   /// Talia's anchor: the island top-centre nudged 12 px down.
   final Offset taliaFoot;
 
-  /// The juz ribbon above the card's far edge, or null when the row does
-  /// not start a juz.
+  /// The juz ribbon: a tab on the card's top near its far edge, or null
+  /// when the row does not start a juz.
   final Rect? juzRibbon;
 }
 
@@ -35,9 +35,10 @@ class KidsQuranRowLayout {
 /// height the row height).
 ///
 /// The island sits on the directional start for even rows and on the end for
-/// odd rows, [direction]-aware. The card spans from 28% of the width on the
-/// island side to the far edge minus 16, so it always overlaps the island.
-/// The juz ribbon hugs the card's far edge when [showJuz] is true.
+/// odd rows, [direction]-aware. The card spans from 36% of the width on the
+/// island side to the far edge minus 16, so it rests on the island's edge
+/// while most of the island (and Talia on it) stays visible. The juz ribbon
+/// is a tab on the card's top near its far edge when [showJuz] is true.
 KidsQuranRowLayout kidsQuranRowLayout({
   required int index,
   required Size size,
@@ -65,17 +66,18 @@ KidsQuranRowLayout kidsQuranRowLayout({
 
   final islandOnLeft = islandLeft <= size.width / 2;
   final cardTop = size.height / 2 + 12 - 104 / 2;
-  final cardLeft = islandOnLeft ? size.width * 0.28 : startInset;
-  final cardRight = islandOnLeft ? size.width - startInset : size.width * 0.72;
+  final cardLeft = islandOnLeft ? size.width * 0.36 : startInset;
+  final cardRight = islandOnLeft ? size.width - startInset : size.width * 0.64;
   final card = Rect.fromLTWH(cardLeft, cardTop, cardRight - cardLeft, 104);
 
   Rect? ribbon;
   if (showJuz) {
-    // The card's far edge is the one away from the island.
+    // A tab on the card's top, inset from its far edge (the one away from
+    // the island), overlapping the card by 6 so it labels this row only.
     final ribbonOnLeft = !islandOnLeft;
     ribbon = Rect.fromLTWH(
-      ribbonOnLeft ? card.left : card.right - 120,
-      0,
+      ribbonOnLeft ? card.left + startInset : card.right - startInset - 120,
+      card.top + 6 - 28,
       120,
       28,
     );

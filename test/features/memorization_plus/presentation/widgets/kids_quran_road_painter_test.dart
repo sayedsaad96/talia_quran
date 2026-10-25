@@ -73,6 +73,18 @@ void main() {
       expect(start.dy, closeTo(0, 0.01));
     });
 
+    test('the coin sits low on the outgoing road, in the gap below the '
+        'card', () {
+      const size = Size(400, 200);
+      final row = _painter(hereX: 96, previousX: 304, nextX: 304);
+      final coin = row.coinCenter(size);
+      // Cards end at 164 (centred 12 below the middle, 104 tall).
+      expect(coin.dy, greaterThan(164 + 11));
+      expect(coin.dy, lessThan(size.height));
+      // On the road: between the foot and the boundary horizontally.
+      expect(coin.dx, inInclusiveRange(96, 200));
+    });
+
     test("the road passes through this row's foot", () {
       const size = Size(400, 200);
       final row = _painter(hereX: 304, previousX: 96, nextX: 96);

@@ -86,7 +86,7 @@ void main() {
       expect(layoutFor(showJuz: false).juzRibbon, isNull);
     });
 
-    test('juzRibbon is 120x28 at the top, above the card far edge', () {
+    test('juzRibbon is a 120x28 tab on the card top, near its far edge', () {
       for (final index in [0, 1]) {
         for (final direction in TextDirection.values) {
           final layout = layoutFor(
@@ -95,16 +95,38 @@ void main() {
             showJuz: true,
           );
           final ribbon = layout.juzRibbon!;
+          final reason = 'index $index $direction';
           expect(ribbon.width, 120);
           expect(ribbon.height, 28);
-          expect(ribbon.top, 0);
-          // The card far edge is the edge away from the island.
-          final cardFarEdge = index.isEven == (direction == TextDirection.ltr)
-              ? layout.card.right
-              : layout.card.left;
+          // Sits on the card it labels (overlapping its top by 6), so it
+          // never reads as belonging to the row above.
+          expect(ribbon.bottom, layout.card.top + 6, reason: reason);
+          expect(ribbon.top, greaterThanOrEqualTo(0), reason: reason);
+          // Inset 16 from the card's far edge (the edge away from the island).
+          final farIsRight = index.isEven == (direction == TextDirection.ltr);
+          if (farIsRight) {
+            expect(ribbon.right, layout.card.right - 16, reason: reason);
+          } else {
+            expect(ribbon.left, layout.card.left + 16, reason: reason);
+          }
+        }
+      }
+    });
+
+    test('the card leaves most of the island visible', () {
+      for (final index in [0, 1]) {
+        for (final direction in TextDirection.values) {
+          final layout = layoutFor(index: index, direction: direction);
+          final overlap = layout.card.intersect(layout.island).width;
           expect(
-            cardFarEdge == ribbon.right || cardFarEdge == ribbon.left,
-            isTrue,
+            overlap,
+            lessThanOrEqualTo(layout.island.width * 0.25),
+            reason: 'index $index $direction',
+          );
+          // Talia stands on the visible part, clear of the card.
+          expect(
+            layout.card.contains(layout.taliaFoot),
+            isFalse,
             reason: 'index $index $direction',
           );
         }

@@ -235,11 +235,6 @@ class _MapRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (showJuz && layout.juzRibbon != null)
-              Positioned.fromRect(
-                rect: layout.juzRibbon!,
-                child: _JuzRibbon(juz: house.juz, tailOnEnd: islandOnStart),
-              ),
             Positioned.fromRect(
               rect: layout.card,
               child: KidsSurahHouseCard(
@@ -250,6 +245,12 @@ class _MapRow extends StatelessWidget {
                 onTap: onTap,
               ),
             ),
+            // After the card: the ribbon is a tab overlapping its top edge.
+            if (showJuz && layout.juzRibbon != null)
+              Positioned.fromRect(
+                rect: layout.juzRibbon!,
+                child: _JuzRibbon(juz: house.juz, tailOnEnd: islandOnStart),
+              ),
           ],
         );
       },
