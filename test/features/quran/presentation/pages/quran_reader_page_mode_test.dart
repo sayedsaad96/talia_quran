@@ -16,6 +16,7 @@ import 'package:talia_quran/core/services/app_session_service.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
+import 'package:talia_quran/core/widgets/keep_screen_awake.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
@@ -258,8 +259,10 @@ void main() {
         uri,
         pathParameters: {'pageNumber': '42'},
       );
-      final widget =
-          route.builder!(_MockBuildContext(), state) as QuranReaderPage;
+      // The reader route keeps the screen on while it is open.
+      final awake =
+          route.builder!(_MockBuildContext(), state) as KeepScreenAwake;
+      final widget = awake.child as QuranReaderPage;
       expect(widget.pageNumber, equals(42));
       expect(widget.readerMode, equals(QuranReaderMode.khatmah));
     });
@@ -276,8 +279,10 @@ void main() {
         uri,
         pathParameters: {'pageNumber': '42'},
       );
-      final widget =
-          route.builder!(_MockBuildContext(), state) as QuranReaderPage;
+      // The reader route keeps the screen on while it is open.
+      final awake =
+          route.builder!(_MockBuildContext(), state) as KeepScreenAwake;
+      final widget = awake.child as QuranReaderPage;
       expect(widget.pageNumber, equals(42));
       expect(widget.readerMode, equals(QuranReaderMode.free));
     });
