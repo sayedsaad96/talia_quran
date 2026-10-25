@@ -61,6 +61,8 @@ class KidsQuranJourneyCubit extends Cubit<KidsQuranJourneyState> {
     this._quranRepository, {
     KidsQuranMapCelebrationStore? celebrationStore,
     DateTime Function()? clock,
+    // Keep the store's public label while the field stays private.
+    // ignore: prefer_initializing_formals
   }) : _celebrationStore = celebrationStore,
        _clock = clock ?? DateTime.now,
        super(const KidsQuranJourneyLoading());

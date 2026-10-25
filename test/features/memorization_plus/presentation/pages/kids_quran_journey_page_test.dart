@@ -453,7 +453,7 @@ void _islandRowTests() {
             ),
           ),
         ),
-        textScaler: TextScaler.linear(1.3),
+        textScaler: const TextScaler.linear(1.3),
       ),
     );
     expect(tester.takeException(), isNull);
@@ -467,7 +467,7 @@ void _islandRowTests() {
       tester,
       _state(houses: _houses(), surahNames: names),
       locale: const Locale('ar'),
-      textScaler: TextScaler.linear(1.3),
+      textScaler: const TextScaler.linear(1.3),
     );
     expect(tester.takeException(), isNull);
   });

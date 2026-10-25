@@ -20,7 +20,7 @@ enum KidsIsland {
   flowerGarden;
 
   /// The transparent 512 px island art for this island.
-  String get asset => 'assets/images/kids/islands/island_${name}.png';
+  String get asset => 'assets/images/kids/islands/island_$name.png';
 }
 
 /// The island for row [index] of the journey map, keyed by row index and
