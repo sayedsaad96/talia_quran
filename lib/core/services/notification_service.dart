@@ -155,6 +155,22 @@ List<int> notificationIdsToCancelForBudget({
   return candidates.take(needed).toList(growable: false);
 }
 
+/// One seasonal reminder for [TaliaNotificationService.replaceSeasonReminders].
+/// Plain UI text only: seasonal azkar never go into notifications.
+class SeasonReminderRequest {
+  const SeasonReminderRequest({
+    required this.title,
+    required this.body,
+    required this.at,
+    this.payload = '/',
+  });
+
+  final String title;
+  final String body;
+  final DateTime at;
+  final String payload;
+}
+
 /// A raw notification response delivered to the app: the payload plus the
 /// tapped action id (null/empty for a body tap). Unlike the legacy
 /// String-only callback, this keeps companion payloads (`pc1|…`) intact so
@@ -376,6 +392,9 @@ class TaliaNotificationService {
   static const int _weeklyImpactId = 1064;
   static const int _forgettingForecastId = 1065;
   static const int _lastTenReminderId = 1066;
+  // Seasonal reminders (at most one per civil day, 7 days ahead): 1140-1147.
+  static const int _seasonReminderBaseId = 1140;
+  static const int seasonReminderMaxSlots = 8;
   static const int _tahajjudId = 1061;
   static const int _khatmahReminderId = 1062;
   static const int _khatmahReminderBaseId = 1110;
@@ -1051,6 +1070,27 @@ class TaliaNotificationService {
       categoryIdentifier: 'khatmah_category',
     ),
   );
+
+  /// Seasonal reminders share the khatmah reminders' channel (and so its
+  /// user-visible channel settings), without the khatmah action buttons.
+  NotificationDetails get _seasonReminderNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_khatmah',
+          _l10n.notificationChannelKhatmahName,
+          channelDescription: _l10n.notificationChannelKhatmahDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF2E7D4F),
+          icon: _notificationIcon,
+          playSound: true,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
 
   /// Immediate milestone celebration channel (juz/surah/khatmah completion).
   /// No interactive actions — a single tap opens the progress screen.
@@ -1890,10 +1930,33 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: tz.TZDateTime.from(at, tz.local),
-      notificationDetails: _milestoneCelebrationNotificationDetails,
+      notificationDetails: _seasonReminderNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: '/',
     );
+  }
+
+  /// Replaces every pending seasonal reminder (ids 1140-1147) with [items]:
+  /// cancels them all first, then schedules the ones given. An empty list
+  /// just cancels, so switching a gate off clears them. At most
+  /// [seasonReminderMaxSlots] are scheduled.
+  Future<void> replaceSeasonReminders(List<SeasonReminderRequest> items) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    for (var i = 0; i < seasonReminderMaxSlots; i++) {
+      await _plugin.cancel(id: _seasonReminderBaseId + i);
+    }
+    for (var i = 0; i < items.length && i < seasonReminderMaxSlots; i++) {
+      final item = items[i];
+      await _zonedSchedule(
+        id: _seasonReminderBaseId + i,
+        title: item.title,
+        body: item.body,
+        scheduledDate: tz.TZDateTime.from(item.at, tz.local),
+        notificationDetails: _seasonReminderNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: item.payload,
+      );
+    }
   }
 
   Future<void> cancelLastTenReminder() async {

@@ -9773,4 +9773,393 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahFinishedReadingPage => 'Finished reading this page';
+
+  @override
+  String get settingsSeasonsPageTitle => 'Seasons & occasions';
+
+  @override
+  String get settingsSeasonsMasterTitle => 'Accompany me through the seasons';
+
+  @override
+  String get settingsSeasonsMasterSubtitle =>
+      'Season cards and their challenges appear at their time, controlled from here.';
+
+  @override
+  String get settingsSeasonsYearGroup => 'Seasons of the year';
+
+  @override
+  String get settingsSeasonsWeeklyGroup => 'Every week and every month';
+
+  @override
+  String get settingsSeasonsRemindersGroup => 'Reminders';
+
+  @override
+  String get settingsSeasonsRemindersTitle => 'Season reminders';
+
+  @override
+  String get settingsSeasonsRemindersHint =>
+      'Reminders for season days, at most one a day. Turning it off stops all seasonal reminders.';
+
+  @override
+  String get settingsSeasonsShaban => 'Shaban: preparing for Ramadan';
+
+  @override
+  String get settingsSeasonsRamadan => 'Ramadan and the last ten nights';
+
+  @override
+  String get settingsSeasonsEid => 'Eid al-Fitr and the six days of Shawwal';
+
+  @override
+  String get settingsSeasonsHajj =>
+      'The ten of Dhul-Hijjah, Arafah and Eid al-Adha';
+
+  @override
+  String get settingsSeasonsNewYear => 'Hijri new year and the year harvest';
+
+  @override
+  String get settingsSeasonsAshura => 'Ashura';
+
+  @override
+  String get settingsSeasonsFriday => 'Friday: Surah al-Kahf';
+
+  @override
+  String get settingsSeasonsWhiteDays => 'The white days';
+
+  @override
+  String get settingsSeasonsMonThu => 'Fasting Mondays and Thursdays';
+
+  @override
+  String get settingsRestoreDefaults => 'Restore default settings';
+
+  @override
+  String settingsSeasonsNow(String season) {
+    return 'Now: $season';
+  }
+
+  @override
+  String settingsSeasonsInDays(String season, int days, String daysText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'starts in $daysText days',
+      one: 'starts tomorrow',
+    );
+    return '$season $_temp0';
+  }
+
+  @override
+  String get settingsSeasonsKidsTitle => 'Child\'s seasons';
+
+  @override
+  String get settingsSeasonsKidsSubtitle =>
+      'Season cards on your child\'s page.';
+
+  @override
+  String get ramadanHideSeason => 'Hide this season';
+
+  @override
+  String get ramadanHideSeasonDone =>
+      'Hidden. You can bring it back from Settings › Seasons & occasions';
+
+  @override
+  String get settingsFeaturesPageTitle => 'App features';
+
+  @override
+  String get settingsFeaturesNavSubtitle =>
+      'Turn on what helps you, turn off what you don\'t need';
+
+  @override
+  String get settingsFeaturesGroupReading => 'Reading';
+
+  @override
+  String get settingsFeaturesGroupMemorization => 'Memorization & review';
+
+  @override
+  String get settingsFeaturesGroupAzkar => 'Azkar & prayer';
+
+  @override
+  String get settingsFeaturesGroupTogether => 'With others';
+
+  @override
+  String get settingsFeaturesGroupHome => 'On the home screen';
+
+  @override
+  String get settingsFeaturesTry => 'Try it';
+
+  @override
+  String get settingsFeatureReaderRepeatTitle => 'Recitation repeat';
+
+  @override
+  String get settingsFeatureReaderRepeatSubtitle =>
+      'Repeat recitation automatically a number of times you choose.';
+
+  @override
+  String get settingsFeatureAyahNotesTitle => 'Ayah notes';
+
+  @override
+  String get settingsFeatureAyahNotesSubtitle =>
+      'Note any ayah and find it again when you review.';
+
+  @override
+  String get settingsFeatureAudioDownloadsTitle => 'Recitation downloads';
+
+  @override
+  String get settingsFeatureAudioDownloadsSubtitle =>
+      'Download recitations once and listen without internet.';
+
+  @override
+  String get settingsFeatureStrengthOverlayTitle =>
+      'Memorization strength in the Mushaf';
+
+  @override
+  String get settingsFeatureStrengthOverlaySubtitle =>
+      'Ayahs colored by how strong your memorization is; controlled in the reader menu.';
+
+  @override
+  String get settingsFeatureForgettingForecastTitle => 'Forgetting forecast';
+
+  @override
+  String get settingsFeatureForgettingForecastSubtitle =>
+      'See what you are close to forgetting and review it in time.';
+
+  @override
+  String get settingsFeaturePrayerReviewTitle => 'Review after prayer';
+
+  @override
+  String get settingsFeaturePrayerReviewSubtitle =>
+      'A short review attached to prayer times.';
+
+  @override
+  String get settingsFeatureHandsFreeTitle => 'Hands-free review';
+
+  @override
+  String get settingsFeatureHandsFreeSubtitle =>
+      'Review out loud without touching the screen.';
+
+  @override
+  String get settingsFeatureAfterPrayerAzkarTitle => 'After-prayer azkar';
+
+  @override
+  String get settingsFeatureAfterPrayerAzkarSubtitle =>
+      'After-prayer azkar shown at their time.';
+
+  @override
+  String get settingsFeatureGroupKhatmahTitle => 'Group khatmah';
+
+  @override
+  String get settingsFeatureGroupKhatmahSubtitle =>
+      'A khatmah with friends, following each other\'s progress.';
+
+  @override
+  String get settingsFeatureHomeWidgetTitle => 'Home-screen widget';
+
+  @override
+  String get settingsFeatureHomeWidgetSubtitle =>
+      'Your prayers and progress on your phone\'s home screen.';
+
+  @override
+  String seasonDaysUntil(int days, String daysText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $daysText days',
+      one: 'tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get seasonNameRamadan => 'Ramadan';
+
+  @override
+  String get seasonShabanOpenKhatmah => 'Ramadan khatmah';
+
+  @override
+  String get seasonEidGreeting => 'Eid Mubarak';
+
+  @override
+  String get seasonEidShare => 'Share your Ramadan';
+
+  @override
+  String seasonEidShareTitle(String yearText) {
+    return 'Ramadan $yearText';
+  }
+
+  @override
+  String get seasonShawwalTitle => 'Six days of Shawwal';
+
+  @override
+  String seasonShawwalProgress(String doneText, String totalText) {
+    return '$doneText of $totalText days';
+  }
+
+  @override
+  String get seasonShawwalMark => 'I fasted today';
+
+  @override
+  String get seasonShawwalUnmark => 'Undo today\'s mark';
+
+  @override
+  String get seasonShawwalDone => 'You completed the six days of Shawwal';
+
+  @override
+  String get seasonShawwalLogDay => 'Log a day';
+
+  @override
+  String get seasonShawwalLogTitle => 'Days of Shawwal';
+
+  @override
+  String seasonShawwalLogDayRow(String hijriDayText) {
+    return '$hijriDayText Shawwal';
+  }
+
+  @override
+  String get seasonHajjName => 'The first ten of Dhul-Hijjah';
+
+  @override
+  String seasonHajjDay(String dayText) {
+    return 'First ten of Dhul-Hijjah: day $dayText';
+  }
+
+  @override
+  String get seasonHajjKhatmah => '10-day khatmah';
+
+  @override
+  String get seasonArafahTomorrow =>
+      'Reminder: the fast of the day of Arafah is tomorrow';
+
+  @override
+  String get seasonArafahToday => 'Today is the day of Arafah';
+
+  @override
+  String seasonNewYearTitle(String yearText) {
+    return 'A new Hijri year $yearText';
+  }
+
+  @override
+  String get seasonNewYearPlan => 'Plan your year';
+
+  @override
+  String get seasonAshuraName => 'Fasting the 9th and 10th of Muharram';
+
+  @override
+  String get seasonAshuraTitle => 'Ashura';
+
+  @override
+  String get seasonAshuraDay9 => 'Today is the 9th of Muharram';
+
+  @override
+  String get seasonAshuraDay10 => 'Today is the 10th of Muharram';
+
+  @override
+  String get seasonWhiteDaysTitle => 'The white days';
+
+  @override
+  String seasonWhiteDaysInvite(
+    String firstText,
+    String secondText,
+    String thirdText,
+  ) {
+    return 'Reminder: the white days (days $firstText, $secondText and $thirdText) begin tomorrow';
+  }
+
+  @override
+  String seasonWhiteDaysToday(String dayText) {
+    return 'Today is day $dayText of the white days';
+  }
+
+  @override
+  String get seasonFridayTitle => 'Friday: Surah Al-Kahf';
+
+  @override
+  String get seasonFridayOpen => 'Open Al-Kahf';
+
+  @override
+  String get seasonFridayRead => 'I read it';
+
+  @override
+  String get seasonMonThuTitle => 'Monday and Thursday';
+
+  @override
+  String get seasonMonThuBody =>
+      'A weekly voluntary-fast day, for those who wish';
+
+  @override
+  String get seasonBadgesTitle => 'Your badges';
+
+  @override
+  String seasonBadgeRamadanKhatmah(String yearText) {
+    return 'Ramadan $yearText khatmah';
+  }
+
+  @override
+  String seasonBadgeShawwalSix(String yearText) {
+    return 'Six of Shawwal $yearText';
+  }
+
+  @override
+  String seasonBadgeHajjKhatmah(String yearText) {
+    return 'Dhul-Hijjah $yearText khatmah';
+  }
+
+  @override
+  String ramadanHoursPart(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanMinutesPart(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ramadanDurationJoin(String first, String second) {
+    return '$first and $second';
+  }
+
+  @override
+  String ramadanIftarIn(String duration) {
+    return 'Iftar in $duration';
+  }
+
+  @override
+  String ramadanSuhoorUntil(String time) {
+    return 'Suhoor until $time';
+  }
+
+  @override
+  String get notificationSeasonTitle => 'A reminder from Talia';
+
+  @override
+  String get notificationSeasonArafah =>
+      'Reminder: the fast of the day of Arafah is tomorrow';
+
+  @override
+  String get notificationSeasonAshura =>
+      'Reminder: fasting the 9th and 10th of Muharram begins tomorrow';
+
+  @override
+  String notificationSeasonWhiteDays(
+    String firstText,
+    String secondText,
+    String thirdText,
+  ) {
+    return 'Reminder: the white days (days $firstText, $secondText and $thirdText) begin tomorrow';
+  }
+
+  @override
+  String get notificationSeasonMonThu =>
+      'Reminder: tomorrow is a weekly voluntary-fast day';
 }

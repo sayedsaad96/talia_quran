@@ -9,8 +9,10 @@ import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/seasons/season_calendar.dart';
+import 'package:talia_quran/core/seasons/season_preferences.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/seasons/data/ramadan_card_dismiss_store.dart';
+import 'package:talia_quran/features/seasons/data/season_dua_loader.dart';
 import 'package:talia_quran/features/seasons/data/tarawih_log_store.dart';
 import 'package:talia_quran/features/seasons/domain/last_ten_reminder.dart';
 import 'package:talia_quran/features/seasons/presentation/widgets/home_ramadan_card.dart';
@@ -95,6 +97,12 @@ void main() {
     Locale locale = const Locale('ar'),
     SharedPreferences? reminderPrefs,
     void Function(BuildContext context)? onReminderChanged,
+    SeasonPreferences? seasonPrefs,
+    DateTime? now,
+    Future<RamadanPrayerTimes?> Function(DateTime day)? prayerTimes,
+    SeasonLineLoader? lineLoader,
+    Duration countdownInterval = const Duration(minutes: 1),
+    DateTime Function()? clock,
   }) async {
     final body = Scaffold(
       body: SingleChildScrollView(
@@ -102,13 +110,17 @@ void main() {
           key: UniqueKey(),
           skin: HomeSkin.forBrightness(Brightness.light),
           info: i,
-          now: () => DateTime(2027, 2, 20),
+          now: clock ?? () => now ?? DateTime(2027, 2, 20),
+          loadPrayerTimes: prayerTimes ?? (_) async => null,
+          lineLoader: lineLoader ?? (_) async => null,
+          countdownInterval: countdownInterval,
           dismissStore: dismissStore ?? dismiss,
           tarawihStore: tarawihStore ?? tarawih,
           loadKhatmahCompletions: completions ?? () async => [],
           hasActiveKhatmah: () async => active,
           prefs: reminderPrefs,
           onReminderChanged: onReminderChanged,
+          seasonPrefs: seasonPrefs,
         ),
       ),
     );
@@ -206,6 +218,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(prefs.getBool(lastTenReminderPreferenceKey), isFalse);
     expect(changes, 2);
+  });
+
+  testWidgets('opting in leaves the shared seasonal reminders switch alone', (
+    tester,
+  ) async {
+    flag(true);
+    final seasons = SeasonPreferences(
+      prefs,
+      const FixedRecordOwnerProvider('a'),
+    );
+    expect(seasons.remindersEnabled, isFalse);
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      reminderPrefs: prefs,
+      onReminderChanged: (_) {},
+      seasonPrefs: seasons,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('home_ramadan_last_ten_reminder')),
+    );
+    await tester.pumpAndSettle();
+    expect(prefs.getBool(lastTenReminderPreferenceKey), isTrue);
+    expect(seasons.remindersEnabled, isFalse);
+    expect(prefs.getBool('season_pref_reminders|a'), isNull);
+  });
+
+  testWidgets('reminder shows on only while opted in and the season is visible', (
+    tester,
+  ) async {
+    flag(true);
+    await prefs.setBool(lastTenReminderPreferenceKey, true);
+    final seasons = SeasonPreferences(
+      prefs,
+      const FixedRecordOwnerProvider('a'),
+    );
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      reminderPrefs: prefs,
+      seasonPrefs: seasons,
+    );
+    expect(find.text('سنذكّرك قبل بدئها'), findsOneWidget);
   });
 
   testWidgets('no reminder toggle once the last ten have begun', (
@@ -480,4 +535,252 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const ValueKey('tarawih_from')), findsOneWidget);
   });
+
+  SeasonPreferences seasonPrefs() =>
+      SeasonPreferences(prefs, const FixedRecordOwnerProvider('a'));
+
+  testWidgets('the season preference off hides the whole card', (tester) async {
+    flag(true);
+    final seasons = seasonPrefs();
+    await seasons.setSeasonEnabled(SeasonId.ramadan, false);
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      seasonPrefs: seasons,
+    );
+    expect(card, findsNothing);
+  });
+
+  testWidgets('the master seasons switch off hides the card too', (
+    tester,
+  ) async {
+    flag(true);
+    final seasons = seasonPrefs();
+    await seasons.setMasterEnabled(false);
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      seasonPrefs: seasons,
+    );
+    expect(card, findsNothing);
+  });
+
+  testWidgets('hide-this-season turns the switch off and undo restores', (
+    tester,
+  ) async {
+    flag(true);
+    final seasons = seasonPrefs();
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      seasonPrefs: seasons,
+    );
+    expect(card, findsOneWidget);
+    expect(seasons.isSeasonEnabled(SeasonId.ramadan), isTrue);
+
+    await tester.tap(find.byKey(const ValueKey('home_ramadan_hide_season')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(card, findsNothing);
+    expect(seasons.isSeasonEnabled(SeasonId.ramadan), isFalse);
+    // The bottom notice offers undo.
+    final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
+    expect(find.text(l10n.ramadanHideSeasonDone), findsOneWidget);
+
+    // Let the notice finish sliding in before tapping its action.
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text(l10n.undo));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(card, findsOneWidget);
+    expect(seasons.isSeasonEnabled(SeasonId.ramadan), isTrue);
+    // The helper's fallback timer must not outlive the test.
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('hide-this-season is independent of hide-this-year', (
+    tester,
+  ) async {
+    flag(true);
+    final seasons = seasonPrefs();
+    await pump(
+      tester,
+      info(RamadanPhase.ramadan, day: 5),
+      seasonPrefs: seasons,
+    );
+    await tester.tap(find.byKey(const ValueKey('home_ramadan_dismiss')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(card, findsNothing);
+    // Dismissed for the year only: the season switch is untouched.
+    expect(seasons.isSeasonEnabled(SeasonId.ramadan), isTrue);
+  });
+  group('iftar and suhoor line', () {
+    final times = RamadanPrayerTimes(
+      fajrToday: DateTime(2027, 2, 20, 5, 10),
+      maghribToday: DateTime(2027, 2, 20, 17, 45),
+      fajrTomorrow: DateTime(2027, 2, 21, 5, 9),
+    );
+    const line = ValueKey('home_ramadan_countdown');
+
+    testWidgets('before Maghrib it counts down to iftar', (tester) async {
+      flag(true);
+      await pump(
+        tester,
+        info(RamadanPhase.ramadan, day: 5),
+        now: DateTime(2027, 2, 20, 15, 30),
+        prayerTimes: (_) async => times,
+      );
+      expect(find.byKey(line), findsOneWidget);
+      expect(find.text('الإفطار بعد ساعتين و١٥ دقيقة'), findsOneWidget);
+    });
+
+    testWidgets('after Maghrib it shows when suhoor ends', (tester) async {
+      flag(true);
+      await pump(
+        tester,
+        info(RamadanPhase.ramadan, day: 5),
+        now: DateTime(2027, 2, 20, 19),
+        prayerTimes: (_) async => times,
+      );
+      expect(find.textContaining('السحور حتى'), findsOneWidget);
+    });
+
+    for (final length in [29, 30]) {
+      testWidgets('after Maghrib on day $length of $length there is no suhoor line', (
+        tester,
+      ) async {
+        flag(true);
+        final lastDay = RamadanInfo(
+          phase: RamadanPhase.lastTen,
+          day: length,
+          monthLength: length,
+          firstDay: first,
+          lastDay: last,
+        );
+        await pump(
+          tester,
+          lastDay,
+          now: DateTime(2027, 2, 20, 19),
+          prayerTimes: (_) async => times,
+        );
+        expect(find.byKey(line), findsNothing);
+        // Before Maghrib the iftar countdown still shows.
+        await pump(
+          tester,
+          lastDay,
+          now: DateTime(2027, 2, 20, 15, 30),
+          prayerTimes: (_) async => times,
+        );
+        expect(find.byKey(line), findsOneWidget);
+      });
+    }
+
+    testWidgets('the day before the last still shows suhoor after Maghrib', (
+      tester,
+    ) async {
+      flag(true);
+      await pump(
+        tester,
+        RamadanInfo(
+          phase: RamadanPhase.lastTen,
+          day: 28,
+          monthLength: 29,
+          firstDay: first,
+          lastDay: last,
+        ),
+        now: DateTime(2027, 2, 20, 19),
+        prayerTimes: (_) async => times,
+      );
+      expect(find.textContaining('السحور حتى'), findsOneWidget);
+    });
+
+    testWidgets('is hidden without prayer times', (tester) async {
+      flag(true);
+      await pump(tester, info(RamadanPhase.ramadan, day: 5));
+      expect(card, findsOneWidget);
+      expect(find.byKey(line), findsNothing);
+    });
+
+    testWidgets('is not shown in the invite or summary phases', (tester) async {
+      flag(true);
+      for (final i in [info(RamadanPhase.invite), info(RamadanPhase.afterEid)]) {
+        await pump(
+          tester,
+          i,
+          now: DateTime(2027, 2, 20, 15, 30),
+          prayerTimes: (_) async => times,
+          completions: () async => [DateTime(2027, 2, 20)],
+        );
+        expect(find.byKey(line), findsNothing, reason: '${i.phase}');
+      }
+    });
+
+    testWidgets('re-reads the clock on every tick and stops on dispose', (
+      tester,
+    ) async {
+      flag(true);
+      var current = DateTime(2027, 2, 20, 17, 0);
+      await pump(
+        tester,
+        info(RamadanPhase.ramadan, day: 5),
+        clock: () => current,
+        prayerTimes: (_) async => times,
+        countdownInterval: const Duration(seconds: 1),
+      );
+      expect(find.text('الإفطار بعد ٤٥ دقيقة'), findsOneWidget);
+      current = DateTime(2027, 2, 20, 17, 30);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+      expect(find.text('الإفطار بعد ١٥ دقيقة'), findsOneWidget);
+      // Replacing the card disposes it and cancels the ticker.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+    });
+  });
+
+  group('last-ten approved line', () {
+    Future<ApprovedSeasonLine?> fake(String id) async => ApprovedSeasonLine(
+      id: id,
+      text: 'LINE_TEXT_$id',
+      citation: 'CITATION_$id',
+    );
+
+    testWidgets('shows only the approved dp4 record, with its citation', (
+      tester,
+    ) async {
+      flag(true);
+      final asked = <String>[];
+      await pump(
+        tester,
+        info(RamadanPhase.lastTen, day: 25),
+        lineLoader: (id) {
+          asked.add(id);
+          return fake(id);
+        },
+      );
+      expect(asked, [SeasonLineIds.lastTenDua]);
+      expect(find.text('LINE_TEXT_dp4'), findsOneWidget);
+      expect(find.text('CITATION_dp4'), findsOneWidget);
+    });
+
+    testWidgets('disappears when the record cannot be loaded', (tester) async {
+      flag(true);
+      await pump(tester, info(RamadanPhase.lastTen, day: 25));
+      expect(card, findsOneWidget);
+      expect(find.byKey(const ValueKey('season_line_dp4')), findsNothing);
+    });
+
+    testWidgets('is not requested before the last ten', (tester) async {
+      flag(true);
+      final asked = <String>[];
+      await pump(
+        tester,
+        info(RamadanPhase.ramadan, day: 5),
+        lineLoader: (id) {
+          asked.add(id);
+          return fake(id);
+        },
+      );
+      expect(asked, isEmpty);
+    });
+  });
+
 }

@@ -6,6 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
+import '../../../../core/experience/feature_preferences.dart';
 import '../../../../core/router/app_router.dart';
 import 'package:go_router/go_router.dart';
 import '../../../adult_journey/presentation/widgets/adult_journey_settings_tile.dart';
@@ -14,10 +15,13 @@ import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../pages/subpages/about_settings_page.dart';
+import '../pages/subpages/features_settings_page.dart';
 import '../pages/subpages/kids_settings_page.dart';
 import '../pages/subpages/notification_settings_page.dart';
 import '../pages/subpages/prayer_settings_page.dart';
 import '../pages/subpages/quran_settings_page.dart';
+import '../pages/subpages/seasons_settings_page.dart';
+import 'seasons_nav_subtitle.dart';
 import 'settings_account_tiles.dart';
 import 'settings_appearance_tiles.dart';
 import 'settings_clarity_tile.dart';
@@ -124,10 +128,32 @@ class SettingsHubBody extends StatelessWidget {
           subtitle: l10n.prayerCompanionSettingsTitle,
           page: const PrayerSettingsPage(),
         ),
+        // Seasons and optional features are adult content (like the Ramadan
+        // card); a confirmed child profile does not see these pages.
+        if (state.memorizationProfile?.isAdult ?? false) ...[
+          SettingsDivider(isDark: isDark),
+          _destination(
+            context,
+            icon: TaliaIcons.moon,
+            title: l10n.settingsSeasonsPageTitle,
+            subtitle:
+                seasonsNavSubtitle(context) ?? l10n.settingsSeasonsMasterTitle,
+            page: const SeasonsSettingsPage(),
+          ),
+          SettingsDivider(isDark: isDark),
+          _destination(
+            context,
+            icon: TaliaIcons.sparkle,
+            title: l10n.settingsFeaturesPageTitle,
+            subtitle: l10n.settingsFeaturesNavSubtitle,
+            page: const FeaturesSettingsPage(),
+          ),
+        ],
         // Confirmed adult profile only (not the legacy `mem_plus_track` hint).
         if ((state.memorizationProfile?.isAdult ?? false) &&
-            getIt.isRegistered<ExperienceFlags>() &&
-            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.audioDownloads))
+            getIt.isRegistered<FeaturePreferences>() &&
+            getIt<FeaturePreferences>()
+                .isVisible(ExperienceFeature.audioDownloads))
           SettingsNavTile(
             icon: TaliaIcons.storage,
             iconColor: context.tokens.accent,

@@ -292,6 +292,9 @@ void main() {
     'mem_plus_profile': profileA,
     'ramadan_tarawih|user-a': '[{"night":1}]',
     'ramadan_card_dismissed_start_1448|user-a': true,
+    'feature_pref_forgettingForecast|user-a': false,
+    'season_pref_reminders|user-a': true,
+    'season_flag_shawwal_1448_2027-04-01|user-a': true,
     'kids_reading_receipts_user-a': '{"2026-09-08":[12]}',
     'kids_streak_user-a': '{"current":3}',
     'kids_achievements_user-a': '{"first":"2026-09-01"}',
@@ -397,6 +400,13 @@ void main() {
     expect(prefsB.getString('mem_plus_home_missions|user-b'), homeMissionsA);
     expect(prefsB.getString('ramadan_tarawih|user-b'), '[{"night":1}]');
     expect(prefsB.getBool('ramadan_card_dismissed_start_1448|user-b'), true);
+    expect(prefsB.getBool('feature_pref_forgettingForecast|user-b'), false);
+    expect(prefsB.getBool('season_pref_reminders|user-b'), true);
+    expect(
+      prefsB.getBool('season_flag_shawwal_1448_2027-04-01|user-b'),
+      true,
+    );
+    expect(prefsB.containsKey('season_pref_reminders|user-a'), isFalse);
     expect(
       prefsB.getString('kids_reading_receipts_user-b'),
       '{"2026-09-08":[12]}',
@@ -593,6 +603,9 @@ void main() {
       'mem_plus_profile',
       'ramadan_tarawih|{owner}',
       'ramadan_card_dismissed_start_1448|{owner}',
+      'feature_pref_forgettingForecast|{owner}',
+      'season_pref_reminders|{owner}',
+      'season_flag_shawwal_1448_2027-04-01|{owner}',
       'kids_reading_receipts_{owner}',
       'kids_streak_{owner}',
       'kids_achievements_{owner}',

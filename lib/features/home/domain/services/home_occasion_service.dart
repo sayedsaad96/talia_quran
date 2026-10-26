@@ -1,5 +1,7 @@
 import 'package:hijri/hijri_calendar.dart';
 
+import '../../../../core/seasons/season_calendar.dart';
+
 enum HomeOccasion { none, friday, ramadan, lastTenNights }
 
 class HomeOccasionContext {
@@ -38,8 +40,9 @@ class HomeOccasionService {
         now.add(Duration(days: _hijriOffsetDays?.call() ?? 0)),
       );
       hijriLabel = hijri.toFormat('dd MMMM yyyy');
-      occasion = _occasion(now, hijri);
     } catch (_) {}
+    // One season engine decides the strip and the cards.
+    occasion = _occasion(now, _hijriOffsetDays?.call() ?? 0);
     return HomeOccasionContext(
       hijriLabel: hijriLabel,
       gregorianLabel: gregorianLabel,
@@ -48,11 +51,16 @@ class HomeOccasionService {
     );
   }
 
-  HomeOccasion _occasion(DateTime now, HijriCalendar hijri) {
-    if (hijri.hMonth == 9 && hijri.hDay >= 21) {
-      return HomeOccasion.lastTenNights;
+  HomeOccasion _occasion(DateTime now, int adjustmentDays) {
+    final seasons = seasonsAt(now, adjustmentDays: adjustmentDays);
+    for (final season in seasons) {
+      if (season.id != SeasonId.ramadan) continue;
+      if (season.stage != SeasonStage.active) break;
+      // Day 21's evening begins the last ten nights.
+      return (season.day ?? 0) >= 21
+          ? HomeOccasion.lastTenNights
+          : HomeOccasion.ramadan;
     }
-    if (hijri.hMonth == 9) return HomeOccasion.ramadan;
     if (now.weekday == DateTime.friday) return HomeOccasion.friday;
     return HomeOccasion.none;
   }

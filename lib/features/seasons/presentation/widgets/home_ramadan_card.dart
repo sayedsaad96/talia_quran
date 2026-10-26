@@ -13,6 +13,8 @@ import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/seasons/season_calendar.dart';
+import '../../../../core/seasons/season_preferences.dart';
+import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/services/notification_scheduler.dart';
@@ -25,8 +27,24 @@ import '../../../home/presentation/widgets/glass_panel.dart';
 import '../../../khatmah/domain/repositories/khatmah_repository.dart';
 import '../../data/ramadan_card_dismiss_store.dart';
 import '../../data/tarawih_log_store.dart';
+import '../../data/season_dua_loader.dart';
+import '../../domain/iftar_countdown.dart';
 import '../../domain/last_ten_reminder.dart';
+import 'season_approved_line.dart';
 import 'tarawih_log_sheet.dart';
+
+/// Fajr and Maghrib of [fajrToday]'s day, plus the next day's Fajr.
+class RamadanPrayerTimes {
+  const RamadanPrayerTimes({
+    required this.fajrToday,
+    required this.maghribToday,
+    required this.fajrTomorrow,
+  });
+
+  final DateTime? fajrToday;
+  final DateTime? maghribToday;
+  final DateTime? fajrTomorrow;
+}
 
 /// Ramadan card on the home page, by phase. Renders nothing unless the
 /// seasonal-Ramadan flag is on and the phase has something to show. Every
@@ -43,6 +61,10 @@ class HomeRamadanCard extends StatefulWidget {
     this.hasActiveKhatmah,
     this.prefs,
     this.onReminderChanged,
+    this.seasonPrefs,
+    this.loadPrayerTimes,
+    this.lineLoader,
+    this.countdownInterval = const Duration(minutes: 1),
   });
 
   final HomeSkin skin;
@@ -52,6 +74,20 @@ class HomeRamadanCard extends StatefulWidget {
   final RamadanInfo? info;
   final RamadanCardDismissStore? dismissStore;
   final TarawihLogStore? tarawihStore;
+
+  /// The user's seasons on/off choices; defaults to get_it.
+  final SeasonPreferences? seasonPrefs;
+
+  /// Fajr and Maghrib around a civil day, or null without prayer times (no
+  /// city). Drives the iftar/suhoor line; defaults to the prayer times
+  /// service from get_it.
+  final Future<RamadanPrayerTimes?> Function(DateTime day)? loadPrayerTimes;
+
+  /// Replaces the azkar-datasource-backed loader of the approved line.
+  final SeasonLineLoader? lineLoader;
+
+  /// How often the countdown re-reads the clock.
+  final Duration countdownInterval;
 
   /// Completion dates of finished khatmahs.
   final Future<List<DateTime>> Function()? loadKhatmahCompletions;
@@ -71,12 +107,17 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
   RamadanInfo? _info;
   int _year = 0;
   bool _dismissed = false;
+  bool _seasonHidden = false;
   bool _activeKhatmah = false;
   int _nights = 0;
   int _pages = 0;
   int _khatmahs = 0;
   bool _summaryLoaded = false;
   bool _reminderOn = false;
+  Timer? _ticker;
+  RamadanPrayerTimes? _times;
+  DateTime? _timesDay;
+  IftarCountdown? _countdown;
 
   static bool get _flagOn =>
       getIt.isRegistered<ExperienceFlags>() &&
@@ -96,10 +137,20 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
       widget.tarawihStore ??
       (getIt.isRegistered<TarawihLogStore>() ? getIt<TarawihLogStore>() : null);
 
+  SeasonPreferences? get _seasonPrefs =>
+      widget.seasonPrefs ??
+      (getIt.isRegistered<SeasonPreferences>() ? getIt<SeasonPreferences>() : null);
+
   @override
   void initState() {
     super.initState();
     if (!_flagOn) return;
+    final seasonPrefs = _seasonPrefs;
+    // The user turned the season (or all seasons) off from its card or the
+    // seasons settings; nothing of the season shows.
+    if (seasonPrefs != null && !seasonPrefs.isSeasonVisible(SeasonId.ramadan)) {
+      return;
+    }
     final adjustment = getIt.isRegistered<HijriDateAdjustment>()
         ? getIt<HijriDateAdjustment>().days
         : 0;
@@ -115,12 +166,110 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
           ).hYear;
     _dismissed = _dismissStore?.isDismissed(info.phase, _year) ?? false;
     if (_dismissed) return;
-    _reminderOn = _prefs?.getBool(lastTenReminderPreferenceKey) ?? false;
+    // Reminder on = the card's own opt-in while the season is visible (a
+    // hidden season returned above).
+    _reminderOn =
+        (_prefs?.getBool(lastTenReminderPreferenceKey) ?? false) &&
+        (seasonPrefs?.isSeasonVisible(SeasonId.ramadan) ?? true);
     if (info.phase == RamadanPhase.afterEid) {
       unawaited(_loadSummary(info));
     } else if (info.phase != RamadanPhase.invite) {
       unawaited(_loadActive());
+      unawaited(_startCountdown());
     }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  DateTime _clock() => (widget.now ?? DateTime.now)();
+
+  Future<RamadanPrayerTimes?> _defaultPrayerTimes(DateTime day) async {
+    if (!getIt.isRegistered<PrayerTimesService>()) return null;
+    final service = getIt<PrayerTimesService>();
+    final today = await service.timesForDate(day);
+    if (today.isEmpty) return null;
+    final tomorrow = await service.timesForDate(
+      DateTime(day.year, day.month, day.day + 1),
+    );
+    DateTime? at(List<({String key, String nameAr, String nameEn, DateTime time})> l, String key) =>
+        l.where((p) => p.key == key).firstOrNull?.time;
+    return RamadanPrayerTimes(
+      fajrToday: at(today, 'fajr'),
+      maghribToday: at(today, 'maghrib'),
+      fajrTomorrow: at(tomorrow, 'fajr'),
+    );
+  }
+
+  /// Loads the day's prayer times and ticks every [countdownInterval]. No
+  /// prayer times (no city) means no line and no timer.
+  Future<void> _startCountdown() async {
+    await _refreshCountdown();
+    if (!mounted || _times == null) return;
+    _ticker = Timer.periodic(
+      widget.countdownInterval,
+      (_) => unawaited(_refreshCountdown()),
+    );
+  }
+
+  Future<void> _refreshCountdown() async {
+    try {
+      final now = _clock();
+      final day = DateTime(now.year, now.month, now.day);
+      if (_timesDay != day) {
+        final loader = widget.loadPrayerTimes ?? _defaultPrayerTimes;
+        _times = await loader(day);
+        _timesDay = day;
+      }
+      final times = _times;
+      final next = times == null
+          ? null
+          : iftarCountdownAt(
+              now,
+              fajrToday: times.fajrToday,
+              maghribToday: times.maghribToday,
+              fajrTomorrow: times.fajrTomorrow,
+              lastRamadanDay: _isLastRamadanDay(_info),
+            );
+      if (!mounted) return;
+      setState(() => _countdown = next);
+    } catch (_) {
+      if (mounted) setState(() => _countdown = null);
+    }
+  }
+
+  static bool _isLastRamadanDay(RamadanInfo? info) =>
+      info != null &&
+      info.day != null &&
+      info.monthLength > 0 &&
+      info.day! >= info.monthLength;
+
+  String? _countdownText(AppLocalizations l10n, String lang) {
+    final c = _countdown;
+    if (c == null) return null;
+    if (c.phase == FastPhase.untilSuhoorEnd) {
+      final fajr = c.fajr;
+      if (fajr == null) return null;
+      final time = context.digitText(
+        TimeOfDay.fromDateTime(fajr).format(context),
+      );
+      return l10n.ramadanSuhoorUntil(time);
+    }
+    final minutes = (c.remaining ?? Duration.zero).inMinutes;
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    String hours() => l10n.ramadanHoursPart(h, LocaleNumberFormatter.number(h, lang));
+    String mins(int n) =>
+        l10n.ramadanMinutesPart(n, LocaleNumberFormatter.number(n, lang));
+    final duration = h > 0 && m > 0
+        ? l10n.ramadanDurationJoin(hours(), mins(m))
+        : h > 0
+        ? hours()
+        : mins(m < 1 ? 1 : m);
+    return l10n.ramadanIftarIn(duration);
   }
 
   Future<void> _loadActive() async {
@@ -199,6 +348,33 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     await _dismissStore?.dismiss(info.phase, _year);
   }
 
+  /// «إخفاء هذا الموسم» turns the Ramadan switch in the seasons settings off
+  /// — unlike [_dismiss], which hides this card for this Hijri year only.
+  /// A bottom notice offers undo and the path back.
+  Future<void> _hideSeason() async {
+    final store = _seasonPrefs;
+    if (store == null) return;
+    setState(() => _seasonHidden = true);
+    await store.setSeasonEnabled(SeasonId.ramadan, false);
+    if (!mounted) return;
+    final l10n = context.l10n;
+    // The last-ten reminder needs the season visible: cancel it now.
+    _applyReminder(l10n, askPermission: false);
+    context.showAutoDismissSnackBar(
+      l10n.ramadanHideSeasonDone,
+      action: SnackBarAction(
+        label: l10n.undo,
+        onPressed: () async {
+          await store.setSeasonEnabled(SeasonId.ramadan, true);
+          // Reschedule even if the card is gone by now.
+          _applyReminder(l10n, askPermission: false);
+          if (!mounted) return;
+          setState(() => _seasonHidden = false);
+        },
+      ),
+    );
+  }
+
   void _openKhatmah() {
     unawaited(
       context.push(
@@ -224,18 +400,17 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     if (custom != null) {
       custom(context);
     } else {
-      _applyReminder(context, askPermission: on);
+      _applyReminder(context.l10n, askPermission: on);
     }
   }
 
   /// Opting in asks for notification permission first (Android 13+), so the
   /// reminder can actually arrive; either way notifications are rescheduled.
   static void _applyReminder(
-    BuildContext context, {
+    AppLocalizations l10n, {
     required bool askPermission,
   }) {
     if (!getIt.isRegistered<NotificationScheduler>()) return;
-    final l10n = context.l10n;
     Future<void> apply() async {
       if (askPermission && getIt.isRegistered<TaliaNotificationService>()) {
         try {
@@ -262,10 +437,16 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
   @override
   Widget build(BuildContext context) {
     final info = _info;
-    if (info == null || _dismissed) return const SizedBox.shrink();
+    if (info == null || _dismissed || _seasonHidden) {
+      return const SizedBox.shrink();
+    }
     final l10n = context.l10n;
     final lang = Localizations.localeOf(context).languageCode;
     final skin = widget.skin;
+    final countdownLine =
+        info.phase == RamadanPhase.ramadan || info.phase == RamadanPhase.lastTen
+        ? _countdownText(l10n, lang)
+        : null;
 
     final String title;
     String? body;
@@ -352,6 +533,23 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
                 ),
               ),
             ],
+            if (countdownLine != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                countdownLine,
+                key: const ValueKey('home_ramadan_countdown'),
+                style: AppTypography.bodySmall.copyWith(
+                  color: skin.textOnHero,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+            if (info.phase == RamadanPhase.lastTen)
+              SeasonApprovedLine(
+                id: SeasonLineIds.lastTenDua,
+                skin: skin,
+                loader: widget.lineLoader,
+              ),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.sm,
@@ -359,6 +557,17 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ...actions,
+                if (_seasonPrefs != null)
+                  TextButton(
+                    key: const ValueKey('home_ramadan_hide_season'),
+                    onPressed: () => unawaited(_hideSeason()),
+                    child: Text(
+                      l10n.ramadanHideSeason,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: skin.textOnHeroMuted,
+                      ),
+                    ),
+                  ),
                 TextButton(
                   key: const ValueKey('home_ramadan_dismiss'),
                   onPressed: () => unawaited(_dismiss()),

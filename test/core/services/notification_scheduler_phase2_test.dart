@@ -6,9 +6,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/seasons/season_preferences.dart';
 import 'package:talia_quran/core/seasons/season_calendar.dart';
 import 'package:talia_quran/features/seasons/domain/last_ten_reminder.dart';
+import 'package:talia_quran/features/seasons/domain/season_windows.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
@@ -33,6 +36,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(FakeScheduledPrayerNotification());
     registerFallbackValue(<ScheduledPrayerNotification>[]);
+    registerFallbackValue(<SeasonReminderRequest>[]);
     registerFallbackValue(DateTime(2000));
   });
 
@@ -380,7 +384,97 @@ void main() {
           mockNotificationService,
           forecastAudienceIsAdult: (_) async => adult,
           seasonNow: () => now,
+          experienceFlags: (prefs) => ExperienceFlags.withUserPreferences(
+            prefs,
+            const FixedRecordOwnerProvider('a'),
+          ),
+          seasonPreferences: (prefs) =>
+              SeasonPreferences(prefs, const FixedRecordOwnerProvider('a')),
         );
+
+    // The last-ten reminder has its own consent: the card's opt-in only.
+    const optedIn = <String, Object>{lastTenReminderPreferenceKey: true};
+    final flagOn = <String, Object>{
+      ExperienceFeature.seasonalRamadan.storageKey: true,
+    };
+
+    Future<void> refresh() => scheduler().refreshNotifications(
+      lookupAppLocalizations(const Locale('ar')),
+    );
+
+    void expectCancelled() {
+      verify(() => mockNotificationService.cancelLastTenReminder()).called(1);
+      verifyNever(
+        () => mockNotificationService.scheduleLastTenReminder(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          at: any(named: 'at'),
+        ),
+      );
+    }
+
+    void expectScheduled() {
+      verify(
+        () => mockNotificationService.scheduleLastTenReminder(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          at: any(named: 'at'),
+        ),
+      ).called(1);
+    }
+
+    test('hiding Ramadan cancels the reminder', () async {
+      SharedPreferences.setMockInitialValues({
+        ...optedIn,
+        ...flagOn,
+        'season_pref_ramadan|a': false,
+      });
+      await refresh();
+      expectCancelled();
+    });
+
+    test('the seasons master switch off cancels the reminder', () async {
+      SharedPreferences.setMockInitialValues({
+        ...optedIn,
+        ...flagOn,
+        'season_pref_master|a': false,
+      });
+      await refresh();
+      expectCancelled();
+    });
+
+    test('the shared seasonal reminders switch does not gate it', () async {
+      for (final shared in <Object?>[false, true, null]) {
+        clearInteractions(mockNotificationService);
+        SharedPreferences.setMockInitialValues({
+          ...optedIn,
+          ...flagOn,
+          'season_pref_reminders|a': ?shared,
+        });
+        await refresh();
+        expectScheduled();
+      }
+    });
+
+    test('the user turning the seasonal feature off cancels it', () async {
+      SharedPreferences.setMockInitialValues({
+        ...optedIn,
+        ...flagOn,
+        'feature_pref_seasonalRamadan|a': false,
+      });
+      await refresh();
+      expectCancelled();
+    });
+
+    test('another owner hiding Ramadan does not affect this one', () async {
+      SharedPreferences.setMockInitialValues({
+        ...optedIn,
+        ...flagOn,
+        'season_pref_ramadan|b': false,
+      });
+      await refresh();
+      expectScheduled();
+    });
 
     test('an opted-in adult gets one reminder on the evening of day 20', () async {
       expect(info.phase, RamadanPhase.ramadan);
@@ -439,7 +533,199 @@ void main() {
     }
   });
 
+  group('Seasonal reminders', () {
+    DateTime civil(int y, int m, int d) {
+      final f = hijriMonthFirstCivilDay(y, m, 0);
+      return DateTime(f.year, f.month, f.day + d - 1);
+    }
+
+    final flagOn = <String, Object>{
+      ExperienceFeature.seasonalRamadan.storageKey: true,
+    };
+
+    setUp(() {
+      when(
+        () => mockNotificationService.replaceSeasonReminders(any()),
+      ).thenAnswer((_) async {});
+    });
+
+    Future<List<SeasonReminderRequest>> run(
+      DateTime now,
+      Map<String, Object> prefs, {
+      bool adult = true,
+    }) async {
+      SharedPreferences.setMockInitialValues(prefs);
+      await NotificationScheduler(
+        mockNotificationService,
+        forecastAudienceIsAdult: (_) async => adult,
+        seasonNow: () => now,
+        experienceFlags: (p) => ExperienceFlags.withUserPreferences(
+          p,
+          const FixedRecordOwnerProvider('a'),
+        ),
+        seasonPreferences: (p) =>
+            SeasonPreferences(p, const FixedRecordOwnerProvider('a')),
+      ).refreshNotifications(lookupAppLocalizations(const Locale('ar')));
+      final captured = verify(
+        () => mockNotificationService.replaceSeasonReminders(captureAny()),
+      ).captured;
+      return captured.last as List<SeasonReminderRequest>;
+    }
+
+    final arafahMorning = civil(1448, 12, 8).add(const Duration(hours: 8));
+
+    test('Arafah eve is scheduled in plain UI text at the fallback time', () async {
+      final out = await run(arafahMorning, {
+        ...flagOn,
+        'season_pref_reminders|a': true,
+      });
+      final l10n = lookupAppLocalizations(const Locale('ar'));
+      final first = out.first;
+      expect(first.body, l10n.notificationSeasonArafah);
+      expect(first.title, l10n.notificationSeasonTitle);
+      final d = civil(1448, 12, 8);
+      expect(first.at, DateTime(d.year, d.month, d.day, 20));
+      final days = out.map((r) => DateTime(r.at.year, r.at.month, r.at.day));
+      expect(days.toSet().length, out.length);
+    });
+
+    for (final (label, prefs, adult) in [
+      ('reminders off', {...flagOn}, true),
+      ('reminders explicitly off', {...flagOn, 'season_pref_reminders|a': false}, true),
+      (
+        'season hidden',
+        {
+          ...flagOn,
+          'season_pref_reminders|a': true,
+          'season_pref_dhulHijjahTen|a': false,
+        },
+        true,
+      ),
+      (
+        'master off',
+        {
+          ...flagOn,
+          'season_pref_reminders|a': true,
+          'season_pref_master|a': false,
+        },
+        true,
+      ),
+      ('flag off', {ExperienceFeature.seasonalRamadan.storageKey: false, 'season_pref_reminders|a': true}, true),
+      ('a child profile', {...flagOn, 'season_pref_reminders|a': true}, false),
+      ('another owner opted in', {...flagOn, 'season_pref_reminders|b': true}, true),
+    ]) {
+      test('$label gives no Arafah reminder', () async {
+        final out = await run(arafahMorning, prefs, adult: adult);
+        final l10n = lookupAppLocalizations(const Locale('ar'));
+        expect(
+          out.where((r) => r.body == l10n.notificationSeasonArafah),
+          isEmpty,
+        );
+      });
+    }
+
+    test('the last-ten opt-in alone does not enable the general reminders', () async {
+      final out = await run(arafahMorning, {
+        ...flagOn,
+        lastTenReminderPreferenceKey: true,
+      });
+      expect(out, isEmpty);
+    });
+
+    test('there is no seasonal Friday reminder (the weekly one covers it)', () async {
+      final out = await run(DateTime(2027, 4, 16, 7), {
+        ...flagOn,
+        'season_pref_reminders|a': true,
+        TaliaNotificationService.fridayKahfPreferenceKey: false,
+      });
+      expect(out.where((r) => r.payload == '/quran/surah/18'), isEmpty);
+    });
+  });
+
+  group('Headless refresh (ownerScopedRefresh: false)', () {
+    NotificationScheduler worker(DateTime now) => NotificationScheduler(
+      mockNotificationService,
+      forecastAudienceIsAdult: (_) async => true,
+      seasonNow: () => now,
+      ownerScopedRefresh: false,
+      // The worker cannot know the owner: these must never be consulted.
+      experienceFlags: (_) => throw StateError('owner-scoped flags read'),
+      seasonPreferences: (_) => throw StateError('owner-scoped seasons read'),
+    );
+
+    test(
+      "a signed-in owner's season and feature choices are neither cancelled nor added",
+      () async {
+        SharedPreferences.setMockInitialValues({
+          ExperienceFeature.seasonalRamadan.storageKey: true,
+          lastTenReminderPreferenceKey: true,
+          TaliaNotificationService.forgettingForecastPreferenceKey: true,
+          ExperienceFeature.forgettingForecast.storageKey: true,
+          'season_pref_reminders|owner-a': true,
+          'season_pref_ramadan|owner-a': true,
+          'feature_pref_forgettingForecast|owner-a': true,
+        });
+        await worker(DateTime(2027, 2, 12, 9)).refreshNotifications(
+          lookupAppLocalizations(const Locale('ar')),
+          force: true,
+        );
+        verifyNever(() => mockNotificationService.cancelLastTenReminder());
+        verifyNever(
+          () => mockNotificationService.scheduleLastTenReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            at: any(named: 'at'),
+          ),
+        );
+        verifyNever(() => mockNotificationService.replaceSeasonReminders(any()));
+        verifyNever(
+          () => mockNotificationService.cancelForgettingForecastReminder(),
+        );
+        verifyNever(
+          () => mockNotificationService.scheduleForgettingForecastReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            weekday: any(named: 'weekday'),
+            hour: any(named: 'hour'),
+            minute: any(named: 'minute'),
+          ),
+        );
+      },
+    );
+  });
+
   group('Forgetting forecast reminder', () {
+    test('the user turning the feature off cancels the reminder', () async {
+      SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.forgettingForecastPreferenceKey: true,
+        ExperienceFeature.forgettingForecast.storageKey: true,
+        'feature_pref_forgettingForecast|a': false,
+      });
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        forecastAudienceIsAdult: (_) async => true,
+        experienceFlags: (prefs) => ExperienceFlags.withUserPreferences(
+          prefs,
+          const FixedRecordOwnerProvider('a'),
+        ),
+      );
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+      verify(
+        () => mockNotificationService.cancelForgettingForecastReminder(),
+      ).called(1);
+      verifyNever(
+        () => mockNotificationService.scheduleForgettingForecastReminder(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          weekday: any(named: 'weekday'),
+          hour: any(named: 'hour'),
+          minute: any(named: 'minute'),
+        ),
+      );
+    });
+
     test('schedules for an enabled adult without foreground DI', () async {
       SharedPreferences.setMockInitialValues({
         TaliaNotificationService.forgettingForecastPreferenceKey: true,

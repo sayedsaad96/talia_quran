@@ -88,6 +88,9 @@ NotificationScheduler _createLocalScheduler({
     prayerTimesService: prayerTimesService,
     prayerCompanionPlanner: prayerCompanionPlanner,
     prayerCompanionPreferences: prayerCompanionPreferences,
+    // Headless isolate: the signed-in owner is unknown, so owner-scoped
+    // reminders stay as the foreground left them.
+    ownerScopedRefresh: false,
   );
 }
 

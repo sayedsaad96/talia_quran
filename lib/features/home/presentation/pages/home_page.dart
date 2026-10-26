@@ -45,7 +45,10 @@ import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 import '../widgets/staggered_fade_slide.dart';
 import '../../../../core/router/open_location.dart';
+import '../../../../core/seasons/season_calendar.dart';
+import '../../../../core/seasons/season_preferences.dart';
 import '../../../seasons/presentation/widgets/home_ramadan_card.dart';
+import '../../../seasons/presentation/widgets/home_season_card.dart';
 import '../../../progress/presentation/widgets/hijri_year_recap_slot.dart';
 
 class HomePage extends StatefulWidget {
@@ -321,6 +324,20 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
     );
   }
 
+  /// Generic season card (Eid, Dhul-Hijjah, Friday, ...); remounts like the
+  /// Ramadan card when the local day or the Hijri adjustment changes.
+  Widget _seasonCard() {
+    final now = (widget.clock ?? DateTime.now)();
+    final adjustment = getIt.isRegistered<HijriDateAdjustment>()
+        ? getIt<HijriDateAdjustment>().days
+        : 0;
+    return HomeSeasonCard(
+      key: ValueKey('season-${now.year}-${now.month}-${now.day}|$adjustment'),
+      skin: widget.skin,
+      now: widget.clock,
+    );
+  }
+
   Widget _buildLoaded(BuildContext context, {required bool clarityOn}) {
     final isDark = widget.skin.isDark;
     final isAdult = !widget.state.isKids && !widget.state.isParentMode;
@@ -413,10 +430,15 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
               ),
             ),
             if (isAdult) SliverToBoxAdapter(child: _ramadanCard()),
+            if (isAdult) SliverToBoxAdapter(child: _seasonCard()),
             if (getIt.isRegistered<ExperienceFlags>() &&
                 getIt<ExperienceFlags>().isEnabled(
                   ExperienceFeature.hijriYearRecap,
-                ))
+                ) &&
+                (!getIt.isRegistered<SeasonPreferences>() ||
+                    getIt<SeasonPreferences>().isSeasonVisible(
+                      SeasonId.hijriNewYear,
+                    )))
               SliverToBoxAdapter(
                 child: HijriYearRecapSlot(
                   enabled: true,
