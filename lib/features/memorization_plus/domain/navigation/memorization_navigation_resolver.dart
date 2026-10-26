@@ -377,10 +377,14 @@ class MemorizationNavigationResolver {
     if (logs.isNotEmpty) return logs.first.surahId;
 
     final customPlan = await _customPlan();
+    // A plan start left over from another path (or an adult plan) is stale
+    // (R10): only honour it when the active path contains it.
+    final path = await _kidsJourneyPath();
     if (customPlan != null &&
         customPlan.isActive &&
         customPlan.targetUser == PlanTargetUser.child &&
-        _isValidSurahId(customPlan.startSurahId)) {
+        _isValidSurahId(customPlan.startSurahId) &&
+        path.contains(customPlan.startSurahId)) {
       return customPlan.startSurahId;
     }
 
@@ -389,9 +393,6 @@ class MemorizationNavigationResolver {
       (_) => null,
       (settings) => settings.startingSurahId,
     );
-    // A start left over from another path is stale (R10): use the active
-    // path's first surah instead.
-    final path = await _kidsJourneyPath();
     if (_isValidSurahId(configuredStart) && path.contains(configuredStart!)) {
       return configuredStart;
     }
@@ -447,7 +448,9 @@ class MemorizationNavigationResolver {
         surahId: id,
       )).fold((_) => null, (stages) => stages);
       if (stages == null) return id;
-      if (stages.any((stage) => stage.requiresHouseReview && stage.isUnlocked)) {
+      if (stages.any(
+        (stage) => stage.requiresHouseReview && stage.isUnlocked,
+      )) {
         return id;
       }
     }

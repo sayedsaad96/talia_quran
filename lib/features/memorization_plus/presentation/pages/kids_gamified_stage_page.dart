@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
@@ -92,7 +93,7 @@ class _KidsGamifiedStagePageState extends State<KidsGamifiedStagePage> {
   @override
   Widget build(BuildContext context) {
     final resolvedSurahName =
-        widget.surahName ?? '${context.l10n.surah} ${_stage.surahId}';
+        widget.surahName ?? context.localizedSurahName(_stage.surahId);
     return KidsGamifiedStageContent(
       stage: _stage,
       surahName: resolvedSurahName,

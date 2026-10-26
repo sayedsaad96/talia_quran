@@ -712,7 +712,10 @@ class MemorizationKidsLocalService {
 
   Future<Either<Failure, ParentSettings>> getParentSettings() async {
     try {
-      return Right(await _datasource.getParentSettings());
+      final ownerId = _owner.currentOwnerId;
+      final settings = await _datasource.getParentSettings();
+      _ensureKidsOwner(ownerId);
+      return Right(await _reconcileLostPin(settings, ownerId));
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
@@ -767,9 +770,23 @@ class MemorizationKidsLocalService {
           blockedUntil.isAfter(DateTime.now().toUtc())) {
         return const Right(false);
       }
-      final verifier = await _parentPinStore.readVerifier(ownerId);
-      if (verifier != null) {
-        return await _verifySecurePin(ownerId, pin, verifier);
+      switch (await _parentPinStore.lookupVerifier(ownerId)) {
+        case ParentPinVerifierPresent(:final verifier):
+          _verifierConfirmed.add(ownerId);
+          return await _verifySecurePin(ownerId, pin, verifier);
+        case ParentPinVerifierUnreadable() when stored == _securePinMarker:
+          // The keystore failed to answer: no PIN can be checked, so this is
+          // neither a wrong guess (no throttle) nor a lost PIN (kept).
+          return const Right(false);
+        case ParentPinVerifierAbsent() when stored == _securePinMarker:
+          // The verifier is gone for good: no PIN can ever match again.
+          // A fresh lookup just proved it gone: drop any session cache.
+          _verifierConfirmed.remove(ownerId);
+          await _reconcileLostPin(settings, ownerId);
+          return const Right(false);
+        case ParentPinVerifierUnreadable() || ParentPinVerifierAbsent():
+          // No secure PIN: a legacy hash may still be upgraded below.
+          break;
       }
       if (_matchesLegacyPin(stored, pin)) {
         await _upgradeLegacyPin(ownerId, pin, settings);
@@ -790,7 +807,11 @@ class MemorizationKidsLocalService {
         ownerId,
         await ParentPinVerifier.createInBackground(pin),
       );
+      // The store swallows write failures: a marker without a stored
+      // verifier would claim a PIN that protects nothing.
+      await _requireStoredVerifier(ownerId);
       await _clearPinThrottle(ownerId);
+      _ensureKidsOwner(ownerId);
       await _datasource.saveParentSettings(
         ParentSettingsModel.fromEntity(
           settings.copyWith(pinHash: _securePinMarker),
@@ -810,6 +831,7 @@ class MemorizationKidsLocalService {
       final settings = await _datasource.getParentSettings();
       final ownerId = _owner.currentOwnerId;
       await _parentPinStore.clearVerifier(ownerId);
+      _verifierConfirmed.remove(ownerId);
       await _clearPinThrottle(ownerId);
       await _datasource.saveParentSettings(
         ParentSettingsModel.fromEntity(
@@ -1406,6 +1428,58 @@ class MemorizationKidsLocalService {
 
   static const _securePinMarker = 'secure-v2';
 
+  /// Owners whose stored verifier was seen this session, so the hot
+  /// settings read does not go back to the keystore on every call.
+  final Set<String> _verifierConfirmed = {};
+
+  /// A secure PIN whose verifier the store no longer holds (Android KeyStore
+  /// keys can be invalidated, and the storage plugin then resets its data)
+  /// can never be entered again, which would lock the guardian out of every
+  /// guardian action. Such a device is returned to "no PIN yet", the same
+  /// state as a child set up without one: unlinked devices create a PIN at
+  /// the next guardian action, linked ones still need guardian recovery.
+  /// A store that cannot be read keeps the PIN, since that may be transient.
+  ///
+  /// The clear re-reads the settings under the kids settings lock and is
+  /// bound to [ownerId], so an account switch or a concurrent settings write
+  /// is never overwritten by the snapshot that triggered it.
+  Future<ParentSettings> _reconcileLostPin(
+    ParentSettings settings,
+    String ownerId,
+  ) async {
+    if (settings.pinHash != _securePinMarker) return settings;
+    if (_verifierConfirmed.contains(ownerId)) return settings;
+    if (!await _verifierIsAbsent(ownerId)) return settings;
+    // Re-check right before writing: a PIN created meanwhile wins.
+    if (!await _verifierIsAbsent(ownerId)) return settings;
+    final cleared = await _datasource.updateKidsHouseSettings((current) {
+      _ensureKidsOwner(ownerId);
+      return current.pinHash == _securePinMarker
+          ? current.copyWith(clearPin: true)
+          : current;
+    });
+    _ensureKidsOwner(ownerId);
+    await _clearPinThrottle(ownerId);
+    TaliaLogger.w('Parent PIN verifier missing; cleared the stale PIN marker');
+    return cleared;
+  }
+
+  Future<bool> _verifierIsAbsent(String ownerId) async {
+    final lookup = await _parentPinStore.lookupVerifier(ownerId);
+    _ensureKidsOwner(ownerId);
+    if (lookup is ParentPinVerifierPresent) _verifierConfirmed.add(ownerId);
+    return lookup is ParentPinVerifierAbsent;
+  }
+
+  Future<void> _requireStoredVerifier(String ownerId) async {
+    final lookup = await _parentPinStore.lookupVerifier(ownerId);
+    _ensureKidsOwner(ownerId);
+    if (lookup is! ParentPinVerifierPresent) {
+      throw StateError('Parent PIN verifier was not stored');
+    }
+    _verifierConfirmed.add(ownerId);
+  }
+
   Future<Either<Failure, bool>> _verifySecurePin(
     String ownerId,
     String pin,
@@ -1433,6 +1507,12 @@ class MemorizationKidsLocalService {
       await ParentPinVerifier.createInBackground(pin),
     );
     await _clearPinThrottle(ownerId);
+    // Keep the legacy hash when the verifier did not land: the PIN must stay
+    // usable rather than point at a verifier that is not there.
+    final lookup = await _parentPinStore.lookupVerifier(ownerId);
+    _ensureKidsOwner(ownerId);
+    if (lookup is! ParentPinVerifierPresent) return;
+    _verifierConfirmed.add(ownerId);
     await _datasource.saveParentSettings(
       ParentSettingsModel.fromEntity(
         settings.copyWith(pinHash: _securePinMarker),

@@ -11128,6 +11128,12 @@ abstract class AppLocalizations {
   /// **'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.'**
   String get kidsRecordingUnavailable;
 
+  /// No description provided for @kidsVoiceConsentDeclined.
+  ///
+  /// In ar, this message translates to:
+  /// **'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.'**
+  String get kidsVoiceConsentDeclined;
+
   /// No description provided for @kidsRecordingNotCaptured.
   ///
   /// In ar, this message translates to:
@@ -14025,6 +14031,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.'**
   String get childSetupPinOptionalHelp;
+
+  /// No description provided for @childSetupPinAlreadySet.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.'**
+  String get childSetupPinAlreadySet;
 
   /// No description provided for @recitationVoiceDisclosureTitle.
   ///

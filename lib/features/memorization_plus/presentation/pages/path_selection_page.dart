@@ -194,11 +194,21 @@ class _PathSelectionViewState extends State<_PathSelectionView> {
   }
 
   Future<void> _showChildSetup(BuildContext context) async {
+    // An existing guardian PIN is kept, so its fields are not offered; an
+    // unreadable setting counts as a PIN, like the create-PIN dialog.
+    final pinAlreadySet =
+        getIt.isRegistered<MemorizationPlusRepository>() &&
+        (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+          (_) => true,
+          (settings) => settings.hasPin,
+        );
+    if (!context.mounted) return;
     final draft = await showModalBottomSheet<_ChildSetupDraft>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => _ChildSetupSheet(
+        pinAlreadySet: pinAlreadySet,
         showPathChoice:
             getIt.isRegistered<SharedPreferences>() &&
             KidsHifzFeatureFlags.isQuranJourneyEnabled(
@@ -309,10 +319,16 @@ class _ChildSetupDraft {
 }
 
 class _ChildSetupSheet extends StatefulWidget {
-  const _ChildSetupSheet({required this.showPathChoice});
+  const _ChildSetupSheet({
+    required this.showPathChoice,
+    this.pinAlreadySet = false,
+  });
 
   /// The path choice shows only while the Quran journey flag is on.
   final bool showPathChoice;
+
+  /// A guardian PIN already exists and is kept, so no PIN fields show.
+  final bool pinAlreadySet;
 
   @override
   State<_ChildSetupSheet> createState() => _ChildSetupSheetState();
@@ -549,30 +565,37 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                 // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). The draft field
                 // still records the age-based default so stored settings stay
                 // consistent.
-                TextField(
-                  controller: _pinController,
-                  obscureText: true,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: context.l10n.parentDashboardCreatePinTitle,
-                    helperText: context.l10n.childSetupPinOptionalHelp,
+                if (widget.pinAlreadySet)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(context.l10n.childSetupPinAlreadySet),
+                  )
+                else ...[
+                  TextField(
+                    controller: _pinController,
+                    obscureText: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: context.l10n.parentDashboardCreatePinTitle,
+                      helperText: context.l10n.childSetupPinOptionalHelp,
+                    ),
+                    onChanged: (_) => _refreshValidity(),
                   ),
-                  onChanged: (_) => _refreshValidity(),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _confirmPinController,
-                  obscureText: true,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: context.l10n.parentDashboardPinConfirm,
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _confirmPinController,
+                    obscureText: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: context.l10n.parentDashboardPinConfirm,
+                    ),
+                    onChanged: (_) => _refreshValidity(),
                   ),
-                  onChanged: (_) => _refreshValidity(),
-                ),
+                ],
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: !_canSubmit

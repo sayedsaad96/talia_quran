@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/kids_enrichment_feature_flags.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../kids_encouragement/presentation/cubits/child_encouragement_inbox_cubit.dart';
@@ -36,9 +37,7 @@ import 'kids_bedtime_listen_page.dart';
 /// The listening game chip shows only while its rollout flag is on.
 bool _learningGamesEnabled() =>
     getIt.isRegistered<KidsEnrichmentFlags>() &&
-    getIt<KidsEnrichmentFlags>().isEnabled(
-      KidsEnrichmentFeature.learningGames,
-    );
+    getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.learningGames);
 
 class KidsGamifiedHomePage extends StatelessWidget {
   const KidsGamifiedHomePage({
@@ -465,9 +464,13 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                       const SizedBox(height: AppSpacing.md),
                       if (getIt.isRegistered<ChildEncouragementInboxCubit>() &&
                           getIt.isRegistered<KidsEnrichmentFlags>() &&
-                          getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.encouragements))
+                          getIt<KidsEnrichmentFlags>().isEnabled(
+                            KidsEnrichmentFeature.encouragements,
+                          ))
                         BlocProvider(
-                          key: ValueKey('encouragement-inbox-$encouragementRefresh'),
+                          key: ValueKey(
+                            'encouragement-inbox-$encouragementRefresh',
+                          ),
                           create: (_) => getIt<ChildEncouragementInboxCubit>(),
                           child: const ChildEncouragementInbox(),
                         ),
@@ -516,10 +519,11 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                               state.nextMission != null &&
                                   state.nextMission!.surahId != state.surahId
                               ? state.missionSurahName ??
-                                    '${context.l10n.surah} '
-                                        '${state.nextMission!.surahId}'
+                                    context.localizedSurahName(
+                                      state.nextMission!.surahId,
+                                    )
                               : state.surahName ??
-                                    '${context.l10n.surah} ${state.surahId}',
+                                    context.localizedSurahName(state.surahId),
                           onContinue: onMissionTap,
                           // A due SRS review or linked stage review is today's
                           // task, so the card says "Ready for review".

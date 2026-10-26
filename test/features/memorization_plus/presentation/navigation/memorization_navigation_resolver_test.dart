@@ -4,7 +4,8 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
-import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 
 void main() {
@@ -424,7 +425,9 @@ void main() {
                 missionType: KidsMissionType.newMemorization,
               ),
             ],
-            kidsStagesBySurah: const {67: [houseReview67]},
+            kidsStagesBySurah: const {
+              67: [houseReview67],
+            },
           ),
         );
 
@@ -545,7 +548,9 @@ void main() {
                 missionType: KidsMissionType.newMemorization,
               ),
             ],
-            kidsStagesBySurah: const {67: [houseReview67]},
+            kidsStagesBySurah: const {
+              67: [houseReview67],
+            },
           ),
         );
 
@@ -600,7 +605,9 @@ void main() {
                 missionType: KidsMissionType.newMemorization,
               ),
             ],
-            kidsStagesBySurah: const {114: [houseReview114]},
+            kidsStagesBySurah: const {
+              114: [houseReview114],
+            },
           ),
         );
 
@@ -632,6 +639,47 @@ void main() {
         Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
         '1',
       );
+    });
+
+    group('child onboarding with a stale child plan start', () {
+      final childProfile = MemorizationProfile(
+        schemaVersion: 1,
+        selectedPath: MemorizationPath.child,
+        guardianLinkStatus: GuardianLinkStatus.none,
+        guardianOnboardingStatus: GuardianOnboardingStatus.skipped,
+        isParentGuardian: false,
+        createdAt: DateTime.utc(2026, 1, 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+      );
+
+      test('a plan start outside the adventure path opens its first surah '
+          '(Al-Fatihah)', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            profile: childProfile,
+            kidsPath: KidsJourneyPathDefinition.adventure,
+            customPlan: _customPlan(2, PlanTargetUser.child),
+          ),
+        );
+
+        final location = await resolver.childOnboardingLocation();
+
+        expect(Uri.parse(location).queryParameters['surahId'], '1');
+      });
+
+      test('a plan start inside the path is still honoured', () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            profile: childProfile,
+            kidsPath: KidsJourneyPathDefinition.adventure,
+            customPlan: _customPlan(110, PlanTargetUser.child),
+          ),
+        );
+
+        final location = await resolver.childOnboardingLocation();
+
+        expect(Uri.parse(location).queryParameters['surahId'], '110');
+      });
     });
 
     test(
@@ -748,7 +796,8 @@ class _FakeRepository implements MemorizationPlusRepository {
   final Map<int, List<KidsJourneyStage>>? kidsStagesBySurah;
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
     required int surahId,
   }) async => Right(kidsStagesBySurah?[surahId] ?? kidsStages);
 
@@ -774,7 +823,9 @@ class _FakeRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
-      profile == null ? const Left(CacheFailure('No profile')) : Right(profile!);
+      profile == null
+      ? const Left(CacheFailure('No profile'))
+      : Right(profile!);
 
   @override
   Future<Either<Failure, KidsJourneyPathDefinition>>

@@ -6546,6 +6546,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The microphone did not work. Try again or ask a parent for help.';
 
   @override
+  String get kidsVoiceConsentDeclined =>
+      'We won\'t use the microphone. Ask your guardian to confirm your memorization.';
+
+  @override
   String get kidsRecordingNotCaptured =>
       'We could not hear your recitation clearly. Please record the ayah again.';
 
@@ -8361,6 +8365,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get childSetupPinOptionalHelp =>
       'Optional: create it now or the first time a guardian action needs it.';
+
+  @override
+  String get childSetupPinAlreadySet =>
+      'A guardian PIN is already set on this device and will be kept.';
 
   @override
   String get recitationVoiceDisclosureTitle => 'Before you recite';

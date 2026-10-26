@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/l10n/localization_helpers.dart';
 import 'package:talia_quran/core/memorization/kids_enrichment_feature_flags.dart';
 import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
@@ -466,6 +467,48 @@ void main() {
         find.byKey(const ValueKey('kids-gamified-manual-complete')),
       );
       expect(manuallyCompleted, isTrue);
+    });
+
+    testWidgets('a declined voice disclosure puts the guardian fallback on '
+        'screen without scrolling', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(720, 1280);
+      addTearDown(tester.view.reset);
+
+      late BuildContext appContext;
+      await tester.pumpWidget(
+        _TestApp(
+          child: Builder(
+            builder: (context) {
+              appContext = context;
+              return KidsGamifiedListenContent(
+                state: _recallState().copyWith(
+                  recordingError: CubitMessageCodes.kidsVoiceConsentDeclined,
+                ),
+                onBack: () {},
+                onPlayPause: () {},
+                onRecordRecitation: () {},
+                onStopRecording: () {},
+                onManualComplete: () {},
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        appContext.localizedCubitMessage(
+          CubitMessageCodes.kidsVoiceConsentDeclined,
+        ),
+        isNot(AppLocalizations.of(appContext).micPermissionError),
+      );
+      final button = find.byKey(const ValueKey('kids-gamified-manual-complete'));
+      expect(button, findsOneWidget);
+      final rect = tester.getRect(button);
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(1280));
+      expect(button.hitTestable(), findsOneWidget);
     });
 
     testWidgets('recitation mismatch never exposes guardian completion', (

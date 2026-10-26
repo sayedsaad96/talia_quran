@@ -1,7 +1,11 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
@@ -175,6 +179,38 @@ void main() {
       expect(find.text('Memorization House 1'), findsOneWidget);
       expect(find.text('Start mission'), findsOneWidget);
     });
+    testWidgets('without a surah name the header shows the Arabic name, not '
+        'a raw number', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      final getIt = GetIt.instance;
+      getIt.registerSingleton<MemorizationPlusRepository>(_NoJourneyRepo());
+      addTearDown(() => getIt.unregister<MemorizationPlusRepository>());
+
+      const fatihaStage = KidsJourneyStage(
+        stageNumber: 1,
+        surahId: 1,
+        startAyah: 1,
+        endAyah: 3,
+        completedAyahs: [],
+        status: KidsJourneyStageStatus.current,
+      );
+      await tester.pumpWidget(
+        const _TestApp(
+          locale: Locale('ar'),
+          child: KidsGamifiedStagePage(stage: fatihaStage),
+        ),
+      );
+      await tester.pump();
+
+      final header = find.textContaining('الفاتحة');
+      expect(header, findsOneWidget);
+      final text = tester.widget<Text>(header).data!;
+      expect(text.contains('1'), isFalse);
+      expect(text.contains('٣'), isTrue);
+    });
+
     test('stage mission route carries the resolved mission type', () {
       // The current stage asks to resume: the session restores a paused run
       // or resolves the ayah's real semantics (N1).
@@ -250,6 +286,19 @@ const _stage = KidsJourneyStage(
   completedAyahs: [3],
   status: KidsJourneyStageStatus.current,
 );
+
+/// The stage page asks the repository for the authoritative stage; a failure
+/// keeps the stage it was opened with.
+class _NoJourneyRepo implements MemorizationPlusRepository {
+  @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
+    required int surahId,
+  }) async => const Left(CacheFailure('offline'));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child, this.locale = const Locale('en')});

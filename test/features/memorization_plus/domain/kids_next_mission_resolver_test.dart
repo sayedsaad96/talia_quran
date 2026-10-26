@@ -339,6 +339,65 @@ void main() {
       );
     });
 
+    test('a stale resume outside a locked path is never offered', () {
+      // Al-Baqarah is not on the Juz Amma adventure (a session left over from
+      // before the child's path was selected).
+      const staleResume = KidsNextMission(
+        type: KidsMissionType.resume,
+        surahId: 2,
+        ayahNumbers: [1],
+      );
+      const quota = KidsDailyBudget(
+        newAyahsCompletedToday: 1,
+        maxNewAyahsPerDay: 1,
+      );
+
+      expect(
+        const KidsNextMissionResolver().resolve(
+          activeSurahId: 114,
+          stages: [_currentStage],
+          resumableMission: staleResume,
+          reviewRecords: const [],
+          now: DateTime.utc(2026, 9, 1),
+          budget: quota,
+        ),
+        isNull,
+      );
+      // Without a quota the child continues the path, not the stale surah.
+      expect(
+        const KidsNextMissionResolver()
+            .resolve(
+              activeSurahId: 114,
+              stages: [_currentStage],
+              resumableMission: staleResume,
+              reviewRecords: const [],
+              now: DateTime.utc(2026, 9, 1),
+            )
+            ?.surahId,
+        114,
+      );
+    });
+
+    test('a resume in any surah stays valid on a free Quran path', () {
+      const resume = KidsNextMission(
+        type: KidsMissionType.resume,
+        surahId: 2,
+        ayahNumbers: [1],
+      );
+
+      expect(
+        const KidsNextMissionResolver().resolve(
+          activeSurahId: 2,
+          stages: const [],
+          resumableMission: resume,
+          reviewRecords: const [],
+          now: DateTime.utc(2026, 9, 1),
+          path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromFatiha),
+        ),
+        resume,
+      );
+    });
+
     test('a weak pass recorded today is not due again the same day (N5)', () {
       final now = DateTime(2026, 9, 1, 18);
       final mission = const KidsNextMissionResolver().resolveSkippingAyah(

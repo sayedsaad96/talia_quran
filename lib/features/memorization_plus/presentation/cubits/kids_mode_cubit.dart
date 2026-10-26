@@ -147,6 +147,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   ) => '$surahId:$ayahNumber:${type.name}';
 
   int _loopCount = 0;
+  bool _preparingRecording = false;
   int _playbackGeneration = 0;
   bool _closingAudio = false;
   Future<void>? _audioStopFuture;
@@ -321,6 +322,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // a zero-point "resume" award (H3): restore the original semantics.
     _missionType = effectiveMissionType;
 
+    // A restored session already past `learning` proves the listen gate was
+    // passed (recall/recitation requires it); do not ask for the listens again.
+    final listenGatePassed =
+        resumed && sessionState.phase != V2SessionPhase.learning;
+    _loopCount = listenGatePassed ? maxLoops : 0;
+
     emit(
       KidsModeLoaded(
         surahId: surahId,
@@ -329,7 +336,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         sessionState: sessionState,
         progress: progress,
         isPlaying: false,
-        currentLoop: 0,
+        currentLoop: _loopCount,
         maxLoops: maxLoops,
         isCompleted: false,
         isReview: isReview,
@@ -695,13 +702,45 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
-    if (st.isPlaying) {
+    if (_preparingRecording) return;
+    _preparingRecording = true;
+    KidsRecitationCaptureResult? notReady;
+    try {
+      // Consent, permission and speech init come first: no recording UI,
+      // engine phase change or timer until the microphone can really open.
+      notReady = await _recitationRecorder.ensureReady();
+    } finally {
+      _preparingRecording = false;
+    }
+    if (isClosed || state is! KidsModeLoaded) return;
+    final ready = state as KidsModeLoaded;
+    if (ready.isCompleted || ready.isGuardianAssessing || ready.isRecording) {
+      return;
+    }
+    if (notReady != null) {
+      // Re-arm the page's change-based error listener for a repeated error.
+      if (ready.recordingError == notReady.messageCode) {
+        emit(ready.copyWith(clearRecordingError: true));
+      }
+      emit(
+        (state as KidsModeLoaded).copyWith(
+          isRecording: false,
+          recordingSeconds: 0,
+          recordingError: notReady.messageCode,
+        ),
+      );
+      return;
+    }
+
+    if (ready.isPlaying) {
       await stopAudio();
     }
+    if (isClosed || state is! KidsModeLoaded) return;
+    final readySt = state as KidsModeLoaded;
 
     // Move the shared engine into its hidden-text recall phase before opening
     // the microphone, so every unsuccessful attempt is tracked consistently.
-    var recitingSession = st.sessionState;
+    var recitingSession = readySt.sessionState;
     if (recitingSession.phase == V2SessionPhase.learning) {
       recitingSession = _sessionEngine.startMemorizing(recitingSession);
     }
@@ -714,7 +753,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _recordingCompleter = Completer<KidsRecitationCaptureResult>();
 
     emit(
-      st.copyWith(
+      readySt.copyWith(
         sessionState: recitingSession,
         isRecording: true,
         recordingSeconds: 0,
@@ -1395,6 +1434,11 @@ abstract class KidsRecitationRecorder {
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   });
 
+  /// Runs voice consent, microphone permission and speech initialisation
+  /// before the UI shows any recording state. Returns null when ready, or the
+  /// error result that explains why recording cannot start.
+  Future<KidsRecitationCaptureResult?> ensureReady();
+
   /// Stops an active recording session (if any).
   Future<void> stop() async {}
 
@@ -1423,6 +1467,15 @@ class KidsRecitationCaptureResult {
         recognizedWords: '',
         isError: true,
         messageCode: CubitMessageCodes.kidsMicPermissionDenied,
+      );
+
+  /// The child (or guardian) declined the voice disclosure: the microphone is
+  /// never opened, which is not a missing OS permission.
+  const KidsRecitationCaptureResult.consentDeclined()
+    : this._(
+        recognizedWords: '',
+        isError: true,
+        messageCode: CubitMessageCodes.kidsVoiceConsentDeclined,
       );
 
   const KidsRecitationCaptureResult.unavailable()
@@ -1456,6 +1509,9 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   final Future<bool> Function()? _voiceConsent;
   final Future<bool> Function()? _microphonePermission;
   bool _speechEnabled = false;
+
+  /// True between a successful [ensureReady] and the capture that follows.
+  bool _prepared = false;
   void Function(SpeechRecognitionError error)? _onSpeechError;
 
   // Tracks the latest words during an active session so stop() can flush them.
@@ -1467,24 +1523,13 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   }) async {
     _latestRecognizedWords = '';
 
-    final permission = await _ensureMicrophonePermission();
-    if (!permission) {
-      _completeIfOpen(
-        externalCompleter,
-        const KidsRecitationCaptureResult.permissionDenied(),
-      );
-      return const KidsRecitationCaptureResult.permissionDenied();
-    }
-
-    if (!_speechEnabled) {
-      _speechEnabled = await _initializeSpeech();
-    }
-    if (!_speechEnabled) {
-      _completeIfOpen(
-        externalCompleter,
-        const KidsRecitationCaptureResult.unavailable(),
-      );
-      return const KidsRecitationCaptureResult.unavailable();
+    // ensureReady() already ran consent, permission and speech init for this
+    // capture; do not prompt the child twice.
+    final failure = _prepared ? null : await ensureReady();
+    _prepared = false;
+    if (failure != null) {
+      _completeIfOpen(externalCompleter, failure);
+      return failure;
     }
 
     // The engine keeps the first initializer's listeners; claim them for this
@@ -1593,9 +1638,27 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       error.errorMsg == 'error_no_match' ||
       error.errorMsg == 'error_speech_timeout';
 
-  Future<bool> _ensureMicrophonePermission() async {
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async {
+    _prepared = false;
     final consent = _voiceConsent;
-    if (consent != null && !await consent()) return false;
+    if (consent != null && !await consent()) {
+      return const KidsRecitationCaptureResult.consentDeclined();
+    }
+    if (!await _ensureMicrophonePermission()) {
+      return const KidsRecitationCaptureResult.permissionDenied();
+    }
+    if (!_speechEnabled) {
+      _speechEnabled = await _initializeSpeech();
+    }
+    if (!_speechEnabled) {
+      return const KidsRecitationCaptureResult.unavailable();
+    }
+    _prepared = true;
+    return null;
+  }
+
+  Future<bool> _ensureMicrophonePermission() async {
     final override = _microphonePermission;
     if (override != null) return override();
     var status = await Permission.microphone.status;

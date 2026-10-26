@@ -2,8 +2,34 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../utils/talia_logger.dart';
 
+/// Result of looking up the stored PIN verifier.
+///
+/// [readVerifier] collapses a missing verifier and a failed read into null;
+/// callers that decide whether a PIN still exists need the difference, since
+/// a transient keystore failure must never be mistaken for a lost PIN.
+sealed class ParentPinVerifierLookup {
+  const ParentPinVerifierLookup();
+}
+
+final class ParentPinVerifierPresent extends ParentPinVerifierLookup {
+  const ParentPinVerifierPresent(this.verifier);
+
+  final String verifier;
+}
+
+/// The store read cleanly and holds no verifier for the owner.
+final class ParentPinVerifierAbsent extends ParentPinVerifierLookup {
+  const ParentPinVerifierAbsent();
+}
+
+/// The store could not be read (for example an Android KeyStore error).
+final class ParentPinVerifierUnreadable extends ParentPinVerifierLookup {
+  const ParentPinVerifierUnreadable();
+}
+
 abstract interface class ParentPinSecureStore {
   Future<String?> readVerifier(String ownerId);
+  Future<ParentPinVerifierLookup> lookupVerifier(String ownerId);
   Future<void> writeVerifier(String ownerId, String verifier);
   Future<void> clearVerifier(String ownerId);
   Future<DateTime?> readBlockedUntil(String ownerId);
@@ -28,8 +54,27 @@ class FlutterParentPinSecureStore implements ParentPinSecureStore {
   final Map<String, DateTime> _sessionBlockedUntil = {};
 
   @override
-  Future<String?> readVerifier(String ownerId) =>
-      _guard<String?>('readVerifier', () => _storage.read(key: _verifier(ownerId)));
+  Future<String?> readVerifier(String ownerId) => _guard<String?>(
+    'readVerifier',
+    () => _storage.read(key: _verifier(ownerId)),
+  );
+
+  @override
+  Future<ParentPinVerifierLookup> lookupVerifier(String ownerId) async {
+    try {
+      final verifier = await _storage.read(key: _verifier(ownerId));
+      return verifier == null
+          ? const ParentPinVerifierAbsent()
+          : ParentPinVerifierPresent(verifier);
+    } on Exception catch (error, stack) {
+      TaliaLogger.w(
+        'ParentPin secure store lookupVerifier failed',
+        error,
+        stack,
+      );
+      return const ParentPinVerifierUnreadable();
+    }
+  }
 
   @override
   Future<void> writeVerifier(String ownerId, String verifier) => _guard(

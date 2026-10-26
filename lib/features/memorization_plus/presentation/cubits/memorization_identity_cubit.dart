@@ -118,7 +118,15 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
       return;
     }
 
-    if (pin.isNotEmpty) {
+    // Setup must never replace a guardian PIN it has not verified: an
+    // existing PIN (or unreadable settings) is kept as it is.
+    final pinAlreadySet =
+        pin.isNotEmpty &&
+        (await _repository.getParentSettings()).fold(
+          (_) => true,
+          (settings) => settings.hasPin,
+        );
+    if (pin.isNotEmpty && !pinAlreadySet) {
       final pinResult = await _repository.setParentPin(pin);
       final pinFailure = pinResult.fold((failure) => failure, (_) => null);
       if (pinFailure != null) {

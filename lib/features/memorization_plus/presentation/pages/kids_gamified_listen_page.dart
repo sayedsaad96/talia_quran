@@ -93,7 +93,9 @@ bool _readProactiveSupport() {
       )) {
     return false;
   }
-  return kidsSupportProactiveHints(getIt<KidsSupportProfileRepository>().read());
+  return kidsSupportProactiveHints(
+    getIt<KidsSupportProfileRepository>().read(),
+  );
 }
 
 /// Guards the guardian completion flow against a double tap.
@@ -111,9 +113,11 @@ bool _supportActionsEnabled() =>
 /// remote guardian proves themselves through recovery instead. An unreadable
 /// profile is treated as linked (no PIN creation).
 Future<bool> _verifyGuardianForPractice(BuildContext context) async {
-  final isLinked = (await getIt<MemorizationPlusRepository>()
-          .getMemorizationProfile())
-      .fold((_) => true, (profile) => profile.isGuardianLinked);
+  final isLinked =
+      (await getIt<MemorizationPlusRepository>().getMemorizationProfile()).fold(
+        (_) => true,
+        (profile) => profile.isGuardianLinked,
+      );
   if (!context.mounted) return false;
   return ensureGuardianPin(
     context,
@@ -343,11 +347,17 @@ class _KidsGamifiedListenView extends StatelessWidget {
           if (state is KidsModeSplitChoiceRequired) {
             return KidsGamifiedListenStatusShell(
               onBack: onBack,
-              child: SingleChildScrollView(child: KidsLegacyResumeRecoveryPanel(
-                state: state,
-                onRecover: ({required whole, stageSize}) => context.read<KidsModeCubit>()
-                    .recoverLegacySplit(state.ticket, whole: whole, stageSize: stageSize),
-              )),
+              child: SingleChildScrollView(
+                child: KidsLegacyResumeRecoveryPanel(
+                  state: state,
+                  onRecover: ({required whole, stageSize}) =>
+                      context.read<KidsModeCubit>().recoverLegacySplit(
+                        state.ticket,
+                        whole: whole,
+                        stageSize: stageSize,
+                      ),
+                ),
+              ),
             );
           }
 
@@ -402,8 +412,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
                     context,
                     surahId: state.surahId,
                     ayahNumber: state.ayahNumber,
-                    recorder:
-                        getIt.isRegistered<KidsFamilyPracticeRepository>()
+                    recorder: getIt.isRegistered<KidsFamilyPracticeRepository>()
                         ? getIt<KidsFamilyPracticeRepository>().record
                         : null,
                     verifyGuardian: _verifyGuardianForPractice,
@@ -679,7 +688,9 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             const SizedBox(height: AppSpacing.md),
                             Center(
                               child: TextButton.icon(
-                                key: const ValueKey('kids-family-practice-open'),
+                                key: const ValueKey(
+                                  'kids-family-practice-open',
+                                ),
                                 onPressed: onFamilyPractice,
                                 icon: const Icon(TaliaIcons.family),
                                 label: Text(
@@ -723,6 +734,7 @@ KidsSupportContext kidsSupportContextFor(
     technicalTrouble:
         state.audioError != null ||
         error == CubitMessageCodes.kidsMicPermissionDenied ||
+        error == CubitMessageCodes.kidsVoiceConsentDeclined ||
         error == CubitMessageCodes.kidsRecordingUnavailable ||
         error == CubitMessageCodes.kidsRecordingNotCaptured,
     proactive: proactive,
@@ -1219,36 +1231,72 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
         ],
         if (showManualComplete) ...[
           const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: _kidsSoftCardDecoration,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  context.l10n.kidsManualCompleteHint,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: KidsTheme.inkOnParchment.withValues(alpha: 0.8),
-                    letterSpacing: 0,
+          _ScrollIntoViewOnShow(
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: _kidsSoftCardDecoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    context.l10n.kidsManualCompleteHint,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: KidsTheme.inkOnParchment.withValues(alpha: 0.8),
+                      letterSpacing: 0,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                KidsChunkyButton(
-                  key: const ValueKey('kids-gamified-manual-complete'),
-                  onPressed: onManualComplete,
-                  icon: TaliaKidsIcons.verified,
-                  label: context.l10n.kidsManualCompleteAction,
-                  tone: KidsButtonTone.green,
-                  height: 56,
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  KidsChunkyButton(
+                    key: const ValueKey('kids-gamified-manual-complete'),
+                    onPressed: onManualComplete,
+                    icon: TaliaKidsIcons.verified,
+                    label: context.l10n.kidsManualCompleteAction,
+                    tone: KidsButtonTone.green,
+                    height: 56,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ],
     );
   }
+}
+
+/// Scrolls its child into view once, when it first appears. The guardian
+/// fallback card sits below the mic; after a declined disclosure or a missing
+/// microphone it must not be left off-screen where the child cannot see it.
+class _ScrollIntoViewOnShow extends StatefulWidget {
+  const _ScrollIntoViewOnShow({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_ScrollIntoViewOnShow> createState() => _ScrollIntoViewOnShowState();
+}
+
+class _ScrollIntoViewOnShowState extends State<_ScrollIntoViewOnShow> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          context,
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Item 20 — the guardian listens to the child and grades by ear: «متقن»,

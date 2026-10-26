@@ -6532,6 +6532,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.';
 
   @override
+  String get kidsVoiceConsentDeclined =>
+      'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.';
+
+  @override
   String get kidsRecordingNotCaptured =>
       'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.';
 
@@ -8371,6 +8375,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get childSetupPinOptionalHelp =>
       'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.';
+
+  @override
+  String get childSetupPinAlreadySet =>
+      'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.';
 
   @override
   String get recitationVoiceDisclosureTitle => 'قبل بدء التسميع';

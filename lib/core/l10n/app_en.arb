@@ -2775,7 +2775,8 @@
   "v2SurahLoadFailed": "Could not load surah data.",
   "v2NoAyahsInRange": "No ayahs are available in the selected range.",
   "kidsRecordingUnavailable": "The microphone did not work. Try again or ask a parent for help.",
-  "kidsRecordingNotCaptured": "We could not hear your recitation clearly. Please record the ayah again.",
+  "kidsVoiceConsentDeclined": "We won't use the microphone. Ask your guardian to confirm your memorization.",
+  "kidsRecordingNotCaptured":"We could not hear your recitation clearly. Please record the ayah again.",
   "kidsRecitationMismatch": "The ayah did not match. Listen again and then record your recitation.",
   "kidsRecitationCloseMatch": "So close! You got {matched} of {total} words right. Listen again and try once more.",
   "@kidsRecitationCloseMatch": {
@@ -3503,6 +3504,7 @@
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
   ,"guardianPinCreateReason": "This is a guardian action. Create a 4-digit PIN to protect it; you will be asked for it next time."
   ,"childSetupPinOptionalHelp": "Optional: create it now or the first time a guardian action needs it."
+  ,"childSetupPinAlreadySet": "A guardian PIN is already set on this device and will be kept."
   ,"recitationVoiceDisclosureTitle": "Before you recite"
   ,"recitationVoiceDisclosureBody": "To check your recitation, the app uses the microphone and your device's built-in speech recognition service (such as Google's). That service may send the audio to its provider's servers to turn it into text, under the provider's policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings."
   ,"recitationVoiceDisclosureGuardian": "If the user is a child, a parent or guardian should read this and decide."

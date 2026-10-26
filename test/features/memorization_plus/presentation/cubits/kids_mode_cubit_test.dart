@@ -363,6 +363,110 @@ void main() {
       expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
     });
 
+    group('recording readiness gate', () {
+      test('nothing is recording until consent/permission are ready', () async {
+        final recorder = _GatedKidsRecitationRecorder();
+        await cubit.close();
+        cubit = buildCubit(recorder: recorder);
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(cubit.maxLoops);
+        final phaseBefore = (cubit.state as KidsModeLoaded).sessionState.phase;
+
+        final started = cubit.startRecording();
+        await Future<void>.delayed(Duration.zero);
+
+        var loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isFalse);
+        expect(loaded.recordingSeconds, 0);
+        expect(loaded.sessionState.phase, phaseBefore);
+        expect(recorder.captureCalls, 0);
+
+        recorder.ready.complete(null);
+        await Future<void>.delayed(Duration.zero);
+        loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isTrue);
+        expect(loaded.sessionState.phase, V2SessionPhase.reciting);
+        expect(recorder.captureCalls, 1);
+
+        recorder.captureResult.complete(
+          const KidsRecitationCaptureResult.stoppedByUser(),
+        );
+        await started;
+      });
+
+      test('a declined disclosure leaves the phase alone and offers the '
+          'guardian fallback', () async {
+        final recorder = _GatedKidsRecitationRecorder();
+        await cubit.close();
+        cubit = buildCubit(recorder: recorder);
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(cubit.maxLoops);
+        final phaseBefore = (cubit.state as KidsModeLoaded).sessionState.phase;
+
+        recorder.ready.complete(
+          const KidsRecitationCaptureResult.consentDeclined(),
+        );
+        await cubit.startRecording();
+
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isFalse);
+        expect(loaded.sessionState.phase, phaseBefore);
+        expect(
+          loaded.recordingError,
+          CubitMessageCodes.kidsVoiceConsentDeclined,
+        );
+        expect(loaded.canUseGuardianFallback, isTrue);
+        expect(recorder.captureCalls, 0);
+      });
+    });
+
+    group('resuming a paused mission', () {
+      Future<KidsModeLoaded> resumeFrom(V2SessionPhase phase) async {
+        final adapter = await _openKidsResumeAdapter();
+        await adapter.save(
+          V2SessionState.initial(
+            surahId: 114,
+            blockAyahs: const [
+              Ayah(
+                number: 1,
+                surahId: 114,
+                text: 'ayah text',
+                numberInSurah: 1,
+              ),
+            ],
+            blockReviewRequired: false,
+          ).copyWith(phase: phase),
+        );
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          quran: const _ResumeQuranRepository(),
+          progressAdapter: adapter,
+        );
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+        return cubit.state as KidsModeLoaded;
+      }
+
+      test('a session past learning keeps the listen gate open', () async {
+        final loaded = await resumeFrom(V2SessionPhase.reciting);
+        expect(loaded.maxLoops, greaterThan(0));
+        expect(loaded.currentLoop, loaded.maxLoops);
+        // The mic is not listen-gated: recording starts without a warning.
+        await cubit.startRecording();
+        expect((cubit.state as KidsModeLoaded).mustListenFirst, isFalse);
+      });
+
+      test('a session paused in learning still requires the listens', () async {
+        final loaded = await resumeFrom(V2SessionPhase.learning);
+        expect(loaded.currentLoop, 0);
+      });
+    });
+
     test(
       'resuming an already-rewarded ayah earns reduced review points',
       () async {
@@ -2560,6 +2664,9 @@ class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   final KidsRecitationCaptureResult result;
 
   @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
+
+  @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async => result;
@@ -2578,6 +2685,9 @@ class _MutableKidsRecitationRecorder implements KidsRecitationRecorder {
       const KidsRecitationCaptureResult.stoppedByUser();
 
   @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
+
+  @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async => result;
@@ -2589,9 +2699,36 @@ class _MutableKidsRecitationRecorder implements KidsRecitationRecorder {
   Future<void> dispose() async {}
 }
 
+/// Recorder whose readiness and capture are both controlled by the test.
+class _GatedKidsRecitationRecorder implements KidsRecitationRecorder {
+  final ready = Completer<KidsRecitationCaptureResult?>();
+  final captureResult = Completer<KidsRecitationCaptureResult>();
+  int captureCalls = 0;
+
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() => ready.future;
+
+  @override
+  Future<KidsRecitationCaptureResult> capture({
+    Completer<KidsRecitationCaptureResult>? externalCompleter,
+  }) {
+    captureCalls++;
+    return captureResult.future;
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
 class _PrecompletedKidsRecitationRecorder implements KidsRecitationRecorder {
   final captureStarted = Completer<void>();
   final finishCapture = Completer<KidsRecitationCaptureResult>();
+
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
 
   @override
   Future<KidsRecitationCaptureResult> capture({

@@ -205,6 +205,14 @@ class _MemoryParentPinStore implements ParentPinSecureStore {
   final _failures = <String, int>{};
 
   @override
+  Future<ParentPinVerifierLookup> lookupVerifier(String ownerId) async {
+    final verifier = _verifiers[ownerId];
+    return verifier == null
+        ? const ParentPinVerifierAbsent()
+        : ParentPinVerifierPresent(verifier);
+  }
+
+  @override
   Future<void> clearVerifier(String ownerId) async =>
       _verifiers.remove(ownerId);
 

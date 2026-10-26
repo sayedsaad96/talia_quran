@@ -9,6 +9,7 @@ import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/kids_reading_receipt_store.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_adventure_regions.dart';
@@ -252,6 +253,50 @@ void main() {
       expect(loaded.dailyGoalCap, 1);
       expect(loaded.dailyGoalReached, isTrue);
     });
+
+    test(
+      'a stale resume session outside the adventure path leaves the day '
+      'complete card instead of opening that surah',
+      () async {
+        await cubit.close();
+        cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          sessionLogsLoader: () async => [
+            KidsSessionLog(
+              id: 'today',
+              surahId: tSurahId,
+              ayahNumber: 1,
+              repeatsCompleted: 3,
+              pointsEarned: 10,
+              completedAt: DateTime.now(),
+              missionType: KidsMissionType.newMemorization,
+            ),
+          ],
+          policyLoader: () async => KidsSessionPolicy.forAge(6),
+          // A kids session left on Al-Baqarah, which is not on the path.
+          resumeMissionLoader: () async => const KidsNextMission(
+            type: KidsMissionType.resume,
+            surahId: 2,
+            ayahNumbers: [1],
+          ),
+          pathLoader: () async => KidsJourneyPathDefinition.adventure,
+        );
+        when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(tSurahId),
+        ).thenAnswer((_) async => const Right(tSurahDetail));
+
+        await cubit.load(surahId: tSurahId, followFrontier: true);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.nextMission, isNull);
+        expect(loaded.dailyGoalCap, 1);
+        expect(loaded.dailyGoalReached, isTrue);
+      },
+    );
 
     group('current region', () {
       const stage113 = <KidsJourneyStage>[

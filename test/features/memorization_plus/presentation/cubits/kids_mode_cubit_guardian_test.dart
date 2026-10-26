@@ -502,6 +502,9 @@ class _CountingRecorder implements KidsRecitationRecorder {
   String words = 'ayah text';
 
   @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
+
+  @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async {

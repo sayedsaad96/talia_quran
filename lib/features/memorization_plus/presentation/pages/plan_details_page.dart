@@ -57,12 +57,20 @@ class _PlanDetailsViewState extends State<_PlanDetailsView> {
   }
 
   void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
+  void _exitToSetup() {
     context.go(AppRoutes.memorizationPlusCustomPlan);
   }
 
   @override
   Widget build(BuildContext context) => FallbackPopScope(
-    fallbackLocation: AppRoutes.memorizationPlusCustomPlan,
+    fallbackLocation: AppRoutes.home,
     child: Scaffold(
       backgroundColor: context.tokens.background,
       appBar: AppBar(
@@ -159,7 +167,7 @@ class _PlanDetailsViewState extends State<_PlanDetailsView> {
       ),
       TextButton.icon(
         key: const Key('plan_details_exit'),
-        onPressed: _back,
+        onPressed: _exitToSetup,
         icon: const Icon(TaliaIcons.settingsSmart),
         label: Text(context.l10n.planDetailsExitToSetup),
       ),

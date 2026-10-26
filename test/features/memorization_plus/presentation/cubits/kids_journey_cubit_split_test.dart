@@ -346,6 +346,24 @@ void main() {
       await cubit.load(surahId: 1, followFrontier: true);
       expect(loaded().surahId, 1);
     });
+
+    test('the adventure ignores a stale start outside its surahs', () async {
+      logs = [];
+      cubit = build();
+      await cubit.load(surahId: 2, followFrontier: true);
+      expect(loaded().surahId, 1);
+      expect(loaded().nextMission?.surahId, 1);
+    });
+
+    test('a free Quran path keeps following the journey, not the '
+        'adventure start', () async {
+      cubit = build(
+        path: KidsJourneyPathDefinition.of(KidsJourneyPathId.quranFromNas),
+      );
+      await cubit.load(surahId: 2, followFrontier: true);
+      expect(loaded().surahId, 112);
+      expect(loaded().nextMission?.surahId, 112);
+    });
   });
 
   test('a guardian surah hint outside the selected path is ignored', () async {
@@ -367,9 +385,7 @@ void main() {
     when(quran.getSurahDetail(any)).thenAnswer(
       (_) async => const Right(SurahDetail(surah: surah, ayahs: [])),
     );
-    settings = const ParentSettings(
-      remotePlan: KidsRemotePlan(nextSurahId: 2),
-    );
+    settings = const ParentSettings(remotePlan: KidsRemotePlan(nextSurahId: 2));
     KidsJourneyCubit withHint(KidsJourneyPathDefinition path) =>
         KidsJourneyCubit(
           getJourney,
