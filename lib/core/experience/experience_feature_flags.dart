@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../identity/record_owner_provider.dart';
 import 'rollout_manifest.dart';
 
 /// Independently switchable parts of the roadmap batch A experience rollout.
@@ -48,7 +49,32 @@ class ExperienceFlags {
     : _readBool = ((key) =>
           prefs.getBool(key) ?? RolloutManifest.defaultFor(key));
 
+  /// Rollout flags first (as [ExperienceFlags.fromPreferences]), then the
+  /// signed-in owner's own on/off choice written by the «مزايا التطبيق» page
+  /// (`feature_pref_<name>|<ownerId>`, on unless turned off). A feature shows
+  /// only when both layers allow it, so every existing read site honours the
+  /// user's switch. The owner is read on each call, so an account switch
+  /// takes effect immediately. An unreadable choice counts as on.
+  ExperienceFlags.withUserPreferences(
+    SharedPreferences prefs,
+    RecordOwnerProvider owner,
+  ) : _readBool = ((key) {
+        final rollout = prefs.getBool(key) ?? RolloutManifest.defaultFor(key);
+        if (rollout != true || !key.startsWith(keyPrefix)) return rollout;
+        try {
+          final name = key.substring(keyPrefix.length);
+          final ownerId = owner.currentOwnerId;
+          return prefs.getBool('$userPreferenceKeyPrefix$name|$ownerId') ??
+              true;
+        } catch (_) {
+          return true;
+        }
+      });
+
   static const keyPrefix = 'experience_flag_';
+
+  /// Per-owner user choice keys: `feature_pref_<name>|<ownerId>`.
+  static const userPreferenceKeyPrefix = 'feature_pref_';
 
   final bool? Function(String key) _readBool;
 

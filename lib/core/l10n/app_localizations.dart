@@ -16365,6 +16365,608 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أتممت قراءة الصفحة'**
   String get khatmahFinishedReadingPage;
+
+  /// No description provided for @settingsSeasonsPageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المواسم والمناسبات'**
+  String get settingsSeasonsPageTitle;
+
+  /// No description provided for @settingsSeasonsMasterTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رافقني في المواسم'**
+  String get settingsSeasonsMasterTitle;
+
+  /// No description provided for @settingsSeasonsMasterSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بطاقات المواسم وتحدياتها تظهر في وقتها، وأنت تتحكم بها من هنا.'**
+  String get settingsSeasonsMasterSubtitle;
+
+  /// No description provided for @settingsSeasonsYearGroup.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواسم السنة'**
+  String get settingsSeasonsYearGroup;
+
+  /// No description provided for @settingsSeasonsWeeklyGroup.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل أسبوع وكل شهر'**
+  String get settingsSeasonsWeeklyGroup;
+
+  /// No description provided for @settingsSeasonsRemindersGroup.
+  ///
+  /// In ar, this message translates to:
+  /// **'التذكيرات'**
+  String get settingsSeasonsRemindersGroup;
+
+  /// No description provided for @settingsSeasonsRemindersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات المواسم'**
+  String get settingsSeasonsRemindersTitle;
+
+  /// No description provided for @settingsSeasonsRemindersHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات بأيام المواسم، بحد أقصى تذكير واحد في اليوم. إيقافه يوقف كل تذكيرات المواسم.'**
+  String get settingsSeasonsRemindersHint;
+
+  /// No description provided for @settingsSeasonsShaban.
+  ///
+  /// In ar, this message translates to:
+  /// **'شعبان: الاستعداد لرمضان'**
+  String get settingsSeasonsShaban;
+
+  /// No description provided for @settingsSeasonsRamadan.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمضان والعشر الأواخر'**
+  String get settingsSeasonsRamadan;
+
+  /// No description provided for @settingsSeasonsEid.
+  ///
+  /// In ar, this message translates to:
+  /// **'عيد الفطر وصيام الست من شوال'**
+  String get settingsSeasonsEid;
+
+  /// No description provided for @settingsSeasonsHajj.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر من ذي الحجة وعرفة والأضحى'**
+  String get settingsSeasonsHajj;
+
+  /// No description provided for @settingsSeasonsNewYear.
+  ///
+  /// In ar, this message translates to:
+  /// **'رأس السنة الهجرية وحصاد العام'**
+  String get settingsSeasonsNewYear;
+
+  /// No description provided for @settingsSeasonsAshura.
+  ///
+  /// In ar, this message translates to:
+  /// **'عاشوراء'**
+  String get settingsSeasonsAshura;
+
+  /// No description provided for @settingsSeasonsFriday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجمعة: سورة الكهف'**
+  String get settingsSeasonsFriday;
+
+  /// No description provided for @settingsSeasonsWhiteDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأيام البيض'**
+  String get settingsSeasonsWhiteDays;
+
+  /// No description provided for @settingsSeasonsMonThu.
+  ///
+  /// In ar, this message translates to:
+  /// **'صيام الاثنين والخميس'**
+  String get settingsSeasonsMonThu;
+
+  /// No description provided for @settingsRestoreDefaults.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة الإعدادات الافتراضية'**
+  String get settingsRestoreDefaults;
+
+  /// No description provided for @settingsSeasonsNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآن: {season}'**
+  String settingsSeasonsNow(String season);
+
+  /// No description provided for @settingsSeasonsInDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{season} {days, plural, =1{يبدأ غدًا} =2{يبدأ بعد يومين} few{يبدأ بعد {daysText} أيام} many{يبدأ بعد {daysText} يومًا} other{يبدأ بعد {daysText} يوم}}}'**
+  String settingsSeasonsInDays(String season, int days, String daysText);
+
+  /// No description provided for @settingsSeasonsKidsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواسم الطفل'**
+  String get settingsSeasonsKidsTitle;
+
+  /// No description provided for @settingsSeasonsKidsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بطاقات المواسم في صفحة طفلك.'**
+  String get settingsSeasonsKidsSubtitle;
+
+  /// No description provided for @ramadanHideSeason.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء هذا الموسم'**
+  String get ramadanHideSeason;
+
+  /// No description provided for @ramadanHideSeasonDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخفيناه. تقدر ترجّعه من الإعدادات ‹ المواسم والمناسبات'**
+  String get ramadanHideSeasonDone;
+
+  /// No description provided for @settingsFeaturesPageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مزايا التطبيق'**
+  String get settingsFeaturesPageTitle;
+
+  /// No description provided for @settingsFeaturesNavSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل ما ينفعك وأطفئ ما لا تحتاجه'**
+  String get settingsFeaturesNavSubtitle;
+
+  /// No description provided for @settingsFeaturesGroupReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراءة'**
+  String get settingsFeaturesGroupReading;
+
+  /// No description provided for @settingsFeaturesGroupMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ والمراجعة'**
+  String get settingsFeaturesGroupMemorization;
+
+  /// No description provided for @settingsFeaturesGroupAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذكار والصلاة'**
+  String get settingsFeaturesGroupAzkar;
+
+  /// No description provided for @settingsFeaturesGroupTogether.
+  ///
+  /// In ar, this message translates to:
+  /// **'مع الآخرين'**
+  String get settingsFeaturesGroupTogether;
+
+  /// No description provided for @settingsFeaturesGroupHome.
+  ///
+  /// In ar, this message translates to:
+  /// **'على الشاشة الرئيسية'**
+  String get settingsFeaturesGroupHome;
+
+  /// No description provided for @settingsFeaturesTry.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّبها'**
+  String get settingsFeaturesTry;
+
+  /// No description provided for @settingsFeatureReaderRepeatTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار التلاوة'**
+  String get settingsFeatureReaderRepeatTitle;
+
+  /// No description provided for @settingsFeatureReaderRepeatSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار التلاوة تلقائيًا بعدد تختاره أثناء الحفظ.'**
+  String get settingsFeatureReaderRepeatSubtitle;
+
+  /// No description provided for @settingsFeatureAyahNotesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظات الآيات'**
+  String get settingsFeatureAyahNotesTitle;
+
+  /// No description provided for @settingsFeatureAyahNotesSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب ملاحظتك على أي آية وارجع إليها وقت المراجعة.'**
+  String get settingsFeatureAyahNotesSubtitle;
+
+  /// No description provided for @settingsFeatureAudioDownloadsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل التلاوات'**
+  String get settingsFeatureAudioDownloadsTitle;
+
+  /// No description provided for @settingsFeatureAudioDownloadsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نزّل التلاوات مرة واحدة واسمعها من غير إنترنت.'**
+  String get settingsFeatureAudioDownloadsSubtitle;
+
+  /// No description provided for @settingsFeatureStrengthOverlayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قوة الحفظ في المصحف'**
+  String get settingsFeatureStrengthOverlayTitle;
+
+  /// No description provided for @settingsFeatureStrengthOverlaySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلوين الآيات بحسب قوة حفظك، والتحكم فيها من قائمة المصحف.'**
+  String get settingsFeatureStrengthOverlaySubtitle;
+
+  /// No description provided for @settingsFeatureForgettingForecastTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'توقع النسيان'**
+  String get settingsFeatureForgettingForecastTitle;
+
+  /// No description provided for @settingsFeatureForgettingForecastSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'توقّع ما يقارب النسيان وراجعه قبل أن يفلت.'**
+  String get settingsFeatureForgettingForecastSubtitle;
+
+  /// No description provided for @settingsFeaturePrayerReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعة بعد الصلاة'**
+  String get settingsFeaturePrayerReviewTitle;
+
+  /// No description provided for @settingsFeaturePrayerReviewSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة قصيرة تلحق بأوقات الصلاة.'**
+  String get settingsFeaturePrayerReviewSubtitle;
+
+  /// No description provided for @settingsFeatureHandsFreeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعة بلا يدين'**
+  String get settingsFeatureHandsFreeTitle;
+
+  /// No description provided for @settingsFeatureHandsFreeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع بصوتك من غير لمس الشاشة.'**
+  String get settingsFeatureHandsFreeSubtitle;
+
+  /// No description provided for @settingsFeatureAfterPrayerAzkarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار بعد الصلاة'**
+  String get settingsFeatureAfterPrayerAzkarTitle;
+
+  /// No description provided for @settingsFeatureAfterPrayerAzkarSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار بعد الصلاة تظهر لك في وقتها.'**
+  String get settingsFeatureAfterPrayerAzkarSubtitle;
+
+  /// No description provided for @settingsFeatureGroupKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة الجماعية'**
+  String get settingsFeatureGroupKhatmahTitle;
+
+  /// No description provided for @settingsFeatureGroupKhatmahSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة مع أصحابك وتابع تقدم بعضكم.'**
+  String get settingsFeatureGroupKhatmahSubtitle;
+
+  /// No description provided for @settingsFeatureHomeWidgetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أداة الشاشة الرئيسية'**
+  String get settingsFeatureHomeWidgetTitle;
+
+  /// No description provided for @settingsFeatureHomeWidgetSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.'**
+  String get settingsFeatureHomeWidgetSubtitle;
+
+  /// No description provided for @seasonDaysUntil.
+  ///
+  /// In ar, this message translates to:
+  /// **'{days, plural, =1{غدًا} =2{بعد يومين} few{بعد {daysText} أيام} many{بعد {daysText} يومًا} other{بعد {daysText} يوم}}'**
+  String seasonDaysUntil(int days, String daysText);
+
+  /// No description provided for @seasonNameRamadan.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمضان'**
+  String get seasonNameRamadan;
+
+  /// No description provided for @seasonShabanOpenKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطة ختمة لرمضان'**
+  String get seasonShabanOpenKhatmah;
+
+  /// No description provided for @seasonEidGreeting.
+  ///
+  /// In ar, this message translates to:
+  /// **'عيد مبارك'**
+  String get seasonEidGreeting;
+
+  /// No description provided for @seasonEidShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'شارك رمضانك'**
+  String get seasonEidShare;
+
+  /// No description provided for @seasonEidShareTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمضان {yearText}'**
+  String seasonEidShareTitle(String yearText);
+
+  /// No description provided for @seasonShawwalTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ست من شوال'**
+  String get seasonShawwalTitle;
+
+  /// No description provided for @seasonShawwalProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{doneText} من {totalText} أيام'**
+  String seasonShawwalProgress(String doneText, String totalText);
+
+  /// No description provided for @seasonShawwalMark.
+  ///
+  /// In ar, this message translates to:
+  /// **'صمت اليوم'**
+  String get seasonShawwalMark;
+
+  /// No description provided for @seasonShawwalUnmark.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء تسجيل اليوم'**
+  String get seasonShawwalUnmark;
+
+  /// No description provided for @seasonShawwalDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت الست من شوال'**
+  String get seasonShawwalDone;
+
+  /// No description provided for @seasonShawwalLogDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل يومًا'**
+  String get seasonShawwalLogDay;
+
+  /// No description provided for @seasonShawwalLogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الست من شوال'**
+  String get seasonShawwalLogTitle;
+
+  /// No description provided for @seasonShawwalLogDayRow.
+  ///
+  /// In ar, this message translates to:
+  /// **'{hijriDayText} شوال'**
+  String seasonShawwalLogDayRow(String hijriDayText);
+
+  /// No description provided for @seasonHajjName.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر من ذي الحجة'**
+  String get seasonHajjName;
+
+  /// No description provided for @seasonHajjDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر من ذي الحجة: اليوم {dayText}'**
+  String seasonHajjDay(String dayText);
+
+  /// No description provided for @seasonHajjKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة في عشرة أيام'**
+  String get seasonHajjKhatmah;
+
+  /// No description provided for @seasonArafahTomorrow.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: صيام يوم عرفة غدًا'**
+  String get seasonArafahTomorrow;
+
+  /// No description provided for @seasonArafahToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم يوم عرفة'**
+  String get seasonArafahToday;
+
+  /// No description provided for @seasonNewYearTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عام هجري جديد {yearText}'**
+  String seasonNewYearTitle(String yearText);
+
+  /// No description provided for @seasonNewYearPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضع خطة للعام'**
+  String get seasonNewYearPlan;
+
+  /// No description provided for @seasonAshuraName.
+  ///
+  /// In ar, this message translates to:
+  /// **'صيام التاسع والعاشر من محرم'**
+  String get seasonAshuraName;
+
+  /// No description provided for @seasonAshuraTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عاشوراء'**
+  String get seasonAshuraTitle;
+
+  /// No description provided for @seasonAshuraDay9.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم التاسع من محرم'**
+  String get seasonAshuraDay9;
+
+  /// No description provided for @seasonAshuraDay10.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم العاشر من محرم'**
+  String get seasonAshuraDay10;
+
+  /// No description provided for @seasonWhiteDaysTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأيام البيض'**
+  String get seasonWhiteDaysTitle;
+
+  /// No description provided for @seasonWhiteDaysInvite.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: صيام الأيام البيض ({firstText} و{secondText} و{thirdText}) يبدأ غدًا'**
+  String seasonWhiteDaysInvite(
+    String firstText,
+    String secondText,
+    String thirdText,
+  );
+
+  /// No description provided for @seasonWhiteDaysToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم {dayText} من الأيام البيض'**
+  String seasonWhiteDaysToday(String dayText);
+
+  /// No description provided for @seasonFridayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجمعة: سورة الكهف'**
+  String get seasonFridayTitle;
+
+  /// No description provided for @seasonFridayOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح سورة الكهف'**
+  String get seasonFridayOpen;
+
+  /// No description provided for @seasonFridayRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرأتها'**
+  String get seasonFridayRead;
+
+  /// No description provided for @seasonMonThuTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاثنين والخميس'**
+  String get seasonMonThuTitle;
+
+  /// No description provided for @seasonMonThuBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يوم من أيام صيام النافلة الأسبوعية لمن أراد'**
+  String get seasonMonThuBody;
+
+  /// No description provided for @seasonBadgesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'شاراتك'**
+  String get seasonBadgesTitle;
+
+  /// No description provided for @seasonBadgeRamadanKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة رمضان {yearText}'**
+  String seasonBadgeRamadanKhatmah(String yearText);
+
+  /// No description provided for @seasonBadgeShawwalSix.
+  ///
+  /// In ar, this message translates to:
+  /// **'الست من شوال {yearText}'**
+  String seasonBadgeShawwalSix(String yearText);
+
+  /// No description provided for @seasonBadgeHajjKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة ذي الحجة {yearText}'**
+  String seasonBadgeHajjKhatmah(String yearText);
+
+  /// No description provided for @ramadanHoursPart.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{ساعة} =2{ساعتين} few{{countText} ساعات} many{{countText} ساعة} other{{countText} ساعة}}'**
+  String ramadanHoursPart(int count, String countText);
+
+  /// No description provided for @ramadanMinutesPart.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{دقيقة} =2{دقيقتين} few{{countText} دقائق} many{{countText} دقيقة} other{{countText} دقيقة}}'**
+  String ramadanMinutesPart(int count, String countText);
+
+  /// No description provided for @ramadanDurationJoin.
+  ///
+  /// In ar, this message translates to:
+  /// **'{first} و{second}'**
+  String ramadanDurationJoin(String first, String second);
+
+  /// No description provided for @ramadanIftarIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإفطار بعد {duration}'**
+  String ramadanIftarIn(String duration);
+
+  /// No description provided for @ramadanSuhoorUntil.
+  ///
+  /// In ar, this message translates to:
+  /// **'السحور حتى {time}'**
+  String ramadanSuhoorUntil(String time);
+
+  /// No description provided for @notificationSeasonTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير من تالية'**
+  String get notificationSeasonTitle;
+
+  /// No description provided for @notificationSeasonArafah.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: صيام يوم عرفة غدًا'**
+  String get notificationSeasonArafah;
+
+  /// No description provided for @notificationSeasonAshura.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: صيام التاسع والعاشر من محرم يبدأ غدًا'**
+  String get notificationSeasonAshura;
+
+  /// No description provided for @notificationSeasonWhiteDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: صيام الأيام البيض ({firstText} و{secondText} و{thirdText}) يبدأ غدًا'**
+  String notificationSeasonWhiteDays(
+    String firstText,
+    String secondText,
+    String thirdText,
+  );
+
+  /// No description provided for @notificationSeasonMonThu.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير: غدًا يوم من أيام صيام النافلة الأسبوعية'**
+  String get notificationSeasonMonThu;
 }
 
 class _AppLocalizationsDelegate

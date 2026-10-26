@@ -275,14 +275,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     bookmarkService.addListener(_onBookmarksChanged);
   }
 
-  bool get _strengthFlagOn {
-    try {
-      return getIt.isRegistered<ExperienceFlags>() &&
-          getIt<ExperienceFlags>().isEnabled(ExperienceFeature.strengthOverlay);
-    } catch (_) {
-      return false;
-    }
-  }
+  bool get _strengthFlagOn =>
+      experienceFeatureVisible(ExperienceFeature.strengthOverlay);
 
   void _initStrengthOverlay() {
     if (!_strengthFlagOn) return;

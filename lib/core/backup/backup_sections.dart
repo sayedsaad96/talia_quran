@@ -100,6 +100,11 @@ abstract final class BackupPreferencePolicy {
     'azkar_smart_wird_',
     'ramadan_',
     'hijri_year_recap_dismissed_',
+    // Per-owner feature and season on/off choices (feature/season settings).
+    'feature_pref_',
+    'season_pref_',
+    // Per-owner season marks: fasted days, read Fridays, hidden cards, badges.
+    'season_flag_',
   };
 
   /// Prefixes whose remainder is the owner id itself (no `|` separator),
@@ -450,6 +455,9 @@ abstract final class BackupPreferencePolicy {
     'azkar_smart_wird_xp': _string(),
     'ramadan_card_dismissed_': _bool,
     'hijri_year_recap_dismissed_': _bool,
+    'feature_pref_': _bool,
+    'season_pref_': _bool,
+    'season_flag_': _bool,
   };
 
   static void Function(Object value) _string([

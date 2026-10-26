@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/services/notification_scheduler.dart';
@@ -28,9 +29,12 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   /// never offer a forecast reminder that cannot fire.
   Future<bool> _forecastAvailable() async {
     try {
-      if (!ExperienceFlags.fromPreferences(
-        _prefs,
-      ).isEnabled(ExperienceFeature.forgettingForecast)) {
+      // The app-wide flags include the user's «مزايا التطبيق» choice; the raw
+      // rollout flags are the fallback where no graph is registered (tests).
+      final flags = getIt.isRegistered<ExperienceFlags>()
+          ? getIt<ExperienceFlags>()
+          : ExperienceFlags.fromPreferences(_prefs);
+      if (!flags.isEnabled(ExperienceFeature.forgettingForecast)) {
         return false;
       }
       return await forecastAudienceIsAdultFromPreferences(_prefs);

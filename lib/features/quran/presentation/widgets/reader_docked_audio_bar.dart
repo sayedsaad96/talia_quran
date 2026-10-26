@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/experience/experience_feature_flags.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/icons/talia_icons.dart';
@@ -12,6 +11,7 @@ import '../../../../core/services/sleep_timer.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/quran_audio_player_cubit.dart';
+import 'audio_downloads_access.dart';
 import 'quran_audio_equalizer.dart';
 import 'reader_repeat_sheet.dart';
 
@@ -29,12 +29,7 @@ class ReaderDockedAudioBar extends StatelessWidget {
   bool get _repeatEnabled {
     final override = showRepeatControls;
     if (override != null) return override;
-    try {
-      return getIt.isRegistered<ExperienceFlags>() &&
-          getIt<ExperienceFlags>().isEnabled(ExperienceFeature.readerRepeat);
-    } catch (_) {
-      return false;
-    }
+    return experienceFeatureVisible(ExperienceFeature.readerRepeat);
   }
 
   @override

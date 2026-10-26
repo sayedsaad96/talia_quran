@@ -489,6 +489,20 @@ void main() {
       expect(prefs.getString('ramadan_tarawih|owner-a'), isNull);
     });
 
+    test('clears per-owner feature and season preferences', () async {
+      await prefs.setBool('feature_pref_readerRepeat|owner-a', false);
+      await prefs.setBool('season_pref_ramadan|owner-a', false);
+      await prefs.setBool('season_pref_master|owner-a', false);
+      await prefs.setBool('season_pref_reminders|owner-a', true);
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(prefs.getBool('feature_pref_readerRepeat|owner-a'), isNull);
+      expect(prefs.getBool('season_pref_ramadan|owner-a'), isNull);
+      expect(prefs.getBool('season_pref_master|owner-a'), isNull);
+      expect(prefs.getBool('season_pref_reminders|owner-a'), isNull);
+    });
+
     test('clears the guardian what\'s-new seen ids', () async {
       await prefs.setString(
         'guardian_milestones_seen|owner-a|child-1',

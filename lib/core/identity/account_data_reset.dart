@@ -161,6 +161,11 @@ class AccountDataReset {
     'ramadan_',
     // Per-owner, per-Hijri-year recap card dismissals.
     'hijri_year_recap_dismissed_',
+    // Per-owner feature and season on/off choices (feature/season settings).
+    'feature_pref_',
+    'season_pref_',
+    // Per-owner season marks: fasted days, read Fridays, hidden cards, badges.
+    'season_flag_',
     // Guardian «ما الجديد» seen ids, per owner and child (local only).
     'guardian_milestones_seen',
   };

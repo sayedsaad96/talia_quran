@@ -28,7 +28,18 @@ import 'notification_service.dart';
 import 'hijri_date_adjustment.dart';
 import 'prayer_times_service.dart';
 import '../seasons/season_calendar.dart';
+import '../seasons/season_preferences.dart';
+import '../identity/record_owner_provider.dart';
 import '../../features/seasons/domain/last_ten_reminder.dart';
+import '../../features/seasons/domain/season_reminders.dart';
+
+/// Builds the rollout + user-choice flags for one refresh from its prefs.
+typedef ExperienceFlagsFactory = ExperienceFlags Function(SharedPreferences prefs);
+
+/// Builds the seasons choices for one refresh from its prefs.
+typedef SeasonPreferencesFactory = SeasonPreferences Function(
+  SharedPreferences prefs,
+);
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
 typedef ForecastAudienceResolver = Future<bool> Function(SharedPreferences prefs);
@@ -117,6 +128,13 @@ class NotificationScheduler {
   final DateTime Function() _prayerReviewNow;
   final DateTime Function() _seasonNow;
   final Future<int?> Function()? _kidsPracticeDaysLoader;
+  final ExperienceFlagsFactory _experienceFlags;
+  final SeasonPreferencesFactory _seasonPreferences;
+
+  /// False in the headless refresh worker, which cannot know the signed-in
+  /// owner. Owner-scoped reminders (seasonal, last ten nights, forgetting
+  /// forecast) are then left exactly as already scheduled: no cancel, no add.
+  final bool _ownerScopedRefresh;
 
   /// Prayer V2 delivery coordinator. Non-null on Android only (created with
   /// the MethodChannel-backed native scheduler); injectable for tests.
@@ -138,7 +156,20 @@ class NotificationScheduler {
     DateTime Function()? prayerReviewNow,
     this.onPrayerScheduleUpdated,
     DateTime Function()? seasonNow,
-  }) : _prayerReviewNow = prayerReviewNow ?? DateTime.now,
+    ExperienceFlagsFactory? experienceFlags,
+    SeasonPreferencesFactory? seasonPreferences,
+    this._ownerScopedRefresh = true,
+  }) : _experienceFlags =
+           experienceFlags ??
+           ((prefs) => ExperienceFlags.withUserPreferences(
+                 prefs,
+                 const SupabaseRecordOwnerProvider(),
+               )),
+       _seasonPreferences =
+           seasonPreferences ??
+           ((prefs) =>
+               SeasonPreferences(prefs, const SupabaseRecordOwnerProvider())),
+       _prayerReviewNow = prayerReviewNow ?? DateTime.now,
        _seasonNow = seasonNow ?? DateTime.now,
        _forecastAudienceIsAdult =
            forecastAudienceIsAdult ?? forecastAudienceIsAdultFromPreferences,
@@ -149,19 +180,23 @@ class NotificationScheduler {
                : null);
 
   /// The opt-in Ramadan reminder for the evening the last ten nights begin.
-  /// Needs the seasonal flag and an adult profile, like the Ramadan card that
-  /// offers it; anything else cancels it.
+  /// Needs the seasonal flag, an adult profile, Ramadan not hidden by the
+  /// user (master + Ramadan switch) and the card's own opt-in (its own
+  /// consent, independent of the shared seasonal reminders switch); anything
+  /// else cancels it.
   Future<void> _refreshLastTenReminder(
     AppLocalizations l10n,
     SharedPreferences prefs,
     bool adultAudience,
   ) async {
     final optedIn = prefs.getBool(lastTenReminderPreferenceKey) ?? false;
-    final flagOn = ExperienceFlags.fromPreferences(
+    final flagOn = _experienceFlags(
       prefs,
     ).isEnabled(ExperienceFeature.seasonalRamadan);
+    final seasons = _seasonPreferences(prefs);
+    final seasonAllowed = seasons.isSeasonVisible(SeasonId.ramadan);
     DateTime? at;
-    if (optedIn && flagOn && adultAudience) {
+    if (optedIn && flagOn && seasonAllowed && adultAudience) {
       final now = _seasonNow();
       final info = ramadanInfoAt(
         now,
@@ -186,6 +221,7 @@ class NotificationScheduler {
         }
       }
       at = lastTenReminderAt(info: info, now: now, maghrib: maghrib);
+      if (at != null) at = _afterQuietHours(prefs, at);
     }
     if (at == null) {
       await _service.cancelLastTenReminder();
@@ -196,6 +232,97 @@ class NotificationScheduler {
       body: l10n.ramadanLastTenTonight,
       at: at,
     );
+  }
+
+  /// Neutral seasonal reminders (Arafah eve, Ashura eve, white days eve,
+  /// Monday/Thursday eve): at most one per civil day, the next
+  /// seven days only. Needs the seasonal flag, an adult profile, the seasonal
+  /// reminders opt-in and the reminder's own season visible; anything else
+  /// cancels them all. Plain UI text; azkar never go into notifications. Friday
+  /// Surat al-Kahf is covered by the weekly reminder in notification settings.
+  Future<void> _refreshSeasonReminders(
+    AppLocalizations l10n,
+    SharedPreferences prefs,
+    bool adultAudience,
+  ) async {
+    try {
+      final requests = <SeasonReminderRequest>[];
+      final flagOn = _experienceFlags(
+        prefs,
+      ).isEnabled(ExperienceFeature.seasonalRamadan);
+      final seasons = _seasonPreferences(prefs);
+      if (flagOn && adultAudience && seasons.remindersEnabled) {
+        final now = _seasonNow();
+        final slots = upcomingSeasonReminderSlots(
+          now,
+          adjustmentDays: HijriDateAdjustment(prefs).days,
+          isVisible: seasons.isSeasonVisible,
+        );
+        for (final slot in slots) {
+          DateTime? maghrib;
+          if (seasonReminderUsesMaghrib(slot.kind)) {
+            maghrib = await _maghribOn(slot.date);
+          }
+          final raw = seasonReminderTime(slot, now: now, maghrib: maghrib);
+          if (raw == null) continue;
+          final at = _afterQuietHours(prefs, raw);
+          requests.add(
+            SeasonReminderRequest(
+              title: l10n.notificationSeasonTitle,
+              body: switch (slot.kind) {
+                SeasonReminderKind.arafahEve => l10n.notificationSeasonArafah,
+                SeasonReminderKind.ashuraEve => l10n.notificationSeasonAshura,
+                SeasonReminderKind.whiteDaysEve =>
+                  l10n.notificationSeasonWhiteDays(
+                    LocaleNumberFormatter.number(13, l10n.localeName),
+                    LocaleNumberFormatter.number(14, l10n.localeName),
+                    LocaleNumberFormatter.number(15, l10n.localeName),
+                  ),
+                SeasonReminderKind.monThuEve => l10n.notificationSeasonMonThu,
+              },
+              at: at,
+              payload: '/',
+            ),
+          );
+        }
+      }
+      await _service.replaceSeasonReminders(requests);
+    } catch (error, stack) {
+      TaliaLogger.w('Seasonal reminders were not refreshed', error, stack);
+    }
+  }
+
+  /// Like the khatmah reminders: a time inside the user's quiet hours moves
+  /// to the end of that window.
+  DateTime _afterQuietHours(SharedPreferences prefs, DateTime at) {
+    final shifted = applyQuietHours(
+      hour: at.hour,
+      minute: at.minute,
+      enabled:
+          prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+          false,
+      startHour: prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23,
+      endHour: prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4,
+    );
+    if (shifted.hour == at.hour && shifted.minute == at.minute) return at;
+    var out = DateTime(at.year, at.month, at.day, shifted.hour, shifted.minute);
+    if (out.isBefore(at)) out = out.add(const Duration(days: 1));
+    return out;
+  }
+
+  Future<DateTime?> _maghribOn(DateTime date) async {
+    try {
+      final service =
+          _prayerTimesService ??
+          (getIt.isRegistered<PrayerTimesService>()
+              ? getIt<PrayerTimesService>()
+              : null);
+      final times = await service?.timesForDate(date);
+      return times?.where((prayer) => prayer.key == 'maghrib').firstOrNull?.time;
+    } catch (error, stack) {
+      TaliaLogger.w('Season reminder uses its fallback time', error, stack);
+      return null;
+    }
   }
 
   String? _lastRollingDateKey;
@@ -716,10 +843,12 @@ class NotificationScheduler {
     } catch (_) {
       adultAudience = false;
     }
-    final featureEnabled = ExperienceFlags.fromPreferences(prefs).isEnabled(
-      ExperienceFeature.forgettingForecast,
-    );
-    if (forecastEnabled && featureEnabled && adultAudience) {
+    final featureEnabled =
+        _ownerScopedRefresh &&
+        _experienceFlags(prefs).isEnabled(ExperienceFeature.forgettingForecast);
+    if (!_ownerScopedRefresh) {
+      // Owner unknown (headless worker): keep the forecast as scheduled.
+    } else if (forecastEnabled && featureEnabled && adultAudience) {
       final hour = prefs.getInt(
             '${TaliaNotificationService.forgettingForecastPreferenceKey}_hour',
           ) ??
@@ -744,7 +873,10 @@ class NotificationScheduler {
       await _service.cancelForgettingForecastReminder();
     }
 
-    await _refreshLastTenReminder(l10n, prefs, adultAudience);
+    if (_ownerScopedRefresh) {
+      await _refreshLastTenReminder(l10n, prefs, adultAudience);
+      await _refreshSeasonReminders(l10n, prefs, adultAudience);
+    }
 
     // Tahajjud / Qiyam Al-Layl Reminder
     final tahajjudEnabled =

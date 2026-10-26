@@ -3,15 +3,20 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
+import 'package:talia_quran/core/experience/feature_preferences.dart';
 import 'package:talia_quran/core/home_widget/home_widget_publisher.dart';
 import 'package:talia_quran/core/home_widget/widget_snapshot.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/seasons/season_calendar.dart';
+import 'package:talia_quran/core/seasons/season_preferences.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
+import 'package:talia_quran/features/seasons/data/season_flag_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
@@ -195,6 +200,72 @@ void main() {
 
       expect(prefs.getString('ayah_review_pull_cursor'), isNull);
       expect(prefs.getString('ayah_review_pull_cursor_pulled_at'), isNull);
+    });
+
+    test("owner A's feature and season choices do not reach owner B", () async {
+      final owner = _SwitchableOwner('user-a');
+      final features = FeaturePreferences(
+        prefs,
+        owner,
+        ExperienceFlags((_) => true),
+      );
+      final seasons = SeasonPreferences(prefs, owner);
+      final flags = SeasonFlagStore(prefs, owner);
+
+      await features.setEnabled(ExperienceFeature.readerRepeat, false);
+      await seasons.setMasterEnabled(false);
+      await seasons.setSeasonEnabled(SeasonId.ashura, false);
+      await seasons.setRemindersEnabled(true);
+      await flags.set('shawwal_1448_2027-04-01', true);
+
+      owner.id = 'user-b';
+      expect(features.isEnabled(ExperienceFeature.readerRepeat), isTrue);
+      expect(seasons.masterEnabled, isTrue);
+      expect(seasons.isSeasonEnabled(SeasonId.ashura), isTrue);
+      expect(seasons.remindersEnabled, isFalse);
+      expect(flags.isSet('shawwal_1448_2027-04-01'), isFalse);
+      expect(flags.namesWithPrefix('shawwal_'), isEmpty);
+
+      // B's own choices do not leak back to A either.
+      await seasons.setRemindersEnabled(false);
+      await seasons.setMasterEnabled(true);
+      owner.id = 'user-a';
+      expect(features.isEnabled(ExperienceFeature.readerRepeat), isFalse);
+      expect(seasons.masterEnabled, isFalse);
+      expect(seasons.isSeasonEnabled(SeasonId.ashura), isFalse);
+      expect(seasons.remindersEnabled, isTrue);
+      expect(flags.isSet('shawwal_1448_2027-04-01'), isTrue);
+    });
+
+    test("the departing owner's choices are cleared on an account change", () async {
+      final owner = _SwitchableOwner('user-a');
+      final features = FeaturePreferences(
+        prefs,
+        owner,
+        ExperienceFlags((_) => true),
+      );
+      final seasons = SeasonPreferences(prefs, owner);
+      await features.setEnabled(ExperienceFeature.readerRepeat, false);
+      await seasons.setRemindersEnabled(true);
+      await SeasonFlagStore(prefs, owner).set('x', true);
+      await prefs.setString(AuthCubit.lastSignedInUserIdKey, 'user-a');
+
+      await AuthCubit.resolveOwnerChange(
+        prefs: prefs,
+        userId: 'user-b',
+        onDepartingAccount:
+            AccountDataReset(isar, prefs).clearAccountOwnedData,
+      );
+
+      expect(
+        prefs.getKeys().where(
+          (k) =>
+              k.startsWith('feature_pref_') ||
+              k.startsWith('season_pref_') ||
+              k.startsWith('season_flag_'),
+        ),
+        isEmpty,
+      );
     });
   });
 }

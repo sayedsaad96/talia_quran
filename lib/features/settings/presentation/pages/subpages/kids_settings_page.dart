@@ -10,6 +10,7 @@ import '../../widgets/settings_section.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
 
 /// Kids path and guardian tools, shown only when the profile allows them.
+/// The child never sees the seasons page.
 class KidsSettingsPage extends StatelessWidget {
   const KidsSettingsPage({super.key});
 
@@ -38,6 +39,9 @@ class KidsSettingsPage extends StatelessWidget {
             );
           },
         ),
+        // «مواسم الطفل» returns here when a kids seasonal surface ships; until
+        // then the switch would control nothing. The store API and its
+        // `season_pref_kids` key stay.
       ],
     );
   }

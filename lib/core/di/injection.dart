@@ -63,11 +63,14 @@ import '../memorization/learning_launch_context.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/kids_enrichment_feature_flags.dart';
 import '../../features/adult_journey/adult_journey_feature_flags.dart';
+import '../../features/seasons/data/season_flag_store.dart';
 import '../../features/seasons/data/tarawih_log_store.dart';
 import '../accessibility/clarity_mode.dart';
 import '../backup/backup_collector.dart';
 import '../backup/backup_restorer.dart';
 import '../experience/experience_feature_flags.dart';
+import '../experience/feature_preferences.dart';
+import '../seasons/season_preferences.dart';
 import '../../features/adult_journey/application/adult_journey_launch_resolver.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/adult_journey/application/adult_journey_usecases.dart';
@@ -320,7 +323,9 @@ Future<void> configureDependencies({bool background = false}) async {
       deleteBookmarksForOwner: getIt<BookmarkService>().eraseOwner,
       cancelAccountNotifications: getIt<TaliaNotificationService>().cancelAll,
       clearHomeWidget: () async {
-        if (!background) await getIt<HomeWidgetPublisher>().clearForAccountTransition();
+        if (!background) {
+          await getIt<HomeWidgetPublisher>().clearForAccountTransition();
+        }
       },
     ),
   );
@@ -366,18 +371,16 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
-  getIt.registerLazySingleton<QuranAudioDownloadManager>(
-    () {
-      const probe = DeviceResourceProbe();
-      return QuranAudioDownloadManager(
-        getIt<SharedPreferences>(),
-        getIt<QuranRepository>(),
-        cache: QuranAudioDurableCache.instance,
-        freeBytes: probe.freeBytes,
-        unmeteredNetwork: probe.isOnUnmeteredNetwork,
-      );
-    },
-  );
+  getIt.registerLazySingleton<QuranAudioDownloadManager>(() {
+    const probe = DeviceResourceProbe();
+    return QuranAudioDownloadManager(
+      getIt<SharedPreferences>(),
+      getIt<QuranRepository>(),
+      cache: QuranAudioDurableCache.instance,
+      freeBytes: probe.freeBytes,
+      unmeteredNetwork: probe.isOnUnmeteredNetwork,
+    );
+  });
   getIt.registerSingleton<QuranReciterService>(
     QuranReciterService(getIt<SharedPreferences>()),
   );
@@ -412,12 +415,25 @@ Future<void> configureDependencies({bool background = false}) async {
       onPrayerScheduleUpdated: () async {
         if (!background) await getIt<HomeWidgetPublisher>().refresh();
       },
+      experienceFlags: (prefs) => ExperienceFlags.withUserPreferences(
+        prefs,
+        getIt<RecordOwnerProvider>(),
+      ),
+      seasonPreferences: (prefs) =>
+          SeasonPreferences(prefs, getIt<RecordOwnerProvider>()),
       prayerCompanionPlanner: getIt<PrayerCompanionPlanner>(),
       prayerCompanionPreferences: getIt<PrayerCompanionPreferences>(),
       kidsPracticeDaysLoader: () => readKidsPracticeDays(getIt),
       prayerReviewBodyLoader: (occurrence, l10n) async {
-        if (!getIt<ExperienceFlags>().isEnabled(ExperienceFeature.prayerReview)) return null;
-        return getIt<PrayerReviewNotificationText>().forOccurrence(occurrence, l10n);
+        if (!getIt<ExperienceFlags>().isEnabled(
+          ExperienceFeature.prayerReview,
+        )) {
+          return null;
+        }
+        return getIt<PrayerReviewNotificationText>().forOccurrence(
+          occurrence,
+          l10n,
+        );
       },
       forecastAudienceIsAdult: (_) async {
         final profile = await getIt<MemorizationPathResolver>()
@@ -691,12 +707,9 @@ Future<void> configureDependencies({bool background = false}) async {
         ),
         // Downloaded ayahs play from disk, so they work offline. Only the
         // durable store: its files were checked as MP3 when downloaded.
-        localAudio: (surahId, ayahNumber, reciter) =>
-            QuranAudioDurableCache.instance.getValidFilePath(
-              surahId,
-              ayahNumber,
-              reciter: reciter,
-            ),
+        localAudio: (surahId, ayahNumber, reciter) => QuranAudioDurableCache
+            .instance
+            .getValidFilePath(surahId, ayahNumber, reciter: reciter),
       );
       // Attach after the player exists — never during configureDependencies.
       // Constructing AudioPlayer() while splash init is still running can
@@ -778,12 +791,17 @@ Future<void> configureDependencies({bool background = false}) async {
         if (getIt.isRegistered<KidsPolicyController>()) {
           unawaited(getIt<KidsPolicyController>().reload());
         }
-        if (getIt<KidsEnrichmentFlags>().isEnabled(KidsEnrichmentFeature.remotePlan) &&
+        if (getIt<KidsEnrichmentFlags>().isEnabled(
+              KidsEnrichmentFeature.remotePlan,
+            ) &&
             getIt.isRegistered<NotificationScheduler>() &&
             getIt.isRegistered<LocaleCubit>()) {
-          unawaited(getIt<NotificationScheduler>().refreshNotifications(
-            lookupAppLocalizations(getIt<LocaleCubit>().state), force: true,
-          ));
+          unawaited(
+            getIt<NotificationScheduler>().refreshNotifications(
+              lookupAppLocalizations(getIt<LocaleCubit>().state),
+              force: true,
+            ),
+          );
         }
       },
       familyActivityInputs: familyActivityInputsLoader(getIt),
@@ -932,7 +950,8 @@ Future<void> configureDependencies({bool background = false}) async {
       cloudSyncQueue: getIt<CloudSyncQueue>(),
       bookmarkService: getIt<BookmarkService>(),
       groupKhatmahRepository: getIt.isRegistered<GroupKhatmahRepository>()
-          ? getIt<GroupKhatmahRepository>() : null,
+          ? getIt<GroupKhatmahRepository>()
+          : null,
       groupKhatmahAvailable: () =>
           getIt.isRegistered<GroupKhatmahAppEnvironment>() &&
           getIt<GroupKhatmahAppEnvironment>().featureEnabled &&
@@ -1211,10 +1230,13 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<KidsReviewOutcomeCommitter>(),
       null,
       null,
-      RecoverKidsSessionSplit(KidsLegacySplitRecoveryRepositoryImpl(
-        getIt<MemorizationPlusLocalDatasource>(), getIt<RecordOwnerProvider>(),
-        AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
-      )),
+      RecoverKidsSessionSplit(
+        KidsLegacySplitRecoveryRepositoryImpl(
+          getIt<MemorizationPlusLocalDatasource>(),
+          getIt<RecordOwnerProvider>(),
+          AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
+        ),
+      ),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -1295,9 +1317,28 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<KidsEnrichmentFlags>(
     () => KidsEnrichmentFlags.fromPreferences(getIt<SharedPreferences>()),
   );
-  // Roadmap batch A rollout switches (all off by default).
+  // Roadmap batch A rollout switches AND the owner's own on/off choice from
+  // «مزايا التطبيق», so every read site honours the user's switch. Labs and
+  // FeaturePreferences' availability layer read the raw rollout flags.
   getIt.registerLazySingleton<ExperienceFlags>(
-    () => ExperienceFlags.fromPreferences(getIt<SharedPreferences>()),
+    () => ExperienceFlags.withUserPreferences(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  // User preference layer on top of the raw rollout switches (per owner).
+  getIt.registerLazySingleton<FeaturePreferences>(
+    () => FeaturePreferences(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+      ExperienceFlags.fromPreferences(getIt<SharedPreferences>()),
+    ),
+  );
+  getIt.registerLazySingleton<SeasonPreferences>(
+    () => SeasonPreferences(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
   );
   getIt.registerLazySingleton<BackupCollector>(
     () => BackupCollector(
@@ -1353,6 +1394,12 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<SharedPreferences>(),
       flagEnabled: () =>
           getIt<ExperienceFlags>().isEnabled(ExperienceFeature.clarityMode),
+    ),
+  );
+  getIt.registerLazySingleton<SeasonFlagStore>(
+    () => SeasonFlagStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
     ),
   );
   getIt.registerLazySingleton<TarawihLogStore>(
@@ -1710,7 +1757,8 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<IsarConfusionPairRepository>(
     () => IsarConfusionPairRepository(
-      getIt<Isar>(), getIt<RecordOwnerProvider>(),
+      getIt<Isar>(),
+      getIt<RecordOwnerProvider>(),
       AccountDataBarrier.forPreferences(getIt<SharedPreferences>()),
     ),
   );
