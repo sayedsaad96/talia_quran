@@ -941,7 +941,7 @@ void main() {
     });
 
     group('a guardian PIN whose verifier is lost', () {
-      test('reads as no PIN so a new one can be created', () async {
+      test('a missing verifier preserves the configured PIN marker', () async {
         await repository.setParentPin('1234');
         // The keystore wiped the verifier (e.g. the key was invalidated)
         // before the next app start.
@@ -959,25 +959,25 @@ void main() {
           () => throw StateError('settings'),
         );
 
-        expect(settings.hasPin, isFalse);
-        expect((await datasource.getParentSettings()).hasPin, isFalse);
-        await repository.setParentPin('5678');
-        expect(
-          (await repository.verifyParentPin('5678')).getOrElse(() => false),
-          isTrue,
-        );
+        // A missing verifier can follow a storage failure or plugin reset.
+        // Never disable guardian protection without explicit recovery.
+        expect(settings.hasPin, isTrue);
+        expect((await datasource.getParentSettings()).hasPin, isTrue);
       });
 
-      test('a verify attempt clears it without counting a failure', () async {
-        await repository.setParentPin('1234');
-        await parentPinStore.clearVerifier('local');
+      test(
+        'a verify attempt preserves the marker without counting a failure',
+        () async {
+          await repository.setParentPin('1234');
+          await parentPinStore.clearVerifier('local');
 
-        final verified = await repository.verifyParentPin('1234');
+          final verified = await repository.verifyParentPin('1234');
 
-        expect(verified.getOrElse(() => true), isFalse);
-        expect(await parentPinStore.readFailureCount('local'), 0);
-        expect((await datasource.getParentSettings()).hasPin, isFalse);
-      });
+          expect(verified.getOrElse(() => true), isFalse);
+          expect(await parentPinStore.readFailureCount('local'), 0);
+          expect((await datasource.getParentSettings()).hasPin, isTrue);
+        },
+      );
 
       test('a PIN whose verifier was not stored is refused', () async {
         parentPinStore.failWrites = true;
@@ -1000,6 +1000,7 @@ void main() {
         expect(settings.hasPin, isTrue);
         expect(verified.getOrElse(() => true), isFalse);
         expect(await parentPinStore.readFailureCount('local'), 0);
+        expect((await datasource.getParentSettings()).hasPin, isTrue);
 
         parentPinStore.unreadable = false;
         expect(

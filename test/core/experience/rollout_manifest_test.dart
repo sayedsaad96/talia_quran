@@ -69,7 +69,7 @@ void main() {
       expect(experience.isEnabled(ExperienceFeature.strengthOverlay), isTrue);
       expect(
         experience.isEnabled(ExperienceFeature.similarAyahTrainer),
-        isFalse,
+        isTrue,
       );
       expect(
         KidsEnrichmentFlags.fromPreferences(
@@ -90,13 +90,13 @@ void main() {
     test('a stored value always wins over the default', () async {
       final p = await prefs({
         ExperienceFeature.strengthOverlay.storageKey: false,
-        ExperienceFeature.similarAyahTrainer.storageKey: true,
+        ExperienceFeature.similarAyahTrainer.storageKey: false,
       });
       final experience = ExperienceFlags.fromPreferences(p);
       expect(experience.isEnabled(ExperienceFeature.strengthOverlay), isFalse);
       expect(
         experience.isEnabled(ExperienceFeature.similarAyahTrainer),
-        isTrue,
+        isFalse,
       );
     });
 

@@ -108,7 +108,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final RecoverKidsSessionSplit? _recoverSessionSplit;
   int _loadGeneration = 0;
   StreamSubscription<void>? _legacyRecoveryChanges;
-  ({int surahId, int ayahNumber, String text, KidsMissionType mission})? _legacyRecoveryIntent;
+  ({int surahId, int ayahNumber, String text, KidsMissionType mission})?
+  _legacyRecoveryIntent;
   final GetKidsJourneyUsecase _getKidsJourney;
   final AwardKidsPointsUsecase _awardPoints;
   final AchievementService _achievementService;
@@ -347,8 +348,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   void _offerLegacyRecovery(KidsLegacyResumeRecoveryTicket ticket) {
     try {
       ticket.lease.checkOwner(ticket.ownerId);
-      _legacyRecoveryIntent = (surahId: ticket.surahId, ayahNumber: ticket.checkpointAyah,
-        text: '', mission: KidsMissionType.resume);
+      _legacyRecoveryIntent = (
+        surahId: ticket.surahId,
+        ayahNumber: ticket.checkpointAyah,
+        text: '',
+        mission: KidsMissionType.resume,
+      );
       unawaited(_legacyRecoveryChanges?.cancel());
       _legacyRecoveryChanges = ticket.lease.changes.listen((_) {
         try {
@@ -356,7 +361,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         } on AccountDataUnavailableException {
           _loadGeneration++;
           _legacyRecoveryIntent = null;
-          if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+          if (!isClosed) {
+            emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+          }
         }
       });
       emit(KidsModeSplitChoiceRequired(ticket));
@@ -365,11 +372,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  Future<void> recoverLegacySplit(KidsLegacyResumeRecoveryTicket displayedTicket,
-      {required bool whole, int? stageSize}) async {
+  Future<void> recoverLegacySplit(
+    KidsLegacyResumeRecoveryTicket displayedTicket, {
+    required bool whole,
+    int? stageSize,
+  }) async {
     final current = state;
     final intent = _legacyRecoveryIntent;
-    if (current is! KidsModeSplitChoiceRequired || current.saving || intent == null ||
+    if (current is! KidsModeSplitChoiceRequired ||
+        current.saving ||
+        intent == null ||
         !identical(current.ticket, displayedTicket)) {
       return;
     }
@@ -389,9 +401,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         emit(KidsModeSplitChoiceRequired(ticket, failed: true));
         return;
       }
-      await load(intent.surahId, intent.ayahNumber, intent.text, missionType: intent.mission);
+      await load(
+        intent.surahId,
+        intent.ayahNumber,
+        intent.text,
+        missionType: intent.mission,
+      );
     } on AccountDataUnavailableException {
-      if (!isClosed) emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+      if (!isClosed) {
+        emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+      }
     }
   }
 
@@ -897,19 +916,28 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  /// Guardian-verified fallback for genuine audio or speech-recognition faults.
+  /// Guardian-assessed fallback for genuine audio or speech-recognition faults.
   /// A recitation mismatch is pedagogical evidence and can never use this path.
-  Future<bool> submitManualCompletion({String? guardianPin}) async {
+  Future<bool> submitManualCompletion({
+    String? guardianPin,
+    bool skipPin = false,
+  }) async {
     if (state is! KidsModeLoaded) return false;
     final before = state as KidsModeLoaded;
     final requestedSessionId = _sessionId;
     if (before.isCompleted || !before.canUseGuardianFallback) return false;
 
     final verifier = _guardianPinVerifier;
-    if (verifier == null || guardianPin == null || guardianPin.length != 4) {
+    if (guardianPin != null) {
+      if (verifier == null ||
+          guardianPin.length != 4 ||
+          int.tryParse(guardianPin) == null ||
+          !await verifier(guardianPin)) {
+        return false;
+      }
+    } else if (!skipPin) {
       return false;
     }
-    if (!await verifier(guardianPin)) return false;
     // The checks above awaited; act on the current state, not a snapshot.
     if (isClosed || state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;
@@ -939,12 +967,15 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
 
-  /// Item 20 — the child recites the hidden ayah to a guardian, who proves
-  /// themselves with [guardianPin], verified here exactly like
+  /// Item 20 — the child recites the hidden ayah for assessment, with optional PIN
+  /// verification as in
   /// [submitManualCompletion]. Needs the required listens first; moves the
   /// session into hidden recall through the same engine steps as
   /// [tryFromMemory]. Returns whether the mode is now on.
-  Future<bool> enterGuardianRecitation({required String guardianPin}) async {
+  Future<bool> enterGuardianRecitation({
+    String? guardianPin,
+    bool skipPin = false,
+  }) async {
     if (state is! KidsModeLoaded) return false;
     final before = state as KidsModeLoaded;
     final requestedSessionId = _sessionId;
@@ -954,8 +985,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return false;
     }
     final verifier = _guardianPinVerifier;
-    if (verifier == null || guardianPin.length != 4) return false;
-    if (!await verifier(guardianPin)) return false;
+    if (guardianPin != null) {
+      if (verifier == null ||
+          guardianPin.length != 4 ||
+          int.tryParse(guardianPin) == null ||
+          !await verifier(guardianPin)) {
+        return false;
+      }
+    } else if (!skipPin) {
+      return false;
+    }
     // The check above awaited; act on the current state, not a snapshot.
     if (isClosed || state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;

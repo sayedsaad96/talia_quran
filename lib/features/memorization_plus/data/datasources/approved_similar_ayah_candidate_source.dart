@@ -7,11 +7,13 @@ import '../../../../core/memorization/similar_ayah/similar_ayah_attempt_service.
 import '../../../../core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../domain/entities/similar_ayah_reference_pair.dart';
+import '../../domain/repositories/similar_ayah_browsing_source.dart';
 
 /// Reads only a checksum-verified, explicitly approved derived index.
 /// Missing approval is normal unavailability, with no corpus or speech logs.
 final class ApprovedSimilarAyahCandidateSource
-    implements SimilarAyahCandidateSource {
+    implements SimilarAyahCandidateSource, SimilarAyahBrowsingSource {
   ApprovedSimilarAyahCandidateSource({
     required this._quran,
     required this._readBytes,
@@ -20,7 +22,11 @@ final class ApprovedSimilarAyahCandidateSource
   static const manifestPath = 'assets/data/content_manifest.json';
   final QuranRepository _quran;
   final Future<List<int>> Function(String path) _readBytes;
-  Future<Map<String, Set<String>>?>? _index;
+  Future<_ApprovedIndex?>? _index;
+
+  @override
+  Future<List<SimilarAyahReferencePair>?> loadBrowsingPairs() async =>
+      (await (_index ??= _loadApprovedIndex()))?.pairs;
 
   @override
   Future<List<SimilarAyahCandidate>?> loadCandidates(String targetKey) async {
@@ -28,7 +34,7 @@ final class ApprovedSimilarAyahCandidateSource
       _parseKey(targetKey);
       final index = await (_index ??= _loadApprovedIndex());
       if (index == null) return null;
-      final keys = (index[targetKey] ?? const <String>{}).toList()
+      final keys = (index.detector[targetKey] ?? const <String>{}).toList()
         ..sort(_compareKeys);
       final details = <int, SurahDetail>{};
       final candidates = <SimilarAyahCandidate>[];
@@ -56,7 +62,7 @@ final class ApprovedSimilarAyahCandidateSource
     }
   }
 
-  Future<Map<String, Set<String>>?> _loadApprovedIndex() async {
+  Future<_ApprovedIndex?> _loadApprovedIndex() async {
     try {
       final manifest = jsonDecode(utf8.decode(await _readBytes(manifestPath)));
       if (manifest is! Map<String, dynamic> || manifest['items'] is! List) {
@@ -106,7 +112,7 @@ final class ApprovedSimilarAyahCandidateSource
         DateTime.tryParse(at) != null;
   }
 
-  Map<String, Set<String>> _decodeIndex(Object? raw, Object? corpusSha) {
+  _ApprovedIndex _decodeIndex(Object? raw, Object? corpusSha) {
     if (raw is! Map<String, dynamic> ||
         raw['version'] != 1 ||
         raw['pairs'] is! List ||
@@ -114,8 +120,12 @@ final class ApprovedSimilarAyahCandidateSource
       throw const FormatException('Invalid derived index');
     }
     final provenance = raw['provenance'] as Map<String, dynamic>;
+    final tokenPolicy = provenance['tokenPolicy'];
     if (provenance['corpusSha256'] != corpusSha ||
-        provenance['tokenPolicy'] != 'normalized-recitable-whitespace-v1') {
+        !{
+          'normalized-recitable-whitespace-v1',
+          'owner-curated-fixture-metrics-v1',
+        }.contains(tokenPolicy)) {
       throw const FormatException('Invalid derived provenance');
     }
     for (final field in [
@@ -133,19 +143,28 @@ final class ApprovedSimilarAyahCandidateSource
     }
     final adjacency = <String, Set<String>>{};
     final seen = <String>{};
+    final pairs = <SimilarAyahReferencePair>[];
     for (final pair in raw['pairs'] as List) {
-      _addPair(pair, adjacency, seen);
+      if (tokenPolicy == 'owner-curated-fixture-metrics-v1' &&
+          (pair is! Map<String, dynamic> || pair['kind'] != 'curated')) {
+        throw const FormatException('Invalid curated provenance');
+      }
+      _addPair(pair, adjacency, seen, pairs);
     }
-    return Map.unmodifiable({
-      for (final entry in adjacency.entries)
-        entry.key: Set<String>.unmodifiable(entry.value),
-    });
+    return _ApprovedIndex(
+      Map.unmodifiable({
+        for (final entry in adjacency.entries)
+          entry.key: Set<String>.unmodifiable(entry.value),
+      }),
+      List.unmodifiable(pairs),
+    );
   }
 
   void _addPair(
     Object? raw,
     Map<String, Set<String>> result,
     Set<String> seen,
+    List<SimilarAyahReferencePair> pairs,
   ) {
     const fields = {'a', 'b', 'score', 'sharedRun', 'kind'};
     if (raw is! Map<String, dynamic> ||
@@ -167,12 +186,31 @@ final class ApprovedSimilarAyahCandidateSource
         score < 0 ||
         score > 1 ||
         raw['sharedRun'] is! int ||
-        (raw['sharedRun'] as int) < 1 ||
-        !{'identical', 'prefix', 'suffix', 'partial'}.contains(raw['kind'])) {
+        (raw['sharedRun'] as int) < 0 ||
+        !{
+          'identical',
+          'prefix',
+          'suffix',
+          'partial',
+          'curated',
+        }.contains(raw['kind']) ||
+        (raw['kind'] != 'curated' && (raw['sharedRun'] as int) < 1)) {
       throw const FormatException('Invalid pair relation');
     }
-    result.putIfAbsent(a, () => {}).add(b);
-    result.putIfAbsent(b, () => {}).add(a);
+    final (aSurah, aAyah) = _parseKey(a);
+    final (bSurah, bAyah) = _parseKey(b);
+    pairs.add(
+      SimilarAyahReferencePair(
+        targetSurahId: aSurah,
+        targetAyahNumber: aAyah,
+        otherSurahId: bSurah,
+        otherAyahNumber: bAyah,
+      ),
+    );
+    if (raw['kind'] != 'curated') {
+      result.putIfAbsent(a, () => {}).add(b);
+      result.putIfAbsent(b, () => {}).add(a);
+    }
   }
 
   (int, int) _parseKey(String key) {
@@ -199,4 +237,10 @@ final class ApprovedSimilarAyahCandidateSource
         ? left.$1.compareTo(right.$1)
         : left.$2.compareTo(right.$2);
   }
+}
+
+final class _ApprovedIndex {
+  const _ApprovedIndex(this.detector, this.pairs);
+  final Map<String, Set<String>> detector;
+  final List<SimilarAyahReferencePair> pairs;
 }

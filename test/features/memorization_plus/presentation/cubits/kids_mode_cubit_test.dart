@@ -1031,50 +1031,90 @@ void main() {
       // session must complete directly instead of dead-ending.
       expect(loaded.sessionState.blockReviewRequired, isFalse);
     });
-    test('legacy partition failure offers recovery without launching or clearing checkpoint', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final barrier = AccountDataBarrier.forPreferences(prefs)
-        ..owner = const FixedRecordOwnerProvider('child');
-      repository.journeyFailure = KidsSplitChoiceRequiredFailure(
-        KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
-          surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1),
-      );
-      await cubit.load(114, 1, 'test ayah', missionType: KidsMissionType.resume);
-      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
-      expect(repository.getJourneyCalls, 1);
-      barrier.invalidate();
-      expect(cubit.state, isA<KidsModeError>());
-    });
+    test(
+      'legacy partition failure offers recovery without launching or clearing checkpoint',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final barrier = AccountDataBarrier.forPreferences(prefs)
+          ..owner = const FixedRecordOwnerProvider('child');
+        repository.journeyFailure = KidsSplitChoiceRequiredFailure(
+          KidsLegacyResumeRecoveryTicket(
+            ownerId: 'child',
+            lease: barrier.capture(),
+            surahId: 114,
+            verifiedAyahCount: 6,
+            defaultStageSize: 3,
+            checkpointAyah: 1,
+          ),
+        );
+        await cubit.load(
+          114,
+          1,
+          'test ayah',
+          missionType: KidsMissionType.resume,
+        );
+        expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+        expect(repository.getJourneyCalls, 1);
+        barrier.invalidate();
+        expect(cubit.state, isA<KidsModeError>());
+      },
+    );
 
-    test('legacy recovery shows save failure then retries the original ayah without awarding', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      const owner = FixedRecordOwnerProvider('child');
-      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
-      final source = _RecoveryDatasource(prefs, owner: owner);
-      final ticket = KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
-        surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1);
-      repository.journeyFailureLoader = () async =>
-        (await source.getParentSettings()).kidsHouseSizesBySurah.containsKey(114)
-          ? null : KidsSplitChoiceRequiredFailure(ticket);
-      await cubit.close();
-      cubit = buildCubit(recorder: _FakeKidsRecitationRecorder(),
-        quran: const _ResumeQuranRepository(), recoverSessionSplit: RecoverKidsSessionSplit(
-          KidsLegacySplitRecoveryRepositoryImpl(source, owner, barrier)));
-      await cubit.load(114, 1, 'ayah text', missionType: KidsMissionType.resume);
-      source.failWrites = true;
-      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
-      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
-      expect((cubit.state as KidsModeSplitChoiceRequired).failed, isTrue);
-      expect((await source.getParentSettings()).kidsHouseSizesBySurah, isEmpty);
-      source.failWrites = false;
-      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
-      expect(cubit.state, isA<KidsModeLoaded>());
-      expect((cubit.state as KidsModeLoaded).ayahNumber, 1);
-      expect((await source.getParentSettings()).kidsHouseSizesBySurah[114], 4);
-      expect(repository.awardCalls, 0);
-    });
+    test(
+      'legacy recovery shows save failure then retries the original ayah without awarding',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        const owner = FixedRecordOwnerProvider('child');
+        final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+        final source = _RecoveryDatasource(prefs, owner: owner);
+        final ticket = KidsLegacyResumeRecoveryTicket(
+          ownerId: 'child',
+          lease: barrier.capture(),
+          surahId: 114,
+          verifiedAyahCount: 6,
+          defaultStageSize: 3,
+          checkpointAyah: 1,
+        );
+        repository.journeyFailureLoader = () async =>
+            (await source.getParentSettings()).kidsHouseSizesBySurah
+                .containsKey(114)
+            ? null
+            : KidsSplitChoiceRequiredFailure(ticket);
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          quran: const _ResumeQuranRepository(),
+          recoverSessionSplit: RecoverKidsSessionSplit(
+            KidsLegacySplitRecoveryRepositoryImpl(source, owner, barrier),
+          ),
+        );
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+        source.failWrites = true;
+        await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+        expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+        expect((cubit.state as KidsModeSplitChoiceRequired).failed, isTrue);
+        expect(
+          (await source.getParentSettings()).kidsHouseSizesBySurah,
+          isEmpty,
+        );
+        source.failWrites = false;
+        await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+        expect(cubit.state, isA<KidsModeLoaded>());
+        expect((cubit.state as KidsModeLoaded).ayahNumber, 1);
+        expect(
+          (await source.getParentSettings()).kidsHouseSizesBySurah[114],
+          4,
+        );
+        expect(repository.awardCalls, 0);
+      },
+    );
 
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
@@ -2089,6 +2129,18 @@ void main() {
       expect(await cubit.submitManualCompletion(guardianPin: ''), isFalse);
       expect(repository.awardCalls, 0);
       expect((cubit.state as KidsModeLoaded).isCompleted, isFalse);
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 10,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+      expect(await cubit.submitManualCompletion(skipPin: true), isTrue);
     });
     test(
       'automatic completion with missing transcript does not award or complete',
@@ -2474,7 +2526,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
       const Right(KidsProgress.initial());
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
     required int surahId,
   }) async {
     // Some phase-4 tests load another surah (e.g. 113 for a due review);

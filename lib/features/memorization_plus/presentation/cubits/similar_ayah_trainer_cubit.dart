@@ -11,6 +11,7 @@ import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/confusion_pair.dart';
 import '../../domain/entities/similar_ayah_reference_pair.dart';
+import '../../domain/repositories/similar_ayah_browsing_source.dart';
 
 typedef SimilarAyahAuthorityCapture = SimilarAyahAttemptAuthority Function();
 
@@ -28,6 +29,7 @@ final class SimilarAyahTrainerState extends Equatable {
   const SimilarAyahTrainerState({
     this.pairs = const [],
     this.related = const [],
+    this.browsing = const [],
     this.selected,
     this.target,
     this.other,
@@ -47,6 +49,7 @@ final class SimilarAyahTrainerState extends Equatable {
   final List<ConfusionPair> pairs;
   final SimilarAyahReferencePair? selected;
   final List<SimilarAyahReferencePair> related;
+  final List<SimilarAyahReferencePair> browsing;
   final SimilarAyahTrainerPassage? target;
   final SimilarAyahTrainerPassage? other;
   final bool loading;
@@ -60,6 +63,7 @@ final class SimilarAyahTrainerState extends Equatable {
     List<ConfusionPair>? pairs,
     SimilarAyahReferencePair? selected,
     List<SimilarAyahReferencePair>? related,
+    List<SimilarAyahReferencePair>? browsing,
     bool clearSelection = false,
     SimilarAyahTrainerPassage? target,
     SimilarAyahTrainerPassage? other,
@@ -73,6 +77,7 @@ final class SimilarAyahTrainerState extends Equatable {
   }) => SimilarAyahTrainerState(
     pairs: pairs ?? this.pairs,
     related: related ?? this.related,
+    browsing: browsing ?? this.browsing,
     selected: clearSelection ? null : selected ?? this.selected,
     target: clearPassages ? null : target ?? this.target,
     other: clearPassages ? null : other ?? this.other,
@@ -88,6 +93,7 @@ final class SimilarAyahTrainerState extends Equatable {
   List<Object?> get props => [
     pairs,
     related,
+    browsing,
     selected,
     target,
     other,
@@ -145,9 +151,19 @@ final class SimilarAyahTrainerCubit extends Cubit<SimilarAyahTrainerState> {
       if (!adult) return _gate();
       final pairs = await _readPairs();
       if (!_valid(authority, request)) return;
+      final source = _candidateSource;
+      final browsing = source is SimilarAyahBrowsingSource
+          ? await (source as SimilarAyahBrowsingSource).loadBrowsingPairs()
+          : <SimilarAyahReferencePair>[];
+      if (!_valid(authority, request)) return;
+      if (browsing == null && pairs.isEmpty) {
+        emit(const SimilarAyahTrainerState(indexUnavailable: true));
+        return;
+      }
       emit(
         state.copyWith(
           pairs: List.unmodifiable(pairs),
+          browsing: List.unmodifiable(browsing ?? const []),
           loading: false,
           failed: false,
         ),
@@ -169,6 +185,35 @@ final class SimilarAyahTrainerCubit extends Cubit<SimilarAyahTrainerState> {
       final adult = await _readAdultEligibility();
       if (!_valid(authority, request)) return;
       if (!adult) return _gate();
+      final source = _candidateSource;
+      if (source is SimilarAyahBrowsingSource) {
+        final all = await (source as SimilarAyahBrowsingSource)
+            .loadBrowsingPairs();
+        if (!_valid(authority, request)) return;
+        if (all == null) {
+          emit(const SimilarAyahTrainerState(indexUnavailable: true));
+          return;
+        }
+        final related = <SimilarAyahReferencePair>[];
+        for (final pair in all) {
+          if (pair.targetSurahId == target.surahId &&
+              pair.targetAyahNumber == target.ayahNumber) {
+            related.add(pair);
+          } else if (pair.otherSurahId == target.surahId &&
+              pair.otherAyahNumber == target.ayahNumber) {
+            related.add(
+              SimilarAyahReferencePair(
+                targetSurahId: target.surahId,
+                targetAyahNumber: target.ayahNumber,
+                otherSurahId: pair.targetSurahId,
+                otherAyahNumber: pair.targetAyahNumber,
+              ),
+            );
+          }
+        }
+        emit(SimilarAyahTrainerState(related: List.unmodifiable(related)));
+        return;
+      }
       final candidates = await _candidateSource?.loadCandidates(
         '${target.surahId}:${target.ayahNumber}',
       );

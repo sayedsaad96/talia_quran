@@ -268,6 +268,21 @@ Future<void> _showManualTokenDialog(BuildContext context) async {
 /// wondering whether the scan or the typed code was taken.
 Future<void> _linkChild(BuildContext context, String token) async {
   final cubit = context.read<FamilyDashboardCubit>();
+  final scope = await GuardianLinkScope.capture();
+  if (scope == null || !context.mounted) return;
+  final verified = await ensureGuardianPin(
+    context,
+    confirmLabel: context.l10n.confirm,
+    isScopeValid: () => scope.active,
+    canCreatePin: scope.stillValid,
+  );
+  if (!verified ||
+      !context.mounted ||
+      cubit.isClosed ||
+      !await scope.stillValid() ||
+      !context.mounted) {
+    return;
+  }
   final navigator = Navigator.of(context, rootNavigator: true);
   unawaited(
     showDialog<void>(

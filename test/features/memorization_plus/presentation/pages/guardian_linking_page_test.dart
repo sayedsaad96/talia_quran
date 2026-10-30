@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
@@ -26,13 +29,136 @@ void main() {
     await getIt.reset();
   });
 
+  testWidgets('a pending QR stays hidden until the mandatory PIN is verified', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository()
+      ..pendingSession = _pairingSession();
+    await _register(repository);
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('ABCD-EF'), findsNothing);
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('guardian-pin-skip')), findsNothing);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('ABCD-EF'), findsNothing);
+    await _authorizeLink(tester);
+    expect(find.text('ABCD-EF'), findsOneWidget);
+    expect(repository.createPairingCalls, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('linking creates a required PIN before generating a code', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository()..hasPin = false;
+    await _register(repository);
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('guardian-pin-skip')), findsNothing);
+    expect(repository.createPairingCalls, 0);
+    await tester.enterText(
+      find.byKey(const ValueKey('guardian-pin-create')),
+      '2468',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('guardian-pin-create-confirm')),
+      '2468',
+    );
+    await tester.tap(find.byKey(const ValueKey('guardian-pin-create-save')));
+    await tester.pumpAndSettle();
+    expect(repository.pinWrites, 1);
+    expect(repository.createPairingCalls, 1);
+    expect(find.text('ABCD-EF'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('account change during PIN prompt cannot generate a code', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository();
+    final owner = _MutableOwner();
+    await _register(repository, owner: owner);
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link guardian now'));
+    await tester.pumpAndSettle();
+    owner.currentOwnerId = 'other-user';
+    await tester.enterText(find.byType(TextField).last, '1234');
+    await tester.tap(find.text('Confirm').last);
+    await tester.pumpAndSettle();
+    expect(repository.createPairingCalls, 0);
+    expect(find.text('ABCD-EF'), findsNothing);
+  });
+
+  testWidgets('account invalidation hides a displayed pairing code', (
+    tester,
+  ) async {
+    final repository = _GuardianLinkingRepository();
+    await _register(repository);
+    await tester.pumpWidget(
+      const _TestApp(
+        authState: AuthAuthenticated(
+          user: AppUser(
+            id: 'child-user',
+            email: 'child@example.com',
+            displayName: 'Child',
+          ),
+        ),
+        child: GuardianLinkingPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _authorizeLink(tester);
+    expect(find.text('ABCD-EF'), findsOneWidget);
+    AccountDataBarrier.forPreferences(getIt<SharedPreferences>()).invalidate();
+    await tester.pumpAndSettle();
+    expect(find.text('ABCD-EF'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('guest child sees sign-in-required message and no QR action', (
     tester,
   ) async {
     final repository = _GuardianLinkingRepository();
-    getIt.registerFactory<GuardianLinkingCubit>(
-      () => GuardianLinkingCubit(repository),
-    );
+    await _register(repository);
 
     await tester.pumpWidget(
       const _TestApp(
@@ -61,9 +187,7 @@ void main() {
     tester,
   ) async {
     final repository = _GuardianLinkingRepository();
-    getIt.registerFactory<GuardianLinkingCubit>(
-      () => GuardianLinkingCubit(repository),
-    );
+    await _register(repository);
 
     await tester.pumpWidget(
       const _TestApp(
@@ -81,8 +205,7 @@ void main() {
 
     expect(find.text('Link guardian now'), findsOneWidget);
 
-    await tester.tap(find.text('Link guardian now'));
-    await tester.pumpAndSettle();
+    await _authorizeLink(tester);
 
     expect(repository.createPairingCalls, 1);
     // Shown in groups of four so it can be read out and typed reliably.
@@ -93,9 +216,7 @@ void main() {
     tester,
   ) async {
     final repository = _GuardianLinkingRepository();
-    getIt.registerFactory<GuardianLinkingCubit>(
-      () => GuardianLinkingCubit(repository),
-    );
+    await _register(repository);
 
     await tester.pumpWidget(
       const _TestApp(
@@ -110,8 +231,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Link guardian now'));
-    await tester.pumpAndSettle();
+    await _authorizeLink(tester);
 
     expect(find.byKey(const ValueKey('guardian-check-now')), findsOneWidget);
     final later = find.byKey(const ValueKey('guardian-link-later'));
@@ -124,9 +244,7 @@ void main() {
 
   testWidgets('"Check now" reads the link status at once', (tester) async {
     final repository = _GuardianLinkingRepository();
-    getIt.registerFactory<GuardianLinkingCubit>(
-      () => GuardianLinkingCubit(repository),
-    );
+    await _register(repository);
 
     await tester.pumpWidget(
       const _TestApp(
@@ -141,8 +259,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Link guardian now'));
-    await tester.pumpAndSettle();
+    await _authorizeLink(tester);
     final before = repository.linkChecks;
 
     final checkNow = find.byKey(const ValueKey('guardian-check-now'));
@@ -164,9 +281,7 @@ void main() {
       ..createPairingResult = const Left(
         NetworkFailure(CubitMessageCodes.guardianCloudUnavailable),
       );
-    getIt.registerFactory<GuardianLinkingCubit>(
-      () => GuardianLinkingCubit(repository),
-    );
+    await _register(repository);
 
     await tester.pumpWidget(
       const _TestApp(
@@ -181,8 +296,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Link guardian now'));
-    await tester.pumpAndSettle();
+    await _authorizeLink(tester);
 
     expect(
       find.text(
@@ -213,6 +327,38 @@ void main() {
     expect(find.byIcon(TaliaIcons.arrowForward), findsWidgets);
     expect(find.byIcon(TaliaIcons.arrowBack), findsNothing);
   });
+}
+
+Future<void> _register(
+  _GuardianLinkingRepository repository, {
+  RecordOwnerProvider? owner,
+}) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  owner ??= const FixedRecordOwnerProvider('child-user');
+  AccountDataBarrier.forPreferences(prefs).owner = owner;
+  getIt.registerSingleton<SharedPreferences>(prefs);
+  getIt.registerSingleton<RecordOwnerProvider>(owner);
+  getIt.registerSingleton<MemorizationPlusRepository>(repository);
+  getIt.registerFactory<GuardianLinkingCubit>(
+    () => GuardianLinkingCubit(repository),
+  );
+}
+
+Future<void> _authorizeLink(WidgetTester tester) async {
+  await tester.tap(find.text('Link guardian now'));
+  await tester.pumpAndSettle();
+  expect(find.byKey(const ValueKey('guardian-pin-skip')), findsNothing);
+  await tester.enterText(find.byType(TextField).last, '1234');
+  await tester.tap(find.text('Confirm').last);
+  await tester.pumpAndSettle();
+}
+
+class _MutableOwner implements RecordOwnerProvider {
+  @override
+  String currentOwnerId = 'child-user';
+  @override
+  bool get isSignedIn => true;
 }
 
 class _TestApp extends StatelessWidget {
@@ -258,6 +404,26 @@ class _GuardianLinkingRepository implements MemorizationPlusRepository {
   int continueWithoutGuardianCalls = 0;
   int linkChecks = 0;
   Either<Failure, PairingSession>? createPairingResult;
+  PairingSession? pendingSession;
+  bool hasPin = true;
+  int pinWrites = 0;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
+      Right(_childProfile());
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      Right(ParentSettings(pinHash: hasPin ? 'configured' : null));
+  @override
+  Future<Either<Failure, void>> setParentPin(String pin) async {
+    pinWrites++;
+    hasPin = true;
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, bool>> verifyParentPin(String pin) async =>
+      Right(pin == '1234');
 
   @override
   Future<Either<Failure, MemorizationProfile>>
@@ -275,7 +441,7 @@ class _GuardianLinkingRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, PairingSession?>> refreshPairingSession() async =>
-      const Right(null);
+      Right(pendingSession);
 
   @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession() async {
@@ -304,7 +470,7 @@ MemorizationProfile _childProfile() {
 }
 
 PairingSession _pairingSession() {
-  final now = DateTime.utc(2026, 1, 1, 12);
+  final now = DateTime.now().toUtc();
   return PairingSession(
     id: 'session-1',
     pairingCode: 'ABCDEF',

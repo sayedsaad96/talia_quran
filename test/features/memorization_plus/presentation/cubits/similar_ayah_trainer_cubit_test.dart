@@ -10,6 +10,8 @@ import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_confusio
 import 'package:talia_quran/core/memorization/learning_launch_context.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/confusion_pair.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/similar_ayah_reference_pair.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/similar_ayah_browsing_source.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/similar_ayah_trainer_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
@@ -54,6 +56,27 @@ void main() {
       expect(disabled.state.gated, isTrue);
       await disabled.close();
     });
+
+    test(
+      'approved browsing works with empty history and in both orientations',
+      () async {
+        final cubit = _cubit(
+          quran: quran,
+          authority: authority,
+          readPairs: () async => [],
+          candidates: _BrowseSource(),
+        );
+        await cubit.load();
+        expect(cubit.state.browsing, hasLength(1));
+        expect(cubit.state.pairs, isEmpty);
+        await cubit.chooseReference(cubit.state.browsing.single);
+        expect(cubit.state.target!.ayah.text, 'text 2 1');
+        expect(cubit.state.other!.ayah.text, 'text 2 2');
+        await cubit.loadRelated(const AyahReference(surahId: 2, ayahNumber: 2));
+        expect(cubit.state.related.single.otherAyahNumber, 1);
+        await cubit.close();
+      },
+    );
 
     test(
       'enabled child profile cannot read historical pairs or corpus',
@@ -283,6 +306,22 @@ final class _Candidates implements SimilarAyahCandidateSource {
   @override
   Future<List<SimilarAyahCandidate>?> loadCandidates(String targetKey) =>
       load(targetKey);
+}
+
+final class _BrowseSource
+    implements SimilarAyahCandidateSource, SimilarAyahBrowsingSource {
+  @override
+  Future<List<SimilarAyahCandidate>?> loadCandidates(String targetKey) async =>
+      [];
+  @override
+  Future<List<SimilarAyahReferencePair>?> loadBrowsingPairs() async => const [
+    SimilarAyahReferencePair(
+      targetSurahId: 2,
+      targetAyahNumber: 1,
+      otherSurahId: 2,
+      otherAyahNumber: 2,
+    ),
+  ];
 }
 
 extension on ConfusionPair {

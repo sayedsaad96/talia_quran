@@ -37,7 +37,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     final summary = await loadContentManifestSummary(rootBundle);
     expect(summary, isNotNull);
-    expect(summary!.datasetCount, 4);
+    expect(summary!.datasetCount, 5);
     expect(summary.datasetVersion, isNotNull);
   });
 }

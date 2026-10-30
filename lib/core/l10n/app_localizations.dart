@@ -3762,31 +3762,31 @@ abstract class AppLocalizations {
   /// No description provided for @familyPinOptionalHelp.
   ///
   /// In ar, this message translates to:
-  /// **'اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.'**
+  /// **'يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.'**
   String get familyPinOptionalHelp;
 
   /// No description provided for @familyPinSkip.
   ///
   /// In ar, this message translates to:
-  /// **'متابعة بدون قفل'**
+  /// **'المتابعة دون رمز'**
   String get familyPinSkip;
 
   /// No description provided for @familyPinLockOn.
   ///
   /// In ar, this message translates to:
-  /// **'قفل اللوحة برقم سري'**
+  /// **'إعداد رمز ولي الأمر'**
   String get familyPinLockOn;
 
   /// No description provided for @familyPinLockRemove.
   ///
   /// In ar, this message translates to:
-  /// **'إزالة قفل اللوحة'**
+  /// **'إزالة الرمز المحفوظ'**
   String get familyPinLockRemove;
 
   /// No description provided for @familyPinLockRemoveConfirm.
   ///
   /// In ar, this message translates to:
-  /// **'ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.'**
+  /// **'سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.'**
   String get familyPinLockRemoveConfirm;
 
   /// No description provided for @kidsGuardianLinkedBadge.
@@ -6357,7 +6357,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardPinHelp.
   ///
   /// In ar, this message translates to:
-  /// **'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز'**
+  /// **'إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.'**
   String get parentDashboardPinHelp;
 
   /// No description provided for @parentDashboardPinConfirm.
@@ -6399,7 +6399,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardResetPin.
   ///
   /// In ar, this message translates to:
-  /// **'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
+  /// **'إعادة تعيين الرمز على هذا الجهاز'**
   String get parentDashboardResetPin;
 
   /// No description provided for @parentDashboardForgotPin.
@@ -6579,7 +6579,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianSessionTileSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'لولي الأمر فقط، وتحتاج الرقم السري'**
+  /// **'فتح أدوات ولي الأمر؛ إدخال الرمز اختياري'**
   String get guardianSessionTileSubtitle;
 
   /// No description provided for @guardianSessionBackToChild.
@@ -6699,7 +6699,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianUnlinkTileSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'يحتاج الرقم السري والاتصال بالإنترنت'**
+  /// **'يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري'**
   String get guardianUnlinkTileSubtitle;
 
   /// No description provided for @guardianUnlinkConfirmTitle.
@@ -9631,7 +9631,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Open.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الأطفال. ويُضبط رمز ولي الأمر أثناء إعداد الطفل. وتظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.'**
+  /// **'اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.'**
   String get tutorialS9Open;
 
   /// No description provided for @tutorialS9Useful.
@@ -9643,7 +9643,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية ورمز ولي أمر من أربعة أرقام.'**
+  /// **'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.'**
   String get tutorialS9Step1;
 
   /// No description provided for @tutorialS9Step2.
@@ -9655,7 +9655,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Step3.
   ///
   /// In ar, this message translates to:
-  /// **'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي»: يدخل ولي الأمر الرمز للتأكيد.'**
+  /// **'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.'**
   String get tutorialS9Step3;
 
   /// No description provided for @tutorialS9Step4.
@@ -9667,7 +9667,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'حافظ على سرية الرمز: فهو يحمي أيضًا الخروج من مسار الأطفال.'**
+  /// **'حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.'**
   String get tutorialS9Tip1;
 
   /// No description provided for @tutorialS9Tip2.
@@ -14023,13 +14023,13 @@ abstract class AppLocalizations {
   /// No description provided for @guardianPinCreateReason.
   ///
   /// In ar, this message translates to:
-  /// **'هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة.'**
+  /// **'يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات.'**
   String get guardianPinCreateReason;
 
   /// No description provided for @childSetupPinOptionalHelp.
   ///
   /// In ar, this message translates to:
-  /// **'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.'**
+  /// **'اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر.'**
   String get childSetupPinOptionalHelp;
 
   /// No description provided for @childSetupPinAlreadySet.
@@ -14431,7 +14431,7 @@ abstract class AppLocalizations {
   /// No description provided for @kidsGuardianAuditionHint.
   ///
   /// In ar, this message translates to:
-  /// **'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم.'**
+  /// **'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري.'**
   String get kidsGuardianAuditionHint;
 
   /// No description provided for @kidsHouseReviewRemaining.
@@ -14715,6 +14715,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذر بدء التحديث. حاول مرة أخرى.'**
   String get appUpdateInstallFailed;
+
+  /// No description provided for @kidsChangeJourneyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير رحلة الحفظ'**
+  String get kidsChangeJourneyTitle;
+
+  /// No description provided for @kidsChangeJourneyDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر رحلة أخرى، وسيبقى تقدمك محفوظًا.'**
+  String get kidsChangeJourneyDescription;
 
   /// No description provided for @kidsJourneyPathTitle.
   ///
@@ -15613,8 +15625,20 @@ abstract class AppLocalizations {
   /// No description provided for @similarAyahTrainerMachineNote.
   ///
   /// In ar, this message translates to:
-  /// **'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.'**
+  /// **'للمقارنة والمراجعة، وليست حكمًا على التلاوة.'**
   String get similarAyahTrainerMachineNote;
+
+  /// No description provided for @similarAyahHistoryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل المراجعة'**
+  String get similarAyahHistoryTitle;
+
+  /// No description provided for @similarAyahBrowseTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'متشابهات للمراجعة'**
+  String get similarAyahBrowseTitle;
 
   /// No description provided for @similarAyahLookupAction.
   ///

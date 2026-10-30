@@ -244,7 +244,6 @@ FamilyDashboardCubit _buildCubit(
   AccountPasswordVerifier? verifier,
   ParentRewardUsecase? rewards,
   bool Function()? guardianSessionActive,
-  Future<bool> Function()? pinOptional,
 }) => FamilyDashboardCubit(
   ParentAccessUsecase(repository),
   ParentRemoteLinkUsecase(repository),
@@ -252,7 +251,6 @@ FamilyDashboardCubit _buildCubit(
   accountVerifier: verifier,
   rewards: rewards,
   guardianSessionActive: guardianSessionActive,
-  pinOptional: pinOptional,
 );
 
 Future<void> _unlockAndLoad(FamilyDashboardCubit cubit) async {
@@ -416,21 +414,7 @@ void main() {
   );
 
   group('optional PIN on the guardian\'s phone', () {
-    Future<bool> optional() async => true;
-
     test('without a PIN the dashboard opens directly', () async {
-      final repository = _FakeRepository(
-        settingsResult: const Right(ParentSettings()),
-      );
-      final cubit = _buildCubit(repository, pinOptional: optional);
-
-      await cubit.load();
-
-      expect(cubit.state, isA<FamilyDashboardLoaded>());
-      await cubit.close();
-    });
-
-    test('the child device still asks for a PIN without the option', () async {
       final repository = _FakeRepository(
         settingsResult: const Right(ParentSettings()),
       );
@@ -438,7 +422,19 @@ void main() {
 
       await cubit.load();
 
-      expect(cubit.state, const FamilyDashboardNeedsPin());
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
+      await cubit.close();
+    });
+
+    test('a child device without a PIN opens directly', () async {
+      final repository = _FakeRepository(
+        settingsResult: const Right(ParentSettings()),
+      );
+      final cubit = _buildCubit(repository);
+
+      await cubit.load();
+
+      expect(cubit.state, isA<FamilyDashboardLoaded>());
       await cubit.close();
     });
 
@@ -446,7 +442,7 @@ void main() {
       final repository = _FakeRepository(
         settingsResult: const Right(ParentSettings()),
       );
-      final cubit = _buildCubit(repository, pinOptional: optional);
+      final cubit = _buildCubit(repository);
       await cubit.load();
 
       await cubit.lockWithPin();
@@ -459,7 +455,7 @@ void main() {
 
     test('removing the lock clears the PIN and stays open', () async {
       final repository = _FakeRepository();
-      final cubit = _buildCubit(repository, pinOptional: optional);
+      final cubit = _buildCubit(repository);
       await _unlockAndLoad(cubit);
 
       await cubit.removePinLock();
@@ -471,7 +467,7 @@ void main() {
 
     test('changing the PIN offers a new one or no lock', () async {
       final repository = _FakeRepository();
-      final cubit = _buildCubit(repository, pinOptional: optional);
+      final cubit = _buildCubit(repository);
       await _unlockAndLoad(cubit);
 
       await cubit.resetAccess();
@@ -480,20 +476,19 @@ void main() {
       await cubit.close();
     });
 
-    test('without the option the lock cannot be removed or skipped', () async {
-      final repository = _FakeRepository();
-      final cubit = _buildCubit(repository);
-      await _unlockAndLoad(cubit);
-
-      await cubit.removePinLock();
-      expect(repository.resetCalls, 0);
-
-      await cubit.resetAccess();
-      expect(cubit.state, const FamilyDashboardNeedsPin());
-      await cubit.skipPin();
-      expect(cubit.state, const FamilyDashboardNeedsPin());
-      await cubit.close();
-    });
+    test(
+      'a locked dashboard can be skipped without removing the PIN',
+      () async {
+        final repository = _FakeRepository();
+        final cubit = _buildCubit(repository);
+        await cubit.load();
+        expect(cubit.state, isA<FamilyDashboardLocked>());
+        await cubit.skipPin();
+        expect(cubit.state, isA<FamilyDashboardLoaded>());
+        expect(repository.resetCalls, 0);
+        await cubit.close();
+      },
+    );
   });
 
   group('removing a child', () {

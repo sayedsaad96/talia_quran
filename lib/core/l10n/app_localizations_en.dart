@@ -2030,20 +2030,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyPinOptionalHelp =>
-      'Optional on your phone: keeps others out of the Family Dashboard.';
+      'You can skip the PIN. It is required only when linking a child to a guardian.';
 
   @override
-  String get familyPinSkip => 'Continue without a lock';
+  String get familyPinSkip => 'Continue without a PIN';
 
   @override
-  String get familyPinLockOn => 'Lock the dashboard with a PIN';
+  String get familyPinLockOn => 'Set up guardian PIN';
 
   @override
-  String get familyPinLockRemove => 'Remove the dashboard lock';
+  String get familyPinLockRemove => 'Remove saved PIN';
 
   @override
   String get familyPinLockRemoveConfirm =>
-      'The Family Dashboard will open on this device without a PIN. You can lock it again any time.';
+      'The saved PIN will be removed from this device. You can set one again; a PIN is required when linking a child to a guardian.';
 
   @override
   String get kidsGuardianLinkedBadge => 'Your guardian follows your journey 💚';
@@ -3592,7 +3592,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardPinHelp =>
-      'This code protects the parent dashboard on this device';
+      'PIN entry is optional here. A PIN is required only when linking a child to a guardian.';
 
   @override
   String get parentDashboardPinConfirm => 'Confirm PIN';
@@ -3613,8 +3613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardEnterLinkingCode => 'Enter linking code';
 
   @override
-  String get parentDashboardResetPin =>
-      'Reset on this device — a new code will be required';
+  String get parentDashboardResetPin => 'Reset the PIN on this device';
 
   @override
   String get parentDashboardForgotPin => 'Forgot the code?';
@@ -3724,7 +3723,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianSessionTileSubtitle =>
-      'For the guardian only, needs the PIN';
+      'Open guardian tools; PIN entry is optional';
 
   @override
   String get guardianSessionBackToChild => 'Back to child';
@@ -3798,7 +3797,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianUnlinkTileSubtitle =>
-      'Needs the PIN and an internet connection';
+      'Needs an internet connection; PIN entry is optional';
 
   @override
   String get guardianUnlinkConfirmTitle => 'Remove the guardian link?';
@@ -5612,7 +5611,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialS9Open =>
-      'Choose the kids path. The parent PIN is set during kids setup. Parent tools appear on Home once you are signed in.';
+      'Choose the kids path. PIN setup is optional; a PIN is required only when linking a guardian. Parent tools appear on Home once you are signed in.';
 
   @override
   String get tutorialS9Useful =>
@@ -5620,7 +5619,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialS9Step1 =>
-      'Choose the kids path, then enter the child\'s name, age, starting surah and a four-digit parent PIN.';
+      'Choose the kids path, then enter the child\'s name, age and starting surah. You can skip setting up a parent PIN.';
 
   @override
   String get tutorialS9Step2 =>
@@ -5628,7 +5627,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialS9Step3 =>
-      'If recording does not work, tap \"I finished memorizing\": the parent enters the PIN to confirm.';
+      'If recording does not work, tap \"I finished memorizing\" for the parent to confirm. PIN entry is optional.';
 
   @override
   String get tutorialS9Step4 =>
@@ -5636,7 +5635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialS9Tip1 =>
-      'Keep the PIN private: it also protects leaving the kids path.';
+      'Keep the PIN private. It is required only when linking a child to a guardian and can be skipped in other actions.';
 
   @override
   String get tutorialS9Tip2 =>
@@ -8360,11 +8359,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianPinCreateReason =>
-      'This is a guardian action. Create a 4-digit PIN to protect it; you will be asked for it next time.';
+      'A 4-digit PIN is required when linking a child to a guardian. You can skip it for other actions.';
 
   @override
   String get childSetupPinOptionalHelp =>
-      'Optional: create it now or the first time a guardian action needs it.';
+      'Optional: set it up now or when linking a child to a guardian.';
 
   @override
   String get childSetupPinAlreadySet =>
@@ -8587,7 +8586,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsGuardianAuditionHint =>
-      'Guardian: first listen to the child reciting this ayah correctly, then enter your PIN to confirm the assessment.';
+      'Guardian: first listen to the child reciting this ayah correctly, then confirm the assessment. PIN entry is optional.';
 
   @override
   String kidsHouseReviewRemaining(String count) {
@@ -8747,6 +8746,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appUpdateInstallFailed =>
       'The update could not start. Please try again.';
+
+  @override
+  String get kidsChangeJourneyTitle => 'Change memorization journey';
+
+  @override
+  String get kidsChangeJourneyDescription =>
+      'Choose another journey. Your progress will be kept.';
 
   @override
   String get kidsJourneyPathTitle => 'Memorization path';
@@ -9309,7 +9315,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get similarAyahTrainerMachineNote =>
-      'These are machine-computed lexical relationships, not a recitation assessment.';
+      'For comparison and review, not a recitation assessment.';
+
+  @override
+  String get similarAyahHistoryTitle => 'Review history';
+
+  @override
+  String get similarAyahBrowseTitle => 'Passages to review';
 
   @override
   String get similarAyahLookupAction => 'Similar wording (machine-computed)';

@@ -7,7 +7,10 @@ import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_attempt_service.dart';
+import 'package:talia_quran/core/memorization/similar_ayah/similar_ayah_confusion_detector.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/confusion_pair.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/similar_ayah_reference_pair.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/similar_ayah_browsing_source.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/similar_ayah_trainer_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/similar_ayah_trainer_page.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -55,12 +58,27 @@ void main() {
     await cubit.load();
     await tester.pumpWidget(_app(cubit));
     expect(
-      find.text(
-        'Surah Al-Baqarah, Ayah 2  ↔  Surah Aal-E-Imran, Ayah 1',
-      ),
+      find.text('Surah Al-Baqarah, Ayah 2  ↔  Surah Aal-E-Imran, Ayah 1'),
       findsOneWidget,
     );
     expect(find.textContaining('2:2'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(cubit.close);
+  });
+
+  testWidgets('curated pair opens original passages without history', (
+    tester,
+  ) async {
+    final cubit = (await tester.runAsync(
+      () => _cubit(onRead: () async => [], candidates: _Browsing()),
+    ))!;
+    await cubit.load();
+    await tester.pumpWidget(_app(cubit));
+    expect(find.text('Passages to review'), findsOneWidget);
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pumpAndSettle();
+    expect(find.text('target body', findRichText: true), findsOneWidget);
+    expect(find.text('other body', findRichText: true), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(cubit.close);
   });
@@ -149,6 +167,7 @@ void main() {
 Future<SimilarAyahTrainerCubit> _cubit({
   Future<List<ConfusionPair>> Function()? onRead,
   QuranRepository? quran,
+  SimilarAyahCandidateSource? candidates,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -170,7 +189,24 @@ Future<SimilarAyahTrainerCubit> _cubit({
     accountChanges: service.accountChanges,
     readAdultEligibility: () async => true,
     isEnabled: () => true,
+    candidateSource: candidates,
   );
+}
+
+final class _Browsing
+    implements SimilarAyahCandidateSource, SimilarAyahBrowsingSource {
+  @override
+  Future<List<SimilarAyahCandidate>?> loadCandidates(String targetKey) async =>
+      [];
+  @override
+  Future<List<SimilarAyahReferencePair>?> loadBrowsingPairs() async => const [
+    SimilarAyahReferencePair(
+      targetSurahId: 2,
+      targetAyahNumber: 2,
+      otherSurahId: 3,
+      otherAyahNumber: 1,
+    ),
+  ];
 }
 
 Widget _app(

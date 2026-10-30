@@ -108,10 +108,7 @@ bool _supportActionsEnabled() =>
       KidsEnrichmentFeature.supportActions,
     );
 
-/// Confirming a family practice is a guardian action, proven like manual
-/// completion: an unlinked device may create a PIN first; a linked child's
-/// remote guardian proves themselves through recovery instead. An unreadable
-/// profile is treated as linked (no PIN creation).
+/// Offers optional PIN verification before family practice.
 Future<bool> _verifyGuardianForPractice(BuildContext context) async {
   final isLinked =
       (await getIt<MemorizationPlusRepository>().getMemorizationProfile()).fold(
@@ -119,12 +116,13 @@ Future<bool> _verifyGuardianForPractice(BuildContext context) async {
         (profile) => profile.isGuardianLinked,
       );
   if (!context.mounted) return false;
-  return ensureGuardianPin(
+  final decision = await optionalGuardianPin(
     context,
     confirmLabel: context.l10n.confirm,
     allowRecovery: isLinked,
     allowCreate: !isLinked,
   );
+  return decision.proceeds;
 }
 
 /// Item 20 — «التسميع على ولي الأمر» is off unless the rollout flag is wired
@@ -136,57 +134,39 @@ bool kidsGuardianRecitationEnabled() =>
       KidsEnrichmentFeature.guardianRecitation,
     );
 
-/// Item 20 — the guardian proves themselves first: [acquirePin] runs the
-/// same PIN flow as manual completion and the cubit verifies the PIN. A
-/// cancelled (null) or wrong PIN changes nothing.
-@visibleForTesting
-Future<bool> startKidsGuardianRecitation(
-  KidsModeCubit cubit,
-  Future<String?> Function() acquirePin,
-) async {
-  final pin = await acquirePin();
-  if (pin == null || cubit.isClosed) return false;
-  return cubit.enterGuardianRecitation(guardianPin: pin);
-}
-
 /// Per-page double-tap guard for the guardian recitation entry, so a second
 /// tap never stacks another PIN dialog.
 class _GuardianRecitationEntryGuard {
   bool inFlight = false;
 }
 
-/// Asks for the guardian PIN, as confirming completion does. The PIN is
-/// optional at child setup, so on an unlinked device a guardian without one
-/// creates it here first. A linked child's guardian is remote, and an
-/// unreadable setting asks for the existing PIN. Null when cancelled.
-Future<String?> _acquireGuardianPin(BuildContext context) async {
-  final repository = getIt<MemorizationPlusRepository>();
-  final settings = (await repository.getParentSettings()).fold(
-    (_) => null,
-    (settings) => settings,
-  );
-  final isLinked = (await repository.getMemorizationProfile()).fold(
-    (_) => true,
-    (profile) => profile.isGuardianLinked,
-  );
-  if (!context.mounted) return null;
-  if (settings != null && !settings.hasPin && !isLinked) {
-    return createGuardianPin(context);
+/// Offers optional PIN verification before assessment.
+Future<GuardianPinDecision> _acquireGuardianPin(BuildContext context) async {
+  final isLinked =
+      (await getIt<MemorizationPlusRepository>().getMemorizationProfile()).fold(
+        (_) => true,
+        (profile) => profile.isGuardianLinked,
+      );
+  if (!context.mounted) {
+    return const GuardianPinDecision(GuardianPinOutcome.cancelled);
   }
-  if (settings != null && !settings.hasPin) {
-    // A linked child without a PIN: the remote guardian sets one through
-    // recovery first, then it is entered below.
-    final recovered = await verifyGuardianPin(
+  var decision = await optionalGuardianPin(
+    context,
+    confirmLabel: context.l10n.confirm,
+    allowRecovery: isLinked,
+    allowCreate: !isLinked,
+  );
+  // Recovery authenticates the account but the cubit still verifies the new PIN.
+  if (decision.outcome == GuardianPinOutcome.verified &&
+      decision.pin == null &&
+      context.mounted) {
+    decision = await optionalGuardianPin(
       context,
       confirmLabel: context.l10n.confirm,
-      allowRecovery: true,
+      allowCreate: false,
     );
-    if (!recovered || !context.mounted) return null;
   }
-  return showDialog<String>(
-    context: context,
-    builder: (_) => const _GuardianPinConfirmationDialog(),
-  );
+  return decision;
 }
 
 /// «نتعلم سوا» is off unless the rollout flag is wired and switched on.
@@ -227,14 +207,16 @@ class _KidsGamifiedListenView extends StatelessWidget {
   Future<void> _runGuardianCompletion(BuildContext context) async {
     final cubit = context.read<KidsModeCubit>();
     // Confirming completion is a guardian action.
-    final pin = await _acquireGuardianPin(context);
-    if (pin == null || !context.mounted) return;
-
-    final accepted = await cubit.submitManualCompletion(guardianPin: pin);
+    final decision = await _acquireGuardianPin(context);
+    if (!decision.proceeds || !context.mounted || cubit.isClosed) return;
+    final accepted = await cubit.submitManualCompletion(
+      guardianPin: decision.pin,
+      skipPin: decision.outcome == GuardianPinOutcome.skipped,
+    );
     final alreadyDone =
         cubit.state is KidsModeLoaded &&
         (cubit.state as KidsModeLoaded).isCompleted;
-    if (!accepted && !alreadyDone && context.mounted) {
+    if (!accepted && !alreadyDone && decision.pin != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
       );
@@ -245,14 +227,14 @@ class _KidsGamifiedListenView extends StatelessWidget {
     if (guardianEntryGuard.inFlight) return;
     guardianEntryGuard.inFlight = true;
     try {
-      var pinEntered = false;
       final cubit = context.read<KidsModeCubit>();
-      final started = await startKidsGuardianRecitation(cubit, () async {
-        final pin = await _acquireGuardianPin(context);
-        pinEntered = pin != null;
-        return pin;
-      });
-      if (!started && pinEntered && context.mounted) {
+      final decision = await _acquireGuardianPin(context);
+      if (!decision.proceeds || !context.mounted || cubit.isClosed) return;
+      final started = await cubit.enterGuardianRecitation(
+        guardianPin: decision.pin,
+        skipPin: decision.outcome == GuardianPinOutcome.skipped,
+      );
+      if (!started && decision.pin != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
         );
@@ -1625,66 +1607,4 @@ Future<void> _navigateAfterKidsCompletion(
     '&pointsEarned=${state.sessionPointsEarned}'
     '$levelUpSegment',
   );
-}
-
-class _GuardianPinConfirmationDialog extends StatefulWidget {
-  const _GuardianPinConfirmationDialog();
-
-  @override
-  State<_GuardianPinConfirmationDialog> createState() =>
-      _GuardianPinConfirmationDialogState();
-}
-
-class _GuardianPinConfirmationDialogState
-    extends State<_GuardianPinConfirmationDialog> {
-  late final TextEditingController _pinController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pinController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _pinController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.l10n.parentDashboardEnterPinTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(context.l10n.kidsGuardianAuditionHint),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _pinController,
-              autofocus: true,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              maxLength: 4,
-              decoration: InputDecoration(
-                helperText: context.l10n.parentDashboardPinHelp,
-              ),
-              onSubmitted: (value) => Navigator.pop(context, value.trim()),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _pinController.text.trim()),
-          child: Text(context.l10n.confirm),
-        ),
-      ],
-    );
-  }
 }

@@ -741,11 +741,11 @@
   "guardianLinkedSuccess": "Linked with your guardian ✓",
   "parentDashboardNotLinkCode": "This isn't a Talia link code",
   "familyDashboardLinking": "Linking the child…",
-  "familyPinOptionalHelp": "Optional on your phone: keeps others out of the Family Dashboard.",
-  "familyPinSkip": "Continue without a lock",
-  "familyPinLockOn": "Lock the dashboard with a PIN",
-  "familyPinLockRemove": "Remove the dashboard lock",
-  "familyPinLockRemoveConfirm": "The Family Dashboard will open on this device without a PIN. You can lock it again any time.",
+  "familyPinOptionalHelp": "You can skip the PIN. It is required only when linking a child to a guardian.",
+  "familyPinSkip": "Continue without a PIN",
+  "familyPinLockOn": "Set up guardian PIN",
+  "familyPinLockRemove": "Remove saved PIN",
+  "familyPinLockRemoveConfirm": "The saved PIN will be removed from this device. You can set one again; a PIN is required when linking a child to a guardian.",
   "kidsGuardianLinkedBadge": "Your guardian follows your journey 💚",
   "guardianRegenerateCode": "Regenerate code",
   "guardianSignInRequired": "Sign in to access guardian tools. Your local progress remains on this device.",
@@ -1450,14 +1450,14 @@
   },
   "parentDashboardDone": "Done",
   "parentDashboardPinMismatch": "PIN codes do not match",
-  "parentDashboardPinHelp": "This code protects the parent dashboard on this device",
+  "parentDashboardPinHelp": "PIN entry is optional here. A PIN is required only when linking a child to a guardian.",
   "parentDashboardPinConfirm": "Confirm PIN",
   "parentDashboardCreatePinTitle": "Create parent PIN",
   "parentDashboardSavePinButton": "Save PIN",
   "parentDashboardEnterPinTitle": "Enter parent PIN",
   "parentDashboardEnterButton": "Enter",
   "parentDashboardEnterLinkingCode": "Enter linking code",
-  "parentDashboardResetPin": "Reset on this device — a new code will be required",
+  "parentDashboardResetPin": "Reset the PIN on this device",
   "parentDashboardForgotPin": "Forgot the code?",
   "parentDashboardForgotPinTitle": "Recover guardian code",
   "parentDashboardForgotPinBody": "To confirm you are the guardian, enter the password for {email}. You will then create a new code; rewards and settings stay as they are.",
@@ -1492,7 +1492,7 @@
   "familyDashboardRemoteUnavailable": "Couldn't load your linked children. Check your connection and try again.",
   "kidsHomeMissionsUnavailable": "Couldn't load the home missions right now.",
   "guardianSessionTileTitle": "Family Dashboard",
-  "guardianSessionTileSubtitle": "For the guardian only, needs the PIN",
+  "guardianSessionTileSubtitle": "Open guardian tools; PIN entry is optional",
   "guardianSessionBackToChild": "Back to child",
   "kidsGiftsTitle": "My gifts",
   "kidsGiftLocked": "Reach your goal to unlock this gift",
@@ -1536,7 +1536,7 @@
   },
   "guardianErrorChildNotLinked": "This child is no longer linked to your account.",
   "guardianUnlinkTileTitle": "Remove guardian link",
-  "guardianUnlinkTileSubtitle": "Needs the PIN and an internet connection",
+  "guardianUnlinkTileSubtitle": "Needs an internet connection; PIN entry is optional",
   "guardianUnlinkConfirmTitle": "Remove the guardian link?",
   "guardianUnlinkConfirmBody": "Your guardian won't follow your progress anymore, and no new missions or gifts will arrive. Gifts you received stay; unfinished gifts and missions disappear from this device. You can link again later.",
   "guardianUnlinkAction": "Remove link",
@@ -2332,13 +2332,13 @@
   "tutorialS9Title": "Kids mode and parent tools",
   "tutorialS9Cat": "Memorization",
   "tutorialS9Does": "A journey of memorization houses with stars, levels and repeated listening for children, plus parent tools for follow-up.",
-  "tutorialS9Open": "Choose the kids path. The parent PIN is set during kids setup. Parent tools appear on Home once you are signed in.",
+  "tutorialS9Open": "Choose the kids path. PIN setup is optional; a PIN is required only when linking a guardian. Parent tools appear on Home once you are signed in.",
   "tutorialS9Useful": "For children and beginners, or for a parent who wants to follow stars, sessions and rewards.",
-  "tutorialS9Step1": "Choose the kids path, then enter the child's name, age, starting surah and a four-digit parent PIN.",
+  "tutorialS9Step1": "Choose the kids path, then enter the child's name, age and starting surah. You can skip setting up a parent PIN.",
   "tutorialS9Step2": "On the kids home tap Continue now, listen to the ayah three times, then try from memory.",
-  "tutorialS9Step3": "If recording does not work, tap \"I finished memorizing\": the parent enters the PIN to confirm.",
+  "tutorialS9Step3": "If recording does not work, tap \"I finished memorizing\" for the parent to confirm. PIN entry is optional.",
   "tutorialS9Step4": "Follow the journey map: houses open one after another as missions are completed.",
-  "tutorialS9Tip1": "Keep the PIN private: it also protects leaving the kids path.",
+  "tutorialS9Tip1": "Keep the PIN private. It is required only when linking a child to a guardian and can be skipped in other actions.",
   "tutorialS9Tip2": "Use the Mushaf tab on the kids home to let the child read in the Quran.",
   "tutorialS9Note1": "Linking a child from another device needs an account.",
   "tutorialS9Note2": "One child per device: more children use their own devices, linked to the guardian.",
@@ -3502,8 +3502,8 @@
   ,"hijriAdjustmentSubtitle": "Shift the Hijri date to match your country's announcement of the new month."
   ,"hijriAdjustmentToday": "Today: {date}"
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
-  ,"guardianPinCreateReason": "This is a guardian action. Create a 4-digit PIN to protect it; you will be asked for it next time."
-  ,"childSetupPinOptionalHelp": "Optional: create it now or the first time a guardian action needs it."
+  ,"guardianPinCreateReason": "A 4-digit PIN is required when linking a child to a guardian. You can skip it for other actions."
+  ,"childSetupPinOptionalHelp": "Optional: set it up now or when linking a child to a guardian."
   ,"childSetupPinAlreadySet": "A guardian PIN is already set on this device and will be kept."
   ,"recitationVoiceDisclosureTitle": "Before you recite"
   ,"recitationVoiceDisclosureBody": "To check your recitation, the app uses the microphone and your device's built-in speech recognition service (such as Google's). That service may send the audio to its provider's servers to turn it into text, under the provider's policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings."
@@ -3571,7 +3571,7 @@
   ,"kidsHouseReviewTitle": "Recite this house"
   ,"kidsHouseReviewHint": "Review and recite every ayah in this house to open the next house."
   ,"kidsHouseReviewAction": "Start house recitation"
-  ,"kidsGuardianAuditionHint": "Guardian: first listen to the child reciting this ayah correctly, then enter your PIN to confirm the assessment."
+  ,"kidsGuardianAuditionHint": "Guardian: first listen to the child reciting this ayah correctly, then confirm the assessment. PIN entry is optional."
   ,"kidsHouseReviewRemaining": "Ayahs left to recite: {count}"
   ,"@kidsHouseReviewRemaining": {"placeholders": {"count": {"type": "String"}}}
   ,"adultJourneyInviteTitle": "Make your journey fit you"
@@ -3621,6 +3621,8 @@
   ,"appUpdateReady": "An update is ready to install."
   ,"appUpdateInstallAction": "Install and restart"
   ,"appUpdateInstallFailed": "The update could not start. Please try again."
+  ,"kidsChangeJourneyTitle": "Change memorization journey"
+  ,"kidsChangeJourneyDescription": "Choose another journey. Your progress will be kept."
   ,"kidsJourneyPathTitle": "Memorization path"
   ,"kidsJourneyPathAdventure": "Juz Amma adventure"
   ,"kidsJourneyPathFromNas": "Quran journey: An-Nas to Al-Baqarah"
@@ -3790,7 +3792,9 @@
   ,"hijriYearRecapShare": "Share"
   ,"hijriYearRecapActivityDays": "Activity days"
   ,"similarAyahTrainerTitle": "Similar passages practice"
-  ,"similarAyahTrainerMachineNote": "These are machine-computed lexical relationships, not a recitation assessment."
+  ,"similarAyahTrainerMachineNote": "For comparison and review, not a recitation assessment."
+  ,"similarAyahHistoryTitle": "Review history"
+  ,"similarAyahBrowseTitle": "Passages to review"
   ,"similarAyahLookupAction": "Similar wording (machine-computed)"
   ,"similarAyahTrainerEmpty": "No historical similar-passage patterns yet"
   ,"similarAyahTrainerTryAgain": "Try again"

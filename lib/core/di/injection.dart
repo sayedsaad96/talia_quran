@@ -1711,10 +1711,6 @@ Future<void> configureDependencies({bool background = false}) async {
       accountVerifier: const SupabaseAccountPasswordVerifier(),
       rewards: getIt<ParentRewardUsecase>(),
       guardianSessionActive: () => getIt<GuardianSessionController>().isActive,
-      // The PIN is optional on an adult's own phone, never on a child's.
-      pinOptional: () async =>
-          (await getIt<MemorizationPlusRepository>().getMemorizationProfile())
-              .fold((_) => false, (profile) => !profile.isChild),
       milestoneStore: getIt<GuardianMilestoneSeenStore>(),
       milestonesEnabled: () =>
           getIt.isRegistered<KidsEnrichmentFlags>() &&

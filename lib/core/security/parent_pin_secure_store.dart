@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../utils/talia_logger.dart';
+import 'secure_storage_configuration.dart';
 
 /// Result of looking up the stored PIN verifier.
 ///
@@ -40,7 +41,7 @@ abstract interface class ParentPinSecureStore {
 
 class FlutterParentPinSecureStore implements ParentPinSecureStore {
   FlutterParentPinSecureStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? taliaSecureStorage;
 
   static const _verifierKey = 'talia.parent_pin.verifier.v2';
   static const _blockedUntilKey = 'talia.parent_pin.blocked_until.v2';

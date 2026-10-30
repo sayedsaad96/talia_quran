@@ -6,26 +6,69 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import 'parent_pin_recovery_dialog.dart';
 
-/// Guards a sensitive guardian action on the child's device.
-///
-/// The PIN is optional at child setup, but guardian actions always need one:
-/// an existing PIN is verified, and when none exists yet the guardian creates
-/// it here before the action continues. If the settings cannot be read the
-/// PIN is asked for, so an error never opens the action.
-///
-/// Pass `allowCreate: false` for a child linked to a remote guardian: anyone
-/// holding the device could create a PIN, so that guardian proves themselves
-/// through recovery instead.
+enum GuardianPinOutcome { cancelled, verified, skipped }
+
+class GuardianPinDecision {
+  const GuardianPinDecision(this.outcome, [this.pin]);
+  final GuardianPinOutcome outcome;
+  final String? pin;
+  bool get proceeds => outcome != GuardianPinOutcome.cancelled;
+}
+
+/// Explicitly optional authorization. Skipping never verifies or writes a PIN.
+Future<GuardianPinDecision> optionalGuardianPin(
+  BuildContext context, {
+  String? confirmLabel,
+  bool allowRecovery = false,
+  bool allowCreate = true,
+  bool Function()? isScopeValid,
+  Future<bool> Function()? canCreatePin,
+}) async {
+  final settings =
+      (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+        (_) => null,
+        (settings) => settings,
+      );
+  if (!context.mounted || !(isScopeValid?.call() ?? true)) {
+    return const GuardianPinDecision(GuardianPinOutcome.cancelled);
+  }
+  final decision = await showDialog<GuardianPinDecision>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => settings != null && !settings.hasPin && allowCreate
+        ? _CreateGuardianPinDialog(
+            isScopeValid: isScopeValid,
+            canCreatePin: canCreatePin,
+            optional: true,
+          )
+        : _GuardianPinDialog(
+            confirmLabel: confirmLabel,
+            allowRecovery: allowRecovery,
+            optional: true,
+          ),
+  );
+  if (!context.mounted || !(isScopeValid?.call() ?? true)) {
+    return const GuardianPinDecision(GuardianPinOutcome.cancelled);
+  }
+  return decision ?? const GuardianPinDecision(GuardianPinOutcome.cancelled);
+}
+
+/// Requires PIN creation or verification for a guardian linking operation.
+/// Linked devices may use account recovery instead of creating a local PIN.
 Future<bool> ensureGuardianPin(
   BuildContext context, {
   String? confirmLabel,
   bool allowRecovery = false,
   bool allowCreate = true,
+  bool Function()? isScopeValid,
+  Future<bool> Function()? canCreatePin,
 }) async {
-  final settings = (await getIt<MemorizationPlusRepository>()
-          .getParentSettings())
-      .fold((_) => null, (settings) => settings);
-  if (!context.mounted) return false;
+  final settings =
+      (await getIt<MemorizationPlusRepository>().getParentSettings()).fold(
+        (_) => null,
+        (settings) => settings,
+      );
+  if (!context.mounted || !(isScopeValid?.call() ?? true)) return false;
   if (settings == null || settings.hasPin || !allowCreate) {
     return verifyGuardianPin(
       context,
@@ -33,21 +76,40 @@ Future<bool> ensureGuardianPin(
       allowRecovery: allowRecovery,
     );
   }
-  return await createGuardianPin(context) != null;
+  return await createGuardianPin(
+        context,
+        isScopeValid: isScopeValid,
+        canCreatePin: canCreatePin,
+      ) !=
+      null;
 }
 
 /// Asks the guardian to create a PIN and saves it. Returns the new PIN, or
 /// null when the guardian cancels.
-Future<String?> createGuardianPin(BuildContext context) {
-  return showDialog<String>(
+Future<String?> createGuardianPin(
+  BuildContext context, {
+  bool Function()? isScopeValid,
+  Future<bool> Function()? canCreatePin,
+}) {
+  return showDialog<GuardianPinDecision>(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const _CreateGuardianPinDialog(),
-  );
+    builder: (_) => _CreateGuardianPinDialog(
+      isScopeValid: isScopeValid,
+      canCreatePin: canCreatePin,
+    ),
+  ).then((decision) => decision?.pin);
 }
 
 class _CreateGuardianPinDialog extends StatefulWidget {
-  const _CreateGuardianPinDialog();
+  const _CreateGuardianPinDialog({
+    this.isScopeValid,
+    this.canCreatePin,
+    this.optional = false,
+  });
+  final bool optional;
+  final bool Function()? isScopeValid;
+  final Future<bool> Function()? canCreatePin;
 
   @override
   State<_CreateGuardianPinDialog> createState() =>
@@ -98,14 +160,23 @@ class _CreateGuardianPinDialogState extends State<_CreateGuardianPinDialog> {
       (settings) => settings.hasPin,
     );
     if (!mounted) return;
-    if (alreadySet) {
+    if (alreadySet || !(widget.isScopeValid?.call() ?? true)) {
+      Navigator.pop(context);
+      return;
+    }
+    final allowed = await (widget.canCreatePin?.call() ?? Future.value(true));
+    if (!mounted) return;
+    if (!allowed || !(widget.isScopeValid?.call() ?? true)) {
       Navigator.pop(context);
       return;
     }
     final result = await repository.setParentPin(pin);
     if (!mounted) return;
     if (result.isRight()) {
-      Navigator.pop(context, pin);
+      Navigator.pop(
+        context,
+        GuardianPinDecision(GuardianPinOutcome.verified, pin),
+      );
     } else {
       setState(() {
         _isSubmitting = false;
@@ -154,6 +225,17 @@ class _CreateGuardianPinDialogState extends State<_CreateGuardianPinDialog> {
         ),
       ),
       actions: [
+        if (widget.optional)
+          TextButton(
+            key: const ValueKey('guardian-pin-skip'),
+            onPressed: _isSubmitting
+                ? null
+                : () => Navigator.pop(
+                    context,
+                    const GuardianPinDecision(GuardianPinOutcome.skipped),
+                  ),
+            child: Text(context.l10n.skip),
+          ),
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.pop(context),
           child: Text(context.l10n.cancel),
@@ -176,7 +258,7 @@ Future<bool> verifyGuardianPin(
   String? confirmLabel,
   bool allowRecovery = false,
 }) async {
-  final verified = await showDialog<bool>(
+  final verified = await showDialog<GuardianPinDecision>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) => _GuardianPinDialog(
@@ -184,11 +266,16 @@ Future<bool> verifyGuardianPin(
       allowRecovery: allowRecovery,
     ),
   );
-  return verified == true;
+  return verified?.outcome == GuardianPinOutcome.verified;
 }
 
 class _GuardianPinDialog extends StatefulWidget {
-  const _GuardianPinDialog({this.confirmLabel, this.allowRecovery = false});
+  const _GuardianPinDialog({
+    this.confirmLabel,
+    this.allowRecovery = false,
+    this.optional = false,
+  });
+  final bool optional;
 
   /// Defaults to the reset label used by the path-reset flow.
   final String? confirmLabel;
@@ -234,7 +321,10 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
     final isValid = result.getOrElse(() => false);
     if (!mounted) return;
     if (isValid) {
-      Navigator.pop(context, true);
+      Navigator.pop(
+        context,
+        GuardianPinDecision(GuardianPinOutcome.verified, pin),
+      );
     } else {
       setState(() {
         _isSubmitting = false;
@@ -245,7 +335,12 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
 
   Future<void> _recover() async {
     final changed = await showParentPinRecoveryDialog(context);
-    if (changed && mounted) Navigator.pop(context, true);
+    if (changed && mounted) {
+      Navigator.pop(
+        context,
+        const GuardianPinDecision(GuardianPinOutcome.verified),
+      );
+    }
   }
 
   @override
@@ -257,7 +352,11 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.l10n.parentDashboardPinHelp),
+            Text(
+              widget.optional
+                  ? context.l10n.parentDashboardPinHelp
+                  : context.l10n.guardianPinCreateReason,
+            ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _controller,
@@ -276,6 +375,17 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
         ),
       ),
       actions: [
+        if (widget.optional)
+          TextButton(
+            key: const ValueKey('guardian-pin-skip'),
+            onPressed: _isSubmitting
+                ? null
+                : () => Navigator.pop(
+                    context,
+                    const GuardianPinDecision(GuardianPinOutcome.skipped),
+                  ),
+            child: Text(context.l10n.skip),
+          ),
         if (widget.allowRecovery)
           TextButton(
             key: const ValueKey('guardian-pin-forgot'),
@@ -283,7 +393,7 @@ class _GuardianPinDialogState extends State<_GuardianPinDialog> {
             child: Text(context.l10n.parentDashboardForgotPin),
           ),
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.cancel),
         ),
         FilledButton(

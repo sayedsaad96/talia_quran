@@ -1,0 +1,18 @@
+{
+  "reviewSetId": "owner-2026-10-30-similar-ayahs-30",
+  "status": "approved",
+  "reviewAuthority": "projectOwner",
+  "reviewedBy": "projectOwner",
+  "reviewedAt": "2026-10-30",
+  "approvalEvidence": "Explicit project-owner instruction in this chat: اعتمد المتشابهات واعرضها في التطبيق",
+  "scope": "Approve the 30 candidatePairs for browsing and comparison practice only; not recitation detector calibration or tafsir approval.",
+  "fixturePath": "test/fixtures/similar_ayah_calibration_candidates.json",
+  "fixtureSha256": "1341256741985bdb0df77dc79770b2a72786e63ba28b79bd2fc70b5d993d22ff",
+  "approvedPairCount": 30,
+  "excludedGroup": "rawBasmalahOnlyCandidates",
+  "excludedPairCount": 6,
+  "sourceCorpusSha256": "09f09074b7341859d4770cc2b9d8768d6a7f7b00d0003123238e6e9949b3fa82",
+  "sourceVerification": "verification.json",
+  "licenseEvidence": "https://tanzil.net/docs/Text_License",
+  "licenseCheckedAt": "2026-10-30"
+}

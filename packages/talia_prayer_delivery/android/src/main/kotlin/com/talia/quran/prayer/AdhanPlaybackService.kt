@@ -22,11 +22,11 @@ import com.talia.quran.prayer.R
  * Owns full Adhan audio playback (V2 §15). Responsibilities ONLY:
  *
  *   1. Read prayer/sound profile from the intent extras.
- *   2. Request audio focus (USAGE_MEDIA + CONTENT_TYPE_SPEECH).
+ *   2. Request transient alarm audio focus.
  *   3. Show a foreground media notification (low-importance channel) with
  *      a "إيقاف الأذان" stop action.
  *   4. Play the bundled adhan clip via MediaPlayer.
- *   5. Handle the stop action (user button or audio-focus loss).
+ *   5. Handle the user stop action.
  *   6. Release the player, abandon focus, stop the foreground service.
  *
  * Never computes prayer times, never touches Flutter. No full-screen
@@ -54,8 +54,6 @@ class AdhanPlaybackService : Service() {
     private var player: MediaPlayer? = null
     private var audioManager: AudioManager? = null
     private var focusRequest: AudioFocusRequest? = null
-    private var ducked = false
-    private var pausedByFocus = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -65,6 +63,8 @@ class AdhanPlaybackService : Service() {
             stopPlayback()
             return START_NOT_STICKY
         }
+        releasePlayer()
+        abandonAudioFocus()
         val prayerKey = intent?.getStringExtra(EXTRA_PRAYER_KEY) ?: "prayer"
         val soundProfile = intent?.getStringExtra(EXTRA_SOUND_PROFILE) ?: "default"
         startForegroundCompat(buildMediaNotification(prayerKey))
@@ -88,9 +88,10 @@ class AdhanPlaybackService : Service() {
                 return
             }
             val mediaPlayer = MediaPlayer()
+            player = mediaPlayer
             mediaPlayer.setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build(),
             )
@@ -106,7 +107,6 @@ class AdhanPlaybackService : Service() {
             }
             mediaPlayer.prepare()
             mediaPlayer.start()
-            player = mediaPlayer
             Log.d(TAG, "playback_started clip=$clip")
         } catch (error: Exception) {
             Log.w(TAG, "failed to start playback", error)
@@ -114,50 +114,19 @@ class AdhanPlaybackService : Service() {
         }
     }
 
+    // Focus changes are informational; completion, errors, and user stop end playback.
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
-        when (change) {
-            AudioManager.AUDIOFOCUS_LOSS -> {
-                Log.d(TAG, "focus_lost")
-                stopPlayback()
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                pausedByFocus = true
-                try {
-                    player?.pause()
-                } catch (_: Exception) {
-                }
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                ducked = true
-                try {
-                    player?.setVolume(0.2f, 0.2f)
-                } catch (_: Exception) {
-                }
-            }
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                try {
-                    if (ducked) {
-                        ducked = false
-                        player?.setVolume(1.0f, 1.0f)
-                    }
-                    if (pausedByFocus) {
-                        pausedByFocus = false
-                        player?.start()
-                    }
-                } catch (_: Exception) {
-                }
-            }
-        }
+        Log.d(TAG, "audio_focus_changed change=$change")
     }
 
     private fun requestAudioFocus(): Boolean {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
         val attrs = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
             .build()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setAudioAttributes(attrs)
                 .setOnAudioFocusChangeListener(focusListener)
                 .build()
@@ -167,8 +136,8 @@ class AdhanPlaybackService : Service() {
             @Suppress("DEPRECATION")
             audioManager!!.requestAudioFocus(
                 focusListener,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN,
+                AudioManager.STREAM_ALARM,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
             ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         }
     }
@@ -184,19 +153,35 @@ class AdhanPlaybackService : Service() {
             }
         } catch (error: Exception) {
             Log.w(TAG, "failed to abandon audio focus", error)
+        } finally {
+            focusRequest = null
+            audioManager = null
         }
     }
 
-    private fun stopPlayback() {
-        try {
-            player?.let { if (it.isPlaying) it.stop() }
-        } catch (_: Exception) {
-        }
-        try {
-            player?.release()
-        } catch (_: Exception) {
-        }
+    private fun releasePlayer() {
+        val previous = player ?: return
         player = null
+        try {
+            previous.setOnCompletionListener(null)
+            previous.setOnErrorListener(null)
+            if (previous.isPlaying) previous.stop()
+        } catch (_: Exception) {
+        }
+        try {
+            previous.release()
+        } catch (_: Exception) {
+        }
+    }
+
+    override fun onDestroy() {
+        releasePlayer()
+        abandonAudioFocus()
+        super.onDestroy()
+    }
+
+    private fun stopPlayback() {
+        releasePlayer()
         abandonAudioFocus()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)

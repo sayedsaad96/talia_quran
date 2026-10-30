@@ -87,6 +87,30 @@
       "reviewer": "الشيخ ومالك المشروع",
       "reviewAuthority": "projectOwnerAndScholar",
       "reviewDate": "2026-09-30"
+    },
+    {
+      "path": "assets/data/similar_ayah_index.json",
+      "role": "derived",
+      "sourceProvider": "project_owner_approved_comparison_references",
+      "sourceEdition": "owner-2026-10-30-similar-ayahs-30",
+      "derivedFrom": "assets/data/quran.json",
+      "sourceUrl": "https://api.alquran.cloud/v1/quran/quran-uthmani",
+      "sourceCorpusSha256": "09f09074b7341859d4770cc2b9d8768d6a7f7b00d0003123238e6e9949b3fa82",
+      "riwayah": "hafs_an_asim_uthmani_script",
+      "licenseStatus": "project_owned_ids_only_index_quran_text_under_tanzil_terms",
+      "licenseEvidence": "https://tanzil.net/docs/Text_License",
+      "licenseCheckedAt": "2026-10-30",
+      "sha256": "4a36588c2fd7380ca45733312e7a2d30e3aa2c1a88bdb2a63f62265f551a40e6",
+      "importDate": "2026-10-30",
+      "generatorVersion": 1,
+      "reviewStatus": "approved",
+      "reviewAuthority": "projectOwner",
+      "reviewDate": "2026-10-30",
+      "reviewedBy": "projectOwner",
+      "reviewedAt": "2026-10-30",
+      "reviewSetId": "owner-2026-10-30-similar-ayahs-30",
+      "approvalEvidence": "docs/content/reviews/2026-10-30-tafsir-mutashabihat/owner-approval.json",
+      "approvalScope": "30 curated browsing/practice pairs only; excludes 6 basmalah controls, recitation detection calibration, and tafsir."
     }
   ]
 }

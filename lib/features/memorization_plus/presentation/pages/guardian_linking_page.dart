@@ -19,6 +19,8 @@ import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
+import '../widgets/guardian_pin_dialog.dart';
+import '../widgets/guardian_link_scope.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 
 import '../../../../core/utils/locale_number_formatter.dart';
@@ -35,8 +37,60 @@ class GuardianLinkingPage extends StatelessWidget {
   }
 }
 
-class _GuardianLinkingView extends StatelessWidget {
+class _GuardianLinkingView extends StatefulWidget {
   const _GuardianLinkingView();
+  @override
+  State<_GuardianLinkingView> createState() => _GuardianLinkingViewState();
+}
+
+class _GuardianLinkingViewState extends State<_GuardianLinkingView> {
+  GuardianLinkScope? _scope;
+  StreamSubscription<void>? _scopeChanges;
+  bool _authorizing = false;
+
+  @override
+  void dispose() {
+    _scopeChanges?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _link({bool revealPending = false}) async {
+    if (_authorizing) return;
+    _authorizing = true;
+    try {
+      final cubit = context.read<GuardianLinkingCubit>();
+      var scope = _scope;
+      if (scope == null || !await scope.stillValid()) {
+        scope = await GuardianLinkScope.capture();
+        if (!mounted || scope == null) return;
+        final verified = await ensureGuardianPin(
+          context,
+          confirmLabel: context.l10n.confirm,
+          isScopeValid: () => scope!.active,
+          canCreatePin: scope.stillValid,
+        );
+        if (!mounted ||
+            !verified ||
+            cubit.isClosed ||
+            !await scope.stillValid()) {
+          return;
+        }
+        _scope = scope;
+        await _scopeChanges?.cancel();
+        _scopeChanges = scope.changes.listen((_) {
+          if (mounted && !scope!.active) setState(() => _scope = null);
+        });
+      }
+      if (!mounted || cubit.isClosed || !await scope.stillValid()) return;
+      if (revealPending) {
+        setState(() {});
+      } else {
+        await cubit.createPairingSession();
+      }
+    } finally {
+      _authorizing = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,23 +189,29 @@ class _GuardianLinkingView extends StatelessWidget {
                       ],
                       const SizedBox(height: AppSpacing.lg),
                     ],
-                    if (state is GuardianLinkingPending) ...[
+                    if (state is GuardianLinkingPending &&
+                        _scope != null &&
+                        _scope!.active) ...[
                       _PairingCard(
                         surface: surface,
                         code: state.session.pairingCode,
                         qrData: state.session.qrData,
                         expiresAt: state.session.expiresAt,
+                        onRegenerate: () => _link(),
                       ),
                       const _LinkLaterAction(),
+                    ] else if (state is GuardianLinkingPending) ...[
+                      _ChoiceActions(
+                        surface: surface,
+                        onLink: () => _link(revealPending: true),
+                      ),
                     ] else if (state is GuardianLinkingExpired) ...[
                       _StatusCard(
                         surface: surface,
                         title: context.l10n.guardianCodeExpired,
                         message: context.l10n.guardianCreateCodeMessage,
                         actionLabel: context.l10n.guardianCreateNewCode,
-                        onPressed: () => context
-                            .read<GuardianLinkingCubit>()
-                            .createPairingSession(),
+                        onPressed: () => _link(),
                       ),
                       const _LinkLaterAction(),
                     ] else if (state is GuardianLinkingUsed) ...[
@@ -160,13 +220,11 @@ class _GuardianLinkingView extends StatelessWidget {
                         title: context.l10n.guardianCodeAlreadyUsed,
                         message: context.l10n.guardianCodeUsedMessage,
                         actionLabel: context.l10n.guardianCreateNewCode,
-                        onPressed: () => context
-                            .read<GuardianLinkingCubit>()
-                            .createPairingSession(),
+                        onPressed: () => _link(),
                       ),
                       const _LinkLaterAction(),
                     ] else
-                      _ChoiceActions(surface: surface),
+                      _ChoiceActions(surface: surface, onLink: () => _link()),
                   ],
                 ],
               );
@@ -290,8 +348,9 @@ class _GuestGuardianLinkingCard extends StatelessWidget {
 }
 
 class _ChoiceActions extends StatelessWidget {
-  const _ChoiceActions({required this.surface});
+  const _ChoiceActions({required this.surface, required this.onLink});
   final Color surface;
+  final VoidCallback onLink;
 
   @override
   Widget build(BuildContext context) {
@@ -305,8 +364,7 @@ class _ChoiceActions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton.icon(
-            onPressed: () =>
-                context.read<GuardianLinkingCubit>().createPairingSession(),
+            onPressed: onLink,
             icon: const Icon(TaliaIcons.qrCode),
             label: Text(context.l10n.linkGuardianNow),
           ),
@@ -364,12 +422,14 @@ class _PairingCard extends StatefulWidget {
     required this.code,
     required this.qrData,
     required this.expiresAt,
+    required this.onRegenerate,
   });
 
   final Color surface;
   final String code;
   final String qrData;
   final DateTime expiresAt;
+  final VoidCallback onRegenerate;
 
   @override
   State<_PairingCard> createState() => _PairingCardState();
@@ -483,8 +543,7 @@ class _PairingCardState extends State<_PairingCard> {
           ),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
-            onPressed: () =>
-                context.read<GuardianLinkingCubit>().createPairingSession(),
+            onPressed: widget.onRegenerate,
             icon: const Icon(TaliaIcons.refresh),
             label: Text(context.l10n.guardianRegenerateCode),
           ),

@@ -292,6 +292,20 @@ void main() {
       expect(find.text('splash-page'), findsOneWidget);
     });
 
+    testWidgets(
+      'PIN present: skipping restores without changing or checking it',
+      (tester) async {
+        deviceHasPin(true);
+        await pumpPage(tester, realGate: true);
+        await confirmRestore(tester);
+        await tester.tap(find.byKey(const ValueKey('guardian-pin-skip')));
+        await tester.pumpAndSettle();
+        expect(restoreCalls, 1);
+        verifyNever(() => repo.verifyParentPin(any()));
+        verifyNever(() => repo.setParentPin(any()));
+      },
+    );
+
     testWidgets('no PIN: no gate and no PIN creation', (tester) async {
       deviceHasPin(false);
       await pumpPage(tester, realGate: true);
@@ -346,27 +360,27 @@ void main() {
     expect(await readPickedBackup(null), isNull);
   });
 
-  test('exported temp file is deleted after sharing, also on failure', () async {
-    final dir = await Directory.systemTemp.createTemp('talia_share_');
-    addTearDown(() => dir.delete(recursive: true));
-    String? sharedPath;
-    await shareBackupFileFrom(dir, 'a.taliabackup', [1, 2, 3], (path) async {
-      sharedPath = path;
-      expect(File(path).readAsBytesSync(), [1, 2, 3]);
-    });
-    expect(File(sharedPath!).existsSync(), isFalse);
+  test(
+    'exported temp file is deleted after sharing, also on failure',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('talia_share_');
+      addTearDown(() => dir.delete(recursive: true));
+      String? sharedPath;
+      await shareBackupFileFrom(dir, 'a.taliabackup', [1, 2, 3], (path) async {
+        sharedPath = path;
+        expect(File(path).readAsBytesSync(), [1, 2, 3]);
+      });
+      expect(File(sharedPath!).existsSync(), isFalse);
 
-    await expectLater(
-      shareBackupFileFrom(
-        dir,
-        'b.taliabackup',
-        [4],
-        (_) async => throw StateError('share failed'),
-      ),
-      throwsStateError,
-    );
-    expect(dir.listSync(), isEmpty);
-  });
+      await expectLater(
+        shareBackupFileFrom(dir, 'b.taliabackup', [
+          4,
+        ], (_) async => throw StateError('share failed')),
+        throwsStateError,
+      );
+      expect(dir.listSync(), isEmpty);
+    },
+  );
 
   testWidgets('invalid sections after confirm show the invalid message', (
     tester,
