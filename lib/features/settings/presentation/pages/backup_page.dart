@@ -95,18 +95,18 @@ Future<List<int>?> readPickedBackup(PlatformFile? picked) async {
 Future<List<int>?> _pickBackupFile() async =>
     readPickedBackup(await FilePicker.pickFile());
 
-/// With a parent PIN on this device (or unreadable parent settings) the
-/// guardian must enter it; a PIN is never created here.
+/// Offers optional PIN verification when a PIN may exist.
 Future<bool> _guardianPinGate(BuildContext context) async {
   final hasPin = (await getIt<MemorizationPlusRepository>().getParentSettings())
       .fold((_) => true, (settings) => settings.hasPin);
   if (!hasPin) return true;
   if (!context.mounted) return false;
-  return ensureGuardianPin(
+  final decision = await optionalGuardianPin(
     context,
     confirmLabel: context.l10n.backupConfirm,
     allowCreate: false,
   );
+  return decision.proceeds;
 }
 
 /// Export and restore of the local backup file. Restore replaces this

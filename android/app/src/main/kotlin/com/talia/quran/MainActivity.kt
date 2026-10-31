@@ -1,7 +1,10 @@
 package com.talia.quran
 
+import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
 import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -113,8 +116,33 @@ class MainActivity : AudioServiceActivity() {
                         }
                     }
                 }
+                "isPinSupported" -> result.success(pinSupported())
+                "requestPin" -> result.success(requestPin())
                 else -> result.notImplemented()
             }
+        }
+    }
+
+    private fun pinSupported(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        return AppWidgetManager.getInstance(this).isRequestPinAppWidgetSupported
+    }
+
+    /** Sends the system pin sheet. False means this launcher cannot pin. */
+    private fun requestPin(): Boolean {
+        if (!pinSupported()) return false
+        return try {
+            val manager = AppWidgetManager.getInstance(this)
+            val provider = ComponentName(this, TaliaHomeWidgetProvider::class.java)
+            val extras = Bundle()
+            @Suppress("DEPRECATION")
+            extras.putParcelable(
+                AppWidgetManager.EXTRA_APPWIDGET_PREVIEW,
+                TaliaHomeWidgetProvider().preview(this),
+            )
+            manager.requestPinAppWidget(provider, extras, null)
+        } catch (e: Exception) {
+            false
         }
     }
 

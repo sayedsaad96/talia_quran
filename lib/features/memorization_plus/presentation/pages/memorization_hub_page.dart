@@ -109,8 +109,9 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         );
       return;
     }
-    await context.push(route);
-    if (mounted) _retryTargets();
+    await context.openLocation(route);
+    // A tab location replaces this page, so there is nothing to refresh.
+    if (mounted && !isShellTabLocation(route)) _retryTargets();
   }
 
   Future<void> _confirmPathSelection(
@@ -696,7 +697,7 @@ class _HubActionCard extends StatelessWidget {
     final textSecondary = context.tokens.textSecondary;
 
     return InkWell(
-      onTap: onTap ?? () => context.push(route!),
+      onTap: onTap ?? () => context.openLocation(route!),
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),

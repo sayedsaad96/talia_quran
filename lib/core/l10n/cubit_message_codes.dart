@@ -11,7 +11,8 @@ abstract final class CubitMessageCodes {
 
   static const kidsAudioPlaybackFailed = '@kids/audio_playback_failed';
   static const kidsMicPermissionDenied = '@kids/mic_permission_denied';
-  static const kidsRecordingUnavailable = '@kids/recording_unavailable';
+  static const kidsVoiceConsentDeclined = '@kids/voice_consent_declined';
+  static const kidsRecordingUnavailable ='@kids/recording_unavailable';
   static const kidsRecordingNotCaptured = '@kids/recording_not_captured';
   static const kidsRecitationMismatch = '@kids/recitation_mismatch';
   static const kidsJourneyStageLocked = '@kids/journey_stage_locked';

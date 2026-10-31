@@ -9,6 +9,7 @@ import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/memorization_kids_local_service.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_journey_path_definition.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -82,6 +83,26 @@ void main() {
     final events = ProgressEventsBus();
     addTearDown(events.dispose);
     final storage = MemorizationPlusLocalDatasourceImpl(prefs, owner: owner);
+    final childProfile = MemorizationProfileModel.fromEntity(
+      MemorizationProfile.empty().copyWith(
+        selectedPath: MemorizationPath.child,
+        childAge: 9,
+        guardianLinkStatus: GuardianLinkStatus.linked,
+        guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+        guardianId: 'guardian-a',
+      ),
+    );
+    await storage.saveMemorizationProfile(childProfile);
+    await storage.saveParentSettings(
+      const ParentSettingsModel(
+        localChildNickname: 'Journey child',
+        reminderHour: 17,
+        reminderMinute: 15,
+        sessionGoalMinutes: 10,
+        remoteLinkEnabled: true,
+        kidsReduceMotion: true,
+      ),
+    );
     final service = MemorizationKidsLocalService(
       storage,
       _Corpus(),
@@ -128,6 +149,7 @@ void main() {
     await award(114, 1);
 
     // 2. switch to the Quran journey.
+    final settingsBeforeSwitch = await storage.getParentSettings();
     expect(
       (await service.setKidsJourneyPath(
         KidsJourneyPathId.quranFromNas,
@@ -138,6 +160,15 @@ void main() {
       () => throw StateError('path'),
     );
     expect(path.isQuranJourney, isTrue);
+    expect(
+      await storage.getParentSettings(),
+      ParentSettingsModel.fromEntity(
+        settingsBeforeSwitch.copyWith(
+          kidsJourneyPathId: KidsJourneyPathId.quranFromNas.storageValue,
+        ),
+      ),
+    );
+    expect(await storage.getMemorizationProfile(), childProfile);
 
     // 3. Al-Mulk is open (no lock) but cannot be split as a whole surah.
     final mulk = await journey(67);
@@ -191,11 +222,31 @@ void main() {
     expect(asr.single.totalAyahs, 3);
 
     // 8. Switching back to the adventure loses nothing.
+    final settingsBeforeReturn = await storage.getParentSettings();
+    final logsBeforeReturn = await storage.getKidsSessionLogs();
     expect(
       (await service.setKidsJourneyPath(
         KidsJourneyPathId.juzAmmaAdventure,
       )).isRight(),
       isTrue,
+    );
+    expect(
+      await storage.getParentSettings(),
+      ParentSettingsModel.fromEntity(
+        settingsBeforeReturn.copyWith(
+          kidsJourneyPathId: KidsJourneyPathId.juzAmmaAdventure.storageValue,
+        ),
+      ),
+    );
+    expect(await storage.getMemorizationProfile(), childProfile);
+    expect(await storage.getKidsSessionLogs(), logsBeforeReturn);
+    final reopenedStorage = MemorizationPlusLocalDatasourceImpl(
+      prefs,
+      owner: owner,
+    );
+    expect(
+      (await reopenedStorage.getParentSettings()).kidsJourneyPathId,
+      KidsJourneyPathId.juzAmmaAdventure.storageValue,
     );
     expect(completed(await journey(114)), contains(1));
     final logs = await storage.getKidsSessionLogs();

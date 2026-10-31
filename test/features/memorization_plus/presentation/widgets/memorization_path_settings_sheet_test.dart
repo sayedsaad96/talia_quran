@@ -4,6 +4,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
@@ -14,15 +17,11 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/application/guardian_session_controller.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import 'package:talia_quran/features/memorization_plus/domain/repositories/parent_pin_recovery_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/guardian_unlink_usecase.dart';
-import 'package:talia_quran/features/memorization_plus/domain/usecases/parent_pin_recovery_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/memorization_path_settings_sheet.dart';
 
 class _MockMemorizationPlusRepository extends Mock
     implements MemorizationPlusRepository {}
-
-class _MockRecovery extends Mock implements ParentPinRecoveryUsecase {}
 
 class _MockUnlink extends Mock implements UnlinkGuardianUsecase {}
 
@@ -88,6 +87,8 @@ final _linkTile = find.widgetWithText(ListTile, 'Link guardian');
 
 MemorizationProfile _child({bool linked = false}) =>
     MemorizationProfile.empty().copyWith(
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
       selectedPath: MemorizationPath.child,
       guardianLinkStatus: linked
           ? GuardianLinkStatus.linked
@@ -119,7 +120,13 @@ void main() {
   late _MockMemorizationPlusRepository mockRepository;
   late _MockMemorizationPathResolver mockPathResolver;
 
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    const owner = FixedRecordOwnerProvider('child');
+    AccountDataBarrier.forPreferences(prefs).owner = owner;
+    getIt.registerSingleton<SharedPreferences>(prefs);
+    getIt.registerSingleton<RecordOwnerProvider>(owner);
     mockRepository = _MockMemorizationPlusRepository();
     mockPathResolver = _MockMemorizationPathResolver();
 
@@ -140,6 +147,8 @@ void main() {
   });
 
   tearDown(() {
+    getIt.unregister<SharedPreferences>();
+    getIt.unregister<RecordOwnerProvider>();
     if (getIt.isRegistered<MemorizationPlusRepository>()) {
       getIt.unregister<MemorizationPlusRepository>();
     }
@@ -148,249 +157,74 @@ void main() {
     }
   });
 
-  testWidgets(
-    'Guardian PIN dialog opens when guardian is linked, validates, and '
-    'resets path without controller disposal exception',
-    (tester) async {
-      // Child path + guardian LINKED → PIN verification is required.
-      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
-        (_) async => Right(
-          MemorizationProfile.empty().copyWith(
-            selectedPath: MemorizationPath.child,
-            guardianLinkStatus: GuardianLinkStatus.linked,
-          ),
-        ),
-      );
+  for (final scenario in [
+    (name: 'unlinked child without a PIN', linked: false, pin: false),
+    (name: 'unlinked child with a PIN', linked: false, pin: true),
+    (name: 'linked child without a PIN', linked: true, pin: false),
+    (name: 'linked child with a PIN', linked: true, pin: true),
+  ]) {
+    testWidgets('${scenario.name} can reset without a PIN', (tester) async {
       when(
-        () => mockRepository.verifyParentPin('1234'),
-      ).thenAnswer((_) async => const Right(true));
-      when(
-        () => mockRepository.resetMemorizationIdentity(),
-      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
-      when(() => mockPathResolver.notifyChanged()).thenReturn(null);
-
-      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
-
-      await _openSheetAndConfirmReset(tester);
-
-      // Guardian PIN dialog must appear.
-      expect(find.byType(TextField), findsOneWidget);
-
-      await tester.enterText(find.byType(TextField), '1234');
-      await tester.pump();
-
-      final pinBtn = find.widgetWithText(FilledButton, 'إعادة الضبط');
-      final fallback = pinBtn.evaluate().isNotEmpty
-          ? pinBtn
-          : find.widgetWithText(FilledButton, 'Reset');
-      await tester.tap(fallback);
-      await tester.pumpAndSettle();
-
-      verify(() => mockRepository.verifyParentPin('1234')).called(1);
-      verify(() => mockRepository.resetMemorizationIdentity()).called(1);
-    },
-  );
-
-  testWidgets(
-    'an unlinked child without a PIN: the guardian creates one, then the '
-    'path resets',
-    (tester) async {
-      // Child path + guardian NOT linked + no PIN yet → create it first.
-      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
-        (_) async => Right(
-          MemorizationProfile.empty().copyWith(
-            selectedPath: MemorizationPath.child,
-            // guardianLinkStatus defaults to GuardianLinkStatus.none
-          ),
-        ),
-      );
-      // A profile that never set a parent PIN.
-      when(
-        () => mockRepository.getParentSettings(),
-      ).thenAnswer((_) async => const Right(ParentSettings()));
-      when(
-        () => mockRepository.setParentPin('2468'),
-      ).thenAnswer((_) async => const Right(null));
-      when(
-        () => mockRepository.resetMemorizationIdentity(),
-      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
-      when(() => mockPathResolver.notifyChanged()).thenReturn(null);
-
-      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
-
-      await _openSheetAndConfirmReset(tester);
-
-      // Leaving the kids track is a guardian action: nothing resets yet.
-      verifyNever(() => mockRepository.resetMemorizationIdentity());
-      await _createGuardianPin(tester, '2468');
-
-      verify(() => mockRepository.setParentPin('2468')).called(1);
-      verify(() => mockRepository.resetMemorizationIdentity()).called(1);
-      verifyNever(() => mockRepository.verifyParentPin(any()));
-    },
-  );
-
-  testWidgets(
-    'an unlinked child without a PIN cannot leave the kids track by '
-    'cancelling PIN creation',
-    (tester) async {
-      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
-        (_) async => Right(
-          MemorizationProfile.empty().copyWith(
-            selectedPath: MemorizationPath.child,
-          ),
-        ),
-      );
-      when(
-        () => mockRepository.getParentSettings(),
-      ).thenAnswer((_) async => const Right(ParentSettings()));
-
-      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
-      await _openSheetAndConfirmReset(tester);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => mockRepository.setParentPin(any()));
-      verifyNever(() => mockRepository.resetMemorizationIdentity());
-    },
-  );
-
-  testWidgets(
-    'an unlinked child with a parent PIN on this device cannot leave the '
-    'kids track without it',
-    (tester) async {
-      when(() => mockRepository.getMemorizationProfile()).thenAnswer(
-        (_) async => Right(
-          MemorizationProfile.empty().copyWith(
-            selectedPath: MemorizationPath.child,
-          ),
-        ),
-      );
+        () => mockRepository.getMemorizationProfile(),
+      ).thenAnswer((_) async => Right(_child(linked: scenario.linked)));
       when(() => mockRepository.getParentSettings()).thenAnswer(
-        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+        (_) async =>
+            Right(ParentSettings(pinHash: scenario.pin ? 'secure-v2' : null)),
       );
       when(
-        () => mockRepository.verifyParentPin(any()),
-      ).thenAnswer((_) async => const Right(false));
+        () => mockRepository.resetMemorizationIdentity(),
+      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
       when(() => mockPathResolver.notifyChanged()).thenReturn(null);
-
       await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
       await _openSheetAndConfirmReset(tester);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Replaced'), findsOneWidget);
+      verify(() => mockRepository.resetMemorizationIdentity()).called(1);
+      verifyNever(() => mockRepository.setParentPin(any()));
+      verifyNever(() => mockRepository.verifyParentPin(any()));
+    });
+  }
 
-      expect(find.byType(TextField), findsOneWidget);
-      await tester.enterText(find.byType(TextField), '0000');
-      await tester.pump();
-      await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
-      await tester.pumpAndSettle();
-
-      verify(() => mockRepository.verifyParentPin('0000')).called(1);
-      verifyNever(() => mockRepository.resetMemorizationIdentity());
-    },
-  );
-
-  testWidgets('a linked child is warned that the link goes, and stays put '
-      'when it cannot be revoked', (tester) async {
+  testWidgets('cancelling reset keeps the current path', (tester) async {
     when(
       () => mockRepository.getMemorizationProfile(),
-    ).thenAnswer((_) async => Right(_child(linked: true)));
-    when(
-      () => mockRepository.verifyParentPin('1234'),
-    ).thenAnswer((_) async => const Right(true));
-    when(() => mockRepository.resetMemorizationIdentity()).thenAnswer(
-      (_) async => const Left(
-        NetworkFailure(CubitMessageCodes.guardianUnlinkBeforePathChangeFailed),
-      ),
-    );
-
+    ).thenAnswer((_) async => Right(_child()));
     await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
     await tester.tap(find.text('Open Sheet'));
     await tester.pumpAndSettle();
     await tester.tap(_resetTile);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Replaced'), findsNothing);
+    verifyNever(() => mockRepository.resetMemorizationIdentity());
+  });
 
+  testWidgets('a failed guardian unlink keeps the current path', (
+    tester,
+  ) async {
+    when(
+      () => mockRepository.getMemorizationProfile(),
+    ).thenAnswer((_) async => Right(_child(linked: true)));
+    when(() => mockRepository.resetMemorizationIdentity()).thenAnswer(
+      (_) async => const Left(
+        NetworkFailure(CubitMessageCodes.guardianUnlinkBeforePathChangeFailed),
+      ),
+    );
+    await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
+    await tester.tap(find.text('Open Sheet'));
+    await tester.pumpAndSettle();
+    await tester.tap(_resetTile);
+    await tester.pumpAndSettle();
     expect(find.textContaining('removes the link'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), '1234');
-    await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
-    await tester.pumpAndSettle();
-
     expect(
       find.textContaining("Couldn't remove the guardian link"),
       findsOneWidget,
     );
     expect(find.text('Replaced'), findsNothing);
     verifyNever(() => mockPathResolver.notifyChanged());
-  });
-
-  group('forgotten PIN', () {
-    late _MockRecovery recovery;
-
-    setUp(() {
-      recovery = _MockRecovery();
-      getIt.registerSingleton<ParentPinRecoveryUsecase>(recovery);
-      when(
-        () => mockRepository.resetMemorizationIdentity(),
-      ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
-      when(() => mockPathResolver.notifyChanged()).thenReturn(null);
-    });
-
-    tearDown(() => getIt.unregister<ParentPinRecoveryUsecase>());
-
-    Future<void> openPinDialog(WidgetTester tester) async {
-      await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
-      await _openSheetAndConfirmReset(tester);
-    }
-
-    testWidgets('a linked child recovers through the guardian and the reset '
-        'goes ahead', (tester) async {
-      when(
-        () => mockRepository.getMemorizationProfile(),
-      ).thenAnswer((_) async => Right(_child(linked: true)));
-      when(() => recovery.request()).thenAnswer(
-        (_) async => Right(
-          PinRecoveryChallenge(id: 'c-1', expiresAt: DateTime.utc(2030)),
-        ),
-      );
-      when(
-        () => recovery.complete(
-          challengeId: 'c-1',
-          code: 'ABCDEF123456',
-          newPin: '2468',
-        ),
-      ).thenAnswer((_) async => const Right(true));
-      await openPinDialog(tester);
-
-      await tester.tap(find.byKey(const ValueKey('guardian-pin-forgot')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const ValueKey('pin-recovery-code')),
-        'ABCDEF123456',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('pin-recovery-new-pin')),
-        '2468',
-      );
-      await tester.tap(find.byKey(const ValueKey('pin-recovery-submit')));
-      await tester.pumpAndSettle();
-
-      verify(() => mockRepository.resetMemorizationIdentity()).called(1);
-      verifyNever(() => mockRepository.verifyParentPin(any()));
-    });
-
-    testWidgets('an unlinked child has no recovery to offer', (tester) async {
-      when(
-        () => mockRepository.getMemorizationProfile(),
-      ).thenAnswer((_) async => Right(_child()));
-      when(() => mockRepository.getParentSettings()).thenAnswer(
-        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
-      );
-      await openPinDialog(tester);
-
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.byKey(const ValueKey('guardian-pin-forgot')), findsNothing);
-    });
   });
 
   group('unlink guardian tile', () {
@@ -429,6 +263,39 @@ void main() {
         () => mockRepository.verifyParentPin('1234'),
       ).thenAnswer((_) async => const Right(true));
     });
+
+    for (final mode in ['missing', 'configured', 'unreadable']) {
+      testWidgets('linked child may skip PIN while unlinking: $mode', (
+        tester,
+      ) async {
+        when(() => mockRepository.getParentSettings()).thenAnswer(
+          (_) async => mode == 'unreadable'
+              ? const Left(CacheFailure('unavailable'))
+              : Right(
+                  ParentSettings(
+                    pinHash: mode == 'configured' ? 'secure-v2' : null,
+                  ),
+                ),
+        );
+        when(
+          () => unlink(),
+        ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
+        await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
+        await tester.tap(find.text('Open Sheet'));
+        await tester.pumpAndSettle();
+        await tester.tap(unlinkTile);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('kids-unlink-guardian-confirm')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('guardian-pin-skip')));
+        await tester.pumpAndSettle();
+        verify(() => unlink()).called(1);
+        verifyNever(() => mockRepository.setParentPin(any()));
+        verifyNever(() => mockRepository.verifyParentPin(any()));
+      });
+    }
 
     testWidgets('only a linked child sees it', (tester) async {
       when(
@@ -514,75 +381,14 @@ void main() {
       }
     });
 
-    testWidgets('asks for the parent PIN, then opens guardian linking', (
-      tester,
-    ) async {
+    testWidgets('opens linking without a PIN prompt', (tester) async {
       when(
         () => mockRepository.getMemorizationProfile(),
       ).thenAnswer((_) async => Right(_child()));
-      when(() => mockRepository.getParentSettings()).thenAnswer(
-        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
-      );
-      when(
-        () => mockRepository.verifyParentPin('1234'),
-      ).thenAnswer((_) async => const Right(true));
-
       await openSheet(tester);
       await tester.tap(_linkTile);
       await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '1234');
-      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
-      await tester.pumpAndSettle();
-
-      verify(() => mockRepository.reopenGuardianLinking()).called(1);
-      expect(find.text('Guardian linking page'), findsOneWidget);
-    });
-
-    testWidgets('a wrong PIN keeps linking closed', (tester) async {
-      when(
-        () => mockRepository.getMemorizationProfile(),
-      ).thenAnswer((_) async => Right(_child()));
-      when(() => mockRepository.getParentSettings()).thenAnswer(
-        (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
-      );
-      when(
-        () => mockRepository.verifyParentPin('0000'),
-      ).thenAnswer((_) async => const Right(false));
-
-      await openSheet(tester);
-      await tester.tap(_linkTile);
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), '0000');
-      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => mockRepository.reopenGuardianLinking());
-      expect(find.text('Guardian linking page'), findsNothing);
-    });
-
-    testWidgets('a profile without a PIN creates one, then links', (
-      tester,
-    ) async {
-      when(
-        () => mockRepository.getMemorizationProfile(),
-      ).thenAnswer((_) async => Right(_child()));
-      when(
-        () => mockRepository.getParentSettings(),
-      ).thenAnswer((_) async => const Right(ParentSettings()));
-      when(
-        () => mockRepository.setParentPin('2468'),
-      ).thenAnswer((_) async => const Right(null));
-
-      await openSheet(tester);
-      await tester.tap(_linkTile);
-      await tester.pumpAndSettle();
-      verifyNever(() => mockRepository.reopenGuardianLinking());
-      await _createGuardianPin(tester, '2468');
-
-      verifyNever(() => mockRepository.verifyParentPin(any()));
+      expect(find.byType(TextField), findsNothing);
       verify(() => mockRepository.reopenGuardianLinking()).called(1);
       expect(find.text('Guardian linking page'), findsOneWidget);
     });
@@ -616,6 +422,26 @@ void main() {
       await tester.pumpWidget(_buildApp(mockRepository, mockPathResolver));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
+    }
+
+    for (final hasPin in [false, true]) {
+      testWidgets('guardian area skip works when PIN configured: $hasPin', (
+        tester,
+      ) async {
+        when(() => mockRepository.getParentSettings()).thenAnswer(
+          (_) async =>
+              Right(ParentSettings(pinHash: hasPin ? 'configured' : null)),
+        );
+        await openSheetFor(tester, _child());
+        await tester.tap(guardianTile);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('guardian-pin-skip')));
+        await tester.pumpAndSettle();
+        expect(session.isActive, isTrue);
+        verifyNever(() => mockRepository.setParentPin(any()));
+        verifyNever(() => mockRepository.verifyParentPin(any()));
+        session.end();
+      });
     }
 
     testWidgets('the right PIN opens a guardian session on the dashboard', (
@@ -743,7 +569,10 @@ void main() {
 /// Fills and saves the create-guardian-PIN dialog.
 Future<void> _createGuardianPin(WidgetTester tester, String pin) async {
   expect(find.byKey(const ValueKey('guardian-pin-create')), findsOneWidget);
-  await tester.enterText(find.byKey(const ValueKey('guardian-pin-create')), pin);
+  await tester.enterText(
+    find.byKey(const ValueKey('guardian-pin-create')),
+    pin,
+  );
   await tester.enterText(
     find.byKey(const ValueKey('guardian-pin-create-confirm')),
     pin,

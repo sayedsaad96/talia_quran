@@ -4,6 +4,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
@@ -470,6 +473,15 @@ void main() {
   });
 
   group('linking errors', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      const owner = FixedRecordOwnerProvider('parent');
+      AccountDataBarrier.forPreferences(prefs).owner = owner;
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      getIt.registerSingleton<RecordOwnerProvider>(owner);
+      getIt.registerSingleton<MemorizationPlusRepository>(_PinRepository());
+    });
     Future<void> submitManualCode(WidgetTester tester, String code) async {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).first, '1234');
@@ -493,7 +505,45 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('guardian-pin-skip')), findsNothing);
+      await tester.enterText(find.byType(TextField).last, '1234');
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.pumpAndSettle();
     }
+
+    testWidgets('skipping the dashboard PIN does not authorize linking', (
+      tester,
+    ) async {
+      final usecases = _FakeUsecases()
+        ..settings = const ParentSettings(pinHash: 'secure-v2');
+      await tester.pumpWidget(_TestApp(cubit: _buildCubit(usecases)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('family-pin-skip')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Link New Child').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enter linking code'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'A1B2C3D4E5F6',
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('guardian-pin-skip')), findsNothing);
+      expect(usecases.acceptCalls, 0);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(usecases.acceptCalls, 0);
+    });
 
     testWidgets('a child with another guardian gets an actionable message', (
       tester,
@@ -947,6 +997,7 @@ class _FakeUsecases {
     settings: ParentSettings(),
   );
   int resetCount = 0;
+  int acceptCalls = 0;
   int dashboardCalls = 0;
   final remoteRewards = <String>[];
   final identityUpdates = <String>[];
@@ -1036,8 +1087,10 @@ class _FakeRemoteLink implements ParentRemoteLinkUsecase {
   final _FakeUsecases _owner;
 
   @override
-  Future<Either<Failure, void>> acceptChildLinkToken(String token) async =>
-      _owner.acceptResult;
+  Future<Either<Failure, void>> acceptChildLinkToken(String token) async {
+    _owner.acceptCalls++;
+    return _owner.acceptResult;
+  }
 
   @override
   Future<Either<Failure, void>> removeChild(String childUserId) async =>
@@ -1068,7 +1121,8 @@ class _FakeRemoteLink implements ParentRemoteLinkUsecase {
   }
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveRemoteReward({ int? milestoneSurahId,
+  Future<Either<Failure, List<ParentReward>>> saveRemoteReward({
+    int? milestoneSurahId,
     required String childUserId,
     required String title,
   }) async {
@@ -1202,4 +1256,19 @@ class _RouterTestAppState extends State<_RouterTestApp> {
 
   @override
   Widget build(BuildContext context) => _localizedApp(router: _router);
+}
+
+class _PinRepository implements MemorizationPlusRepository {
+  final profile = MemorizationProfile.empty();
+  @override
+  Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>
+      Right(profile);
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      const Right(ParentSettings(pinHash: 'configured'));
+  @override
+  Future<Either<Failure, bool>> verifyParentPin(String pin) async =>
+      Right(pin == '1234');
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

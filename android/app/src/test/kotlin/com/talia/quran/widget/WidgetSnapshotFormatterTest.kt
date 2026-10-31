@@ -77,6 +77,18 @@ class WidgetSnapshotFormatterTest {
     }
 
     @Test
+    fun `review counts advance at deadlines and across midnight`() {
+        val json = """{"schemaVersion":1,"isEmpty":true,"adultNoData":true,
+          "reviewsSettled":true,"dayEndsAt":1000,"expiresAt":5000,
+          "nextDay":{"dueReviewCount":1},
+          "reviewCounts":[{"at":500,"count":1},{"at":2000,"count":3}]}"""
+        assertEquals("Reviews done", WidgetSnapshotFormatter.format(json, labels, false, 499).reviewLine)
+        assertEquals("1 reviews due", WidgetSnapshotFormatter.format(json, labels, false, 500).reviewLine)
+        assertEquals("1 reviews due", WidgetSnapshotFormatter.format(json, labels, false, 1000).reviewLine)
+        assertEquals("3 reviews due", WidgetSnapshotFormatter.format(json, labels, false, 2000).reviewLine)
+    }
+
+    @Test
     fun `malformed fields invalid bounds and expired prayer do not render`() {
         val rows = WidgetSnapshotFormatter.format(
             """{
@@ -376,8 +388,140 @@ class WidgetSnapshotFormatterTest {
 
         assertTrue(adult.empty)
         assertTrue(adult.adultNoData)
+        assertFalse(adult.stale)
         assertTrue(cleared.empty)
         assertFalse(cleared.adultNoData)
         assertFalse(expired.adultNoData)
+        assertTrue(expired.stale)
+    }
+
+    @Test
+    fun `specific empty states stay distinct from a generic empty widget`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "isEmpty":true,
+              "adultNoData":true,
+              "prayerUnset":true,
+              "reviewsSettled":true,
+              "noKhatmahPlan":true
+            }""".trimIndent(),
+            labels,
+            false,
+            0L,
+        )
+
+        assertEquals("Set prayer times", rows.prayerLine)
+        assertEquals("Reviews done", rows.reviewLine)
+        assertEquals("No khatmah plan", rows.wirdLine)
+        assertEquals("khatmah-setup", rows.wirdDestination)
+        assertFalse(rows.empty)
+        assertFalse(rows.stale)
+    }
+
+    @Test
+    fun `a hidden section is omitted and a real wird exposes its range`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "isEmpty":false,
+              "showReviews":false,
+              "dueReviewCount":3,
+              "wirdFromPage":10,
+              "wirdToPage":12,
+              "wirdDonePages":1,
+              "wirdSurahName":"الفاتحة"
+            }""".trimIndent(),
+            labels,
+            false,
+            0L,
+        )
+
+        assertNull(rows.reviewLine)
+        assertEquals("الفاتحة · 1/3 pages", rows.wirdLine)
+        assertEquals("10–12", rows.wirdRange)
+        assertEquals(1, rows.wirdDone)
+        assertEquals(3, rows.wirdTotal)
+        assertTrue(rows.showWirdAction)
+        assertEquals("wird", rows.wirdDestination)
+    }
+
+    @Test
+    fun `after midnight the precomputed next day replaces review and wird`() {
+        val json = """{
+          "schemaVersion":1,
+          "isEmpty":false,
+          "expiresAt":172800000,
+          "dayEndsAt":86400000,
+          "dueReviewCount":2,
+          "wirdFromPage":10,
+          "wirdToPage":12,
+          "wirdDonePages":1,
+          "wirdSurahName":"الفاتحة",
+          "nextDay":{
+            "dueReviewCount":4,
+            "wirdFromPage":20,
+            "wirdToPage":22,
+            "wirdDonePages":0,
+            "wirdSurahName":"البقرة"
+          },
+          "upcomingPrayers":[{"key":"fajr","at":104580000,"offsetMinutes":0}]
+        }""".trimIndent()
+
+        val before = WidgetSnapshotFormatter.format(json, labels, false, 80_000_000L)
+        val after = WidgetSnapshotFormatter.format(json, labels, false, 88_200_000L)
+
+        assertEquals("الفاتحة · 1/3 pages", before.wirdLine)
+        assertEquals("4 reviews due", after.reviewLine)
+        assertEquals("البقرة · 0/3 pages", after.wirdLine)
+        assertEquals("20–22", after.wirdRange)
+        assertTrue(after.showWirdAction)
+        assertEquals("Fajr · 05:03", after.prayerLine)
+        assertFalse(after.stale)
+    }
+
+    @Test
+    fun `a finished wird keeps its range and hides the action`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "wirdFromPage":10,
+              "wirdToPage":12,
+              "wirdDonePages":3,
+              "wirdSurahName":"الفاتحة"
+            }""".trimIndent(),
+            labels,
+            false,
+            0L,
+        )
+
+        assertEquals(3, rows.wirdDone)
+        assertFalse(rows.showWirdAction)
+    }
+
+    @Test
+    fun `hiding every section says nothing is due instead of asking to open the app`() {
+        val rows = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "isEmpty":false,
+              "showPrayer":false,
+              "showReviews":false,
+              "showWird":false,
+              "dueReviewCount":3,
+              "nextPrayerKey":"fajr",
+              "nextPrayerAt":18180000
+            }""".trimIndent(),
+            labels,
+            false,
+            0L,
+        )
+
+        assertNull(rows.prayerLine)
+        assertNull(rows.reviewLine)
+        assertNull(rows.wirdLine)
+        assertTrue(rows.empty)
+        assertTrue(rows.adultNoData)
+        assertFalse(rows.stale)
     }
 }

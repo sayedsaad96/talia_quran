@@ -30,7 +30,6 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     this._accountVerifier,
     this._rewards,
     this._guardianSessionActive,
-    this._pinOptional,
     this._milestoneStore,
     this._milestonesEnabled,
     this._ayahCounts,
@@ -52,19 +51,6 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
   /// dashboard).
   final List<CertificateAward> Function()? _localCertificates;
   final DateTime Function() _clock;
-
-  /// True on the guardian's own (adult) phone: the dashboard opens without a
-  /// PIN unless the guardian chose to lock it. The child's device always
-  /// needs one. Missing means required, the safe side.
-  final Future<bool> Function()? _pinOptional;
-
-  Future<bool> _isPinOptional() async {
-    try {
-      return await _pinOptional?.call() ?? false;
-    } catch (_) {
-      return false;
-    }
-  }
 
   /// True when the guardian already entered the PIN for a session on the
   /// child's device, so the dashboard opens without asking again.
@@ -90,11 +76,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     final settingsResult = await _parentAccess.getSettings();
     final settings = settingsResult.getOrElse(() => const ParentSettings());
     if (!settings.hasPin) {
-      if (await _isPinOptional()) {
-        await refresh();
-        return;
-      }
-      emit(const FamilyDashboardNeedsPin());
+      await refresh();
       return;
     }
     if (_guardianSessionActive?.call() ?? false) {
@@ -416,30 +398,31 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
     );
   }
 
-  /// Change PIN: the old one is cleared and a new one is asked for (the
-  /// guardian's phone may also continue without one).
+  /// Change PIN: the old one is cleared and a new one may be chosen.
   Future<void> resetAccess() async {
     if (state is! FamilyDashboardLoaded) return;
     await _resetPinAndReload();
   }
 
-  /// Guardian's phone only: asks for a PIN that will lock the dashboard.
+  /// Asks for a PIN that will lock the dashboard.
   Future<void> lockWithPin() async {
-    if (state is! FamilyDashboardLoaded || !await _isPinOptional()) return;
+    if (state is! FamilyDashboardLoaded) return;
     emit(const FamilyDashboardNeedsPin(canSkip: true));
   }
 
-  /// Guardian's phone only: leaves PIN creation and opens the dashboard.
+  /// Opens the dashboard without creating or verifying a PIN.
   Future<void> skipPin() async {
     final current = state;
-    if (current is! FamilyDashboardNeedsPin || !current.canSkip) return;
+    if (current is! FamilyDashboardNeedsPin &&
+        current is! FamilyDashboardLocked) {
+      return;
+    }
     await refresh();
   }
 
-  /// Guardian's phone only: removes the lock, from inside the unlocked
-  /// dashboard (holding the locked phone is not enough).
+  /// Removes the lock from the dashboard.
   Future<void> removePinLock() async {
-    if (state is! FamilyDashboardLoaded || !await _isPinOptional()) return;
+    if (state is! FamilyDashboardLoaded) return;
     emit(const FamilyDashboardLoading());
     await _parentAccess.reset();
     await refresh();
@@ -481,7 +464,7 @@ class FamilyDashboardCubit extends Cubit<FamilyDashboardState> {
       await load();
       return;
     }
-    emit(FamilyDashboardNeedsPin(canSkip: await _isPinOptional()));
+    emit(const FamilyDashboardNeedsPin(canSkip: true));
   }
 
   bool _linking = false;

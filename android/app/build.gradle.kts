@@ -17,6 +17,8 @@ android {
     namespace = "com.talia.quran"
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
+    useLibrary("android.test.runner", false)
+    useLibrary("android.test.base", false)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -33,6 +35,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "android.test.InstrumentationTestRunner"
     }
 
     signingConfigs {

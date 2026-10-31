@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "provenance": {
+    "corpusSha256": "09f09074b7341859d4770cc2b9d8768d6a7f7b00d0003123238e6e9949b3fa82",
+    "generatorSha256": "37f7302958f1900501bd7bda9f4d137f284990d0245407dbdfd9e283b57ee87d",
+    "normalizerSha256": "4a992b344e5e85a43060b1ba2cd1101993f9c2728c803f0fc6972284846a9a05",
+    "recitablePredicateSha256": "b444476b72b9dd3218c3e93d69cce6becda95ff8fb8aa399030b662d2e97d109",
+    "splitterSha256": "bc1c7405cf7dc737dbb3dbcaf1bc7260eeaa21a606c5b222c304bf1f23a1267f",
+    "surahMetadataSha256": "125fcff463dce28148ac4c035b77caf3093213535c88b6e67585e09b23fc9ca0",
+    "tokenPolicy": "owner-curated-fixture-metrics-v1",
+    "reviewSetId": "owner-2026-10-30-similar-ayahs-30",
+    "approvalSha256": "11ecaab0441184805d7da8ae8f40b65ddbe47e3765ed165189ff7b082d67e2c6",
+    "fixtureSha256": "1341256741985bdb0df77dc79770b2a72786e63ba28b79bd2fc70b5d993d22ff"
+  },
+  "pairs": [
+    {
+      "a": "2:1",
+      "b": "3:1",
+      "score": 1.0,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "2:136",
+      "b": "3:84",
+      "score": 0.806452,
+      "sharedRun": 10,
+      "kind": "curated"
+    },
+    {
+      "a": "2:255",
+      "b": "3:2",
+      "score": 0.14,
+      "sharedRun": 7,
+      "kind": "curated"
+    },
+    {
+      "a": "2:285",
+      "b": "4:136",
+      "score": 0.0,
+      "sharedRun": 4,
+      "kind": "curated"
+    },
+    {
+      "a": "3:1",
+      "b": "29:1",
+      "score": 1.0,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "3:26",
+      "b": "35:13",
+      "score": 0.0,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "3:133",
+      "b": "57:21",
+      "score": 0.28,
+      "sharedRun": 6,
+      "kind": "curated"
+    },
+    {
+      "a": "4:1",
+      "b": "33:70",
+      "score": 0.071429,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "5:32",
+      "b": "6:151",
+      "score": 0.0,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "6:59",
+      "b": "27:75",
+      "score": 0.21875,
+      "sharedRun": 4,
+      "kind": "curated"
+    },
+    {
+      "a": "7:54",
+      "b": "10:3",
+      "score": 0.4375,
+      "sharedRun": 14,
+      "kind": "curated"
+    },
+    {
+      "a": "9:111",
+      "b": "61:10",
+      "score": 0.026316,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "10:62",
+      "b": "41:30",
+      "score": 0.157895,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "11:18",
+      "b": "46:10",
+      "score": 0.083333,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "12:64",
+      "b": "21:89",
+      "score": 0.058824,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "14:10",
+      "b": "35:3",
+      "score": 0.088235,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "16:97",
+      "b": "40:40",
+      "score": 0.304348,
+      "sharedRun": 8,
+      "kind": "curated"
+    },
+    {
+      "a": "17:111",
+      "b": "25:2",
+      "score": 0.333333,
+      "sharedRun": 8,
+      "kind": "curated"
+    },
+    {
+      "a": "19:65",
+      "b": "20:14",
+      "score": 0.0,
+      "sharedRun": 0,
+      "kind": "curated"
+    },
+    {
+      "a": "21:30",
+      "b": "24:45",
+      "score": 0.032258,
+      "sharedRun": 2,
+      "kind": "curated"
+    },
+    {
+      "a": "23:1",
+      "b": "70:22",
+      "score": 0.0,
+      "sharedRun": 0,
+      "kind": "curated"
+    },
+    {
+      "a": "29:1",
+      "b": "32:1",
+      "score": 1.0,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "39:53",
+      "b": "42:25",
+      "score": 0.0,
+      "sharedRun": 0,
+      "kind": "curated"
+    },
+    {
+      "a": "54:17",
+      "b": "54:22",
+      "score": 1.0,
+      "sharedRun": 7,
+      "kind": "curated"
+    },
+    {
+      "a": "54:22",
+      "b": "54:32",
+      "score": 1.0,
+      "sharedRun": 7,
+      "kind": "curated"
+    },
+    {
+      "a": "54:32",
+      "b": "54:40",
+      "score": 1.0,
+      "sharedRun": 7,
+      "kind": "curated"
+    },
+    {
+      "a": "55:13",
+      "b": "55:16",
+      "score": 1.0,
+      "sharedRun": 4,
+      "kind": "curated"
+    },
+    {
+      "a": "56:96",
+      "b": "87:1",
+      "score": 0.25,
+      "sharedRun": 1,
+      "kind": "curated"
+    },
+    {
+      "a": "77:15",
+      "b": "77:19",
+      "score": 1.0,
+      "sharedRun": 3,
+      "kind": "curated"
+    },
+    {
+      "a": "109:3",
+      "b": "109:5",
+      "score": 1.0,
+      "sharedRun": 5,
+      "kind": "curated"
+    }
+  ]
+}

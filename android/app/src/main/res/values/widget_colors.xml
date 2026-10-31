@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_background">#FFFCF8F2</color>
+    <color name="widget_text_primary">#FF173B32</color>
+    <color name="widget_text_secondary">#FF355C50</color>
+    <color name="widget_progress">#FF1F6B56</color>
+    <color name="widget_progress_track">#FFE4EFEA</color>
+</resources>

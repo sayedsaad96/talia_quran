@@ -9,6 +9,8 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
+import 'package:talia_quran/core/services/hijri_date_adjustment.dart';
+import 'package:talia_quran/features/home/domain/services/home_occasion_service.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
@@ -29,6 +31,7 @@ import 'package:talia_quran/features/memorization_plus/domain/repositories/memor
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/settings/data/user_profile.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
+import 'package:talia_quran/features/settings/presentation/pages/subpages/prayer_settings_page.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
 import 'package:talia_quran/features/streak/presentation/cubits/streak_cubit.dart';
@@ -53,21 +56,53 @@ void main() {
   });
 
   group('Widget prayer launch', () {
-    Future<void> register({bool enabled = true, bool child = false,
-      bool invalidate = false, bool deferredState = false}) async {
-      final state = _homeLoaded(isKids: child).copyWith(prayerSnapshot:
-        PrayerTimesSnapshot(city: const PrayerCity(id:'cairo',nameAr:'القاهرة',nameEn:'Cairo',latitude:30,longitude:31,timeZone:'Africa/Cairo',countryId:'eg',countryAr:'مصر',countryEn:'Egypt',defaultMethod:'egyptian'), nextName: 'dhuhr',
-          nextTime: DateTime(2026, 10, 23, 12), minutesUntil: 20));
+    Future<void> register({
+      bool enabled = true,
+      bool child = false,
+      bool invalidate = false,
+      bool deferredState = false,
+    }) async {
+      final state = _homeLoaded(isKids: child).copyWith(
+        prayerSnapshot: PrayerTimesSnapshot(
+          city: const PrayerCity(
+            id: 'cairo',
+            nameAr: 'القاهرة',
+            nameEn: 'Cairo',
+            latitude: 30,
+            longitude: 31,
+            timeZone: 'Africa/Cairo',
+            countryId: 'eg',
+            countryAr: 'مصر',
+            countryEn: 'Egypt',
+            defaultMethod: 'egyptian',
+          ),
+          nextName: 'dhuhr',
+          nextTime: DateTime(2026, 10, 23, 12),
+          minutesUntil: 20,
+        ),
+      );
       final prefs = await SharedPreferences.getInstance();
-      await _registerHome(state, homeCubit: _ReloadingHomeCubit(state,
-        deferredState: deferredState,
-        afterLoad: invalidate ? () => AccountDataBarrier.forPreferences(prefs).invalidate() : null));
+      await _registerHome(
+        state,
+        homeCubit: _ReloadingHomeCubit(
+          state,
+          deferredState: deferredState,
+          afterLoad: invalidate
+              ? () => AccountDataBarrier.forPreferences(prefs).invalidate()
+              : null,
+        ),
+      );
       getIt.registerSingleton<ExperienceFlags>(ExperienceFlags((_) => enabled));
     }
 
-    testWidgets('opens once and a new tap opens the sheet again', (tester) async {
+    testWidgets('opens once and a new tap opens the sheet again', (
+      tester,
+    ) async {
       await register();
-      final router = await _pumpHome(tester, initialLocation: '/?widgetPrayer=1&widgetTap=1');
+      final router = await _pumpHome(
+        tester,
+        initialLocation: '/?widgetPrayer=1&widgetTap=1',
+      );
       await _pumpHomeInitialFrames(tester);
       expect(find.byType(HomePrayerTimesSheet), findsOneWidget);
       router.pop();
@@ -80,26 +115,49 @@ void main() {
     });
 
     for (final child in [false, true]) {
-      testWidgets(child ? 'child cannot open widget prayer sheet' : 'disabled flag cannot open widget prayer sheet', (tester) async {
-        await register(enabled: child, child: child);
-        await _pumpHome(tester, initialLocation: '/?widgetPrayer=1');
-        await _pumpHomeInitialFrames(tester);
-        expect(find.byType(HomePrayerTimesSheet), findsNothing);
-      });
+      testWidgets(
+        child
+            ? 'child cannot open widget prayer sheet'
+            : 'disabled flag cannot open widget prayer sheet',
+        (tester) async {
+          await register(enabled: child, child: child);
+          await _pumpHome(tester, initialLocation: '/?widgetPrayer=1');
+          await _pumpHomeInitialFrames(tester);
+          expect(find.byType(HomePrayerTimesSheet), findsNothing);
+        },
+      );
     }
 
-    testWidgets('account invalidation prevents a queued prayer sheet', (tester) async {
+    testWidgets('account invalidation prevents a queued prayer sheet', (
+      tester,
+    ) async {
       await register(invalidate: true);
       await _pumpHome(tester, initialLocation: '/?widgetPrayer=1');
       await _pumpHomeInitialFrames(tester);
       expect(find.byType(HomePrayerTimesSheet), findsNothing);
     });
 
-    testWidgets('a deferred home update preserves the prayer tap', (tester) async {
+    testWidgets('a deferred home update preserves the prayer tap', (
+      tester,
+    ) async {
       await register(deferredState: true);
       await _pumpHome(tester, initialLocation: '/?widgetPrayer=1');
       await _pumpHomeInitialFrames(tester);
       expect(find.byType(HomePrayerTimesSheet), findsOneWidget);
+    });
+
+    testWidgets('missing prayer times opens prayer settings', (tester) async {
+      final state = _homeLoaded();
+      await _registerHome(state, homeCubit: _ReloadingHomeCubit(state));
+      getIt.registerSingleton<HomeOccasionService>(const HomeOccasionService());
+      getIt.registerSingleton<HijriDateAdjustment>(
+        HijriDateAdjustment(await SharedPreferences.getInstance()),
+      );
+      getIt.registerSingleton<ExperienceFlags>(ExperienceFlags((_) => true));
+      await _pumpHome(tester, initialLocation: '/?widgetPrayer=1');
+      await _pumpHomeInitialFrames(tester);
+      await _pumpHomeAfterInteraction(tester);
+      expect(find.byType(PrayerSettingsPage), findsOneWidget);
     });
   });
 
@@ -679,9 +737,13 @@ Future<GoRouter> _pumpHome(
   final router = GoRouter(
     initialLocation: initialLocation,
     routes: [
-      GoRoute(path: AppRoutes.home, builder: (_, state) => HomePage(
-        requestPrayerTimes: state.uri.queryParameters['widgetPrayer'] == '1',
-        prayerRequestId: state.uri.queryParameters['widgetTap'])),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (_, state) => HomePage(
+          requestPrayerTimes: state.uri.queryParameters['widgetPrayer'] == '1',
+          prayerRequestId: state.uri.queryParameters['widgetTap'],
+        ),
+      ),
       GoRoute(
         path: '/memorization-plus/daily-plan',
         builder: (_, _) =>
@@ -752,7 +814,8 @@ class _StaticHomeCubit extends Cubit<HomeState> implements HomeCubit {
 }
 
 class _ReloadingHomeCubit extends _StaticHomeCubit {
-  _ReloadingHomeCubit(this.loaded, {this.afterLoad, this.deferredState = false}) : super(loaded);
+  _ReloadingHomeCubit(this.loaded, {this.afterLoad, this.deferredState = false})
+    : super(loaded);
   final HomeLoaded loaded;
   final void Function()? afterLoad;
   final bool deferredState;

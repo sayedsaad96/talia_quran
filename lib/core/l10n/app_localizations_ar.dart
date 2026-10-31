@@ -2020,20 +2020,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get familyPinOptionalHelp =>
-      'اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.';
+      'يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.';
 
   @override
-  String get familyPinSkip => 'متابعة بدون قفل';
+  String get familyPinSkip => 'المتابعة دون رمز';
 
   @override
-  String get familyPinLockOn => 'قفل اللوحة برقم سري';
+  String get familyPinLockOn => 'إعداد رمز ولي الأمر';
 
   @override
-  String get familyPinLockRemove => 'إزالة قفل اللوحة';
+  String get familyPinLockRemove => 'إزالة الرمز المحفوظ';
 
   @override
   String get familyPinLockRemoveConfirm =>
-      'ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.';
+      'سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.';
 
   @override
   String get kidsGuardianLinkedBadge => 'ولي أمرك يتابع رحلتك 💚';
@@ -3576,7 +3576,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardPinHelp =>
-      'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز';
+      'إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.';
 
   @override
   String get parentDashboardPinConfirm => 'تأكيد PIN';
@@ -3597,8 +3597,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardEnterLinkingCode => 'إدخال رمز الربط';
 
   @override
-  String get parentDashboardResetPin =>
-      'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد';
+  String get parentDashboardResetPin => 'إعادة تعيين الرمز على هذا الجهاز';
 
   @override
   String get parentDashboardForgotPin => 'نسيت الرمز؟';
@@ -3705,7 +3704,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianSessionTileSubtitle =>
-      'لولي الأمر فقط، وتحتاج الرقم السري';
+      'فتح أدوات ولي الأمر؛ إدخال الرمز اختياري';
 
   @override
   String get guardianSessionBackToChild => 'العودة إلى الطفل';
@@ -3780,7 +3779,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianUnlinkTileSubtitle =>
-      'يحتاج الرقم السري والاتصال بالإنترنت';
+      'يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري';
 
   @override
   String get guardianUnlinkConfirmTitle => 'إلغاء ربط ولي الأمر؟';
@@ -5601,7 +5600,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialS9Open =>
-      'اختر مسار الأطفال. ويُضبط رمز ولي الأمر أثناء إعداد الطفل. وتظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.';
+      'اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.';
 
   @override
   String get tutorialS9Useful =>
@@ -5609,7 +5608,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialS9Step1 =>
-      'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية ورمز ولي أمر من أربعة أرقام.';
+      'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.';
 
   @override
   String get tutorialS9Step2 =>
@@ -5617,7 +5616,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialS9Step3 =>
-      'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي»: يدخل ولي الأمر الرمز للتأكيد.';
+      'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.';
 
   @override
   String get tutorialS9Step4 =>
@@ -5625,7 +5624,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialS9Tip1 =>
-      'حافظ على سرية الرمز: فهو يحمي أيضًا الخروج من مسار الأطفال.';
+      'حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.';
 
   @override
   String get tutorialS9Tip2 =>
@@ -6530,6 +6529,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kidsRecordingUnavailable =>
       'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.';
+
+  @override
+  String get kidsVoiceConsentDeclined =>
+      'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.';
 
   @override
   String get kidsRecordingNotCaptured =>
@@ -8366,11 +8369,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guardianPinCreateReason =>
-      'هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة.';
+      'يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات.';
 
   @override
   String get childSetupPinOptionalHelp =>
-      'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.';
+      'اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر.';
+
+  @override
+  String get childSetupPinAlreadySet =>
+      'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.';
 
   @override
   String get recitationVoiceDisclosureTitle => 'قبل بدء التسميع';
@@ -8584,7 +8591,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsGuardianAuditionHint =>
-      'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم.';
+      'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري.';
 
   @override
   String kidsHouseReviewRemaining(String count) {
@@ -8739,6 +8746,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appUpdateInstallFailed => 'تعذر بدء التحديث. حاول مرة أخرى.';
+
+  @override
+  String get kidsChangeJourneyTitle => 'تغيير رحلة الحفظ';
+
+  @override
+  String get kidsChangeJourneyDescription =>
+      'اختر رحلة أخرى، وسيبقى تقدمك محفوظًا.';
 
   @override
   String get kidsJourneyPathTitle => 'مسار الحفظ';
@@ -9316,7 +9330,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get similarAyahTrainerMachineNote =>
-      'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.';
+      'للمقارنة والمراجعة، وليست حكمًا على التلاوة.';
+
+  @override
+  String get similarAyahHistoryTitle => 'سجل المراجعة';
+
+  @override
+  String get similarAyahBrowseTitle => 'متشابهات للمراجعة';
 
   @override
   String get similarAyahLookupAction => 'آيات متقاربة اللفظ (محسوبة آليًا)';
@@ -9975,6 +9995,38 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsFeatureHomeWidgetSubtitle =>
       'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.';
+
+  @override
+  String get settingsHomeWidgetAdd => 'أضف إلى الشاشة الرئيسية';
+
+  @override
+  String get settingsHomeWidgetUnsupported =>
+      'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.';
+
+  @override
+  String get settingsHomeWidgetManualSteps =>
+      'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.';
+
+  @override
+  String get settingsHomeWidgetPreviewCaption => 'معاينة الأداة';
+
+  @override
+  String get settingsHomeWidgetPreviewPrayer => 'الفجر · ٠٥:١٢';
+
+  @override
+  String get settingsHomeWidgetPreviewReview => 'أنجزت مراجعاتك';
+
+  @override
+  String get settingsHomeWidgetPreviewWird => '١٢–١٥';
+
+  @override
+  String get settingsHomeWidgetShowPrayer => 'إظهار الصلاة';
+
+  @override
+  String get settingsHomeWidgetShowReviews => 'إظهار المراجعات';
+
+  @override
+  String get settingsHomeWidgetShowWird => 'إظهار الورد';
 
   @override
   String seasonDaysUntil(int days, String daysText) {

@@ -205,17 +205,24 @@ void main() {
         activePlan: null,
         now: now,
         languageCode: 'en',
+        reviewsKnown: true,
       );
 
       expect(snapshot.isEmpty, isTrue);
       expect(snapshot.adultNoData, isTrue);
       expect(snapshot.clearsNative, isFalse);
+      expect(snapshot.prayerUnset, isTrue);
+      expect(snapshot.reviewsSettled, isTrue);
+      expect(snapshot.noKhatmahPlan, isTrue);
       expect(snapshot.toJson(), {
         'schemaVersion': 1,
         'isEmpty': true,
         'adultNoData': true,
         'locale': 'en',
         'expiresAt': DateTime(2026, 10, 24).millisecondsSinceEpoch,
+        'prayerUnset': true,
+        'reviewsSettled': true,
+        'noKhatmahPlan': true,
       });
       expect(const WidgetSnapshot.empty().clearsNative, isTrue);
     });
@@ -430,6 +437,32 @@ void main() {
         expect(json.containsKey('text'), isFalse);
       },
     );
+
+    test('precomputes tomorrow and can hide a section', () {
+      final snapshot = buildWidgetSnapshot(
+        enabled: true,
+        isAdult: true,
+        signedOutOrSwitching: false,
+        today: _snapshot(now),
+        tomorrow: null,
+        dueReviewCount: 0,
+        reviewsKnown: true,
+        nextDueReviewCount: 4,
+        showReviews: false,
+        activePlan: _plan(now),
+        now: now,
+      );
+
+      expect(snapshot.reviewsSettled, isTrue);
+      expect(snapshot.showReviews, isFalse);
+      expect(snapshot.nextDay?.dueReviewCount, 4);
+      expect(snapshot.nextDay?.reviewsSettled, isFalse);
+      expect(snapshot.toJson()['showReviews'], isFalse);
+      expect(snapshot.toJson().containsKey('showPrayer'), isFalse);
+      final nextDay = snapshot.toJson()['nextDay'] as Map<String, Object?>;
+      expect(nextDay['dueReviewCount'], 4);
+      expect(nextDay.containsKey('reviewsSettled'), isFalse);
+    });
   });
 }
 

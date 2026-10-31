@@ -6,7 +6,7 @@ import 'package:talia_quran/core/router/widget_deep_link.dart';
 
 void main() {
   test(
-    'only the three allowlisted widget links reach existing destinations',
+    'only allowlisted widget links reach existing destinations',
     () {
       expect(
         widgetDeepLinkDestination(Uri.parse('talia://widget/prayer')),
@@ -19,6 +19,14 @@ void main() {
       expect(
         widgetDeepLinkDestination(Uri.parse('talia://widget/khatmah')),
         AppRoutes.khatmahDashboard,
+      );
+      expect(
+        widgetDeepLinkDestination(Uri.parse('talia://widget/khatmah-setup')),
+        AppRoutes.khatmahSetup,
+      );
+      expect(
+        widgetDeepLinkDestination(Uri.parse('talia://widget/wird')),
+        widgetWirdMarker,
       );
       for (final value in [
         'talia://widget/unknown',

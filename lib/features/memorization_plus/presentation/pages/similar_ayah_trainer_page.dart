@@ -56,16 +56,17 @@ final class _TrainerView extends StatelessWidget {
     if (state.failed) return _Retry(pair: state.selected);
     if (state.selected != null) return _Practice(state: state);
     if (state.related.isNotEmpty) return _RelatedList(pairs: state.related);
-    if (state.pairs.isEmpty) {
+    if (state.pairs.isEmpty && state.browsing.isEmpty) {
       return _Message(context.l10n.similarAyahTrainerEmpty);
     }
-    return _PairList(pairs: state.pairs);
+    return _PairList(pairs: state.pairs, browsing: state.browsing);
   }
 }
 
 final class _PairList extends StatelessWidget {
-  const _PairList({required this.pairs});
+  const _PairList({required this.pairs, required this.browsing});
   final List<ConfusionPair> pairs;
+  final List<SimilarAyahReferencePair> browsing;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -73,6 +74,7 @@ final class _PairList extends StatelessWidget {
     children: [
       Text(context.l10n.similarAyahTrainerMachineNote),
       const SizedBox(height: 12),
+      if (pairs.isNotEmpty) Text(context.l10n.similarAyahHistoryTitle),
       for (final pair in pairs)
         Card(
           child: ListTile(
@@ -84,6 +86,20 @@ final class _PairList extends StatelessWidget {
             ),
             subtitle: Text(context.l10n.similarAyahTrainerCount(pair.count)),
             onTap: () => context.read<SimilarAyahTrainerCubit>().choose(pair),
+          ),
+        ),
+      if (browsing.isNotEmpty) Text(context.l10n.similarAyahBrowseTitle),
+      for (final pair in browsing)
+        Card(
+          child: ListTile(
+            leading: const Icon(TaliaIcons.swapHorizontal),
+            title: Text(
+              '${similarAyahLabel(context, pair.targetSurahId, pair.targetAyahNumber)}'
+              '  ↔  '
+              '${similarAyahLabel(context, pair.otherSurahId, pair.otherAyahNumber)}',
+            ),
+            onTap: () =>
+                context.read<SimilarAyahTrainerCubit>().chooseReference(pair),
           ),
         ),
     ],

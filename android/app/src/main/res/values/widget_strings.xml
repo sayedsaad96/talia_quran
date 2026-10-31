@@ -1,6 +1,16 @@
 <resources>
     <string name="widget_empty_hint">Open Talia to see today’s summary</string>
     <string name="widget_empty_adult">Nothing due right now</string>
+    <string name="widget_stale">Open the app to refresh the data</string>
+    <string name="widget_reviews_done">You’ve finished your reviews</string>
+    <string name="widget_no_khatmah">You haven’t started a khatmah plan</string>
+    <string name="widget_prayer_unset">Set prayer times</string>
+    <string name="widget_wird_range">%1$d–%2$d</string>
+    <string name="widget_wird_action">Complete your portion</string>
+    <string name="widget_preview_prayer">Fajr · 05:12</string>
+    <string name="widget_preview_review">You’ve finished your reviews</string>
+    <string name="widget_preview_wird">12–15</string>
+    <string name="widget_description">Prayer, reviews, and today’s portion</string>
     <string name="widget_prayer_fajr">Fajr</string>
     <string name="widget_prayer_dhuhr">Dhuhr</string>
     <string name="widget_prayer_asr">Asr</string>

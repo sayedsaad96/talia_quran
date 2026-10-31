@@ -167,8 +167,14 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     if (showLoading || state is! KidsJourneyLoaded) {
       emit(const KidsJourneyLoading());
     }
-    var activeSurahId = surahId;
     final path = await _loadPath();
+    // A locked path has a fixed surah set: a stale start outside it (for
+    // example carried over from an adult plan) falls back to the path start.
+    var activeSurahId =
+        followFrontier && path.locksAhead && !path.contains(surahId)
+        ? path.surahIds.first
+        : surahId;
+    surahId = activeSurahId;
     final logs = await _loadSessionLogs();
     var journeyResult = await _getJourney(
       GetKidsJourneyParams(surahId: surahId),

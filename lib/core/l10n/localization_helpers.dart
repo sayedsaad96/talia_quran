@@ -184,6 +184,8 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.v2AccountChanged => l10n.v2AccountChanged,
       CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
       CubitMessageCodes.kidsMicPermissionDenied => l10n.micPermissionError,
+      CubitMessageCodes.kidsVoiceConsentDeclined =>
+        l10n.kidsVoiceConsentDeclined,
       CubitMessageCodes.kidsRecordingUnavailable =>
         l10n.kidsRecordingUnavailable,
       CubitMessageCodes.kidsRecordingNotCaptured =>

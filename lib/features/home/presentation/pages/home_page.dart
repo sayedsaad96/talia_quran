@@ -22,6 +22,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../adult_journey/presentation/widgets/adult_journey_home_slot.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
+import '../../../settings/presentation/pages/subpages/prayer_settings_page.dart';
 import '../cubits/home_cubit.dart';
 import '../../domain/services/home_primary_action_resolver.dart';
 import '../theme/home_skin.dart';
@@ -154,14 +155,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _openRequestedPrayerTimes(HomeState state) {
     if (!_openPrayerWhenReady || _prayerOpeningScheduled) return;
-    if (state is HomeLoaded &&
-        !state.isRefreshing &&
-        state.prayerSnapshot == null) {
-      // Prayer times are unavailable: drop the request so it cannot open a
-      // sheet later, after an unrelated reload brings a snapshot.
-      _openPrayerWhenReady = false;
-      return;
-    }
     if (state is! HomeLoaded || state.isRefreshing) return;
     final AccountDataLease lease;
     try {
@@ -185,9 +178,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       final latest = _homeCubit.state;
       if (latest is! HomeLoaded || latest.isRefreshing) return;
       _openPrayerWhenReady = false;
-      if (latest.prayerSnapshot == null) return;
       if (!getIt<ExperienceFlags>().isEnabled(ExperienceFeature.homeWidget) ||
           latest.isKids) {
+        return;
+      }
+      if (latest.prayerSnapshot == null) {
+        unawaited(
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PrayerSettingsPage(),
+                ),
+              )
+              .then((_) {
+                if (mounted) _homeCubit.load();
+              }),
+        );
         return;
       }
       unawaited(
@@ -530,22 +536,22 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
             // users without memorized ayahs. Hidden in clarity mode.
             if (!clarityOn)
               SliverToBoxAdapter(
-              child: StaggeredFadeSlide(
-                delay: const Duration(milliseconds: 280),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.md,
-                    AppSpacing.pagePadding,
-                    0,
-                  ),
-                  child: HomeMicroReviewCard(
-                    skin: widget.skin,
-                    record: widget.state.microReview,
+                child: StaggeredFadeSlide(
+                  delay: const Duration(milliseconds: 280),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.md,
+                      AppSpacing.pagePadding,
+                      0,
+                    ),
+                    child: HomeMicroReviewCard(
+                      skin: widget.skin,
+                      record: widget.state.microReview,
+                    ),
                   ),
                 ),
               ),
-            ),
             if (widget.state.ayahOfDay != null)
               SliverToBoxAdapter(
                 child: StaggeredFadeSlide(

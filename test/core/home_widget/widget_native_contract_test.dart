@@ -48,6 +48,8 @@ void main() {
         'android/app/src/main/kotlin/com/talia/quran/MainActivity.kt',
       ).readAsStringSync();
       expect(activity, contains('talia/home_widget_component'));
+      expect(activity, contains('isPinSupported'));
+      expect(activity, contains('requestPin'));
       expect(activity, contains('setComponentEnabledSetting'));
       expect(activity, contains('DONT_KILL_APP'));
     },
@@ -67,6 +69,9 @@ void main() {
       'widget_prayer',
       'widget_review',
       'widget_wird',
+      'widget_wird_range',
+      'widget_wird_progress',
+      'widget_wird_action',
       'widget_empty',
     ]) {
       expect(ltr, contains('@+id/$id'));
@@ -88,7 +93,49 @@ void main() {
         final xml = File(path).readAsStringSync();
         expect(xml, contains('name="widget_empty_adult"'));
         expect(xml, contains('name="widget_empty_hint"'));
+        expect(xml, contains('name="widget_stale"'));
+        expect(xml, contains('name="widget_reviews_done"'));
+        expect(xml, contains('name="widget_no_khatmah"'));
+        expect(xml, contains('name="widget_prayer_unset"'));
+        expect(xml, contains('name="widget_wird_action"'));
+        expect(xml, contains('name="widget_preview_prayer"'));
       }
     },
   );
+  test('Android 12 supplies a size map and the picker has its own preview', () {
+    final provider = File(
+      'android/app/src/main/kotlin/com/talia/quran/widget/TaliaHomeWidgetProvider.kt',
+    ).readAsStringSync();
+    final info = File(
+      'android/app/src/main/res/xml/talia_home_widget_info.xml',
+    ).readAsStringSync();
+    expect(provider, contains('SizeF'));
+    expect(provider, contains('responsiveViews'));
+    expect(info, contains('android:minWidth="250dp"'));
+    expect(info, contains('android:minResizeWidth="110dp"'));
+    expect(info, contains('android:minResizeHeight="72dp"'));
+    expect(info, contains('@layout/talia_home_widget_preview'));
+    expect(
+      File(
+        'android/app/src/main/res/layout/talia_home_widget_preview.xml',
+      ).existsSync(),
+      isTrue,
+    );
+    for (final path in [
+      'android/app/src/main/res/values/widget_colors.xml',
+      'android/app/src/main/res/values-night/widget_colors.xml',
+      'android/app/src/main/res/values-v31/widget_colors.xml',
+      'android/app/src/main/res/values-night-v31/widget_colors.xml',
+    ]) {
+      final colors = File(path).readAsStringSync();
+      expect(colors, contains('widget_background'));
+      expect(colors, contains('widget_text_primary'));
+    }
+    expect(
+      File(
+        'android/app/src/main/res/values-v31/widget_colors.xml',
+      ).readAsStringSync(),
+      contains('system_accent1'),
+    );
+  });
 }

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/usecases/guardian_unlink_usecase.dart';
 import 'guardian_pin_dialog.dart';
+import 'guardian_link_scope.dart';
 
 /// Kids settings entry for a linked child to end the guardian link.
 class GuardianUnlinkTile extends StatelessWidget {
@@ -70,12 +71,21 @@ Future<void> runGuardianUnlink(BuildContext context) async {
     ),
   );
   if (confirmed != true || !context.mounted) return;
-  final verified = await verifyGuardianPin(
+  final scope = await GuardianLinkScope.capture();
+  if (scope == null || !context.mounted) return;
+  final decision = await optionalGuardianPin(
     context,
     confirmLabel: context.l10n.guardianUnlinkAction,
     allowRecovery: true,
+    allowCreate: false,
+    isScopeValid: () => scope.active,
   );
-  if (!verified || !context.mounted) return;
+  if (!decision.proceeds ||
+      !context.mounted ||
+      !await scope.stillValid() ||
+      !context.mounted) {
+    return;
+  }
   final result = await getIt<UnlinkGuardianUsecase>()();
   if (!context.mounted) return;
   final message = result.fold(

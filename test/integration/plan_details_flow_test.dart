@@ -253,6 +253,7 @@ void main() {
                   path: AppRoutes.memorizationHub,
                   builder: (_, _) => const MemorizationTabPage(),
                 ),
+                _stubTab(AppRoutes.hifzPracticeSurah, 'practice surah fixture'),
               ],
             ),
             StatefulShellBranch(
@@ -434,6 +435,43 @@ void main() {
     },
   );
 
+  testWidgets('practice by surah from the options hub does not crash', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tapKey(tester, 'custom_plan_save');
+    await tapKey(tester, 'plan_details_other_options');
+    expect(find.byType(MemorizationHubPage), findsOneWidget);
+    final card = find.text('Practice by Surah');
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('practice surah fixture'), findsOneWidget);
+  });
+
+  testWidgets(
+    'continue today plan resolving to the hub tab from options does not crash',
+    (tester) async {
+      await pump(tester);
+      await tapKey(tester, 'custom_plan_save');
+      await tapKey(tester, 'plan_details_other_options');
+      // No generated plan (rest day / generation failure): the resolver
+      // answers with the Hifz tab location instead of a session.
+      when(
+        () => repository.getCachedDailyPlan(),
+      ).thenAnswer((_) async => const Right(null));
+      final card = find.text("Continue Today's Plan");
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(PlanDetailsPage), findsOneWidget);
+    },
+  );
+
   testWidgets(
     'bottom nav opens selected plan and exiting setup can return without changing it',
     (tester) async {
@@ -442,6 +480,11 @@ void main() {
       expect(find.byType(AppShell), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+      expect(find.text('home fixture'), findsOneWidget);
+      expect(find.byType(CustomPlanSetupPage), findsNothing);
+      await tester.tap(find.text('Memorization'));
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'plan_details_exit');
       expect(find.byType(CustomPlanSetupPage), findsOneWidget);
       await tapKey(tester, 'custom_plan_return_selected');
       await tester.tap(find.text('Home'));

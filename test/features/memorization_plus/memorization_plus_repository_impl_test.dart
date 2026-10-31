@@ -940,6 +940,76 @@ void main() {
       expect(await datasource.getParentRewards(), hasLength(1));
     });
 
+    group('a guardian PIN whose verifier is lost', () {
+      test('a missing verifier preserves the configured PIN marker', () async {
+        await repository.setParentPin('1234');
+        // The keystore wiped the verifier (e.g. the key was invalidated)
+        // before the next app start.
+        await parentPinStore.clearVerifier('local');
+        repository = MemorizationPlusRepositoryImpl(
+          datasource,
+          _UnusedQuranRepository(),
+          streakReader,
+          ProgressEventsBus(),
+          prefs,
+          parentPinStore: parentPinStore,
+        );
+
+        final settings = (await repository.getParentSettings()).getOrElse(
+          () => throw StateError('settings'),
+        );
+
+        // A missing verifier can follow a storage failure or plugin reset.
+        // Never disable guardian protection without explicit recovery.
+        expect(settings.hasPin, isTrue);
+        expect((await datasource.getParentSettings()).hasPin, isTrue);
+      });
+
+      test(
+        'a verify attempt preserves the marker without counting a failure',
+        () async {
+          await repository.setParentPin('1234');
+          await parentPinStore.clearVerifier('local');
+
+          final verified = await repository.verifyParentPin('1234');
+
+          expect(verified.getOrElse(() => true), isFalse);
+          expect(await parentPinStore.readFailureCount('local'), 0);
+          expect((await datasource.getParentSettings()).hasPin, isTrue);
+        },
+      );
+
+      test('a PIN whose verifier was not stored is refused', () async {
+        parentPinStore.failWrites = true;
+
+        final result = await repository.setParentPin('1234');
+
+        expect(result.isLeft(), isTrue);
+        expect((await datasource.getParentSettings()).hasPin, isFalse);
+      });
+
+      test('an unreadable store keeps the PIN and adds no throttle', () async {
+        await repository.setParentPin('1234');
+        parentPinStore.unreadable = true;
+
+        final settings = (await repository.getParentSettings()).getOrElse(
+          () => throw StateError('settings'),
+        );
+        final verified = await repository.verifyParentPin('1234');
+
+        expect(settings.hasPin, isTrue);
+        expect(verified.getOrElse(() => true), isFalse);
+        expect(await parentPinStore.readFailureCount('local'), 0);
+        expect((await datasource.getParentSettings()).hasPin, isTrue);
+
+        parentPinStore.unreadable = false;
+        expect(
+          (await repository.verifyParentPin('1234')).getOrElse(() => false),
+          isTrue,
+        );
+      });
+    });
+
     test(
       'legacy plaintext parent PIN verifies once and migrates to hash',
       () async {
@@ -1371,6 +1441,21 @@ class _MemoryParentPinStore implements ParentPinSecureStore {
   final Map<String, DateTime> _blockedUntil = {};
   final Map<String, int> _failures = {};
 
+  /// Simulates a keystore that cannot be read.
+  bool unreadable = false;
+
+  /// Simulates a keystore that drops writes.
+  bool failWrites = false;
+
+  @override
+  Future<ParentPinVerifierLookup> lookupVerifier(String ownerId) async {
+    if (unreadable) return const ParentPinVerifierUnreadable();
+    final verifier = _verifiers[ownerId];
+    return verifier == null
+        ? const ParentPinVerifierAbsent()
+        : ParentPinVerifierPresent(verifier);
+  }
+
   @override
   Future<void> clearVerifier(String ownerId) async {
     _verifiers.remove(ownerId);
@@ -1402,6 +1487,8 @@ class _MemoryParentPinStore implements ParentPinSecureStore {
 
   @override
   Future<void> writeVerifier(String ownerId, String verifier) async {
+    // Like the real store, a failed write is swallowed.
+    if (failWrites) return;
     _verifiers[ownerId] = verifier;
   }
 }

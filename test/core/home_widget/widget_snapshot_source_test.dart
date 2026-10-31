@@ -86,6 +86,46 @@ void main() {
       ).called(1);
     },
   );
+  test('future counts change at review deadlines across midnight', () async {
+    final local = now.toLocal();
+    final midnight = DateTime(local.year, local.month, local.day + 1);
+    AyahReviewRecord record(int ayah, DateTime due, {int reviews = 1}) =>
+        AyahReviewRecord(
+          surahId: 1,
+          ayahNumber: ayah,
+          strengthLevel: 6,
+          intervalDays: 1,
+          lastReviewedAt: now,
+          nextReviewDate: due,
+          totalReviews: reviews,
+          lastRating: null,
+          createdByMode: ReviewRecordCreatedByMode.v2Session,
+        );
+    final todayDue = now.add(const Duration(hours: 1));
+    final tomorrowDue = midnight.add(const Duration(hours: 15));
+    when(
+      () => records.getAllReviewRecords(scope: ReviewRecordReadScope.adult),
+    ).thenAnswer(
+      (_) async => Right([
+        record(1, todayDue),
+        record(2, tomorrowDue),
+        record(3, tomorrowDue),
+        record(4, todayDue, reviews: 0),
+      ]),
+    );
+    final snapshot = await source.load(barrier.capture(), 'a');
+    expect(snapshot.dueReviewCount, 0);
+    expect(snapshot.nextDay!.dueReviewCount, 1);
+    expect(snapshot.reviewCounts, [
+      (at: todayDue, count: 1),
+      (at: tomorrowDue, count: 3),
+    ]);
+    expect(snapshot.redrawTimes(now), containsAll([todayDue, tomorrowDue]));
+    expect(snapshot.toJson()['reviewCounts'], [
+      {'at': todayDue.millisecondsSinceEpoch, 'count': 1},
+      {'at': tomorrowDue.millisecondsSinceEpoch, 'count': 3},
+    ]);
+  });
   test('disabled flag never reads account material', () async {
     enabled = false;
     expect((await source.load(barrier.capture(), 'a')).isEmpty, isTrue);

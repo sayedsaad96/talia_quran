@@ -7,8 +7,10 @@ import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
+import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import com.talia.quran.MainActivity
 import com.talia.quran.R
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
@@ -21,6 +23,37 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        render(context, appWidgetManager, appWidgetIds)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle,
+    ) {
+        render(context, appWidgetManager, intArrayOf(appWidgetId))
+    }
+
+    internal fun preview(context: Context): RemoteViews {
+        val json = snapshotJson(context)
+        val language = WidgetSnapshotFormatter.language(json) ?: deviceLanguage(context)
+        val arabic = language == "ar"
+        val localized = localizedContext(context, language)
+        val rows = WidgetSnapshotFormatter.format(
+            json,
+            labels(localized),
+            arabic,
+            System.currentTimeMillis(),
+        )
+        return sizedViews(context, localized, rows, arabic, WidgetSize.MEDIUM)
+    }
+
+    private fun render(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
         val json = snapshotJson(context)
         // The widget follows the app language written into the snapshot and
         // falls back to the device language (cleared or older snapshots).
@@ -28,10 +61,63 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         val arabic = language == "ar"
         val localized = localizedContext(context, language)
         val rows = WidgetSnapshotFormatter.format(json, labels(localized), arabic, System.currentTimeMillis())
+        val portrait = context.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE
         for (widgetId in appWidgetIds) {
-            appWidgetManager.updateAppWidget(widgetId, views(context, localized, rows, arabic))
+            val rendered = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // The launcher picks the layout as the user resizes, so the
+                // content changes without another process wake.
+                responsiveViews(context, localized, rows, arabic)
+            } else {
+                val options = appWidgetManager.getAppWidgetOptions(widgetId)
+                val (width, height) = WidgetLayoutPolicy.span(
+                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0),
+                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0),
+                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0),
+                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0),
+                    portrait,
+                )
+                sizedViews(
+                    context,
+                    localized,
+                    rows,
+                    arabic,
+                    WidgetLayoutPolicy.sizeFor(width, height),
+                )
+            }
+            appWidgetManager.updateAppWidget(widgetId, rendered)
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun responsiveViews(
+        context: Context,
+        localized: Context,
+        rows: WidgetRows,
+        arabic: Boolean,
+    ): RemoteViews = RemoteViews(
+        mapOf(
+            SizeF(
+                WidgetLayoutPolicy.SMALL_MIN_WIDTH.toFloat(),
+                WidgetLayoutPolicy.SMALL_MIN_HEIGHT.toFloat(),
+            ) to sizedViews(context, localized, rows, arabic, WidgetSize.SMALL),
+            SizeF(
+                WidgetLayoutPolicy.MEDIUM_MIN_WIDTH.toFloat(),
+                WidgetLayoutPolicy.MEDIUM_MIN_HEIGHT.toFloat(),
+            ) to sizedViews(context, localized, rows, arabic, WidgetSize.MEDIUM),
+            SizeF(
+                WidgetLayoutPolicy.LARGE_MIN_WIDTH.toFloat(),
+                WidgetLayoutPolicy.LARGE_MIN_HEIGHT.toFloat(),
+            ) to sizedViews(context, localized, rows, arabic, WidgetSize.LARGE),
+        ),
+    )
+
+    private fun sizedViews(
+        context: Context,
+        localized: Context,
+        rows: WidgetRows,
+        arabic: Boolean,
+        size: WidgetSize,
+    ): RemoteViews = views(context, localized, WidgetLayoutPolicy.apply(rows, size), arabic)
 
     // The app does not declare supportsRtl, so layoutDirection and textAlignment
     // are ignored. Arabic therefore uses a separate layout with absolute
@@ -41,14 +127,53 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, layout)
         setRow(views, R.id.widget_prayer, rows.prayerLine, link(context, "prayer"))
         setRow(views, R.id.widget_review, rows.reviewLine, link(context, "review"))
-        setRow(views, R.id.widget_wird, rows.wirdLine, link(context, "khatmah"))
-        views.setViewVisibility(R.id.widget_empty, if (rows.empty) View.VISIBLE else View.GONE)
-        views.setTextViewText(
-            R.id.widget_empty,
-            localized.getString(if (rows.adultNoData) R.string.widget_empty_adult else R.string.widget_empty_hint),
-        )
+        setRow(views, R.id.widget_wird, rows.wirdLine, link(context, rows.wirdDestination))
+        val done = rows.wirdDone
+        val total = rows.wirdTotal
+        val detail = rows.wirdRange != null && done != null && total != null
+        views.setViewVisibility(R.id.widget_wird_range, if (rows.wirdRange != null) View.VISIBLE else View.GONE)
+        if (rows.wirdRange != null) views.setTextViewText(R.id.widget_wird_range, rows.wirdRange)
+        views.setViewVisibility(R.id.widget_wird_progress, if (detail) View.VISIBLE else View.GONE)
+        if (detail && done != null && total != null) {
+            views.setProgressBar(
+                R.id.widget_wird_progress,
+                total.coerceAtLeast(1),
+                done.coerceIn(0, total),
+                false,
+            )
+        }
+        views.setViewVisibility(R.id.widget_wird_action, if (rows.showWirdAction) View.VISIBLE else View.GONE)
+        views.setTextViewText(R.id.widget_wird_action, localized.getString(R.string.widget_wird_action))
+        views.setOnClickPendingIntent(R.id.widget_wird_action, link(context, "wird"))
+        val showEmpty = rows.prayerLine == null && rows.reviewLine == null && rows.wirdLine == null
+        views.setViewVisibility(R.id.widget_empty, if (showEmpty) View.VISIBLE else View.GONE)
+        val emptyText = when {
+            rows.stale -> R.string.widget_stale
+            rows.adultNoData -> R.string.widget_empty_adult
+            else -> R.string.widget_empty_hint
+        }
+        views.setTextViewText(R.id.widget_empty, localized.getString(emptyText))
         views.setOnClickPendingIntent(R.id.widget_empty, link(context, ""))
+        applyColors(views)
         return views
+    }
+
+    // API 31 resolves these in the launcher, so night mode and system colors
+    // update without a new snapshot. Older releases use the night-qualified
+    // colors baked in when the widget is redrawn.
+    private fun applyColors(views: RemoteViews) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        views.setColor(R.id.widget_root, "setBackgroundColor", R.color.widget_background)
+        views.setColor(R.id.widget_prayer, "setTextColor", R.color.widget_text_primary)
+        for (id in intArrayOf(
+            R.id.widget_review,
+            R.id.widget_wird,
+            R.id.widget_wird_range,
+            R.id.widget_empty,
+        )) {
+            views.setColor(id, "setTextColor", R.color.widget_text_secondary)
+        }
+        views.setColor(R.id.widget_wird_action, "setTextColor", R.color.widget_background)
     }
 
     private fun setRow(
@@ -100,6 +225,12 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         },
         wirdLine = { name, done, total ->
             context.getString(R.string.widget_wird_progress, name, done, total)
+        },
+        reviewsDone = context.getString(R.string.widget_reviews_done),
+        noKhatmahPlan = context.getString(R.string.widget_no_khatmah),
+        prayerUnset = context.getString(R.string.widget_prayer_unset),
+        wirdRange = { from, to ->
+            context.getString(R.string.widget_wird_range, from, to)
         },
     )
 

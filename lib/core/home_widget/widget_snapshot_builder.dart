@@ -17,6 +17,12 @@ WidgetSnapshot buildWidgetSnapshot({
   DateTime? tomorrowFajr,
   List<WidgetPrayerTime> tomorrowPrayers = const [],
   String? languageCode,
+  bool reviewsKnown = false,
+  int? nextDueReviewCount,
+  List<WidgetReviewCount> reviewCounts = const [],
+  bool showPrayer = true,
+  bool showReviews = true,
+  bool showWird = true,
 }) {
   if (!enabled || !isAdult || signedOutOrSwitching) {
     return const WidgetSnapshot.empty();
@@ -35,8 +41,8 @@ WidgetSnapshot buildWidgetSnapshot({
     now.toLocal().month,
     now.toLocal().day + 1,
   );
-  // The prayer list outlives the day, so the snapshot itself stays valid until
-  // the end of tomorrow; the review and wird rows stop at [dayEndsAt].
+  // The prayer list and the precomputed [nextDay] stay valid until the end of
+  // tomorrow. Without a next day, the review and wird rows stop at [dayEndsAt].
   final expiresAt = DateTime(
     now.toLocal().year,
     now.toLocal().month,
@@ -46,11 +52,35 @@ WidgetSnapshot buildWidgetSnapshot({
       ? languageCode
       : null;
   final reviews = dueReviewCount < 0 ? 0 : dueReviewCount;
-  if (next == null && reviews == 0 && wird == null) {
+  final prayerUnset =
+      next == null &&
+      today == null &&
+      tomorrow == null &&
+      tomorrowFajr == null &&
+      tomorrowPrayers.isEmpty;
+  final noPlan = activePlan == null;
+  final settled = reviewsKnown && reviews == 0;
+  final nextDay = _nextDay(
+    plan: activePlan,
+    at: dayEndsAt.add(const Duration(hours: 12)),
+    nextDueReviewCount: nextDueReviewCount,
+    reviewsKnown: reviewsKnown,
+  );
+  final nothingToday = next == null && reviews == 0 && wird == null;
+  if (nothingToday) {
     return WidgetSnapshot(
-      expiresAt: dayEndsAt,
+      expiresAt: nextDay == null ? dayEndsAt : expiresAt,
+      dayEndsAt: nextDay == null ? null : dayEndsAt,
       languageCode: language,
       adultNoData: true,
+      prayerUnset: prayerUnset,
+      reviewsSettled: settled,
+      noKhatmahPlan: noPlan,
+      showPrayer: showPrayer,
+      showReviews: showReviews,
+      showWird: showWird,
+      nextDay: nextDay,
+      reviewCounts: reviewCounts,
     );
   }
   return WidgetSnapshot(
@@ -61,6 +91,39 @@ WidgetSnapshot buildWidgetSnapshot({
     nextPrayerAt: next?.at,
     upcomingPrayers: upcoming,
     dueReviewCount: reviews,
+    wirdFromPage: wird?.from,
+    wirdToPage: wird?.to,
+    wirdDonePages: wird?.done,
+    wirdSurahName: wird?.surahName,
+    prayerUnset: prayerUnset,
+    reviewsSettled: settled,
+    noKhatmahPlan: noPlan && wird == null,
+    showPrayer: showPrayer,
+    showReviews: showReviews,
+    showWird: showWird,
+    nextDay: nextDay,
+    reviewCounts: reviewCounts,
+  );
+}
+
+/// Tomorrow's review count and wird, computed while the app is open.
+/// Null when the caller did not supply a next-day review count and there is
+/// no plan: older call sites keep the previous "hide after midnight" behavior.
+WidgetNextDay? _nextDay({
+  required KhatmahPlan? plan,
+  required DateTime at,
+  required int? nextDueReviewCount,
+  required bool reviewsKnown,
+}) {
+  if (nextDueReviewCount == null && plan == null) return null;
+  final wird = _wird(plan, at);
+  final count = nextDueReviewCount == null
+      ? 0
+      : (nextDueReviewCount < 0 ? 0 : nextDueReviewCount);
+  return WidgetNextDay(
+    dueReviewCount: count,
+    reviewsSettled: reviewsKnown && nextDueReviewCount != null && count == 0,
+    noKhatmahPlan: plan == null,
     wirdFromPage: wird?.from,
     wirdToPage: wird?.to,
     wirdDonePages: wird?.done,

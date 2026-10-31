@@ -757,11 +757,11 @@
   "guardianLinkedSuccess": "تم الربط بولي الأمر ✓",
   "parentDashboardNotLinkCode": "هذا ليس رمز ربط من تالية",
   "familyDashboardLinking": "جارٍ ربط الطفل…",
-  "familyPinOptionalHelp": "اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.",
-  "familyPinSkip": "متابعة بدون قفل",
-  "familyPinLockOn": "قفل اللوحة برقم سري",
-  "familyPinLockRemove": "إزالة قفل اللوحة",
-  "familyPinLockRemoveConfirm": "ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.",
+  "familyPinOptionalHelp": "يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.",
+  "familyPinSkip": "المتابعة دون رمز",
+  "familyPinLockOn": "إعداد رمز ولي الأمر",
+  "familyPinLockRemove": "إزالة الرمز المحفوظ",
+  "familyPinLockRemoveConfirm": "سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.",
   "kidsGuardianLinkedBadge": "ولي أمرك يتابع رحلتك 💚",
   "guardianRegenerateCode": "تجديد الرمز",
   "guardianSignInRequired": "سجّل دخولك للوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.",
@@ -1534,14 +1534,14 @@
   },
   "parentDashboardDone": "تم",
   "parentDashboardPinMismatch": "رمزا PIN غير متطابقين",
-  "parentDashboardPinHelp": "هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز",
+  "parentDashboardPinHelp": "إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.",
   "parentDashboardPinConfirm": "تأكيد PIN",
   "parentDashboardCreatePinTitle": "أنشئ رمز ولي الأمر",
   "parentDashboardSavePinButton": "حفظ الرمز",
   "parentDashboardEnterPinTitle": "أدخل رمز ولي الأمر",
   "parentDashboardEnterButton": "دخول",
   "parentDashboardEnterLinkingCode": "إدخال رمز الربط",
-  "parentDashboardResetPin": "اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد",
+  "parentDashboardResetPin": "إعادة تعيين الرمز على هذا الجهاز",
   "parentDashboardForgotPin": "نسيت الرمز؟",
   "parentDashboardForgotPinTitle": "استعادة رمز ولي الأمر",
   "parentDashboardForgotPinBody": "للتأكد أنك ولي الأمر، أدخل كلمة مرور حسابك {email}. بعدها تنشئ رمزاً جديداً، وتبقى المكافآت والإعدادات كما هي.",
@@ -1583,7 +1583,7 @@
   "familyDashboardRemoteUnavailable": "تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.",
   "kidsHomeMissionsUnavailable": "تعذّر تحميل مهام البيت الآن.",
   "guardianSessionTileTitle": "لوحة العائلة",
-  "guardianSessionTileSubtitle": "لولي الأمر فقط، وتحتاج الرقم السري",
+  "guardianSessionTileSubtitle": "فتح أدوات ولي الأمر؛ إدخال الرمز اختياري",
   "guardianSessionBackToChild": "العودة إلى الطفل",
   "kidsGiftsTitle": "هداياي",
   "kidsGiftLocked": "أكمل هدفك لتُفتح هذه الهدية",
@@ -1627,7 +1627,7 @@
   },
   "guardianErrorChildNotLinked": "هذا الطفل لم يعد مرتبطاً بحسابك.",
   "guardianUnlinkTileTitle": "إلغاء ربط ولي الأمر",
-  "guardianUnlinkTileSubtitle": "يحتاج الرقم السري والاتصال بالإنترنت",
+  "guardianUnlinkTileSubtitle": "يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري",
   "guardianUnlinkConfirmTitle": "إلغاء ربط ولي الأمر؟",
   "guardianUnlinkConfirmBody": "لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.",
   "guardianUnlinkAction": "إلغاء الربط",
@@ -2361,13 +2361,13 @@
   "tutorialS9Title": "وضع الأطفال وأدوات ولي الأمر",
   "tutorialS9Cat": "الحفظ",
   "tutorialS9Does": "رحلة بيوت حفظ للأطفال بنجوم ومستويات واستماع متكرر، مع أدوات لولي الأمر للمتابعة.",
-  "tutorialS9Open": "اختر مسار الأطفال. ويُضبط رمز ولي الأمر أثناء إعداد الطفل. وتظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.",
+  "tutorialS9Open": "اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.",
   "tutorialS9Useful": "للأطفال والمبتدئين، أو لولي أمر يريد متابعة النجوم والجلسات والمكافآت.",
-  "tutorialS9Step1": "اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية ورمز ولي أمر من أربعة أرقام.",
+  "tutorialS9Step1": "اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.",
   "tutorialS9Step2": "في رئيسية الأطفال اضغط «استكمل الآن»، واستمع إلى الآية ثلاث مرات، ثم جرّب من حفظك.",
-  "tutorialS9Step3": "إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي»: يدخل ولي الأمر الرمز للتأكيد.",
+  "tutorialS9Step3": "إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.",
   "tutorialS9Step4": "تابع خريطة الرحلة: تُفتح البيوت واحدًا بعد آخر كلما أتممت المهام.",
-  "tutorialS9Tip1": "حافظ على سرية الرمز: فهو يحمي أيضًا الخروج من مسار الأطفال.",
+  "tutorialS9Tip1": "حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.",
   "tutorialS9Tip2": "استخدم تبويب المصحف في رئيسية الأطفال ليقرأ الطفل في القرآن.",
   "tutorialS9Note1": "ربط طفل من جهاز آخر يحتاج إلى حساب.",
   "tutorialS9Note2": "طفل واحد لكل جهاز: يستخدم بقية الأطفال أجهزتهم الخاصة مرتبطة بولي الأمر.",
@@ -2803,7 +2803,8 @@
   "v2SurahLoadFailed": "تعذر تحميل بيانات السورة.",
   "v2NoAyahsInRange": "لا توجد آيات في النطاق المحدد.",
   "kidsRecordingUnavailable": "لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.",
-  "kidsRecordingNotCaptured": "لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.",
+  "kidsVoiceConsentDeclined": "لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.",
+  "kidsRecordingNotCaptured":"لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.",
   "kidsRecitationMismatch": "الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.",
   "kidsRecitationCloseMatch": "أنت قريب جدًا! أصبت {matched} من {total} كلمات. استمع مرة أخرى وحاول من جديد.",
   "@kidsRecitationCloseMatch": {
@@ -3539,8 +3540,9 @@
   ,"hijriAdjustmentSubtitle": "عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر."
   ,"hijriAdjustmentToday": "اليوم: {date}"
   ,"@hijriAdjustmentToday": {"placeholders": {"date": {"type": "String"}}}
-  ,"guardianPinCreateReason": "هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة."
-  ,"childSetupPinOptionalHelp": "اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر."
+  ,"guardianPinCreateReason": "يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات."
+  ,"childSetupPinOptionalHelp": "اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر."
+  ,"childSetupPinAlreadySet": "رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو."
   ,"recitationVoiceDisclosureTitle": "قبل بدء التسميع"
   ,"recitationVoiceDisclosureBody": "لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز."
   ,"recitationVoiceDisclosureGuardian": "إذا كان المستخدم طفلًا، فليقرأ وليّ الأمر هذا البيان ويقرّر."
@@ -3607,7 +3609,7 @@
   ,"kidsHouseReviewTitle": "تسميع آيات البيت"
   ,"kidsHouseReviewHint": "نراجع ونسمّع كل آيات هذا البيت قبل فتح البيت التالي."
   ,"kidsHouseReviewAction": "ابدأ تسميع آيات البيت"
-  ,"kidsGuardianAuditionHint": "لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم."
+  ,"kidsGuardianAuditionHint": "لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري."
   ,"kidsHouseReviewRemaining": "متبقي للتسميع: {count} آية"
   ,"@kidsHouseReviewRemaining": {"placeholders": {"count": {"type": "String"}}}
   ,"adultJourneyInviteTitle": "خلّي رحلتك مناسبة لك"
@@ -3657,6 +3659,8 @@
   ,"appUpdateReady": "التحديث جاهز للتثبيت."
   ,"appUpdateInstallAction": "تثبيت وإعادة التشغيل"
   ,"appUpdateInstallFailed": "تعذر بدء التحديث. حاول مرة أخرى."
+  ,"kidsChangeJourneyTitle": "تغيير رحلة الحفظ"
+  ,"kidsChangeJourneyDescription": "اختر رحلة أخرى، وسيبقى تقدمك محفوظًا."
   ,"kidsJourneyPathTitle": "مسار الحفظ"
   ,"kidsJourneyPathAdventure": "مغامرة جزء عمّ"
   ,"kidsJourneyPathFromNas": "رحلة القرآن: من الناس إلى البقرة"
@@ -3827,7 +3831,9 @@
   ,"hijriYearRecapShare": "مشاركة"
   ,"hijriYearRecapActivityDays": "أيام النشاط"
   ,"similarAyahTrainerTitle": "تدريب المتشابهات"
-  ,"similarAyahTrainerMachineNote": "هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة."
+  ,"similarAyahTrainerMachineNote": "للمقارنة والمراجعة، وليست حكمًا على التلاوة."
+  ,"similarAyahHistoryTitle": "سجل المراجعة"
+  ,"similarAyahBrowseTitle": "متشابهات للمراجعة"
   ,"similarAyahLookupAction": "آيات متقاربة اللفظ (محسوبة آليًا)"
   ,"similarAyahTrainerEmpty": "لا توجد أنماط متشابهات مسجلة بعد"
   ,"similarAyahTrainerTryAgain": "حاول مرة أخرى"
@@ -4019,6 +4025,16 @@
   ,"settingsFeatureGroupKhatmahSubtitle": "ختمة مع أصحابك وتابع تقدم بعضكم."
   ,"settingsFeatureHomeWidgetTitle": "أداة الشاشة الرئيسية"
   ,"settingsFeatureHomeWidgetSubtitle": "ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية."
+  ,"settingsHomeWidgetAdd": "أضف إلى الشاشة الرئيسية"
+  ,"settingsHomeWidgetUnsupported": "هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق."
+  ,"settingsHomeWidgetManualSteps": "المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية."
+  ,"settingsHomeWidgetPreviewCaption": "معاينة الأداة"
+  ,"settingsHomeWidgetPreviewPrayer": "الفجر · ٠٥:١٢"
+  ,"settingsHomeWidgetPreviewReview": "أنجزت مراجعاتك"
+  ,"settingsHomeWidgetPreviewWird": "١٢–١٥"
+  ,"settingsHomeWidgetShowPrayer": "إظهار الصلاة"
+  ,"settingsHomeWidgetShowReviews": "إظهار المراجعات"
+  ,"settingsHomeWidgetShowWird": "إظهار الورد"
   ,"seasonDaysUntil": "{days, plural, =1{غدًا} =2{بعد يومين} few{بعد {daysText} أيام} many{بعد {daysText} يومًا} other{بعد {daysText} يوم}}"
   ,"@seasonDaysUntil": {"placeholders": {"days": {"type": "int"}, "daysText": {"type": "String"}}}
   ,"seasonNameRamadan": "رمضان"

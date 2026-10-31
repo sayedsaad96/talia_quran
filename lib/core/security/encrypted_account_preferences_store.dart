@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../utils/talia_logger.dart';
+import 'secure_storage_configuration.dart';
 
 /// Owner-scoped account blobs held by platform-backed encrypted storage.
 ///
@@ -15,7 +16,7 @@ abstract interface class EncryptedAccountPreferencesStore {
 class FlutterEncryptedAccountPreferencesStore
     implements EncryptedAccountPreferencesStore {
   FlutterEncryptedAccountPreferencesStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? taliaSecureStorage;
 
   final FlutterSecureStorage _storage;
 

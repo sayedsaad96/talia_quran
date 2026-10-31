@@ -26,6 +26,8 @@ import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
 import '../widgets/family_child_name.dart';
+import '../widgets/guardian_pin_dialog.dart';
+import '../widgets/guardian_link_scope.dart';
 import '../widgets/family_remote_status_banner.dart';
 import '../widgets/guardian_news_section.dart';
 import '../widgets/guardian_session_scope.dart';
@@ -168,9 +170,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               helpText: state.canSkip
                   ? context.l10n.familyPinOptionalHelp
                   : null,
-              onSkip: state.canSkip
-                  ? () => context.read<FamilyDashboardCubit>().skipPin()
-                  : null,
+              onSkip: () => context.read<FamilyDashboardCubit>().skipPin(),
               onSubmit: (pin) =>
                   context.read<FamilyDashboardCubit>().setPin(pin),
             );
@@ -183,6 +183,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               title: context.l10n.parentDashboardEnterPinTitle,
               buttonText: context.l10n.parentDashboardEnterButton,
               controller: _pinController,
+              onSkip: () => context.read<FamilyDashboardCubit>().skipPin(),
               onSubmit: (pin) =>
                   context.read<FamilyDashboardCubit>().unlock(pin),
               onForgot: recoveryEmail == null

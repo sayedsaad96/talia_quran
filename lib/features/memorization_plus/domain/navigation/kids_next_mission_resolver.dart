@@ -91,7 +91,12 @@ final class KidsNextMissionResolver {
         ayahNumbers: [record.ayahNumber],
       );
     }
-    if (resumableMission != null) return resumableMission;
+    // A saved session outside the selected path (left over from an adult
+    // plan or another path) is stale: never resume it, so the child is not
+    // sent to a surah that is not on their journey.
+    if (resumableMission != null && path.contains(resumableMission.surahId)) {
+      return resumableMission;
+    }
 
     // A stage "needs review" because it holds a due record, so the due-review
     // branch above already covers it. Once that budget is spent, offering the

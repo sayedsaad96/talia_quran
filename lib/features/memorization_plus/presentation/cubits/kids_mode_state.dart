@@ -163,6 +163,7 @@ class KidsModeLoaded extends KidsModeState {
   bool get canUseGuardianFallback =>
       audioError != null ||
       recordingError == CubitMessageCodes.kidsMicPermissionDenied ||
+      recordingError == CubitMessageCodes.kidsVoiceConsentDeclined ||
       recordingError == CubitMessageCodes.kidsRecordingUnavailable ||
       (recordingError == CubitMessageCodes.kidsRecordingNotCaptured &&
           silentAttempts >= kGuardianFallbackAfterSilentAttempts) ||

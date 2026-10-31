@@ -1,15 +1,16 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/approved_similar_ayah_candidate_source.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late Map<String, Object?> index;
   late Map<String, Object?> entry;
   late _Quran quran;
@@ -90,36 +91,69 @@ void main() {
     expect(quran.calls, 0);
   });
 
-  test('approved status without complete review evidence fails closed', () async {
-    final good = Map<String, Object?>.of(entry);
-    for (final bad in <Map<String, Object?>>[
-      {'reviewedBy': null},
-      {'reviewedBy': '  '},
-      {'reviewedAt': null},
-      {'reviewedAt': 'yesterday'},
-      {'reviewSetId': ''},
-      {'reviewSetId': null},
-    ]) {
-      entry
-        ..clear()
-        ..addAll(good)
-        ..addAll(bad);
-      expect(await source().loadCandidates('2:1'), isNull, reason: '$bad');
-    }
+  test(
+    'approved status without complete review evidence fails closed',
+    () async {
+      final good = Map<String, Object?>.of(entry);
+      for (final bad in <Map<String, Object?>>[
+        {'reviewedBy': null},
+        {'reviewedBy': '  '},
+        {'reviewedAt': null},
+        {'reviewedAt': 'yesterday'},
+        {'reviewSetId': ''},
+        {'reviewSetId': null},
+      ]) {
+        entry
+          ..clear()
+          ..addAll(good)
+          ..addAll(bad);
+        expect(await source().loadCandidates('2:1'), isNull, reason: '$bad');
+      }
+      expect(quran.calls, 0);
+    },
+  );
+
+  test(
+    'real bundled approved references browse without enabling detection',
+    () async {
+      final loaded = ApprovedSimilarAyahCandidateSource(
+        quran: quran,
+        readBytes: (path) async {
+          reads.add(path);
+          final bytes = await rootBundle.load(path);
+          return bytes.buffer.asUint8List(
+            bytes.offsetInBytes,
+            bytes.lengthInBytes,
+          );
+        },
+      );
+      final pairs = await loaded.loadBrowsingPairs();
+      expect(pairs, hasLength(30));
+      final first = pairs!.first;
+      expect(
+        await loaded.loadCandidates(
+          '${first.targetSurahId}:${first.targetAyahNumber}',
+        ),
+        isEmpty,
+      );
+      expect(quran.calls, 0);
+    },
+  );
+
+  test('curated zero-run pairs browse but never enter detection', () async {
+    index['pairs'] = [
+      {...pair('2:1', '2:2'), 'kind': 'curated', 'sharedRun': 0},
+    ];
+    final loaded = source();
+    expect(await loaded.loadBrowsingPairs(), hasLength(1));
+    expect(await loaded.loadCandidates('2:1'), isEmpty);
     expect(quran.calls, 0);
   });
 
-  test('real bundled manifest leaves unapproved feature unavailable', () async {
-    final loaded = ApprovedSimilarAyahCandidateSource(
-      quran: quran,
-      readBytes: (path) async {
-        reads.add(path);
-        return File(path).readAsBytes();
-      },
-    );
-    expect(await loaded.loadCandidates('2:1'), isNull);
-    expect(reads, [ApprovedSimilarAyahCandidateSource.manifestPath]);
-    expect(quran.calls, 0);
+  test('curated provenance rejects machine relationships', () async {
+    (index['provenance']! as Map<String, Object?>)['tokenPolicy'] =
+        'owner-curated-fixture-metrics-v1';
+    expect(await source().loadBrowsingPairs(), isNull);
   });
 
   test('digest and canonical source mismatch fail closed', () async {

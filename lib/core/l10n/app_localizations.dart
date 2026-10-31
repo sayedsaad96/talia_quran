@@ -3762,31 +3762,31 @@ abstract class AppLocalizations {
   /// No description provided for @familyPinOptionalHelp.
   ///
   /// In ar, this message translates to:
-  /// **'اختياري على جهازك: يمنع غيرك من فتح لوحة العائلة.'**
+  /// **'يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.'**
   String get familyPinOptionalHelp;
 
   /// No description provided for @familyPinSkip.
   ///
   /// In ar, this message translates to:
-  /// **'متابعة بدون قفل'**
+  /// **'المتابعة دون رمز'**
   String get familyPinSkip;
 
   /// No description provided for @familyPinLockOn.
   ///
   /// In ar, this message translates to:
-  /// **'قفل اللوحة برقم سري'**
+  /// **'إعداد رمز ولي الأمر'**
   String get familyPinLockOn;
 
   /// No description provided for @familyPinLockRemove.
   ///
   /// In ar, this message translates to:
-  /// **'إزالة قفل اللوحة'**
+  /// **'إزالة الرمز المحفوظ'**
   String get familyPinLockRemove;
 
   /// No description provided for @familyPinLockRemoveConfirm.
   ///
   /// In ar, this message translates to:
-  /// **'ستُفتح لوحة العائلة على هذا الجهاز دون رقم سري. يمكنك قفلها مرة أخرى في أي وقت.'**
+  /// **'سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.'**
   String get familyPinLockRemoveConfirm;
 
   /// No description provided for @kidsGuardianLinkedBadge.
@@ -6357,7 +6357,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardPinHelp.
   ///
   /// In ar, this message translates to:
-  /// **'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز'**
+  /// **'إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.'**
   String get parentDashboardPinHelp;
 
   /// No description provided for @parentDashboardPinConfirm.
@@ -6399,7 +6399,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardResetPin.
   ///
   /// In ar, this message translates to:
-  /// **'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
+  /// **'إعادة تعيين الرمز على هذا الجهاز'**
   String get parentDashboardResetPin;
 
   /// No description provided for @parentDashboardForgotPin.
@@ -6579,7 +6579,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianSessionTileSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'لولي الأمر فقط، وتحتاج الرقم السري'**
+  /// **'فتح أدوات ولي الأمر؛ إدخال الرمز اختياري'**
   String get guardianSessionTileSubtitle;
 
   /// No description provided for @guardianSessionBackToChild.
@@ -6699,7 +6699,7 @@ abstract class AppLocalizations {
   /// No description provided for @guardianUnlinkTileSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'يحتاج الرقم السري والاتصال بالإنترنت'**
+  /// **'يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري'**
   String get guardianUnlinkTileSubtitle;
 
   /// No description provided for @guardianUnlinkConfirmTitle.
@@ -9631,7 +9631,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Open.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الأطفال. ويُضبط رمز ولي الأمر أثناء إعداد الطفل. وتظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.'**
+  /// **'اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.'**
   String get tutorialS9Open;
 
   /// No description provided for @tutorialS9Useful.
@@ -9643,7 +9643,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Step1.
   ///
   /// In ar, this message translates to:
-  /// **'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية ورمز ولي أمر من أربعة أرقام.'**
+  /// **'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.'**
   String get tutorialS9Step1;
 
   /// No description provided for @tutorialS9Step2.
@@ -9655,7 +9655,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Step3.
   ///
   /// In ar, this message translates to:
-  /// **'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي»: يدخل ولي الأمر الرمز للتأكيد.'**
+  /// **'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.'**
   String get tutorialS9Step3;
 
   /// No description provided for @tutorialS9Step4.
@@ -9667,7 +9667,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS9Tip1.
   ///
   /// In ar, this message translates to:
-  /// **'حافظ على سرية الرمز: فهو يحمي أيضًا الخروج من مسار الأطفال.'**
+  /// **'حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.'**
   String get tutorialS9Tip1;
 
   /// No description provided for @tutorialS9Tip2.
@@ -11127,6 +11127,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.'**
   String get kidsRecordingUnavailable;
+
+  /// No description provided for @kidsVoiceConsentDeclined.
+  ///
+  /// In ar, this message translates to:
+  /// **'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.'**
+  String get kidsVoiceConsentDeclined;
 
   /// No description provided for @kidsRecordingNotCaptured.
   ///
@@ -14017,14 +14023,20 @@ abstract class AppLocalizations {
   /// No description provided for @guardianPinCreateReason.
   ///
   /// In ar, this message translates to:
-  /// **'هذا الإجراء خاص بولي الأمر. أنشئ رمزًا من ٤ أرقام لحمايته، وسيُطلب منك في المرات القادمة.'**
+  /// **'يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات.'**
   String get guardianPinCreateReason;
 
   /// No description provided for @childSetupPinOptionalHelp.
   ///
   /// In ar, this message translates to:
-  /// **'اختياري: أنشئه الآن أو عند أول إجراء خاص بولي الأمر.'**
+  /// **'اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر.'**
   String get childSetupPinOptionalHelp;
+
+  /// No description provided for @childSetupPinAlreadySet.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.'**
+  String get childSetupPinAlreadySet;
 
   /// No description provided for @recitationVoiceDisclosureTitle.
   ///
@@ -14419,7 +14431,7 @@ abstract class AppLocalizations {
   /// No description provided for @kidsGuardianAuditionHint.
   ///
   /// In ar, this message translates to:
-  /// **'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أدخل رمزك لتأكيد التقييم.'**
+  /// **'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري.'**
   String get kidsGuardianAuditionHint;
 
   /// No description provided for @kidsHouseReviewRemaining.
@@ -14703,6 +14715,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذر بدء التحديث. حاول مرة أخرى.'**
   String get appUpdateInstallFailed;
+
+  /// No description provided for @kidsChangeJourneyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير رحلة الحفظ'**
+  String get kidsChangeJourneyTitle;
+
+  /// No description provided for @kidsChangeJourneyDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر رحلة أخرى، وسيبقى تقدمك محفوظًا.'**
+  String get kidsChangeJourneyDescription;
 
   /// No description provided for @kidsJourneyPathTitle.
   ///
@@ -15601,8 +15625,20 @@ abstract class AppLocalizations {
   /// No description provided for @similarAyahTrainerMachineNote.
   ///
   /// In ar, this message translates to:
-  /// **'هذه علاقات لفظية محسوبة آليًا وليست حكمًا على التلاوة.'**
+  /// **'للمقارنة والمراجعة، وليست حكمًا على التلاوة.'**
   String get similarAyahTrainerMachineNote;
+
+  /// No description provided for @similarAyahHistoryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل المراجعة'**
+  String get similarAyahHistoryTitle;
+
+  /// No description provided for @similarAyahBrowseTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'متشابهات للمراجعة'**
+  String get similarAyahBrowseTitle;
 
   /// No description provided for @similarAyahLookupAction.
   ///
@@ -16677,6 +16713,66 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.'**
   String get settingsFeatureHomeWidgetSubtitle;
+
+  /// No description provided for @settingsHomeWidgetAdd.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف إلى الشاشة الرئيسية'**
+  String get settingsHomeWidgetAdd;
+
+  /// No description provided for @settingsHomeWidgetUnsupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.'**
+  String get settingsHomeWidgetUnsupported;
+
+  /// No description provided for @settingsHomeWidgetManualSteps.
+  ///
+  /// In ar, this message translates to:
+  /// **'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.'**
+  String get settingsHomeWidgetManualSteps;
+
+  /// No description provided for @settingsHomeWidgetPreviewCaption.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة الأداة'**
+  String get settingsHomeWidgetPreviewCaption;
+
+  /// No description provided for @settingsHomeWidgetPreviewPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفجر · ٠٥:١٢'**
+  String get settingsHomeWidgetPreviewPrayer;
+
+  /// No description provided for @settingsHomeWidgetPreviewReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنجزت مراجعاتك'**
+  String get settingsHomeWidgetPreviewReview;
+
+  /// No description provided for @settingsHomeWidgetPreviewWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٢–١٥'**
+  String get settingsHomeWidgetPreviewWird;
+
+  /// No description provided for @settingsHomeWidgetShowPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الصلاة'**
+  String get settingsHomeWidgetShowPrayer;
+
+  /// No description provided for @settingsHomeWidgetShowReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار المراجعات'**
+  String get settingsHomeWidgetShowReviews;
+
+  /// No description provided for @settingsHomeWidgetShowWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الورد'**
+  String get settingsHomeWidgetShowWird;
 
   /// No description provided for @seasonDaysUntil.
   ///

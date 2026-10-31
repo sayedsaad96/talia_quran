@@ -22,7 +22,6 @@ import 'package:talia_quran/features/memorization_plus/domain/entities/memorizat
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
-import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
 import '../../../../helpers/isar_test_core.dart';
@@ -118,11 +117,8 @@ void main() {
   test('a wrong or cancelled PIN enters no mode and saves nothing', () async {
     final cubit = await loadedAfterListens();
 
-    final cancelled = await startKidsGuardianRecitation(
-      cubit,
-      () async => null,
-    );
-    final wrong = await startKidsGuardianRecitation(cubit, () async => '9999');
+    final cancelled = await cubit.enterGuardianRecitation();
+    final wrong = await cubit.enterGuardianRecitation(guardianPin: '9999');
 
     expect(cancelled, isFalse);
     expect(wrong, isFalse);
@@ -135,10 +131,24 @@ void main() {
     expect(await isar.isarReviewEvidenceEvents.count(), 0);
   });
 
+  test(
+    'explicit PIN skip opens assessment after the required listens',
+    () async {
+      final cubit = await loadedAfterListens();
+      expect(await cubit.enterGuardianRecitation(), isFalse);
+      expect(
+        await cubit.enterGuardianRecitation(guardianPin: '9999', skipPin: true),
+        isFalse,
+      );
+      expect(await cubit.enterGuardianRecitation(skipPin: true), isTrue);
+      expect((cubit.state as KidsModeLoaded).isGuardianAssessing, isTrue);
+    },
+  );
+
   test('a verified guardian opens the mode with the ayah hidden', () async {
     final cubit = await loadedAfterListens();
 
-    expect(await startKidsGuardianRecitation(cubit, () async => _pin), isTrue);
+    expect(await cubit.enterGuardianRecitation(guardianPin: _pin), isTrue);
 
     final state = cubit.state as KidsModeLoaded;
     expect(state.isGuardianAssessing, isTrue);
@@ -425,7 +435,8 @@ class _FakeRepository implements MemorizationPlusRepository {
       const Right(KidsProgress.initial());
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
     required int surahId,
   }) async => Right(journey);
 
@@ -500,6 +511,9 @@ class _FakeStreakService implements KidsStreakStore {
 class _CountingRecorder implements KidsRecitationRecorder {
   int captureCalls = 0;
   String words = 'ayah text';
+
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
 
   @override
   Future<KidsRecitationCaptureResult> capture({

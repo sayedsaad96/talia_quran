@@ -13,12 +13,24 @@ data class WidgetRows(
     val empty: Boolean,
     // An adult with nothing to show, as opposed to a cleared or expired widget.
     val adultNoData: Boolean = false,
+    // The precomputed window has ended. Distinct from a widget that was never filled.
+    val stale: Boolean = false,
+    val wirdRange: String? = null,
+    val wirdDone: Int? = null,
+    val wirdTotal: Int? = null,
+    val showWirdAction: Boolean = false,
+    // `wird` opens the reading position; `khatmah-setup` opens plan setup.
+    val wirdDestination: String = "wird",
 )
 
 data class WidgetSnapshotLabels(
     val prayerNames: Map<String, String>,
     val reviewLine: (Int) -> String,
     val wirdLine: (String, Int, Int) -> String,
+    val reviewsDone: String = "Reviews done",
+    val noKhatmahPlan: String = "No khatmah plan",
+    val prayerUnset: String = "Set prayer times",
+    val wirdRange: (Int, Int) -> String = { from, to -> "$from–$to" },
 )
 
 object WidgetSnapshotFormatter {
@@ -48,20 +60,56 @@ object WidgetSnapshotFormatter {
     ): WidgetRows {
         val objectValue = parse(json) ?: return emptyRows()
         if (integer(objectValue, "schemaVersion") != schemaVersion) return emptyRows()
-        if (isExpired(objectValue, nowMillis)) return emptyRows()
-        if (objectValue.optBoolean("isEmpty", false)) {
+        if (isExpired(objectValue, nowMillis)) return emptyRows(stale = true)
+        val dayEnded = hasDayEnded(objectValue, nowMillis)
+        val daySlice = if (dayEnded) objectValue.optJSONObject("nextDay") else objectValue
+        if (objectValue.optBoolean("isEmpty", false) && daySlice == null) {
             return if (objectValue.optBoolean("adultNoData", false)) {
                 WidgetRows(null, null, null, true, adultNoData = true)
             } else {
                 emptyRows()
             }
         }
-        val prayer = prayerLine(objectValue, labels, arabic, nowMillis)
-        // Review and wird describe the snapshot's day; the prayer list outlives it.
-        val dayEnded = hasDayEnded(objectValue, nowMillis)
-        val review = if (dayEnded) null else reviewLine(objectValue, labels, arabic)
-        val wird = if (dayEnded) null else wirdLine(objectValue, labels, arabic)
-        return WidgetRows(prayer, review, wird, prayer == null && review == null && wird == null)
+        val showPrayer = sectionVisible(objectValue, "showPrayer")
+        val showReviews = sectionVisible(objectValue, "showReviews")
+        val showWird = sectionVisible(objectValue, "showWird")
+        val prayer = if (showPrayer) {
+            prayerLine(objectValue, labels, arabic, nowMillis)
+                ?: if (objectValue.optBoolean("prayerUnset", false)) labels.prayerUnset else null
+        } else {
+            null
+        }
+        val review = if (daySlice != null && showReviews) {
+            reviewLine(daySlice, objectValue, labels, arabic, nowMillis)
+        } else {
+            null
+        }
+        val wird = if (daySlice != null && showWird) {
+            wirdPresentation(daySlice, labels, arabic)
+        } else {
+            null
+        }
+        val blank = prayer == null && review == null && wird?.line == null
+        if (blank && objectValue.optBoolean("isEmpty", false)) {
+            return if (objectValue.optBoolean("adultNoData", false)) {
+                WidgetRows(null, null, null, true, adultNoData = true)
+            } else {
+                emptyRows()
+            }
+        }
+        return WidgetRows(
+            prayer,
+            review,
+            wird?.line,
+            blank,
+            // Hiding every section is a choice, not a missing snapshot.
+            adultNoData = blank && !showPrayer && !showReviews && !showWird,
+            wirdRange = wird?.range,
+            wirdDone = wird?.done,
+            wirdTotal = wird?.total,
+            showWirdAction = wird?.action == true,
+            wirdDestination = wird?.destination ?: "wird",
+        )
     }
 
     private fun parse(json: String?): JSONObject? = try {
@@ -112,30 +160,76 @@ object WidgetSnapshotFormatter {
         return "$name · ${formatTime(at, offset, arabic)}"
     }
 
+    private fun sectionVisible(objectValue: JSONObject, key: String) =
+        objectValue.optBoolean(key, true)
+
     private fun reviewLine(
         objectValue: JSONObject,
+        snapshot: JSONObject,
         labels: WidgetSnapshotLabels,
         arabic: Boolean,
+        nowMillis: Long,
     ): String? {
-        val count = integer(objectValue, "dueReviewCount") ?: return null
-        if (count <= 0) return null
-        val line = labels.reviewLine(count)
-        return if (arabic) digits(line) else line
+        var count = integer(objectValue, "dueReviewCount")
+        val transitions = snapshot.optJSONArray("reviewCounts")
+        var latest = Long.MIN_VALUE
+        if (transitions != null) {
+            for (index in 0 until transitions.length()) {
+                val entry = transitions.optJSONObject(index) ?: continue
+                val at = long(entry, "at") ?: continue
+                val value = integer(entry, "count") ?: continue
+                if (at <= nowMillis && at >= latest && value >= 0) {
+                    latest = at
+                    count = value
+                }
+            }
+        }
+        if (count != null && count > 0) {
+            val line = labels.reviewLine(count)
+            return if (arabic) digits(line) else line
+        }
+        return if (objectValue.optBoolean("reviewsSettled", false)) labels.reviewsDone else null
     }
 
-    private fun wirdLine(
+    private data class WirdPresentation(
+        val line: String,
+        val range: String?,
+        val done: Int?,
+        val total: Int?,
+        val action: Boolean,
+        val destination: String,
+    )
+
+    private fun wirdPresentation(
         objectValue: JSONObject,
         labels: WidgetSnapshotLabels,
         arabic: Boolean,
-    ): String? {
-        val from = integer(objectValue, "wirdFromPage") ?: return null
-        val to = integer(objectValue, "wirdToPage") ?: return null
-        val done = integer(objectValue, "wirdDonePages") ?: return null
+    ): WirdPresentation? {
+        val from = integer(objectValue, "wirdFromPage")
+        val to = integer(objectValue, "wirdToPage")
+        val done = integer(objectValue, "wirdDonePages")
         val name = objectValue.optString("wirdSurahName").takeIf { it in canonicalSurahNames }
-        if (from !in 1..604 || to !in from..604 || done < 0 || name == null) return null
-        val total = to - from + 1
-        val line = labels.wirdLine(name, minOf(done, total), total)
-        return if (arabic) digits(line) else line
+        if (from != null && to != null && done != null && name != null &&
+            from in 1..604 && to in from..604 && done >= 0
+        ) {
+            val total = to - from + 1
+            val shownDone = minOf(done, total)
+            val line = labels.wirdLine(name, shownDone, total)
+            val range = labels.wirdRange(from, to)
+            return WirdPresentation(
+                line = if (arabic) digits(line) else line,
+                range = if (arabic) digits(range) else range,
+                done = shownDone,
+                total = total,
+                action = shownDone < total,
+                destination = "wird",
+            )
+        }
+        return if (objectValue.optBoolean("noKhatmahPlan", false)) {
+            WirdPresentation(labels.noKhatmahPlan, null, null, null, false, "khatmah-setup")
+        } else {
+            null
+        }
     }
 
     private fun formatTime(millis: Long, offsetMinutes: Int, arabic: Boolean): String {
@@ -178,5 +272,6 @@ object WidgetSnapshotFormatter {
         return nowMillis >= dayEndsAt
     }
 
-    private fun emptyRows() = WidgetRows(null, null, null, true)
+    private fun emptyRows(stale: Boolean = false) =
+        WidgetRows(null, null, null, true, stale = stale)
 }

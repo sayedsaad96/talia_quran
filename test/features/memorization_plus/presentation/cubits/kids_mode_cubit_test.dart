@@ -363,6 +363,110 @@ void main() {
       expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
     });
 
+    group('recording readiness gate', () {
+      test('nothing is recording until consent/permission are ready', () async {
+        final recorder = _GatedKidsRecitationRecorder();
+        await cubit.close();
+        cubit = buildCubit(recorder: recorder);
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(cubit.maxLoops);
+        final phaseBefore = (cubit.state as KidsModeLoaded).sessionState.phase;
+
+        final started = cubit.startRecording();
+        await Future<void>.delayed(Duration.zero);
+
+        var loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isFalse);
+        expect(loaded.recordingSeconds, 0);
+        expect(loaded.sessionState.phase, phaseBefore);
+        expect(recorder.captureCalls, 0);
+
+        recorder.ready.complete(null);
+        await Future<void>.delayed(Duration.zero);
+        loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isTrue);
+        expect(loaded.sessionState.phase, V2SessionPhase.reciting);
+        expect(recorder.captureCalls, 1);
+
+        recorder.captureResult.complete(
+          const KidsRecitationCaptureResult.stoppedByUser(),
+        );
+        await started;
+      });
+
+      test('a declined disclosure leaves the phase alone and offers the '
+          'guardian fallback', () async {
+        final recorder = _GatedKidsRecitationRecorder();
+        await cubit.close();
+        cubit = buildCubit(recorder: recorder);
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(cubit.maxLoops);
+        final phaseBefore = (cubit.state as KidsModeLoaded).sessionState.phase;
+
+        recorder.ready.complete(
+          const KidsRecitationCaptureResult.consentDeclined(),
+        );
+        await cubit.startRecording();
+
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isRecording, isFalse);
+        expect(loaded.sessionState.phase, phaseBefore);
+        expect(
+          loaded.recordingError,
+          CubitMessageCodes.kidsVoiceConsentDeclined,
+        );
+        expect(loaded.canUseGuardianFallback, isTrue);
+        expect(recorder.captureCalls, 0);
+      });
+    });
+
+    group('resuming a paused mission', () {
+      Future<KidsModeLoaded> resumeFrom(V2SessionPhase phase) async {
+        final adapter = await _openKidsResumeAdapter();
+        await adapter.save(
+          V2SessionState.initial(
+            surahId: 114,
+            blockAyahs: const [
+              Ayah(
+                number: 1,
+                surahId: 114,
+                text: 'ayah text',
+                numberInSurah: 1,
+              ),
+            ],
+            blockReviewRequired: false,
+          ).copyWith(phase: phase),
+        );
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          quran: const _ResumeQuranRepository(),
+          progressAdapter: adapter,
+        );
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+        return cubit.state as KidsModeLoaded;
+      }
+
+      test('a session past learning keeps the listen gate open', () async {
+        final loaded = await resumeFrom(V2SessionPhase.reciting);
+        expect(loaded.maxLoops, greaterThan(0));
+        expect(loaded.currentLoop, loaded.maxLoops);
+        // The mic is not listen-gated: recording starts without a warning.
+        await cubit.startRecording();
+        expect((cubit.state as KidsModeLoaded).mustListenFirst, isFalse);
+      });
+
+      test('a session paused in learning still requires the listens', () async {
+        final loaded = await resumeFrom(V2SessionPhase.learning);
+        expect(loaded.currentLoop, 0);
+      });
+    });
+
     test(
       'resuming an already-rewarded ayah earns reduced review points',
       () async {
@@ -927,50 +1031,90 @@ void main() {
       // session must complete directly instead of dead-ending.
       expect(loaded.sessionState.blockReviewRequired, isFalse);
     });
-    test('legacy partition failure offers recovery without launching or clearing checkpoint', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final barrier = AccountDataBarrier.forPreferences(prefs)
-        ..owner = const FixedRecordOwnerProvider('child');
-      repository.journeyFailure = KidsSplitChoiceRequiredFailure(
-        KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
-          surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1),
-      );
-      await cubit.load(114, 1, 'test ayah', missionType: KidsMissionType.resume);
-      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
-      expect(repository.getJourneyCalls, 1);
-      barrier.invalidate();
-      expect(cubit.state, isA<KidsModeError>());
-    });
+    test(
+      'legacy partition failure offers recovery without launching or clearing checkpoint',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final barrier = AccountDataBarrier.forPreferences(prefs)
+          ..owner = const FixedRecordOwnerProvider('child');
+        repository.journeyFailure = KidsSplitChoiceRequiredFailure(
+          KidsLegacyResumeRecoveryTicket(
+            ownerId: 'child',
+            lease: barrier.capture(),
+            surahId: 114,
+            verifiedAyahCount: 6,
+            defaultStageSize: 3,
+            checkpointAyah: 1,
+          ),
+        );
+        await cubit.load(
+          114,
+          1,
+          'test ayah',
+          missionType: KidsMissionType.resume,
+        );
+        expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+        expect(repository.getJourneyCalls, 1);
+        barrier.invalidate();
+        expect(cubit.state, isA<KidsModeError>());
+      },
+    );
 
-    test('legacy recovery shows save failure then retries the original ayah without awarding', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      const owner = FixedRecordOwnerProvider('child');
-      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
-      final source = _RecoveryDatasource(prefs, owner: owner);
-      final ticket = KidsLegacyResumeRecoveryTicket(ownerId: 'child', lease: barrier.capture(),
-        surahId: 114, verifiedAyahCount: 6, defaultStageSize: 3, checkpointAyah: 1);
-      repository.journeyFailureLoader = () async =>
-        (await source.getParentSettings()).kidsHouseSizesBySurah.containsKey(114)
-          ? null : KidsSplitChoiceRequiredFailure(ticket);
-      await cubit.close();
-      cubit = buildCubit(recorder: _FakeKidsRecitationRecorder(),
-        quran: const _ResumeQuranRepository(), recoverSessionSplit: RecoverKidsSessionSplit(
-          KidsLegacySplitRecoveryRepositoryImpl(source, owner, barrier)));
-      await cubit.load(114, 1, 'ayah text', missionType: KidsMissionType.resume);
-      source.failWrites = true;
-      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
-      expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
-      expect((cubit.state as KidsModeSplitChoiceRequired).failed, isTrue);
-      expect((await source.getParentSettings()).kidsHouseSizesBySurah, isEmpty);
-      source.failWrites = false;
-      await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
-      expect(cubit.state, isA<KidsModeLoaded>());
-      expect((cubit.state as KidsModeLoaded).ayahNumber, 1);
-      expect((await source.getParentSettings()).kidsHouseSizesBySurah[114], 4);
-      expect(repository.awardCalls, 0);
-    });
+    test(
+      'legacy recovery shows save failure then retries the original ayah without awarding',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        const owner = FixedRecordOwnerProvider('child');
+        final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+        final source = _RecoveryDatasource(prefs, owner: owner);
+        final ticket = KidsLegacyResumeRecoveryTicket(
+          ownerId: 'child',
+          lease: barrier.capture(),
+          surahId: 114,
+          verifiedAyahCount: 6,
+          defaultStageSize: 3,
+          checkpointAyah: 1,
+        );
+        repository.journeyFailureLoader = () async =>
+            (await source.getParentSettings()).kidsHouseSizesBySurah
+                .containsKey(114)
+            ? null
+            : KidsSplitChoiceRequiredFailure(ticket);
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(),
+          quran: const _ResumeQuranRepository(),
+          recoverSessionSplit: RecoverKidsSessionSplit(
+            KidsLegacySplitRecoveryRepositoryImpl(source, owner, barrier),
+          ),
+        );
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.resume,
+        );
+        source.failWrites = true;
+        await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+        expect(cubit.state, isA<KidsModeSplitChoiceRequired>());
+        expect((cubit.state as KidsModeSplitChoiceRequired).failed, isTrue);
+        expect(
+          (await source.getParentSettings()).kidsHouseSizesBySurah,
+          isEmpty,
+        );
+        source.failWrites = false;
+        await cubit.recoverLegacySplit(ticket, whole: false, stageSize: 4);
+        expect(cubit.state, isA<KidsModeLoaded>());
+        expect((cubit.state as KidsModeLoaded).ayahNumber, 1);
+        expect(
+          (await source.getParentSettings()).kidsHouseSizesBySurah[114],
+          4,
+        );
+        expect(repository.awardCalls, 0);
+      },
+    );
 
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
@@ -1985,6 +2129,18 @@ void main() {
       expect(await cubit.submitManualCompletion(guardianPin: ''), isFalse);
       expect(repository.awardCalls, 0);
       expect((cubit.state as KidsModeLoaded).isCompleted, isFalse);
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 10,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+      expect(await cubit.submitManualCompletion(skipPin: true), isTrue);
     });
     test(
       'automatic completion with missing transcript does not award or complete',
@@ -2370,7 +2526,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
       const Right(KidsProgress.initial());
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
     required int surahId,
   }) async {
     // Some phase-4 tests load another surah (e.g. 113 for a due review);
@@ -2560,6 +2717,9 @@ class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   final KidsRecitationCaptureResult result;
 
   @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
+
+  @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async => result;
@@ -2578,6 +2738,9 @@ class _MutableKidsRecitationRecorder implements KidsRecitationRecorder {
       const KidsRecitationCaptureResult.stoppedByUser();
 
   @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
+
+  @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async => result;
@@ -2589,9 +2752,36 @@ class _MutableKidsRecitationRecorder implements KidsRecitationRecorder {
   Future<void> dispose() async {}
 }
 
+/// Recorder whose readiness and capture are both controlled by the test.
+class _GatedKidsRecitationRecorder implements KidsRecitationRecorder {
+  final ready = Completer<KidsRecitationCaptureResult?>();
+  final captureResult = Completer<KidsRecitationCaptureResult>();
+  int captureCalls = 0;
+
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() => ready.future;
+
+  @override
+  Future<KidsRecitationCaptureResult> capture({
+    Completer<KidsRecitationCaptureResult>? externalCompleter,
+  }) {
+    captureCalls++;
+    return captureResult.future;
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
 class _PrecompletedKidsRecitationRecorder implements KidsRecitationRecorder {
   final captureStarted = Completer<void>();
   final finishCapture = Completer<KidsRecitationCaptureResult>();
+
+  @override
+  Future<KidsRecitationCaptureResult?> ensureReady() async => null;
 
   @override
   Future<KidsRecitationCaptureResult> capture({

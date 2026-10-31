@@ -137,6 +137,33 @@ void main() {
     verifyNever(mockRepository.setParentPin(any));
   });
 
+  test('setupChild keeps an existing guardian PIN', () async {
+    final selectedChild = testProfile.copyWith(
+      selectedPath: MemorizationPath.child,
+      guardianOnboardingStatus: GuardianOnboardingStatus.required,
+    );
+    final configuredChild = selectedChild.copyWith(childAge: 6);
+    when(
+      mockRepository.selectMemorizationPath(MemorizationPath.child),
+    ).thenAnswer((_) async => Right(selectedChild));
+    when(
+      mockRepository.configureChildAge(6),
+    ).thenAnswer((_) async => Right(configuredChild));
+    when(
+      mockRepository.getParentSettings(),
+    ).thenAnswer(
+      (_) async => const Right(ParentSettings(pinHash: 'secure-v2')),
+    );
+    when(
+      mockRepository.saveParentSettings(any),
+    ).thenAnswer((_) async => const Right(null));
+
+    await cubit.setupChild(nickname: 'مريم', age: 6, pin: '1234');
+
+    expect(cubit.state, MemorizationIdentitySuccess(profile: configuredChild));
+    verifyNever(mockRepository.setParentPin(any));
+  });
+
   test('setupChild rejects a PIN that is not 4 digits', () async {
     await cubit.setupChild(nickname: 'مريم', age: 6, pin: '12');
 

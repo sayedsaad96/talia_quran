@@ -57,10 +57,10 @@ abstract final class RolloutManifest {
   ]);
 
   static RolloutEntry _experience(ExperienceFeature f) => switch (f) {
-    ExperienceFeature.similarAyahTrainer => _off(
+    ExperienceFeature.similarAyahTrainer => RolloutEntry(
       f.storageKey,
-      'The derived index awaits human review (E0); the feature only says '
-      '"not approved yet".',
+      RolloutStage.on,
+      evidence: 'owner-2026-10-30-similar-ayahs-30',
     ),
     ExperienceFeature.tabletSpread => _off(
       f.storageKey,
