@@ -1,175 +1,237 @@
 <div align="center">
   <img src="assets/images/logo_new.png" alt="Talia Logo" width="150" style="border-radius:20px; margin-bottom: 20px;">
 
-  # 🕌 تالية — Talia Quran
+  # تالية — Talia Quran
 
-  **A Premium, Intelligent, Offline-First Quran Memorization & Recitation Application**
+  **Offline-first Quran reading, memorization, prayer, and azkar. Arabic (RTL) is the primary locale.**
 
-  [![Flutter](https://img.shields.io/badge/Flutter-3.22+-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-  [![Dart](https://img.shields.io/badge/Dart-3.4+-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
-  [![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-success?style=for-the-badge)](#-technical-architecture)
-  [![BLoC](https://img.shields.io/badge/State_Management-BLoC-blue?style=for-the-badge)](#-tech-stack)
-  [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](#-tech-stack)
+  [![Flutter](https://img.shields.io/badge/Flutter->=3.44-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+  [![Dart](https://img.shields.io/badge/Dart-^3.12-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+  [![Version](https://img.shields.io/badge/version-1.0.3%2B4-1A6B5A?style=for-the-badge)](pubspec.yaml)
+  [![Architecture](https://img.shields.io/badge/Architecture-Clean-success?style=for-the-badge)](#technical-architecture)
 
-  [English](#english) • [العربية](#العربية)
+  [English](#english) • [العربية](#arabic)
 </div>
 
 <br>
 
-> **Talia (تالية)** bridges traditional Islamic learning with cutting-edge technology. It combines an immersive Quranic reading experience with advanced **Spaced Repetition System (SRS)** algorithms, **AI-powered speech recognition**, and gamified habit-building for all ages.
+Talia (تالية) is an offline-first Flutter app for reading the Mushaf, memorizing with spaced repetition and speech-based recitation checks, tracking a khatmah, keeping prayer times and azkar, and following a kids or adult path. Supabase is optional cloud sync. Without it the app stays local-only.
+
+The bottom navigation has five tabs: Home, Quran, Memorization, Azkar, and Progress. Optional pieces (downloads, notes, hands-free review, group khatmah, the home-screen widget, and others) can be switched from **Settings → App features**.
 
 ---
 
-<h2 id="english">🇬🇧 English Overview & Features</h2>
+<h2 id="english">English</h2>
 
-### 🌟 Why Talia?
-Talia is not just another Quran app; it is a **comprehensive Hifz (Memorization) ecosystem**. Designed with an uncompromising focus on visual excellence, cognitive science, and robust software architecture (Clean Architecture & Domain-Driven Design), Talia transforms how Muslims engage with the Quran.
+### Reading
 
-### ✨ Core Features
+- Mushaf pages render with [`qcf_quran_plus`](https://pub.dev/packages/qcf_quran_plus). The bundled text is the Tanzil Quran text, Hafs an Asim, Uthmani script. See [Quran text](#quran-text).
+- Search, bookmarks, per-ayah notes, and a daily ayah.
+- Recitation playback with `just_audio` and `audio_service`, including a chosen ayah range and repeat. Downloaded recitations play without a network. The screen stays on while the reader is open.
+- Reader menu controls for memorization strength coloring on the page.
 
-#### 📖 1. The Premium Mushaf Experience
-- **Complete 114 Surahs:** Verified Ottoman script with precise Ayah counts, Hizb divisions, and Makki/Madani classifications.
-- **QCF Visual Rendering (`qcf_quran_plus`):** Flawless, crystal-clear Mushaf page rendering preserving the authentic script while using efficient JSON/Isar databases as the underlying source of truth.
-- **Immersive Audio:** High-quality Ayah-by-Ayah audio playback via `just_audio` with seamless offline caching (`flutter_cache_manager`).
-- **Focus & Customization:** Adjustable typography (`Amiri` font, 16–36px), a distraction-free Focus Mode, and persistent bookmarks.
+### Memorization
 
-#### 🧠 2. Intelligent Memorization (Hifz) & AI Testing
-- **Spaced Repetition System (SRS):** Scientifically optimized intervals (`1, 3, 7, 14, 30, 90` days) shift memorized Ayahs into permanent memory.
-- **AI Voice Verification:** Integrates `speech_to_text` and `string_similarity` to actively listen, analyze, and automatically verify your recitation against the text.
-- **Interactive Checkpoints:** Guided sessions that enforce mastery before allowing progress to new sections.
+- Adult daily plan and custom plan, plus a guided session (`memorization_plus` and the v2 session engine).
+- Spaced repetition, a forgetting forecast, and review scheduled around prayer times.
+- Recitation check: on-device speech-to-text compared with the ayah text. Hands-free review uses the microphone without touching the screen.
+- Similar-ayah practice, listening review, and surah practice.
+- Product rules for the session engine live in [`docs/memorization_v2_product_rules.md`](docs/memorization_v2_product_rules.md).
 
-#### 🌱 3. Dual Identity Tracks (Kids & Adults)
-- **Kids Journey Mode:** A highly engaging, gamified step-by-step memorization map designed to keep children motivated.
-- **Adult Smart Daily Plan:** Automated, adaptive memorization targets customized to an adult's learning pace.
-- **Parental Dashboard (Guardian Linking):** Secure QR-code / Supabase pairing that allows parents to remotely track their child's progress, streaks, and quiz results in real time.
+### Kids and family
 
-#### 📊 4. Gamification, Habits & Azkar
-- **Streaks & XP Points:** Earn XP (`XpService`) and build daily streaks (`StreakService`) for completing Hifz sessions and Dhikr.
-- **Badges & Certificates:** Unlock milestone badges and generate personalized, printable **Certificates of Completion**.
-- **Haptic Azkar Counters:** Interactive Supplications with haptic feedback (`HapticFeedback`) and animated progress rings.
+- A kids Quran journey: an island map with the Talia character, coins, and juz markers, plus listen, stage, and bedtime flows.
+- Guardian linking (QR) and a family dashboard with a child detail view and a monthly report. Progress follows the linked account when cloud sync is configured. The app does not require an account for local use.
 
----
+### Khatmah
 
-## 🏗️ Technical Architecture
+- A personal khatmah with setup, dashboard, history, completion, and a read-confirmation step.
+- A group khatmah so people can follow one another’s progress.
+- Khatm dua, shown from the approved bundled text.
 
-Talia strictly adheres to **Clean Architecture** principles. The application is decoupled into distinct layers, ensuring high testability, easy maintenance, and scalability.
+### Prayer, azkar, and seasons
+
+- Prayer times (`adhan`) and Adhan playback on Android through `talia_prayer_delivery`.
+- An opt-in prayer companion (it starts off) for preparation, check-in, and follow-up reminders. Confirmation is always an explicit user action.
+- Azkar with counters, including after-prayer azkar in their time window. Only approved records in `assets/data/azkar_release.json` are shown.
+- A seasons companion for Hijri occasions (Sha'ban, Ramadan and the last ten nights, Shawwal, Dhul-Hijjah, Hijri new year, Ashura, Friday / Al-Kahf, the white days, and Monday–Thursday fasting). Each season can be turned off, and season reminders are capped at one per day.
+
+### Progress and the home screen
+
+- Streaks, XP, badges, and a completion certificate.
+- A home-screen widget summarizing prayer and progress. Its contents follow the feature switch in Settings.
+- Local backup and restore, the privacy policy, sources and licenses, and the page **How we protect content and your privacy**.
+- Google Play in-app updates via `in_app_update`.
+
+### Quran text
+
+`assets/data/quran.json` is the verbatim Tanzil text. The app does not rewrite it for layout. Display separates the basmalah at runtime; the stored record stays intact.
+
+> Tanzil Quran Text Copyright (C) 2007-2021 Tanzil Project  
+> License: Creative Commons Attribution 3.0  
+> https://tanzil.net
+
+The same notice is shown in the app under **Settings → Sources & licenses**. Do not edit canonical files under `assets/data/` to satisfy a UI change. Content rules are in [`docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md`](docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md).
+
+<h2 id="technical-architecture">Technical architecture</h2>
+
+Features live in `lib/features/<feature>/{data,domain,presentation}`. Repositories return a `dartz` `Either`. Presentation state uses `flutter_bloc` Cubits. Shared systems (routing, storage, sync, the memorization engine, prayer delivery) live in `lib/core/`.
 
 ```mermaid
 graph TD
-    UI[Presentation Layer<br>UI / Widgets] --> Bloc[State Management<br>BLoC / Cubit]
-    Bloc --> UC[Domain Layer<br>Use Cases]
-    UC --> Entities[Entities]
-    UC --> RepoInterface[Repository Interfaces]
-    RepoImpl[Data Layer<br>Repository Implementation] -. Implements .-> RepoInterface
-    RepoImpl --> Local[Local DB<br>Isar / SharedPreferences]
-    RepoImpl --> Remote[Remote API<br>Supabase / Audio]
-    
+    UI[Presentation<br>Widgets and Cubits] --> Domain[Domain<br>use cases and entities]
+    Domain --> RepoInterface[Repository interfaces]
+    RepoImpl[Data<br>repository implementation] -. implements .-> RepoInterface
+    RepoImpl --> Local[Local<br>Isar and SharedPreferences]
+    RepoImpl --> Remote[Optional remote<br>Supabase and audio]
+
     style UI fill:#1A6B5A,stroke:#fff,stroke-width:2px,color:#fff
-    style Bloc fill:#1A6B5A,stroke:#fff,stroke-width:2px,color:#fff
-    style UC fill:#D4A843,stroke:#fff,stroke-width:2px,color:#000
-    style Entities fill:#D4A843,stroke:#fff,stroke-width:2px,color:#000
+    style Domain fill:#D4A843,stroke:#fff,stroke-width:2px,color:#000
     style RepoInterface fill:#D4A843,stroke:#fff,stroke-width:2px,color:#000
     style RepoImpl fill:#0D1117,stroke:#fff,stroke-width:2px,color:#fff
     style Local fill:#0D1117,stroke:#fff,stroke-width:2px,color:#fff
     style Remote fill:#0D1117,stroke:#fff,stroke-width:2px,color:#fff
 ```
 
-### 📂 Directory Structure Highlights
+Dependency injection is manual `get_it` registration in `lib/core/di/injection.dart`. `build_runner` does not generate the locator. It generates Isar schemas (`*.g.dart`) and mockito mocks. A new Isar model or `@GenerateMocks` test must be listed in `build.yaml` or nothing is generated for it.
+
 ```text
 lib/
-├── core/                        # Shared Utilities, DI (GetIt), Routing (GoRouter), Theme
-└── features/                    # Independent Feature Modules
-    ├── auth/                    # Supabase Session Management
-    ├── hifz/                    # Memorization & Speech Testing
-    ├── memorization_plus/       # Kids/Adults Tracks, Guardian Linking
-    ├── progress/                # Heatmaps, Streaks, XP & Certificates
-    └── quran/                   # Mushaf Reader & Audio Player
+├── core/                     # DI, GoRouter, theme, l10n, sync, memorization engine
+└── features/
+    ├── quran/                # Reader, search, audio, downloads
+    ├── hifz/                 # Recitation practice
+    ├── memorization_plus/    # Plans, kids journey, guardian, similar ayahs
+    ├── khatmah/              # Personal khatmah
+    ├── group_khatmah/        # Shared khatmah
+    ├── azkar/
+    ├── prayer_companion/
+    ├── seasons/
+    ├── progress/
+    ├── home/
+    └── settings/             # Features, backup, sources, labs
 ```
 
-### 🛠️ Tech Stack
-- **Framework:** Flutter (`>=3.22`), Dart (`>=3.4`)
-- **State Management:** `flutter_bloc`
-- **Database:** `isar` (NoSQL), `shared_preferences`
-- **Backend / Sync:** `supabase_flutter`
-- **Audio & Speech:** `just_audio`, `speech_to_text`
-- **UI & Animations:** `qcf_quran_plus`, `flutter_animate`, `percent_indicator`
+Localization is generated from ARB (`flutter: generate: true` in `pubspec.yaml`). `app_ar.arb` is the template. New keys go in both `app_ar.arb` and `app_en.arb`, then `flutter gen-l10n`.
+
+### Tech stack
+
+| Area | Packages |
+|---|---|
+| App | Flutter `>=3.44`, Dart `^3.12` (`pubspec.yaml`) |
+| State and DI | `flutter_bloc`, `get_it` |
+| Routing | `go_router` |
+| Local data | `isar_community` 3.3.2, `shared_preferences`, `flutter_secure_storage` |
+| Sync | `supabase_flutter` (optional), `workmanager` |
+| Audio and speech | `just_audio`, `audio_service`, `speech_to_text`, `qcf_quran_plus` |
+| Prayer and time | `adhan`, `talia_prayer_delivery`, `hijri`, `flutter_local_notifications` |
+| Home screen | `home_widget` |
+
+### Getting started
+
+Requirements: Flutter `>=3.44` and the Dart SDK from `pubspec.yaml` (`^3.12.0`).
+
+```bash
+git clone https://github.com/sayedsaad96/talia_quran.git
+cd talia_quran
+flutter pub get
+flutter gen-l10n
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
+
+`flutter run` without defines starts the app local-only. Cloud sync turns on only when both defines are set and the URL starts with `https://`:
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon-key>
+```
+
+Supabase schema source of truth is `supabase/migrations/`, applied in lexical order. See [`supabase/README.md`](supabase/README.md).
+
+### Checks
+
+```bash
+flutter analyze
+flutter test
+flutter test test/path/to/file_test.dart
+```
+
+On Windows, the release gate is `./scripts/verify_v1_release.ps1`. It enforces the lockfile, regenerates l10n and Isar code, runs analysis and tests, and checks the Supabase migrations. Add `-BuildAndroidRelease` to build the app bundle as well.
 
 ---
 
-## 🚀 Getting Started
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/talia_quran.git
-   cd talia_quran
-   ```
-2. **Install dependencies:**
-   ```bash
-   flutter pub get
-   ```
-3. **Generate code (Isar schemas & GetIt locators):**
-   ```bash
-   flutter pub run build_runner build --delete-conflicting-outputs
-   ```
-4. **Run the App:**
-   ```bash
-   flutter run
-   ```
-
----
-
-<h2 id="العربية" align="right">🇸🇦 الواجهة العربية (Arabic Overview)</h2>
+<h2 id="arabic" align="right">العربية</h2>
 
 <div align="right" dir="rtl">
 
-### 🌟 لماذا تالية؟
-**تالية (Talia)** ليس مجرد تطبيق قرآني تقليدي، بل هو **منظومة متكاملة لحفظ ومراجعة القرآن الكريم**. تم تصميمه بأعلى معايير الجودة والجماليات البرمجية (Clean Architecture)، ليجمع بين أصالة التلاوة وذكاء التقنية، محولاً عملية الحفظ إلى تجربة ممتعة، تفاعلية، ومستدامة لجميع الأعمار.
+**تالية** تطبيق Flutter يعمل بلا اتصال أولًا: قراءة المصحف، الحفظ والمراجعة، الختمة، مواقيت الصلاة والأذكار، ومسار للأطفال وآخر للكبار. المزامنة السحابية عبر Supabase اختيارية. من دونها يبقى كل شيء على الجهاز.
 
-### ✨ أبرز المميزات
+التنقل السفلي خمسة تبويبات: الرئيسية، القرآن، الحفظ، الأذكار، وتقدمي. المزايا الاختيارية (التنزيل، الملاحظات، المراجعة بلا يدين، الختمة الجماعية، أداة الشاشة الرئيسية، وغيرها) تُفتح وتُغلق من **الإعدادات ← مزايا التطبيق**.
 
-#### 📖 1. المصحف الشريف المطور
-- **مصحف متكامل:** 114 سورة بالرسم العثماني مدققة بالكامل مع تقسيمات الأجزاء والأرباع.
-- **طبقة العرض QCF:** عرض فائق الدقة والموثوقية لصفحات المصحف باستخدام `qcf_quran_plus` للحفاظ على جماليات الرسم العثماني.
-- **تلاوات صوتية وتخزين ذكي:** استماع آية بآية عبر `just_audio` مع التخزين المؤقت للاستماع لاحقاً بدون إنترنت.
-- **تجربة بصرية مريحة:** خط `Amiri` الأصيل، إمكانية تعديل حجم الخط، ووضع "التركيز" لقراءة بلا مشتتات.
+### القراءة
 
-#### 🧠 2. التحفيظ الذكي والتكرار المتباعد
-- **خوارزميات التكرار المتباعد (SRS):** جدولة ذكية للمراجعات (1، 3، 7، 14، 30، 90 يوماً) لنقل الحفظ إلى الذاكرة طويلة المدى.
-- **اختبار التلاوة بالذكاء الاصطناعي:** تقنية الاستماع للتلاوة آلياً ومطابقتها مع النص القرآني لتحديد الأخطاء بدقة.
-- **جلسات ونقاط فحص (Checkpoints):** نظام يمنع الانتقال للورد التالي قبل إتقان الورد الحالي بالكامل.
+- صفحات المصحف عبر `qcf_quran_plus`. النص المضمّن نص تنزيل، برواية حفص عن عاصم وبالرسم العثماني. التفصيل في قسم [نص القرآن](#quran-text).
+- بحث، علامات، ملاحظة على الآية، وآية اليوم.
+- تلاوة صوتية مع تكرار مدى تحدده. التلاوات المنزّلة تُسمع بلا إنترنت. الشاشة تبقى مضاءة أثناء القراءة.
+- تلوين قوة الحفظ على صفحة المصحف من قائمة القارئ.
 
-#### 🌱 3. مسارات مخصصة (للأطفال والكبار)
-- **رحلة الأطفال التفاعلية:** خريطة حفظ ممتعة مصممة بأسلوب الألعاب (Gamification) لجذب الأطفال.
-- **الخطة اليومية الذكية:** أهداف حفظ تُبنى وتتأقلم تلقائياً مع قدرات المستخدم البالغ.
-- **لوحة تحكم الوالدين:** ربط آمن عبر الـ QR Code و Supabase، يتيح للآباء متابعة تقدم أبنائهم ونتائج اختباراتهم عن بُعد وبشكل فوري.
+### الحفظ
 
-#### 📊 4. التحفيز، الإحصائيات والأذكار
-- **النقاط (XP) والسلاسل اليومية:** اكسب نقاط الخبرة وحافظ على سلسلة أيامك (Streaks) لتشجيع الاستمرارية.
-- **الأوسمة والشهادات التقديرية:** احصل على شارات الإنجاز، وأصدر شهادات تقديرية مخصصة ومطبوعة عند إتمام حفظ الأجزاء.
-- **أذكار المسلم التفاعلية:** عدادات ذكية تدعم الاهتزاز (Haptic) مع حفظ تلقائي لتقدمك اليومي.
+- خطة يومية وخطة مخصصة للكبار، وجلسة حفظ موجّهة.
+- تكرار متباعد، وتوقع لما يقارب النسيان، ومراجعة قصيرة بعد الصلاة.
+- فحص التلاوة: تحويل الكلام إلى نص على الجهاز ومقارنته بنص الآية. المراجعة بلا يدين تعتمد الصوت من غير لمس الشاشة.
+- تدريب المتشابه، ومراجعة بالسمع، وتدريب على السورة.
+- قواعد جلسة الحفظ في [`docs/memorization_v2_product_rules.md`](docs/memorization_v2_product_rules.md).
 
----
+### الأطفال والأسرة
 
-### 🏗️ المعمارية والتقنيات (Architecture)
+- رحلة قرآن للأطفال: خريطة جزر مع شخصية تالية، وعملات، وعلامات للأجزاء، مع الاستماع والمراحل ووقت النوم.
+- ربط ولي الأمر برمز QR، ولوحة عائلة فيها تفاصيل الطفل وتقرير شهري. المتابعة عن بعد تعمل عندما تكون المزامنة السحابية مهيأة. الاستخدام المحلي لا يحتاج حسابًا.
 
-تم بناء التطبيق باستخدام معمارية **البنية النظيفة (Clean Architecture)**، مما يضمن كوداً نظيفاً، قابلاً للاختبار، وسهل التوسع.
-* ينقسم المشروع إلى ميزات مستقلة (Feature Modules) وكل ميزة تتكون من 3 طبقات:
-  1. **الواجهة (Presentation):** إدارة الحالة باستخدام `flutter_bloc` وواجهات المستخدم.
-  2. **النواة (Domain):** قواعد العمل (Use Cases) والكيانات.
-  3. **البيانات (Data):** التعامل مع قاعدة البيانات المحلية السريعة `Isar` والخادم السحابي `Supabase`.
+### الختمة
 
-### 🚀 خطوات التشغيل السريعة
+- ختمة شخصية: إعداد، لوحة، سجل، إتمام، وتأكيد القراءة.
+- ختمة جماعية لمتابعة تقدم المشاركين.
+- دعاء الختم من النص المعتمد المضمّن.
 
-1. استنساخ المشروع: `git clone https://github.com/yourusername/talia_quran.git`
-2. تحميل الحزم: `flutter pub get`
-3. توليد الأكواد المطلوبة: `flutter pub run build_runner build --delete-conflicting-outputs`
-4. تشغيل التطبيق: `flutter run`
+### الصلاة والأذكار والمواسم
 
----
-<br>
+- مواقيت الصلاة والأذان على أندرويد.
+- رفيق صلاة اختياري (مغلق افتراضيًا) للتذكير قبل الصلاة وبعدها. تأكيد الصلاة يبقى فعلًا صريحًا من المستخدم.
+- أذكار بعدّادات، ومنها أذكار بعد الصلاة في وقتها. لا يُعرض إلا ما اعتُمد في `assets/data/azkar_release.json`.
+- رفيق مواسم للتواريخ الهجرية: شعبان، رمضان والعشر الأواخر، ست شوال، عشر ذي الحجة، رأس السنة، عاشوراء، الجمعة وسورة الكهف، الأيام البيض، وصيام الاثنين والخميس. كل موسم يُطفأ على حدة، وتذكيرات المواسم بحد أقصى تذكير واحد في اليوم.
 
-<div align="center">
-  <i>تم التطوير بكل ❤️ باستخدام Flutter لخدمة كتاب الله الكريم</i>
-</div>
+### التقدم والشاشة الرئيسية
+
+- السلاسل، ونقاط الخبرة، والأوسمة، وشهادة الإتمام.
+- أداة شاشة رئيسية تلخص الصلاة والتقدم، وتتبع مفتاح الميزة في الإعدادات.
+- نسخ احتياطي محلي واستعادة، وسياسة الخصوصية، والمصادر والتراخيص، وصفحة **كيف نحفظ المحتوى وخصوصيتك**.
+- تحديث داخل التطبيق عبر Google Play.
+
+### التشغيل
+
+```bash
+git clone https://github.com/sayedsaad96/talia_quran.git
+cd talia_quran
+flutter pub get
+flutter gen-l10n
+dart run build_runner build --delete-conflicting-outputs
+flutter run
+```
+
+التشغيل من دون معرّفات يبقى محليًا. المزامنة تحتاج العنوانين معًا، وعنوانًا يبدأ بـ `https://`:
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon-key>
+```
+
+حقن الاعتمادات يدوي في `lib/core/di/injection.dart`. أمر `build_runner` يولّد مخططات Isar والقوالب الاختبارية فقط، ولا يولّد `get_it`. مفاتيح الترجمة تُضاف إلى `app_ar.arb` و`app_en.arb` ثم `flutter gen-l10n`.
+
+لا يُعدَّل `assets/data/quran.json` لأجل الواجهة. إشعار تنزيل ظاهر في التطبيق تحت **الإعدادات ← المصادر والتراخيص**:
+
+> Tanzil Quran Text Copyright (C) 2007-2021 Tanzil Project  
+> License: Creative Commons Attribution 3.0
+
+سياسة المصادر: [`docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md`](docs/TALIA_ISLAMIC_CONTENT_SOURCES_POLICY.md).
 
 </div>
