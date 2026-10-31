@@ -23,6 +23,8 @@ import 'core/services/app_session_service.dart';
 import 'core/home_widget/home_widget_publisher.dart';
 import 'core/home_widget/home_widget_launch_controller.dart';
 import 'core/router/widget_deep_link.dart';
+import 'core/router/widget_wird_route.dart';
+import 'features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'core/experience/experience_feature_flags.dart';
 import 'core/identity/account_data_barrier.dart';
 import 'core/memorization/memorization_path_resolver.dart';
@@ -319,6 +321,12 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       var target = enabled && profile?.isAdult == true
           ? widgetDeepLinkDestination(uri)
           : AppRoutes.home;
+      if (target == widgetWirdMarker) {
+        final plan = await getIt<KhatmahRepository>().getActivePlan();
+        lease.check();
+        if (!mounted || epoch != _widgetNavigationEpoch) return;
+        target = widgetWirdReadingRoute(plan, DateTime.now());
+      }
       if (uri.path == '/prayer' && target != AppRoutes.home) {
         target = '$target&widgetTap=$epoch';
       }

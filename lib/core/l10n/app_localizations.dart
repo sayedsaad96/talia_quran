@@ -16714,6 +16714,66 @@ abstract class AppLocalizations {
   /// **'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.'**
   String get settingsFeatureHomeWidgetSubtitle;
 
+  /// No description provided for @settingsHomeWidgetAdd.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف إلى الشاشة الرئيسية'**
+  String get settingsHomeWidgetAdd;
+
+  /// No description provided for @settingsHomeWidgetUnsupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.'**
+  String get settingsHomeWidgetUnsupported;
+
+  /// No description provided for @settingsHomeWidgetManualSteps.
+  ///
+  /// In ar, this message translates to:
+  /// **'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.'**
+  String get settingsHomeWidgetManualSteps;
+
+  /// No description provided for @settingsHomeWidgetPreviewCaption.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة الأداة'**
+  String get settingsHomeWidgetPreviewCaption;
+
+  /// No description provided for @settingsHomeWidgetPreviewPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفجر · ٠٥:١٢'**
+  String get settingsHomeWidgetPreviewPrayer;
+
+  /// No description provided for @settingsHomeWidgetPreviewReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنجزت مراجعاتك'**
+  String get settingsHomeWidgetPreviewReview;
+
+  /// No description provided for @settingsHomeWidgetPreviewWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٢–١٥'**
+  String get settingsHomeWidgetPreviewWird;
+
+  /// No description provided for @settingsHomeWidgetShowPrayer.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الصلاة'**
+  String get settingsHomeWidgetShowPrayer;
+
+  /// No description provided for @settingsHomeWidgetShowReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار المراجعات'**
+  String get settingsHomeWidgetShowReviews;
+
+  /// No description provided for @settingsHomeWidgetShowWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الورد'**
+  String get settingsHomeWidgetShowWird;
+
   /// No description provided for @seasonDaysUntil.
   ///
   /// In ar, this message translates to:

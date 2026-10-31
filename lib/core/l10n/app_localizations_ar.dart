@@ -9997,6 +9997,38 @@ class AppLocalizationsAr extends AppLocalizations {
       'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.';
 
   @override
+  String get settingsHomeWidgetAdd => 'أضف إلى الشاشة الرئيسية';
+
+  @override
+  String get settingsHomeWidgetUnsupported =>
+      'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.';
+
+  @override
+  String get settingsHomeWidgetManualSteps =>
+      'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.';
+
+  @override
+  String get settingsHomeWidgetPreviewCaption => 'معاينة الأداة';
+
+  @override
+  String get settingsHomeWidgetPreviewPrayer => 'الفجر · ٠٥:١٢';
+
+  @override
+  String get settingsHomeWidgetPreviewReview => 'أنجزت مراجعاتك';
+
+  @override
+  String get settingsHomeWidgetPreviewWird => '١٢–١٥';
+
+  @override
+  String get settingsHomeWidgetShowPrayer => 'إظهار الصلاة';
+
+  @override
+  String get settingsHomeWidgetShowReviews => 'إظهار المراجعات';
+
+  @override
+  String get settingsHomeWidgetShowWird => 'إظهار الورد';
+
+  @override
   String seasonDaysUntil(int days, String daysText) {
     String _temp0 = intl.Intl.pluralLogic(
       days,

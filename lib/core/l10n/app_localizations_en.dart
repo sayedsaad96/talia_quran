@@ -9978,6 +9978,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your prayers and progress on your phone\'s home screen.';
 
   @override
+  String get settingsHomeWidgetAdd => 'Add to home screen';
+
+  @override
+  String get settingsHomeWidgetUnsupported =>
+      'This phone can\'t add the widget directly from the app.';
+
+  @override
+  String get settingsHomeWidgetManualSteps =>
+      'Touch and hold the home screen, choose Widgets, then Talia.';
+
+  @override
+  String get settingsHomeWidgetPreviewCaption => 'Widget preview';
+
+  @override
+  String get settingsHomeWidgetPreviewPrayer => 'Fajr · 05:12';
+
+  @override
+  String get settingsHomeWidgetPreviewReview => 'You\'ve finished your reviews';
+
+  @override
+  String get settingsHomeWidgetPreviewWird => '12–15';
+
+  @override
+  String get settingsHomeWidgetShowPrayer => 'Show prayer';
+
+  @override
+  String get settingsHomeWidgetShowReviews => 'Show reviews';
+
+  @override
+  String get settingsHomeWidgetShowWird => 'Show the daily portion';
+
+  @override
   String seasonDaysUntil(int days, String daysText) {
     String _temp0 = intl.Intl.pluralLogic(
       days,

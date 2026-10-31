@@ -13,6 +13,7 @@ import '../../../../../core/l10n/app_localizations.dart';
 import '../../../../../core/services/notification_scheduler.dart';
 import '../../../../azkar/domain/services/after_prayer_azkar_window.dart';
 import '../../../../../core/router/app_router.dart';
+import '../../widgets/home_widget_options.dart';
 import '../../widgets/settings_group.dart';
 import '../../widgets/settings_section.dart';
 import '../../widgets/settings_subpage_scaffold.dart';
@@ -108,6 +109,9 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
               : () => _open(rows[i].openPath!),
           tryLabel: rows[i].openPath == null ? null : l10n.settingsFeaturesTry,
         ),
+        if (rows[i] == _FeatureRow.homeWidget &&
+            (store?.isEnabled(rows[i].feature) ?? false))
+          const HomeWidgetOptions(),
       ],
     ];
   }
@@ -220,7 +224,6 @@ enum _FeatureRow {
     TaliaIcons.family,
     AppRoutes.groupKhatmah,
   ),
-  // Added from the phone's home-screen settings, not from inside the app.
   homeWidget(
     _FeatureGroup.home,
     ExperienceFeature.homeWidget,

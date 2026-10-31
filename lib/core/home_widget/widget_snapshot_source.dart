@@ -5,7 +5,9 @@ import '../identity/record_owner_provider.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../memorization/progress_metrics_service.dart';
 import '../memorization/review_record_audience_scope.dart';
+import '../memorization/review_record_filters.dart';
 import '../services/prayer_times_service.dart';
+import 'widget_section_preferences.dart';
 import 'widget_snapshot.dart';
 import 'widget_snapshot_builder.dart';
 
@@ -17,6 +19,7 @@ final class WidgetSnapshotSource {
     required this.prayers,
     required this.khatmah,
     required this.isEnabled,
+    this.sections,
     DateTime Function()? now,
     String Function()? languageCode,
   }) : now = now ?? DateTime.now,
@@ -27,6 +30,7 @@ final class WidgetSnapshotSource {
   final PrayerTimesService prayers;
   final KhatmahRepository khatmah;
   final bool Function() isEnabled;
+  final WidgetSectionPreferences? sections;
   final DateTime Function() now;
 
   /// App language (`ar`/`en`) the native renderer should use.
@@ -61,6 +65,33 @@ final class WidgetSnapshotSource {
       records: reviewRecords,
       now: instant,
     );
+    final local = instant.toLocal();
+    final midnight = DateTime(local.year, local.month, local.day + 1);
+    final expiry = DateTime(local.year, local.month, local.day + 2);
+    final nextMetrics = const ProgressMetricsService().calculate(
+      records: reviewRecords,
+      now: midnight,
+    );
+    final deadlines =
+        reviewRecords
+            .where(ReviewRecordFilters.isAdultProductionCount)
+            .where(ReviewRecordFilters.isStarted)
+            .map((record) => record.nextReviewDate)
+            .where((date) => date.isAfter(instant) && date.isBefore(expiry))
+            .toList()
+          ..sort();
+    var count = metrics.dueReviews;
+    final reviewCounts = <WidgetReviewCount>[];
+    for (final deadline in deadlines) {
+      count++;
+      if (reviewCounts.isNotEmpty &&
+          reviewCounts.last.at.isAtSameMomentAs(deadline)) {
+        reviewCounts[reviewCounts.length - 1] = (at: deadline, count: count);
+      } else {
+        reviewCounts.add((at: deadline, count: count));
+      }
+    }
+    final choices = sections;
     return buildWidgetSnapshot(
       enabled: isEnabled(),
       isAdult: true,
@@ -71,6 +102,12 @@ final class WidgetSnapshotSource {
       tomorrowPrayers: tomorrowPrayers,
       languageCode: languageCode(),
       dueReviewCount: metrics.dueReviews,
+      reviewsKnown: true,
+      nextDueReviewCount: nextMetrics.dueReviews,
+      reviewCounts: reviewCounts,
+      showPrayer: choices?.showPrayer ?? true,
+      showReviews: choices?.showReviews ?? true,
+      showWird: choices?.showWird ?? true,
       activePlan: plan,
       now: instant,
     );

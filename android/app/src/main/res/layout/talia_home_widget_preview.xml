@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/talia_home_widget_background"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingTop="12dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/widget_preview_prayer"
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:textColor="@color/widget_text_primary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="@string/widget_preview_review"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textColor="@color/widget_text_secondary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="@string/widget_preview_wird"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textColor="@color/widget_text_secondary" />
+</LinearLayout>

@@ -5,6 +5,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../experience/experience_feature_flags.dart';
 import '../home_widget/home_widget_publisher.dart';
 import '../home_widget/platform_home_widget_bridge.dart';
+import '../home_widget/widget_section_preferences.dart';
 import '../home_widget/widget_snapshot_source.dart';
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
@@ -40,6 +41,7 @@ Future<void> registerHomeWidget(GetIt getIt) async {
     prayers: getIt<PrayerTimesService>(),
     khatmah: khatmah,
     isEnabled: flagOn,
+    sections: WidgetSectionPreferences(getIt<SharedPreferences>()),
     languageCode: () => getIt<LocaleCubit>().state.languageCode,
   );
   final publisher = HomeWidgetPublisher(
