@@ -57,6 +57,23 @@ abstract final class RolloutManifest {
   ]);
 
   static RolloutEntry _experience(ExperienceFeature f) => switch (f) {
+    ExperienceFeature.readingCheckpointCloud => _off(
+      f.storageKey,
+      'Additive SQL contract awaits isolated database and two-device validation.',
+    ),
+    ExperienceFeature.portableAccountImport => _off(
+      f.storageKey,
+      'Requires final account-transition and Android validation.',
+    ),
+    ExperienceFeature.approvedAyahStudy => RolloutEntry(
+      f.storageKey,
+      RolloutStage.on,
+      evidence: 'owner-2026-11-03-ayah-study',
+    ),
+    ExperienceFeature.recoverableBackupRestore => _off(
+      f.storageKey,
+      'Full writer admission isolation and Android crash/capacity checks pending.',
+    ),
     ExperienceFeature.similarAyahTrainer => RolloutEntry(
       f.storageKey,
       RolloutStage.on,
@@ -88,6 +105,10 @@ abstract final class RolloutManifest {
   };
 
   static RolloutEntry _adultJourney(AdultJourneyFeature f) => switch (f) {
+    AdultJourneyFeature.dailyReviewTask => _off(
+      f.storageKey,
+      'Requires final runtime/accessibility acceptance.',
+    ),
     AdultJourneyFeature.personalization => _on(f.storageKey),
     _ => _on(
       f.storageKey,

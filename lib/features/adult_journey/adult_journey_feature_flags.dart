@@ -15,7 +15,10 @@ enum AdultJourneyFeature {
   todayBudget,
 
   /// Gentle-return invitation after seven or more days away.
-  gentleReturn;
+  gentleReturn,
+
+  /// Single daily review projection, off by default.
+  dailyReviewTask;
 
   String get storageKey => '${AdultJourneyFlags.keyPrefix}$name';
 }

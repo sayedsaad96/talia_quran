@@ -21,6 +21,17 @@ abstract interface class HomeWidgetBridge {
 typedef WidgetSnapshotLoader =
     Future<WidgetSnapshot> Function(AccountDataLease lease, String ownerId);
 
+/// Clears a projection before a publisher/profile exists during startup.
+Future<void> clearHomeWidgetProjection(HomeWidgetBridge bridge) async {
+  await bridge.save(HomeWidgetPublisher.snapshotKey, null);
+  await bridge.requestUpdate();
+  try {
+    await bridge.cancelScheduledUpdates();
+  } catch (error, stack) {
+    TaliaLogger.w('Home widget alarm cancel failed', error, stack);
+  }
+}
+
 /// The foreground isolate is the sole writer. Background work only redraws.
 final class HomeWidgetPublisher {
   HomeWidgetPublisher({
@@ -260,13 +271,7 @@ final class HomeWidgetPublisher {
     _ready = false;
     _audience = null;
     Future<void> attempt() => _enqueue(() async {
-      await bridge.save(snapshotKey, null);
-      await bridge.requestUpdate();
-      try {
-        await bridge.cancelScheduledUpdates();
-      } catch (error, stack) {
-        TaliaLogger.w('Home widget alarm cancel failed', error, stack);
-      }
+      await clearHomeWidgetProjection(bridge);
       if (clearRevision == _clearRevision) _ready = true;
     }).timeout(clearTimeout);
     final result = _clearWithRetry(attempt);

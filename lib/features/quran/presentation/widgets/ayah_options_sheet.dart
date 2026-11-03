@@ -38,6 +38,7 @@ class AyahOptionsSheet extends StatefulWidget {
     required this.ayah,
     required this.surahName,
     this.showReviewNow = false,
+    this.onStudy,
   });
 
   final Ayah ayah;
@@ -46,6 +47,7 @@ class AyahOptionsSheet extends StatefulWidget {
   /// Offers "review this ayah now"; the reader sets it only when the strength
   /// flag is on and an adult review record exists for the ayah.
   final bool showReviewNow;
+  final VoidCallback? onStudy;
 
   @override
   State<AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -224,13 +226,28 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                       onTap: () {
                         final router = GoRouter.of(context);
                         Navigator.of(context).pop();
-                        unawaited(router.push(Uri(
-                          path: AppRoutes.similarAyahTrainer,
-                          queryParameters: {
-                            'surahId': '${widget.ayah.surahId}',
-                            'ayah': '${widget.ayah.numberInSurah}',
-                          },
-                        ).toString()));
+                        unawaited(
+                          router.push(
+                            Uri(
+                              path: AppRoutes.similarAyahTrainer,
+                              queryParameters: {
+                                'surahId': '${widget.ayah.surahId}',
+                                'ayah': '${widget.ayah.numberInSurah}',
+                              },
+                            ).toString(),
+                          ),
+                        );
+                      },
+                    ),
+                  if (widget.onStudy != null)
+                    AyahOptionButton(
+                      key: const Key('ayah-study-action'),
+                      icon: TaliaIcons.school,
+                      label: context.l10n.ayahStudyAction,
+                      color: primary,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        widget.onStudy!();
                       },
                     ),
                   if (_notesAllowed)

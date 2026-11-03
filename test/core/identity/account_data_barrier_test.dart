@@ -63,10 +63,12 @@ void main() {
 
       expect(wiped, isTrue, reason: 'Account data must be wiped regardless');
       expect(barrier.isReady, isFalse, reason: 'Owner stays blocked');
-      expect(() => barrier.capture(), throwsA(isA<AccountDataUnavailableException>()));
+      expect(
+        () => barrier.capture(),
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
 
-      // markOwnerReady is refused for the failed generation, and succeeds only
-      // after a later invalidation whose participants all succeed.
+      // A later owner cannot bypass the durable unfinished-cleanup fence.
       owner.currentOwnerId = 'owner-b';
       barrier.prepareOwner('owner-b');
       await expectLater(barrier.markOwnerReady('owner-b'), throwsStateError);
@@ -74,6 +76,12 @@ void main() {
 
       failing = false;
       barrier.prepareOwner('owner-b');
+      await barrier.markOwnerReady('owner-b');
+      expect(barrier.isReady, isFalse);
+      // Complete the full cleanup under the new generation before admitting
+      // the new owner; a fresh ready marker alone is not proof of cleanup.
+      barrier.prepareOwner('owner-b');
+      await barrier.clear(() async => wiped = true);
       await barrier.markOwnerReady('owner-b');
       expect(barrier.isReady, isTrue);
     });
@@ -91,48 +99,58 @@ void main() {
       expect(barrier.isReady, isFalse);
     });
 
-    test('a bounded retry unblocks only after the participant succeeds', () async {
-      var failing = true;
-      final remove = barrier.addInvalidationParticipant(() async {
-        if (failing) throw StateError('native widget unavailable');
-      });
-      addTearDown(remove);
-      await expectLater(barrier.clear(() async {}), throwsStateError);
-      expect(barrier.isReady, isFalse);
+    test(
+      'a bounded retry unblocks only after the participant succeeds',
+      () async {
+        var failing = true;
+        final remove = barrier.addInvalidationParticipant(() async {
+          if (failing) throw StateError('native widget unavailable');
+        });
+        addTearDown(remove);
+        await expectLater(barrier.clear(() async {}), throwsStateError);
+        expect(barrier.isReady, isFalse);
 
-      expect(await barrier.retryFailedClear(), isFalse);
-      expect(barrier.isReady, isFalse);
+        expect(await barrier.retryFailedClear(), isFalse);
+        expect(barrier.isReady, isFalse);
 
-      failing = false;
-      expect(await barrier.retryFailedClear(), isTrue);
-      expect(barrier.isReady, isTrue);
-      expect(barrier.capture().check, returnsNormally);
-      expect(await barrier.retryFailedClear(), isFalse, reason: 'nothing left');
-    });
+        failing = false;
+        expect(await barrier.retryFailedClear(), isTrue);
+        expect(barrier.isReady, isTrue);
+        expect(barrier.capture().check, returnsNormally);
+        expect(
+          await barrier.retryFailedClear(),
+          isFalse,
+          reason: 'nothing left',
+        );
+      },
+    );
 
-    test('a projection-only clear failure surfaces its cause and can retry', () async {
-      await expectLater(
-        barrier.clear(
-          () async => throw AccountProjectionClearFailure(
-            StateError('widget'),
-            StackTrace.current,
+    test(
+      'a projection-only clear failure surfaces its cause and can retry',
+      () async {
+        await expectLater(
+          barrier.clear(
+            () async => throw AccountProjectionClearFailure(
+              StateError('widget'),
+              StackTrace.current,
+            ),
           ),
-        ),
-        throwsStateError,
-      );
-      expect(barrier.isReady, isFalse);
+          throwsStateError,
+        );
+        expect(barrier.isReady, isFalse);
 
-      var projectionFails = true;
-      Future<void> projection() async {
-        if (projectionFails) throw StateError('still down');
-      }
+        var projectionFails = true;
+        Future<void> projection() async {
+          if (projectionFails) throw StateError('still down');
+        }
 
-      expect(await barrier.retryFailedClear(projection: projection), isFalse);
-      expect(barrier.isReady, isFalse);
-      projectionFails = false;
-      expect(await barrier.retryFailedClear(projection: projection), isTrue);
-      expect(barrier.isReady, isTrue);
-    });
+        expect(await barrier.retryFailedClear(projection: projection), isFalse);
+        expect(barrier.isReady, isFalse);
+        projectionFails = false;
+        expect(await barrier.retryFailedClear(projection: projection), isTrue);
+        expect(barrier.isReady, isTrue);
+      },
+    );
 
     test('a store wipe failure is never recoverable by retry', () async {
       await expectLater(
@@ -158,6 +176,12 @@ void main() {
       expect(await barrier.retryFailedClear(), isFalse);
       expect(barrier.isReady, isFalse);
       await barrier.markOwnerReady('owner-b');
+      expect(barrier.isReady, isFalse);
+      var projectionCleared = false;
+      barrier.prepareOwner('owner-b');
+      await barrier.clear(() async => projectionCleared = true);
+      await barrier.markOwnerReady('owner-b');
+      expect(projectionCleared, isTrue);
       expect(barrier.isReady, isTrue);
     });
   });

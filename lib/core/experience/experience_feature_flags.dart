@@ -9,6 +9,18 @@ import 'rollout_manifest.dart';
 /// rename or repurpose one. Values for later items exist so the inventory
 /// stays complete; nothing reads them until they ship.
 enum ExperienceFeature {
+  /// Additive cloud RPC deployment and security acceptance gate.
+  readingCheckpointCloud,
+
+  /// Conservative signed-in import; never replaces memorization progress.
+  portableAccountImport,
+
+  /// Remains off until approved content and device acceptance are available.
+  approvedAyahStudy,
+
+  /// Full replacement requires verified exclusion of every progress writer.
+  recoverableBackupRestore,
+
   /// Memorization-strength overlay on the adult reader.
   strengthOverlay,
 

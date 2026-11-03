@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../memorization/review_record_identity.dart';
+import 'guest_store_ownership.dart';
 import 'record_owner_provider.dart';
 
 class AccountDataUnavailableException implements Exception {
@@ -41,6 +43,7 @@ class AccountDataBarrier {
     _invalidationParticipants.add(clear);
     return () => _invalidationParticipants.remove(clear);
   }
+
   final _changes = StreamController<void>.broadcast(sync: true);
   Stream<void> get changes => _changes.stream;
 
@@ -54,6 +57,22 @@ class AccountDataBarrier {
   void _checkOwner() {
     final current = owner?.currentOwnerId;
     if (current == null) return;
+    final pending = _prefs.get(GuestStoreOwnership.pendingKey);
+    final account = _prefs.get(GuestStoreOwnership.accountKey);
+    final previous = _prefs.get('auth_last_signed_in_user_id');
+    final protectedGuest =
+        current == ReviewRecordIdentity.localOwnerId &&
+        (account == true ||
+            (account != null && account is! bool) ||
+            (previous != null &&
+                previous != '' &&
+                _prefs.get(GuestStoreOwnership.cleanKey) != true));
+    if (!_blocked &&
+        (protectedGuest ||
+            pending == true ||
+            (pending != null && pending is! bool))) {
+      invalidate();
+    }
     final hasKhatmahData =
         _prefs.containsKey('khatmah_active_plan') ||
         _prefs.containsKey('khatmah_history');
@@ -79,9 +98,16 @@ class AccountDataBarrier {
   Future<void> markOwnerReady(String ownerId) async {
     final generation = _generation;
     await _invalidation;
-    if (generation != _generation || _preparingOwner != ownerId ||
+    // Cleanup writes its durable guest proof inside the same queue. Do not
+    // publish a new account while that cleanup is still being finalized.
+    await _tail;
+    if (generation != _generation ||
+        _preparingOwner != ownerId ||
         (owner != null && owner!.currentOwnerId != ownerId)) {
       throw const AccountDataUnavailableException();
+    }
+    if (ownerId != ReviewRecordIdentity.localOwnerId) {
+      await GuestStoreOwnership(_prefs).markAccountActive();
     }
     // This marker prevents preserved account-owned Khatmah data appearing as
     // guest data after a forced sign-out and process restart.
@@ -92,7 +118,8 @@ class AccountDataBarrier {
         throw const AccountDataUnavailableException();
       }
     }
-    if (generation != _generation || _preparingOwner != ownerId ||
+    if (generation != _generation ||
+        _preparingOwner != ownerId ||
         (owner != null && owner!.currentOwnerId != ownerId)) {
       throw const AccountDataUnavailableException();
     }
@@ -120,6 +147,14 @@ class AccountDataBarrier {
     return AccountDataLease._(this, _generation);
   }
 
+  /// Checks authority supplied to a store operation already inside this barrier.
+  void checkLease(AccountDataLease lease) {
+    if (!identical(lease._barrier, this)) {
+      throw const AccountDataUnavailableException();
+    }
+    lease.check();
+  }
+
   void invalidate() {
     _generation++;
     _blocked = true;
@@ -127,11 +162,17 @@ class AccountDataBarrier {
     _clearFailed = false;
     final generation = _generation;
     _invalidation = Future.wait<void>([
-      for (final clear in _invalidationParticipants.toList()) Future<void>.sync(clear),
+      for (final clear in _invalidationParticipants.toList())
+        Future<void>.sync(clear),
     ]).then<void>((_) {});
-    unawaited(_invalidation.then<void>((_) {}, onError: (Object _, StackTrace _) {
-      if (generation == _generation) _invalidationFailed = true;
-    }));
+    unawaited(
+      _invalidation.then<void>(
+        (_) {},
+        onError: (Object _, StackTrace _) {
+          if (generation == _generation) _invalidationFailed = true;
+        },
+      ),
+    );
     _changes.add(null);
   }
 
@@ -141,8 +182,7 @@ class AccountDataBarrier {
     Future<T> Function(AccountDataLease lease) work, {
     Object? authority,
   }) {
-    if (authority is AccountDataLease &&
-        !identical(authority._barrier, this)) {
+    if (authority is AccountDataLease && !identical(authority._barrier, this)) {
       throw const AccountDataUnavailableException();
     }
     final lease = authority is AccountDataLease ? authority : capture();
@@ -173,6 +213,12 @@ class AccountDataBarrier {
         if (projection != null) Future<void>.sync(projection),
       ]);
       if (generation != _generation) return false;
+      await GuestStoreOwnership(_prefs).finishCleanup();
+      if (generation != _generation) return false;
+      if (owner?.currentOwnerId != ReviewRecordIdentity.localOwnerId) {
+        await GuestStoreOwnership(_prefs).markAccountActive();
+        if (generation != _generation) return false;
+      }
       _clearFailed = false;
       _invalidationFailed = false;
       _readyOwner = owner?.currentOwnerId;
@@ -191,6 +237,7 @@ class AccountDataBarrier {
     final generation = _generation;
     final invalidation = _invalidation;
     final result = _tail.then((_) async {
+      await GuestStoreOwnership(_prefs).beginCleanup();
       // A failed invalidation participant (for example a native projection)
       // must not keep stale account data on disk: always wipe the stores, then
       // surface the failure and stay blocked so nothing is published or
@@ -221,6 +268,12 @@ class AccountDataBarrier {
         );
       }
       if (generation == _generation) {
+        await GuestStoreOwnership(_prefs).finishCleanup();
+        if (generation != _generation) return;
+        if (owner?.currentOwnerId != ReviewRecordIdentity.localOwnerId) {
+          await GuestStoreOwnership(_prefs).markAccountActive();
+          if (generation != _generation) return;
+        }
         _readyOwner = owner?.currentOwnerId;
         _blocked = _preparingOwner != null;
         notifyChanged();
@@ -243,7 +296,8 @@ class AccountDataLease {
   /// An unbound barrier cannot authorize an owner-scoped write.
   void checkOwner(String ownerId) {
     check();
-    if (ownerId.isEmpty || _ownerId != ownerId ||
+    if (ownerId.isEmpty ||
+        _ownerId != ownerId ||
         _barrier.owner?.currentOwnerId != ownerId) {
       throw const AccountDataUnavailableException();
     }

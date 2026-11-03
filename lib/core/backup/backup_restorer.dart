@@ -13,6 +13,8 @@ import '../../features/quran/data/models/isar_ayah_note.dart';
 import '../../features/memorization_plus/data/models/isar_confusion_pair.dart';
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
+import '../services/app_session_service.dart';
+import '../storage/data_admission.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import '../memorization/review_record_identity.dart';
@@ -21,14 +23,42 @@ import '../sync/cloud_sync_queue_item.dart';
 import '../utils/talia_logger.dart';
 import 'backup_file_format.dart';
 import 'backup_sections.dart';
+import 'in_memory_restore_journal_store.dart';
+import 'portable_reading_backup_adapter.dart';
+import 'portable_reading_data.dart';
 import 'prayer_review_backup_mapper.dart';
+import 'restore_isar_snapshot.dart';
+import 'restore_operation_gate.dart';
+import 'restore_preferences_snapshot.dart';
+import 'restore_recovery_journal.dart';
+import 'restore_store_rollbacks.dart';
 import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
 import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
+import '../../features/quran/data/datasources/bookmark_service.dart';
+import '../../features/quran/domain/entities/bookmark_entry.dart';
 
-enum BackupRestoreResult { restored, invalidSections, writeFailed }
+part 'backup_restore_transaction.dart';
+
+enum BackupRestoreResult {
+  restored,
+  invalidSections,
+  writeFailed,
+
+  /// No durable rollback point could be stored (capacity, keystore, or an
+  /// unfinished earlier restore), so nothing was changed.
+  protectionUnavailable,
+
+  /// A previous restore could not be recovered; restores stay disabled until
+  /// the next startup recovery succeeds.
+  recoveryBlocked,
+}
 
 class _OwnerChanged implements Exception {
   const _OwnerChanged();
+}
+
+class _RestoreAdmissionLost implements Exception {
+  const _RestoreAdmissionLost();
 }
 
 /// The Isar rows a restore replaces, kept so a failed restore can put them
@@ -73,24 +103,49 @@ class _IsarScopeSnapshot {
 ///
 /// The clear is restore-scoped (not `AccountDataReset`): only the backed-up
 /// collections and this owner's state derived from them are replaced. The
-/// parent PIN, bookmarks, Prayer Companion data, the activity feed, other
+/// parent PIN, Prayer Companion data, the activity feed, other
 /// owners' rows, playback/resume state and device settings are untouched.
 /// The device's PIN marker and guardian/child link state inside the parent
 /// settings and memorization profile are kept (merged into the restored
 /// values, or the device value left in place when the file lacks the key).
 ///
-/// Isar is replaced in one transaction. If anything fails after it, the
-/// result is [BackupRestoreResult.writeFailed]; while the owner is unchanged
-/// the replaced Isar rows and touched preferences are put back best-effort
-/// inside the barrier work (before any reset or writer queued behind it).
-/// After an owner switch nothing is put back: the switch's reset cleans up.
+/// Version 5 adds missing bookmarks without reviving tombstones. Data absent
+/// from older versions stays untouched. A verified journal precedes writes;
+/// rollback failure or an ambiguous commit acknowledgement blocks recovery.
+/// Production full replacement remains disabled until every writer, including
+/// other isolates, is proven excluded from the restore transaction.
 class BackupRestorer {
-  BackupRestorer(this._isar, this._prefs, this._owner, {this._events});
+  BackupRestorer(
+    this._isar,
+    this._prefs,
+    this._owner, {
+    this._events,
+    this._reading,
+    this.fullReplacementAllowed = true,
+    this.maintenancePermit,
+    this.destinationIsSafe,
+    RestoreRecoveryJournal? journal,
+    RestoreOperationGate? gate,
+  }) : _journal =
+           journal ?? RestoreRecoveryJournal(InMemoryRestoreJournalStore()),
+       _gate = gate ?? RestoreOperationGate(_owner);
 
   final Isar _isar;
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
   final ProgressEventsBus? _events;
+
+  /// Source of the v5 bookmark section. Without it bookmarks in a file are
+  /// ignored and the device's are untouched.
+  final PortableReadingBackupAdapter? _reading;
+  final bool fullReplacementAllowed;
+  final DataAdmissionPermit? maintenancePermit;
+  final Future<bool> Function()? destinationIsSafe;
+
+  /// Durable rollback point. Production passes one backed by the protected
+  /// account store; the default is volatile (tests only).
+  final RestoreRecoveryJournal _journal;
+  final RestoreOperationGate _gate;
 
   /// Review pull bookkeeping that would skip rows the restore replaced.
   static const derivedPreferenceKeys = {
@@ -102,16 +157,14 @@ class BackupRestorer {
 
   /// Queue kinds tied to the replaced review/production data. Bookmark,
   /// certificate, auth and kids work of this owner stays queued.
-  static const replacedQueueKinds = {
-    CloudSyncQueueKind.productionPull,
-    CloudSyncQueueKind.productionPush,
-    CloudSyncQueueKind.reviewEvidencePull,
-    CloudSyncQueueKind.reviewEvidencePush,
-  };
+  static const replacedQueueKinds = restoreReplacedQueueKinds;
 
   /// Validates every section first (types, ranges, surah 1..114, ayah >= 1)
   /// and writes nothing on failure.
   Future<BackupRestoreResult> restore(BackupPayload p) async {
+    if (!fullReplacementAllowed || !await _hasMaintenanceAdmission()) {
+      return BackupRestoreResult.protectionUnavailable;
+    }
     final ownerId = _owner.currentOwnerId;
 
     final ParsedBackupSections parsed;
@@ -128,31 +181,30 @@ class BackupRestorer {
       return BackupRestoreResult.invalidSections;
     }
 
+    final List<BookmarkEntry> bookmarkEntries;
+    if (p.schemaVersion >= 5 && _reading == null) {
+      return BackupRestoreResult.protectionUnavailable;
+    }
+    try {
+      bookmarkEntries = await _resolveBookmarks(p.schemaVersion, parsed);
+    } on PortableReadingDataException catch (e) {
+      TaliaLogger.w('Backup restore rejected: ${e.message}');
+      return BackupRestoreResult.invalidSections;
+    }
+
     try {
       _ensureOwner(ownerId);
-      await AccountDataBarrier.forPreferences(_prefs).run((lease) async {
-        Map<String, Object?>? prefsSnapshot;
-        _IsarScopeSnapshot? isarSnapshot;
-        try {
-          _ensureOwner(ownerId);
-          prefsSnapshot = _snapshotPreferences(parsed, ownerId);
-          isarSnapshot = await _replaceIsar(parsed, ownerId, p.schemaVersion);
-          _ensureOwner(ownerId);
-          lease.check();
-          await _replacePreferences(parsed, ownerId);
-          _ensureOwner(ownerId);
-        } catch (_) {
-          // Rolled back inside the barrier work, so it completes before any
-          // reset queued behind this restore. After an owner switch there is
-          // no rollback: putting the previous owner's unscoped data back
-          // would hand it to the new account, and the switch's queued reset
-          // owns the cleanup.
-          if (_owner.currentOwnerId == ownerId) {
-            await _rollback(ownerId, prefsSnapshot, isarSnapshot);
-          }
-          rethrow;
-        }
-      });
+      await _gate.run(
+        expectedOwnerId: ownerId,
+        operation: () =>
+            _restoreStores(ownerId, parsed, p.schemaVersion, bookmarkEntries),
+      );
+    } on RestoreJournalRejected catch (e) {
+      TaliaLogger.w('Backup restore refused: ${e.reason.name}');
+      return BackupRestoreResult.protectionUnavailable;
+    } on RestoreBlockedException catch (e) {
+      TaliaLogger.w('Backup restore blocked: ${e.reason}');
+      return BackupRestoreResult.recoveryBlocked;
     } catch (e, st) {
       // Also reached when the work succeeded but the final lease check failed
       // (owner switch or reset queued meanwhile): no rollback then either.
@@ -172,6 +224,15 @@ class BackupRestorer {
     if (_owner.currentOwnerId != ownerId) throw const _OwnerChanged();
   }
 
+  Future<bool> _hasMaintenanceAdmission() async =>
+      maintenancePermit?.mode == DataAdmissionMode.maintenance &&
+      await maintenancePermit!.validate() &&
+      (destinationIsSafe == null || await destinationIsSafe!());
+
+  Future<void> _ensureMaintenanceAdmission() async {
+    if (!await _hasMaintenanceAdmission()) throw const _RestoreAdmissionLost();
+  }
+
   Set<String> _touchedKeys(ParsedBackupSections parsed, String ownerId) => {
     ..._prefs.getKeys().where(
       (k) => BackupPreferencePolicy.backupKeyFor(k, ownerId) != null,
@@ -179,21 +240,11 @@ class BackupRestorer {
     ...parsed.prefs.keys,
     ...derivedPreferenceKeys,
     _khatmahOwnerKey,
+    AppSessionService.quranCheckpointKeyFor(ownerId),
+    ...?_reading?.checkpointKeysForOwner(ownerId),
   };
 
-  Map<String, Object?> _snapshotPreferences(
-    ParsedBackupSections parsed,
-    String ownerId,
-  ) {
-    final snapshot = <String, Object?>{};
-    for (final key in _touchedKeys(parsed, ownerId)) {
-      final value = _prefs.get(key);
-      snapshot[key] = value is List ? List<String>.of(value.cast()) : value;
-    }
-    return snapshot;
-  }
-
-  Future<_IsarScopeSnapshot> _replaceIsar(
+  Future<void> _replaceIsar(
     ParsedBackupSections parsed,
     String ownerId,
     int schemaVersion,
@@ -201,9 +252,8 @@ class BackupRestorer {
     // Data the file's version predates (notes, confusion pairs, prayer
     // reviews) is kept, never wiped by an older backup that cannot carry it.
     final carried = BackupSections.forVersion(schemaVersion);
-    late _IsarScopeSnapshot snapshot;
     await _isar.writeTxn(() async {
-      snapshot = await _readScope(ownerId);
+      final snapshot = await _readScope(ownerId);
       await _clearScope(snapshot);
       await _isar.isarAyahReviewRecords.putAll(parsed.reviewRecords);
       await _isar.isarAyahProgress.putAll(parsed.ayahProgress);
@@ -249,7 +299,6 @@ class BackupRestorer {
         );
       }
     });
-    return snapshot;
   }
 
   /// Retain today's device fence even when importing an older backup. The
@@ -259,7 +308,8 @@ class BackupRestorer {
     List<IsarPrayerReviewReceipt> device,
   ) {
     final now = DateTime.now();
-    final day = '${now.year.toString().padLeft(4, '0')}-'
+    final day =
+        '${now.year.toString().padLeft(4, '0')}-'
         '${now.month.toString().padLeft(2, '0')}-'
         '${now.day.toString().padLeft(2, '0')}';
     final merged = {for (final row in imported) row.receiptKey: row};
@@ -326,8 +376,14 @@ class BackupRestorer {
             .filter()
             .ownerIdEqualTo(ownerId)
             .findAll(),
-        prayerAssignments: await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).findAll(),
-        prayerReceipts: await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).findAll(),
+        prayerAssignments: await _isar.isarPrayerReviewAssignments
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .findAll(),
+        prayerReceipts: await _isar.isarPrayerReviewReceipts
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .findAll(),
       );
 
   Future<void> _clearScope(_IsarScopeSnapshot s) async {
@@ -350,13 +406,18 @@ class BackupRestorer {
     await _isar.isarConfusionPairs.deleteAll([
       for (final r in s.confusionPairs) r.id,
     ]);
-    await _isar.isarPrayerReviewAssignments.deleteAll([for (final row in s.prayerAssignments) row.id]);
-    await _isar.isarPrayerReviewReceipts.deleteAll([for (final row in s.prayerReceipts) row.id]);
+    await _isar.isarPrayerReviewAssignments.deleteAll([
+      for (final row in s.prayerAssignments) row.id,
+    ]);
+    await _isar.isarPrayerReviewReceipts.deleteAll([
+      for (final row in s.prayerReceipts) row.id,
+    ]);
   }
 
   Future<void> _replacePreferences(
     ParsedBackupSections parsed,
     String ownerId,
+    AccountDataLease lease,
   ) async {
     // The device's PIN marker and guardian/child link state are never taken
     // from a file: read them before anything is removed.
@@ -403,6 +464,15 @@ class BackupRestorer {
         throw StateError('Failed to write $_khatmahOwnerKey');
       }
     }
+
+    // Only a v5 file with a position carries one; otherwise the device keeps
+    // its own.
+    final checkpoint = parsed.readingCheckpoint;
+    if (checkpoint != null) {
+      final reading = _reading;
+      if (reading == null) throw StateError('Checkpoint authority unavailable');
+      await reading.writeCheckpoint(ownerId, checkpoint.pageNumber, lease);
+    }
   }
 
   /// The device's current value of a [BackupPreferencePolicy.keepsDeviceState]
@@ -431,52 +501,4 @@ class BackupRestorer {
     final List<String> v => _prefs.setStringList(key, v),
     _ => Future.value(false),
   };
-
-  /// Best effort: every step runs even if an earlier one fails.
-  Future<void> _rollback(
-    String ownerId,
-    Map<String, Object?>? prefsSnapshot,
-    _IsarScopeSnapshot? isarSnapshot,
-  ) async {
-    if (isarSnapshot != null) {
-      try {
-        await _isar.writeTxn(() async {
-          await _clearScope(await _readScope(ownerId));
-          await _isar.isarAyahReviewRecords.putAll(isarSnapshot.reviews);
-          await _isar.isarAyahProgress.putAll(isarSnapshot.progress);
-          await _isar.streakIsars.putAll(isarSnapshot.streaks);
-          await _isar.xpIsars.putAll(isarSnapshot.xps);
-          await _isar.dailyActivityIsars.putAll(isarSnapshot.daily);
-          await _isar.isarV2Sessions.putAll(isarSnapshot.sessions);
-          await _isar.isarReviewEvidenceEvents.putAll(isarSnapshot.evidence);
-          await _isar.isarReviewEffectOutboxs.putAll(isarSnapshot.outbox);
-          await _isar.cloudSyncQueueItems.putAll(isarSnapshot.queue);
-          await _isar.isarAyahNotes.putAll(isarSnapshot.notes);
-          await _isar.isarConfusionPairs.putAll(isarSnapshot.confusionPairs);
-          await _isar.isarPrayerReviewAssignments.putAll(isarSnapshot.prayerAssignments);
-          await _isar.isarPrayerReviewReceipts.putAll(isarSnapshot.prayerReceipts);
-        });
-      } catch (e, st) {
-        TaliaLogger.e('Backup restore rollback of Isar failed', e, st);
-      }
-    }
-    if (prefsSnapshot != null) {
-      for (final entry in prefsSnapshot.entries) {
-        try {
-          final value = entry.value;
-          if (value == null) {
-            if (_prefs.containsKey(entry.key)) await _prefs.remove(entry.key);
-          } else if (_prefs.get(entry.key) != value || value is List) {
-            await _setTyped(entry.key, value);
-          }
-        } catch (e, st) {
-          TaliaLogger.e(
-            'Backup restore rollback of ${entry.key} failed',
-            e,
-            st,
-          );
-        }
-      }
-    }
-  }
 }

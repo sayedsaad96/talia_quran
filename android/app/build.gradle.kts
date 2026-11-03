@@ -48,6 +48,13 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            // Keep runtime verification separate from an installed user's data.
+            if (providers.gradleProperty("taliaRuntimeQa").orNull == "true") {
+                applicationIdSuffix = ".runtimeqa"
+                versionNameSuffix = "-runtimeqa"
+            }
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.

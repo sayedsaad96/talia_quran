@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../../adult_journey/domain/entities/adult_journey_context.dart';
+import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/identity/account_data_barrier.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -80,6 +82,7 @@ class HomeCubit extends Cubit<HomeState> {
   StreamSubscription<void>? _khatmahChangesSub;
   int _khatmahRevision = 0;
   int _loadRevision = 0;
+  StreamSubscription<void>? _accountChangesSub;
 
   HomeCubit(
     this._getProgress,
@@ -138,6 +141,17 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void _listen() {
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    _accountChangesSub = barrier.changes.listen((_) {
+      if (isClosed) return;
+      final current = state;
+      if (current is HomeLoaded && !_hasCurrentAuthority(current)) {
+        _loadRevision++;
+        _khatmahRevision++;
+        emit(const HomeLoading());
+      }
+      if (state is HomeLoading && barrier.isReady) _scheduleFullReload();
+    });
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
         _scheduleFullReload();
@@ -166,6 +180,8 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> _refreshKhatmah() async {
+    final initial = state;
+    if (initial is! HomeLoaded || !_hasCurrentAuthority(initial)) return;
     final revision = ++_khatmahRevision;
     KhatmahPlan? plan;
     Object? error;
@@ -178,7 +194,11 @@ class HomeCubit extends Cubit<HomeState> {
     }
     final recitation = await _khatmahRecitation(plan);
     final current = state;
-    if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
+    if (!isClosed &&
+        revision == _khatmahRevision &&
+        current is HomeLoaded &&
+        identical(current.accountAuthority, initial.accountAuthority) &&
+        _hasCurrentAuthority(current)) {
       emit(
         current.copyWith(
           activeKhatmah: plan,
@@ -235,7 +255,13 @@ class HomeCubit extends Cubit<HomeState> {
     if (current is! HomeLoaded) return;
     try {
       final totalXp = await _xpService.getTotalXp();
-      if (!isClosed && state is HomeLoaded) {
+      if (!isClosed &&
+          state is HomeLoaded &&
+          identical(
+            (state as HomeLoaded).accountAuthority,
+            current.accountAuthority,
+          ) &&
+          _hasCurrentAuthority(current)) {
         emit((state as HomeLoaded).copyWith(totalXp: totalXp));
       }
     } catch (_) {}
@@ -254,9 +280,77 @@ class HomeCubit extends Cubit<HomeState> {
   /// navigation resolver and home itself share one store read per load.
   Future<void> load() => ReviewRecordReadBatch.run(_load);
 
+  /// Fresh strict reads for a tap decision; never emits or reuses Home state.
+  Future<AdultJourneyContext> loadFreshAdultJourneyContext({
+    required String expectedOwnerId,
+    required RecordOwnerProvider owner,
+    required DateTime now,
+  }) => ReviewRecordReadBatch.run(() async {
+    final lease = AccountDataBarrier.forPreferences(_prefs).capture();
+    lease.checkOwner(expectedOwnerId);
+    if (owner.currentOwnerId != expectedOwnerId) {
+      throw const AccountDataUnavailableException();
+    }
+    final profile = (await _memorizationRepository.getMemorizationProfile())
+        .fold((failure) => throw failure, (value) => value);
+    final progress = (await _getProgress()).fold(
+      (failure) => throw failure,
+      (value) => value,
+    );
+    final plan = (await _getCustomPlan()).fold(
+      (failure) => throw failure,
+      (value) => value,
+    );
+    final records = (await _memorizationRepository.getAllReviewRecords(
+      scope: ReviewRecordReadScope.adult,
+    )).fold((failure) => throw failure, (value) => value);
+    final coach = (await _getCoachRecommendation()).fold(
+      (failure) => throw failure,
+      (value) => value,
+    );
+    final khatmah = await _getActiveKhatmah?.call();
+    final evaluated = await _evaluateUnifiedActions(
+      lastLocation: _sessionService.getLastRestorableLocation(),
+      coachRecommendation: coach,
+      customPlan: plan,
+      dailyWirdDetail: null,
+      isKids: profile.isChild,
+      reviewRecords: records,
+      overallProgress: progress,
+      activeKhatmah: khatmah,
+      isEnabled: _prefs.getBool('unified_journey_enabled') ?? true,
+    );
+    lease.checkOwner(expectedOwnerId);
+    if (owner.currentOwnerId != expectedOwnerId) {
+      throw const AccountDataUnavailableException();
+    }
+    return AdultJourneyContext(
+      ownerId: expectedOwnerId,
+      isAdult:
+          profile.isAdult && profile.selectedPath == MemorizationPath.adult,
+      now: now,
+      actions: evaluated.$2,
+      hasActiveAdultPlan:
+          plan != null &&
+          plan.isActive &&
+          plan.targetUser == PlanTargetUser.adult,
+      hasAdultReviewRecords: records.isNotEmpty,
+      hasDueAdultReview:
+          progress.overdueReviews > 0 ||
+          evaluated.$2.any((a) => a.intent == JourneyIntent.review),
+    );
+  });
+
   Future<void> _load() async {
     final revision = ++_loadRevision;
     if (isClosed) return;
+    final AccountDataLease authority;
+    try {
+      authority = AccountDataBarrier.forPreferences(_prefs).capture();
+    } on AccountDataUnavailableException {
+      emit(const HomeLoading());
+      return;
+    }
     final hadLoaded = state is HomeLoaded;
     if (!hadLoaded) {
       emit(const HomeLoading());
@@ -375,7 +469,7 @@ class HomeCubit extends Cubit<HomeState> {
       heroAction: heroAction,
     );
 
-    if (!_isCurrentLoad(revision)) return;
+    if (!_isCurrentLoad(revision, authority)) return;
     try {
       _checkKhatmahAuthority(activeKhatmah);
     } catch (error) {
@@ -395,6 +489,7 @@ class HomeCubit extends Cubit<HomeState> {
     final previous = state is HomeLoaded ? state as HomeLoaded : null;
     emit(
       HomeLoaded(
+        accountAuthority: authority,
         progress: progress,
         greeting: extras.greeting,
         dailyWirdPageDetail: dailyWirdDetail,
@@ -432,7 +527,7 @@ class HomeCubit extends Cubit<HomeState> {
     );
 
     final ayahOfDay = await extraReads.ayahOfDay;
-    if (!_isCurrentLoad(revision)) return;
+    if (!_isCurrentLoad(revision, authority)) return;
     final current = state;
     if (current is! HomeLoaded) return;
     emit(current.copyWith(isRefreshing: false, ayahOfDay: ayahOfDay));
@@ -742,7 +837,25 @@ class HomeCubit extends Cubit<HomeState> {
     return (all.first, all);
   }
 
-  bool _isCurrentLoad(int revision) => !isClosed && revision == _loadRevision;
+  bool _isCurrentLoad(int revision, AccountDataLease authority) {
+    if (isClosed || revision != _loadRevision) return false;
+    try {
+      authority.check();
+      return true;
+    } on AccountDataUnavailableException {
+      return false;
+    }
+  }
+
+  bool _hasCurrentAuthority(HomeLoaded home) {
+    if (home.accountAuthority == null) return false;
+    try {
+      home.accountAuthority!.check();
+      return true;
+    } on AccountDataUnavailableException {
+      return false;
+    }
+  }
 
   SmartPlanType _smartPlanTypeForCoach(SmartCoachRecommendation coach) {
     return switch (coach.kind) {
@@ -757,6 +870,7 @@ class HomeCubit extends Cubit<HomeState> {
   @override
   Future<void> close() async {
     _loadRevision++;
+    await _accountChangesSub?.cancel();
     await _khatmahChangesSub?.cancel();
     _reloadDebounce?.cancel();
     await _pathChangesSub.cancel();

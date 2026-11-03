@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/backup/portable_reading_data.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/identity/account_deletion_marker.dart';
 import 'package:talia_quran/core/identity/pending_bookmark_recovery_marker.dart';
@@ -35,23 +36,38 @@ void main() {
   });
 
   group('BookmarkService', () {
-    test('requested deletion blocks access without erasing on server rejection', () async {
-      final prefs = await SharedPreferences.getInstance();
-      final owner = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('a'));
-      await owner.toggle(createEntry());
-      final original = prefs.getString('quran_bookmarks_owner_a');
-      await AccountDeletionMarker.markRequested(prefs, 'a');
-      expect(owner.getAll(), isEmpty);
-      await expectLater(owner.toggle(createEntry(ayahNumber: 2)), throwsStateError);
-      expect(prefs.getString('quran_bookmarks_owner_a'), original);
-      await AccountDeletionMarker.clear(prefs);
-      expect(owner.getAll(), hasLength(1));
-    });
+    test(
+      'requested deletion blocks access without erasing on server rejection',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        final owner = BookmarkService(
+          prefs,
+          owner: const FixedRecordOwnerProvider('a'),
+        );
+        await owner.toggle(createEntry());
+        final original = prefs.getString('quran_bookmarks_owner_a');
+        await AccountDeletionMarker.markRequested(prefs, 'a');
+        expect(owner.getAll(), isEmpty);
+        await expectLater(
+          owner.toggle(createEntry(ayahNumber: 2)),
+          throwsStateError,
+        );
+        expect(prefs.getString('quran_bookmarks_owner_a'), original);
+        await AccountDeletionMarker.clear(prefs);
+        expect(owner.getAll(), hasLength(1));
+      },
+    );
 
     test('erasure evicts owner cache and leaves other owner intact', () async {
       final prefs = await SharedPreferences.getInstance();
-      final a = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('a'));
-      final b = BookmarkService(prefs, owner: const FixedRecordOwnerProvider('b'));
+      final a = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      final b = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('b'),
+      );
       await a.toggle(createEntry());
       await b.toggle(createEntry(ayahNumber: 2));
       await AccountDeletionMarker.markRequested(prefs, 'a');
@@ -69,20 +85,29 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final requested = Completer<void>();
       final response = Completer<dynamic>();
-      final a = BookmarkService(prefs,
+      final a = BookmarkService(
+        prefs,
         owner: const FixedRecordOwnerProvider('a'),
         cloudRpc: (function, {params}) {
           requested.complete();
           return response.future;
-        });
+        },
+      );
       final pull = a.pullFromCloud();
       await requested.future;
       await AccountDeletionMarker.markRequested(prefs, 'a');
       await AccountDeletionMarker.markRemoteConfirmed(prefs);
       await a.eraseOwner('a');
       await AccountDeletionMarker.completeAndClear(prefs, 'a');
-      response.complete([{'surah_id': 1, 'ayah_number': 1,
-        'payload': createEntry().toJson(), 'revision': 1, 'is_deleted': false}]);
+      response.complete([
+        {
+          'surah_id': 1,
+          'ayah_number': 1,
+          'payload': createEntry().toJson(),
+          'revision': 1,
+          'is_deleted': false,
+        },
+      ]);
       await pull;
       expect(a.getAll(), isEmpty);
       expect(prefs.getString('quran_bookmarks_owner_a'), isNull);
@@ -566,50 +591,207 @@ void main() {
       expect(service.isBookmarked(1, 1), isFalse);
     });
 
-    test('ensureLoaded loads bookmarks into memory for encrypted storage', () async {
+    test(
+      'ensureLoaded loads bookmarks into memory for encrypted storage',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        final encrypted = _MemoryEncryptedAccountPreferencesStore();
+        const owner = FixedRecordOwnerProvider('user-loaded');
+        final first = BookmarkService(
+          prefs,
+          owner: owner,
+          encryptedAccountPreferences: encrypted,
+        );
+        await first.toggle(createEntry(surahId: 18, ayahNumber: 10));
+
+        final second = BookmarkService(
+          prefs,
+          owner: owner,
+          encryptedAccountPreferences: encrypted,
+        );
+        expect(second.isLoaded, isFalse);
+        expect(second.getAll(), isEmpty);
+
+        await second.ensureLoaded();
+        expect(second.isLoaded, isTrue);
+        expect(second.isBookmarked(18, 10), isTrue);
+      },
+    );
+
+    test(
+      'ensureLoaded migrates legacy SharedPreferences data if encrypted store was empty',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        final encrypted = _MemoryEncryptedAccountPreferencesStore();
+        const ownerId = 'migrated-user';
+        final entry = createEntry(surahId: 2, ayahNumber: 255);
+        await prefs.setString(
+          'quran_bookmarks_owner_$ownerId',
+          jsonEncode([entry.toJson()]),
+        );
+
+        final secondService = BookmarkService(
+          prefs,
+          owner: const FixedRecordOwnerProvider(ownerId),
+          encryptedAccountPreferences: encrypted,
+        );
+
+        await secondService.ensureLoaded();
+        expect(secondService.isBookmarked(2, 255), isTrue);
+        expect(prefs.getString('quran_bookmarks_owner_$ownerId'), isNull);
+        expect(await encrypted.read(ownerId, 'quran_bookmarks'), isNotNull);
+      },
+    );
+  });
+
+  group('BookmarkService.exportPortable', () {
+    test(
+      'exports only live bookmark references, never text or flags',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        final owner = BookmarkService(
+          prefs,
+          owner: const FixedRecordOwnerProvider('a'),
+        );
+        await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+        await owner.toggle(createEntry(surahId: 36, ayahNumber: 1));
+
+        final exported = await owner.exportPortable(expectedOwnerId: 'a');
+
+        expect(exported.map((e) => (e.surahId, e.ayahNumber)).toList(), [
+          (2, 255),
+          (36, 1),
+        ]);
+        expect(exported.first.toJson().keys, {
+          'surahId',
+          'ayahNumber',
+          'savedAt',
+        });
+      },
+    );
+
+    test('logical deletion is not exported', () async {
       final prefs = await SharedPreferences.getInstance();
-      final encrypted = _MemoryEncryptedAccountPreferencesStore();
-      const owner = FixedRecordOwnerProvider('user-loaded');
-      final first = BookmarkService(
+      final owner = BookmarkService(
         prefs,
-        owner: owner,
-        encryptedAccountPreferences: encrypted,
+        owner: const FixedRecordOwnerProvider('a'),
       );
-      await first.toggle(createEntry(surahId: 18, ayahNumber: 10));
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+      await owner.toggle(createEntry(surahId: 3, ayahNumber: 1));
 
-      final second = BookmarkService(
-        prefs,
-        owner: owner,
-        encryptedAccountPreferences: encrypted,
-      );
-      expect(second.isLoaded, isFalse);
-      expect(second.getAll(), isEmpty);
+      final exported = await owner.exportPortable(expectedOwnerId: 'a');
 
-      await second.ensureLoaded();
-      expect(second.isLoaded, isTrue);
-      expect(second.isBookmarked(18, 10), isTrue);
+      expect(exported.map((e) => (e.surahId, e.ayahNumber)), [(3, 1)]);
     });
 
-    test('ensureLoaded migrates legacy SharedPreferences data if encrypted store was empty', () async {
+    test('reads durable state rather than the in-memory cache', () async {
       final prefs = await SharedPreferences.getInstance();
-      final encrypted = _MemoryEncryptedAccountPreferencesStore();
-      const ownerId = 'migrated-user';
-      final entry = createEntry(surahId: 2, ayahNumber: 255);
-      await prefs.setString(
-        'quran_bookmarks_owner_$ownerId',
-        jsonEncode([entry.toJson()]),
-      );
-
-      final secondService = BookmarkService(
+      final owner = BookmarkService(
         prefs,
-        owner: const FixedRecordOwnerProvider(ownerId),
-        encryptedAccountPreferences: encrypted,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+      expect(owner.getAll(), hasLength(1));
+      // Another instance changes durable storage behind the first one's cache.
+      final other = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      await other.toggle(createEntry(surahId: 3, ayahNumber: 1));
+
+      final exported = await owner.exportPortable(expectedOwnerId: 'a');
+
+      expect(exported.map((e) => e.surahId), unorderedEquals([2, 3]));
+    });
+
+    test('fails when the encrypted store cannot be read', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final owner = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+        encryptedAccountPreferences: _UnreadableEncryptedStore(),
       );
 
-      await secondService.ensureLoaded();
-      expect(secondService.isBookmarked(2, 255), isTrue);
-      expect(prefs.getString('quran_bookmarks_owner_$ownerId'), isNull);
-      expect(await encrypted.read(ownerId, 'quran_bookmarks'), isNotNull);
+      await expectLater(
+        owner.exportPortable(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+    });
+
+    test('a store that becomes unreadable is not exported as empty', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final store = _UnreadableEncryptedStore()..readable = true;
+      final owner = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+        encryptedAccountPreferences: store,
+      );
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+      store.readable = false;
+
+      await expectLater(
+        owner.exportPortable(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+    });
+
+    test('refuses an owner other than the active one', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final owner = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+
+      await expectLater(
+        owner.exportPortable(expectedOwnerId: 'b'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+    });
+
+    test('refuses an owner whose account deletion is pending', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final owner = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 255));
+      await AccountDeletionMarker.markRequested(prefs, 'a');
+
+      await expectLater(
+        owner.exportPortable(expectedOwnerId: 'a'),
+        throwsA(anything),
+      );
+    });
+
+    test('a corrupt stored reference fails instead of being dropped', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final owner = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      await owner.toggle(createEntry(surahId: 2, ayahNumber: 9999));
+
+      await expectLater(
+        owner.exportPortable(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+    });
+
+    test('another owner bookmarks are never exported', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final a = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('a'),
+      );
+      final b = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider('b'),
+      );
+      await a.toggle(createEntry(surahId: 2, ayahNumber: 255));
+
+      expect(await b.exportPortable(expectedOwnerId: 'b'), isEmpty);
     });
   });
 
@@ -697,6 +879,17 @@ class _MutableRecordOwnerProvider implements RecordOwnerProvider {
 
   @override
   bool get isSignedIn => true;
+}
+
+class _UnreadableEncryptedStore
+    extends _MemoryEncryptedAccountPreferencesStore {
+  bool readable = false;
+
+  @override
+  Future<String?> read(String ownerId, String key) async {
+    if (!readable) throw Exception('secure read failed');
+    return super.read(ownerId, key);
+  }
 }
 
 class _FailingWriteEncryptedStore

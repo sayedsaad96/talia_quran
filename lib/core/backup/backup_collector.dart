@@ -14,6 +14,7 @@ import '../memorization/review_record_identity.dart';
 import '../utils/talia_logger.dart';
 import 'backup_file_format.dart';
 import 'backup_sections.dart';
+import 'portable_reading_backup_adapter.dart';
 import 'prayer_review_backup_mapper.dart';
 import '../../features/prayer_review/data/models/isar_prayer_review_assignment.dart';
 import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart';
@@ -23,11 +24,15 @@ import '../../features/prayer_review/data/models/isar_prayer_review_receipt.dart
 /// Owner ids never leave the device: keys and owner fields carry
 /// [kBackupOwnerToken] instead, and data of any other owner is skipped.
 class BackupCollector {
-  BackupCollector(this._isar, this._prefs, this._owner);
+  BackupCollector(this._isar, this._prefs, this._owner, {this._reading});
 
   final Isar _isar;
   final SharedPreferences _prefs;
   final RecordOwnerProvider _owner;
+
+  /// Source of the v5 bookmark and reader-position sections. Without it the
+  /// collector writes the v4 layout.
+  final PortableReadingBackupAdapter? _reading;
 
   /// Runs inside the [AccountDataBarrier], so an account reset or owner
   /// switch cannot interleave with the reads: a reset queued meanwhile
@@ -37,7 +42,13 @@ class BackupCollector {
   /// consistent snapshot.
   Future<BackupPayload> collect(DateTime now) async {
     final ownerId = _owner.currentOwnerId;
-    return AccountDataBarrier.forPreferences(_prefs).run((lease) async {
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    // The reading stores queue on the barrier themselves, so they are read
+    // under a captured lease before the work item and re-checked inside it.
+    final authority = barrier.capture();
+    final reading = await _reading?.export(ownerId);
+    return barrier.run((lease) async {
+      lease.check();
       _ensureOwner(ownerId);
       final rows = await _isar.txn(
         () async => (
@@ -54,8 +65,14 @@ class BackupCollector {
               .filter()
               .ownerIdEqualTo(ownerId)
               .findAll(),
-          prayerAssignments: await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).findAll(),
-          prayerReceipts: await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).findAll(),
+          prayerAssignments: await _isar.isarPrayerReviewAssignments
+              .filter()
+              .ownerIdEqualTo(ownerId)
+              .findAll(),
+          prayerReceipts: await _isar.isarPrayerReviewReceipts
+              .filter()
+              .ownerIdEqualTo(ownerId)
+              .findAll(),
         ),
       );
       lease.check();
@@ -63,9 +80,15 @@ class BackupCollector {
       final prefs = _preferences(ownerId);
 
       final payload = BackupPayload(
-        schemaVersion: kBackupSchemaVersion,
+        schemaVersion: reading == null ? 4 : kBackupSchemaVersion,
         createdAt: now.toUtc(),
         sections: {
+          if (reading != null) ...{
+            BackupSections.bookmarks: [
+              for (final bookmark in reading.bookmarks) bookmark.toJson(),
+            ],
+            BackupSections.readingCheckpoint: reading.checkpoint?.toJson(),
+          },
           BackupSections.reviewRecords: _reviews(rows.reviews, ownerId),
           BackupSections.ayahProgress: _valid('ayahProgress', [
             for (final p in rows.progress) AyahProgressBackupMapper.toJson(p),
@@ -85,17 +108,26 @@ class BackupCollector {
             ownerId,
           ),
           BackupSections.prefs: prefs,
-          BackupSections.prayerReviewAssignments: _prayerRows(rows.prayerAssignments, PrayerReviewBackupMapper.assignmentToJson),
-          BackupSections.prayerReviewReceipts: _prayerRows(rows.prayerReceipts, PrayerReviewBackupMapper.receiptToJson),
+          BackupSections.prayerReviewAssignments: _prayerRows(
+            rows.prayerAssignments,
+            PrayerReviewBackupMapper.assignmentToJson,
+          ),
+          BackupSections.prayerReviewReceipts: _prayerRows(
+            rows.prayerReceipts,
+            PrayerReviewBackupMapper.receiptToJson,
+          ),
         },
       );
       lease.check();
       _ensureOwner(ownerId);
       return payload;
-    });
+    }, authority: authority);
   }
 
-  List<Map<String, Object?>> _prayerRows<T>(List<T> rows, Map<String, Object?> Function(T) encode) {
+  List<Map<String, Object?>> _prayerRows<T>(
+    List<T> rows,
+    Map<String, Object?> Function(T) encode,
+  ) {
     try {
       return [for (final row in rows) encode(row)];
     } on FormatException {

@@ -25,6 +25,7 @@ class ReaderOverflowSheet extends StatefulWidget {
     this.strengthOverlayEnabled,
     this.onStrengthOverlayChanged,
     this.onDownload,
+    this.onStudy,
   });
 
   final VoidCallback onEnterFocus;
@@ -40,6 +41,7 @@ class ReaderOverflowSheet extends StatefulWidget {
   final bool? strengthOverlayEnabled;
   final ValueChanged<bool>? onStrengthOverlayChanged;
   final VoidCallback? onDownload;
+  final VoidCallback? onStudy;
 
   static Future<void> show(
     BuildContext context, {
@@ -50,6 +52,7 @@ class ReaderOverflowSheet extends StatefulWidget {
     bool? strengthOverlayEnabled,
     ValueChanged<bool>? onStrengthOverlayChanged,
     VoidCallback? onDownload,
+    VoidCallback? onStudy,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -69,6 +72,7 @@ class ReaderOverflowSheet extends StatefulWidget {
             strengthOverlayEnabled: strengthOverlayEnabled,
             onStrengthOverlayChanged: onStrengthOverlayChanged,
             onDownload: onDownload,
+            onStudy: onStudy,
           ),
         ),
       ),
@@ -167,6 +171,13 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
                   onTap: () => ReciterSelectorSheet.show(context),
                 ),
               ),
+              if (widget.onStudy != null)
+                _actionTile(
+                  key: const Key('reader-study-action'),
+                  icon: TaliaIcons.school,
+                  title: context.l10n.ayahStudyAction,
+                  onTap: widget.onStudy!,
+                ),
               if (widget.onDownload != null)
                 _actionTile(
                   icon: TaliaIcons.download,

@@ -1553,6 +1553,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.2"
+  talia_data_admission:
+    dependency: "direct main"
+    description:
+      path: "packages/talia_data_admission"
+      relative: true
+    source: path
+    version: "0.0.0"
   talia_prayer_delivery:
     dependency: "direct main"
     description:

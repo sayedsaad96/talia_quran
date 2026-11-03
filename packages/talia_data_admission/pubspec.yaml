@@ -1,0 +1,15 @@
+name: talia_data_admission
+description: Native data access admission for Talia.
+publish_to: none
+environment:
+  sdk: ^3.12.0
+  flutter: '>=3.44.0'
+dependencies:
+  flutter:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.talia.quran.admission
+        pluginClass: TaliaDataAdmissionPlugin

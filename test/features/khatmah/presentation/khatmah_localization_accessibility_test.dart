@@ -112,7 +112,18 @@ void main() {
     );
     expect(data['dedicationFeatureReview']['scholarIdentity'], isNotNull);
     expect('${data['source']} ${data['sourceNote']}', isNot(contains('مأثور')));
-    for (final item in entries.where((e) => e['path'] != entry['path'])) {
+    // Later independently approved datasets must not inherit the original
+    // corpus approval, nor must adding one change its historical date.
+    const originalPaths = {
+      'assets/data/quran.json',
+      'assets/data/surahs.json',
+      'assets/data/azkar_release.json',
+    };
+    final originalItems = entries.where(
+      (e) => originalPaths.contains(e['path']),
+    );
+    expect(originalItems, hasLength(originalPaths.length));
+    for (final item in originalItems) {
       expect(item['reviewStatus'], 'approved');
       expect(item['reviewDate'], '2026-08-31');
     }

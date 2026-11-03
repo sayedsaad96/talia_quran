@@ -133,8 +133,10 @@ void main() {
         await service.usedBytes(reciter: QuranReciter.alafasy),
         greaterThan(0),
       );
-      expect(await manager().usedBytes(reciter: QuranReciter.alafasy),
-          greaterThan(0));
+      expect(
+        await manager().usedBytes(reciter: QuranReciter.alafasy),
+        greaterThan(0),
+      );
       await service.deleteReciter(QuranReciter.alafasy);
       expect(await manager().usedBytes(reciter: QuranReciter.alafasy), 0);
     },
@@ -257,8 +259,14 @@ class _Durable extends QuranAudioDurableCache {
     int surahId,
     int ayahNumber, {
     QuranReciter? reciter,
-  }) async =>
-      await saved.exists() && await saved.length() > 0 ? saved.path : null;
+  }) async {
+    // This fixture contains only 1:1. Returning it for every canonical ayah
+    // makes recovery invent a full download and performs thousands of disk
+    // reads while summing the same physical file.
+    if (surahId != 1 || ayahNumber != 1) return null;
+    return await saved.exists() && await saved.length() > 0 ? saved.path : null;
+  }
+
   @override
   Future<File> fetch(QuranReciter reciter, int surahId, int ayahNumber) async =>
       saved.writeAsBytes(empty ? [] : [0xFF, 0xFB]);
@@ -266,6 +274,7 @@ class _Durable extends QuranAudioDurableCache {
   Future<void> evict(QuranReciter reciter, int surahId, int ayahNumber) async {
     if (await saved.exists()) await saved.delete();
   }
+
   @override
   Future<void> deleteReciter(QuranReciter reciter) async {
     if (await saved.exists()) await saved.delete();

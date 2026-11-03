@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
@@ -37,10 +39,15 @@ import 'home_cubit_test.mocks.dart';
 
 class _MockGetAyahOfDay extends Mock implements GetAyahOfDayUsecase {
   @override
-  Future<AyahOfDay?> call({DateTime? date, String? userGoal}) => super.noSuchMethod(
-    Invocation.method(#call, const [], {#date: date, #userGoal: userGoal}),
-    returnValue: Future<AyahOfDay?>.value(),
-  ) as Future<AyahOfDay?>;
+  Future<AyahOfDay?> call({DateTime? date, String? userGoal}) =>
+      super.noSuchMethod(
+            Invocation.method(#call, const [], {
+              #date: date,
+              #userGoal: userGoal,
+            }),
+            returnValue: Future<AyahOfDay?>.value(),
+          )
+          as Future<AyahOfDay?>;
 }
 
 @GenerateMocks([
@@ -105,6 +112,10 @@ void main() {
 
     when(mockPathResolver.changes).thenAnswer((_) => const Stream.empty());
     when(mockPrefs.getString(any)).thenReturn(null);
+    // Model an empty preference store: unknown keys are absent, not dummy
+    // non-null values that would be rejected as malformed ownership metadata.
+    when(mockPrefs.get(any)).thenReturn(null);
+    when(mockPrefs.containsKey(any)).thenReturn(false);
     when(mockPrefs.getBool(any)).thenReturn(false);
     when(mockPrefs.getBool('unified_journey_enabled')).thenReturn(true);
 
@@ -170,6 +181,60 @@ void main() {
     progressEvents.dispose();
   });
 
+  for (final switchBack in [false, true]) {
+    test(
+      'account transition discards in-flight Home data (return=$switchBack)',
+      () async {
+        final markers = <String, Object>{};
+        when(mockPrefs.setBool('restore_account_state_v1', true)).thenAnswer((
+          _,
+        ) async {
+          markers['restore_account_state_v1'] = true;
+          return true;
+        });
+        when(
+          mockPrefs.get('restore_account_state_v1'),
+        ).thenAnswer((_) => markers['restore_account_state_v1']);
+        when(
+          mockPrefs.remove('restore_guest_clean_v1'),
+        ).thenAnswer((_) async => true);
+        when(mockPrefs.reload()).thenAnswer((_) async {});
+        final owner = _ChangingHomeOwner();
+        final barrier = AccountDataBarrier.forPreferences(mockPrefs)
+          ..owner = owner;
+        final pendingXp = Completer<int>();
+        xpService.pendingTotalXp = pendingXp;
+        final loading = cubit.load();
+        await xpService.totalXpRequested.future;
+        owner.currentOwnerId = 'b';
+        barrier.prepareOwner('b');
+        await barrier.markOwnerReady('b');
+        if (switchBack) {
+          owner.currentOwnerId = 'a';
+          barrier.prepareOwner('a');
+          await barrier.markOwnerReady('a');
+        }
+        pendingXp.complete(120);
+        await loading;
+        expect(cubit.state, isNot(isA<HomeLoaded>()));
+      },
+    );
+  }
+
+  test(
+    'account invalidation immediately hides already loaded Home data',
+    () async {
+      final owner = _ChangingHomeOwner();
+      final barrier = AccountDataBarrier.forPreferences(mockPrefs)
+        ..owner = owner;
+      await cubit.load();
+      expect(cubit.state, isA<HomeLoaded>());
+      owner.currentOwnerId = 'b';
+      barrier.prepareOwner('b');
+      expect(cubit.state, isA<HomeLoading>());
+    },
+  );
+
   test('loads the micro-review candidate into HomeLoaded state', () async {
     await cubit.load();
 
@@ -180,9 +245,7 @@ void main() {
   });
 
   test('Scenario 1: Resume Session emits P1 Action', () async {
-    when(
-      mockSessionService.getLastRestorableLocation(),
-    ).thenReturn(
+    when(mockSessionService.getLastRestorableLocation()).thenReturn(
       '/memorization-v2/session?surahId=2&ayahNumber=7&intent=resume&origin=checkpoint',
     );
 
@@ -221,10 +284,8 @@ void main() {
     );
     // Enough weak ayahs for retention to be a real signal (not one ayah).
     when(mockMemRepo.getAllReviewRecords()).thenAnswer(
-      (_) async => Right([
-        for (var ayah = 1; ayah <= 10; ayah++)
-          recordFor(ayah),
-      ]),
+      (_) async =>
+          Right([for (var ayah = 1; ayah <= 10; ayah++) recordFor(ayah)]),
     );
     const coach = SmartCoachRecommendation(
       kind: SmartCoachRecommendationKind.reviewWeakAyah,
@@ -247,137 +308,145 @@ void main() {
     expect(route.queryParameters['ayahNumber'], '255');
     expect(route.queryParameters['intent'], 'review');
     expect(route.queryParameters['origin'], 'smartCoach');
-    expect(
-      state.alternativeActions.map((action) => action.route),
-      [state.heroAction!.route, '/quran'],
-    );
+    expect(state.alternativeActions.map((action) => action.route), [
+      state.heroAction!.route,
+      '/quran',
+    ]);
   });
 
-  test('critical alert keeps the overlapping Coach memorization intent',
-      () async {
-    AyahReviewRecord recordFor(int ayah) => AyahReviewRecord(
-      surahId: 1,
-      ayahNumber: ayah,
-      lastReviewedAt: DateTime.now().subtract(const Duration(days: 30)),
-      nextReviewDate: DateTime.now().subtract(const Duration(days: 10)),
-      totalReviews: 1,
-      intervalDays: 1,
-      easeFactor: 1.0,
-      strengthLevel: 0,
-      reviewState: ReviewState.learning,
-      lastRating: PerformanceRating.average,
-      createdByMode: ReviewRecordCreatedByMode.v2Session,
-    );
-    const coach = SmartCoachRecommendation(
-      kind: SmartCoachRecommendationKind.memorizeNewAyahs,
-      explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
-      route:
-          '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
-    );
-    // Enough weak ayahs for retention to be a real signal (not one ayah).
-    when(mockMemRepo.getAllReviewRecords()).thenAnswer(
-      (_) async => Right([
-        for (var ayah = 1; ayah <= 10; ayah++)
-          recordFor(ayah),
-      ]),
-    );
-    when(
-      mockGetCoachRecommendation.call(),
-    ).thenAnswer((_) async => const Right(coach));
-
-    await cubit.load();
-    final action = (cubit.state as HomeLoaded).heroAction!;
-
-    expect(action.priority, UnifiedJourneyPriority.p2CriticalAlert);
-    expect(action.intent, JourneyIntent.memorize);
-    expect(action.source, 'SmartCoach');
-    expect(action.metadata['smartCoachKind'], 'memorizeNewAyahs');
-    expect(action.metadata['smartCoachExplanation'], 'newAyahsAvailable');
-  });
-
-  test('genuinely separate leech recovery emits the p2 critical alert',
-      () async {
-    final records = List.generate(
-      10,
-      (index) => AyahReviewRecord(
+  test(
+    'critical alert keeps the overlapping Coach memorization intent',
+    () async {
+      AyahReviewRecord recordFor(int ayah) => AyahReviewRecord(
         surahId: 1,
-        ayahNumber: index + 1,
-        lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
-        nextReviewDate: DateTime.now().add(const Duration(days: 1)),
-        totalReviews: 3,
-        intervalDays: 5,
-        easeFactor: 2.5,
-        strengthLevel: 3,
-        lapses: 8,
-        reviewState: ReviewState.relearning,
-        lastRating: PerformanceRating.excellent,
-        createdByMode: ReviewRecordCreatedByMode.v2Session,
-      ),
-    );
-    when(
-      mockMemRepo.getAllReviewRecords(),
-    ).thenAnswer((_) async => Right(records));
-
-    await cubit.load();
-    final state = cubit.state as HomeLoaded;
-
-    expect(state.heroAction, isNotNull);
-    expect(state.heroAction!.priority, UnifiedJourneyPriority.p2CriticalAlert);
-    expect(state.heroAction!.intent, JourneyIntent.review);
-  });
-
-  test('review backlog without p1 or p2 selects the exact P3 outcome',
-      () async {
-    final records = List.generate(
-      101,
-      (index) => AyahReviewRecord(
-        surahId: 2,
-        ayahNumber: index + 1,
-        lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
-        nextReviewDate: DateTime.now().subtract(const Duration(days: 1)),
+        ayahNumber: ayah,
+        lastReviewedAt: DateTime.now().subtract(const Duration(days: 30)),
+        nextReviewDate: DateTime.now().subtract(const Duration(days: 10)),
         totalReviews: 1,
-        intervalDays: 7,
-        easeFactor: 2.5,
-        strengthLevel: 1,
-        reviewState: ReviewState.review,
-        lastRating: PerformanceRating.excellent,
+        intervalDays: 1,
+        easeFactor: 1.0,
+        strengthLevel: 0,
+        reviewState: ReviewState.learning,
+        lastRating: PerformanceRating.average,
         createdByMode: ReviewRecordCreatedByMode.v2Session,
-      ),
-    );
-    when(mockMemRepo.getAllReviewRecords())
-        .thenAnswer((_) async => Right(records));
-    when(mockGetProgress.call()).thenAnswer(
-      (_) async => const Right(
-        OverallProgress(
-          memorizedAyahs: 10,
-          totalAyahs: 100,
-          memorizedSurahs: 1,
-          totalSurahs: 114,
-          memorizedJuz: 0,
-          totalJuz: 30,
-          readAyahs: 50,
-          readSurahs: 2,
-          readJuz: 1,
-          streakDays: 5,
-          lastActiveDate: null,
-          achievements: [],
-          readPagesCount: 10,
-          totalQuranPages: 604,
-          learningAyahs: 5,
-          reviewAyahs: 101,
-          overdueReviews: 101,
+      );
+      const coach = SmartCoachRecommendation(
+        kind: SmartCoachRecommendationKind.memorizeNewAyahs,
+        explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
+        route:
+            '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
+      );
+      // Enough weak ayahs for retention to be a real signal (not one ayah).
+      when(mockMemRepo.getAllReviewRecords()).thenAnswer(
+        (_) async =>
+            Right([for (var ayah = 1; ayah <= 10; ayah++) recordFor(ayah)]),
+      );
+      when(
+        mockGetCoachRecommendation.call(),
+      ).thenAnswer((_) async => const Right(coach));
+
+      await cubit.load();
+      final action = (cubit.state as HomeLoaded).heroAction!;
+
+      expect(action.priority, UnifiedJourneyPriority.p2CriticalAlert);
+      expect(action.intent, JourneyIntent.memorize);
+      expect(action.source, 'SmartCoach');
+      expect(action.metadata['smartCoachKind'], 'memorizeNewAyahs');
+      expect(action.metadata['smartCoachExplanation'], 'newAyahsAvailable');
+    },
+  );
+
+  test(
+    'genuinely separate leech recovery emits the p2 critical alert',
+    () async {
+      final records = List.generate(
+        10,
+        (index) => AyahReviewRecord(
+          surahId: 1,
+          ayahNumber: index + 1,
+          lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
+          nextReviewDate: DateTime.now().add(const Duration(days: 1)),
+          totalReviews: 3,
+          intervalDays: 5,
+          easeFactor: 2.5,
+          strengthLevel: 3,
+          lapses: 8,
+          reviewState: ReviewState.relearning,
+          lastRating: PerformanceRating.excellent,
+          createdByMode: ReviewRecordCreatedByMode.v2Session,
         ),
-      ),
-    );
+      );
+      when(
+        mockMemRepo.getAllReviewRecords(),
+      ).thenAnswer((_) async => Right(records));
 
-    await cubit.load();
-    final action = (cubit.state as HomeLoaded).heroAction!;
+      await cubit.load();
+      final state = cubit.state as HomeLoaded;
 
-    expect(action.priority, UnifiedJourneyPriority.p3ReviewBacklog);
-    expect(action.source, 'AdaptiveRecommendations');
-    expect(action.intent, JourneyIntent.review);
-    expect(action.route, '/memorization');
-  });
+      expect(state.heroAction, isNotNull);
+      expect(
+        state.heroAction!.priority,
+        UnifiedJourneyPriority.p2CriticalAlert,
+      );
+      expect(state.heroAction!.intent, JourneyIntent.review);
+    },
+  );
+
+  test(
+    'review backlog without p1 or p2 selects the exact P3 outcome',
+    () async {
+      final records = List.generate(
+        101,
+        (index) => AyahReviewRecord(
+          surahId: 2,
+          ayahNumber: index + 1,
+          lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
+          nextReviewDate: DateTime.now().subtract(const Duration(days: 1)),
+          totalReviews: 1,
+          intervalDays: 7,
+          easeFactor: 2.5,
+          strengthLevel: 1,
+          reviewState: ReviewState.review,
+          lastRating: PerformanceRating.excellent,
+          createdByMode: ReviewRecordCreatedByMode.v2Session,
+        ),
+      );
+      when(
+        mockMemRepo.getAllReviewRecords(),
+      ).thenAnswer((_) async => Right(records));
+      when(mockGetProgress.call()).thenAnswer(
+        (_) async => const Right(
+          OverallProgress(
+            memorizedAyahs: 10,
+            totalAyahs: 100,
+            memorizedSurahs: 1,
+            totalSurahs: 114,
+            memorizedJuz: 0,
+            totalJuz: 30,
+            readAyahs: 50,
+            readSurahs: 2,
+            readJuz: 1,
+            streakDays: 5,
+            lastActiveDate: null,
+            achievements: [],
+            readPagesCount: 10,
+            totalQuranPages: 604,
+            learningAyahs: 5,
+            reviewAyahs: 101,
+            overdueReviews: 101,
+          ),
+        ),
+      );
+
+      await cubit.load();
+      final action = (cubit.state as HomeLoaded).heroAction!;
+
+      expect(action.priority, UnifiedJourneyPriority.p3ReviewBacklog);
+      expect(action.source, 'AdaptiveRecommendations');
+      expect(action.intent, JourneyIntent.review);
+      expect(action.route, '/memorization');
+    },
+  );
 
   test('ignores kids rows when evaluating the adult review workload', () async {
     final records = List.generate(
@@ -432,45 +501,51 @@ void main() {
     expect(route.queryParameters['origin'], 'smartCoach');
   });
 
-  test('retention Coach recommendation preserves its exact review route', () async {
-    const coach = SmartCoachRecommendation(
-      kind: SmartCoachRecommendationKind.memorizedReviewDue,
-      route:
-          '/memorization-v2/session?surahId=36&ayahNumber=12&intent=review&origin=smartCoach',
-    );
-    when(
-      mockGetCoachRecommendation.call(),
-    ).thenAnswer((_) async => const Right(coach));
+  test(
+    'retention Coach recommendation preserves its exact review route',
+    () async {
+      const coach = SmartCoachRecommendation(
+        kind: SmartCoachRecommendationKind.memorizedReviewDue,
+        route:
+            '/memorization-v2/session?surahId=36&ayahNumber=12&intent=review&origin=smartCoach',
+      );
+      when(
+        mockGetCoachRecommendation.call(),
+      ).thenAnswer((_) async => const Right(coach));
 
-    await cubit.load();
-    final route = Uri.parse((cubit.state as HomeLoaded).heroAction!.route);
+      await cubit.load();
+      final route = Uri.parse((cubit.state as HomeLoaded).heroAction!.route);
 
-    expect(route.queryParameters['surahId'], '36');
-    expect(route.queryParameters['ayahNumber'], '12');
-    expect(route.queryParameters['intent'], 'review');
-    expect(route.queryParameters['origin'], 'smartCoach');
-  });
+      expect(route.queryParameters['surahId'], '36');
+      expect(route.queryParameters['ayahNumber'], '12');
+      expect(route.queryParameters['intent'], 'review');
+      expect(route.queryParameters['origin'], 'smartCoach');
+    },
+  );
 
-  test('incomplete plan Coach recommendation preserves its exact route', () async {
-    const coach = SmartCoachRecommendation(
-      kind: SmartCoachRecommendationKind.continueDailyPlan,
-      route:
-          '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
-    );
-    when(
-      mockGetCoachRecommendation.call(),
-    ).thenAnswer((_) async => const Right(coach));
+  test(
+    'incomplete plan Coach recommendation preserves its exact route',
+    () async {
+      const coach = SmartCoachRecommendation(
+        kind: SmartCoachRecommendationKind.continueDailyPlan,
+        route:
+            '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
+      );
+      when(
+        mockGetCoachRecommendation.call(),
+      ).thenAnswer((_) async => const Right(coach));
 
-    await cubit.load();
-    final state = cubit.state as HomeLoaded;
-    final route = Uri.parse(state.heroAction!.route);
+      await cubit.load();
+      final state = cubit.state as HomeLoaded;
+      final route = Uri.parse(state.heroAction!.route);
 
-    expect(state.heroAction!.priority, UnifiedJourneyPriority.p4SmartPlan);
-    expect(route.queryParameters['surahId'], '2');
-    expect(route.queryParameters['ayahNumber'], '4');
-    expect(route.queryParameters['intent'], 'memorize');
-    expect(route.queryParameters['origin'], 'smartCoach');
-  });
+      expect(state.heroAction!.priority, UnifiedJourneyPriority.p4SmartPlan);
+      expect(route.queryParameters['surahId'], '2');
+      expect(route.queryParameters['ayahNumber'], '4');
+      expect(route.queryParameters['intent'], 'memorize');
+      expect(route.queryParameters['origin'], 'smartCoach');
+    },
+  );
 
   test('child mission preserves the exact Coach kids-home route', () async {
     const coach = SmartCoachRecommendation(
@@ -481,9 +556,7 @@ void main() {
     when(
       mockGetCoachRecommendation.call(),
     ).thenAnswer((_) async => const Right(coach));
-    when(
-      mockMemRepo.getMemorizationProfile(),
-    ).thenAnswer(
+    when(mockMemRepo.getMemorizationProfile()).thenAnswer(
       (_) async => Right(
         MemorizationProfile.empty().copyWith(
           selectedPath: MemorizationPath.child,
@@ -613,45 +686,49 @@ void main() {
     expect((cubit.state as HomeLoaded).isRefreshing, isFalse);
   });
 
-  test('starts the profile lookup while the daily Quran page is loading',
-      () async {
-    final pendingPage = Completer<Either<Failure, QuranPageDetail>>();
-    when(mockGetQuranPage.call(any)).thenAnswer((_) => pendingPage.future);
+  test(
+    'starts the profile lookup while the daily Quran page is loading',
+    () async {
+      final pendingPage = Completer<Either<Failure, QuranPageDetail>>();
+      when(mockGetQuranPage.call(any)).thenAnswer((_) => pendingPage.future);
 
-    final load = cubit.load();
-    await Future<void>.delayed(Duration.zero);
-    await Future<void>.delayed(Duration.zero);
+      final load = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-    verify(mockGetQuranPage.call(any)).called(1);
-    // The navigation resolver among the home extras reads the profile too.
-    verify(
-      mockMemRepo.getMemorizationProfile(),
-    ).called(greaterThanOrEqualTo(1));
+      verify(mockGetQuranPage.call(any)).called(1);
+      // The navigation resolver among the home extras reads the profile too.
+      verify(
+        mockMemRepo.getMemorizationProfile(),
+      ).called(greaterThanOrEqualTo(1));
 
-    pendingPage.complete(const Left(CacheFailure('no cache')));
-    await load;
-  });
+      pendingPage.complete(const Left(CacheFailure('no cache')));
+      await load;
+    },
+  );
 
-  test('starts optional home content without waiting for activity history',
-      () async {
-    final feed = _PendingActivityFeed();
-    final ayah = _MockGetAyahOfDay();
-    when(ayah.call()).thenAnswer((_) async => null);
-    await cubit.close();
-    cubit = buildCubit(
-      getAyahOfDay: ayah,
-      getRecentActivity: GetRecentActivityUsecase(feed),
-    );
+  test(
+    'starts optional home content without waiting for activity history',
+    () async {
+      final feed = _PendingActivityFeed();
+      final ayah = _MockGetAyahOfDay();
+      when(ayah.call()).thenAnswer((_) async => null);
+      await cubit.close();
+      cubit = buildCubit(
+        getAyahOfDay: ayah,
+        getRecentActivity: GetRecentActivityUsecase(feed),
+      );
 
-    final load = cubit.load();
-    await feed.recentRequested.future;
-    await Future<void>.delayed(Duration.zero);
+      final load = cubit.load();
+      await feed.recentRequested.future;
+      await Future<void>.delayed(Duration.zero);
 
-    verify(ayah.call()).called(1);
+      verify(ayah.call()).called(1);
 
-    feed.pendingRecent.complete(const []);
-    await load;
-  });
+      feed.pendingRecent.complete(const []);
+      await load;
+    },
+  );
 
   test('paints the page before the ayah of the day resolves', () async {
     final ayah = _MockGetAyahOfDay();
@@ -668,14 +745,16 @@ void main() {
     expect(painted.ayahOfDay, isNull);
     expect(painted.isRefreshing, isFalse);
 
-    pending.complete(const AyahOfDay(
-      surahId: 2,
-      ayahNumber: 1,
-      text: 'نص',
-      surahNameAr: 'البقرة',
-      surahNameEn: 'Al-Baqarah',
-      pageNumber: 2,
-    ));
+    pending.complete(
+      const AyahOfDay(
+        surahId: 2,
+        ayahNumber: 1,
+        text: 'نص',
+        surahNameAr: 'البقرة',
+        surahNameEn: 'Al-Baqarah',
+        pageNumber: 2,
+      ),
+    );
     await load;
 
     final loaded = cubit.state as HomeLoaded;
@@ -683,52 +762,58 @@ void main() {
     expect(loaded.isRefreshing, isFalse);
   });
 
-  test('a refresh keeps the previous deferred content until it resolves',
-      () async {
-    final ayah = _MockGetAyahOfDay();
-    final refreshed = Completer<AyahOfDay?>();
-    var calls = 0;
-    when(ayah.call()).thenAnswer(
-      (_) => calls++ == 0
-          ? Future.value(const AyahOfDay(
-              surahId: 2,
-              ayahNumber: 1,
-              text: 'الأولى',
-              surahNameAr: 'البقرة',
-              surahNameEn: 'Al-Baqarah',
-              pageNumber: 2,
-            ))
-          : refreshed.future,
-    );
-    await cubit.close();
-    cubit = buildCubit(getAyahOfDay: ayah);
-    await cubit.load();
+  test(
+    'a refresh keeps the previous deferred content until it resolves',
+    () async {
+      final ayah = _MockGetAyahOfDay();
+      final refreshed = Completer<AyahOfDay?>();
+      var calls = 0;
+      when(ayah.call()).thenAnswer(
+        (_) => calls++ == 0
+            ? Future.value(
+                const AyahOfDay(
+                  surahId: 2,
+                  ayahNumber: 1,
+                  text: 'الأولى',
+                  surahNameAr: 'البقرة',
+                  surahNameEn: 'Al-Baqarah',
+                  pageNumber: 2,
+                ),
+              )
+            : refreshed.future,
+      );
+      await cubit.close();
+      cubit = buildCubit(getAyahOfDay: ayah);
+      await cubit.load();
 
-    final states = <HomeState>[];
-    final sub = cubit.stream.listen(states.add);
-    addTearDown(sub.cancel);
-    final refresh = cubit.load();
-    await untilCalled(ayah.call());
-    refreshed.complete(const AyahOfDay(
-      surahId: 2,
-      ayahNumber: 2,
-      text: 'الثانية',
-      surahNameAr: 'البقرة',
-      surahNameEn: 'Al-Baqarah',
-      pageNumber: 2,
-    ));
-    await refresh;
-    await Future<void>.delayed(Duration.zero);
+      final states = <HomeState>[];
+      final sub = cubit.stream.listen(states.add);
+      addTearDown(sub.cancel);
+      final refresh = cubit.load();
+      await untilCalled(ayah.call());
+      refreshed.complete(
+        const AyahOfDay(
+          surahId: 2,
+          ayahNumber: 2,
+          text: 'الثانية',
+          surahNameAr: 'البقرة',
+          surahNameEn: 'Al-Baqarah',
+          pageNumber: 2,
+        ),
+      );
+      await refresh;
+      await Future<void>.delayed(Duration.zero);
 
-    final loaded = states.whereType<HomeLoaded>().toList();
-    expect(loaded, hasLength(3));
-    for (final interim in loaded.take(2)) {
-      expect(interim.isRefreshing, isTrue);
-      expect(interim.ayahOfDay?.text, 'الأولى');
-    }
-    expect(loaded.last.isRefreshing, isFalse);
-    expect(loaded.last.ayahOfDay?.text, 'الثانية');
-  });
+      final loaded = states.whereType<HomeLoaded>().toList();
+      expect(loaded, hasLength(3));
+      for (final interim in loaded.take(2)) {
+        expect(interim.isRefreshing, isTrue);
+        expect(interim.ayahOfDay?.text, 'الأولى');
+      }
+      expect(loaded.last.isRefreshing, isFalse);
+      expect(loaded.last.ayahOfDay?.text, 'الثانية');
+    },
+  );
 
   test('review-record reads share one store read per load', () async {
     var storeReads = 0;
@@ -744,9 +829,10 @@ void main() {
       await ReviewRecordReadBatch.read('local|adult', readStore);
       return const Right(null);
     });
-    when(mockMemRepo.getAllReviewRecords(scope: anyNamed('scope')))
-        .thenAnswer((_) async =>
-            Right(await ReviewRecordReadBatch.read('local|adult', readStore)));
+    when(mockMemRepo.getAllReviewRecords(scope: anyNamed('scope'))).thenAnswer(
+      (_) async =>
+          Right(await ReviewRecordReadBatch.read('local|adult', readStore)),
+    );
 
     await cubit.load();
     expect(storeReads, 1);
@@ -778,65 +864,74 @@ void main() {
     verify(ayah.call(userGoal: 'azkar')).called(1);
   });
 
-  test('load completes quietly when cubit closes during extras loading', () async {
-    final ayah = _MockGetAyahOfDay();
-    final pending = Completer<AyahOfDay?>();
-    when(ayah.call()).thenAnswer((_) => pending.future);
-    await cubit.close();
-    cubit = buildCubit(getAyahOfDay: ayah);
+  test(
+    'load completes quietly when cubit closes during extras loading',
+    () async {
+      final ayah = _MockGetAyahOfDay();
+      final pending = Completer<AyahOfDay?>();
+      when(ayah.call()).thenAnswer((_) => pending.future);
+      await cubit.close();
+      cubit = buildCubit(getAyahOfDay: ayah);
 
-    final load = cubit.load();
-    await untilCalled(ayah.call());
-    await cubit.close();
-    pending.complete(null);
+      final load = cubit.load();
+      await untilCalled(ayah.call());
+      await cubit.close();
+      pending.complete(null);
 
-    await expectLater(load, completes);
-  });
+      await expectLater(load, completes);
+    },
+  );
 
-  test('newer Home load is not overwritten by an older extras result', () async {
-    final ayah = _MockGetAyahOfDay();
-    final first = Completer<AyahOfDay?>();
-    final second = Completer<AyahOfDay?>();
-    var calls = 0;
-    when(ayah.call()).thenAnswer(
-      (_) => calls++ == 0 ? first.future : second.future,
-    );
-    when(mockMemRepo.getMemorizationProfile()).thenAnswer(
-      (_) async => Right(
-        MemorizationProfile.empty().copyWith(isParentGuardian: true),
-      ),
-    );
-    await cubit.close();
-    cubit = buildCubit(getAyahOfDay: ayah);
+  test(
+    'newer Home load is not overwritten by an older extras result',
+    () async {
+      final ayah = _MockGetAyahOfDay();
+      final first = Completer<AyahOfDay?>();
+      final second = Completer<AyahOfDay?>();
+      var calls = 0;
+      when(
+        ayah.call(),
+      ).thenAnswer((_) => calls++ == 0 ? first.future : second.future);
+      when(mockMemRepo.getMemorizationProfile()).thenAnswer(
+        (_) async =>
+            Right(MemorizationProfile.empty().copyWith(isParentGuardian: true)),
+      );
+      await cubit.close();
+      cubit = buildCubit(getAyahOfDay: ayah);
 
-    final firstLoad = cubit.load();
-    await untilCalled(ayah.call());
+      final firstLoad = cubit.load();
+      await untilCalled(ayah.call());
 
-    final secondCall = untilCalled(ayah.call());
-    final secondLoad = cubit.load();
-    await secondCall;
-    second.complete(const AyahOfDay(
-      surahId: 2,
-      ayahNumber: 2,
-      text: 'الثانية',
-      surahNameAr: 'البقرة',
-      surahNameEn: 'Al-Baqarah',
-      pageNumber: 2,
-    ));
-    await secondLoad;
+      final secondCall = untilCalled(ayah.call());
+      final secondLoad = cubit.load();
+      await secondCall;
+      second.complete(
+        const AyahOfDay(
+          surahId: 2,
+          ayahNumber: 2,
+          text: 'الثانية',
+          surahNameAr: 'البقرة',
+          surahNameEn: 'Al-Baqarah',
+          pageNumber: 2,
+        ),
+      );
+      await secondLoad;
 
-    first.complete(const AyahOfDay(
-      surahId: 2,
-      ayahNumber: 1,
-      text: 'الأولى',
-      surahNameAr: 'البقرة',
-      surahNameEn: 'Al-Baqarah',
-      pageNumber: 2,
-    ));
-    await firstLoad;
+      first.complete(
+        const AyahOfDay(
+          surahId: 2,
+          ayahNumber: 1,
+          text: 'الأولى',
+          surahNameAr: 'البقرة',
+          surahNameEn: 'Al-Baqarah',
+          pageNumber: 2,
+        ),
+      );
+      await firstLoad;
 
-    expect((cubit.state as HomeLoaded).ayahOfDay?.ayahNumber, 2);
-  });
+      expect((cubit.state as HomeLoaded).ayahOfDay?.ayahNumber, 2);
+    },
+  );
 
   test('loads recent activity from the feed usecase', () async {
     final events = [
@@ -882,13 +977,26 @@ void main() {
     expect((cubit.state as HomeLoaded).recentActivity, hasLength(1));
   });
 
-  test('active contextual slot is never weeklyReflection redirecting to progress', () async {
-    await cubit.load();
+  test(
+    'active contextual slot is never weeklyReflection redirecting to progress',
+    () async {
+      await cubit.load();
 
-    final state = cubit.state;
-    expect(state, isA<HomeLoaded>());
-    expect((state as HomeLoaded).activeSlot?.route, isNot(AppRoutes.progress));
-  });
+      final state = cubit.state;
+      expect(state, isA<HomeLoaded>());
+      expect(
+        (state as HomeLoaded).activeSlot?.route,
+        isNot(AppRoutes.progress),
+      );
+    },
+  );
+}
+
+class _ChangingHomeOwner implements RecordOwnerProvider {
+  @override
+  String currentOwnerId = 'a';
+  @override
+  bool get isSignedIn => true;
 }
 
 class _MemoryActivityFeed implements ActivityFeedRepository {
@@ -900,8 +1008,10 @@ class _MemoryActivityFeed implements ActivityFeedRepository {
   Future<void> append(ActivityEvent event, {bool replace = false}) async {}
 
   @override
-  Future<List<ActivityEvent>> recent({int limit = 20, bool kids = false}) async =>
-      events.take(limit).toList();
+  Future<List<ActivityEvent>> recent({
+    int limit = 20,
+    bool kids = false,
+  }) async => events.take(limit).toList();
 
   @override
   Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => {

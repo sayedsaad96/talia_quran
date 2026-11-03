@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'dart:io' show Platform;
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,10 +10,13 @@ import '../../features/prayer_companion/data/datasources/prayer_companion_prefer
 import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../l10n/app_localizations.dart';
+import '../backup/restore_recovery_journal.dart';
+import '../security/encrypted_account_preferences_store.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_times_service.dart';
 import '../storage/app_isar.dart';
+import '../storage/data_admission.dart';
 import '../utils/talia_logger.dart';
 
 /// Task name used when registering the periodic notification refresh.
@@ -51,9 +55,19 @@ debugCompanionPlannerBuilder;
 /// retry with its configured backoff.
 Future<bool> runNotificationRefreshTask({
   NotificationSchedulerFactory createScheduler = _createLocalScheduler,
+  DataAdmission? admission,
+  Future<bool> Function()? journalIsClean,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+  final needsAdmission = Platform.isAndroid || admission != null;
+  final permit = needsAdmission
+      ? await (admission ?? DataAdmission.instance).acquireWorker()
+      : null;
+  if (needsAdmission && permit == null) return false;
+  var success = false;
   try {
+    final clean = await (journalIsClean ?? _journalIsClean)();
+    if (!clean || (permit != null && !await permit.validate())) return false;
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('app_locale') ?? 'ar';
     final l10n = lookupAppLocalizations(Locale(languageCode));
@@ -62,17 +76,31 @@ Future<bool> runNotificationRefreshTask({
       service: TaliaNotificationService(),
       prayerTimesService: PrayerTimesService(prefs),
       prayerCompanionPreferences: PrayerCompanionPreferences(prefs),
-      prayerCompanionPlanner:
-          await (debugCompanionPlannerBuilder ?? _createLocalCompanionPlanner)(
-            prefs,
-          ),
+      prayerCompanionPlanner: debugCompanionPlannerBuilder != null
+          ? await debugCompanionPlannerBuilder!(prefs)
+          : await _createLocalCompanionPlanner(prefs, permit),
     );
-    return await scheduler.refreshNotificationsInBackground(l10n, force: true);
+    success = await scheduler.refreshNotificationsInBackground(
+      l10n,
+      force: true,
+    );
+    if (permit != null && !await permit.validate()) success = false;
   } catch (error, stack) {
     TaliaLogger.w('Background notification refresh failed', error, stack);
-    return false;
+  } finally {
+    try {
+      await permit?.release();
+    } catch (error, stack) {
+      TaliaLogger.w('Background admission release failed', error, stack);
+      success = false;
+    }
   }
+  return success;
 }
+
+Future<bool> _journalIsClean() => RestoreRecoveryJournal(
+  FlutterEncryptedAccountPreferencesStore(),
+).isCleanForAdmission();
 
 /// Production factory: wires the explicitly built local dependencies into
 /// the scheduler. Kept as a named function so it is the visible default of
@@ -111,9 +139,10 @@ NotificationScheduler _createLocalScheduler({
 /// next foreground refresh corrects the schedule.
 Future<PrayerCompanionPlanner?> _createLocalCompanionPlanner(
   SharedPreferences prefs,
+  DataAdmissionPermit? permit,
 ) async {
   try {
-    final isar = await openNotificationRefreshIsar();
+    final isar = await openNotificationRefreshIsar(admission: permit);
     final datasource = PrayerCompanionLocalDatasource(isar);
     final repository = PrayerCompanionRepositoryImpl(datasource);
     final preferences = PrayerCompanionPreferences(prefs);
@@ -135,10 +164,15 @@ Future<PrayerCompanionPlanner?> _createLocalCompanionPlanner(
 Future<Isar> openNotificationRefreshIsar({
   String? directory,
   String name = Isar.defaultName,
+  DataAdmissionPermit? admission,
 }) async {
   final databaseDirectory =
       directory ?? (await getApplicationDocumentsDirectory()).path;
-  return openAppIsar(directory: databaseDirectory, name: name);
+  return openAppIsar(
+    directory: databaseDirectory,
+    name: name,
+    admission: admission,
+  );
 }
 
 /// Standalone entry-point dispatcher for the notification refresh task.

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/identity/record_owner_provider.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../../home/presentation/cubits/home_cubit.dart';
 import '../../../home/presentation/theme/home_skin.dart';
 import '../../adult_journey_feature_flags.dart';
@@ -37,7 +38,15 @@ class AdultJourneyHomeSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!_enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
     return BlocProvider<AdultJourneyCubit>(
-      create: (_) => getIt<AdultJourneyCubit>(),
+      create: (context) =>
+          getIt<AdultJourneyCubit>()..setDailyReviewContextLoader(() {
+            final owner = getIt<RecordOwnerProvider>();
+            return context.read<HomeCubit>().loadFreshAdultJourneyContext(
+              expectedOwnerId: owner.currentOwnerId,
+              owner: owner,
+              now: DateTime.now(),
+            );
+          }),
       child: _SlotBody(
         isHomeForeground: isHomeForeground ?? adultJourneyHomeIsForeground,
       ),
@@ -133,10 +142,17 @@ class _SlotBodyState extends State<_SlotBody> with WidgetsBindingObserver {
 
   Future<void> _feed(HomeState home) async {
     if (home is! HomeLoaded) return;
+    final ownerId = getIt<RecordOwnerProvider>().currentOwnerId;
+    try {
+      if (home.accountAuthority == null) return;
+      home.accountAuthority!.checkOwner(ownerId);
+    } on AccountDataUnavailableException {
+      return;
+    }
     await context.read<AdultJourneyCubit>().refreshContext(
       buildAdultJourneyContext(
         state: home,
-        ownerId: getIt<RecordOwnerProvider>().currentOwnerId,
+        ownerId: ownerId,
         now: DateTime.now(),
       ),
     );

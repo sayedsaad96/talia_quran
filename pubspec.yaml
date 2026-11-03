@@ -82,6 +82,8 @@ dependencies:
   url_launcher: ^6.3.2
   talia_prayer_delivery:
     path: packages/talia_prayer_delivery
+  talia_data_admission:
+    path: packages/talia_data_admission
 
 
   uuid: any
@@ -143,6 +145,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/data/quran.json
+    - assets/data/quran_study/
     - assets/data/similar_ayah_index.json
     - assets/data/surahs.json
     - assets/data/content_manifest.json
@@ -205,6 +208,9 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
+    - family: TafsirUthmanic
+      fonts:
+        - asset: assets/data/quran_study/uthmanic_hafs_v20.ttf
     - family: Amiri
       fonts:
         - asset: assets/fonts/Amiri/Amiri-Regular.ttf

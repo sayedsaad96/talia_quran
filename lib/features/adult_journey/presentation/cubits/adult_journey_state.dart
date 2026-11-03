@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/adult_journey_preferences.dart';
 import '../../domain/entities/adult_journey_suggestion.dart';
+import '../../domain/entities/daily_review_task.dart';
 import '../../domain/services/adult_return_policy.dart';
 
 /// Why the last save failed. The UI maps it to a localized message; raw
@@ -20,6 +21,7 @@ class AdultJourneyState extends Equatable {
     this.status = AdultJourneyStatus.hidden,
     this.preferences = AdultJourneyPreferences.empty,
     this.suggestions = const [],
+    this.dailyReviewTask,
     this.localDate,
     this.todayBudgetEnabled = false,
     this.setupInviteDue = false,
@@ -35,6 +37,7 @@ class AdultJourneyState extends Equatable {
   final AdultJourneyStatus status;
   final AdultJourneyPreferences preferences;
   final List<AdultJourneySuggestion> suggestions;
+  final DailyReviewTaskDecision? dailyReviewTask;
 
   /// The local day the state was computed for (`YYYY-MM-DD`).
   final String? localDate;
@@ -75,6 +78,7 @@ class AdultJourneyState extends Equatable {
       status: status,
       preferences: preferences ?? this.preferences,
       suggestions: suggestions ?? this.suggestions,
+      dailyReviewTask: dailyReviewTask,
       localDate: localDate,
       todayBudgetEnabled: todayBudgetEnabled,
       setupInviteDue: setupInviteDue,
@@ -97,6 +101,7 @@ class AdultJourneyState extends Equatable {
     status,
     preferences,
     suggestions,
+    dailyReviewTask,
     localDate,
     todayBudgetEnabled,
     setupInviteDue,

@@ -79,6 +79,37 @@ void main() {
     expect(() => encodeBackup(w({1: 2})), throwsArgumentError);
   });
 
+  group('schema versions', () {
+    test('the current layout is v5 and v1-v4 files still decode', () {
+      expect(kBackupSchemaVersion, 5);
+      for (var version = 1; version <= 5; version++) {
+        final payload = BackupPayload(
+          schemaVersion: version,
+          createdAt: DateTime.utc(2026),
+          sections: const {'k': 1},
+        );
+        final decoded = decodeBackup(encodeBackup(payload));
+        expect(decoded.error, isNull, reason: 'v$version');
+        expect(decoded.payload!.schemaVersion, version);
+      }
+    });
+
+    test('a file newer than v5 is refused, not partially read', () {
+      final env = _unpack(encodeBackup(_sample()))..['schemaVersion'] = 6;
+      final decoded = decodeBackup(_pack(env));
+      expect(decoded.payload, isNull);
+      expect(decoded.error, BackupDecodeError.newerVersion);
+    });
+
+    test('the 50 MiB payload limit is unchanged', () {
+      expect(kBackupMaxBytes, 50 * 1024 * 1024);
+      final oversized = List<int>.filled(kBackupMaxBytes + 1, 0)
+        ..[0] = 0x1f
+        ..[1] = 0x8b;
+      expect(decodeBackup(oversized).error, BackupDecodeError.notGzip);
+    });
+  });
+
   group('decode errors', () {
     test('notGzip', () {
       expect(

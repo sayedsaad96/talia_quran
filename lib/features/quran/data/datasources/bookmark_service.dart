@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/backup/portable_reading_data.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/identity/account_deletion_marker.dart';
 import '../../../../core/identity/pending_bookmark_recovery_marker.dart';
@@ -13,6 +14,8 @@ import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../domain/entities/bookmark_entry.dart';
 
 part 'bookmark_owner_erasure.dart';
+part 'bookmark_portable_export.dart';
+part 'bookmark_restore_access.dart';
 
 typedef BookmarkCloudRpc =
     Future<dynamic> Function(String function, {Map<String, dynamic>? params});
@@ -68,6 +71,18 @@ class BookmarkService extends ChangeNotifier {
       }
     });
   }
+
+  /// Canonical references of the live bookmarks of [expectedOwnerId], read
+  /// from durable storage. Throws [PortableReadingDataException] on failure.
+  Future<List<PortableBookmark>> exportPortable({
+    required String expectedOwnerId,
+  }) => _exportPortableBookmarks(this, expectedOwnerId);
+
+  /// Holds the owner's bookmark queue for a whole multi-store restore.
+  Future<T> runRestoreExclusive<T>({
+    required String expectedOwnerId,
+    required Future<T> Function(BookmarkRestoreAccess access) body,
+  }) => _runBookmarkRestore(this, expectedOwnerId, body);
 
   List<BookmarkEntry> getAll() {
     final bookmarks = _readRecords(_owner.currentOwnerId);
@@ -479,6 +494,8 @@ class BookmarkService extends ChangeNotifier {
     }
     throw StateError('Bookmark account deletion interrupted storage work');
   }
+
+  void _notifyChanged() => notifyListeners();
 
   void _evictErasedOwner(String ownerId) {
     _recordsByOwner.remove(ownerId);

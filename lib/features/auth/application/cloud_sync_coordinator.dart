@@ -7,6 +7,7 @@ import '../../../core/sync/cloud_sync_queue.dart';
 import '../../../core/utils/talia_logger.dart';
 import '../../memorization_plus/domain/repositories/memorization_cloud_repository.dart';
 import '../../quran/data/datasources/bookmark_service.dart';
+import '../../quran/domain/repositories/reading_checkpoint_repository.dart';
 import '../../group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import '../domain/repositories/auth_repository.dart';
 
@@ -26,6 +27,9 @@ class CloudSyncCoordinator {
     this._groupKhatmahRepository,
     this._groupKhatmahAvailable,
     this._onMemorizationIdentityChanged,
+    this._restoreActive,
+    this._readingCheckpoints,
+    this._checkpointCloudAvailable,
     this._syncBookmarks = true,
     this._localChangeDebounce = const Duration(seconds: 2),
   }) {
@@ -43,6 +47,49 @@ class CloudSyncCoordinator {
   final GroupKhatmahRepository? _groupKhatmahRepository;
   final bool Function()? _groupKhatmahAvailable;
   final void Function()? _onMemorizationIdentityChanged;
+
+  /// True while a multi-store restore runs or an unrecovered one blocks the
+  /// stores. Sync must not pull into, or push out of, a half-restored state.
+  final bool Function()? _restoreActive;
+  final ReadingCheckpointRepository? _readingCheckpoints;
+  final bool Function()? _checkpointCloudAvailable;
+  String? _checkpointOwner;
+  CheckpointSyncResult? _checkpointResult;
+  DateTime? _checkpointSuccessAt;
+
+  bool get _checkpointCanSync =>
+      _readingCheckpoints != null &&
+      (_checkpointCloudAvailable?.call() ?? false);
+
+  ({CheckpointSyncResult? result, DateTime? lastSuccess}) checkpointStatusFor(
+    String ownerId,
+  ) => _checkpointOwner == ownerId
+      ? (result: _checkpointResult, lastSuccess: _checkpointSuccessAt)
+      : (result: null, lastSuccess: null);
+
+  /// Uses the existing debounce; saving a location does not award reading credit.
+  void scheduleCheckpointPush() {
+    if (_checkpointCanSync) {
+      _schedulePendingPush(ProgressChangedReason.readPage);
+    }
+  }
+
+  Future<void> _syncReadingPosition(String ownerId) async {
+    if (!_checkpointCanSync ||
+        !_ownerIsStillActive(ownerId) ||
+        _isRestoreActive) {
+      return;
+    }
+    final result = await _readingCheckpoints!.sync(expectedOwnerId: ownerId);
+    if (!_ownerIsStillActive(ownerId)) return;
+    if (_checkpointOwner != ownerId) _checkpointSuccessAt = null;
+    _checkpointOwner = ownerId;
+    _checkpointResult = result;
+    if (result.status == CheckpointSyncStatus.synced) {
+      _checkpointSuccessAt = DateTime.now().toUtc();
+    }
+  }
+
   final bool _syncBookmarks;
   final Duration _localChangeDebounce;
 
@@ -56,6 +103,8 @@ class CloudSyncCoordinator {
   DateTime? _lastResumeSyncAt;
   static const _resumeDebounce = Duration(minutes: 5);
 
+  bool get _isRestoreActive => _restoreActive?.call() ?? false;
+
   Future<void> dispose() async {
     _localChangeTimer?.cancel();
     await _progressSubscription?.cancel();
@@ -65,7 +114,7 @@ class CloudSyncCoordinator {
   /// Unexpected exceptions are logged and contained so authentication UI and
   /// lifecycle observers remain responsive while offline services recover.
   Future<void> run() {
-    if (_identityTransitionDepth > 0) return Future.value();
+    if (_identityTransitionDepth > 0 || _isRestoreActive) return Future.value();
     final pendingPush = _pendingPushInFlight;
     if (pendingPush != null) {
       return pendingPush.then((_) => run());
@@ -83,7 +132,9 @@ class CloudSyncCoordinator {
   /// must not trigger another full remote pull: the next login/resume still
   /// performs reconciliation, while this path uploads only outstanding work.
   void _schedulePendingPush(ProgressChangedReason reason) {
-    if (_identityTransitionDepth > 0 || _authRepository.currentUser == null) {
+    if (_identityTransitionDepth > 0 ||
+        _isRestoreActive ||
+        _authRepository.currentUser == null) {
       return;
     }
     if (reason == ProgressChangedReason.kidsProgress) {
@@ -97,7 +148,7 @@ class CloudSyncCoordinator {
   }
 
   Future<void> _pushPendingChanges() async {
-    if (_identityTransitionDepth > 0) return;
+    if (_identityTransitionDepth > 0 || _isRestoreActive) return;
     _pendingPushRequested = true;
     _pendingPushInFlight ??= _drainPendingPushes()
         .catchError((Object error, StackTrace stackTrace) {
@@ -129,7 +180,7 @@ class CloudSyncCoordinator {
   /// an explicit recovery action and are never silently re-armed by an
   /// application lifecycle event.
   Future<void> resumeIfNeeded({bool force = false}) async {
-    if (_identityTransitionDepth > 0) return;
+    if (_identityTransitionDepth > 0 || _isRestoreActive) return;
     await _groupKhatmahRepository?.reconcilePendingWake();
     final now = DateTime.now();
     if (!force &&
@@ -157,7 +208,27 @@ class CloudSyncCoordinator {
   /// dead letters and intents of an unavailable feature cannot be flushed, so
   /// they must not block a password update (sign-out still counts them all).
   Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async {
+    // Unflushed or half-restored data must not be discarded as "safe".
+    if (_isRestoreActive) return false;
+    final initialCheckpointOwner = _authRepository.currentUser?.id;
     try {
+      if (_checkpointCanSync) {
+        final ownerId = _authRepository.currentUser?.id;
+        if (ownerId == null) return false;
+        final checkpoint = await _readingCheckpoints!.readLocal(
+          expectedOwnerId: ownerId,
+        );
+        if (checkpoint?.pendingMutationId != null) {
+          await _syncReadingPosition(ownerId);
+        }
+        if (!_ownerIsStillActive(ownerId) ||
+            (await _readingCheckpoints.readLocal(
+                  expectedOwnerId: ownerId,
+                ))?.pendingMutationId !=
+                null) {
+          return false;
+        }
+      }
       final groups = _groupKhatmahRepository;
       Future<bool> groupsPending() => forPasswordUpdate
           ? groups!.hasDeliverablePending()
@@ -204,6 +275,15 @@ class CloudSyncCoordinator {
       await _processSyncQueue();
       final memorizationPending =
           memorization != null && await memorization.hasPendingCloudWork();
+      if (_checkpointCanSync &&
+          (initialCheckpointOwner == null ||
+              !_ownerIsStillActive(initialCheckpointOwner) ||
+              (await _readingCheckpoints!.readLocal(
+                    expectedOwnerId: initialCheckpointOwner,
+                  ))?.pendingMutationId !=
+                  null)) {
+        return false;
+      }
       return !memorizationPending &&
           !(groups != null && await groupsPending()) &&
           !(bookmarks != null &&
@@ -221,6 +301,11 @@ class CloudSyncCoordinator {
 
   Future<void> preservePendingSignOutWork() async {
     await _bookmarkService?.preservePendingRecoveryIfNeeded();
+    final ownerId = _authRepository.currentUser?.id;
+    if (ownerId != null && _readingCheckpoints != null) {
+      // A durable read also repairs the recovery marker of older local drafts.
+      await _readingCheckpoints.readLocal(expectedOwnerId: ownerId);
+    }
   }
 
   /// Prevents new sync work and waits until existing network work has stopped
@@ -250,7 +335,8 @@ class CloudSyncCoordinator {
   bool _ownerIsStillActive(String? ownerId) =>
       ownerId != null && _authRepository.currentUser?.id == ownerId;
 
-  bool get _groupsCanSync => _groupKhatmahRepository != null &&
+  bool get _groupsCanSync =>
+      _groupKhatmahRepository != null &&
       (_groupKhatmahAvailable?.call() ?? true);
 
   Future<void> _perform(String? ownerId) async {
@@ -383,6 +469,8 @@ class CloudSyncCoordinator {
 
   Future<void> _pushAllData(String ownerId) async {
     if (!_ownerIsStillActive(ownerId)) return;
+    await _syncReadingPosition(ownerId);
+    if (!_ownerIsStillActive(ownerId)) return;
     await _pushAuthProgress();
     if (!_ownerIsStillActive(ownerId)) return;
 
@@ -407,6 +495,8 @@ class CloudSyncCoordinator {
   }
 
   Future<void> _performPendingPushes() async {
+    final checkpointOwner = _authRepository.currentUser?.id;
+    if (checkpointOwner != null) await _syncReadingPosition(checkpointOwner);
     if (await _authRepository.hasPendingCloudPush()) {
       await _pushAuthProgress();
     }
@@ -568,7 +658,18 @@ class CloudSyncCoordinator {
   }
 
   Future<bool> _hasPendingSyncWork() async {
-    if (await _groupKhatmahRepository?.hasRunnablePending() ?? false) return true;
+    final ownerId = _authRepository.currentUser?.id;
+    if (_checkpointCanSync &&
+        ownerId != null &&
+        (await _readingCheckpoints!.readLocal(
+              expectedOwnerId: ownerId,
+            ))?.pendingMutationId !=
+            null) {
+      return true;
+    }
+    if (await _groupKhatmahRepository?.hasRunnablePending() ?? false) {
+      return true;
+    }
     final queue = _cloudSyncQueue;
     if (queue != null && await queue.hasPending()) return true;
     final bookmarks = _bookmarkService;
@@ -587,7 +688,8 @@ class CloudSyncCoordinator {
     if (queue == null) return;
     for (final item in await queue.dueItems()) {
       if ((item.kind == CloudSyncQueueKind.groupKhatmahPull ||
-          item.kind == CloudSyncQueueKind.groupKhatmahPush) && !_groupsCanSync) {
+              item.kind == CloudSyncQueueKind.groupKhatmahPush) &&
+          !_groupsCanSync) {
         continue;
       }
       final memorization = _memorizationCloudRepository;

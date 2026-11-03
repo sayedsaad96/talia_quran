@@ -145,8 +145,10 @@ void main() {
 
   testWidgets('shows what the file includes and excludes', (tester) async {
     await pumpPage(tester);
-    expect(find.textContaining('Includes:'), findsOneWidget);
-    expect(find.textContaining('Excludes: bookmarks'), findsOneWidget);
+    expect(find.textContaining('Version 5 includes'), findsOneWidget);
+    expect(find.textContaining('notes, bookmarks,'), findsOneWidget);
+    expect(find.textContaining('Excludes device'), findsOneWidget);
+    expect(find.textContaining('Excludes: bookmarks'), findsNothing);
   });
 
   testWidgets('signed-in user sees restore disabled with the explanation', (

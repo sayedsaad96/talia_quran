@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'reading_checkpoint_injection.dart';
+import 'data_protection_injection.dart';
+import '../../features/quran/domain/repositories/reading_checkpoint_repository.dart';
 import 'prayer_review_injection.dart';
 import 'hands_free_injection.dart';
 import 'home_widget_injection.dart';
@@ -6,6 +9,7 @@ import 'group_khatmah_injection.dart';
 import '../sync/group_khatmah_environment.dart';
 import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import '../home_widget/home_widget_publisher.dart';
+import '../home_widget/platform_home_widget_bridge.dart';
 import 'kids_remote_plan_injection.dart';
 import 'kids_encouragement_injection.dart';
 import '../../features/memorization_plus/data/repositories/kids_legacy_split_recovery_repository_impl.dart';
@@ -17,6 +21,11 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar_community/isar.dart';
+import '../constants/surah_names.dart';
+import '../../features/quran_study/data/datasources/study_asset_source.dart';
+import '../../features/quran_study/data/repositories/quran_study_repository_impl.dart';
+import '../../features/quran_study/domain/repositories/quran_study_repository.dart';
+import '../../features/quran_study/domain/usecases/get_ayah_study.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
@@ -49,6 +58,7 @@ import 'family_activity_inputs_loader.dart';
 import '../services/daily_reading_log_service.dart';
 import '../services/audio_resume_store.dart';
 import '../storage/app_isar.dart';
+import '../storage/data_admission.dart';
 import '../services/streak_risk_evaluator.dart';
 import '../services/get_daily_wird_usecase.dart';
 import '../services/prayer_times_service.dart';
@@ -100,6 +110,11 @@ import '../memorization/v2/session_engine.dart';
 import '../memorization/v2/session_phase.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
+import '../backup/portable_reading_backup_adapter.dart';
+import '../backup/restore_operation_gate.dart';
+import '../backup/restore_recovery_journal.dart';
+import '../backup/restore_startup_recovery.dart';
+import '../backup/restore_store_rollbacks.dart';
 import '../identity/record_owner_provider.dart';
 import '../memorization/similar_ayah/similar_ayah_attempt_service.dart';
 import '../../features/memorization_plus/data/datasources/approved_similar_ayah_candidate_source.dart';
@@ -112,6 +127,7 @@ import '../security/encrypted_account_preferences_store.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/isar_ayah_note_repository.dart';
+import '../../features/quran/data/services/quran_corpus_bookmark_resolver.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
 import '../../features/quran/domain/repositories/ayah_note_repository.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -237,7 +253,6 @@ import '../../features/auth/data/services/supabase_account_password_verifier.dar
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
 import '../identity/account_data_barrier.dart';
-import '../identity/account_deletion_marker.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
@@ -261,7 +276,31 @@ import '../../features/home/domain/services/daily_ayah_context_resolver.dart';
 
 final GetIt getIt = GetIt.instance;
 
-Future<void> configureDependencies({bool background = false}) async {
+/// Runs only after restore recovery has admitted foreground progress access.
+Future<void> migrateLocalProgressAfterRecovery() async {
+  await (getIt<HifzLocalDatasource>() as IsarHifzLocalDatasourceImpl)
+      .migrateFromSharedPreferencesIfNeeded();
+  final datasource = getIt<MemorizationPlusLocalDatasource>();
+  await datasource.migrateReviewRecordsToIsarIfNeeded();
+  await datasource.migrateReviewRecordIdentityIfNeeded();
+}
+
+Future<void> configureDependencies({
+  bool background = false,
+  DataAdmissionPermit? admission,
+}) async {
+  getIt.registerLazySingleton<QuranStudyRepository>(
+    () => QuranStudyRepositoryImpl(
+      canonicalAyahCounts: {
+        for (var surah = 1; surah <= 114; surah++)
+          surah: SurahNames.ayahCount(surah),
+      },
+      loadBundle: ApprovedStudyBundleSource(rootBundle).load,
+    ),
+  );
+  getIt.registerLazySingleton<GetAyahStudy>(
+    () => GetAyahStudy(getIt<QuranStudyRepository>()),
+  );
   // ─── External ───────────────────────────────────────────────────────────────
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
@@ -276,12 +315,8 @@ Future<void> configureDependencies({bool background = false}) async {
       },
     ),
   );
-  final deletionPending = AccountDeletionMarker.hasPendingOperation(
-    sharedPrefs,
-  );
-
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await openAppIsar(directory: dir.path);
+  final isar = await openAppIsar(directory: dir.path, admission: admission);
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
@@ -289,9 +324,6 @@ Future<void> configureDependencies({bool background = false}) async {
 
   // Migrate old SharedPreferences Hifz data to Isar if needed
   final hifzDatasource = IsarHifzLocalDatasourceImpl(isar, sharedPrefs);
-  if (!deletionPending) {
-    await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
-  }
   getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
   getIt.registerLazySingleton<RecordOwnerProvider>(
@@ -321,10 +353,17 @@ Future<void> configureDependencies({bool background = false}) async {
       backgroundSyncScheduler: getIt<BackgroundSyncScheduler>(),
       audioResumeStore: getIt<AudioResumeStore>(),
       deleteBookmarksForOwner: getIt<BookmarkService>().eraseOwner,
+      abortRestoreForOwner: getIt<RestoreRecoveryJournal>().abortForOwner,
       cancelAccountNotifications: getIt<TaliaNotificationService>().cancelAll,
       clearHomeWidget: () async {
         if (!background) {
-          await getIt<HomeWidgetPublisher>().clearForAccountTransition();
+          if (getIt.isRegistered<HomeWidgetPublisher>()) {
+            await getIt<HomeWidgetPublisher>().clearForAccountTransition();
+          } else {
+            await clearHomeWidgetProjection(
+              PlatformHomeWidgetBridge(),
+            ).timeout(const Duration(seconds: 10));
+          }
         }
       },
     ),
@@ -335,10 +374,6 @@ Future<void> configureDependencies({bool background = false}) async {
     isar: isar,
     owner: getIt<RecordOwnerProvider>(),
   );
-  if (!deletionPending) {
-    await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
-    await memorizationPlusDatasource.migrateReviewRecordIdentityIfNeeded();
-  }
 
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
@@ -385,7 +420,18 @@ Future<void> configureDependencies({bool background = false}) async {
     QuranReciterService(getIt<SharedPreferences>()),
   );
   getIt.registerSingleton<AppSessionService>(
-    AppSessionService(getIt<SharedPreferences>()),
+    AppSessionService(
+      getIt<SharedPreferences>(),
+      owner: getIt<RecordOwnerProvider>(),
+      checkpointReader: readActiveReadingCheckpoint,
+      checkpointWriter: writeActiveReadingCheckpoint,
+      checkpointPreferenceKeys: activeCheckpointPreferenceKeys,
+      onCheckpointSaved: () {
+        if (checkpointCloudAvailable()) {
+          getIt<CloudSyncCoordinator>().scheduleCheckpointPush();
+        }
+      },
+    ),
   );
   getIt.registerLazySingleton<AppVersionInfoProvider>(
     () => const PackageInfoAppVersionInfoProvider(),
@@ -958,6 +1004,11 @@ Future<void> configureDependencies({bool background = false}) async {
           getIt<GroupKhatmahAppEnvironment>().isAdult,
       onMemorizationIdentityChanged:
           getIt<MemorizationPathResolver>().notifyChanged,
+      restoreActive: () =>
+          getIt<RestoreOperationGate>().isRunning ||
+          getIt<RestoreOperationGate>().isBlocked,
+      readingCheckpoints: getIt<ReadingCheckpointRepository>(),
+      checkpointCloudAvailable: checkpointCloudAvailable,
       syncBookmarks: !background,
     ),
     dispose: (coordinator) => coordinator.dispose(),
@@ -1345,6 +1396,34 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<Isar>(),
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
+      reading: getIt<PortableReadingBackupAdapter>(),
+    ),
+  );
+  getIt.registerLazySingleton<RestoreRecoveryJournal>(
+    () => RestoreRecoveryJournal(getIt<EncryptedAccountPreferencesStore>()),
+  );
+  getIt.registerLazySingleton<RestoreOperationGate>(
+    () => RestoreOperationGate(getIt<RecordOwnerProvider>()),
+  );
+  getIt.registerLazySingleton<PortableReadingBackupAdapter>(
+    () => PortableReadingBackupAdapter(
+      bookmarks: getIt<BookmarkService>(),
+      session: getIt<AppSessionService>(),
+      resolve: QuranCorpusBookmarkResolver(getIt<QuranLocalDatasource>()).call,
+    ),
+  );
+  configureReadingCheckpoints();
+  configureDataProtection();
+  getIt.registerLazySingleton<RestoreStartupRecovery>(
+    () => RestoreStartupRecovery(
+      journal: getIt<RestoreRecoveryJournal>(),
+      rollbacks: RestoreStoreRollbacks(
+        getIt<Isar>(),
+        getIt<SharedPreferences>(),
+        getIt<PortableReadingBackupAdapter>(),
+      ),
+      owner: getIt<RecordOwnerProvider>(),
+      gate: getIt<RestoreOperationGate>(),
     ),
   );
   getIt.registerLazySingleton<AyahNoteRepository>(
@@ -1387,6 +1466,10 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<SharedPreferences>(),
       getIt<RecordOwnerProvider>(),
       events: getIt<ProgressEventsBus>(),
+      reading: getIt<PortableReadingBackupAdapter>(),
+      journal: getIt<RestoreRecoveryJournal>(),
+      gate: getIt<RestoreOperationGate>(),
+      fullReplacementAllowed: false,
     ),
   );
   getIt.registerLazySingleton<ClarityModeController>(
@@ -1851,8 +1934,15 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerFactory<KhatmDuaCubit>(
     () => KhatmDuaCubit(getIt<GetKhatmDuaUsecase>()),
   );
+}
+
+/// Activate subscriptions only after the startup safety checks and migrations.
+Future<void> activateRuntimeDependencies({bool background = false}) async {
   if (!background) await registerHomeWidget(getIt);
   if (!background) await registerGroupKhatmah(getIt);
+}
+
+void activateAuthenticationDependencies() {
   getIt.registerSingleton<AuthCubit>(
     AuthCubit(
       getIt<AuthRepository>(),
@@ -1867,6 +1957,8 @@ Future<void> configureDependencies({bool background = false}) async {
         final AyahNoteClaimer claimer => claimer,
         _ => null,
       },
+      true,
     ),
+    dispose: (value) => value.close(),
   );
 }

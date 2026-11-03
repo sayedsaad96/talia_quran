@@ -58,8 +58,10 @@ class _Reset extends Mock implements AccountDataReset {
 class _MarkerStore extends InMemorySharedPreferencesStore {
   _MarkerStore(super.data) : super.withData();
   bool reject = true;
+  bool rejectAccount = false;
   @override
   Future<bool> setValue(String valueType, String key, Object value) async {
+    if (rejectAccount && key.endsWith('restore_account_state_v1')) return false;
     if (reject && key.endsWith(AuthCubit.lastSignedInUserIdKey)) return false;
     return super.setValue(valueType, key, value);
   }
@@ -80,7 +82,8 @@ class _ForcedPreserveCoordinator extends CloudSyncCoordinator {
   bool flushResult = false;
 
   @override
-  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async => flushResult;
+  Future<bool> flushBeforeSignOut({bool forPasswordUpdate = false}) async =>
+      flushResult;
 
   @override
   Future<void> preservePendingSignOutWork() async {}
@@ -181,80 +184,80 @@ void main() {
     },
   );
 
-  test(
-    'forced sign-out fails closed when the widget clear throws',
-    () async {
-      SharedPreferences.setMockInitialValues({
-        AuthCubit.lastSignedInUserIdKey: 'a',
-        'khatmah_owner': 'a',
-        'khatmah_active_plan': 'private-a',
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final barrier = AccountDataBarrier.forPreferences(prefs)
-        ..owner = _Owner('a');
-      final auth = _Auth();
-      final reset = _Reset();
-      when(
-        () => reset.clearAccountWidget(),
-      ).thenAnswer((_) async => throw StateError('widget clear timed out'));
-      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
-      when(() => auth.currentUser).thenReturn(user);
-      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
-      when(
-        () => auth.passwordRecoveryChanges,
-      ).thenAnswer((_) => const Stream.empty());
-      final cubit = AuthCubit(
-        auth,
-        null,
-        null,
-        null,
-        null,
-        prefs,
-        reset,
-        _ForcedPreserveCoordinator(auth),
-      );
-      addTearDown(cubit.close);
-
-      await cubit.signOut(force: true);
-
-      expect(cubit.state, isA<AuthOwnerDataFailure>());
-      expect(barrier.isReady, isFalse);
-      verifyNever(() => auth.signOut(preserveAccountData: true));
-      expect(prefs.getString('khatmah_active_plan'), 'private-a');
-    },
-  );
-
-  test('app resume retries a failed widget clear and unblocks the barrier', () async {
-    SharedPreferences.setMockInitialValues({});
+  test('forced sign-out fails closed when the widget clear throws', () async {
+    SharedPreferences.setMockInitialValues({
+      AuthCubit.lastSignedInUserIdKey: 'a',
+      'khatmah_owner': 'a',
+      'khatmah_active_plan': 'private-a',
+    });
     final prefs = await SharedPreferences.getInstance();
     final barrier = AccountDataBarrier.forPreferences(prefs)
-      ..owner = _Owner('local');
+      ..owner = _Owner('a');
     final auth = _Auth();
     final reset = _Reset();
-    when(() => auth.currentUser).thenReturn(null);
+    when(
+      () => reset.clearAccountWidget(),
+    ).thenAnswer((_) async => throw StateError('widget clear timed out'));
+    const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+    when(() => auth.currentUser).thenReturn(user);
     when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
     when(
       () => auth.passwordRecoveryChanges,
     ).thenAnswer((_) => const Stream.empty());
-    final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
-    addTearDown(cubit.close);
-    await expectLater(
-      barrier.clear(
-        () async => throw AccountProjectionClearFailure(
-          StateError('widget'),
-          StackTrace.current,
-        ),
-      ),
-      throwsStateError,
+    final cubit = AuthCubit(
+      auth,
+      null,
+      null,
+      null,
+      null,
+      prefs,
+      reset,
+      _ForcedPreserveCoordinator(auth),
     );
+    addTearDown(cubit.close);
+
+    await cubit.signOut(force: true);
+
+    expect(cubit.state, isA<AuthOwnerDataFailure>());
     expect(barrier.isReady, isFalse);
-
-    cubit.resyncOnResume();
-    await Future<void>.delayed(Duration.zero);
-
-    expect(barrier.isReady, isTrue);
-    verify(() => reset.clearAccountWidget()).called(1);
+    verifyNever(() => auth.signOut(preserveAccountData: true));
+    expect(prefs.getString('khatmah_active_plan'), 'private-a');
   });
+
+  test(
+    'app resume retries a failed widget clear and unblocks the barrier',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('local');
+      final auth = _Auth();
+      final reset = _Reset();
+      when(() => auth.currentUser).thenReturn(null);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
+      addTearDown(cubit.close);
+      await expectLater(
+        barrier.clear(
+          () async => throw AccountProjectionClearFailure(
+            StateError('widget'),
+            StackTrace.current,
+          ),
+        ),
+        throwsStateError,
+      );
+      expect(barrier.isReady, isFalse);
+
+      cubit.resyncOnResume();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(barrier.isReady, isTrue);
+      verify(() => reset.clearAccountWidget()).called(1);
+    },
+  );
 
   test(
     'failed forced-preserve signout restores fresh authority for the same session',
@@ -363,6 +366,9 @@ void main() {
     (tester) async {
       SharedPreferences.setMockInitialValues({
         AuthCubit.lastSignedInUserIdKey: 'a',
+        // This scenario starts with an already-established account. Missing
+        // proof is intentionally blocked and exercised by the startup tests.
+        'restore_account_state_v1': true,
         'theme_mode': 'dark',
       });
       final prefs = await SharedPreferences.getInstance();
@@ -593,8 +599,12 @@ void main() {
       expect((dashboard.state as KhatmahProgressFailure).plan, isNull);
       expect(setup.state, isA<KhatmahSetupIdle>());
       expect(history.state, isA<KhatmahHistoryFailure>());
-      expect((home.state as HomeLoaded).activeKhatmah, isNull);
-      expect((home.state as HomeLoaded).khatmahError, isNotNull);
+      expect(
+        home.state,
+        isA<HomeLoading>(),
+        reason:
+            'All prior account data is hidden while account access is blocked',
+      );
       expect(
         find.byKey(const Key('khatmah_completion_certificate_button')),
         findsNothing,
@@ -636,13 +646,21 @@ void main() {
       expect(history.state, isA<KhatmahHistoryLoaded>());
       expect((home.state as HomeLoaded).activeKhatmah?.id, plan.id);
       expect(
+        () => (home.state as HomeLoaded).accountAuthority!.checkOwner('a'),
+        returnsNormally,
+      );
+      expect(
         find.byKey(const Key('khatmah_completion_certificate_button')),
         findsNothing,
       );
 
       coordinator.flushResult = true;
       await authCubit.signOut();
-      await tester.pump();
+      // Owner readiness schedules a debounced fresh Home load. Exercise that
+      // transition rather than leaving a live timer after this retained
+      // consumer test ends.
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
 
       expect(authCubit.state, isA<AuthUnauthenticated>());
       expect(barrier.isReady, isTrue);
@@ -651,6 +669,8 @@ void main() {
       expect(prefs.getString('theme_mode'), 'dark');
       expect(await repository.getActivePlan(), isNull);
       expect(await repository.getHistory(), isEmpty);
+      expect(home.state, isA<HomeLoaded>());
+      expect((home.state as HomeLoaded).activeKhatmah, isNull);
     },
   );
 
@@ -757,9 +777,13 @@ void main() {
 
       await tester.tap(find.text(l10n.retrySyncAfterError));
       await tester.pumpAndSettle();
-      expect(resetAttempts, 3);
+      // A successful retry first completes the interrupted cleanup, then
+      // resolves the still-pending A-to-B owner transition.
+      expect(resetAttempts, 4);
+      verify(() => reset.clearAccountOwnedData(departingOwnerId: 'a')).called(4);
       expect(find.text('ready home'), findsOneWidget);
       expect(barrier.isReady, isTrue);
+      expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'b');
       expect(prefs.getString('khatmah_active_plan'), isNull);
     },
   );
@@ -920,6 +944,7 @@ void main() {
         AuthCubit.lastSignedInUserIdKey: 'a',
         'khatmah_active_plan': 'private-a',
         'khatmah_owner': 'a',
+        'restore_guest_clean_v1': true,
       });
       final prefs = await SharedPreferences.getInstance();
       final barrier = AccountDataBarrier.forPreferences(prefs)
@@ -940,10 +965,58 @@ void main() {
         () => auth.syncProgressToCloud(),
       ).thenAnswer((_) async => const Right(unit));
       final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
+      expect(barrier.isReady, isFalse);
       await cubit.ensureCloudSyncComplete();
-      expect(lease.check, returnsNormally);
+      expect(lease.check, throwsA(isA<AccountDataUnavailableException>()));
+      expect(prefs.getBool('restore_account_state_v1'), isTrue);
+      expect(prefs.containsKey('restore_guest_clean_v1'), isFalse);
       expect(prefs.getString('khatmah_active_plan'), 'private-a');
       expect(cubit.state, isA<AuthAuthenticated>());
+      await cubit.close();
+    },
+  );
+  test(
+    'same-owner startup blocks and can retry when account marker fails',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final store =
+          _MarkerStore({
+              'flutter.auth_last_signed_in_user_id': 'a',
+              'flutter.restore_guest_clean_v1': true,
+            })
+            ..reject = false
+            ..rejectAccount = true;
+      SharedPreferencesStorePlatform.instance = store;
+      SharedPreferences.resetStatic();
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('a');
+      final auth = _Auth();
+      final reset = _Reset();
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        () => auth.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
+      await expectLater(
+        cubit.ensureCloudSyncComplete(),
+        throwsA(isA<StateError>()),
+      );
+      expect(barrier.isReady, isFalse);
+      store.rejectAccount = false;
+      store.reject = false;
+      await cubit.ensureCloudSyncComplete();
+      expect(barrier.isReady, isTrue);
+      expect(prefs.getBool('restore_account_state_v1'), isTrue);
+      expect(prefs.containsKey('restore_guest_clean_v1'), isFalse);
       await cubit.close();
     },
   );

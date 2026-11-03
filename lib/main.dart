@@ -1,11 +1,22 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/backup/cold_restore_startup.dart';
+import 'core/backup/restore_bootstrap.dart';
+import 'core/backup/restore_maintenance_session.dart';
+import 'core/di/injection.dart';
+import 'core/storage/data_admission.dart';
+import 'features/settings/presentation/pages/restore_maintenance_page.dart';
+import 'features/auth/data/repositories/retained_account_recovery_repository_impl.dart';
+import 'features/auth/presentation/pages/retained_account_recovery_app.dart';
+import 'core/services/app_initializer.dart';
 import 'core/utils/talia_logger.dart';
 
 Future<void> main() async {
@@ -96,6 +107,57 @@ Future<void> _bootstrapAndRun() async {
     ),
   );
 
+  if (!Platform.isAndroid) {
+    await _runNormal();
+    return;
+  }
+  final admission = await acquireStartupAdmission();
+  await _runWithAdmission(admission);
+}
+
+Future<void> _runWithAdmission(ColdRestoreAdmission admission) async {
+  switch (admission) {
+    case NormalRestoreAdmission(:final permit):
+      await _runNormal(permit);
+    case MaintenanceRestoreAdmission(:final permit):
+      runApp(
+        RestoreMaintenanceApp(
+          open: () => RestoreMaintenanceSession.open(permit),
+          resume: (session) async {
+            try {
+              await _runNormal(await finishRestoreMaintenance(session));
+            } on RestoreHandoffRetry {
+              await _bootstrapWithRetry();
+            }
+          },
+        ),
+      );
+    case BlockedRestoreAdmission():
+      runApp(const RestoreAdmissionBusyApp(retry: _bootstrapWithRetry));
+  }
+}
+
+Future<void> _runNormal([DataAdmissionPermit? permit]) async {
+  if (permit != null && !getIt.isRegistered<DataAdmissionPermit>()) {
+    getIt.registerSingleton<DataAdmissionPermit>(permit);
+  }
+  final identity = await AppInitializer.prepareIdentity();
+  if (!identity.canStartProgress) {
+    final prefs = await SharedPreferences.getInstance();
+    runApp(
+      RetainedAccountRecoveryApp(
+        repository: RetainedAccountRecoveryRepositoryImpl(
+          prefs: prefs,
+          expectedOwnerId: identity.expectedOwnerId,
+          authentication: SupabaseRetainedAccountAuthentication(),
+        ),
+        canSignIn: identity.expectedOwnerId != null,
+        locale: Locale(prefs.getString('app_locale') == 'en' ? 'en' : 'ar'),
+        resume: () => _runNormal(permit),
+      ),
+    );
+    return;
+  }
   runApp(const TaliaApp());
 }
 

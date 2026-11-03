@@ -174,7 +174,7 @@ void main() {
     ),
   );
 
-  testWidgets('ReaderFooter shows the page is still being counted', (
+  testWidgets('ReaderFooter hides page counting from the reader', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -182,14 +182,14 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('تُحتسب الصفحة بعد قليل'), findsOneWidget);
-    expect(find.byKey(const Key('reader_read_countdown')), findsOneWidget);
+    expect(find.text('تُحتسب الصفحة بعد قليل'), findsNothing);
+    expect(find.byKey(const Key('reader_read_countdown')), findsNothing);
 
     await tester.pump(const Duration(seconds: 25));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ReaderFooter hides the countdown once the page counts', (
+  testWidgets('ReaderFooter hides page counting confirmation', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -198,7 +198,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('تُحتسب الصفحة بعد قليل'), findsNothing);
-    expect(find.text('تم احتساب الصفحة'), findsOneWidget);
+    expect(find.text('تم احتساب الصفحة'), findsNothing);
   });
 
   testWidgets('ReaderDockedAudioBar renders nothing when idle', (tester) async {

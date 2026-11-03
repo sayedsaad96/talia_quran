@@ -83,11 +83,13 @@ void main() {
   testWidgets('shows the default, marks a local change and resets it', (
     tester,
   ) async {
-    final key = ExperienceFeature.similarAyahTrainer.storageKey;
+    final key = ExperienceFeature.tabletSpread.storageKey;
     SharedPreferences.setMockInitialValues({key: true});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
-      MaterialApp(home: LabsFlagsPage(prefs: prefs, onFlagChanged: (_) {})),
+      MaterialApp(
+        home: LabsFlagsPage(prefs: prefs, onFlagChanged: (_) {}),
+      ),
     );
     final tile = find.byKey(ValueKey('labs_flag_$key'));
     await tester.scrollUntilVisible(
