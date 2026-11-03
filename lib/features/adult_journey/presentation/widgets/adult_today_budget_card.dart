@@ -9,11 +9,13 @@ import '../../../home/presentation/theme/home_skin.dart';
 import '../../../home/presentation/widgets/glass_panel.dart';
 import '../../domain/entities/adult_journey_preferences.dart';
 import '../../domain/entities/adult_journey_suggestion.dart';
+import '../../domain/entities/daily_review_task.dart';
 import '../adult_journey_safe_routes.dart';
 import '../cubits/adult_journey_cubit.dart';
 import '../cubits/adult_journey_state.dart';
 import 'adult_journey_error_text.dart';
 import 'adult_journey_suggestion_tile.dart';
+import 'daily_review_task_card.dart';
 
 /// «مناسب لوقتك اليوم»: 5/10/20 minute chips (none selected by default) and at
 /// most three suggestions from the existing journey. Times are approximate
@@ -61,6 +63,52 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
     if (ok && mounted) setState(() => _changingTime = false);
   }
 
+  Future<void> _openDaily(DailyReviewTaskDecision decision) async {
+    if (_navigating) return;
+    final key = decision.decisionKey;
+    if (key == null && decision.status != DailyReviewTaskStatus.noReviews) {
+      return;
+    }
+    _navigating = true;
+    final cubit = context.read<AdultJourneyCubit>();
+    try {
+      final route = key == null
+          ? await cubit.resolveNoReviewsLaunch(
+              expectedLocalDate: decision.localDate,
+            )
+          : await cubit.resolveDailyReviewLaunch(expectedDecisionKey: key);
+      if (!mounted ||
+          route == null ||
+          !(key == null
+              ? cubit.canNavigateNoReviews(decision.localDate)
+              : cubit.canNavigateDailyReview(key))) {
+        return;
+      }
+      final open = widget.openRoute ?? (c, r) => c.openLocation(r);
+      await open(context, route);
+      if (mounted) await cubit.refreshDailyReviewContext();
+    } finally {
+      _navigating = false;
+    }
+  }
+
+  void _showOtherOptions() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.cardPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _suggestions(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -96,7 +144,25 @@ class _AdultTodayBudgetCardState extends State<AdultTodayBudgetCard> {
               code,
               key: const ValueKey('adult_today_error'),
             ),
-          if (minutes != null) ..._suggestions(),
+          if (widget.state.dailyReviewTask case final decision?) ...[
+            if (decision.status == DailyReviewTaskStatus.blockedByPriority &&
+                decision.suggestion != null)
+              AdultJourneySuggestionTile(
+                suggestion: decision.suggestion!,
+                skin: skin,
+                onOpen: _openerFor(decision.suggestion!),
+                onChangeTime: () => setState(() => _changingTime = true),
+              )
+            else
+              DailyReviewTaskCard(
+                decision: decision,
+                skin: skin,
+                onStart: () => _openDaily(decision),
+                onOtherOptions: _showOtherOptions,
+                onChangeTime: () => setState(() => _changingTime = true),
+              ),
+          ] else if (minutes != null)
+            ..._suggestions(),
         ],
       ),
     );

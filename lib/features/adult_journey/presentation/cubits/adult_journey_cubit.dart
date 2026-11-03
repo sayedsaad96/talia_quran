@@ -11,9 +11,11 @@ import '../../domain/entities/adult_journey_context.dart';
 import '../../domain/entities/adult_journey_preferences.dart';
 import '../../domain/entities/adult_journey_suggestion.dart';
 import '../../domain/entities/adult_journey_update.dart';
+import '../../domain/entities/daily_review_task.dart';
 import '../../domain/services/adult_journey_suggestion_policy.dart';
 import '../../domain/services/adult_local_date.dart';
 import '../../domain/services/adult_return_policy.dart';
+import '../../domain/services/daily_review_task_policy.dart';
 import '../adult_journey_safe_routes.dart';
 import 'adult_journey_state.dart';
 
@@ -43,6 +45,7 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     this._launchResolver,
     this._returnPolicy = const AdultReturnPolicy(),
     Stream<String>? preferenceChanges,
+    this._loadFreshContext,
   }) : _load = loadAdultJourney,
        _update = updateAdultJourney,
        _owner = owner,
@@ -60,6 +63,58 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
   final AdultJourneySuggestionPolicy _policy;
   final AdultJourneyLaunchResolver? _launchResolver;
   final AdultReturnPolicy _returnPolicy;
+  Future<AdultJourneyContext> Function()? _loadFreshContext;
+  final _dailyPolicy = const DailyReviewTaskPolicy();
+  bool _dailyLaunching = false;
+
+  /// Home supplies a fresh load; an absent loader fails closed.
+  void setDailyReviewContextLoader(
+    Future<AdultJourneyContext> Function()? loader,
+  ) {
+    _loadFreshContext = loader;
+  }
+
+  bool canNavigateDailyReview(String key) =>
+      !isClosed &&
+      state.isVisible &&
+      _stateOwner == _owner.currentOwnerId &&
+      state.localDate == _localDate() &&
+      state.dailyReviewTask?.decisionKey == key &&
+      _context?.isAdult == true;
+
+  bool canNavigateNoReviews(String expectedLocalDate) =>
+      !isClosed &&
+      state.isVisible &&
+      _stateOwner == _owner.currentOwnerId &&
+      state.localDate == expectedLocalDate &&
+      _localDate() == expectedLocalDate &&
+      state.dailyReviewTask?.status == DailyReviewTaskStatus.noReviews &&
+      _context?.isAdult == true;
+
+  bool _matchesDailyDecision(
+    DailyReviewTaskDecision? decision,
+    String? key,
+    String day,
+  ) =>
+      decision != null &&
+      decision.localDate == day &&
+      (key == null
+          ? decision.status == DailyReviewTaskStatus.noReviews
+          : decision.status == DailyReviewTaskStatus.ready &&
+                decision.decisionKey == key);
+  Future<void> refreshDailyReviewContext() async {
+    final loader = _loadFreshContext;
+    if (loader == null) return;
+    final owner = _syncOwner();
+    final epoch = _epoch;
+    try {
+      final fresh = await loader();
+      if (_isCurrent(owner, epoch)) await refreshContext(fresh);
+    } catch (error, stack) {
+      TaliaLogger.w('Daily review refresh failed', error, stack);
+    }
+  }
+
   late final StreamSubscription<void> _accountSub;
   StreamSubscription<String>? _preferencesSub;
   bool _launching = false;
@@ -202,6 +257,121 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
     return route;
   }
 
+  Future<String?> resolveDailyReviewLaunch({
+    required String expectedDecisionKey,
+  }) => _resolveDailyReviewLaunch(
+    expectedDecisionKey: expectedDecisionKey,
+    expectedLocalDate: state.localDate ?? '',
+  );
+
+  Future<String?> resolveNoReviewsLaunch({required String expectedLocalDate}) =>
+      _resolveDailyReviewLaunch(
+        expectedDecisionKey: null,
+        expectedLocalDate: expectedLocalDate,
+      );
+
+  Future<String?> _resolveDailyReviewLaunch({
+    required String? expectedDecisionKey,
+    required String expectedLocalDate,
+  }) async {
+    final owner = _syncOwner();
+    final loader = _loadFreshContext;
+    final original = state.dailyReviewTask;
+    if (_dailyLaunching ||
+        loader == null ||
+        state.isSaving ||
+        !state.isVisible ||
+        _stateOwner != owner ||
+        _localDate() != expectedLocalDate ||
+        state.localDate != expectedLocalDate ||
+        !_matchesDailyDecision(
+          original,
+          expectedDecisionKey,
+          expectedLocalDate,
+        )) {
+      return null;
+    }
+    final epoch = _epoch;
+    final visibility = _visibility;
+    final seq = _seq;
+    final day = _localDate();
+    _dailyLaunching = true;
+    try {
+      final fresh = await loader();
+      if (!_isCurrent(owner, epoch) ||
+          visibility != _visibility ||
+          seq != _seq ||
+          day != _localDate()) {
+        return null;
+      }
+      if (!fresh.isAdult || fresh.ownerId != owner) {
+        await refreshContext(fresh);
+        return null;
+      }
+      final loaded = await _load(owner);
+      if (!_isCurrent(owner, epoch) ||
+          visibility != _visibility ||
+          seq != _seq ||
+          day != _localDate()) {
+        return null;
+      }
+      if (loaded.status == AdultJourneyLoadStatus.unavailable ||
+          loaded.status == AdultJourneyLoadStatus.unsupported) {
+        _hide();
+        return null;
+      }
+      final freshNow = _withNow(fresh, _now());
+      final decision = _dailyPolicy.select(
+        context: freshNow,
+        preferences: loaded.preferences,
+      );
+      _context = freshNow;
+      _publish(loaded.preferences);
+      if (!_matchesDailyDecision(
+        decision,
+        expectedDecisionKey,
+        expectedLocalDate,
+      )) {
+        return null;
+      }
+      final suggestion =
+          decision.suggestion ??
+          const AdultJourneySuggestion(
+            launchKind: AdultJourneyLaunchKind.setupPlan,
+            reason: AdultJourneySuggestionReason.noReview,
+          );
+      final route = await resolveLaunch(suggestion);
+      if (!_isCurrent(owner, epoch) ||
+          visibility != _visibility ||
+          seq != _seq ||
+          day != _localDate() ||
+          !_matchesDailyDecision(
+            state.dailyReviewTask,
+            expectedDecisionKey,
+            expectedLocalDate,
+          )) {
+        return null;
+      }
+      return route;
+    } catch (error, stack) {
+      TaliaLogger.w('Daily review refresh failed', error, stack);
+      return null;
+    } finally {
+      _dailyLaunching = false;
+    }
+  }
+
+  AdultJourneyContext _withNow(AdultJourneyContext context, DateTime now) =>
+      AdultJourneyContext(
+        ownerId: context.ownerId,
+        isAdult: context.isAdult,
+        now: now,
+        actions: context.actions,
+        hasActiveAdultPlan: context.hasActiveAdultPlan,
+        hasAdultReviewRecords: context.hasAdultReviewRecords,
+        hasDueAdultReview: context.hasDueAdultReview,
+      );
+
   Future<void> _reload(String owner) async {
     final epoch = _epoch;
     final seq = ++_seq;
@@ -313,6 +483,15 @@ class AdultJourneyCubit extends Cubit<AdultJourneyState> {
         status: AdultJourneyStatus.ready,
         preferences: prefs,
         suggestions: suggestions,
+        dailyReviewTask:
+            budgetOn &&
+                context != null &&
+                _flags.isEnabled(AdultJourneyFeature.dailyReviewTask)
+            ? _dailyPolicy.select(
+                context: _withNow(context, now),
+                preferences: prefs,
+              )
+            : null,
         localDate: localDate,
         todayBudgetEnabled: budgetOn,
         setupInviteDue:

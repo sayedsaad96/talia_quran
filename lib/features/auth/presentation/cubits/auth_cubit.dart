@@ -25,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/identity/account_data_reset.dart';
 import '../../../../core/identity/account_data_barrier.dart';
 import '../../../../core/identity/account_deletion_marker.dart';
+import '../../../../core/identity/guest_store_ownership.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 
 import '../../../../core/error/app_failure.dart';
@@ -59,7 +60,9 @@ class AuthCubit extends Cubit<AuthState> {
     CloudSyncCoordinator? cloudSyncCoordinator,
 
     this._ayahNoteClaimer,
-  ]) : _cloudSyncCoordinator =
+    bool deferInitialSync = false,
+  ]) : _startupDeferred = deferInitialSync,
+       _cloudSyncCoordinator =
            cloudSyncCoordinator ??
            CloudSyncCoordinator(
              authRepository: _authRepository,
@@ -143,7 +146,9 @@ class AuthCubit extends Cubit<AuthState> {
 
     if (_deletionCleanupInProgress) {
       emit(const AuthAccountDeletionInProgress());
-      unawaited(_resumeDeletedAccountCleanup());
+      final cleanup = _resumeDeletedAccountCleanup();
+      _startupDeletionCleanup = cleanup;
+      unawaited(cleanup);
       return;
     }
 
@@ -164,6 +169,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> _runCloudSync() {
+    if (_startupDeferred) return Future<void>.value();
     final requestedOwnerId = _authRepository.currentUser?.id;
     final active = _syncInFlight;
     if (active != null && requestedOwnerId == _syncTailOwnerId) {
@@ -233,14 +239,69 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Local identity/cleanup only: reconciliation starts after migrations.
+  Future<void> prepareStartupOwner() async {
+    if (!_startupDeferred) return;
+    final deletion = _startupDeletionCleanup;
+    if (deletion != null) {
+      await deletion;
+      if (_pendingDeletionOperationOwnerId != null ||
+          state is AuthAccountDeletionCleanupFailed) {
+        throw const AccountDataUnavailableException();
+      }
+      return;
+    }
+    final userId = _authRepository.currentUser?.id;
+    if (userId == null) {
+      final prefs = _prefs;
+      if (prefs != null &&
+          !await GuestStoreOwnership(prefs).canRestoreGuest()) {
+        throw const AccountDataUnavailableException();
+      }
+      return;
+    }
+    await _handleAccountOwnerChange(userId: userId);
+    if (_authRepository.currentUser?.id != userId) {
+      throw const AccountDataUnavailableException();
+    }
+  }
+
+  void activateAfterStartup() {
+    if (!_startupDeferred) return;
+    _startupDeferred = false;
+    if (_startupDeletionCleanup == null &&
+        !_deletionCleanupInProgress &&
+        _authRepository.currentUser != null) {
+      unawaited(_runCloudSync());
+    }
+  }
+
+  bool _startupDeferred;
+  Future<void>? _startupDeletionCleanup;
+
   static const lastSignedInUserIdKey = 'auth_last_signed_in_user_id';
   Object? _ownerReadyFailure;
   bool _requiresOwnerCleanup(String ownerId) {
-    final previous = _prefs?.getString(lastSignedInUserIdKey);
+    final prefs = _prefs;
+    final previous = prefs?.getString(lastSignedInUserIdKey);
+    if (prefs != null) {
+      final barrier = AccountDataBarrier.forPreferences(prefs);
+      final pending = prefs.get(GuestStoreOwnership.pendingKey);
+      final ownershipProven =
+          prefs.get(GuestStoreOwnership.accountKey) == true &&
+          !prefs.containsKey(GuestStoreOwnership.cleanKey) &&
+          (pending == null || pending == false);
+      if (!ownershipProven && barrier.isReady) {
+        // Block account-owned writers synchronously before publishing a
+        // cached session; the async marker write completes before readiness.
+        barrier.prepareOwner(ownerId);
+        return true;
+      }
+    }
     return _ownerReadyFailure != null ||
-        (_prefs != null &&
+        (prefs != null &&
             (previous != ownerId ||
-                !AccountDataBarrier.forPreferences(_prefs).isReady));
+                !AccountDataBarrier.forPreferences(prefs).isReady));
   }
 
   /// Decides whether [userId] is a different account than the one last seen on
@@ -289,13 +350,25 @@ class AuthCubit extends Cubit<AuthState> {
     final reset = _accountDataReset;
     if (prefs == null || reset == null || userId == null) return;
     final barrier = AccountDataBarrier.forPreferences(prefs);
-    if (prefs.getString(lastSignedInUserIdKey) == userId &&
-        _ownerReadyFailure == null &&
-        barrier.isReady) {
-      return;
-    }
-    barrier.prepareOwner(userId);
     try {
+      if (prefs.getString(lastSignedInUserIdKey) == userId &&
+          _ownerReadyFailure == null &&
+          barrier.isReady) {
+        final generation = barrier.generation;
+        await GuestStoreOwnership(prefs).markAccountActive();
+        if (barrier.generation != generation ||
+            !barrier.isReady ||
+            _authRepository.currentUser?.id != userId) {
+          throw const AccountDataUnavailableException();
+        }
+        return;
+      }
+      barrier.prepareOwner(userId);
+      if (prefs.get(GuestStoreOwnership.pendingKey) == true) {
+        await reset.clearAccountOwnedData(
+          departingOwnerId: prefs.getString(lastSignedInUserIdKey) ?? userId,
+        );
+      }
       await reset.clearAccountWidget();
       final switched = await resolveOwnerChange(
         prefs: prefs,
@@ -405,17 +478,16 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> _resumeDeletedAccountCleanup() async {
     final prefs = _prefs;
-    final requested = prefs != null &&
-        AccountDeletionMarker.stage(prefs) == AccountDeletionMarker.requestedStage;
+    final requested =
+        prefs != null &&
+        AccountDeletionMarker.stage(prefs) ==
+            AccountDeletionMarker.requestedStage;
     final result = requested
         ? await _authRepository.deleteAccount()
         : await _authRepository.resumeDeletedAccountCleanup();
     if (isClosed) return;
     _deletionCleanupInProgress = _pendingDeletionOperationOwnerId != null;
-    result.fold(
-      _emitDeletionFailure,
-      (_) => emit(const AuthAccountDeleted()),
-    );
+    result.fold(_emitDeletionFailure, (_) => emit(const AuthAccountDeleted()));
   }
 
   void _emitDeletionFailure(Failure failure) {

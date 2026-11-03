@@ -37,6 +37,9 @@ import '../../data/services/quran_warmup_service.dart';
 import '../widgets/app_quran_page_view.dart';
 import '../widgets/audio_downloads_access.dart';
 import '../widgets/ayah_options_sheet.dart';
+import '../../../quran_study/presentation/widgets/reader_study_access.dart';
+import '../../../quran_study/presentation/widgets/reader_study_selection_guard.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../widgets/long_press_hint_banner.dart';
 import '../widgets/quick_navigation_sheet.dart';
 import '../widgets/quran_page_font_guard.dart';
@@ -204,6 +207,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
   // Keep these for internal logic that doesn't need to trigger UI rebuild.
   int? _currentPageNumber;
+  final _studySelection = ReaderStudySelectionGuard();
   bool _hasNavigatedToCompletion = false;
   bool _hasShownWirdClosingMoment = false;
 
@@ -318,6 +322,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
   @override
   void dispose() {
+    _studySelection.invalidate();
     WidgetsBinding.instance.removeObserver(this);
     getIt<BookmarkService>().removeListener(_onBookmarksChanged);
     _khatmahCubit?.unwatchCalendar();
@@ -354,6 +359,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   }
 
   void _openAtPage(int pageNumber) {
+    _studySelection.invalidate();
+    _selectedAyah = null;
     _currentPageNumber = pageNumber;
     _currentPageNotifier.value = pageNumber;
     if (_pageController == null) {
@@ -398,6 +405,13 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
   void _saveCurrentPage(int pageNumber) {
     if (widget.readerMode == QuranReaderMode.khatmah) return;
+    unawaited(
+      getIt<AppSessionService>()
+          .saveCurrentQuranCheckpoint(_normalizePageNumber(pageNumber))
+          .catchError((Object error, StackTrace stack) {
+            TaliaLogger.w('Quran checkpoint save failed', error, stack);
+          }),
+    );
     unawaited(
       getIt<AppSessionService>().saveLocation(
         '/quran/page/${_normalizePageNumber(pageNumber)}',
@@ -705,15 +719,30 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     int verseNumber,
     LongPressStartDetails _,
   ) async {
+    final currentPage = _currentPageNumber;
+    if (currentPage == null) return;
+    final token = _studySelection.begin(currentPage);
+    bool current() =>
+        mounted &&
+        context.mounted &&
+        _studySelection.isCurrent(token, currentPage: _currentPageNumber);
     final audioCubit = context.read<QuranAudioPlayerCubit>();
 
     // Fire-and-forget: opening the sheet must not wait on the platform
     // haptic channel (it may reply late, or never under test).
     unawaited(HapticFeedback.lightImpact());
-    final ayah = await _resolveAyah(surahNumber, verseNumber);
-    if (!mounted || !context.mounted || ayah == null) return;
-    final canReview = await _hasAdultReviewRecord(surahNumber, verseNumber);
-    if (!mounted || !context.mounted) return;
+    final ayah = await _studySelection.resolve(
+      token,
+      _resolveAyah(surahNumber, verseNumber),
+      currentPage: () => _currentPageNumber,
+    );
+    if (!current() || ayah == null) return;
+    final canReview = await _studySelection.resolve(
+      token,
+      _hasAdultReviewRecord(surahNumber, verseNumber),
+      currentPage: () => _currentPageNumber,
+    );
+    if (!mounted || !context.mounted || !current() || canReview == null) return;
 
     setState(() => _selectedAyah = (surah: surahNumber, ayah: verseNumber));
     await showModalBottomSheet(
@@ -724,12 +753,21 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         value: audioCubit,
         child: AyahOptionsSheet(
           ayah: ayah,
+          onStudy: readerStudyAvailable()
+              ? () {
+                  if (current()) {
+                    unawaited(
+                      showReaderStudy(context, surahNumber, verseNumber),
+                    );
+                  }
+                }
+              : null,
           surahName: qcf.getSurahNameArabic(surahNumber),
           showReviewNow: canReview,
         ),
       ),
     );
-    if (mounted) setState(() => _selectedAyah = null);
+    if (current()) setState(() => _selectedAyah = null);
   }
 
   /// Opens the Quick Navigation sheet. The last-read position is resolved
@@ -881,7 +919,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
 
             // Audio highlights — isolated BlocBuilder so only the PageView
             // highlights list changes, not the full Scaffold.
-            Widget audioLayer() => BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
+            Widget
+            audioLayer() => BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
               builder: (context, audioState) {
                 final isAudioActive =
                     audioState.hasActiveAudio &&
@@ -900,7 +939,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           page: audioState.currentPageNumber!,
                         )
                       : null,
-                  selected: _selectedAyah ??
+                  selected:
+                      _selectedAyah ??
                       validatedInitialTargetForPage(
                         detail: detail,
                         target: widget.initialTarget,
@@ -928,6 +968,8 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                               isTajweed: _tajweed,
                               pageBackgroundColor: bg,
                               onPageChanged: (page) {
+                                _studySelection.invalidate();
+                                _selectedAyah = null;
                                 HapticFeedback.selectionClick();
                                 // Only update notifier — no setState = no
                                 // Scaffold rebuild during page turn animation.
@@ -975,44 +1017,69 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                               context.go('/');
                                             }
                                           },
-                                          onOpenMenu: () =>
-                                              ReaderOverflowSheet.show(
-                                                context,
-                                                onDownload: firstAyah != null &&
-                                                    _audioDownloadsAllowed
-                                                    ? () => context.push('/quran/downloads?surah=${firstAyah.surahId}')
-                                                    : null,
-                                                onOpenNavigation: () =>
-                                                    _openQuickNav(
-                                                      context,
-                                                      pageNumber,
-                                                    ),
-                                                tajweedEnabled: _tajweed,
-                                                onTajweedChanged: _setTajweed,
-                                                strengthOverlayEnabled:
-                                                    _strengthCubit
-                                                        ?.state
-                                                        .enabled,
-                                                onStrengthOverlayChanged:
-                                                    _strengthCubit == null
-                                                    ? null
-                                                    : (on) {
-                                                        _strengthLegendDismissed
-                                                                .value =
-                                                            false;
-                                                        unawaited(
-                                                          _strengthCubit!
-                                                              .setEnabled(on),
+                                          onOpenMenu: () => ReaderOverflowSheet.show(
+                                            context,
+                                            onStudy: readerStudyAvailable()
+                                                ? () {
+                                                    final page =
+                                                        _currentPageNumber;
+                                                    if (page == null) return;
+                                                    final token =
+                                                        _studySelection.begin(
+                                                          page,
                                                         );
-                                                      },
-                                                onEnterFocus: () {
-                                                  HapticFeedback.selectionClick();
-                                                  _isFocusModeNotifier.value =
-                                                      true;
-                                                },
-                                              ),
+                                                    unawaited(
+                                                      chooseReaderStudyAyah(
+                                                        context,
+                                                        page,
+                                                        isCurrent: () =>
+                                                            mounted &&
+                                                            _studySelection
+                                                                .isCurrent(
+                                                                  token,
+                                                                  currentPage:
+                                                                      _currentPageNumber,
+                                                                ),
+                                                      ),
+                                                    );
+                                                  }
+                                                : null,
+                                            onDownload:
+                                                firstAyah != null &&
+                                                    _audioDownloadsAllowed
+                                                ? () => context.push(
+                                                    '/quran/downloads?surah=${firstAyah.surahId}',
+                                                  )
+                                                : null,
+                                            onOpenNavigation: () =>
+                                                _openQuickNav(
+                                                  context,
+                                                  pageNumber,
+                                                ),
+                                            tajweedEnabled: _tajweed,
+                                            onTajweedChanged: _setTajweed,
+                                            strengthOverlayEnabled:
+                                                _strengthCubit?.state.enabled,
+                                            onStrengthOverlayChanged:
+                                                _strengthCubit == null
+                                                ? null
+                                                : (on) {
+                                                    _strengthLegendDismissed
+                                                            .value =
+                                                        false;
+                                                    unawaited(
+                                                      _strengthCubit!
+                                                          .setEnabled(on),
+                                                    );
+                                                  },
+                                            onEnterFocus: () {
+                                              HapticFeedback.selectionClick();
+                                              _isFocusModeNotifier.value = true;
+                                            },
+                                          ),
                                         ),
-                                        if (_strengthCubit?.state.enabled ?? false)
+                                        if (_strengthCubit?.state.enabled ??
+                                            false)
                                           ValueListenableBuilder<bool>(
                                             valueListenable:
                                                 _strengthLegendDismissed,

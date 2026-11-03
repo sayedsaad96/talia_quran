@@ -9115,18 +9115,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupIncludes =>
-      'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل، والملاحظات الشخصية';
+      'يشمل الإصدار 5: الحفظ والمراجعة والختمة والقراءة والسلاسل والنقاط وتقدم الأذكار والطفل والملاحظات، والعلامات المرجعية وموضع المصحف المحفوظ لهذا المستخدم.';
 
   @override
   String get backupExcludes =>
-      'لا يشمل: العلامات المرجعية، إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر';
+      'لا يشمل: إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر، ومفاتيح الحساب.';
 
   @override
   String get backupConfirmTitle => 'استبدال البيانات الحالية؟';
 
   @override
   String get backupConfirmBody =>
-      'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف. النسخة من الإصدار 1 لا تحتوي ملاحظات شخصية وستمسح ملاحظاتك الحالية.';
+      'ستستبدل بيانات الملف المجالات التي يحتويها على هذا الجهاز. المجالات غير الموجودة في النسخ الأقدم تبقى محفوظة؛ مثل الملاحظات في الإصدار 1 والعلامات وموضع القراءة قبل الإصدار 5.';
 
   @override
   String get backupConfirm => 'استبدال';
@@ -9138,6 +9138,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get backupErrorNewer =>
       'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.';
+
+  @override
+  String get backupErrorProtection =>
+      'تعذّر تجهيز نسخة أمان قبل الاستعادة، فلم يتغيّر شيء من بياناتك. أفرغ مساحة على الجهاز أو أعد المحاولة.';
+
+  @override
+  String get backupErrorRecoveryBlocked =>
+      'تعذّر إكمال استعادة سابقة. أعد تشغيل التطبيق قبل محاولة استعادة أخرى.';
 
   @override
   String get backupErrorCorrupt => 'الملف تالف ولا يمكن استعادته.';
@@ -10239,4 +10247,217 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationSeasonMonThu =>
       'تذكير: غدًا يوم من أيام صيام النافلة الأسبوعية';
+
+  @override
+  String get ayahStudyAction => 'فهم الآية';
+
+  @override
+  String get ayahStudyTafsir => 'التفسير';
+
+  @override
+  String get ayahStudyTranslation => 'ترجمة المعاني';
+
+  @override
+  String get ayahStudyUnavailable =>
+      'محتوى الفهم المعتمد غير متاح حاليًا. يمكنك متابعة القراءة.';
+
+  @override
+  String get ayahStudyInvalid =>
+      'تعذّر عرض المحتوى لهذه الآية. يمكنك متابعة القراءة.';
+
+  @override
+  String get ayahStudyLoading => 'جارٍ تحميل المحتوى';
+
+  @override
+  String get ayahStudySource => 'المصدر والإصدار';
+
+  @override
+  String get ayahStudyFootnotes => 'الحواشي';
+
+  @override
+  String get ayahStudyCopyReport => 'نسخ مرجع للإبلاغ عن ملاحظة';
+
+  @override
+  String get ayahStudyCopied => 'تم نسخ المرجع';
+
+  @override
+  String get ayahStudySelectAyah => 'اختر آية لفهم معناها';
+
+  @override
+  String get dailyReviewNoReviews =>
+      'لا توجد مراجعات بعد. ابدأ بإعداد خطة الحفظ.';
+
+  @override
+  String get dailyReviewNoDue => 'لا توجد مراجعات مستحقة الآن.';
+
+  @override
+  String get dailyReviewUnavailable =>
+      'تعذّر تحديث المراجعات. افتح مركز الحفظ للمراجعة.';
+
+  @override
+  String get dailyReviewOtherOptions => 'خيارات أخرى';
+
+  @override
+  String get dailyReviewContinue => 'متابعة المهمة';
+
+  @override
+  String get checkpointSync => 'مزامنة موضع القراءة';
+
+  @override
+  String checkpointChoose(int localPage, int cloudPage) {
+    return 'يوجد موضعان مختلفان: صفحة $localPage على هذا الجهاز وصفحة $cloudPage للحساب. اختر الموضع الذي تريد متابعته.';
+  }
+
+  @override
+  String get checkpointKeepLocal => 'متابعة موضع هذا الجهاز';
+
+  @override
+  String get checkpointUseCloud => 'استخدام موضع الحساب';
+
+  @override
+  String get protectionTitle => 'حماية بياناتي';
+
+  @override
+  String get protectionOnDevice => 'محفوظ على هذا الجهاز';
+
+  @override
+  String get protectionUnknown => 'لم يتم التحقق من الحفظ السحابي';
+
+  @override
+  String get protectionPending => 'توجد تغييرات تنتظر المزامنة';
+
+  @override
+  String get protectionSynced => 'تمت المزامنة';
+
+  @override
+  String get protectionFailed => 'تعذّرت المزامنة';
+
+  @override
+  String get protectionProgress => 'تقدم القراءة';
+
+  @override
+  String get protectionReview => 'الحفظ والمراجعة';
+
+  @override
+  String get protectionBookmarks => 'العلامات المرجعية';
+
+  @override
+  String get protectionCheckpoint => 'موضع متابعة القراءة';
+
+  @override
+  String get protectionLastSuccess => 'آخر نجاح مؤكد';
+
+  @override
+  String get protectionPendingCount => 'التغييرات المعلقة';
+
+  @override
+  String get protectionImportScope =>
+      'استعادة الحساب من الملف تضيف العلامات الجديدة وموضع قراءة تختاره فقط. تقدم الحفظ والنقاط يستعادان عبر مزامنة الحساب.';
+
+  @override
+  String get backupUnencryptedWarning =>
+      'ملف النسخة الاحتياطية غير مشفر وقد يحتوي على ملاحظاتك وتقدمك. احفظه في مكان خاص ولا تشاركه إلا مع من تثق به.';
+
+  @override
+  String get backupRestoreNotReady =>
+      'استبدال بيانات الجهاز من ملف متوقف مؤقتًا لحماية تقدمك أثناء استكمال التحقق من التعافي. يمكنك تصدير نسخة والاحتفاظ بها.';
+
+  @override
+  String get backupPortableImport => 'استيراد العلامات وموضع القراءة';
+
+  @override
+  String get backupPortableConfirm => 'استيراد الإضافات المختارة';
+
+  @override
+  String get backupPortablePreview => 'راجع الإضافات قبل الاستيراد';
+
+  @override
+  String get backupPortableCheckpoint => 'استعادة موضع القراءة من الملف';
+
+  @override
+  String backupPortablePartial(int added) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other:
+          'أُضيفت $added من العلامات، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
+      one:
+          'أُضيفت علامة واحدة، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
+      zero:
+          'لم تُضف علامات جديدة، وتعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupPortableStale =>
+      'تغيرت البيانات أو الحساب. افتح الملف مجددًا لمراجعة الإضافات.';
+
+  @override
+  String backupPortableSummary(
+    int added,
+    int existing,
+    int deleted,
+    int invalid,
+  ) {
+    return 'علامات جديدة: $added، موجودة: $existing، محذوفة سابقًا: $deleted، غير صالحة: $invalid';
+  }
+
+  @override
+  String get backupMaintenanceRestart =>
+      'تم تجهيز الطلب. أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه. ستختار ملف النسخة وتؤكد الاستبدال عند بدء التشغيل. لن تتغير بياناتك الآن.';
+
+  @override
+  String get backupMaintenanceTitle => 'استعادة آمنة';
+
+  @override
+  String get backupMaintenanceContinue => 'المتابعة إلى التطبيق';
+
+  @override
+  String get backupMaintenanceBody =>
+      'تعمل الاستعادة قبل فتح بيانات التقدم والمزامنة. اختر الملف وراجعه ثم أكد الاستبدال. يمكنك المتابعة إلى التطبيق لإلغاء الطلب.';
+
+  @override
+  String get backupMaintenanceUnavailable =>
+      'الاستعادة غير متاحة لهذه البيانات أو لهذا الإصدار. يمكنك المتابعة إلى التطبيق.';
+
+  @override
+  String get backupMaintenancePin => 'رمز ولي الأمر';
+
+  @override
+  String get backupMaintenanceFinished =>
+      'انتهى هذا الطلب. للبدء مجددًا، تابع إلى التطبيق وأنشئ طلبًا جديدًا.';
+
+  @override
+  String get backupMaintenanceBusy =>
+      'البيانات مستخدمة الآن. أعد المحاولة بعد قليل. إذا استمر ذلك، أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه.';
+
+  @override
+  String get backupMaintenanceSchedule => 'تجهيز الاستعادة عند بدء التطبيق';
+
+  @override
+  String get backupMaintenancePinRejected =>
+      'تعذر التحقق من الرمز. انتظر قليلًا ثم أعد المحاولة.';
+
+  @override
+  String get retainedAccountRecoveryTitle => 'استعادة حسابك';
+
+  @override
+  String get retainedAccountRecoveryBody =>
+      'لا تزال بعض بيانات الحساب محفوظة على هذا الجهاز ولا تظهر للضيف. سجّل الدخول إلى الحساب نفسه للمتابعة وحماية التغييرات التي لم تُزامن بعد.';
+
+  @override
+  String get retainedAccountRecoveryWrongAccount => 'هذا ليس الحساب السابق.';
+
+  @override
+  String get retainedAccountRecoveryFailed =>
+      'تعذرت الاستعادة. تحقق من بياناتك وحاول مجددًا.';
+
+  @override
+  String get retainedAccountRecoveryUnavailable =>
+      'استعادة الحساب غير متاحة الآن. حاول مرة أخرى لاحقًا.';
+
+  @override
+  String get retainedAccountRecoveryUnknownOwner =>
+      'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.';
 }

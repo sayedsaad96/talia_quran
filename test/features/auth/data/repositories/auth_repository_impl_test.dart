@@ -7,6 +7,7 @@ import 'package:isar_community/isar.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
@@ -30,8 +31,16 @@ import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
 import '../../../../helpers/isar_test_core.dart';
 
-
 Future<void> _initializeIsarCoreForTests() => initializeIsarCoreForTests();
+
+class _RejectAccountOwnershipStore extends InMemorySharedPreferencesStore {
+  _RejectAccountOwnershipStore(super.data) : super.withData();
+  @override
+  Future<bool> setValue(String type, String key, Object value) async {
+    if (key.endsWith('restore_account_state_v1')) return false;
+    return super.setValue(type, key, value);
+  }
+}
 
 void main() {
   group('AuthRepositoryImpl offline auth behavior', () {
@@ -446,6 +455,92 @@ void main() {
         expect(prefs.getString('bookmarks'), 'local-bookmarks');
         expect(prefs.getString('theme_mode'), 'dark');
         expect(prefs.getString('locale'), 'ar');
+      },
+    );
+
+    test(
+      'normal SDK sign-out invalidates guest proof before session clears',
+      () async {
+        await prefs.setBool('restore_guest_clean_v1', true);
+        final logoutStarted = Completer<void>();
+        final allowLogout = Completer<void>();
+        late SupabaseClient client;
+        client = SupabaseClient(
+          'https://example.test',
+          'anon-key',
+          httpClient: MockClient((request) async {
+            if (request.url.path.endsWith('/token')) {
+              return http.Response(
+                '{"access_token":"eyJhbGciOiJub25lIn0.eyJzdWIiOiJvd25lci1hIiwic2Vzc2lvbl9pZCI6InNlc3Npb24tYSJ9.","refresh_token":"refresh","expires_in":3600,"token_type":"bearer","user":{"id":"owner-a","email":"a@example.test"}}',
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (request.url.path.endsWith('/logout')) {
+              expect(client.auth.currentSession, isNull);
+              expect(prefs.getBool('restore_account_state_v1'), isTrue);
+              expect(prefs.containsKey('restore_guest_clean_v1'), isFalse);
+              logoutStarted.complete();
+              await allowLogout.future;
+            }
+            return http.Response('{}', 200);
+          }),
+        );
+        await client.auth.signInWithPassword(
+          email: 'a@example.test',
+          password: 'password',
+        );
+        final repo = AuthRepositoryImpl(
+          isar,
+          AccountDataReset(isar, prefs, documentsDirectory: () async => dir),
+          prefs,
+          client,
+        );
+        final signOut = repo.signOut();
+        await logoutStarted.future;
+        allowLogout.complete();
+        expect(await signOut, const Right(unit));
+      },
+    );
+
+    test(
+      'failed ownership marker prevents SDK from clearing the session',
+      () async {
+        final store = _RejectAccountOwnershipStore({
+          'flutter.restore_guest_clean_v1': true,
+        });
+        SharedPreferencesStorePlatform.instance = store;
+        SharedPreferences.resetStatic();
+        final deniedPrefs = await SharedPreferences.getInstance();
+        var logoutCalls = 0;
+        final client = SupabaseClient(
+          'https://example.test',
+          'anon-key',
+          httpClient: MockClient((request) async {
+            if (request.url.path.endsWith('/token')) {
+              return http.Response(
+                '{"access_token":"eyJhbGciOiJub25lIn0.eyJzdWIiOiJvd25lci1hIiwic2Vzc2lvbl9pZCI6InNlc3Npb24tYSJ9.","refresh_token":"refresh","expires_in":3600,"token_type":"bearer","user":{"id":"owner-a","email":"a@example.test"}}',
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (request.url.path.endsWith('/logout')) logoutCalls++;
+            return http.Response('{}', 200);
+          }),
+        );
+        await client.auth.signInWithPassword(
+          email: 'a@example.test',
+          password: 'password',
+        );
+        final repo = AuthRepositoryImpl(
+          isar,
+          AccountDataReset(isar, deniedPrefs),
+          deniedPrefs,
+          client,
+        );
+        expect((await repo.signOut()).isLeft(), isTrue);
+        expect(client.auth.currentSession, isNotNull);
+        expect(logoutCalls, 0);
       },
     );
 

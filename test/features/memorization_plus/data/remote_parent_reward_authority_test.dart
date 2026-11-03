@@ -96,7 +96,8 @@ void main() {
     final operation = service.requestStoredCloudParentReward(_cloud());
     await entered.future;
     await barrier.clear(() async {
-      await prefs.clear();
+      // Production reset removes account data, not the cleanup fence.
+      await prefs.remove('mem_plus_parent_rewards|child-a');
     });
     release.complete();
 

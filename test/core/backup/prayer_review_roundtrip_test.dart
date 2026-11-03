@@ -1,3 +1,4 @@
+import '../../helpers/restore_test_admission.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,7 @@ class _RejectingPreferences extends InMemorySharedPreferencesStore {
 }
 
 void main() {
+  setUpAll(initializeRestoreAdmissionForTests);
   late Directory directory;
   late Isar source;
   late Isar target;
@@ -71,6 +73,7 @@ void main() {
     target,
     prefs,
     const FixedRecordOwnerProvider('target-owner'),
+    maintenancePermit: testRestorePermit,
   ).restore(payload);
 
   setUpAll(initializeIsarCoreForTests);
@@ -209,28 +212,30 @@ void main() {
   });
 
   for (final version in [1, 2, 3]) {
-    test('v$version restore (no prayer sections) keeps every device receipt',
-        () async {
-      await seed(target, 'target-owner', day, 2);
-      await seed(target, 'target-owner', '2020-01-01', 1);
-      final current = await collect();
-      final legacy = BackupPayload(
-        schemaVersion: version,
-        createdAt: current.createdAt,
-        sections: {
-          for (final key in BackupSections.forVersion(version))
-            key: current.sections[key],
-        },
-      );
-      expect(await restore(legacy), BackupRestoreResult.restored);
-      final rows = await target.isarPrayerReviewReceipts.where().findAll();
-      expect(rows, hasLength(2));
-      expect(rows.singleWhere((r) => r.localDayKey == day).gradeIndex, 2);
-      expect(
-        rows.singleWhere((r) => r.localDayKey == '2020-01-01').gradeIndex,
-        1,
-      );
-    });
+    test(
+      'v$version restore (no prayer sections) keeps every device receipt',
+      () async {
+        await seed(target, 'target-owner', day, 2);
+        await seed(target, 'target-owner', '2020-01-01', 1);
+        final current = await collect();
+        final legacy = BackupPayload(
+          schemaVersion: version,
+          createdAt: current.createdAt,
+          sections: {
+            for (final key in BackupSections.forVersion(version))
+              key: current.sections[key],
+          },
+        );
+        expect(await restore(legacy), BackupRestoreResult.restored);
+        final rows = await target.isarPrayerReviewReceipts.where().findAll();
+        expect(rows, hasLength(2));
+        expect(rows.singleWhere((r) => r.localDayKey == day).gradeIndex, 2);
+        expect(
+          rows.singleWhere((r) => r.localDayKey == '2020-01-01').gradeIndex,
+          1,
+        );
+      },
+    );
   }
 
   test(

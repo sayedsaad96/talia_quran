@@ -1,4 +1,6 @@
 import 'package:isar_community/isar.dart';
+import 'dart:io' show Platform;
+import 'data_admission.dart';
 
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/home/data/models/activity_event_isar.dart';
@@ -42,7 +44,15 @@ final List<CollectionSchema<dynamic>> appIsarSchemas = [
 Future<Isar> openAppIsar({
   required String directory,
   String name = Isar.defaultName,
+  DataAdmissionPermit? admission,
 }) async {
+  if (Platform.isAndroid || admission != null) {
+    if (admission == null ||
+        admission.mode == DataAdmissionMode.probe ||
+        !await admission.validate()) {
+      throw StateError('Progress storage requires active data admission');
+    }
+  }
   return Isar.getInstance(name) ??
       Isar.open(appIsarSchemas, directory: directory, name: name);
 }

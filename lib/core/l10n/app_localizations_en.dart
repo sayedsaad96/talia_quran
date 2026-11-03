@@ -9095,18 +9095,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupIncludes =>
-      'Includes: memorization and review, khatmah, reading, streaks and XP, adhkar progress, the child\'s progress, and personal notes';
+      'Version 5 includes memorization, review, khatmah, reading, streaks and XP, adhkar and child progress, notes, bookmarks, and this user\'s saved Quran page.';
 
   @override
   String get backupExcludes =>
-      'Excludes: bookmarks, device settings and notifications, and the guardian PIN';
+      'Excludes device and notification settings, the guardian PIN, and account keys.';
 
   @override
   String get backupConfirmTitle => 'Replace current data?';
 
   @override
   String get backupConfirmBody =>
-      'Your current data on this device will be replaced by the file\'s data. A version 1 backup has no personal notes and will clear your current notes.';
+      'The file replaces the data domains it contains on this device. Domains absent from older versions are preserved, such as notes in version 1 and bookmarks and reading position before version 5.';
 
   @override
   String get backupConfirm => 'Replace';
@@ -9117,6 +9117,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupErrorNewer =>
       'This backup is from a newer app version. Update the app first.';
+
+  @override
+  String get backupErrorProtection =>
+      'A safety copy could not be prepared before restoring, so nothing was changed. Free up space on the device or try again.';
+
+  @override
+  String get backupErrorRecoveryBlocked =>
+      'A previous restore could not be completed. Restart the app before restoring again.';
 
   @override
   String get backupErrorCorrupt =>
@@ -10214,4 +10222,219 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSeasonMonThu =>
       'Reminder: tomorrow is a weekly voluntary-fast day';
+
+  @override
+  String get ayahStudyAction => 'Understand this ayah';
+
+  @override
+  String get ayahStudyTafsir => 'Tafsir';
+
+  @override
+  String get ayahStudyTranslation => 'Translation of meanings';
+
+  @override
+  String get ayahStudyUnavailable =>
+      'Approved study content is currently unavailable. You can continue reading.';
+
+  @override
+  String get ayahStudyInvalid =>
+      'This ayah’s study content could not be displayed. You can continue reading.';
+
+  @override
+  String get ayahStudyLoading => 'Loading study content';
+
+  @override
+  String get ayahStudySource => 'Source and edition';
+
+  @override
+  String get ayahStudyFootnotes => 'Footnotes';
+
+  @override
+  String get ayahStudyCopyReport => 'Copy a reference to report an issue';
+
+  @override
+  String get ayahStudyCopied => 'Reference copied';
+
+  @override
+  String get ayahStudySelectAyah => 'Choose an ayah to understand';
+
+  @override
+  String get dailyReviewNoReviews =>
+      'There are no reviews yet. Start by setting up a memorization plan.';
+
+  @override
+  String get dailyReviewNoDue => 'No reviews are due now.';
+
+  @override
+  String get dailyReviewUnavailable =>
+      'Reviews could not be refreshed. Open the memorization center to check.';
+
+  @override
+  String get dailyReviewOtherOptions => 'Other options';
+
+  @override
+  String get dailyReviewContinue => 'Continue task';
+
+  @override
+  String get checkpointSync => 'Sync reading position';
+
+  @override
+  String checkpointChoose(int localPage, int cloudPage) {
+    return 'There are two positions: page $localPage on this device and page $cloudPage for your account. Choose where to continue.';
+  }
+
+  @override
+  String get checkpointKeepLocal => 'Keep this device’s position';
+
+  @override
+  String get checkpointUseCloud => 'Use the account’s position';
+
+  @override
+  String get protectionTitle => 'Protect my data';
+
+  @override
+  String get protectionOnDevice => 'Saved on this device';
+
+  @override
+  String get protectionUnknown => 'Cloud protection has not been verified';
+
+  @override
+  String get protectionPending => 'Changes are waiting to sync';
+
+  @override
+  String get protectionSynced => 'Synced';
+
+  @override
+  String get protectionFailed => 'Sync failed';
+
+  @override
+  String get protectionProgress => 'Reading progress';
+
+  @override
+  String get protectionReview => 'Memorization and review';
+
+  @override
+  String get protectionBookmarks => 'Bookmarks';
+
+  @override
+  String get protectionCheckpoint => 'Continue reading position';
+
+  @override
+  String get protectionLastSuccess => 'Last confirmed success';
+
+  @override
+  String get protectionPendingCount => 'Pending changes';
+
+  @override
+  String get protectionImportScope =>
+      'Account file imports add new bookmarks and a reading position you select only. Memorization progress and points are recovered through account sync.';
+
+  @override
+  String get backupUnencryptedWarning =>
+      'The backup file is not encrypted and may contain your notes and progress. Keep it private and share it only with people you trust.';
+
+  @override
+  String get backupRestoreNotReady =>
+      'Full device replacement from a file is temporarily paused to protect your progress while recovery checks are completed. You can still export a backup and keep it.';
+
+  @override
+  String get backupPortableImport => 'Import bookmarks and reading position';
+
+  @override
+  String get backupPortableConfirm => 'Import selected additions';
+
+  @override
+  String get backupPortablePreview => 'Review additions before importing';
+
+  @override
+  String get backupPortableCheckpoint =>
+      'Restore the reading position from this file';
+
+  @override
+  String backupPortablePartial(int added) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other:
+          '$added bookmarks were added, but the reading position could not be saved. You can retry without duplicating them.',
+      one:
+          'One bookmark was added, but the reading position could not be saved. You can retry without duplicating it.',
+      zero:
+          'No new bookmarks were added, and the reading position could not be saved. You can retry.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupPortableStale =>
+      'The account or data changed. Open the file again to review additions.';
+
+  @override
+  String backupPortableSummary(
+    int added,
+    int existing,
+    int deleted,
+    int invalid,
+  ) {
+    return 'New: $added, existing: $existing, previously deleted: $deleted, invalid: $invalid';
+  }
+
+  @override
+  String get backupMaintenanceRestart =>
+      'The request is ready. Fully stop Talia from Android app info, then open it again. You will choose the backup and confirm replacement at startup. Your data has not changed.';
+
+  @override
+  String get backupMaintenanceTitle => 'Safe restore';
+
+  @override
+  String get backupMaintenanceContinue => 'Continue to the app';
+
+  @override
+  String get backupMaintenanceBody =>
+      'Restore runs before progress and sync start. Choose a file, review it, and confirm replacement. Continue to the app to cancel the request.';
+
+  @override
+  String get backupMaintenanceUnavailable =>
+      'Restore is unavailable for this data or release. You can continue to the app.';
+
+  @override
+  String get backupMaintenancePin => 'Guardian PIN';
+
+  @override
+  String get backupMaintenanceFinished =>
+      'This request has ended. Continue to the app to schedule a new request.';
+
+  @override
+  String get backupMaintenanceBusy =>
+      'Data is in use. Retry shortly. If this continues, fully stop Talia from Android app info, then open it again.';
+
+  @override
+  String get backupMaintenanceSchedule => 'Prepare restore at app startup';
+
+  @override
+  String get backupMaintenancePinRejected =>
+      'The PIN could not be verified. Wait briefly, then try again.';
+
+  @override
+  String get retainedAccountRecoveryTitle => 'Recover your account';
+
+  @override
+  String get retainedAccountRecoveryBody =>
+      'Some account data remains on this device and is not visible to a guest. Sign in to the same account to continue and protect any changes that have not synced.';
+
+  @override
+  String get retainedAccountRecoveryWrongAccount =>
+      'This is not the previous account.';
+
+  @override
+  String get retainedAccountRecoveryFailed =>
+      'We couldn\'t complete recovery. Check your details and try again.';
+
+  @override
+  String get retainedAccountRecoveryUnavailable =>
+      'Account recovery is unavailable right now. Please try again later.';
+
+  @override
+  String get retainedAccountRecoveryUnknownOwner =>
+      'We can\'t identify the previous account safely. Try again when the account becomes available.';
 }

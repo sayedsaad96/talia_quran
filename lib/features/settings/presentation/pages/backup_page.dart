@@ -1,15 +1,29 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/backup/backup_after_restore.dart';
 import '../../../../core/backup/backup_collector.dart';
 import '../../../../core/backup/backup_file_format.dart';
 import '../../../../core/backup/backup_restorer.dart';
+import '../../../../core/backup/backup_file_picker.dart';
+export '../../../../core/backup/backup_file_picker.dart'
+    show BackupFileTooLarge, readPickedBackup;
+import '../../../../core/backup/restore_request_store.dart';
+import '../../../../core/backup/portable_signed_in_import.dart';
+import '../../../../core/experience/experience_feature_flags.dart';
+import '../cubits/data_protection_cubit.dart';
+import '../widgets/data_protection_panel.dart';
+import '../widgets/portable_backup_import_button.dart';
+import '../widgets/reading_checkpoint_panel.dart';
+import '../widgets/cold_restore_request_button.dart';
+import '../../../../core/di/reading_checkpoint_injection.dart';
+import '../../../quran/presentation/cubits/reading_checkpoint_cubit.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -47,11 +61,6 @@ typedef BackupFilePicker = Future<List<int>?> Function();
 /// Asks for the guardian PIN when this device has one; false cancels.
 typedef BackupGuardianGate = Future<bool> Function(BuildContext context);
 
-/// The picked file is larger than [kBackupMaxBytes].
-class BackupFileTooLarge implements Exception {
-  const BackupFileTooLarge();
-}
-
 /// Writes [bytes] to [fileName] in [dir], hands the path to [share], and
 /// deletes the file afterwards (best effort) whether sharing succeeded or not.
 @visibleForTesting
@@ -81,19 +90,6 @@ Future<void> _shareBackupFile(String fileName, List<int> bytes) async =>
       bytes,
       (path) => SharePlus.instance.share(ShareParams(files: [XFile(path)])),
     );
-
-/// The picked file's bytes, or null when nothing was picked. The size is
-/// checked before reading, so an oversized file is never loaded.
-@visibleForTesting
-Future<List<int>?> readPickedBackup(PlatformFile? picked) async {
-  if (picked == null) return null;
-  final size = picked.lengthSync() ?? await picked.length();
-  if (size != null && size > kBackupMaxBytes) throw const BackupFileTooLarge();
-  return picked.readAsBytes();
-}
-
-Future<List<int>?> _pickBackupFile() async =>
-    readPickedBackup(await FilePicker.pickFile());
 
 /// Offers optional PIN verification when a PIN may exist.
 Future<bool> _guardianPinGate(BuildContext context) async {
@@ -178,7 +174,7 @@ class _BackupPageState extends State<BackupPage> {
     try {
       final List<int>? bytes;
       try {
-        bytes = await (widget.pickFile ?? _pickBackupFile)();
+        bytes = await (widget.pickFile ?? pickBackupFile)();
       } on BackupFileTooLarge {
         _snack(l10n.backupErrorInvalid);
         return;
@@ -230,6 +226,10 @@ class _BackupPageState extends State<BackupPage> {
           _snack(l10n.backupErrorInvalid);
         case BackupRestoreResult.writeFailed:
           _snack(l10n.errorUnknownMessage);
+        case BackupRestoreResult.protectionUnavailable:
+          _snack(l10n.backupErrorProtection);
+        case BackupRestoreResult.recoveryBlocked:
+          _snack(l10n.backupErrorRecoveryBlocked);
       }
     } catch (e, st) {
       TaliaLogger.w('Backup import failed', e, st);
@@ -250,8 +250,25 @@ class _BackupPageState extends State<BackupPage> {
     return SettingsSubpageScaffold(
       title: l10n.backupTitle,
       children: [
+        if (getIt.isRegistered<DataProtectionCubit>())
+          BlocProvider(
+            create: (_) => getIt<DataProtectionCubit>()..refresh(),
+            child: const DataProtectionPanel(),
+          ),
+        if (signedIn &&
+            checkpointCloudAvailable() &&
+            getIt.isRegistered<ReadingCheckpointCubit>())
+          BlocProvider(
+            create: (_) => getIt<ReadingCheckpointCubit>(),
+            child: const ReadingCheckpointPanel(),
+          ),
         Text(l10n.backupIncludes, style: subtle),
         Text(l10n.backupExcludes, style: subtle),
+        Text(l10n.backupUnencryptedWarning, style: subtle),
+        if (widget.restore == null &&
+            getIt.isRegistered<BackupRestorer>() &&
+            !getIt<BackupRestorer>().fullReplacementAllowed)
+          Text(l10n.backupRestoreNotReady, style: subtle),
         FilledButton(
           onPressed: _busy ? null : _export,
           child: Text(l10n.backupExport),
@@ -260,12 +277,40 @@ class _BackupPageState extends State<BackupPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             OutlinedButton(
-              onPressed: _busy || signedIn ? null : _import,
+              onPressed:
+                  _busy ||
+                      signedIn ||
+                      (widget.restore == null &&
+                          getIt.isRegistered<BackupRestorer>() &&
+                          !getIt<BackupRestorer>().fullReplacementAllowed)
+                  ? null
+                  : _import,
               child: Text(l10n.backupImport),
             ),
+            if (Platform.isAndroid &&
+                !signedIn &&
+                getIt.isRegistered<ExperienceFlags>() &&
+                getIt<ExperienceFlags>().isEnabled(
+                  ExperienceFeature.recoverableBackupRestore,
+                ) &&
+                getIt.isRegistered<SharedPreferences>())
+              ColdRestoreRequestButton(
+                requests: RestoreRequestStore(getIt<SharedPreferences>()),
+              ),
             if (signedIn) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(l10n.backupImportSignedIn, style: subtle),
+              if (getIt.isRegistered<PortableSignedInImporter>() &&
+                  getIt.isRegistered<ExperienceFlags>() &&
+                  getIt<ExperienceFlags>().isEnabled(
+                    ExperienceFeature.portableAccountImport,
+                  ))
+                PortableBackupImportButton(
+                  importer: getIt<PortableSignedInImporter>(),
+                  pickFile: widget.pickFile ?? pickBackupFile,
+                  guardianGate: widget.guardianGate ?? _guardianPinGate,
+                  signedIn: () => _signedIn,
+                ),
             ],
           ],
         ),

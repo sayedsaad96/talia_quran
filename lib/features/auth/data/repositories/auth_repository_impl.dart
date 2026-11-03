@@ -9,6 +9,7 @@ import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/identity/account_data_reset.dart';
 import '../../../../core/identity/account_deletion_marker.dart';
+import '../../../../core/identity/guest_store_ownership.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/sync/sync_acknowledgement.dart';
 import '../../../../core/utils/talia_logger.dart';
@@ -352,6 +353,13 @@ class AuthRepositoryImpl implements AuthRepository {
     bool preserveAccountData = false,
   }) async {
     try {
+      final prefs = _prefs;
+      if (prefs != null) {
+        // Deny cold guest restoration before the SDK can discard its session.
+        await GuestStoreOwnership(prefs).markAccountActive();
+      } else if (preserveAccountData || _isSupabaseInitialized) {
+        throw StateError('Cannot persist account ownership before sign-out');
+      }
       if (!_isSupabaseInitialized) {
         // A normal offline logout still clears account data. Forced logout
         // after a failed flush retains it under its existing owner scope.

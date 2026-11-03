@@ -295,7 +295,9 @@ void main() {
     final request = repository.requestParentReward('same-id');
     await source.entered.future;
     await barrier.clear(() async {
-      await prefs.clear();
+      // Model the scoped account reset, which must retain its durable
+      // cleanup fence while clearing account data.
+      await prefs.remove('mem_plus_parent_rewards|child-a');
       await source.saveParentRewards([ParentRewardModel.fromEntity(replacement)]);
     });
     source.release.complete();

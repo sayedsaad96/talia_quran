@@ -1,3 +1,4 @@
+import '../../helpers/restore_test_admission.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,7 @@ class _RejectingPreferenceStore extends InMemorySharedPreferencesStore {
 }
 
 void main() {
+  setUpAll(initializeRestoreAdmissionForTests);
   late Directory directory;
   late Isar source;
   late Isar target;
@@ -93,6 +95,7 @@ void main() {
         target,
         prefs,
         const FixedRecordOwnerProvider('owner-b'),
+        maintenancePermit: testRestorePermit,
       );
 
       expect(await restorer.restore(payload), BackupRestoreResult.restored);
@@ -108,7 +111,8 @@ void main() {
     },
   );
 
-  test('a v2 backup (no pairs section) keeps every owner''s pairs', () async {
+  test('a v2 backup (no pairs section) keeps every owner'
+      's pairs', () async {
     await seed(source, 'owner-a');
     final current = await collect();
     final v2 = BackupPayload(
@@ -126,6 +130,7 @@ void main() {
         target,
         prefs,
         const FixedRecordOwnerProvider('owner-b'),
+        maintenancePermit: testRestorePermit,
       ).restore(v2),
       BackupRestoreResult.restored,
     );
@@ -161,7 +166,7 @@ void main() {
       await seed(target, 'owner-b');
       final current = await collect();
       final malformed = BackupPayload(
-        schemaVersion: kBackupSchemaVersion,
+        schemaVersion: 4,
         createdAt: current.createdAt,
         sections: {
           ...current.sections,
@@ -184,6 +189,7 @@ void main() {
           target,
           prefs,
           const FixedRecordOwnerProvider('owner-b'),
+          maintenancePermit: testRestorePermit,
         ).restore(malformed),
         BackupRestoreResult.invalidSections,
       );
@@ -222,6 +228,7 @@ void main() {
           target,
           failingPrefs,
           const FixedRecordOwnerProvider('owner-b'),
+          maintenancePermit: testRestorePermit,
         ).restore(payload),
         BackupRestoreResult.writeFailed,
       );

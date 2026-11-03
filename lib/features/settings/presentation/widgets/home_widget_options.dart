@@ -10,6 +10,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/home_widget/home_widget_pin.dart';
 import '../../../../core/home_widget/home_widget_publisher.dart';
+import '../../../../core/home_widget/widget_preview_palette.dart';
 import '../../../../core/home_widget/widget_section_preferences.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -35,8 +36,7 @@ class _HomeWidgetOptionsState extends State<HomeWidgetOptions> {
 
   /// The pin sheet and the manual steps are Android launcher behavior.
   /// A test can still show them by passing [HomeWidgetOptions.pin].
-  bool get _visible =>
-      widget.pin != null || (!kIsWeb && Platform.isAndroid);
+  bool get _visible => widget.pin != null || (!kIsWeb && Platform.isAndroid);
 
   WidgetSectionPreferences? get _sections {
     final provided = widget.sections;
@@ -148,7 +148,8 @@ class _HomeWidgetOptionsState extends State<HomeWidgetOptions> {
             icon: TaliaIcons.mushaf,
             title: l10n.settingsHomeWidgetShowWird,
             value: sections.showWird,
-            onChanged: (value) => _setSection(() => sections.setShowWird(value)),
+            onChanged: (value) =>
+                _setSection(() => sections.setShowWird(value)),
           ),
         ],
       ],
@@ -170,10 +171,9 @@ class _WidgetPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final dark = context.isDark;
-    final background = dark ? const Color(0xFF15211C) : const Color(0xFFFCF8F2);
-    final primary = dark ? const Color(0xFFE6F3ED) : const Color(0xFF173B32);
-    final secondary = dark ? const Color(0xFFB7D0C6) : const Color(0xFF355C50);
+    final palette = HomeWidgetPreviewPalette.forBrightness(
+      Theme.of(context).brightness,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -186,8 +186,10 @@ class _WidgetPreview extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(20),
+            color: palette.background,
+            borderRadius: BorderRadius.circular(
+              HomeWidgetPreviewPalette.radius,
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -197,20 +199,26 @@ class _WidgetPreview extends StatelessWidget {
                 if (showPrayer)
                   Text(
                     l10n.settingsHomeWidgetPreviewPrayer,
-                    style: AppTypography.titleSmall.copyWith(color: primary),
+                    style: AppTypography.titleSmall.copyWith(
+                      color: palette.primary,
+                    ),
                   ),
                 if (showReviews) ...[
                   if (showPrayer) const SizedBox(height: 6),
                   Text(
                     l10n.settingsHomeWidgetPreviewReview,
-                    style: AppTypography.bodySmall.copyWith(color: secondary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: palette.secondary,
+                    ),
                   ),
                 ],
                 if (showWird) ...[
                   if (showPrayer || showReviews) const SizedBox(height: 6),
                   Text(
                     l10n.settingsHomeWidgetPreviewWird,
-                    style: AppTypography.bodySmall.copyWith(color: secondary),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: palette.secondary,
+                    ),
                   ),
                 ],
               ],

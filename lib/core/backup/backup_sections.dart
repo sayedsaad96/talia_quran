@@ -26,6 +26,7 @@ import '../constants/surah_names.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/review_record_identity.dart';
 import '../utils/talia_logger.dart';
+import 'portable_reading_data.dart';
 
 /// Section names of a versioned backup.
 abstract final class BackupSections {
@@ -39,6 +40,8 @@ abstract final class BackupSections {
   static const confusionPairs = 'confusionPairs';
   static const prayerReviewAssignments = 'prayerReviewAssignments';
   static const prayerReviewReceipts = 'prayerReviewReceipts';
+  static const bookmarks = 'bookmarks';
+  static const readingCheckpoint = 'readingCheckpoint';
 
   static const v1 = {
     reviewRecords,
@@ -51,12 +54,17 @@ abstract final class BackupSections {
   static const v2 = {...v1, ayahNotes};
   static const v3 = {...v2, confusionPairs};
   static const v4 = {...v3, prayerReviewAssignments, prayerReviewReceipts};
+  static const v5 = {...v4, bookmarks, readingCheckpoint};
+
+  /// Sections of the v4 layout, written when no portable reading adapter is
+  /// configured.
   static const all = v4;
   static Set<String> forVersion(int version) => switch (version) {
     1 => v1,
     2 => v2,
     3 => v3,
     4 => v4,
+    5 => v5,
     _ => throw const BackupSectionInvalid('schemaVersion'),
   };
 }
@@ -373,7 +381,9 @@ abstract final class BackupPreferencePolicy {
 
   static final Map<String, void Function(Object value)> _exactSpecs = {
     PrayerReviewLengths.baseKey: (value) {
-      if (value is! String) throw const BackupSectionInvalid('prayer review lengths');
+      if (value is! String) {
+        throw const BackupSectionInvalid('prayer review lengths');
+      }
       PrayerReviewLengths.decode(value);
     },
     'user_profile': _string(_mapOf(UserProfile.fromJson)),
@@ -943,7 +953,13 @@ abstract final class ConfusionPairBackupMapper {
   static IsarConfusionPair fromJson(Object? raw, String ownerId) {
     final map = _map(raw, 'confusionPair');
     const fields = {
-      'ownerId', 'audience', 'targetKey', 'otherKey', 'count', 'firstAt', 'lastAt',
+      'ownerId',
+      'audience',
+      'targetKey',
+      'otherKey',
+      'count',
+      'firstAt',
+      'lastAt',
     };
     if (map.length != fields.length || !fields.every(map.containsKey)) {
       throw const BackupSectionInvalid('confusionPair fields');
@@ -1002,6 +1018,8 @@ class ParsedBackupSections {
     required this.confusionPairs,
     required this.prayerAssignments,
     required this.prayerReceipts,
+    required this.bookmarks,
+    required this.readingCheckpoint,
     required this.prefs,
   });
 
@@ -1014,6 +1032,12 @@ class ParsedBackupSections {
   final List<IsarConfusionPair> confusionPairs;
   final List<IsarPrayerReviewAssignment> prayerAssignments;
   final List<IsarPrayerReviewReceipt> prayerReceipts;
+
+  /// Canonical bookmark references (v5; empty and uncarried before v5).
+  final List<PortableBookmark> bookmarks;
+
+  /// Ordinary reader page (v5; null when absent or uncarried).
+  final QuranReadingCheckpoint? readingCheckpoint;
 
   /// Real (rebound) key → typed value.
   final Map<String, Object> prefs;
@@ -1073,16 +1097,34 @@ class ParsedBackupSections {
       'confusionPairs',
     );
 
-    final assignments = schemaVersion < 4 ? <IsarPrayerReviewAssignment>[] : [
-      for (final row in _list(sections[BackupSections.prayerReviewAssignments], 'prayer assignments'))
-        PrayerReviewBackupMapper.assignmentFromJson(row, ownerId),
-    ];
-    final receipts = schemaVersion < 4 ? <IsarPrayerReviewReceipt>[] : [
-      for (final row in _list(sections[BackupSections.prayerReviewReceipts], 'prayer receipts'))
-        PrayerReviewBackupMapper.receiptFromJson(row, ownerId),
-    ];
+    final assignments = schemaVersion < 4
+        ? <IsarPrayerReviewAssignment>[]
+        : [
+            for (final row in _list(
+              sections[BackupSections.prayerReviewAssignments],
+              'prayer assignments',
+            ))
+              PrayerReviewBackupMapper.assignmentFromJson(row, ownerId),
+          ];
+    final receipts = schemaVersion < 4
+        ? <IsarPrayerReviewReceipt>[]
+        : [
+            for (final row in _list(
+              sections[BackupSections.prayerReviewReceipts],
+              'prayer receipts',
+            ))
+              PrayerReviewBackupMapper.receiptFromJson(row, ownerId),
+          ];
     _unique(assignments.map((r) => r.occurrenceKey), 'prayer assignments');
     _unique(receipts.map((r) => r.receiptKey), 'prayer receipts');
+
+    final bookmarks = schemaVersion < 5
+        ? <PortableBookmark>[]
+        : _bookmarks(sections[BackupSections.bookmarks]);
+    _unique(bookmarks.map((b) => '${b.surahId}:${b.ayahNumber}'), 'bookmarks');
+    final checkpoint = schemaVersion < 5
+        ? null
+        : _checkpoint(sections[BackupSections.readingCheckpoint]);
 
     final prefs = <String, Object>{};
     final rawPrefs = _map(sections[BackupSections.prefs], 'prefs');
@@ -1115,8 +1157,30 @@ class ParsedBackupSections {
       confusionPairs: pairs,
       prayerAssignments: assignments,
       prayerReceipts: receipts,
+      bookmarks: bookmarks,
+      readingCheckpoint: checkpoint,
       prefs: prefs,
     );
+  }
+
+  static List<PortableBookmark> _bookmarks(Object? raw) {
+    try {
+      return [
+        for (final row in _list(raw, 'bookmarks'))
+          PortableBookmark.fromJson(_map(row, 'bookmark')),
+      ];
+    } on PortableReadingDataException catch (e) {
+      throw BackupSectionInvalid('bookmarks: ${e.message}');
+    }
+  }
+
+  static QuranReadingCheckpoint? _checkpoint(Object? raw) {
+    if (raw == null) return null;
+    try {
+      return QuranReadingCheckpoint.fromJson(_map(raw, 'readingCheckpoint'));
+    } on PortableReadingDataException catch (e) {
+      throw BackupSectionInvalid('readingCheckpoint: ${e.message}');
+    }
   }
 
   static void _unique(Iterable<Object> keys, String what) {

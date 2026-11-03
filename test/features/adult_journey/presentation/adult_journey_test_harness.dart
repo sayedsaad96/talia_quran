@@ -22,11 +22,12 @@ class MockUpdateAdultJourney extends Mock implements UpdateAdultJourney {}
 final adultTestNow = DateTime(2026, 10, 13, 10);
 const adultTestToday = '2026-10-13';
 
-/// A real cubit over mocked use cases, with every flag on.
+/// A real cubit over mocked use cases, with legacy flags on.
 class AdultCubitFixture {
   AdultCubitFixture({
     AdultJourneyPreferences preferences = AdultJourneyPreferences.empty,
     this.ownerId = 'owner-a',
+    bool dailyReviewTask = false,
   }) {
     registerFallbackValue(const ClearAdultToday());
     when(
@@ -35,7 +36,11 @@ class AdultCubitFixture {
     cubit = AdultJourneyCubit(
       loadAdultJourney: load,
       updateAdultJourney: update,
-      flags: AdultJourneyFlags((_) => true),
+      flags: AdultJourneyFlags(
+        (key) => key == AdultJourneyFeature.dailyReviewTask.storageKey
+            ? dailyReviewTask
+            : true,
+      ),
       owner: _Owner(ownerId),
       accountChanges: const Stream<void>.empty(),
       now: () => adultTestNow,

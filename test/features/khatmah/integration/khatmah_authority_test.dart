@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/guest_store_ownership.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
@@ -126,6 +127,7 @@ void main() {
       () async {
         SharedPreferences.setMockInitialValues({
           'auth_last_signed_in_user_id': 'a',
+          if (!preserve) GuestStoreOwnership.cleanKey: true,
           if (preserve) 'khatmah_owner': 'a',
           if (preserve) 'khatmah_active_plan': 'private-a',
         });

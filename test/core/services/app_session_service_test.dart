@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/backup/portable_reading_data.dart';
+import 'package:talia_quran/core/identity/account_deletion_marker.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
 
 void main() {
@@ -52,7 +55,9 @@ void main() {
   test(
     'restores memorization routes when required query data exists',
     () async {
-      await service.saveLocation('/memorization-v2/session?surahId=2&startAyah=5');
+      await service.saveLocation(
+        '/memorization-v2/session?surahId=2&startAyah=5',
+      );
 
       expect(
         service.getLastRestorableLocation(),
@@ -117,19 +122,118 @@ void main() {
       expect(service.getDailyWirdLastCompletedPage(), 51);
     });
 
-    test('free reading elsewhere (Al-Kahf, going back) never moves it', () async {
-      await service.saveDailyWirdTarget(50, today);
-      await service.advanceDailyWird(50, now: today);
+    test(
+      'free reading elsewhere (Al-Kahf, going back) never moves it',
+      () async {
+        await service.saveDailyWirdTarget(50, today);
+        await service.advanceDailyWird(50, now: today);
 
-      expect(await service.advanceDailyWird(293, now: today), isFalse);
-      expect(await service.advanceDailyWird(12, now: today), isFalse);
-      expect(await service.advanceDailyWird(53, now: today), isFalse);
-      expect(service.getDailyWirdLastCompletedPage(), 50);
-    });
+        expect(await service.advanceDailyWird(293, now: today), isFalse);
+        expect(await service.advanceDailyWird(12, now: today), isFalse);
+        expect(await service.advanceDailyWird(53, now: today), isFalse);
+        expect(service.getDailyWirdLastCompletedPage(), 50);
+      },
+    );
 
     test('without a target for today nothing is advanced', () async {
       expect(await service.advanceDailyWird(10, now: today), isFalse);
       expect(service.getDailyWirdLastCompletedPage(), isNull);
+    });
+  });
+
+  group('Quran reading checkpoint export', () {
+    AppSessionService serviceFor(String ownerId) =>
+        AppSessionService(prefs, owner: FixedRecordOwnerProvider(ownerId));
+
+    test('exports the page saved under the active owner', () async {
+      final owner = serviceFor('a');
+      await owner.saveQuranCheckpoint(expectedOwnerId: 'a', pageNumber: 42);
+
+      final checkpoint = await owner.exportQuranCheckpoint(
+        expectedOwnerId: 'a',
+      );
+
+      expect(checkpoint, QuranReadingCheckpoint(pageNumber: 42));
+    });
+
+    test('exports null when the owner never saved a checkpoint', () async {
+      expect(
+        await serviceFor('a').exportQuranCheckpoint(expectedOwnerId: 'a'),
+        isNull,
+      );
+    });
+
+    test('does not turn a legacy route into an owner checkpoint', () async {
+      final owner = serviceFor('a');
+      await owner.saveLocation('/quran/page/42');
+      await owner.saveLocation('/quran/surah/2');
+
+      expect(await owner.exportQuranCheckpoint(expectedOwnerId: 'a'), isNull);
+    });
+
+    test('keeps checkpoints isolated per owner', () async {
+      await serviceFor(
+        'a',
+      ).saveQuranCheckpoint(expectedOwnerId: 'a', pageNumber: 42);
+
+      expect(
+        await serviceFor('b').exportQuranCheckpoint(expectedOwnerId: 'b'),
+        isNull,
+      );
+    });
+
+    test('refuses to export or save for a non-active owner', () async {
+      final owner = serviceFor('a');
+      await owner.saveQuranCheckpoint(expectedOwnerId: 'a', pageNumber: 42);
+
+      await expectLater(
+        owner.exportQuranCheckpoint(expectedOwnerId: 'b'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+      await expectLater(
+        owner.saveQuranCheckpoint(expectedOwnerId: 'b', pageNumber: 7),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+      expect(
+        (await owner.exportQuranCheckpoint(expectedOwnerId: 'a'))?.pageNumber,
+        42,
+      );
+    });
+
+    test('rejects pages outside 1..604 on save', () async {
+      final owner = serviceFor('a');
+      for (final page in [0, 605]) {
+        await expectLater(
+          owner.saveQuranCheckpoint(expectedOwnerId: 'a', pageNumber: page),
+          throwsA(isA<PortableReadingDataException>()),
+        );
+      }
+      expect(await owner.exportQuranCheckpoint(expectedOwnerId: 'a'), isNull);
+    });
+
+    test('fails instead of returning null for an unreadable value', () async {
+      await prefs.setInt('quran_reading_checkpoint_owner_a', 605);
+      await expectLater(
+        serviceFor('a').exportQuranCheckpoint(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+
+      await prefs.setString('quran_reading_checkpoint_owner_a', 'garbage');
+      await expectLater(
+        serviceFor('a').exportQuranCheckpoint(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
+    });
+
+    test('refuses an owner whose account deletion is pending', () async {
+      final owner = serviceFor('a');
+      await owner.saveQuranCheckpoint(expectedOwnerId: 'a', pageNumber: 42);
+      await AccountDeletionMarker.markRequested(prefs, 'a');
+
+      await expectLater(
+        owner.exportQuranCheckpoint(expectedOwnerId: 'a'),
+        throwsA(isA<PortableReadingDataException>()),
+      );
     });
   });
 

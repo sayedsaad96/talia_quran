@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/features/adult_journey/adult_journey_feature_flags.dart';
@@ -66,6 +68,7 @@ HomeLoaded _home({
   bool isKids = false,
   bool firstRun = false,
 }) => HomeLoaded(
+  accountAuthority: _homeAuthority(),
   progress: _progress,
   greeting: 'morning',
   activityStartDate: DateTime.utc(2026, 1, 1),
@@ -77,6 +80,9 @@ HomeLoaded _home({
 
 const _inviteTitle = 'Make your journey fit you';
 const _todayTitle = 'How much time do you have today?';
+
+AccountDataLease _homeAuthority() =>
+    AccountDataBarrier.forPreferences(getIt<SharedPreferences>()).capture();
 
 void main() {
   late MockLoadAdultJourney load;
@@ -99,6 +105,10 @@ void main() {
       () => load(any()),
     ).thenAnswer((_) async => AdultJourneyLoadResult.missing);
     const owner = FixedRecordOwnerProvider('owner-a');
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    getIt.registerSingleton<SharedPreferences>(prefs);
+    AccountDataBarrier.forPreferences(prefs).owner = owner;
     getIt.registerSingleton<RecordOwnerProvider>(owner);
     getIt.registerSingleton<AdultJourneyFlags>(
       AdultJourneyFlags((key) => flagValues[key]),
@@ -308,6 +318,7 @@ void main() {
       home.push(_home(firstRun: false));
       home.push(
         HomeLoaded(
+          accountAuthority: _homeAuthority(),
           progress: _progress,
           greeting: 'evening',
           activityStartDate: DateTime.utc(2026, 1, 1),
@@ -375,6 +386,7 @@ void main() {
       }
 
       HomeLoaded reloaded(String greeting) => HomeLoaded(
+        accountAuthority: _homeAuthority(),
         progress: _progress,
         greeting: greeting,
         activityStartDate: DateTime.utc(2026, 1, 1),

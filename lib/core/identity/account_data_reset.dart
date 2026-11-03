@@ -10,6 +10,7 @@ import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../services/audio_resume_store.dart';
 import 'record_owner_provider.dart';
+import 'pending_checkpoint_recovery_marker.dart';
 import 'account_data_barrier.dart';
 import 'pending_bookmark_recovery_marker.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
@@ -60,6 +61,7 @@ class AccountDataReset {
     Future<Directory> Function()? documentsDirectory,
     this._cancelAccountNotifications,
     this._clearHomeWidget,
+    this._abortRestoreForOwner,
   }) : _documentsDirectory =
            documentsDirectory ?? getApplicationDocumentsDirectory;
 
@@ -74,6 +76,10 @@ class AccountDataReset {
   final Future<Directory> Function() _documentsDirectory;
   final Future<void> Function()? _cancelAccountNotifications;
   final Future<void> Function()? _clearHomeWidget;
+
+  /// Records a durable cancel for an unfinished restore of the deleted
+  /// account, so recovery can never recreate its data.
+  final Future<void> Function(String ownerId)? _abortRestoreForOwner;
 
   Future<void> clearAccountWidget() async => _clearHomeWidget?.call();
 
@@ -140,6 +146,8 @@ class AccountDataReset {
     'mem_plus_',
     'hifz_',
     'quran_bookmarks_owner_',
+    // Owner-scoped ordinary reader page (portable reading checkpoint).
+    'quran_reading_checkpoint_owner_',
     // Day-scoped reading proof and its fixed ordinary-wird target.
     'daily_read_pages_',
     'daily_wird_target_',
@@ -201,6 +209,7 @@ class AccountDataReset {
     final widgetFailure = await _clearWidgetBounded();
     if (!preservePendingBookmarkRecovery && ownerId != null) {
       await PendingBookmarkRecoveryMarker.clear(_prefs, ownerId);
+      await PendingCheckpointRecoveryMarker.clear(_prefs, ownerId);
     }
     final protectedOwners = preservePendingBookmarkRecovery
         ? PendingBookmarkRecoveryMarker.ownerIds(_prefs)
@@ -233,6 +242,8 @@ class AccountDataReset {
     final widgetFailure = await _clearWidgetBounded();
     await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     await _audioResumeStore?.stopPlaybackForAccountReset();
+    await _abortRestoreForOwner?.call(ownerId);
+    await PendingCheckpointRecoveryMarker.clear(_prefs, ownerId);
     await _deleteBookmarksForOwner?.call(ownerId);
     await _cancelAccountNotifications?.call();
     await _clearParentPin(ownerId);
@@ -262,11 +273,15 @@ class AccountDataReset {
         return key == 'prayer_review_lengths|$ownerId';
       }
       if (key.startsWith('kids_encouragement_pending_seen_v1_')) {
-        return key == 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}';
+        return key ==
+            'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}';
       }
       if (key.startsWith('quran_bookmarks_owner_')) {
         return key == 'quran_bookmarks_owner_$ownerId' ||
             key == 'quran_bookmarks_owner_${ownerId}_migrated';
+      }
+      if (key.startsWith('quran_reading_checkpoint_owner_')) {
+        return key == 'quran_reading_checkpoint_owner_$ownerId';
       }
       // The kids streak and achievements are local-only, so a sign-out keeps
       // them for the account's return; a deleted account takes its own.
@@ -316,10 +331,16 @@ class AccountDataReset {
             .deleteAll();
       });
       await _runWhenCollectionSchemaAvailable(() async {
-        await _isar.isarPrayerReviewAssignments.filter().ownerIdEqualTo(ownerId).deleteAll();
+        await _isar.isarPrayerReviewAssignments
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .deleteAll();
       });
       await _runWhenCollectionSchemaAvailable(() async {
-        await _isar.isarPrayerReviewReceipts.filter().ownerIdEqualTo(ownerId).deleteAll();
+        await _isar.isarPrayerReviewReceipts
+            .filter()
+            .ownerIdEqualTo(ownerId)
+            .deleteAll();
       });
       // These legacy stores contain only the active, unscoped profile. They
       // must be erased, while explicitly owner-scoped records above survive.
@@ -371,10 +392,18 @@ class AccountDataReset {
     String? ownerId, {
     required bool preserve,
   }) async {
-    if (ownerId == null || preserve) return;
+    if (ownerId == null) return;
     final encrypted = _encryptedAccountPreferences;
-    await encrypted?.delete(ownerId, 'quran_bookmarks');
-    await encrypted?.delete(ownerId, 'quran_bookmarks_owner_$ownerId');
+    if (!preserve) {
+      await encrypted?.delete(ownerId, 'quran_bookmarks');
+      await encrypted?.delete(ownerId, 'quran_bookmarks_owner_$ownerId');
+    }
+    if (!PendingCheckpointRecoveryMarker.contains(_prefs, ownerId)) {
+      await encrypted?.delete(ownerId, 'reading_checkpoint_v1');
+      if (await encrypted?.read(ownerId, 'reading_checkpoint_v1') != null) {
+        throw const AccountDataResetException('Failed to erase checkpoint');
+      }
+    }
   }
 
   Future<void> _clearPreferences(Set<String> protectedOwners) async {
@@ -386,10 +415,20 @@ class AccountDataReset {
               clearedPreferencePrefixes.any(key.startsWith),
         )
         .where(
+          (key) =>
+              !key.startsWith('quran_reading_checkpoint_owner_') ||
+              !PendingCheckpointRecoveryMarker.contains(
+                _prefs,
+                key.substring('quran_reading_checkpoint_owner_'.length),
+              ),
+        )
+        .where(
           (key) => !protectedOwners.any(
-            (ownerId) => key.startsWith('quran_bookmarks_owner_$ownerId') ||
+            (ownerId) =>
+                key.startsWith('quran_bookmarks_owner_$ownerId') ||
                 key == 'prayer_review_lengths|$ownerId' ||
-                key == 'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}',
+                key ==
+                    'kids_encouragement_pending_seen_v1_${Uri.encodeComponent(ownerId)}',
           ),
         )
         .toList();
@@ -483,13 +522,15 @@ class AccountDataReset {
     await _runWhenCollectionSchemaAvailable(() async {
       final rows = await _isar.isarPrayerReviewAssignments.where().findAll();
       await _isar.isarPrayerReviewAssignments.deleteAll([
-        for (final row in rows) if (!protectedOwners.contains(row.ownerId)) row.id,
+        for (final row in rows)
+          if (!protectedOwners.contains(row.ownerId)) row.id,
       ]);
     });
     await _runWhenCollectionSchemaAvailable(() async {
       final rows = await _isar.isarPrayerReviewReceipts.where().findAll();
       await _isar.isarPrayerReviewReceipts.deleteAll([
-        for (final row in rows) if (!protectedOwners.contains(row.ownerId)) row.id,
+        for (final row in rows)
+          if (!protectedOwners.contains(row.ownerId)) row.id,
       ]);
     });
   }

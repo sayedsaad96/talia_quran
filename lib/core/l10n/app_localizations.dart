@@ -15235,13 +15235,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupIncludes.
   ///
   /// In ar, this message translates to:
-  /// **'يشمل: الحفظ والمراجعة، الختمة، القراءة، السلاسل والنقاط، تقدّم الأذكار، وتقدّم الطفل، والملاحظات الشخصية'**
+  /// **'يشمل الإصدار 5: الحفظ والمراجعة والختمة والقراءة والسلاسل والنقاط وتقدم الأذكار والطفل والملاحظات، والعلامات المرجعية وموضع المصحف المحفوظ لهذا المستخدم.'**
   String get backupIncludes;
 
   /// No description provided for @backupExcludes.
   ///
   /// In ar, this message translates to:
-  /// **'لا يشمل: العلامات المرجعية، إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر'**
+  /// **'لا يشمل: إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر، ومفاتيح الحساب.'**
   String get backupExcludes;
 
   /// No description provided for @backupConfirmTitle.
@@ -15253,7 +15253,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupConfirmBody.
   ///
   /// In ar, this message translates to:
-  /// **'ستُحذف بياناتك الحالية على هذا الجهاز وتحل محلها بيانات الملف. النسخة من الإصدار 1 لا تحتوي ملاحظات شخصية وستمسح ملاحظاتك الحالية.'**
+  /// **'ستستبدل بيانات الملف المجالات التي يحتويها على هذا الجهاز. المجالات غير الموجودة في النسخ الأقدم تبقى محفوظة؛ مثل الملاحظات في الإصدار 1 والعلامات وموضع القراءة قبل الإصدار 5.'**
   String get backupConfirmBody;
 
   /// No description provided for @backupConfirm.
@@ -15273,6 +15273,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.'**
   String get backupErrorNewer;
+
+  /// No description provided for @backupErrorProtection.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تجهيز نسخة أمان قبل الاستعادة، فلم يتغيّر شيء من بياناتك. أفرغ مساحة على الجهاز أو أعد المحاولة.'**
+  String get backupErrorProtection;
+
+  /// No description provided for @backupErrorRecoveryBlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إكمال استعادة سابقة. أعد تشغيل التطبيق قبل محاولة استعادة أخرى.'**
+  String get backupErrorRecoveryBlocked;
 
   /// No description provided for @backupErrorCorrupt.
   ///
@@ -17063,6 +17075,359 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تذكير: غدًا يوم من أيام صيام النافلة الأسبوعية'**
   String get notificationSeasonMonThu;
+
+  /// No description provided for @ayahStudyAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'فهم الآية'**
+  String get ayahStudyAction;
+
+  /// No description provided for @ayahStudyTafsir.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفسير'**
+  String get ayahStudyTafsir;
+
+  /// No description provided for @ayahStudyTranslation.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترجمة المعاني'**
+  String get ayahStudyTranslation;
+
+  /// No description provided for @ayahStudyUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'محتوى الفهم المعتمد غير متاح حاليًا. يمكنك متابعة القراءة.'**
+  String get ayahStudyUnavailable;
+
+  /// No description provided for @ayahStudyInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر عرض المحتوى لهذه الآية. يمكنك متابعة القراءة.'**
+  String get ayahStudyInvalid;
+
+  /// No description provided for @ayahStudyLoading.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ تحميل المحتوى'**
+  String get ayahStudyLoading;
+
+  /// No description provided for @ayahStudySource.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصدر والإصدار'**
+  String get ayahStudySource;
+
+  /// No description provided for @ayahStudyFootnotes.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحواشي'**
+  String get ayahStudyFootnotes;
+
+  /// No description provided for @ayahStudyCopyReport.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ مرجع للإبلاغ عن ملاحظة'**
+  String get ayahStudyCopyReport;
+
+  /// No description provided for @ayahStudyCopied.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ المرجع'**
+  String get ayahStudyCopied;
+
+  /// No description provided for @ayahStudySelectAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر آية لفهم معناها'**
+  String get ayahStudySelectAyah;
+
+  /// No description provided for @dailyReviewNoReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مراجعات بعد. ابدأ بإعداد خطة الحفظ.'**
+  String get dailyReviewNoReviews;
+
+  /// No description provided for @dailyReviewNoDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مراجعات مستحقة الآن.'**
+  String get dailyReviewNoDue;
+
+  /// No description provided for @dailyReviewUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحديث المراجعات. افتح مركز الحفظ للمراجعة.'**
+  String get dailyReviewUnavailable;
+
+  /// No description provided for @dailyReviewOtherOptions.
+  ///
+  /// In ar, this message translates to:
+  /// **'خيارات أخرى'**
+  String get dailyReviewOtherOptions;
+
+  /// No description provided for @dailyReviewContinue.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة المهمة'**
+  String get dailyReviewContinue;
+
+  /// No description provided for @checkpointSync.
+  ///
+  /// In ar, this message translates to:
+  /// **'مزامنة موضع القراءة'**
+  String get checkpointSync;
+
+  /// No description provided for @checkpointChoose.
+  ///
+  /// In ar, this message translates to:
+  /// **'يوجد موضعان مختلفان: صفحة {localPage} على هذا الجهاز وصفحة {cloudPage} للحساب. اختر الموضع الذي تريد متابعته.'**
+  String checkpointChoose(int localPage, int cloudPage);
+
+  /// No description provided for @checkpointKeepLocal.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة موضع هذا الجهاز'**
+  String get checkpointKeepLocal;
+
+  /// No description provided for @checkpointUseCloud.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدام موضع الحساب'**
+  String get checkpointUseCloud;
+
+  /// No description provided for @protectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حماية بياناتي'**
+  String get protectionTitle;
+
+  /// No description provided for @protectionOnDevice.
+  ///
+  /// In ar, this message translates to:
+  /// **'محفوظ على هذا الجهاز'**
+  String get protectionOnDevice;
+
+  /// No description provided for @protectionUnknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم التحقق من الحفظ السحابي'**
+  String get protectionUnknown;
+
+  /// No description provided for @protectionPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'توجد تغييرات تنتظر المزامنة'**
+  String get protectionPending;
+
+  /// No description provided for @protectionSynced.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت المزامنة'**
+  String get protectionSynced;
+
+  /// No description provided for @protectionFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّرت المزامنة'**
+  String get protectionFailed;
+
+  /// No description provided for @protectionProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم القراءة'**
+  String get protectionProgress;
+
+  /// No description provided for @protectionReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ والمراجعة'**
+  String get protectionReview;
+
+  /// No description provided for @protectionBookmarks.
+  ///
+  /// In ar, this message translates to:
+  /// **'العلامات المرجعية'**
+  String get protectionBookmarks;
+
+  /// No description provided for @protectionCheckpoint.
+  ///
+  /// In ar, this message translates to:
+  /// **'موضع متابعة القراءة'**
+  String get protectionCheckpoint;
+
+  /// No description provided for @protectionLastSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر نجاح مؤكد'**
+  String get protectionLastSuccess;
+
+  /// No description provided for @protectionPendingCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'التغييرات المعلقة'**
+  String get protectionPendingCount;
+
+  /// No description provided for @protectionImportScope.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة الحساب من الملف تضيف العلامات الجديدة وموضع قراءة تختاره فقط. تقدم الحفظ والنقاط يستعادان عبر مزامنة الحساب.'**
+  String get protectionImportScope;
+
+  /// No description provided for @backupUnencryptedWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملف النسخة الاحتياطية غير مشفر وقد يحتوي على ملاحظاتك وتقدمك. احفظه في مكان خاص ولا تشاركه إلا مع من تثق به.'**
+  String get backupUnencryptedWarning;
+
+  /// No description provided for @backupRestoreNotReady.
+  ///
+  /// In ar, this message translates to:
+  /// **'استبدال بيانات الجهاز من ملف متوقف مؤقتًا لحماية تقدمك أثناء استكمال التحقق من التعافي. يمكنك تصدير نسخة والاحتفاظ بها.'**
+  String get backupRestoreNotReady;
+
+  /// No description provided for @backupPortableImport.
+  ///
+  /// In ar, this message translates to:
+  /// **'استيراد العلامات وموضع القراءة'**
+  String get backupPortableImport;
+
+  /// No description provided for @backupPortableConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'استيراد الإضافات المختارة'**
+  String get backupPortableConfirm;
+
+  /// No description provided for @backupPortablePreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الإضافات قبل الاستيراد'**
+  String get backupPortablePreview;
+
+  /// No description provided for @backupPortableCheckpoint.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة موضع القراءة من الملف'**
+  String get backupPortableCheckpoint;
+
+  /// No description provided for @backupPortablePartial.
+  ///
+  /// In ar, this message translates to:
+  /// **'{added, plural, =0{لم تُضف علامات جديدة، وتعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة.} =1{أُضيفت علامة واحدة، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.} other{أُضيفت {added} من العلامات، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.}}'**
+  String backupPortablePartial(int added);
+
+  /// No description provided for @backupPortableStale.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيرت البيانات أو الحساب. افتح الملف مجددًا لمراجعة الإضافات.'**
+  String get backupPortableStale;
+
+  /// No description provided for @backupPortableSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'علامات جديدة: {added}، موجودة: {existing}، محذوفة سابقًا: {deleted}، غير صالحة: {invalid}'**
+  String backupPortableSummary(
+    int added,
+    int existing,
+    int deleted,
+    int invalid,
+  );
+
+  /// No description provided for @backupMaintenanceRestart.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجهيز الطلب. أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه. ستختار ملف النسخة وتؤكد الاستبدال عند بدء التشغيل. لن تتغير بياناتك الآن.'**
+  String get backupMaintenanceRestart;
+
+  /// No description provided for @backupMaintenanceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة آمنة'**
+  String get backupMaintenanceTitle;
+
+  /// No description provided for @backupMaintenanceContinue.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة إلى التطبيق'**
+  String get backupMaintenanceContinue;
+
+  /// No description provided for @backupMaintenanceBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعمل الاستعادة قبل فتح بيانات التقدم والمزامنة. اختر الملف وراجعه ثم أكد الاستبدال. يمكنك المتابعة إلى التطبيق لإلغاء الطلب.'**
+  String get backupMaintenanceBody;
+
+  /// No description provided for @backupMaintenanceUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاستعادة غير متاحة لهذه البيانات أو لهذا الإصدار. يمكنك المتابعة إلى التطبيق.'**
+  String get backupMaintenanceUnavailable;
+
+  /// No description provided for @backupMaintenancePin.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز ولي الأمر'**
+  String get backupMaintenancePin;
+
+  /// No description provided for @backupMaintenanceFinished.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهى هذا الطلب. للبدء مجددًا، تابع إلى التطبيق وأنشئ طلبًا جديدًا.'**
+  String get backupMaintenanceFinished;
+
+  /// No description provided for @backupMaintenanceBusy.
+  ///
+  /// In ar, this message translates to:
+  /// **'البيانات مستخدمة الآن. أعد المحاولة بعد قليل. إذا استمر ذلك، أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه.'**
+  String get backupMaintenanceBusy;
+
+  /// No description provided for @backupMaintenanceSchedule.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجهيز الاستعادة عند بدء التطبيق'**
+  String get backupMaintenanceSchedule;
+
+  /// No description provided for @backupMaintenancePinRejected.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر التحقق من الرمز. انتظر قليلًا ثم أعد المحاولة.'**
+  String get backupMaintenancePinRejected;
+
+  /// No description provided for @retainedAccountRecoveryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة حسابك'**
+  String get retainedAccountRecoveryTitle;
+
+  /// No description provided for @retainedAccountRecoveryBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تزال بعض بيانات الحساب محفوظة على هذا الجهاز ولا تظهر للضيف. سجّل الدخول إلى الحساب نفسه للمتابعة وحماية التغييرات التي لم تُزامن بعد.'**
+  String get retainedAccountRecoveryBody;
+
+  /// No description provided for @retainedAccountRecoveryWrongAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا ليس الحساب السابق.'**
+  String get retainedAccountRecoveryWrongAccount;
+
+  /// No description provided for @retainedAccountRecoveryFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذرت الاستعادة. تحقق من بياناتك وحاول مجددًا.'**
+  String get retainedAccountRecoveryFailed;
+
+  /// No description provided for @retainedAccountRecoveryUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة الحساب غير متاحة الآن. حاول مرة أخرى لاحقًا.'**
+  String get retainedAccountRecoveryUnavailable;
+
+  /// No description provided for @retainedAccountRecoveryUnknownOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.'**
+  String get retainedAccountRecoveryUnknownOwner;
 }
 
 class _AppLocalizationsDelegate

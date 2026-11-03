@@ -17,7 +17,14 @@ import '../services/notification_service.dart';
 import '../services/prayer_serenity_watcher.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../sync/notification_refresh_worker.dart';
+import '../backup/restore_startup_recovery.dart';
+import '../backup/restore_operation_gate.dart';
+import '../backup/restore_recovery_journal.dart';
+import '../security/encrypted_account_preferences_store.dart';
+import '../storage/data_admission.dart';
 import '../identity/account_deletion_marker.dart';
+import '../identity/startup_account_guard.dart';
+import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../theme/theme_cubit.dart';
 import '../theme/pure_black_cubit.dart';
 import '../utils/talia_logger.dart';
@@ -35,6 +42,7 @@ class AppInitializer {
   AppInitializer._();
 
   static bool _initialized = false;
+  static bool _recoveryBlocked = false;
 
   /// Whether initialization has already completed.
   static bool get isInitialized => _initialized;
@@ -42,6 +50,7 @@ class AppInitializer {
   @visibleForTesting
   static void resetForTesting({bool initialized = false}) {
     _initialized = initialized;
+    _recoveryBlocked = false;
   }
 
   /// Runs all heavy initialization steps, reporting progress via [onProgress].
@@ -66,24 +75,57 @@ class AppInitializer {
     if (_initialized) return;
 
     try {
+      final admission = getIt.isRegistered<DataAdmissionPermit>()
+          ? getIt<DataAdmissionPermit>()
+          : null;
+      if (Platform.isAndroid) {
+        if (admission?.mode != DataAdmissionMode.foreground ||
+            !await admission!.validate() ||
+            !await RestoreRecoveryJournal(
+              FlutterEncryptedAccountPreferencesStore(),
+            ).isCleanForAdmission()) {
+          throw const RestoreBlockedException('cold_maintenance_required');
+        }
+      }
       // Step 1: Supabase
       onProgress?.call('جارٍ الاتصال...', 0.1);
       await _initSupabase();
+      final identity = await prepareIdentity();
+      if (!identity.canStartProgress) {
+        throw StateError('Retained account authentication is required');
+      }
 
       // Step 2: Dependency Injection (heaviest step — Isar, migrations, etc.)
       onProgress?.call('جارٍ تجهيز البيانات...', 0.3);
       if (getIt.isRegistered<SharedPreferences>()) {
         await getIt.reset();
       }
-      await configureDependencies(background: background);
+      if (admission != null && !getIt.isRegistered<DataAdmissionPermit>()) {
+        getIt.registerSingleton<DataAdmissionPermit>(admission);
+      }
+      await configureDependencies(background: background, admission: admission);
 
       final deletionPending = AccountDeletionMarker.hasPendingOperation(
         getIt<SharedPreferences>(),
       );
-      if (!background && !deletionPending) {
+      // An interrupted restore is rolled back before anything reads or syncs
+      // progress. If that cannot be proven safe, progress stays untouched.
+      _recoveryBlocked = await _recoverInterruptedRestore(
+        background: background,
+        deletionPending: deletionPending,
+      );
+      if (_recoveryBlocked) {
+        throw const RestoreBlockedException('startup_recovery_required');
+      }
+      activateAuthenticationDependencies();
+      await getIt<AuthCubit>().prepareStartupOwner();
+      if (!background && !deletionPending && !_recoveryBlocked) {
+        await migrateLocalProgressAfterRecovery();
         // Finish personal-progress migration before deletion can be initiated.
         await getIt<HifzMigrationService>().runIfNeeded();
       }
+      await activateRuntimeDependencies(background: background);
+      getIt<AuthCubit>().activateAfterStartup();
 
       if (!background) {
         // Pre-load theme, locale, and profile early so they are immediately available
@@ -91,7 +133,9 @@ class AppInitializer {
         getIt<ThemeCubit>().loadTheme();
         getIt<PureBlackCubit>().load();
         getIt<LocaleCubit>().loadLocale();
-        if (!deletionPending) getIt<ProfileCubit>().loadProfile();
+        if (!deletionPending && !_recoveryBlocked) {
+          getIt<ProfileCubit>().loadProfile();
+        }
 
         // Steps 3 & 4: Notifications — foreground only. The notification
         // plugin needs an Activity context that headless Workmanager engines
@@ -108,7 +152,7 @@ class AppInitializer {
         // transition; home's reads join this same in-flight load.
         unawaited(_preloadQuranCorpus());
         unawaited(getIt<QuranWarmupService>().warmUp());
-        if (!deletionPending) {
+        if (!deletionPending && !_recoveryBlocked) {
           unawaited(getIt<BookmarkService>().ensureLoaded());
         }
 
@@ -130,6 +174,37 @@ class AppInitializer {
       TaliaLogger.e('AppInitializer failed', error, stack);
       rethrow;
     }
+  }
+
+  /// Returns whether progress must stay untouched because an interrupted
+  /// restore could not be recovered. A deleting account is never recovered:
+  /// deletion wins and its cleanup drops the journal.
+  static Future<bool> _recoverInterruptedRestore({
+    required bool background,
+    required bool deletionPending,
+  }) async {
+    if (deletionPending) return false;
+    try {
+      final recovery = getIt<RestoreStartupRecovery>();
+      // A background isolate must not recover: the foreground may be in the
+      // middle of a live restore.
+      await recovery.requireReady(background: background);
+      return false;
+    } catch (error, stack) {
+      TaliaLogger.e('Restore recovery failed', error, stack);
+      return true;
+    }
+  }
+
+  /// Authentication and identity metadata only; no progress graph is created.
+  static Future<StartupAccountDecision> prepareIdentity() async {
+    await _initSupabase();
+    final prefs = await SharedPreferences.getInstance();
+    String? ownerId;
+    if (_isSupabaseReady()) {
+      ownerId = Supabase.instance.client.auth.currentUser?.id;
+    }
+    return StartupAccountGuard(prefs).inspect(ownerId);
   }
 
   static Future<void> _initSupabase() async {
@@ -282,7 +357,8 @@ class AppInitializer {
   }
 
   static Future<void> _startBackgroundTasks() async {
-    if (AccountDeletionMarker.hasPendingOperation(getIt<SharedPreferences>())) {
+    if (_recoveryBlocked ||
+        AccountDeletionMarker.hasPendingOperation(getIt<SharedPreferences>())) {
       return;
     }
     await getIt<BackgroundSyncScheduler>().initialize();

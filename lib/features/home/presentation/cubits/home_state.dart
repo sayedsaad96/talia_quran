@@ -23,6 +23,7 @@ class HomeLoaded extends HomeState {
   const HomeLoaded({
     required this.progress,
     required this.greeting,
+    this.accountAuthority,
     this.dailyWirdPageDetail,
     this.customPlan,
     this.selectedTrack,
@@ -99,6 +100,7 @@ class HomeLoaded extends HomeState {
     return HomeLoaded(
       progress: progress ?? this.progress,
       greeting: greeting ?? this.greeting,
+      accountAuthority: accountAuthority,
       dailyWirdPageDetail: dailyWirdPageDetail ?? this.dailyWirdPageDetail,
       customPlan: customPlan ?? this.customPlan,
       selectedTrack: selectedTrack ?? this.selectedTrack,
@@ -148,6 +150,9 @@ class HomeLoaded extends HomeState {
   }
 
   final OverallProgress progress;
+
+  /// Authority of the account/generation used for this entire snapshot.
+  final AccountDataLease? accountAuthority;
   final String greeting;
   final QuranPageDetail? dailyWirdPageDetail;
   final CustomMemorizationPlan? customPlan;
@@ -205,6 +210,7 @@ class HomeLoaded extends HomeState {
 
   @override
   List<Object?> get props => [
+    accountAuthority,
     progress,
     greeting,
     dailyWirdPageDetail,
