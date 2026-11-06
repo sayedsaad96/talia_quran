@@ -4161,5 +4161,24 @@
 ,"retainedAccountRecoveryWrongAccount":"هذا ليس الحساب السابق."
 ,"retainedAccountRecoveryFailed":"تعذرت الاستعادة. تحقق من بياناتك وحاول مجددًا."
 ,"retainedAccountRecoveryUnavailable":"استعادة الحساب غير متاحة الآن. حاول مرة أخرى لاحقًا."
-,"retainedAccountRecoveryUnknownOwner":"لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا."
+,"retainedAccountRecoveryUnknownOwner":"لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.",
+  "inviteFromNamed": "{name} يدعوك",
+  "@inviteFromNamed": {"placeholders":{"name":{"type":"String"}}},
+  "inviteFromAnonymous": "دعوة من أحد مستخدمي تالية",
+  "inviteStartNow": "ابدأ الآن",
+  "inviteExpiredTitle": "انتهت مدة هذه الدعوة",
+  "inviteExpiredBody": "يمكنك أن تبدأ القراءة الآن لنفسك، ولن تُحتسب ضمن الدعوة.",
+  "inviteInvalid": "تعذّر فتح هذه الدعوة",
+  "inviteOfflineRetry": "تحتاج الدعوة إلى اتصال لفتحها أول مرة",
+  "inviteKidsBlocked": "الدعوات غير متاحة في مساحة الأطفال",
+  "inviteExpiresIn": "تنتهي خلال {duration}",
+  "@inviteExpiresIn": {"placeholders":{"duration":{"type":"String"}}},
+  "inviteUnavailable": "هذا النشاط غير متاح حالياً",
+  "inviteStartFresh": "ابدأ لنفسك",
+  "inviteDurationDays": "{count} يوم",
+  "@inviteDurationDays": {"placeholders":{"count":{"type":"int"}}},
+  "inviteDurationHours": "{count} ساعة",
+  "@inviteDurationHours": {"placeholders":{"count":{"type":"int"}}},
+  "inviteDurationMinutes": "{count} دقيقة",
+  "@inviteDurationMinutes": {"placeholders":{"count":{"type":"int"}}}
 }

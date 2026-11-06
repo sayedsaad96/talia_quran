@@ -78,23 +78,44 @@ void main() {
       }
     });
 
-    test('production router registers the manual-grade destination', () async {
-      final getIt = GetIt.instance;
-      final authCubit = _FakeAuthCubit();
-      getIt.registerSingleton<AuthCubit>(authCubit);
+    test(
+      'production router matches local destinations and guest invites',
+      () async {
+        final getIt = GetIt.instance;
+        final authCubit = _FakeAuthCubit();
+        getIt.registerSingleton<AuthCubit>(authCubit);
 
-      addTearDown(() async {
-        AppRouter.router.dispose();
-        await getIt.unregister<AuthCubit>();
-        await authCubit.close();
-      });
+        addTearDown(() async {
+          AppRouter.router.dispose();
+          await getIt.unregister<AuthCubit>();
+          await authCubit.close();
+        });
 
-      final match = AppRouter.router.configuration.findMatch(
-        Uri.parse(AppRoutes.memorizationHub),
+        final match = AppRouter.router.configuration.findMatch(
+          Uri.parse(AppRoutes.memorizationHub),
+        );
+
+        expect(match.error, isNull);
+        expect(match.uri.path, AppRoutes.memorizationHub);
+
+        final invite = AppRouter.router.configuration.findMatch(
+          Uri.parse('/invite/${'a' * 43}'),
+        );
+        expect(invite.error, isNull);
+        expect(invite.pathParameters['token'], 'a' * 43);
+      },
+    );
+
+    test('invite preview is public for initial and signed-out auth', () {
+      final path = '/invite/${'a' * 43}';
+      expect(AppRouter.requiresAuthentication(path), isFalse);
+      expect(AppRouter.isPublicLocation(path), isTrue);
+      expect(
+        AppRouter.redirectForAuth(const AuthUnauthenticated(), path),
+        isNull,
       );
-
-      expect(match.error, isNull);
-      expect(match.uri.path, AppRoutes.memorizationHub);
+      expect(AppRouter.redirectForAuth(const AuthInitial(), path), isNull);
+      expect(AppRouter.isPublicLocation('/invited/other'), isFalse);
     });
 
     test('remote parent dashboard remains protected', () {

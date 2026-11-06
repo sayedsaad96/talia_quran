@@ -10437,4 +10437,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get retainedAccountRecoveryUnknownOwner =>
       'We can\'t identify the previous account safely. Try again when the account becomes available.';
+
+  @override
+  String inviteFromNamed(String name) {
+    return '$name invites you';
+  }
+
+  @override
+  String get inviteFromAnonymous => 'An invitation from a Talia user';
+
+  @override
+  String get inviteStartNow => 'Start now';
+
+  @override
+  String get inviteExpiredTitle => 'This invitation has expired';
+
+  @override
+  String get inviteExpiredBody =>
+      'You can start reading for yourself; it will not count towards this invitation.';
+
+  @override
+  String get inviteInvalid => 'This invitation could not be opened';
+
+  @override
+  String get inviteOfflineRetry =>
+      'Connect to the internet to open this invitation for the first time';
+
+  @override
+  String get inviteKidsBlocked =>
+      'Invitations are unavailable in the children’s space';
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'Expires in $duration';
+  }
+
+  @override
+  String get inviteUnavailable => 'This activity is currently unavailable';
+
+  @override
+  String get inviteStartFresh => 'Start for yourself';
+
+  @override
+  String inviteDurationDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String inviteDurationHours(int count) {
+    return '$count hours';
+  }
+
+  @override
+  String inviteDurationMinutes(int count) {
+    return '$count minutes';
+  }
 }

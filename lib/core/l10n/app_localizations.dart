@@ -17428,6 +17428,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.'**
   String get retainedAccountRecoveryUnknownOwner;
+
+  /// No description provided for @inviteFromNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} يدعوك'**
+  String inviteFromNamed(String name);
+
+  /// No description provided for @inviteFromAnonymous.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة من أحد مستخدمي تالية'**
+  String get inviteFromAnonymous;
+
+  /// No description provided for @inviteStartNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الآن'**
+  String get inviteStartNow;
+
+  /// No description provided for @inviteExpiredTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت مدة هذه الدعوة'**
+  String get inviteExpiredTitle;
+
+  /// No description provided for @inviteExpiredBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك أن تبدأ القراءة الآن لنفسك، ولن تُحتسب ضمن الدعوة.'**
+  String get inviteExpiredBody;
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر فتح هذه الدعوة'**
+  String get inviteInvalid;
+
+  /// No description provided for @inviteOfflineRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج الدعوة إلى اتصال لفتحها أول مرة'**
+  String get inviteOfflineRetry;
+
+  /// No description provided for @inviteKidsBlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعوات غير متاحة في مساحة الأطفال'**
+  String get inviteKidsBlocked;
+
+  /// No description provided for @inviteExpiresIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنتهي خلال {duration}'**
+  String inviteExpiresIn(String duration);
+
+  /// No description provided for @inviteUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا النشاط غير متاح حالياً'**
+  String get inviteUnavailable;
+
+  /// No description provided for @inviteStartFresh.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ لنفسك'**
+  String get inviteStartFresh;
+
+  /// No description provided for @inviteDurationDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} يوم'**
+  String inviteDurationDays(int count);
+
+  /// No description provided for @inviteDurationHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} ساعة'**
+  String inviteDurationHours(int count);
+
+  /// No description provided for @inviteDurationMinutes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} دقيقة'**
+  String inviteDurationMinutes(int count);
 }
 
 class _AppLocalizationsDelegate

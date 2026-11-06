@@ -95,12 +95,16 @@ import '../../features/settings/presentation/pages/labs_flags_page.dart';
 import '../../features/settings/presentation/pages/backup_page.dart';
 import '../../features/settings/presentation/pages/trust_center_page.dart';
 import '../../features/settings/presentation/pages/sources_licenses_page.dart';
+import '../../features/share_good/presentation/cubits/invite_preview_cubit.dart';
+import '../../features/share_good/presentation/pages/invite_preview_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fallback_pop_scope.dart';
 
 abstract class AppRoutes {
   static const String splash = '/splash';
+  static const String _invitePrefix = '/invite/';
+  static const String invite = '$_invitePrefix:token';
   static const String onboarding = '/onboarding';
   static const String childOnboarding = '/onboarding/child';
   static const String home = '/';
@@ -276,6 +280,7 @@ class _AuthNotifier extends ChangeNotifier {
 
 /// Routes that are always accessible without authentication.
 final _publicRoutes = <String>[
+  AppRoutes._invitePrefix,
   AppRoutes.splash,
   AppRoutes.onboarding,
   AppRoutes.childOnboarding,
@@ -620,7 +625,6 @@ abstract class AppRouter {
   /// Only contains the splash route — no auth guards or DI dependencies.
   static final GoRouter splashOnlyRouter = GoRouter(
     initialLocation: AppRoutes.splash,
-    debugLogDiagnostics: kDebugMode,
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -629,10 +633,10 @@ abstract class AppRouter {
     ],
   );
 
+  // GoRouter diagnostics include raw locations, including invite bearers.
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.home,
-    debugLogDiagnostics: kDebugMode,
     // AUTH GATE: redirect unauthenticated users to /login for all protected routes.
     refreshListenable: _AuthNotifier(
       getIt<AuthCubit>(),
@@ -689,6 +693,16 @@ abstract class AppRouter {
     },
     routes: [
       // ── Full-screen routes (push over shell, own back button) ─────────────
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.invite,
+        builder: (context, state) => BlocProvider<InvitePreviewCubit>(
+          create: (_) => getIt<InvitePreviewCubit>(
+            param1: Localizations.localeOf(context).languageCode == 'ar',
+          ),
+          child: InvitePreviewPage(token: state.pathParameters['token']!),
+        ),
+      ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.splash,
@@ -1490,6 +1504,9 @@ abstract class AppRouter {
   );
 
   const AppRouter._();
+
+  static bool isInvitePreviewLocation(String path) =>
+      path.startsWith(AppRoutes._invitePrefix);
 
   static bool requiresAuthentication(String location) {
     return _remoteProtectedRoutes.any((r) => location.startsWith(r));

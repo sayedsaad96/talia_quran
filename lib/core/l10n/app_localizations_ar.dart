@@ -10460,4 +10460,57 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get retainedAccountRecoveryUnknownOwner =>
       'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.';
+
+  @override
+  String inviteFromNamed(String name) {
+    return '$name يدعوك';
+  }
+
+  @override
+  String get inviteFromAnonymous => 'دعوة من أحد مستخدمي تالية';
+
+  @override
+  String get inviteStartNow => 'ابدأ الآن';
+
+  @override
+  String get inviteExpiredTitle => 'انتهت مدة هذه الدعوة';
+
+  @override
+  String get inviteExpiredBody =>
+      'يمكنك أن تبدأ القراءة الآن لنفسك، ولن تُحتسب ضمن الدعوة.';
+
+  @override
+  String get inviteInvalid => 'تعذّر فتح هذه الدعوة';
+
+  @override
+  String get inviteOfflineRetry => 'تحتاج الدعوة إلى اتصال لفتحها أول مرة';
+
+  @override
+  String get inviteKidsBlocked => 'الدعوات غير متاحة في مساحة الأطفال';
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'تنتهي خلال $duration';
+  }
+
+  @override
+  String get inviteUnavailable => 'هذا النشاط غير متاح حالياً';
+
+  @override
+  String get inviteStartFresh => 'ابدأ لنفسك';
+
+  @override
+  String inviteDurationDays(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String inviteDurationHours(int count) {
+    return '$count ساعة';
+  }
+
+  @override
+  String inviteDurationMinutes(int count) {
+    return '$count دقيقة';
+  }
 }

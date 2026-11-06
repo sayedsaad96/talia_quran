@@ -38,6 +38,15 @@ void main() {
     expect(service.getLastRestorableLocation(), '/quran/page/42');
   });
 
+  test('invite routes never replace the last restorable location', () async {
+    final token = 'a' * 43;
+    await service.saveLocation('/quran/page/42');
+    await service.saveLocation('/invite/$token');
+
+    expect(service.getLastRestorableLocation(), '/quran/page/42');
+    expect(prefs.getString('last_restorable_location'), '/quran/page/42');
+  });
+
   test('does not restore incomplete memorization routes', () async {
     await service.saveLocation('/memorization-plus/daily-plan');
 

@@ -151,6 +151,26 @@ final class ShareGoodLocalStore {
     }
     return result;
   });
+  Future<List<InviteSession>> eligibleStartedSessions() => _serialize(() async {
+    final result = <InviteSession>[];
+    final now = DateTime.now();
+    for (final key in await _readIndex()) {
+      final session = await _readSession(key);
+      if (session == null ||
+          session.snapshot.status != InviteLifecycleStatus.active ||
+          !session.snapshot.expiresAt.isAfter(now)) {
+        continue;
+      }
+      final status = max(
+        session.serverStatus?.index ?? -1,
+        session.pendingStatus?.index ?? -1,
+      );
+      if (status == InviteParticipationStatus.started.index) {
+        result.add(session);
+      }
+    }
+    return result;
+  });
   Future<InviteSession?> sessionByLocalId(String id) => _serialize(() async {
     for (final key in await _readIndex()) {
       final value = await _readSession(key);

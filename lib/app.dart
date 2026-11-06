@@ -142,9 +142,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
   void _saveCurrentLocation() {
     if (!AppInitializer.isInitialized) return;
-    final location = AppRouter.router.routerDelegate.currentConfiguration.uri
-        .toString();
-    unawaited(getIt<AppSessionService>().saveLocation(location));
+    final uri = AppRouter.router.routerDelegate.currentConfiguration.uri;
+    if (AppRouter.isInvitePreviewLocation(uri.path)) return;
+    unawaited(getIt<AppSessionService>().saveLocation(uri.toString()));
   }
 
   @override

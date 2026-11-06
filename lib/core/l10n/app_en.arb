@@ -4119,5 +4119,24 @@
 ,"retainedAccountRecoveryWrongAccount":"This is not the previous account."
 ,"retainedAccountRecoveryFailed":"We couldn't complete recovery. Check your details and try again."
 ,"retainedAccountRecoveryUnavailable":"Account recovery is unavailable right now. Please try again later."
-,"retainedAccountRecoveryUnknownOwner":"We can't identify the previous account safely. Try again when the account becomes available."
+,"retainedAccountRecoveryUnknownOwner":"We can't identify the previous account safely. Try again when the account becomes available.",
+  "inviteFromNamed": "{name} invites you",
+  "@inviteFromNamed": {"placeholders":{"name":{"type":"String"}}},
+  "inviteFromAnonymous": "An invitation from a Talia user",
+  "inviteStartNow": "Start now",
+  "inviteExpiredTitle": "This invitation has expired",
+  "inviteExpiredBody": "You can start reading for yourself; it will not count towards this invitation.",
+  "inviteInvalid": "This invitation could not be opened",
+  "inviteOfflineRetry": "Connect to the internet to open this invitation for the first time",
+  "inviteKidsBlocked": "Invitations are unavailable in the children’s space",
+  "inviteExpiresIn": "Expires in {duration}",
+  "@inviteExpiresIn": {"placeholders":{"duration":{"type":"String"}}},
+  "inviteUnavailable": "This activity is currently unavailable",
+  "inviteStartFresh": "Start for yourself",
+  "inviteDurationDays": "{count} days",
+  "@inviteDurationDays": {"placeholders":{"count":{"type":"int"}}},
+  "inviteDurationHours": "{count} hours",
+  "@inviteDurationHours": {"placeholders":{"count":{"type":"int"}}},
+  "inviteDurationMinutes": "{count} minutes",
+  "@inviteDurationMinutes": {"placeholders":{"count":{"type":"int"}}}
 }

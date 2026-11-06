@@ -1942,6 +1942,7 @@ Future<void> configureDependencies({
 Future<void> activateRuntimeDependencies({bool background = false}) async {
   if (!background) await registerHomeWidget(getIt);
   if (!background) await registerGroupKhatmah(getIt);
+  if (!background) unawaited(restoreShareGoodSessions(getIt));
 }
 
 void activateAuthenticationDependencies() {
