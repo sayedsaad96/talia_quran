@@ -4,6 +4,19 @@
 **Status:** Product design approved; ready for implementation-plan review  
 **Working feature names:** **شارك الخير** (Share Good) and **أثر الخير** (Good Impact)
 
+> **Implementation reconciliation — 2026-11-05 / HEAD `5a049731`:** This product
+> contract remains approved and no Share Good code has landed yet. The current,
+> code-aligned delivery contract is
+> `docs/superpowers/plans/2026-10-07-talia-share-good-v1-delivery.md`:
+> Android-only V1 links; authenticated invite creation/chain/impact; guest
+> resolve/start/private completion; deferred restoration only after real Play
+> Install Referrer verification; and integration with the current Dawn,
+> rollout, startup, notification, account-reset, backup, Quran/Khatmah and
+> Supabase security boundaries. When this document is intentionally broad (for
+> example “where technically supported”), the delivery plan's locked V1
+> decisions control implementation without weakening the privacy or
+> worship-first requirements here.
+
 ## 1. Purpose
 
 Create a privacy-respecting invitation and sharing system inside Talia Quran that lets a user invite another person to perform the same worship activity they are doing, either before starting or after completing it.

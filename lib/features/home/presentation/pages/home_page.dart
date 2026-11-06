@@ -378,7 +378,6 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
             const SliverToBoxAdapter(
               child: LinearProgressIndicator(minHeight: 2),
             ),
-          const AdultJourneyHomeSlot(key: ValueKey('adult_journey_home_slot')),
           if (widget.state.isFirstRun)
             SliverToBoxAdapter(
               child: Padding(
@@ -570,25 +569,26 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                   ),
                 ),
               ),
-            if (!clarityOn)
-              SliverToBoxAdapter(
-                child: StaggeredFadeSlide(
-                  delay: const Duration(milliseconds: 400),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.pagePadding,
-                      AppSpacing.md,
-                      AppSpacing.pagePadding,
-                      0,
-                    ),
-                    child: HomeActivityFeed(
-                      state: widget.state,
-                      skin: widget.skin,
-                    ),
+          ],
+          const AdultJourneyHomeSlot(key: ValueKey('adult_journey_home_slot')),
+          if (!widget.state.isFirstRun && !clarityOn)
+            SliverToBoxAdapter(
+              child: StaggeredFadeSlide(
+                delay: const Duration(milliseconds: 400),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                  child: HomeActivityFeed(
+                    state: widget.state,
+                    skin: widget.skin,
                   ),
                 ),
               ),
-          ],
+            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
