@@ -78,15 +78,6 @@ void main() {
       ),
       resolved,
       InviteSession(token: token, snapshot: resolved),
-      InviteImpactSummary(
-        token: token,
-        target: target,
-        status: InviteLifecycleStatus.active,
-        expiresAt: timestamp,
-        opens: 0,
-        starts: 0,
-        completions: 0,
-      ),
       NamedAcknowledgement(
         target: target,
         visibleName: name,

@@ -10,11 +10,7 @@ enum GoodImpactMilestone {
 }
 
 final class InviteImpactSummary extends Equatable {
-  @override
-  bool get stringify => false;
-
   const InviteImpactSummary({
-    required this.token,
     required this.target,
     required this.status,
     required this.expiresAt,
@@ -22,14 +18,12 @@ final class InviteImpactSummary extends Equatable {
     required this.starts,
     required this.completions,
   });
-  final String token;
   final InviteActivityTarget target;
   final InviteLifecycleStatus status;
   final DateTime expiresAt;
   final int opens, starts, completions;
   @override
   List<Object?> get props => [
-    token,
     target,
     status,
     expiresAt,

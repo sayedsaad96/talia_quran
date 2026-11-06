@@ -244,7 +244,7 @@ exit $exitCode
     [string[]] $Arguments = @(),
     [int] $FakeExitCode = 17,
     [string[]] $Secrets = @(),
-    [int] $ExpectedInvocationCount = 139,
+    [int] $ExpectedInvocationCount = ($expectedContractQueryCount + 2),
     [bool] $Fresh = $false
   ) {
     $captureDirectory = Join-Path $captureRoot $Name
@@ -296,6 +296,9 @@ exit $exitCode
     }
   }
 
+  # 173 existing catalog checks plus 28 Share Good checks. Non-fresh cases
+  # also read migration-history availability and entries.
+  $expectedContractQueryCount = 201
   $credentialedUrl = 'postgresql://qa%3Auser:pa%3Ass%5Cword@db.example.test:6543/db%3Aname?sslmode=require'
   $credentialed = Invoke-VerifierCase `
     -Name 'credentialed-host-failure' `
@@ -324,9 +327,6 @@ exit $exitCode
 
   $migrationCount = @(Get-ChildItem (Join-Path $repositoryRoot 'supabase\migrations') -Filter '*.sql' -File).Count
   $databaseTestCount = @(Get-ChildItem (Join-Path $repositoryRoot 'supabase\tests') -Filter '*.sql' -File).Count
-  # 105 existing checks plus 32 phase2 checks; non-fresh cases also read
-  # migration-history availability and entries before these catalog checks.
-  $expectedContractQueryCount = 137
   $freshSuccessUrl = 'postgresql://fresh-user:fresh%3Apassword@fresh.example.test:6545/freshdb'
   $freshSuccess = Invoke-VerifierCase `
     -Name 'credentialed-host-success' `
