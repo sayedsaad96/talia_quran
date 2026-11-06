@@ -115,6 +115,10 @@ void main() {
         isNull,
       );
       expect(AppRouter.redirectForAuth(const AuthInitial(), path), isNull);
+      expect(
+        AppRouter.redirectForAuth(const AuthPasswordRecoveryDetected(), path),
+        AppRoutes.updatePassword,
+      );
       expect(AppRouter.isPublicLocation('/invited/other'), isFalse);
     });
 

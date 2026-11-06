@@ -14,6 +14,7 @@ import android.view.WindowManager
 import com.talia.quran.prayer.AdhanClipResolver
 import com.talia.quran.prayer.AdhanPreviewBridge
 import com.talia.quran.widget.TaliaHomeWidgetProvider
+import com.talia.quran.referrer.InstallReferrerPlugin
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -28,6 +29,7 @@ class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        InstallReferrerPlugin(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         registerAdhanPreviewChannel(flutterEngine.dartExecutor.binaryMessenger)
         registerHomeWidgetComponentChannel(flutterEngine.dartExecutor.binaryMessenger)
         registerDeviceResourcesChannel(flutterEngine.dartExecutor.binaryMessenger)

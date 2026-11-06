@@ -95,6 +95,7 @@ void main() {
         activeSessions: active,
         isChild: () async => child,
         cachedSession: store.session,
+        acknowledgeIncoming: store.acknowledgePendingIncomingToken,
       );
   test('opens once, starts and activates', () async {
     final c = cubit();
@@ -107,6 +108,23 @@ void main() {
     await c.close();
     await active.dispose();
   });
+  test(
+    'only an accepted preview acknowledges the matching pending invite',
+    () async {
+      final c = cubit();
+      await store.setPendingIncomingToken(token);
+      expect(await store.pendingIncomingToken(), token);
+      await c.load(token);
+      expect(await store.pendingIncomingToken(), isNull);
+
+      final newer = 'b' * 43;
+      await store.setPendingIncomingToken(newer);
+      await c.load(token);
+      expect(await store.pendingIncomingToken(), newer);
+      await c.close();
+      await active.dispose();
+    },
+  );
   test('child and invalid token never resolve', () async {
     final c = cubit(child: true);
     await c.load(token);

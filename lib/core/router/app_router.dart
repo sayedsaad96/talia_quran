@@ -105,6 +105,7 @@ abstract class AppRoutes {
   static const String splash = '/splash';
   static const String _invitePrefix = '/invite/';
   static const String invite = '$_invitePrefix:token';
+  static String inviteLocation(String token) => '$_invitePrefix$token';
   static const String onboarding = '/onboarding';
   static const String childOnboarding = '/onboarding/child';
   static const String home = '/';
@@ -599,6 +600,13 @@ abstract class AppRouter {
     String location, {
     bool guardianSessionActive = false,
   }) {
+    if (authState is AuthPasswordRecoveryDetected) {
+      return location == AppRoutes.updatePassword ||
+              location == AppRoutes.updatePasswordAlias ||
+              location == AppRoutes.login
+          ? null
+          : AppRoutes.updatePassword;
+    }
     if (authState is AuthAccountDeletionInProgress) {
       return null;
     }

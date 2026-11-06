@@ -55,6 +55,8 @@ void registerShareGood(GetIt getIt) {
       activeSessions: getIt(),
       isChild: () => _isShareGoodChild(getIt),
       cachedSession: getIt<ShareGoodLocalStore>().session,
+      acknowledgeIncoming:
+          getIt<ShareGoodLocalStore>().acknowledgePendingIncomingToken,
       arabic: arabic,
     ),
   );

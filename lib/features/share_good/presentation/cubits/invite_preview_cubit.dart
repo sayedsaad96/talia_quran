@@ -65,6 +65,7 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
     required this._activeSessions,
     required this._isChild,
     required this._cachedSession,
+    this._acknowledgeIncoming,
     this.arabic = true,
   }) : super(const InvitePreviewLoading());
   final ShareGoodRepository _repository;
@@ -72,6 +73,7 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
   final ActiveInviteSessions _activeSessions;
   final Future<bool> Function() _isChild;
   final Future<InviteSession?> Function(String) _cachedSession;
+  final Future<bool> Function(String)? _acknowledgeIncoming;
   final bool arabic;
   int _generation = 0;
   final _opened = <String>{};
@@ -105,10 +107,26 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
         (failure) => _showFailure(failure, token, generation),
         (session) => _showSession(session, generation),
       );
+      if (!isClosed && generation == _generation) {
+        await _acknowledgeAccepted(token);
+      }
     } catch (_) {
       if (!isClosed && generation == _generation) {
         emit(const InvitePreviewUnavailable(null));
       }
+    }
+  }
+
+  Future<void> _acknowledgeAccepted(String token) async {
+    if (state is! InvitePreviewReady &&
+        state is! InvitePreviewExpired &&
+        state is! InvitePreviewInvalid) {
+      return;
+    }
+    try {
+      await _acknowledgeIncoming?.call(token);
+    } catch (_) {
+      // Keep the pending token retryable if secure storage is unavailable.
     }
   }
 

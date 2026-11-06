@@ -36,6 +36,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         testInstrumentationRunner = "android.test.InstrumentationTestRunner"
+        manifestPlaceholders["shareGoodLinkHost"] = providers.gradleProperty("shareGoodLinkHost")
+            .orElse("invalid.localhost").get()
     }
 
     signingConfigs {
@@ -74,6 +76,7 @@ flutter {
 }
 
 dependencies {
+    implementation("com.android.installreferrer:installreferrer:2.2")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // Pure-JVM unit tests for the prayer delivery identity/codec (Prayer V2).
     testImplementation("junit:junit:4.13.2")
