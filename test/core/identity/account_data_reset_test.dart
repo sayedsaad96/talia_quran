@@ -7,6 +7,7 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,9 @@ import 'package:talia_quran/features/streak/data/models/daily_activity_isar.dart
 import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
 import 'package:talia_quran/features/quran/data/models/isar_ayah_note.dart';
+import 'package:talia_quran/features/share_good/data/datasources/share_good_local_store.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_activity_target.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_types.dart';
 import '../../helpers/isar_test_core.dart';
 
 
@@ -272,6 +276,64 @@ void main() {
       expect(prefs.containsKey('prayer_review_lengths|user-b'), isFalse);
       expect(prefs.getString('prayer_review_lengths|user-c'), '{"fajr":7}');
     });
+
+    test(
+      'Share Good account deletion and switch preserve installation data',
+      () async {
+        FlutterSecureStorage.setMockInitialValues({});
+        final store = ShareGoodLocalStore(const FlutterSecureStorage(), prefs);
+        const token = 'guest-invite';
+        final participant = await store.participantKey();
+        await store.setPendingIncomingToken(token);
+        await store.saveSession(
+          InviteSession(
+            token: token,
+            snapshot: ResolvedInvite(
+              token: token,
+              target: const QuranPageInviteTarget(1),
+              moment: InviteMoment.beforeActivity,
+              mode: InviteMode.personal,
+              inviter: const InviterIdentity(mode: InviteIdentityMode.anonymous),
+              status: InviteLifecycleStatus.active,
+              expiresAt: DateTime.utc(2027),
+            ),
+            pendingStatus: InviteParticipationStatus.started,
+          ),
+        );
+        final session = await store.session(token);
+        expect(session, isNotNull);
+        const prefixes = [
+          'share_good_identity_pref_v1|',
+          'share_good_prompt_v1|',
+          'share_good_impact_seen_v1|',
+        ];
+        for (final prefix in prefixes) {
+          await prefs.setString('${prefix}user-a', 'a');
+          await prefs.setString('${prefix}user-b', 'b');
+        }
+        final reset = AccountDataReset(
+          isar,
+          prefs,
+          documentsDirectory: () async => dir,
+        );
+        await reset.eraseDeletedAccountLocally(departingOwnerId: 'user-a');
+        for (final prefix in prefixes) {
+          expect(prefs.containsKey('${prefix}user-a'), isFalse);
+          expect(prefs.getString('${prefix}user-b'), 'b');
+        }
+        expect(await store.session(token), session);
+        expect(await store.participantKey(), participant);
+        expect(await store.pendingIncomingToken(), token);
+
+        await reset.clearAccountOwnedData(departingOwnerId: 'user-b');
+        for (final prefix in prefixes) {
+          expect(prefs.containsKey('${prefix}user-b'), isFalse);
+        }
+        expect(await store.session(token), session);
+        expect(await store.participantKey(), participant);
+        expect(await store.pendingIncomingToken(), token);
+      },
+    );
 
     test('kids map display state is cleared; the kids streak and achievements '
         'survive a sign-out and are erased only with a deleted account', () async {
