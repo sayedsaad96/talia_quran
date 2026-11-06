@@ -5,11 +5,9 @@ import 'dart:ui' show Locale;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz_data;
 
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
@@ -19,6 +17,7 @@ import '../router/launch_destination.dart';
 import '../content/approved_azkar_content.dart';
 import '../utils/talia_logger.dart';
 import 'daily_ayah_notification_target.dart';
+import 'device_timezone.dart';
 import 'prayer_sound.dart';
 
 /// True when an exact alarm was refused and the same reminder can be
@@ -43,14 +42,7 @@ String azkarNotificationBody({
   return approvedTexts[index.abs() % approvedTexts.length];
 }
 
-bool _timezoneDatabaseInitialized = false;
 bool _localLocationConfigured = false;
-
-void _ensureTimezoneDatabaseInitialized() {
-  if (_timezoneDatabaseInitialized) return;
-  tz_data.initializeTimeZones();
-  _timezoneDatabaseInitialized = true;
-}
 
 /// Guarantees `tz.local` is usable before anything schedules a notification.
 ///
@@ -61,44 +53,10 @@ void _ensureTimezoneDatabaseInitialized() {
 /// forever. UTC is only a safety net: [configureLocalTimezone] replaces it
 /// with the real device timezone whenever one can be resolved.
 void _ensureLocalLocationReady() {
-  _ensureTimezoneDatabaseInitialized();
+  ensureTimezoneDatabaseInitialized();
   if (_localLocationConfigured) return;
   tz.setLocalLocation(tz.UTC);
   _localLocationConfigured = true;
-}
-
-/// Android OEMs and emulators often report offset IDs like "GMT+03:00" that
-/// don't exist in the tz database. Maps them to the equivalent (sign
-/// inverted) "Etc/GMT" zone; returns other identifiers unchanged.
-String _normalizeTimezoneIdentifier(String identifier) {
-  final trimmed = identifier.trim();
-  if (trimmed == 'GMT' || trimmed == 'UTC') return 'UTC';
-  final match = RegExp(
-    r'^GMT([+-])(\d{1,2})(?::(\d{2}))?$',
-  ).firstMatch(trimmed);
-  if (match == null) return trimmed;
-  final hours = int.parse(match.group(2)!);
-  if (hours == 0) return 'UTC';
-  // "Etc/GMT" zones invert the sign: GMT+03:00 == Etc/GMT-3.
-  final sign = match.group(1) == '+' ? '-' : '+';
-  return 'Etc/GMT$sign$hours';
-}
-
-/// Resolves [identifier] against the tz database, retrying with the
-/// normalized form. Returns null when neither resolves.
-tz.Location? _tryGetLocation(String identifier) {
-  final candidates = <String>[
-    identifier.trim(),
-    _normalizeTimezoneIdentifier(identifier),
-  ];
-  for (final candidate in candidates) {
-    try {
-      return tz.getLocation(candidate);
-    } catch (_) {
-      // Unknown ID — try the next candidate.
-    }
-  }
-  return null;
 }
 
 /// Smart notification service for Talia Quran.
@@ -1206,7 +1164,7 @@ class TaliaNotificationService {
       return;
     }
 
-    _ensureTimezoneDatabaseInitialized();
+    ensureTimezoneDatabaseInitialized();
 
     // CODE-3 FIX: Detect and set the device's actual local timezone
     await configureLocalTimezone();
@@ -1287,8 +1245,8 @@ class TaliaNotificationService {
     // giving up. Retain the last verified device timezone rather than
     // guessing a regional timezone.
     try {
-      final localTimezone = await FlutterTimezone.getLocalTimezone();
-      final deviceLocation = _tryGetLocation(localTimezone.identifier);
+      final (:identifier, location: deviceLocation) =
+          await lookupDeviceTimezone();
       if (deviceLocation != null) {
         tz.setLocalLocation(deviceLocation);
         _localLocationConfigured = true;
@@ -1300,7 +1258,7 @@ class TaliaNotificationService {
         return;
       }
       TaliaLogger.w(
-        'Device timezone "${localTimezone.identifier}" is not in the tz database',
+        'Device timezone "$identifier" is not in the tz database',
       );
     } catch (error, stack) {
       TaliaLogger.w('Device timezone lookup failed', error, stack);
@@ -1309,7 +1267,7 @@ class TaliaNotificationService {
       final prefs = await SharedPreferences.getInstance();
       final lastKnownTimezone = prefs.getString(lastKnownTimezonePreferenceKey);
       if (lastKnownTimezone != null) {
-        final savedLocation = _tryGetLocation(lastKnownTimezone);
+        final savedLocation = resolveTimezoneLocation(lastKnownTimezone);
         if (savedLocation != null) {
           tz.setLocalLocation(savedLocation);
           _localLocationConfigured = true;
@@ -1327,7 +1285,7 @@ class TaliaNotificationService {
     }
     // Final safety net: explicitly fall back to UTC so scheduling can never
     // crash with a LateError on an unconfigured tz.local.
-    _ensureTimezoneDatabaseInitialized();
+    ensureTimezoneDatabaseInitialized();
     tz.setLocalLocation(tz.UTC);
     _localLocationConfigured = true;
     TaliaLogger.w('No valid device timezone is available; using UTC fallback');

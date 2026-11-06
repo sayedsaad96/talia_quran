@@ -37,7 +37,7 @@ void main() {
     for (final f in ExperienceFeature.values) {
       expect(f.storageKey, 'experience_flag_${f.name}');
     }
-    expect(ExperienceFeature.values.length, 21);
+    expect(ExperienceFeature.values.length, 22);
   });
 }
 
