@@ -7,11 +7,16 @@ import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/notification_settings_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/notification_settings_state.dart';
+import 'package:talia_quran/features/share_good/application/share_good_notification_controller.dart';
+import 'package:talia_quran/core/di/injection.dart';
 
 class MockTaliaNotificationService extends Mock
     implements TaliaNotificationService {}
 
 class MockNotificationScheduler extends Mock implements NotificationScheduler {}
+
+class MockInviteReminderController extends Mock
+    implements ShareGoodNotificationController {}
 
 class FakeAppLocalizations extends Fake implements AppLocalizations {}
 
@@ -63,6 +68,18 @@ void main() {
   tearDown(() => cubit.close());
 
   group('NotificationSettingsCubit', () {
+    test(
+      'quiet-hours changes refresh the pending invitation reminder',
+      () async {
+        final controller = MockInviteReminderController();
+        when(() => controller.refresh()).thenAnswer((_) async {});
+        getIt.registerSingleton<ShareGoodNotificationController>(controller);
+        addTearDown(() => getIt.unregister<ShareGoodNotificationController>());
+        await cubit.load();
+        await cubit.updateQuietHours(startHour: 22, endHour: 5);
+        verify(() => controller.refresh()).called(1);
+      },
+    );
     test('the forecast reminder is offered and counted only when its flag is '
         'on for an adult profile', () async {
       await prefs.setBool(

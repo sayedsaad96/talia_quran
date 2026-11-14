@@ -82,6 +82,9 @@ final class ShareGoodLocalStore {
       return InviteSession(
         token: token,
         localSessionId: j['localSessionId'] as String,
+        startedAt: j['startedAt'] == null
+            ? null
+            : DateTime.parse(j['startedAt'] as String),
         snapshot: ResolvedInvite(
           token: token,
           target: InviteActivityTarget.fromJson(j['target']),
@@ -107,7 +110,13 @@ final class ShareGoodLocalStore {
       ? null
       : InviteParticipationStatus.values.byName(name as String);
 
-  Future<void> saveSession(InviteSession session) => _serialize(() async {
+  Future<void> saveSession(InviteSession session) =>
+      _serialize(() => _saveSession(session));
+
+  Future<void> _saveSession(
+    InviteSession session, {
+    bool? consentOverride,
+  }) async {
     if (session.token != session.snapshot.token) {
       throw ArgumentError('Session token mismatch');
     }
@@ -115,9 +124,12 @@ final class ShareGoodLocalStore {
     final old = await _readSession(key);
     final id = old?.localSessionId ?? _randomId(18);
     final s = session.snapshot;
+    final newlyCompleted =
+        _isCompleted(session) && (old == null || !_isCompleted(old));
     final data = {
       'token': session.token,
       'localSessionId': id,
+      'startedAt': (old?.startedAt ?? session.startedAt)?.toIso8601String(),
       'target': s.target.toJson(),
       'moment': s.moment.name,
       'mode': s.mode.name,
@@ -127,7 +139,11 @@ final class ShareGoodLocalStore {
       'expiresAt': s.expiresAt.toIso8601String(),
       'serverStatus': session.serverStatus?.name,
       'pendingStatus': session.pendingStatus?.name,
-      'awaitingConsent': session.awaitingConsent,
+      'awaitingConsent':
+          consentOverride ??
+          (newlyCompleted
+              ? true
+              : old?.awaitingConsent ?? session.awaitingConsent),
     };
     final index = await _readIndex()
       ..remove(key);
@@ -141,7 +157,26 @@ final class ShareGoodLocalStore {
     for (final entry in removed) {
       await _secure.delete(key: entry);
     }
-  });
+  }
+
+  bool _isCompleted(InviteSession session) =>
+      max(
+        session.serverStatus?.index ?? -1,
+        session.pendingStatus?.index ?? -1,
+      ) >=
+      InviteParticipationStatus.completedPrivate.index;
+
+  Future<void> setAwaitingConsent(String token, bool value) =>
+      _serialize(() async {
+        final key = _key(token);
+        if (!(await _readIndex()).contains(key)) return;
+        final session = await _readSession(key);
+        if (session == null) return;
+        if (value && !_isCompleted(session)) {
+          throw StateError('Completion is required before consent');
+        }
+        await _saveSession(session, consentOverride: value);
+      });
 
   Future<List<InviteSession>> sessionsWithPending() => _serialize(() async {
     final result = <InviteSession>[];
@@ -225,6 +260,16 @@ final class ShareGoodLocalStore {
           'educationSeen': value.educationSeen,
         }),
       );
+  Future<SharePromptState> updatePromptState(
+    String ownerId,
+    SharePromptState Function(SharePromptState) update,
+  ) => _serialize(() async {
+    final value = update(promptState(ownerId));
+    if (!await setPromptState(ownerId, value)) {
+      throw StateError('Could not save prompt state');
+    }
+    return value;
+  });
   String? impactSeen(String ownerId) =>
       _prefs.getString('$impactPrefix$ownerId');
   Future<bool> setImpactSeen(String ownerId, String value) =>

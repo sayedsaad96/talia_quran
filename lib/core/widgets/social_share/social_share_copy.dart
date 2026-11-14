@@ -115,6 +115,8 @@ class SocialShareCopy {
         return isArabic ? 'شهادة إتمام' : 'Certificate';
       case SocialShareCategory.khatmah:
         return khatmahBadge;
+      case SocialShareCategory.invitation:
+        return isArabic ? 'دعوة' : 'Invitation';
     }
   }
 
@@ -167,6 +169,8 @@ class SocialShareCopy {
             : 'A journey of mastery with Talia';
       case SocialShareCategory.khatmah:
         return isArabic ? 'ابدأ ختمتك القادمة' : 'Start your next khatmah';
+      case SocialShareCategory.invitation:
+        return isArabic ? 'افتح الدعوة' : 'Open the invitation';
     }
   }
 

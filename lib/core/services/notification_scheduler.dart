@@ -32,19 +32,24 @@ import '../seasons/season_preferences.dart';
 import '../identity/record_owner_provider.dart';
 import '../../features/seasons/domain/last_ten_reminder.dart';
 import '../../features/seasons/domain/season_reminders.dart';
+import '../../features/share_good/domain/entities/invite_types.dart';
 
 /// Builds the rollout + user-choice flags for one refresh from its prefs.
-typedef ExperienceFlagsFactory = ExperienceFlags Function(SharedPreferences prefs);
+typedef ExperienceFlagsFactory =
+    ExperienceFlags Function(SharedPreferences prefs);
 
 /// Builds the seasons choices for one refresh from its prefs.
-typedef SeasonPreferencesFactory = SeasonPreferences Function(
-  SharedPreferences prefs,
-);
+typedef SeasonPreferencesFactory =
+    SeasonPreferences Function(SharedPreferences prefs);
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
-typedef ForecastAudienceResolver = Future<bool> Function(SharedPreferences prefs);
-typedef PrayerReviewPreparationBodyLoader = Future<String?> Function(
-  PrayerOccurrence occurrence, AppLocalizations l10n);
+typedef ForecastAudienceResolver =
+    Future<bool> Function(SharedPreferences prefs);
+typedef PrayerReviewPreparationBodyLoader =
+    Future<String?> Function(
+      PrayerOccurrence occurrence,
+      AppLocalizations l10n,
+    );
 
 /// Reads the persisted memorization profile without a foreground DI graph.
 /// Unknown, malformed, and unselected profiles fail closed to protect children.
@@ -55,7 +60,8 @@ Future<bool> forecastAudienceIsAdultFromPreferences(
     final raw = prefs.getString('mem_plus_profile');
     if (raw == null) return false;
     final decoded = jsonDecode(raw);
-    return decoded is Map<String, dynamic> && decoded['selectedPath'] == 'adult';
+    return decoded is Map<String, dynamic> &&
+        decoded['selectedPath'] == 'adult';
   } catch (_) {
     return false;
   }
@@ -98,6 +104,49 @@ bool isInQuietHoursWindow(
 }) {
   if (!enabled) return false;
   return _isInQuietWindow(time.toLocal().hour, startHour, endHour);
+}
+
+/// Returns no time when quiet hours or the expiry safety margin leave no window.
+DateTime? inviteReminderTime(
+  InviteSession session, {
+  required DateTime now,
+  required bool quietHours,
+  required int quietStart,
+  required int quietEnd,
+}) {
+  final started = session.startedAt;
+  if (started == null ||
+      session.snapshot.status != InviteLifecycleStatus.active) {
+    return null;
+  }
+  final status = [
+    session.serverStatus?.index ?? -1,
+    session.pendingStatus?.index ?? -1,
+  ];
+  if (!status.contains(InviteParticipationStatus.started.index) ||
+      status.any(
+        (value) => value >= InviteParticipationStatus.completedPrivate.index,
+      )) {
+    return null;
+  }
+  final expiry = session.snapshot.expiresAt;
+  final beforeExpiry = expiry.subtract(const Duration(hours: 2));
+  final afterStart = started.add(const Duration(hours: 1));
+  var at = beforeExpiry.isAfter(afterStart) ? beforeExpiry : afterStart;
+  if (quietHours && quietStart == quietEnd) return null;
+  if (isInQuietHoursWindow(
+    at,
+    enabled: quietHours,
+    startHour: quietStart,
+    endHour: quietEnd,
+  )) {
+    final local = at.toLocal();
+    at = DateTime(local.year, local.month, local.day, quietEnd);
+    if (!at.isAfter(local)) at = at.add(const Duration(days: 1));
+  }
+  // A refresh after the planned time must not reissue a delivered reminder.
+  if (!at.isAfter(now)) return null;
+  return at.isAfter(expiry.subtract(const Duration(minutes: 15))) ? null : at;
 }
 
 ({int hour, int minute}) applyQuietHours({
@@ -162,9 +211,9 @@ class NotificationScheduler {
   }) : _experienceFlags =
            experienceFlags ??
            ((prefs) => ExperienceFlags.withUserPreferences(
-                 prefs,
-                 const SupabaseRecordOwnerProvider(),
-               )),
+             prefs,
+             const SupabaseRecordOwnerProvider(),
+           )),
        _seasonPreferences =
            seasonPreferences ??
            ((prefs) =>
@@ -217,7 +266,11 @@ class NotificationScheduler {
               .firstOrNull
               ?.time;
         } catch (error, stack) {
-          TaliaLogger.w('Last-ten reminder uses its fallback time', error, stack);
+          TaliaLogger.w(
+            'Last-ten reminder uses its fallback time',
+            error,
+            stack,
+          );
         }
       }
       at = lastTenReminderAt(info: info, now: now, maghrib: maghrib);
@@ -301,7 +354,8 @@ class NotificationScheduler {
       enabled:
           prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
           false,
-      startHour: prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23,
+      startHour:
+          prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23,
       endHour: prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4,
     );
     if (shifted.hour == at.hour && shifted.minute == at.minute) return at;
@@ -318,7 +372,10 @@ class NotificationScheduler {
               ? getIt<PrayerTimesService>()
               : null);
       final times = await service?.timesForDate(date);
-      return times?.where((prayer) => prayer.key == 'maghrib').firstOrNull?.time;
+      return times
+          ?.where((prayer) => prayer.key == 'maghrib')
+          .firstOrNull
+          ?.time;
     } catch (error, stack) {
       TaliaLogger.w('Season reminder uses its fallback time', error, stack);
       return null;
@@ -334,6 +391,48 @@ class NotificationScheduler {
     _refreshQueue = operation.then<void>((_) {}, onError: (_, _) {});
     return operation;
   }
+
+  Future<void> cancelInviteReminder() =>
+      _enqueueRefresh(_service.cancelInviteReminder);
+
+  Future<void> scheduleInviteReminder(
+    InviteSession session, {
+    required AppLocalizations l10n,
+    required String activityLabel,
+    required bool available,
+    required bool adult,
+    DateTime? now,
+  }) => _enqueueRefresh(() async {
+    await _service.cancelInviteReminder();
+    final prefs = await SharedPreferences.getInstance();
+    final id = session.localSessionId;
+    if (!available ||
+        !adult ||
+        !(prefs.getBool(TaliaNotificationService.inviteReminderPreferenceKey) ??
+            true) ||
+        id == null ||
+        !RegExp(r'^[A-Za-z0-9_-]{24}$').hasMatch(id) ||
+        !await _service.areNotificationsGranted()) {
+      return;
+    }
+    final at = inviteReminderTime(
+      session,
+      now: now ?? DateTime.now(),
+      quietHours:
+          prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+          false,
+      quietStart:
+          prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23,
+      quietEnd: prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4,
+    );
+    if (at == null) return;
+    await _service.scheduleInviteReminder(
+      title: l10n.inviteReminderTitle,
+      body: l10n.inviteReminderBody(activityLabel),
+      at: at,
+      payload: 'sg1|$id',
+    );
+  });
 
   /// Reschedules every enabled reminder. Called from app resume, locale
   /// changes and first launch — none of which may surface plugin errors,
@@ -835,7 +934,9 @@ class NotificationScheduler {
     }
 
     final forecastEnabled =
-        prefs.getBool(TaliaNotificationService.forgettingForecastPreferenceKey) ??
+        prefs.getBool(
+          TaliaNotificationService.forgettingForecastPreferenceKey,
+        ) ??
         false;
     var adultAudience = false;
     try {
@@ -849,15 +950,18 @@ class NotificationScheduler {
     if (!_ownerScopedRefresh) {
       // Owner unknown (headless worker): keep the forecast as scheduled.
     } else if (forecastEnabled && featureEnabled && adultAudience) {
-      final hour = prefs.getInt(
+      final hour =
+          prefs.getInt(
             '${TaliaNotificationService.forgettingForecastPreferenceKey}_hour',
           ) ??
           18;
-      final minute = prefs.getInt(
+      final minute =
+          prefs.getInt(
             '${TaliaNotificationService.forgettingForecastPreferenceKey}_minute',
           ) ??
           0;
-      final weekday = prefs.getInt(
+      final weekday =
+          prefs.getInt(
             '${TaliaNotificationService.forgettingForecastPreferenceKey}_weekday',
           ) ??
           DateTime.monday;
@@ -1195,12 +1299,18 @@ class NotificationScheduler {
         PrayerKey.isha => isArabic ? 'العشاء' : 'Isha',
       };
       var reviewActive = true;
-      final reviewBodies = await _reviewPreparationBodies(
-        reminders, l10n, () => reviewActive,
-      ).timeout(const Duration(seconds: 2), onTimeout: () {
-        reviewActive = false;
-        return const <int, String>{};
-      });
+      final reviewBodies =
+          await _reviewPreparationBodies(
+            reminders,
+            l10n,
+            () => reviewActive,
+          ).timeout(
+            const Duration(seconds: 2),
+            onTimeout: () {
+              reviewActive = false;
+              return const <int, String>{};
+            },
+          );
       reviewActive = false;
       await _service.schedulePrayerCompanionReminders(
         reminders: reminders,
@@ -1217,7 +1327,9 @@ class NotificationScheduler {
           return switch (reminder.kind) {
             PrayerCompanionNotificationKind.preparation =>
               l10n.notificationCompanionPreparationBody(prayerName) +
-                (reviewBodies[reminder.id] == null ? '' : '\n${reviewBodies[reminder.id]}'),
+                  (reviewBodies[reminder.id] == null
+                      ? ''
+                      : '\n${reviewBodies[reminder.id]}'),
             PrayerCompanionNotificationKind.checkIn =>
               l10n.notificationCompanionCheckInBody(prayerName),
             PrayerCompanionNotificationKind.followUp =>
@@ -1251,7 +1363,8 @@ class NotificationScheduler {
   static const Duration _prayerReviewSelectionHorizon = Duration(hours: 24);
 
   Future<Map<int, String>> _reviewPreparationBodies(
-    List<ScheduledPrayerCompanionNotification> reminders, AppLocalizations l10n,
+    List<ScheduledPrayerCompanionNotification> reminders,
+    AppLocalizations l10n,
     bool Function() isActive,
   ) async {
     final loader = _prayerReviewBodyLoader;
@@ -1259,7 +1372,9 @@ class NotificationScheduler {
     final result = <int, String>{};
     for (final reminder in reminders) {
       if (!isActive()) break;
-      if (reminder.kind != PrayerCompanionNotificationKind.preparation) continue;
+      if (reminder.kind != PrayerCompanionNotificationKind.preparation) {
+        continue;
+      }
       final now = _prayerReviewNow();
       if (!now.isBefore(reminder.scheduledAt) ||
           !now.isBefore(reminder.occurrence.scheduledAt)) {
@@ -1275,7 +1390,8 @@ class NotificationScheduler {
         final addition = await loader(reminder.occurrence, l10n);
         if (!isActive()) return const {};
         final checkedAt = _prayerReviewNow();
-        if (addition != null && addition.trim().isNotEmpty &&
+        if (addition != null &&
+            addition.trim().isNotEmpty &&
             checkedAt.isBefore(reminder.scheduledAt) &&
             checkedAt.isBefore(reminder.occurrence.scheduledAt)) {
           result[reminder.id] = addition;

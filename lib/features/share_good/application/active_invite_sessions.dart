@@ -63,9 +63,14 @@ class ActiveInviteSessions {
     return null;
   }
 
+  InviteSession? forLocalSessionId(String id) => _sessions.values
+      .where((session) => session.localSessionId == id)
+      .firstOrNull;
+
   void clear(String token) {
     if (_restoring) _touched.add(token);
-    _sessions.remove(token);
+    final removed = _sessions.remove(token);
+    if (removed != null && !_changes.isClosed) _changes.add(removed);
   }
 
   Future<void> dispose() => _changes.close();

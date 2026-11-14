@@ -83,6 +83,7 @@ void main() {
       expect(json.keys.toSet(), {
         'token',
         'localSessionId',
+        'startedAt',
         'target',
         'moment',
         'mode',
@@ -165,4 +166,28 @@ void main() {
     );
     expect(await secure.read(key: unrelatedKey), 'unrelated-value');
   });
+
+  test(
+    'completion consent survives replay and explicit privacy choice wins',
+    () async {
+      final initial = example('complete-invite');
+      await store.saveSession(initial);
+      final completed = InviteSession(
+        token: initial.token,
+        snapshot: initial.snapshot,
+        pendingStatus: InviteParticipationStatus.completedPrivate,
+      );
+      await store.saveSession(completed);
+      expect((await store.session(initial.token))!.awaitingConsent, isTrue);
+      await store.setAwaitingConsent(initial.token, false);
+      await store.saveSession(completed);
+      expect((await store.session(initial.token))!.awaitingConsent, isFalse);
+      final restored = ShareGoodLocalStore(secure, prefs);
+      expect(
+        (await restored.session(initial.token))!.pendingStatus,
+        InviteParticipationStatus.completedPrivate,
+      );
+      expect((await restored.session(initial.token))!.awaitingConsent, isFalse);
+    },
+  );
 }

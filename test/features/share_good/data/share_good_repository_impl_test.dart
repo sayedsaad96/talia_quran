@@ -71,6 +71,16 @@ void main() {
       ),
     );
   });
+  test('start timestamp survives completion and server refresh', () async {
+    const token = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    await repo.resolve(token);
+    await repo.advance(token, InviteParticipationStatus.started);
+    final started = (await local.session(token))!.startedAt;
+    expect(started, DateTime.utc(2026, 11, 6));
+    await repo.advance(token, InviteParticipationStatus.completedPrivate);
+    await repo.resolve(token);
+    expect((await local.session(token))!.startedAt, started);
+  });
   test('an invalidated account cannot send a queued invite', () async {
     final barrier = AccountDataBarrier.forPreferences(
       await SharedPreferences.getInstance(),

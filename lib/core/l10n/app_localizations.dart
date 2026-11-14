@@ -17477,12 +17477,6 @@ abstract class AppLocalizations {
   /// **'الدعوات غير متاحة في مساحة الأطفال'**
   String get inviteKidsBlocked;
 
-  /// No description provided for @inviteExpiresIn.
-  ///
-  /// In ar, this message translates to:
-  /// **'تنتهي خلال {duration}'**
-  String inviteExpiresIn(String duration);
-
   /// No description provided for @inviteUnavailable.
   ///
   /// In ar, this message translates to:
@@ -17512,6 +17506,318 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count} دقيقة'**
   String inviteDurationMinutes(int count);
+
+  /// No description provided for @inviteActivityLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة: {activity}'**
+  String inviteActivityLabel(String activity);
+
+  /// No description provided for @inviteCompleteReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت القراءة'**
+  String get inviteCompleteReading;
+
+  /// No description provided for @inviteCompletionError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تسجيل الإتمام. حاول مرة أخرى.'**
+  String get inviteCompletionError;
+
+  /// No description provided for @inviteAzkarAlreadyDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممتها اليوم'**
+  String get inviteAzkarAlreadyDone;
+
+  /// No description provided for @inviteConfirmAzkarCompletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الإتمام'**
+  String get inviteConfirmAzkarCompletion;
+
+  /// No description provided for @inviteCompletionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت النشاط'**
+  String get inviteCompletionTitle;
+
+  /// No description provided for @inviteKeepPrivate.
+  ///
+  /// In ar, this message translates to:
+  /// **'احتفظ بإتمامي لنفسي'**
+  String get inviteKeepPrivate;
+
+  /// No description provided for @inviteTellInviter.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخبره أنني أتممت'**
+  String get inviteTellInviter;
+
+  /// No description provided for @inviteTellName.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيظهر اسمك {name}'**
+  String inviteTellName(String name);
+
+  /// No description provided for @inviteGuestSignIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنشئ حسابك واحفظ أثرك'**
+  String get inviteGuestSignIn;
+
+  /// No description provided for @inviteDisclosureError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّرت مشاركة الإتمام. حاول مرة أخرى.'**
+  String get inviteDisclosureError;
+
+  /// No description provided for @inviteNameUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف اسمًا لحسابك قبل مشاركة إتمامك.'**
+  String get inviteNameUnavailable;
+
+  /// No description provided for @inviteEditMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الرسالة'**
+  String get inviteEditMessage;
+
+  /// No description provided for @inviteModeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر طريقة المشاركة'**
+  String get inviteModeTitle;
+
+  /// No description provided for @inviteModePersonal.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة شخصية'**
+  String get inviteModePersonal;
+
+  /// No description provided for @inviteModePublic.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة عامة'**
+  String get inviteModePublic;
+
+  /// No description provided for @inviteIdentityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الذي يظهر في الدعوة'**
+  String get inviteIdentityTitle;
+
+  /// No description provided for @inviteIdentityFullName.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الكامل'**
+  String get inviteIdentityFullName;
+
+  /// No description provided for @inviteIdentityFirstName.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الأول'**
+  String get inviteIdentityFirstName;
+
+  /// No description provided for @inviteIdentityDisplayName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العرض'**
+  String get inviteIdentityDisplayName;
+
+  /// No description provided for @inviteIdentityAnonymous.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون اسم'**
+  String get inviteIdentityAnonymous;
+
+  /// No description provided for @inviteCreateAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء الدعوة'**
+  String get inviteCreateAction;
+
+  /// No description provided for @inviteCreateError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إنشاء الدعوة. حاول مرة أخرى.'**
+  String get inviteCreateError;
+
+  /// No description provided for @inviteSignInToCreate.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل الدخول لإنشاء دعوة'**
+  String get inviteSignInToCreate;
+
+  /// No description provided for @inviteBeforeNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} يدعوك لقراءة {activity} معه 🤍'**
+  String inviteBeforeNamed(String name, String activity);
+
+  /// No description provided for @inviteBeforeAnonymous.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدعوك لقراءة {activity} معي 🤍'**
+  String inviteBeforeAnonymous(String activity);
+
+  /// No description provided for @inviteAfterNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} أتمّ قراءة {activity} اليوم، ويدعوك لتقرأها أنت أيضًا 🤍'**
+  String inviteAfterNamed(String name, String activity);
+
+  /// No description provided for @inviteAfterAnonymous.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممتُ قراءة {activity} اليوم، وأدعوك لتقرأها أنت أيضًا 🤍'**
+  String inviteAfterAnonymous(String activity);
+
+  /// No description provided for @inviteExpiresIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنتهي الدعوة خلال {duration}'**
+  String inviteExpiresIn(String duration);
+
+  /// No description provided for @inviteExpirySoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنتهي الدعوة خلال {minutes} دقيقة'**
+  String inviteExpirySoon(int minutes);
+
+  /// No description provided for @inviteContinueChain.
+  ///
+  /// In ar, this message translates to:
+  /// **'واصل سلسلة الخير'**
+  String get inviteContinueChain;
+
+  /// No description provided for @inviteChainExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت الدعوة الأصلية. يمكنك إنشاء دعوة جديدة مستقلة.'**
+  String get inviteChainExpired;
+
+  /// No description provided for @inviteChainFresh.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء دعوة جديدة'**
+  String get inviteChainFresh;
+
+  /// No description provided for @goodImpactTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أثر الخير'**
+  String get goodImpactTitle;
+
+  /// No description provided for @shareGoodPromptHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ادعُ شخصًا ليشاركك هذا العمل'**
+  String get shareGoodPromptHint;
+
+  /// No description provided for @shareGoodEducation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجّل الدعوة المشاركة فقط. يظل إتمامك خاصًا ما لم تختر مشاركة اسمك.'**
+  String get shareGoodEducation;
+
+  /// No description provided for @inviteReminderTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير بالدعوة'**
+  String get inviteReminderTitle;
+
+  /// No description provided for @inviteReminderBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوتك لقراءة {activity} ما زالت متاحة'**
+  String inviteReminderBody(String activity);
+
+  /// No description provided for @inviteReminderSetting.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير الدعوات'**
+  String get inviteReminderSetting;
+
+  /// No description provided for @goodImpactResponses.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لم يستجب أحد لدعوتك بعد} =1{استجاب شخص واحد لدعوتك} =2{استجاب شخصان لدعوتك} few{استجاب {count} أشخاص لدعوتك} many{استجاب {count} شخصًا لدعوتك} other{استجاب {count} شخص لدعوتك}}'**
+  String goodImpactResponses(int count);
+
+  /// No description provided for @goodImpactCompletions.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لم يُسجّل إتمام بعد} =1{أتمّ شخص واحد القراءة} =2{أتمّ شخصان القراءة} few{أتمّ {count} أشخاص القراءة} many{أتمّ {count} شخصًا القراءة} other{أتمّ {count} شخص القراءة}}'**
+  String goodImpactCompletions(int count);
+
+  /// No description provided for @goodImpactReach.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =0{لم يمتد أثر دعوتك بعد} =1{امتد أثر دعوتك إلى شخص واحد} =2{امتد أثر دعوتك إلى شخصين} few{امتد أثر دعوتك إلى {count} أشخاص} many{امتد أثر دعوتك إلى {count} شخصًا} other{امتد أثر دعوتك إلى {count} شخص}}'**
+  String goodImpactReach(int count);
+
+  /// No description provided for @goodImpactActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة نشطة'**
+  String get goodImpactActive;
+
+  /// No description provided for @goodImpactRecentlyExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت مؤخرًا'**
+  String get goodImpactRecentlyExpired;
+
+  /// No description provided for @goodImpactEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستظهر دعواتك واستجاباتها هنا.'**
+  String get goodImpactEmpty;
+
+  /// No description provided for @goodImpactError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل أثر الخير. حاول مرة أخرى.'**
+  String get goodImpactError;
+
+  /// No description provided for @goodImpactNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'جديد'**
+  String get goodImpactNew;
+
+  /// No description provided for @goodImpactAcknowledgements.
+  ///
+  /// In ar, this message translates to:
+  /// **'من اختاروا مشاركة إتمامهم'**
+  String get goodImpactAcknowledgements;
+
+  /// No description provided for @goodImpactMilestoneFirstChain.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدأت سلسلة خير'**
+  String get goodImpactMilestoneFirstChain;
+
+  /// No description provided for @goodImpactMilestoneFiveReach.
+  ///
+  /// In ar, this message translates to:
+  /// **'خمس استجابات ووصولات'**
+  String get goodImpactMilestoneFiveReach;
+
+  /// No description provided for @goodImpactMilestoneTenResponses.
+  ///
+  /// In ar, this message translates to:
+  /// **'عشر استجابات'**
+  String get goodImpactMilestoneTenResponses;
+
+  /// No description provided for @goodImpactMilestoneTwentyFiveReach.
+  ///
+  /// In ar, this message translates to:
+  /// **'خمس وعشرون استجابة ووصولًا'**
+  String get goodImpactMilestoneTwentyFiveReach;
 }
 
 class _AppLocalizationsDelegate

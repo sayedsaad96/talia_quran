@@ -217,6 +217,7 @@ abstract final class SharePalettes {
   static SharePalette forCategory(SocialShareCategory category) {
     return switch (category) {
       SocialShareCategory.quranAyah => mushafLight,
+      SocialShareCategory.invitation => forenoon,
       SocialShareCategory.dua => suhoor,
       SocialShareCategory.azkar => dusk,
       SocialShareCategory.achievement ||

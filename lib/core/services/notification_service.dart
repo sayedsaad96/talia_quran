@@ -306,6 +306,8 @@ class TaliaNotificationService {
       'notifications_forgetting_forecast';
   static const String tahajjudPreferenceKey = 'notifications_tahajjud';
   static const String khatmahReminderPreferenceKey = 'notifications_khatmah';
+  static const String inviteReminderPreferenceKey =
+      'notifications_share_good_invite';
   static const String prayerNotificationsPreferenceKey =
       'notifications_prayer_times';
   static const String prayerFajrKey = 'notifications_prayer_fajr';
@@ -350,6 +352,7 @@ class TaliaNotificationService {
   static const int _weeklyImpactId = 1064;
   static const int _forgettingForecastId = 1065;
   static const int _lastTenReminderId = 1066;
+  static const int _inviteReminderId = 1067;
   // Seasonal reminders (at most one per civil day, 7 days ahead): 1140-1147.
   static const int _seasonReminderBaseId = 1140;
   static const int seasonReminderMaxSlots = 8;
@@ -1257,9 +1260,7 @@ class TaliaNotificationService {
         );
         return;
       }
-      TaliaLogger.w(
-        'Device timezone "$identifier" is not in the tz database',
-      );
+      TaliaLogger.w('Device timezone "$identifier" is not in the tz database');
     } catch (error, stack) {
       TaliaLogger.w('Device timezone lookup failed', error, stack);
     }
@@ -1765,7 +1766,9 @@ class TaliaNotificationService {
     for (var bit = 0; bit < 7; bit++) {
       if ((practiceDays & (1 << bit)) == 0) continue;
       await _zonedSchedule(
-        id: _kidsPracticeBaseId + bit, title: title, body: body,
+        id: _kidsPracticeBaseId + bit,
+        title: title,
+        body: body,
         scheduledDate: _nextInstanceOfDayAndTime(bit + 1, hour, minute),
         notificationDetails: _kidsReviewNotificationDetails,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -1892,6 +1895,32 @@ class TaliaNotificationService {
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: '/',
     );
+  }
+
+  /// One invitation reminder, sharing the same iOS pending-notification budget.
+  Future<void> scheduleInviteReminder({
+    required String title,
+    required String body,
+    required DateTime at,
+    required String payload,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelInviteReminder();
+    if (await _availableScheduledNotificationSlots() < 1) return;
+    await _zonedSchedule(
+      id: _inviteReminderId,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(at, tz.local),
+      notificationDetails: _seasonReminderNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
+    );
+  }
+
+  Future<void> cancelInviteReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _inviteReminderId);
   }
 
   /// Replaces every pending seasonal reminder (ids 1140-1147) with [items]:

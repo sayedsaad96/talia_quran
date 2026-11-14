@@ -47,6 +47,7 @@ class FakeShare implements ShareGoodRepository {
       token: token,
       snapshot: session.snapshot,
       serverStatus: status,
+      localSessionId: session.localSessionId,
     );
     return Right(session);
   }
@@ -77,6 +78,7 @@ void main() {
       expiresAt: DateTime.now().add(const Duration(days: 1)),
     ),
     serverStatus: status,
+    localSessionId: 'local-session-id',
   );
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
@@ -105,6 +107,7 @@ void main() {
     expect(repo.calls, [InviteParticipationStatus.opened]);
     expect(await c.startActivity(), '/quran/page/18');
     expect(active.forTarget(const QuranPageInviteTarget(18)), isNotNull);
+    expect(c.activityLaunch?.localSessionId, 'local-session-id');
     await c.close();
     await active.dispose();
   });
@@ -142,6 +145,7 @@ void main() {
     await c.load(token);
     expect(c.state, isA<InvitePreviewExpired>());
     expect(c.startFresh(), '/quran/page/18');
+    expect(c.activityLaunch, isNull);
     expect(repo.calls, isEmpty);
     await c.close();
     await active.dispose();

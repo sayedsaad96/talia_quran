@@ -116,7 +116,10 @@ class ShareCardShell extends StatelessWidget {
                       metrics: metrics,
                       copy: copy,
                       invitation: copy.invitation(data),
-                      qrData: ShareCardLinks.forCategory(data.category),
+                      fitText: data.category == SocialShareCategory.invitation,
+                      qrData: data.category == SocialShareCategory.invitation
+                          ? data.linkUrl?.toString() ?? ''
+                          : ShareCardLinks.forCategory(data.category),
                     ),
                   ],
                 ),

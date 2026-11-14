@@ -24,6 +24,9 @@ import '../widgets/khatmah_dedication_form.dart';
 import '../widgets/group_khatmah_entry.dart';
 import '../widgets/khatmah_juz_map.dart';
 import '../widgets/khatmah_progress_gauge.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_action.dart';
 
 class KhatmahDashboardPage extends StatefulWidget {
   const KhatmahDashboardPage({super.key, this.cubit});
@@ -814,6 +817,20 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                                 ),
                               ),
                             ),
+                            if (state is KhatmahActive &&
+                                !dailyComplete &&
+                                wirdStartPage >= 1 &&
+                                wirdEndPage <= 604 &&
+                                wirdStartPage <= wirdEndPage &&
+                                wirdEndPage - wirdStartPage <= 19)
+                              ShareGoodAction(
+                                target: QuranWirdInviteTarget(
+                                  wirdStartPage,
+                                  wirdEndPage,
+                                ),
+                                moment: InviteMoment.beforeActivity,
+                                style: ShareGoodActionStyle.text,
+                              ),
                           ],
                         ),
                       ),

@@ -8,16 +8,18 @@ import 'dart:async' as _i5;
 
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:shared_preferences/shared_preferences.dart' as _i23;
+import 'package:shared_preferences/shared_preferences.dart' as _i25;
+import 'package:talia_quran/core/backup/portable_reading_data.dart' as _i20;
 import 'package:talia_quran/core/error/app_failure.dart' as _i6;
+import 'package:talia_quran/core/identity/account_data_barrier.dart' as _i21;
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart'
-    as _i20;
+    as _i22;
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
     as _i14;
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart'
-    as _i22;
+    as _i24;
 import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart'
-    as _i21;
+    as _i23;
 import 'package:talia_quran/core/services/app_session_service.dart' as _i19;
 import 'package:talia_quran/core/sync/sync_result.dart' as _i13;
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
@@ -1579,6 +1581,78 @@ class MockAppSessionService extends _i1.Mock implements _i19.AppSessionService {
   }
 
   @override
+  Iterable<String> checkpointKeysForOwner(String? ownerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#checkpointKeysForOwner, [ownerId]),
+            returnValue: <String>[],
+          )
+          as Iterable<String>);
+
+  @override
+  _i5.Future<void> saveCurrentQuranCheckpoint(int? pageNumber) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveCurrentQuranCheckpoint, [pageNumber]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<_i20.QuranReadingCheckpoint?> readCheckpointUnderLease(
+    String? ownerId,
+    _i21.AccountDataLease? lease,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#readCheckpointUnderLease, [ownerId, lease]),
+            returnValue: _i5.Future<_i20.QuranReadingCheckpoint?>.value(),
+          )
+          as _i5.Future<_i20.QuranReadingCheckpoint?>);
+
+  @override
+  _i5.Future<void> writeCheckpointUnderLease(
+    String? ownerId,
+    int? page,
+    _i21.AccountDataLease? lease,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#writeCheckpointUnderLease, [
+              ownerId,
+              page,
+              lease,
+            ]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> saveQuranCheckpoint({
+    required String? expectedOwnerId,
+    required int? pageNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveQuranCheckpoint, [], {
+              #expectedOwnerId: expectedOwnerId,
+              #pageNumber: pageNumber,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<_i20.QuranReadingCheckpoint?> exportQuranCheckpoint({
+    required String? expectedOwnerId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#exportQuranCheckpoint, [], {
+              #expectedOwnerId: expectedOwnerId,
+            }),
+            returnValue: _i5.Future<_i20.QuranReadingCheckpoint?>.value(),
+          )
+          as _i5.Future<_i20.QuranReadingCheckpoint?>);
+
+  @override
   _i5.Future<void> saveLocation(String? location) =>
       (super.noSuchMethod(
             Invocation.method(#saveLocation, [location]),
@@ -1652,7 +1726,7 @@ class MockGetActivityHeatmapUsecase extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockMemorizationPathResolver extends _i1.Mock
-    implements _i20.MemorizationPathResolver {
+    implements _i22.MemorizationPathResolver {
   MockMemorizationPathResolver() {
     _i1.throwOnMissingStub(this);
   }
@@ -1709,34 +1783,34 @@ class MockMemorizationPathResolver extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetSmartCoachRecommendationUsecase extends _i1.Mock
-    implements _i21.GetSmartCoachRecommendationUsecase {
+    implements _i23.GetSmartCoachRecommendationUsecase {
   MockGetSmartCoachRecommendationUsecase() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i22.SmartCoachRecommendation?>> call() =>
+  _i5.Future<_i2.Either<_i6.Failure, _i24.SmartCoachRecommendation?>> call() =>
       (super.noSuchMethod(
             Invocation.method(#call, []),
             returnValue:
                 _i5.Future<
-                  _i2.Either<_i6.Failure, _i22.SmartCoachRecommendation?>
+                  _i2.Either<_i6.Failure, _i24.SmartCoachRecommendation?>
                 >.value(
-                  _FakeEither_0<_i6.Failure, _i22.SmartCoachRecommendation?>(
+                  _FakeEither_0<_i6.Failure, _i24.SmartCoachRecommendation?>(
                     this,
                     Invocation.method(#call, []),
                   ),
                 ),
           )
           as _i5.Future<
-            _i2.Either<_i6.Failure, _i22.SmartCoachRecommendation?>
+            _i2.Either<_i6.Failure, _i24.SmartCoachRecommendation?>
           >);
 }
 
 /// A class which mocks [SharedPreferences].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSharedPreferences extends _i1.Mock implements _i23.SharedPreferences {
+class MockSharedPreferences extends _i1.Mock implements _i25.SharedPreferences {
   MockSharedPreferences() {
     _i1.throwOnMissingStub(this);
   }

@@ -23,7 +23,8 @@ enum SocialShareCategory {
   streak,
   progress,
   certificate,
-  khatmah;
+  khatmah,
+  invitation;
 
   IconData get icon {
     switch (this) {
@@ -45,6 +46,8 @@ enum SocialShareCategory {
         return TaliaIcons.certificate;
       case SocialShareCategory.khatmah:
         return TaliaIcons.reading;
+      case SocialShareCategory.invitation:
+        return TaliaIcons.share;
     }
   }
 
@@ -68,6 +71,8 @@ enum SocialShareCategory {
         return 'شهادة إتمام';
       case SocialShareCategory.khatmah:
         return 'ختمة القرآن';
+      case SocialShareCategory.invitation:
+        return 'دعوة';
     }
   }
 
@@ -91,6 +96,8 @@ enum SocialShareCategory {
         return 'Certificate';
       case SocialShareCategory.khatmah:
         return 'Quran Khatmah';
+      case SocialShareCategory.invitation:
+        return 'Invitation';
     }
   }
 
@@ -176,6 +183,7 @@ class SocialShareData {
   final SocialShareCategory category;
   final String? userName;
   final String? customBadge;
+  final Uri? linkUrl;
 
   // Metadata & specific share attributes
   final String? surahName;
@@ -205,6 +213,7 @@ class SocialShareData {
     this.subtitle,
     this.userName,
     this.customBadge,
+    this.linkUrl,
     this.surahName,
     this.ayahNumber,
     this.juzNumber,
@@ -225,6 +234,18 @@ class SocialShareData {
     this.audience = SocialShareAudience.adult,
     this.achievementUnlocked,
   });
+
+  factory SocialShareData.invitation({
+    required String title,
+    required String message,
+    required Uri linkUrl,
+  }) => SocialShareData(
+    content: message,
+    title: title,
+    linkUrl: linkUrl,
+    category: SocialShareCategory.invitation,
+    showCharacter: false,
+  );
 
   /// Factory for Quran Verse share from authentic domain entities
   factory SocialShareData.quranAyah({
@@ -514,6 +535,7 @@ class SocialShareData {
     subtitle: subtitle,
     userName: userName == _unset ? this.userName : userName as String?,
     customBadge: customBadge,
+    linkUrl: linkUrl,
     surahName: surahName,
     ayahNumber: ayahNumber,
     juzNumber: juzNumber,
@@ -537,7 +559,12 @@ class SocialShareData {
 
   /// Plain-text fallback for channels without image support.  The footer is
   /// parameterized so callers can localize it from presentation code.
-  String toPlainShareText({String? footer}) {
+  String toPlainShareText({String? footer, String? message}) {
+    if (category == SocialShareCategory.invitation) {
+      final text = (message ?? content).trim();
+      final link = linkUrl?.toString() ?? '';
+      return text.isEmpty ? link : '$text\n\n$link';
+    }
     final buffer = StringBuffer();
     if (title != null && title!.isNotEmpty) {
       buffer.writeln(title);

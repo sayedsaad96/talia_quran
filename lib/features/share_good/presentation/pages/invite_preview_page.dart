@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/icons/talia_icons.dart';
 import '../cubits/invite_preview_cubit.dart';
+import '../widgets/invite_completion_sheet.dart';
 
 class InvitePreviewPage extends StatefulWidget {
   const InvitePreviewPage({super.key, required this.token});
@@ -19,25 +23,37 @@ class _InvitePreviewPageState extends State<InvitePreviewPage> {
   @override
   void initState() {
     super.initState();
-    context.read<InvitePreviewCubit>().load(widget.token);
+    unawaited(_load());
   }
 
   @override
   void didUpdateWidget(covariant InvitePreviewPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.token != widget.token) {
-      context.read<InvitePreviewCubit>().load(widget.token);
+      unawaited(_load());
     }
+  }
+
+  Future<void> _load() async {
+    final token = widget.token;
+    final cubit = context.read<InvitePreviewCubit>();
+    await cubit.load(token);
+    if (!mounted || token != widget.token) return;
+    final session = cubit.awaitingConsentSession;
+    if (session != null) await InviteCompletionSheet.show(context, session);
   }
 
   Future<void> _start() async {
     if (_starting) return;
     setState(() => _starting = true);
     final token = widget.token;
-    final route = await context.read<InvitePreviewCubit>().startActivity();
+    final cubit = context.read<InvitePreviewCubit>();
+    final route = await cubit.startActivity();
     if (!mounted) return;
     setState(() => _starting = false);
-    if (route != null && token == widget.token) context.go(route);
+    if (route != null && token == widget.token) {
+      context.go(route, extra: cubit.activityLaunch);
+    }
   }
 
   String _duration(DateTime expiresAt) {
@@ -100,7 +116,7 @@ class _InvitePreviewPageState extends State<InvitePreviewPage> {
       InvitePreviewOffline() => _PreviewContent(
         title: l10n.inviteOfflineRetry,
         action: l10n.tryAgain,
-        onAction: () => context.read<InvitePreviewCubit>().load(widget.token),
+        onAction: () => unawaited(_load()),
       ),
       _ => _PreviewContent(
         title: switch (state) {
@@ -151,7 +167,7 @@ class _PreviewContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Icon(
-          Icons.menu_book_rounded,
+          TaliaIcons.mushaf,
           size: 56,
           color: theme.colorScheme.primary,
         ),

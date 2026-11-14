@@ -9,6 +9,9 @@ import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'reciter_selector_sheet.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_action.dart';
 
 /// Overflow sheet for the adult reader's secondary actions (presentation).
 ///
@@ -26,6 +29,8 @@ class ReaderOverflowSheet extends StatefulWidget {
     this.onStrengthOverlayChanged,
     this.onDownload,
     this.onStudy,
+    this.inviteTarget,
+    this.inviteMoment = InviteMoment.beforeActivity,
   });
 
   final VoidCallback onEnterFocus;
@@ -42,6 +47,8 @@ class ReaderOverflowSheet extends StatefulWidget {
   final ValueChanged<bool>? onStrengthOverlayChanged;
   final VoidCallback? onDownload;
   final VoidCallback? onStudy;
+  final InviteActivityTarget? inviteTarget;
+  final InviteMoment inviteMoment;
 
   static Future<void> show(
     BuildContext context, {
@@ -53,6 +60,8 @@ class ReaderOverflowSheet extends StatefulWidget {
     ValueChanged<bool>? onStrengthOverlayChanged,
     VoidCallback? onDownload,
     VoidCallback? onStudy,
+    InviteActivityTarget? inviteTarget,
+    InviteMoment inviteMoment = InviteMoment.beforeActivity,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -73,6 +82,8 @@ class ReaderOverflowSheet extends StatefulWidget {
             onStrengthOverlayChanged: onStrengthOverlayChanged,
             onDownload: onDownload,
             onStudy: onStudy,
+            inviteTarget: inviteTarget,
+            inviteMoment: inviteMoment,
           ),
         ),
       ),
@@ -162,6 +173,12 @@ class _ReaderOverflowSheetState extends State<ReaderOverflowSheet> {
                 title: context.l10n.readerGoToPage,
                 onTap: widget.onOpenNavigation,
               ),
+              if (widget.inviteTarget case final target?)
+                ShareGoodAction(
+                  target: target,
+                  moment: widget.inviteMoment,
+                  style: ShareGoodActionStyle.text,
+                ),
               ValueListenableBuilder<QuranReciter>(
                 valueListenable: reciterService.currentReciter,
                 builder: (context, reciter, _) => _actionTile(

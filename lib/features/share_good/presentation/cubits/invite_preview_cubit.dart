@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../application/active_invite_sessions.dart';
+import '../../application/invite_activity_launch.dart';
 import '../../domain/entities/invite_activity_target.dart';
 import '../../domain/entities/invite_types.dart';
 import '../../domain/repositories/share_good_repository.dart';
@@ -76,11 +77,16 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
   final Future<bool> Function(String)? _acknowledgeIncoming;
   final bool arabic;
   int _generation = 0;
+  InviteActivityLaunch? _activityLaunch;
+  InviteActivityLaunch? get activityLaunch => _activityLaunch;
+  InviteSession? awaitingConsentSession;
   final _opened = <String>{};
   final _opening = <String, Future<Either<ShareGoodFailure, InviteSession>>>{};
   static final _tokenPattern = RegExp(r'^[A-Za-z0-9_-]{43}$');
 
   Future<void> load(String token) async {
+    _activityLaunch = null;
+    awaitingConsentSession = null;
     final generation = ++_generation;
     emit(const InvitePreviewLoading());
     if (!_tokenPattern.hasMatch(token)) {
@@ -137,6 +143,7 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
   ) async {
     if (failure == ShareGoodFailure.expired) {
       final cached = await _cachedSession(token);
+      if (cached != null) _captureConsent(cached);
       await _showExpired(cached?.snapshot.target, generation);
       return;
     }
@@ -149,6 +156,7 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
   }
 
   Future<void> _showSession(InviteSession session, int generation) async {
+    _captureConsent(session);
     final snapshot = session.snapshot;
     if (snapshot.status == InviteLifecycleStatus.revoked) {
       emit(const InvitePreviewInvalid());
@@ -165,6 +173,15 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
       (_) async => emit(const InvitePreviewUnavailable(null)),
       (label) => _showReady(session, label, generation),
     );
+  }
+
+  void _captureConsent(InviteSession session) {
+    final threshold = InviteParticipationStatus.completedPrivate.index;
+    if (session.awaitingConsent &&
+        ((session.serverStatus?.index ?? -1) >= threshold ||
+            (session.pendingStatus?.index ?? -1) >= threshold)) {
+      awaitingConsentSession = session;
+    }
   }
 
   Future<void> _showReady(
@@ -221,6 +238,7 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
   }
 
   Future<String?> startActivity() async {
+    _activityLaunch = null;
     final current = state;
     final generation = _generation;
     if (current is! InvitePreviewReady) return null;
@@ -253,6 +271,10 @@ class InvitePreviewCubit extends Cubit<InvitePreviewState> {
       }
       return result.fold<String?>((_) => null, (session) {
         _activeSessions.activate(session);
+        final id = session.localSessionId;
+        if (id != null && _activeSessions.forLocalSessionId(id) != null) {
+          _activityLaunch = InviteActivityLaunch(id);
+        }
         return _route(session.snapshot.target);
       });
     } catch (_) {

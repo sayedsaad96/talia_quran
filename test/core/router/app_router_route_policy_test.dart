@@ -13,6 +13,16 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 
 void main() {
   group('AppRouter route policy', () {
+    test('Good Impact requires login with a fixed return destination', () {
+      expect(AppRouter.requiresAuthentication(AppRoutes.goodImpact), isTrue);
+      expect(
+        AppRouter.redirectForAuth(
+          const AuthUnauthenticated(),
+          AppRoutes.goodImpact,
+        ),
+        '/login?from=good_impact',
+      );
+    });
     test(
       'owner-data failure redirects any current screen to recovery login',
       () {

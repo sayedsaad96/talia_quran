@@ -10468,11 +10468,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Invitations are unavailable in the children’s space';
 
   @override
-  String inviteExpiresIn(String duration) {
-    return 'Expires in $duration';
-  }
-
-  @override
   String get inviteUnavailable => 'This activity is currently unavailable';
 
   @override
@@ -10492,4 +10487,215 @@ class AppLocalizationsEn extends AppLocalizations {
   String inviteDurationMinutes(int count) {
     return '$count minutes';
   }
+
+  @override
+  String inviteActivityLabel(String activity) {
+    return 'Invitation: $activity';
+  }
+
+  @override
+  String get inviteCompleteReading => 'I finished reading';
+
+  @override
+  String get inviteCompletionError =>
+      'Could not record completion. Please try again.';
+
+  @override
+  String get inviteAzkarAlreadyDone => 'I completed these today';
+
+  @override
+  String get inviteConfirmAzkarCompletion => 'Confirm completion';
+
+  @override
+  String get inviteCompletionTitle => 'Activity completed';
+
+  @override
+  String get inviteKeepPrivate => 'Keep my completion private';
+
+  @override
+  String get inviteTellInviter => 'Tell them I completed it';
+
+  @override
+  String inviteTellName(String name) {
+    return 'Your name will appear as $name';
+  }
+
+  @override
+  String get inviteGuestSignIn => 'Create an account and save your impact';
+
+  @override
+  String get inviteDisclosureError =>
+      'Could not share your completion. Please try again.';
+
+  @override
+  String get inviteNameUnavailable =>
+      'Add a name to your account before sharing your completion.';
+
+  @override
+  String get inviteEditMessage => 'Edit message';
+
+  @override
+  String get inviteModeTitle => 'Choose how to share';
+
+  @override
+  String get inviteModePersonal => 'Personal invitation';
+
+  @override
+  String get inviteModePublic => 'Public share';
+
+  @override
+  String get inviteIdentityTitle => 'Name shown in the invitation';
+
+  @override
+  String get inviteIdentityFullName => 'Full name';
+
+  @override
+  String get inviteIdentityFirstName => 'First name';
+
+  @override
+  String get inviteIdentityDisplayName => 'Display name';
+
+  @override
+  String get inviteIdentityAnonymous => 'Without a name';
+
+  @override
+  String get inviteCreateAction => 'Create invitation';
+
+  @override
+  String get inviteCreateError =>
+      'Could not create the invitation. Please try again.';
+
+  @override
+  String get inviteSignInToCreate => 'Sign in to create an invitation';
+
+  @override
+  String inviteBeforeNamed(String name, String activity) {
+    return '$name invites you to read $activity together 🤍';
+  }
+
+  @override
+  String inviteBeforeAnonymous(String activity) {
+    return 'I invite you to read $activity with me 🤍';
+  }
+
+  @override
+  String inviteAfterNamed(String name, String activity) {
+    return '$name completed $activity today and invites you to read it too 🤍';
+  }
+
+  @override
+  String inviteAfterAnonymous(String activity) {
+    return 'I completed $activity today and invite you to read it too 🤍';
+  }
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'Invitation expires in $duration';
+  }
+
+  @override
+  String inviteExpirySoon(int minutes) {
+    return 'Invitation expires in $minutes minutes';
+  }
+
+  @override
+  String get inviteContinueChain => 'Continue the chain';
+
+  @override
+  String get inviteChainExpired =>
+      'The original invitation has expired. You can create a new standalone invitation.';
+
+  @override
+  String get inviteChainFresh => 'Create a new invitation';
+
+  @override
+  String get goodImpactTitle => 'Good Impact';
+
+  @override
+  String get shareGoodPromptHint => 'Invite someone to do this activity too';
+
+  @override
+  String get shareGoodEducation =>
+      'Your invitation records participation only. Your completion stays private unless you choose to share your name.';
+
+  @override
+  String get inviteReminderTitle => 'Invitation reminder';
+
+  @override
+  String inviteReminderBody(String activity) {
+    return 'Your invitation to read $activity is still available';
+  }
+
+  @override
+  String get inviteReminderSetting => 'Invitation reminders';
+
+  @override
+  String goodImpactResponses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count responses',
+      one: '1 response',
+      zero: 'No responses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goodImpactCompletions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count completions',
+      one: '1 completion',
+      zero: 'No completions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goodImpactReach(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count downstream reach',
+      one: '1 downstream reach',
+      zero: 'No downstream reach',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goodImpactActive => 'Active invitation';
+
+  @override
+  String get goodImpactRecentlyExpired => 'Recently expired';
+
+  @override
+  String get goodImpactEmpty =>
+      'Your invitations and responses will appear here.';
+
+  @override
+  String get goodImpactError => 'Could not load Good Impact. Please try again.';
+
+  @override
+  String get goodImpactNew => 'New';
+
+  @override
+  String get goodImpactAcknowledgements =>
+      'People who chose to share their completion';
+
+  @override
+  String get goodImpactMilestoneFirstChain => 'A chain has started';
+
+  @override
+  String get goodImpactMilestoneFiveReach =>
+      'Five responses and downstream reach';
+
+  @override
+  String get goodImpactMilestoneTenResponses => 'Ten responses';
+
+  @override
+  String get goodImpactMilestoneTwentyFiveReach =>
+      'Twenty-five responses and downstream reach';
 }

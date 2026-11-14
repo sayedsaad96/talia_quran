@@ -47,6 +47,8 @@ import 'features/share_good/application/incoming_invite_link_service.dart';
 import 'features/share_good/application/install_referrer_channel.dart';
 import 'features/share_good/data/datasources/share_good_local_store.dart';
 import 'features/share_good/share_good_config.dart';
+import 'features/share_good/application/good_impact_indicator_controller.dart';
+import 'features/share_good/application/share_good_notification_controller.dart';
 
 /// Notifier that signals when [AppInitializer] has finished.
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
@@ -126,6 +128,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
   void _onInitialized() {
     if (appInitializedNotifier.value && mounted) {
+      _refreshGoodImpact();
       setState(() {});
     }
   }
@@ -137,6 +140,10 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     getIt<AppUpdateCubit>().setForeground(state == AppLifecycleState.resumed);
 
     if (state == AppLifecycleState.resumed) {
+      _refreshGoodImpact();
+      if (getIt.isRegistered<ShareGoodNotificationController>()) {
+        unawaited(getIt<ShareGoodNotificationController>().refresh());
+      }
       _audioNotificationController?.setReady(_launchNavigationReady);
       if (getIt.isRegistered<HomeWidgetPublisher>()) {
         unawaited(getIt<HomeWidgetPublisher>().refresh());
@@ -167,6 +174,12 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     final uri = AppRouter.router.routerDelegate.currentConfiguration.uri;
     if (AppRouter.isInvitePreviewLocation(uri.path)) return;
     unawaited(getIt<AppSessionService>().saveLocation(uri.toString()));
+  }
+
+  void _refreshGoodImpact() {
+    if (getIt.isRegistered<GoodImpactIndicatorController>()) {
+      unawaited(getIt<GoodImpactIndicatorController>().onResume());
+    }
   }
 
   @override
@@ -391,6 +404,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       return;
     }
     final epoch = _priorityNavigationEpoch;
+    if (await _claimInviteReminder(event.payload, epoch)) return;
     final outcome = await getIt<PrayerCompanionController>().handle(event);
     if (!mounted || epoch != _priorityNavigationEpoch || _hasPasswordRecovery) {
       return;
@@ -429,6 +443,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       payload: pending.payload,
       actionId: pending.actionId,
     );
+    if (await _claimInviteReminder(event.payload, _priorityNavigationEpoch)) {
+      return true;
+    }
     if (isFirstTime) {
       // First-time users always go to onboarding; no notification response
       // (companion or legacy) is applied before onboarding completes.
@@ -442,6 +459,32 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       AppRouter.router.go(outcome.route);
     }
     return false;
+  }
+
+  Future<bool> _claimInviteReminder(String? payload, int epoch) async {
+    if (payload == null || !payload.startsWith('sg1|')) return false;
+    if (!getIt.isRegistered<ShareGoodNotificationController>()) return true;
+    try {
+      final lease = AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ).capture();
+      final session = await getIt<ShareGoodNotificationController>().claim(
+        payload,
+      );
+      lease.check();
+      if (session == null ||
+          !mounted ||
+          epoch != _priorityNavigationEpoch ||
+          _hasPasswordRecovery) {
+        return true;
+      }
+      _priorityNavigationEpoch++;
+      _widgetNavigationEpoch++;
+      AppRouter.router.go(AppRoutes.inviteLocation(session.token));
+    } on AccountDataUnavailableException {
+      // A profile/account transition owns navigation.
+    }
+    return true;
   }
 
   bool get _hasPasswordRecovery {

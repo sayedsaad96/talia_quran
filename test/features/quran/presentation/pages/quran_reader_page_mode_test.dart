@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,8 +10,11 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/config/supabase_config.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
@@ -37,7 +41,15 @@ import 'package:talia_quran/features/quran/presentation/cubits/quran_page_cubit.
 import 'package:talia_quran/features/quran/presentation/pages/quran_reader_page.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_view.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/reader_top_bar.dart';
+import 'package:talia_quran/features/quran/presentation/widgets/reader_footer.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
+import 'package:talia_quran/features/share_good/application/active_invite_sessions.dart';
+import 'package:talia_quran/features/share_good/data/datasources/share_good_local_store.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_activity_target.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_types.dart';
+import 'package:talia_quran/features/share_good/domain/repositories/share_good_repository.dart';
+import 'package:talia_quran/features/share_good/domain/services/invite_target_labeler.dart';
+import 'package:talia_quran/features/share_good/share_good_config.dart';
 
 class MockAppSessionService extends Mock implements AppSessionService {}
 
@@ -48,6 +60,10 @@ class MockSaveReadPageUsecase extends Mock implements SaveReadPageUsecase {}
 class MockStreakService extends Mock implements StreakService {}
 
 class MockKhatmahCubit extends Mock implements KhatmahCubit {}
+
+class _MockShareGoodRepository extends Mock implements ShareGoodRepository {}
+
+class _MockMemorizationPath extends Mock implements MemorizationPathResolver {}
 
 class MockGetActiveKhatmahUsecase extends Mock
     implements GetActiveKhatmahUsecase {}
@@ -199,6 +215,7 @@ void main() {
     QuranReaderMode readerMode = QuranReaderMode.free,
     KhatmahCubit? khatmahCubit,
     Locale locale = const Locale('ar'),
+    String? inviteSessionId,
   }) {
     return MultiBlocProvider(
       providers: [
@@ -219,6 +236,7 @@ void main() {
           pageNumber: pageNumber,
           readerMode: readerMode,
           khatmahCubit: khatmahCubit,
+          inviteSessionId: inviteSessionId,
         ),
       ),
     );
@@ -475,6 +493,148 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await fixture.cubit.close();
     });
+
+    for (final viewport in [
+      (size: const Size(800, 600), locale: const Locale('en'), wide: true),
+      (size: const Size(320, 640), locale: const Locale('ar'), wide: false),
+    ]) {
+      testWidgets(
+        'invite waits for the explicit Khatmah save to finish at ${viewport.size} ${viewport.locale}',
+        (tester) async {
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = viewport.size;
+          addTearDown(tester.view.resetDevicePixelRatio);
+          addTearDown(tester.view.resetPhysicalSize);
+          final today = DateTime(2026, 10, 24);
+          final plan = testPlan.copyWith(
+            completedPages: const {39},
+            dailyTargetDate: today,
+            dailyTargetStartPage: 40,
+            dailyTargetEndPage: 42,
+          );
+          final fixture = await buildRealKhatmahCubit(
+            plan: plan,
+            now: () => today,
+          );
+          final save = Completer<KhatmahReadingResult>();
+          when(
+            () => fixture.record(
+              any(),
+              42,
+              source: KhatmahReadingSource.digital,
+              readAt: today,
+            ),
+          ).thenAnswer((_) => save.future);
+
+          final path = _MockMemorizationPath();
+          when(() => path.currentProfile()).thenAnswer((_) async => null);
+          when(() => path.isKids(null)).thenReturn(false);
+          when(
+            () => path.changes,
+          ).thenAnswer((_) => const Stream<void>.empty());
+          final share = _MockShareGoodRepository();
+          final sessions = ActiveInviteSessions(
+            ShareGoodLocalStore(const FlutterSecureStorage(), getIt()),
+          );
+          final snapshot = ResolvedInvite(
+            token: 'test-invite',
+            target: const QuranPageInviteTarget(42),
+            moment: InviteMoment.beforeActivity,
+            mode: InviteMode.personal,
+            inviter: const InviterIdentity(mode: InviteIdentityMode.anonymous),
+            status: InviteLifecycleStatus.active,
+            expiresAt: DateTime.now().add(const Duration(days: 1)),
+          );
+          sessions.activate(
+            InviteSession(
+              token: snapshot.token,
+              snapshot: snapshot,
+              localSessionId: 'local-id',
+              serverStatus: InviteParticipationStatus.started,
+            ),
+          );
+          getIt
+            ..registerSingleton<MemorizationPathResolver>(path)
+            ..registerSingleton<ShareGoodRepository>(share)
+            ..registerSingleton<InviteTargetLabeler>(
+              InviteTargetLabeler(mockQuranRepo),
+            )
+            ..registerSingleton<ActiveInviteSessions>(sessions)
+            ..registerSingleton(
+              ShareGoodAvailability(
+                ExperienceFlags((_) => true),
+                const SupabaseConfig(
+                  url: 'https://example.test',
+                  anonKey: 'test',
+                ),
+                linkHost: 'example.test',
+              ),
+            );
+          await tester.pumpWidget(
+            buildReaderApp(
+              pageNumber: 42,
+              readerMode: QuranReaderMode.khatmah,
+              khatmahCubit: fixture.cubit,
+              locale: viewport.locale,
+              inviteSessionId: 'local-id',
+            ),
+          );
+          await tester.pump();
+          await tester.pump();
+          await tester.pump();
+          final l10n = AppLocalizations.of(
+            tester.element(find.byType(QuranReaderPage)),
+          );
+          final inviteButton = find.widgetWithText(
+            TextButton,
+            l10n.inviteCompleteReading,
+          );
+          final footer = find.byType(ReaderFooter);
+          expect(footer, findsOneWidget);
+          if (viewport.wide) {
+            expect(
+              tester.getCenter(inviteButton).dy,
+              closeTo(tester.getCenter(footer).dy, 1),
+            );
+          } else {
+            expect(
+              tester.getRect(inviteButton).bottom,
+              lessThanOrEqualTo(tester.getRect(footer).top),
+            );
+          }
+          expect(
+            tester.getRect(inviteButton).overlaps(tester.getRect(footer)),
+            isFalse,
+          );
+          expect(tester.widget<TextButton>(inviteButton).onPressed, isNull);
+          await tester.tap(
+            find.byKey(const Key('khatmah_confirm_page_button')),
+          );
+          await tester.pump();
+          expect(tester.widget<TextButton>(inviteButton).onPressed, isNull);
+          save.complete(
+            KhatmahReadingResult(
+              plan: plan.copyWith(completedPages: const {39, 42}),
+              newlyCompletedPages: const {42},
+            ),
+          );
+          await tester.pump();
+          expect(tester.widget<TextButton>(inviteButton).onPressed, isNotNull);
+          verify(
+            () => fixture.record(
+              any(),
+              42,
+              source: KhatmahReadingSource.digital,
+              readAt: today,
+            ),
+          ).called(1);
+          verifyZeroInteractions(share);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await fixture.cubit.close();
+          await sessions.dispose();
+        },
+      );
+    }
 
     testWidgets('explicit final-page save failure can be retried', (
       tester,

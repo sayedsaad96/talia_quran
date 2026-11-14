@@ -188,6 +188,7 @@ class ShareGoodRepositoryImpl implements ShareGoodRepository {
                   : null,
               awaitingConsent: old?.awaitingConsent ?? false,
               localSessionId: old?.localSessionId,
+              startedAt: old?.startedAt,
             );
             await local.saveSession(session);
             return (await local.session(token))!;
@@ -211,6 +212,7 @@ class ShareGoodRepositoryImpl implements ShareGoodRepository {
                   pendingStatus: old.pendingStatus,
                   awaitingConsent: old.awaitingConsent,
                   localSessionId: old.localSessionId,
+                  startedAt: old.startedAt,
                 );
               }
               return old;
@@ -260,7 +262,11 @@ class ShareGoodRepositoryImpl implements ShareGoodRepository {
           desired.index <= old.serverStatus!.index) {
         return old;
       }
-      final pending = _copy(old, pending: desired);
+      final pending = _copy(
+        old,
+        pending: desired,
+        startedAt: status == InviteParticipationStatus.started ? clock() : null,
+      );
       await local.saveSession(pending);
       return _flush(pending);
     }),
@@ -440,6 +446,7 @@ InviteSession _copy(
   InviteSession s, {
   InviteParticipationStatus? server,
   required InviteParticipationStatus? pending,
+  DateTime? startedAt,
 }) => InviteSession(
   token: s.token,
   snapshot: s.snapshot,
@@ -447,6 +454,7 @@ InviteSession _copy(
   pendingStatus: pending,
   awaitingConsent: s.awaitingConsent,
   localSessionId: s.localSessionId,
+  startedAt: s.startedAt ?? startedAt,
 );
 
 InviteSession _withLifecycle(InviteSession s, InviteLifecycleStatus status) {
@@ -466,5 +474,6 @@ InviteSession _withLifecycle(InviteSession s, InviteLifecycleStatus status) {
     pendingStatus: null,
     awaitingConsent: s.awaitingConsent,
     localSessionId: s.localSessionId,
+    startedAt: s.startedAt,
   );
 }

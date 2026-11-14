@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Implementation status — 2026-11-14:** Tasks 1–15 are implemented. The final local verifier passed 6141 Flutter tests, clean analysis and generated-file stability. Task 16's release gates remain **BLOCKED (external)**: domain/association, signing fingerprints, target Supabase/staging checks and signed-device/Play QA. Rollout stays off. See [acceptance evidence](2026-11-14-share-good-v1-acceptance-evidence.md); the reconciled baseline and original steps below are retained for traceability.
+
 **Goal:** Ship the شارك الخير / أثر الخير worship-invitation loop on Android. Signed-in users invite someone to the exact Quran page, Surah, wird range, or morning/evening adhkar they are reading. Recipients open it from an installed app or after a fresh Play install, complete it as guests, and choose whether to reveal themselves. Inviters see aggregate, non-competitive impact.
 
 **Architecture:** A new `lib/features/share_good/` feature (domain/data/presentation, Cubits, `get_it`) sits on top of one additive Supabase migration. Public `SECURITY INVOKER` RPCs call narrowly granted `private.*` definer helpers; both layers have exact role/ACL tests. Existing worship authorities (`QuranReadConfirmationGate` + `QuranPageCubit.confirmRead`, `AzkarCubit`/`AzkarLoaded.allDone`, and Khatmah confirmation/recording policy) stay authoritative. Share Good only observes their successful completion boundaries. Installed recipients enter through verified Android App Links (`app_links`); fresh Play installs restore `referrer=inv%3D<token>` through a new Install Referrer bridge. The current social-card URLs carry UTM data in Play's `referrer`, but the app does **not** currently read Install Referrer, so that bridge remains new work.
@@ -9,7 +11,7 @@
 **Tech Stack:** Current project floor: Dart `^3.12.0`, Flutter `>=3.44.0`, Android compile SDK 37 / Java 17; `flutter_bloc`, `get_it`, `go_router`, `dartz`, `equatable`, `supabase_flutter`, the local `flutter_secure_storage` package, `shared_preferences`, `share_plus ^13.1.0`, the shipped Dawn social-share stack (`lib/core/widgets/social_share/`), `flutter_local_notifications ^22.0.1`, a direct `app_links` dependency (currently transitive only), and `com.android.installreferrer:installreferrer:2.2` through a small Kotlin method channel.
 
 **Spec:** `docs/superpowers/plans/2026-09-11-talia-share-good-design.md` (product source of truth; its 2026-11-05 implementation note points here).
-**Supersedes:** `docs/superpowers/plans/2026-09-11-talia-share-good-v1.md` (reconciled at `3f2b9ad`, never executed). This plan was re-audited against HEAD `5a049731`; Share Good itself is still unimplemented. See §2.
+**Supersedes:** `docs/superpowers/plans/2026-09-11-talia-share-good-v1.md` (reconciled at `3f2b9ad`, never executed). This plan was re-audited against baseline HEAD `5a049731`, where Share Good was unimplemented. See §2 for that original audit and the status note above for current implementation evidence.
 
 ---
 

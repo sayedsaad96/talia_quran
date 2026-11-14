@@ -8,6 +8,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/home_cubit.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_action.dart';
 
 class DailyWirdCard extends StatelessWidget {
   const DailyWirdCard({super.key, required this.state, required this.isDark});
@@ -75,6 +78,12 @@ class DailyWirdCard extends StatelessWidget {
                 ),
               ),
               Icon(context.forwardChevron, size: 14, color: AppColors.primary),
+              if (state.dailyWirdPageDetail != null)
+                ShareGoodAction(
+                  target: QuranPageInviteTarget(pageNumber),
+                  moment: InviteMoment.beforeActivity,
+                  style: ShareGoodActionStyle.icon,
+                ),
             ],
           ),
         ),

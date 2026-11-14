@@ -44,8 +44,12 @@ import '../widgets/long_press_hint_banner.dart';
 import '../widgets/quick_navigation_sheet.dart';
 import '../widgets/quran_page_font_guard.dart';
 import '../widgets/reader_docked_audio_bar.dart';
+import '../widgets/reader_invite_completion.dart';
 import '../widgets/reader_footer.dart';
 import '../widgets/reader_overflow_sheet.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_prompt_hint.dart';
 import '../widgets/reader_top_bar.dart';
 import '../widgets/strength_overlay_legend.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -152,6 +156,7 @@ class QuranReaderPage extends StatefulWidget {
     this.readerMode = QuranReaderMode.free,
     this.khatmahCubit,
     this.initialTarget,
+    this.inviteSessionId,
   });
 
   final int? surahId;
@@ -159,6 +164,7 @@ class QuranReaderPage extends StatefulWidget {
   final QuranReaderMode readerMode;
   final KhatmahCubit? khatmahCubit;
   final AyahReference? initialTarget;
+  final String? inviteSessionId;
 
   @override
   State<QuranReaderPage> createState() => _QuranReaderPageState();
@@ -189,6 +195,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   // simple UI flags change. Only the specific ValueListenableBuilder widgets
   // that depend on them will rebuild.
   final _currentPageNotifier = ValueNotifier<int>(1);
+  final _inviteKhatmahSavedPages = ValueNotifier<Set<int>>(const {});
   final _isFocusModeNotifier = ValueNotifier<bool>(false);
 
   /// The ayah whose options sheet is open, marked on the page (N15).
@@ -338,6 +345,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       _khatmahCubit?.close();
     }
     _currentPageNotifier.dispose();
+    _inviteKhatmahSavedPages.dispose();
     _isFocusModeNotifier.dispose();
     _showLongPressHintNotifier.dispose();
     _showReadConfirmedNotifier.dispose();
@@ -553,9 +561,39 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       pageNumber,
       isExplicit: isExplicit,
     );
+    if (saved && mounted) {
+      _inviteKhatmahSavedPages.value = {
+        ..._inviteKhatmahSavedPages.value,
+        pageNumber,
+      };
+    }
     if (saved && mounted && _currentPageNumber == pageNumber) {
       _showReadConfirmed();
     }
+  }
+
+  Widget _inviteCompletion(String localSessionId, QuranPageState state) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        _currentPageNotifier,
+        _inviteKhatmahSavedPages,
+      ]),
+      builder: (context, _) {
+        final page = _currentPageNotifier.value;
+        final gateConfirmed =
+            state is QuranPageLoaded &&
+            state.detail.pageNumber == page &&
+            _readConfirmationGate.hasConfirmed(page);
+        return ReaderInviteCompletion(
+          localSessionId: localSessionId,
+          pageNumber: page,
+          confirmed:
+              gateConfirmed &&
+              (widget.readerMode != QuranReaderMode.khatmah ||
+                  _inviteKhatmahSavedPages.value.contains(page)),
+        );
+      },
+    );
   }
 
   void _handleKhatmahState(BuildContext context, KhatmahState state) {
@@ -627,6 +665,16 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
+                  if (wird.startPage >= 1 &&
+                      wird.endPage <= 604 &&
+                      wird.endPage >= wird.startPage &&
+                      wird.endPage - wird.startPage <= 19)
+                    ShareGoodPromptHint(
+                      target: QuranWirdInviteTarget(
+                        wird.startPage,
+                        wird.endPage,
+                      ),
+                    ),
                   OutlinedButton.icon(
                     key: const Key('khatmah_wird_closing_dua_button'),
                     onPressed: () => showClosingDuaSheet(dialogContext),
@@ -1019,6 +1067,24 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                           },
                                           onOpenMenu: () => ReaderOverflowSheet.show(
                                             context,
+                                            inviteTarget: QuranPageInviteTarget(
+                                              pageNumber,
+                                            ),
+                                            inviteMoment:
+                                                _readConfirmationGate
+                                                        .hasConfirmed(
+                                                          pageNumber,
+                                                        ) &&
+                                                    (widget.readerMode !=
+                                                            QuranReaderMode
+                                                                .khatmah ||
+                                                        _inviteKhatmahSavedPages
+                                                            .value
+                                                            .contains(
+                                                              pageNumber,
+                                                            ))
+                                                ? InviteMoment.afterActivity
+                                                : InviteMoment.beforeActivity,
                                             onStudy: readerStudyAvailable()
                                                 ? () {
                                                     final page =
@@ -1146,27 +1212,69 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                                 isExplicit: true,
                                               ),
                                         ),
+                                      if (isFocusMode)
+                                        if (widget.inviteSessionId
+                                            case final id?)
+                                          _inviteCompletion(id, state),
                                       if (!isFocusMode)
-                                        ValueListenableBuilder<Duration?>(
-                                          valueListenable:
-                                              _readCountdownNotifier,
-                                          builder: (context, countdown, _) =>
-                                              ReaderFooter(
-                                                pageNumber: pageNumber,
-                                                hizbNumber:
-                                                    MushafHizbHelper.getHizb(
-                                                      pageNumber,
+                                        LayoutBuilder(
+                                          builder: (context, constraints) {
+                                            final id = widget.inviteSessionId;
+                                            final shareRow =
+                                                id != null &&
+                                                constraints.maxWidth >= 600;
+                                            final footer =
+                                                ValueListenableBuilder<
+                                                  Duration?
+                                                >(
+                                                  valueListenable:
+                                                      _readCountdownNotifier,
+                                                  builder:
+                                                      (
+                                                        context,
+                                                        countdown,
+                                                        _,
+                                                      ) => ReaderFooter(
+                                                        pageNumber: pageNumber,
+                                                        hizbNumber:
+                                                            MushafHizbHelper.getHizb(
+                                                              pageNumber,
+                                                            ),
+                                                        accent: accent,
+                                                        bg: bg,
+                                                        showReadConfirmed:
+                                                            showReadConfirmed,
+                                                        readCountdown:
+                                                            countdown,
+                                                        onPageTap: () =>
+                                                            _openQuickNav(
+                                                              context,
+                                                              pageNumber,
+                                                            ),
+                                                      ),
+                                                );
+                                            if (id == null) return footer;
+                                            if (shareRow) {
+                                              return Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: _inviteCompletion(
+                                                      id,
+                                                      state,
                                                     ),
-                                                accent: accent,
-                                                bg: bg,
-                                                showReadConfirmed:
-                                                    showReadConfirmed,
-                                                readCountdown: countdown,
-                                                onPageTap: () => _openQuickNav(
-                                                  context,
-                                                  pageNumber,
-                                                ),
-                                              ),
+                                                  ),
+                                                  Expanded(child: footer),
+                                                ],
+                                              );
+                                            }
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                _inviteCompletion(id, state),
+                                                footer,
+                                              ],
+                                            );
+                                          },
                                         ),
                                     ],
                                   );

@@ -9,6 +9,8 @@ import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/prayer_sound.dart';
 import 'notification_settings_state.dart';
+import '../../../share_good/share_good_config.dart';
+import '../../../share_good/application/share_good_notification_controller.dart';
 
 class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   NotificationSettingsCubit(
@@ -90,6 +92,12 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     final khatmahReminder =
         _prefs.getBool(TaliaNotificationService.khatmahReminderPreferenceKey) ??
         true;
+    final inviteReminder =
+        _prefs.getBool(TaliaNotificationService.inviteReminderPreferenceKey) ??
+        true;
+    final inviteReminderAvailable =
+        getIt.isRegistered<ShareGoodAvailability>() &&
+        getIt<ShareGoodAvailability>().isAvailable;
     final prayerNotifications =
         _prefs.getBool(
           TaliaNotificationService.prayerNotificationsPreferenceKey,
@@ -147,6 +155,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         forgettingForecastAvailable: forgettingForecastAvailable,
         tahajjud: tahajjud,
         khatmahReminder: khatmahReminder,
+        inviteReminder: inviteReminder,
+        inviteReminderAvailable: inviteReminderAvailable,
         prayerNotifications: prayerNotifications,
         prayerAthan: prayerAthan,
         prayerFajr: prayerFajr,
@@ -288,6 +298,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.khatmahReminderPreferenceKey => state.copyWith(
         khatmahReminder: persistedValue,
       ),
+      TaliaNotificationService.inviteReminderPreferenceKey => state.copyWith(
+        inviteReminder: persistedValue,
+      ),
       TaliaNotificationService.prayerNotificationsPreferenceKey =>
         state.copyWith(prayerNotifications: persistedValue),
       TaliaNotificationService.prayerAthanKey => state.copyWith(
@@ -303,6 +316,14 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     };
 
     if (!isClosed) emit(updatedState);
+    if (preferenceKey == TaliaNotificationService.inviteReminderPreferenceKey &&
+        !persistedValue) {
+      if (_scheduler != null) {
+        await _scheduler.cancelInviteReminder();
+      } else {
+        await _notificationService.cancelInviteReminder();
+      }
+    }
     await _reschedule(l10n);
   }
 
@@ -598,6 +619,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       effectiveL10n,
       force: true,
     );
+    if (getIt.isRegistered<ShareGoodNotificationController>()) {
+      await getIt<ShareGoodNotificationController>().refresh();
+    }
     if (!scheduled) {
       _emitFeedback(state, NotificationSettingsFeedback.schedulingFailed);
     }

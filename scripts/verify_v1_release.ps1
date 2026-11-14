@@ -39,6 +39,47 @@ function Add-Result([string] $Gate, [string] $Status, [string] $Detail) {
     })
 }
 
+function Assert-ShareGoodLinkHost([AllowEmptyString()][string] $DefineFile) {
+  $dartHost = ''
+  if ($DefineFile) {
+    $raw = Get-Content -LiteralPath $DefineFile -Raw
+    if ($raw.TrimStart().StartsWith('{')) {
+      $defines = $raw | ConvertFrom-Json
+      $property = $defines.PSObject.Properties['SHARE_GOOD_LINK_HOST']
+      if ($null -ne $property) { $dartHost = [string]$property.Value }
+    } else {
+      $entries = @($raw -split "`r?`n" | Where-Object { $_ -match '^\s*SHARE_GOOD_LINK_HOST\s*=' })
+      if ($entries.Count -gt 1) { throw 'Duplicate Share Good host defines.' }
+      if ($entries.Count -eq 1) {
+        if ($entries[0] -notmatch '^\s*SHARE_GOOD_LINK_HOST\s*=\s*([A-Za-z0-9.-]*)\s*(?:#.*)?$') {
+          throw 'Use an unquoted hostname for SHARE_GOOD_LINK_HOST in the release env file.'
+        }
+        $dartHost = $Matches[1]
+      }
+    }
+  }
+  $gradleHost = [Environment]::GetEnvironmentVariable('ORG_GRADLE_PROJECT_shareGoodLinkHost')
+  if ($null -eq $gradleHost) { $gradleHost = '' }
+  $pattern = '^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$'
+  if ($dartHost -eq '') {
+    if ($gradleHost -ne '' -and $gradleHost -cne 'invalid.localhost') {
+      throw 'Share Good Gradle host has no matching Dart host.'
+    }
+    $rollout = Get-Content -LiteralPath (Join-Path $repositoryRoot 'lib/core/experience/rollout_manifest.dart') -Raw
+    if ($rollout -notmatch 'ExperienceFeature\.shareGood\s*=>\s*_off\(') {
+      throw 'An unconfigured Share Good host requires the rollout to remain off.'
+    }
+    Add-Result 'Share Good link host' 'PASS' 'unconfigured; non-production host and rollout off'
+    return
+  }
+  if ($dartHost -cnotmatch $pattern -or $gradleHost -cnotmatch $pattern -or
+      $dartHost.ToLowerInvariant() -cne $gradleHost.ToLowerInvariant() -or
+      $dartHost.ToLowerInvariant() -ceq 'invalid.localhost') {
+    throw 'Share Good Dart and Android hosts must be matching valid production hostnames.'
+  }
+  Add-Result 'Share Good link host' 'PASS' 'Dart and Android hosts match'
+}
+
 function ConvertTo-SafeCommand([string] $Executable, [string[]] $Arguments) {
   $safeArguments = foreach ($argument in $Arguments) {
     if ($argument -match '\s') {
@@ -412,6 +453,8 @@ try {
   Assert-GeneratedFilesUnchanged $generatedBefore $generatedAfter
 
   Invoke-Flutter 'Static analysis' @('analyze', '--no-pub')
+  # Native backup/restore fixtures create children under this ignored root.
+  New-Item -ItemType Directory -Path (Join-Path $repositoryRoot '.superpowers/tmp') -Force | Out-Null
   $testArguments = @('test', '--no-pub', '--reporter', 'expanded')
   if ($null -ne $TestConcurrency) {
     $testArguments += @('--concurrency', $TestConcurrency.ToString())
@@ -424,6 +467,7 @@ try {
   if ($BuildAndroidRelease) {
     $defineFileItem = Get-Item -LiteralPath 'Env:TALIA_RELEASE_DART_DEFINES_FILE' -ErrorAction SilentlyContinue
     $buildArguments = @('build', 'appbundle', '--release', '--no-pub')
+    $defineFile = ''
     if ($null -eq $defineFileItem -or [string]::IsNullOrWhiteSpace($defineFileItem.Value)) {
       if (-not $OfflineBuild) {
         Add-Result 'Cloud production defines' 'FAIL' 'TALIA_RELEASE_DART_DEFINES_FILE is not set; pass -OfflineBuild only for an intentional guest-only artifact'
@@ -452,6 +496,7 @@ try {
       $buildDisplay = 'flutter build appbundle --release --no-pub --dart-define-from-file=<redacted>'
     }
 
+    Assert-ShareGoodLinkHost $defineFile
     Invoke-Flutter 'Android release appbundle' $buildArguments $buildDisplay
     $script:artifactPath = Join-Path $repositoryRoot 'build\app\outputs\bundle\release\app-release.aab'
     if (-not (Test-Path -LiteralPath $script:artifactPath -PathType Leaf)) {

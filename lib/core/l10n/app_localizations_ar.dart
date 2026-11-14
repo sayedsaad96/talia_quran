@@ -10489,11 +10489,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteKidsBlocked => 'الدعوات غير متاحة في مساحة الأطفال';
 
   @override
-  String inviteExpiresIn(String duration) {
-    return 'تنتهي خلال $duration';
-  }
-
-  @override
   String get inviteUnavailable => 'هذا النشاط غير متاح حالياً';
 
   @override
@@ -10513,4 +10508,216 @@ class AppLocalizationsAr extends AppLocalizations {
   String inviteDurationMinutes(int count) {
     return '$count دقيقة';
   }
+
+  @override
+  String inviteActivityLabel(String activity) {
+    return 'دعوة: $activity';
+  }
+
+  @override
+  String get inviteCompleteReading => 'أتممت القراءة';
+
+  @override
+  String get inviteCompletionError => 'تعذّر تسجيل الإتمام. حاول مرة أخرى.';
+
+  @override
+  String get inviteAzkarAlreadyDone => 'أتممتها اليوم';
+
+  @override
+  String get inviteConfirmAzkarCompletion => 'تأكيد الإتمام';
+
+  @override
+  String get inviteCompletionTitle => 'أتممت النشاط';
+
+  @override
+  String get inviteKeepPrivate => 'احتفظ بإتمامي لنفسي';
+
+  @override
+  String get inviteTellInviter => 'أخبره أنني أتممت';
+
+  @override
+  String inviteTellName(String name) {
+    return 'سيظهر اسمك $name';
+  }
+
+  @override
+  String get inviteGuestSignIn => 'أنشئ حسابك واحفظ أثرك';
+
+  @override
+  String get inviteDisclosureError => 'تعذّرت مشاركة الإتمام. حاول مرة أخرى.';
+
+  @override
+  String get inviteNameUnavailable => 'أضف اسمًا لحسابك قبل مشاركة إتمامك.';
+
+  @override
+  String get inviteEditMessage => 'تعديل الرسالة';
+
+  @override
+  String get inviteModeTitle => 'اختر طريقة المشاركة';
+
+  @override
+  String get inviteModePersonal => 'دعوة شخصية';
+
+  @override
+  String get inviteModePublic => 'مشاركة عامة';
+
+  @override
+  String get inviteIdentityTitle => 'الاسم الذي يظهر في الدعوة';
+
+  @override
+  String get inviteIdentityFullName => 'الاسم الكامل';
+
+  @override
+  String get inviteIdentityFirstName => 'الاسم الأول';
+
+  @override
+  String get inviteIdentityDisplayName => 'اسم العرض';
+
+  @override
+  String get inviteIdentityAnonymous => 'بدون اسم';
+
+  @override
+  String get inviteCreateAction => 'إنشاء الدعوة';
+
+  @override
+  String get inviteCreateError => 'تعذّر إنشاء الدعوة. حاول مرة أخرى.';
+
+  @override
+  String get inviteSignInToCreate => 'سجّل الدخول لإنشاء دعوة';
+
+  @override
+  String inviteBeforeNamed(String name, String activity) {
+    return '$name يدعوك لقراءة $activity معه 🤍';
+  }
+
+  @override
+  String inviteBeforeAnonymous(String activity) {
+    return 'أدعوك لقراءة $activity معي 🤍';
+  }
+
+  @override
+  String inviteAfterNamed(String name, String activity) {
+    return '$name أتمّ قراءة $activity اليوم، ويدعوك لتقرأها أنت أيضًا 🤍';
+  }
+
+  @override
+  String inviteAfterAnonymous(String activity) {
+    return 'أتممتُ قراءة $activity اليوم، وأدعوك لتقرأها أنت أيضًا 🤍';
+  }
+
+  @override
+  String inviteExpiresIn(String duration) {
+    return 'تنتهي الدعوة خلال $duration';
+  }
+
+  @override
+  String inviteExpirySoon(int minutes) {
+    return 'تنتهي الدعوة خلال $minutes دقيقة';
+  }
+
+  @override
+  String get inviteContinueChain => 'واصل سلسلة الخير';
+
+  @override
+  String get inviteChainExpired =>
+      'انتهت الدعوة الأصلية. يمكنك إنشاء دعوة جديدة مستقلة.';
+
+  @override
+  String get inviteChainFresh => 'إنشاء دعوة جديدة';
+
+  @override
+  String get goodImpactTitle => 'أثر الخير';
+
+  @override
+  String get shareGoodPromptHint => 'ادعُ شخصًا ليشاركك هذا العمل';
+
+  @override
+  String get shareGoodEducation =>
+      'تسجّل الدعوة المشاركة فقط. يظل إتمامك خاصًا ما لم تختر مشاركة اسمك.';
+
+  @override
+  String get inviteReminderTitle => 'تذكير بالدعوة';
+
+  @override
+  String inviteReminderBody(String activity) {
+    return 'دعوتك لقراءة $activity ما زالت متاحة';
+  }
+
+  @override
+  String get inviteReminderSetting => 'تذكير الدعوات';
+
+  @override
+  String goodImpactResponses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'استجاب $count شخص لدعوتك',
+      many: 'استجاب $count شخصًا لدعوتك',
+      few: 'استجاب $count أشخاص لدعوتك',
+      two: 'استجاب شخصان لدعوتك',
+      one: 'استجاب شخص واحد لدعوتك',
+      zero: 'لم يستجب أحد لدعوتك بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goodImpactCompletions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أتمّ $count شخص القراءة',
+      many: 'أتمّ $count شخصًا القراءة',
+      few: 'أتمّ $count أشخاص القراءة',
+      two: 'أتمّ شخصان القراءة',
+      one: 'أتمّ شخص واحد القراءة',
+      zero: 'لم يُسجّل إتمام بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goodImpactReach(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'امتد أثر دعوتك إلى $count شخص',
+      many: 'امتد أثر دعوتك إلى $count شخصًا',
+      few: 'امتد أثر دعوتك إلى $count أشخاص',
+      two: 'امتد أثر دعوتك إلى شخصين',
+      one: 'امتد أثر دعوتك إلى شخص واحد',
+      zero: 'لم يمتد أثر دعوتك بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goodImpactActive => 'دعوة نشطة';
+
+  @override
+  String get goodImpactRecentlyExpired => 'انتهت مؤخرًا';
+
+  @override
+  String get goodImpactEmpty => 'ستظهر دعواتك واستجاباتها هنا.';
+
+  @override
+  String get goodImpactError => 'تعذّر تحميل أثر الخير. حاول مرة أخرى.';
+
+  @override
+  String get goodImpactNew => 'جديد';
+
+  @override
+  String get goodImpactAcknowledgements => 'من اختاروا مشاركة إتمامهم';
+
+  @override
+  String get goodImpactMilestoneFirstChain => 'بدأت سلسلة خير';
+
+  @override
+  String get goodImpactMilestoneFiveReach => 'خمس استجابات ووصولات';
+
+  @override
+  String get goodImpactMilestoneTenResponses => 'عشر استجابات';
+
+  @override
+  String get goodImpactMilestoneTwentyFiveReach => 'خمس وعشرون استجابة ووصولًا';
 }

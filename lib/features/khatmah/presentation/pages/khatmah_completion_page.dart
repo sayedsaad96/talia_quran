@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/icons/talia_icons.dart';
@@ -18,6 +17,11 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../../../../core/identity/account_data_barrier.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_action.dart';
 
 class KhatmahCompletionPage extends StatefulWidget {
   const KhatmahCompletionPage({
@@ -98,16 +102,18 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     final totalDays = completion.actualElapsedDays;
     final totalDaysStr = context.numText(totalDays);
 
-    final buffer = StringBuffer(
-      context.l10n.khatmahShareSummary(title, totalDays, totalDaysStr),
+    final data = SocialShareData(
+      category: SocialShareCategory.khatmah,
+      title: title,
+      content: context.l10n.khatmahShareSummary(title, totalDays, totalDaysStr),
+      subtitle: plan.dedication.isDedicated
+          ? context.l10n.khatmahDedicatedTo(plan.dedication.recipientName ?? '')
+          : null,
+      targetValue: totalDays,
+      currentValue: plan.completedPagesCount,
+      readPagesCount: plan.completedPagesCount,
     );
-    if (plan.dedication.isDedicated) {
-      buffer.writeln();
-      buffer.writeln(
-        context.l10n.khatmahDedicatedTo(plan.dedication.recipientName ?? ''),
-      );
-    }
-    SharePlus.instance.share(ShareParams(text: buffer.toString()));
+    unawaited(SocialShareSheet.show(context, data));
   }
 
   @override
@@ -448,6 +454,12 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+
+                  const ShareGoodAction(
+                    target: QuranPageInviteTarget(604),
+                    moment: InviteMoment.afterActivity,
+                    style: ShareGoodActionStyle.text,
                   ),
 
                   const SizedBox(height: AppSpacing.md),

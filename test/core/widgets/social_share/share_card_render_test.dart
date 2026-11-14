@@ -76,6 +76,14 @@ SocialShareData _sampleFor(SocialShareCategory category) {
         targetValue: 30,
         readPagesCount: 604,
       );
+    case SocialShareCategory.invitation:
+      return SocialShareData.invitation(
+        title: 'Morning adhkar',
+        message: 'Join me',
+        linkUrl: Uri.parse(
+          'https://example.com/i/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
+        ),
+      );
   }
 }
 

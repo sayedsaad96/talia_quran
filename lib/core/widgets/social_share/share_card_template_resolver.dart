@@ -18,6 +18,7 @@ abstract final class ShareCardTemplateResolver {
     switch (data.category) {
       case SocialShareCategory.quranAyah:
       case SocialShareCategory.dua:
+      case SocialShareCategory.invitation:
         return TextHero(data: data, palette: palette, metrics: metrics);
       case SocialShareCategory.azkar:
         return data.isAzkarWirdProgress

@@ -16,6 +16,7 @@ class ShareSignatureBar extends StatelessWidget {
     required this.copy,
     required this.invitation,
     required this.qrData,
+    this.fitText = false,
   });
 
   static const String logoAsset = 'assets/images/logo_new_padded.png';
@@ -37,6 +38,7 @@ class ShareSignatureBar extends StatelessWidget {
   final SocialShareCopy copy;
   final String invitation;
   final String qrData;
+  final bool fitText;
 
   @override
   Widget build(BuildContext context) {
@@ -55,33 +57,18 @@ class ShareSignatureBar extends StatelessWidget {
           _ShareLogo(size: metrics.logoSize, fallbackColor: palette.wordmark),
           SizedBox(width: metrics.gap + 2),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  copy.wordmark,
-                  maxLines: 1,
-                  style: TaliaShareTypography.display(
-                    color: palette.wordmark,
-                    fontSize: metrics.wordmarkSize,
-                    height: 1.2,
-                  ),
-                ),
-                Text(
-                  invitation,
-                  key: const ValueKey('share-invitation'),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TaliaShareTypography.body(
-                    color: palette.signatureText,
-                    fontSize: metrics.invitationSize,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
+            child: fitText
+                ? LayoutBuilder(
+                    builder: (context, constraints) => FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: SizedBox(
+                        width: constraints.maxWidth,
+                        child: _labels(),
+                      ),
+                    ),
+                  )
+                : _labels(),
           ),
           SizedBox(width: metrics.gap),
           ShareQrCode(
@@ -94,6 +81,34 @@ class ShareSignatureBar extends StatelessWidget {
       ),
     );
   }
+
+  Widget _labels() => Column(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        copy.wordmark,
+        maxLines: 1,
+        style: TaliaShareTypography.display(
+          color: palette.wordmark,
+          fontSize: metrics.wordmarkSize,
+          height: 1.2,
+        ),
+      ),
+      Text(
+        invitation,
+        key: const ValueKey('share-invitation'),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TaliaShareTypography.body(
+          color: palette.signatureText,
+          fontSize: metrics.invitationSize,
+          height: 1.35,
+        ),
+      ),
+    ],
+  );
 }
 
 class _ShareLogo extends StatelessWidget {

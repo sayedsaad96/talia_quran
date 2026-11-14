@@ -96,7 +96,11 @@ import '../../features/settings/presentation/pages/backup_page.dart';
 import '../../features/settings/presentation/pages/trust_center_page.dart';
 import '../../features/settings/presentation/pages/sources_licenses_page.dart';
 import '../../features/share_good/presentation/cubits/invite_preview_cubit.dart';
+import '../../features/share_good/application/invite_activity_launch.dart';
 import '../../features/share_good/presentation/pages/invite_preview_page.dart';
+import '../../features/share_good/presentation/pages/good_impact_page.dart';
+import '../../features/share_good/presentation/cubits/good_impact_cubit.dart';
+import '../../features/share_good/domain/services/invite_target_labeler.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fallback_pop_scope.dart';
@@ -129,6 +133,7 @@ abstract class AppRoutes {
   static const String azkar = '/azkar';
   static const String progress = '/progress';
   static const String settings = '/settings';
+  static const String goodImpact = '/settings/good-impact';
   static const String memorizationPlus = '/memorization-plus';
   static const String memorizationPlusGuardianLinking =
       '/memorization-plus/guardian-linking';
@@ -207,13 +212,16 @@ String? ayahNotesRedirect(ExperienceFlags? flags) =>
 @visibleForTesting
 String? similarAyahTrainerRedirect(ExperienceFlags? flags) =>
     flags?.isEnabled(ExperienceFeature.similarAyahTrainer) == true
-        ? null
-        : AppRoutes.memorizationHub;
+    ? null
+    : AppRoutes.memorizationHub;
 
 @visibleForTesting
-String? handsFreeReviewRedirect(ExperienceFlags? flags, {required bool isAdult}) =>
-    flags?.isEnabled(ExperienceFeature.handsFreeReview) == true && isAdult
-        ? null : AppRoutes.memorizationHub;
+String? handsFreeReviewRedirect(
+  ExperienceFlags? flags, {
+  required bool isAdult,
+}) => flags?.isEnabled(ExperienceFeature.handsFreeReview) == true && isAdult
+    ? null
+    : AppRoutes.memorizationHub;
 
 @visibleForTesting
 String? prayerReviewRedirect(ExperienceFlags? flags, Object? occurrence) {
@@ -226,8 +234,12 @@ String? prayerReviewRedirect(ExperienceFlags? flags, Object? occurrence) {
 AyahReference? _similarAyahTarget(Map<String, String> query) {
   final surah = int.tryParse(query['surahId'] ?? '');
   final ayah = int.tryParse(query['ayah'] ?? '');
-  if (surah == null || ayah == null || surah < 1 || surah > 114 ||
-      ayah < 1 || ayah > SurahNames.ayahCount(surah)) {
+  if (surah == null ||
+      ayah == null ||
+      surah < 1 ||
+      surah > 114 ||
+      ayah < 1 ||
+      ayah > SurahNames.ayahCount(surah)) {
     return null;
   }
   return AyahReference(surahId: surah, ayahNumber: ayah);
@@ -239,8 +251,13 @@ AyahReference? _similarAyahTarget(Map<String, String> query) {
   final target = _similarAyahTarget(query);
   final surah = int.tryParse(query['otherSurahId'] ?? '');
   final ayah = int.tryParse(query['otherAyah'] ?? '');
-  if (target == null || surah == null || ayah == null || surah < 1 ||
-      surah > 114 || ayah < 1 || ayah > SurahNames.ayahCount(surah) ||
+  if (target == null ||
+      surah == null ||
+      ayah == null ||
+      surah < 1 ||
+      surah > 114 ||
+      ayah < 1 ||
+      ayah > SurahNames.ayahCount(surah) ||
       (surah == target.surahId && ayah == target.ayahNumber)) {
     return null;
   }
@@ -251,14 +268,16 @@ AyahReference? _similarAyahTarget(Map<String, String> query) {
 @visibleForTesting
 String? similarAyahPairRedirect(Map<String, String> query) =>
     (query.containsKey('otherSurahId') || query.containsKey('otherAyah')) &&
-            _similarAyahPair(query) == null
-        ? AppRoutes.similarAyahTrainer : null;
+        _similarAyahPair(query) == null
+    ? AppRoutes.similarAyahTrainer
+    : null;
 
 @visibleForTesting
 String? similarAyahTargetRedirect(Map<String, String> query) =>
     (query.containsKey('surahId') || query.containsKey('ayah')) &&
-            _similarAyahTarget(query) == null
-        ? AppRoutes.quran : null;
+        _similarAyahTarget(query) == null
+    ? AppRoutes.quran
+    : null;
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
 /// re-evaluates its [redirect] automatically whenever auth state changes.
@@ -315,7 +334,8 @@ final _publicRoutes = <String>[
 ];
 
 String? groupKhatmahRedirect(
-  GroupKhatmahEnvironment? environment, RecordOwnerProvider? owner,
+  GroupKhatmahEnvironment? environment,
+  RecordOwnerProvider? owner,
 ) {
   if (environment?.featureEnabled != true || environment?.isAdult != true) {
     return AppRoutes.khatmahDashboard;
@@ -324,7 +344,9 @@ String? groupKhatmahRedirect(
 }
 
 final _remoteProtectedRoutes = <String>[
-  AppRoutes.familyDashboard, AppRoutes.groupKhatmah,
+  AppRoutes.familyDashboard,
+  AppRoutes.groupKhatmah,
+  AppRoutes.goodImpact,
 ];
 
 class MemorizationRouteGuard {
@@ -619,7 +641,9 @@ abstract class AppRouter {
           guardianSessionActive) {
         return null;
       }
-      return AppRoutes.login;
+      return location == AppRoutes.goodImpact
+          ? '${AppRoutes.login}?from=good_impact'
+          : AppRoutes.login;
     }
     if (isPublicLocation(location) ||
         authState is AuthAuthenticated ||
@@ -729,7 +753,13 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.login,
-        builder: (context, state) => const LoginPage(),
+        builder: (context, state) => LoginPage(
+          returnToPreviousAfterLogin:
+              state.uri.queryParameters['from'] == 'share_good',
+          postLoginLocation: state.uri.queryParameters['from'] == 'good_impact'
+              ? AppRoutes.goodImpact
+              : null,
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -794,7 +824,15 @@ abstract class AppRouter {
         builder: (context, state) {
           final surahId =
               int.tryParse(state.pathParameters['surahId'] ?? '1') ?? 1;
-          return KeepScreenAwake(child: QuranReaderPage(surahId: surahId));
+          final extra = state.extra;
+          return KeepScreenAwake(
+            child: QuranReaderPage(
+              surahId: surahId,
+              inviteSessionId: extra is InviteActivityLaunch
+                  ? extra.localSessionId
+                  : null,
+            ),
+          );
         },
       ),
       GoRoute(
@@ -820,9 +858,9 @@ abstract class AppRouter {
           return MemorizationRouteGuard.adultOnlyRedirect();
         },
         builder: (context, state) => AudioDownloadsPage(
-          initialSurah: switch (
-            int.tryParse(state.uri.queryParameters['surah'] ?? '')
-          ) {
+          initialSurah: switch (int.tryParse(
+            state.uri.queryParameters['surah'] ?? '',
+          )) {
             final int value when value >= 1 && value <= 114 => value,
             _ => null,
           },
@@ -842,71 +880,93 @@ abstract class AppRouter {
         },
         builder: (context, state) => const AudioStoragePage(),
       ),
-        GoRoute(
-          parentNavigatorKey: _rootNavigatorKey,
-          path: AppRoutes.prayerReview,
-          redirect: (context, state) async => prayerReviewRedirect(
-            getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null,
-            state.extra) ?? await MemorizationRouteGuard.adultOnlyRedirect(),
-          builder: (context, state) {
-            final occurrence = state.extra! as PrayerOccurrence;
-            return BlocProvider(
-              create: (_) => getIt<PrayerReviewCubit>()
-                ..load(occurrence, allowSelection: false),
-              child: Builder(builder: (context) => PrayerReviewPage(
-                onRetry: () => context.read<PrayerReviewCubit>()
-                  .load(occurrence, allowSelection: false))),
-            );
-          },
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.prayerReview,
+        redirect: (context, state) async =>
+            prayerReviewRedirect(
+              getIt.isRegistered<ExperienceFlags>()
+                  ? getIt<ExperienceFlags>()
+                  : null,
+              state.extra,
+            ) ??
+            await MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) {
+          final occurrence = state.extra! as PrayerOccurrence;
+          return BlocProvider(
+            create: (_) =>
+                getIt<PrayerReviewCubit>()
+                  ..load(occurrence, allowSelection: false),
+            child: Builder(
+              builder: (context) => PrayerReviewPage(
+                onRetry: () => context.read<PrayerReviewCubit>().load(
+                  occurrence,
+                  allowSelection: false,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.handsFreeReview,
+        redirect: (context, state) => MemorizationRouteGuard.handsFreeRedirect(
+          getIt.isRegistered<ExperienceFlags>()
+              ? getIt<ExperienceFlags>()
+              : null,
         ),
-        GoRoute(
-          parentNavigatorKey: _rootNavigatorKey,
-          path: AppRoutes.handsFreeReview,
-          redirect: (context, state) => MemorizationRouteGuard.handsFreeRedirect(
-            getIt.isRegistered<ExperienceFlags>() ? getIt<ExperienceFlags>() : null),
-          builder: (context, state) => const HandsFreeReviewPage(),
-        ),
-        GoRoute(
-          parentNavigatorKey: _rootNavigatorKey,
-          path: AppRoutes.similarAyahTrainer,
-          redirect: (context, state) async =>
-              similarAyahTrainerRedirect(
-                getIt.isRegistered<ExperienceFlags>()
-                    ? getIt<ExperienceFlags>() : null,
-              ) ?? similarAyahPairRedirect(state.uri.queryParameters) ??
-                  similarAyahTargetRedirect(state.uri.queryParameters) ??
-                  await MemorizationRouteGuard.adultOnlyRedirect(),
-          builder: (context, state) => BlocProvider(
-            create: (_) {
-              final cubit = getIt<SimilarAyahTrainerCubit>();
-              final query = state.uri.queryParameters;
-              final pair = _similarAyahPair(query);
-              final target = _similarAyahTarget(query);
-              if (pair != null) {
-                // Load the list first so Back returns to it, then open the pair.
-                unawaited(cubit.load().then((_) => cubit.chooseReference(
-                  SimilarAyahReferencePair(
-                    targetSurahId: pair.$1.surahId,
-                    targetAyahNumber: pair.$1.ayahNumber,
-                    otherSurahId: pair.$2.surahId,
-                    otherAyahNumber: pair.$2.ayahNumber,
+        builder: (context, state) => const HandsFreeReviewPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.similarAyahTrainer,
+        redirect: (context, state) async =>
+            similarAyahTrainerRedirect(
+              getIt.isRegistered<ExperienceFlags>()
+                  ? getIt<ExperienceFlags>()
+                  : null,
+            ) ??
+            similarAyahPairRedirect(state.uri.queryParameters) ??
+            similarAyahTargetRedirect(state.uri.queryParameters) ??
+            await MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) => BlocProvider(
+          create: (_) {
+            final cubit = getIt<SimilarAyahTrainerCubit>();
+            final query = state.uri.queryParameters;
+            final pair = _similarAyahPair(query);
+            final target = _similarAyahTarget(query);
+            if (pair != null) {
+              // Load the list first so Back returns to it, then open the pair.
+              unawaited(
+                cubit.load().then(
+                  (_) => cubit.chooseReference(
+                    SimilarAyahReferencePair(
+                      targetSurahId: pair.$1.surahId,
+                      targetAyahNumber: pair.$1.ayahNumber,
+                      otherSurahId: pair.$2.surahId,
+                      otherAyahNumber: pair.$2.ayahNumber,
+                    ),
                   ),
-                )));
-              } else {
-                unawaited(
-                  target == null ? cubit.load() : cubit.loadRelated(target),
-                );
-              }
-              return cubit;
-            },
-            child: Builder(builder: (context) => SimilarAyahTrainerPage(
+                ),
+              );
+            } else {
+              unawaited(
+                target == null ? cubit.load() : cubit.loadRelated(target),
+              );
+            }
+            return cubit;
+          },
+          child: Builder(
+            builder: (context) => SimilarAyahTrainerPage(
               cubit: context.read<SimilarAyahTrainerCubit>(),
-            )),
+            ),
           ),
         ),
-        GoRoute(
-          parentNavigatorKey: _rootNavigatorKey,
-          path: AppRoutes.quranNotes,
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.quranNotes,
         redirect: (context, state) async {
           final flagged = ayahNotesRedirect(
             getIt.isRegistered<ExperienceFlags>()
@@ -953,16 +1013,17 @@ abstract class AppRouter {
                   targetAyah != null &&
                   targetSurah > 0 &&
                   targetAyah > 0
-              ? AyahReference(
-                  surahId: targetSurah,
-                  ayahNumber: targetAyah,
-                )
+              ? AyahReference(surahId: targetSurah, ayahNumber: targetAyah)
               : null;
+          final extra = state.extra;
           return KeepScreenAwake(
             child: QuranReaderPage(
               pageNumber: pageNumber,
               readerMode: mode,
               initialTarget: initialTarget,
+              inviteSessionId: extra is InviteActivityLaunch
+                  ? extra.localSessionId
+                  : null,
             ),
           );
         },
@@ -983,13 +1044,27 @@ abstract class AppRouter {
               initialSubcategory: state.uri.queryParameters['sub'],
             );
           }
-          return AzkarCategoryPage(category: category);
+          final extra = state.extra;
+          return AzkarCategoryPage(
+            category: category,
+            inviteSessionId: extra is InviteActivityLaunch
+                ? extra.localSessionId
+                : null,
+          );
         },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.goodImpact,
+        builder: (context, state) => GoodImpactPage(
+          cubit: getIt<GoodImpactCubit>(),
+          labeler: getIt<InviteTargetLabeler>(),
+        ),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -1050,9 +1125,11 @@ abstract class AppRouter {
         path: AppRoutes.groupKhatmah,
         redirect: (context, state) => groupKhatmahRedirect(
           getIt.isRegistered<GroupKhatmahAppEnvironment>()
-              ? getIt<GroupKhatmahAppEnvironment>() : null,
+              ? getIt<GroupKhatmahAppEnvironment>()
+              : null,
           getIt.isRegistered<RecordOwnerProvider>()
-              ? getIt<RecordOwnerProvider>() : null,
+              ? getIt<RecordOwnerProvider>()
+              : null,
         ),
         builder: (context, state) => GroupKhatmahRoutePage(
           environment: getIt<GroupKhatmahAppEnvironment>(),
@@ -1226,9 +1303,7 @@ abstract class AppRouter {
               // The reader validates the ayah against the Mushaf itself.
               ayahNumber: validSurahId == null
                   ? null
-                  : int.tryParse(
-                      state.uri.queryParameters['ayahNumber'] ?? '',
-                    ),
+                  : int.tryParse(state.uri.queryParameters['ayahNumber'] ?? ''),
             ),
           );
         },
@@ -1446,7 +1521,8 @@ abstract class AppRouter {
                 path: AppRoutes.home,
                 pageBuilder: (_, state) => NoTransitionPage(
                   child: HomePage(
-                    requestPrayerTimes: state.uri.queryParameters['widgetPrayer']=='1',
+                    requestPrayerTimes:
+                        state.uri.queryParameters['widgetPrayer'] == '1',
                     prayerRequestId: state.uri.queryParameters['widgetTap'],
                     requestDailyAyahShare:
                         state.uri.queryParameters['dailyAyahAction'] == 'share',

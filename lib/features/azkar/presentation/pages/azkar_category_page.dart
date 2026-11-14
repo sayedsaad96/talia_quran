@@ -27,10 +27,25 @@ import '../widgets/zikr_audio_state_builder.dart';
 import '../widgets/font_scale_selector_sheet.dart';
 import '../../../../core/widgets/talia_app_bar.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../share_good/presentation/widgets/invite_completion_sheet.dart';
+import '../../../share_good/application/active_invite_sessions.dart';
+import '../../../share_good/domain/repositories/share_good_repository.dart';
+import '../../../share_good/presentation/widgets/azkar_invite_completion.dart';
+import '../../../share_good/share_good_config.dart';
+import '../../../share_good/domain/entities/invite_activity_target.dart';
+import '../../../share_good/domain/entities/invite_types.dart';
+import '../../../share_good/presentation/widgets/share_good_action.dart';
+import '../../../share_good/presentation/widgets/share_good_prompt_hint.dart';
 
 class AzkarCategoryPage extends StatelessWidget {
-  const AzkarCategoryPage({super.key, required this.category});
+  const AzkarCategoryPage({
+    super.key,
+    required this.category,
+    this.inviteSessionId,
+  });
   final String category;
+  final String? inviteSessionId;
 
   AzkarCategory get _category => switch (category) {
     'morning' => AzkarCategory.morning,
@@ -43,14 +58,18 @@ class AzkarCategoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<AzkarCubit>()..load(_category),
-      child: _AzkarCategoryView(category: _category),
+      child: _AzkarCategoryView(
+        category: _category,
+        inviteSessionId: inviteSessionId,
+      ),
     );
   }
 }
 
 class _AzkarCategoryView extends StatelessWidget {
-  const _AzkarCategoryView({required this.category});
+  const _AzkarCategoryView({required this.category, this.inviteSessionId});
   final AzkarCategory category;
+  final String? inviteSessionId;
 
   String _title(BuildContext ctx) => switch (category) {
     AzkarCategory.morning => ctx.l10n.morningAzkar,
@@ -67,6 +86,15 @@ class _AzkarCategoryView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: context.tokens.background,
+      bottomNavigationBar:
+          inviteSessionId != null &&
+              (category == AzkarCategory.morning ||
+                  category == AzkarCategory.evening)
+          ? _AzkarInviteGate(
+              localSessionId: inviteSessionId!,
+              category: category,
+            )
+          : null,
       body: BlocBuilder<AzkarCubit, AzkarState>(
         builder: (context, state) {
           if (state is AzkarLoading) {
@@ -90,6 +118,7 @@ class _AzkarCategoryView extends StatelessWidget {
                 key: ValueKey('azkar-completion-${category.name}'),
                 title: _title(context),
                 completedCount: state.completedCount,
+                category: category,
                 totalCount: state.sessions.length,
                 isDark: isDark,
                 onReset: () => context.read<AzkarCubit>().reset(),
@@ -107,6 +136,77 @@ class _AzkarCategoryView extends StatelessWidget {
           return const SizedBox.shrink();
         },
       ),
+    );
+  }
+}
+
+class _AzkarInviteGate extends StatefulWidget {
+  const _AzkarInviteGate({
+    required this.localSessionId,
+    required this.category,
+  });
+  final String localSessionId;
+  final AzkarCategory category;
+  @override
+  State<_AzkarInviteGate> createState() => _AzkarInviteGateState();
+}
+
+class _AzkarInviteGateState extends State<_AzkarInviteGate> {
+  StreamSubscription<void>? _changes;
+  Future<bool>? _allowed;
+
+  Future<bool> _check(MemorizationPathResolver path) async =>
+      getIt<ShareGoodAvailability>().isAvailable &&
+      !path.isKids(await path.currentProfile());
+
+  @override
+  void initState() {
+    super.initState();
+    if (!getIt.isRegistered<ShareGoodAvailability>() ||
+        !getIt.isRegistered<MemorizationPathResolver>() ||
+        !getIt.isRegistered<ActiveInviteSessions>() ||
+        !getIt.isRegistered<ShareGoodRepository>()) {
+      return;
+    }
+    final path = getIt<MemorizationPathResolver>();
+    _allowed = _check(path);
+    _changes = path.changes.listen((_) {
+      if (mounted) setState(() => _allowed = _check(path));
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_changes?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_allowed == null) return const SizedBox.shrink();
+    return FutureBuilder<bool>(
+      future: _allowed,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done ||
+            snapshot.data != true ||
+            !getIt<ShareGoodAvailability>().isAvailable) {
+          return const SizedBox.shrink();
+        }
+        return BlocBuilder<AzkarCubit, AzkarState>(
+          builder: (context, state) => AzkarInviteCompletion(
+            localSessionId: widget.localSessionId,
+            category: widget.category,
+            allDone: state is AzkarLoaded && state.category == widget.category
+                ? state.allDone
+                : null,
+            enabled: true,
+            sessions: getIt<ActiveInviteSessions>(),
+            repository: getIt<ShareGoodRepository>(),
+            onCompleted: (session) =>
+                unawaited(InviteCompletionSheet.show(context, session)),
+          ),
+        );
+      },
     );
   }
 }
@@ -415,6 +515,15 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                           isDark: widget.isDark,
                         ),
                       ),
+                      if (widget.state.category == AzkarCategory.morning ||
+                          widget.state.category == AzkarCategory.evening)
+                        ShareGoodAction(
+                          target: AzkarCollectionInviteTarget(
+                            widget.state.category,
+                          ),
+                          moment: InviteMoment.beforeActivity,
+                          style: ShareGoodActionStyle.icon,
+                        ),
                       if (isSmall)
                         ValueListenableBuilder<bool>(
                           valueListenable: _prefsStore.autoAdvanceListenable,
@@ -955,6 +1064,7 @@ class _CompletionScreen extends StatefulWidget {
     super.key,
     required this.title,
     required this.completedCount,
+    required this.category,
     required this.totalCount,
     required this.isDark,
     required this.onReset,
@@ -963,6 +1073,7 @@ class _CompletionScreen extends StatefulWidget {
 
   final String title;
   final int completedCount;
+  final AzkarCategory category;
   final int totalCount;
   final bool isDark;
   final VoidCallback onReset;
@@ -1080,6 +1191,17 @@ class _CompletionScreenState extends State<_CompletionScreen> {
               ),
             ],
             const SizedBox(height: AppSpacing.xxl),
+            if (widget.category == AzkarCategory.morning ||
+                widget.category == AzkarCategory.evening) ...[
+              ShareGoodPromptHint(
+                target: AzkarCollectionInviteTarget(widget.category),
+              ),
+              ShareGoodAction(
+                target: AzkarCollectionInviteTarget(widget.category),
+                moment: InviteMoment.afterActivity,
+                style: ShareGoodActionStyle.text,
+              ),
+            ],
             Row(
                   children: [
                     Expanded(

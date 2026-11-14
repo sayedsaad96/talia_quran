@@ -118,12 +118,14 @@ final class InviteSession extends Equatable {
     this.pendingStatus,
     this.awaitingConsent = false,
     this.localSessionId,
+    this.startedAt,
   });
   final String token;
   final ResolvedInvite snapshot;
   final InviteParticipationStatus? serverStatus, pendingStatus;
   final bool awaitingConsent;
   final String? localSessionId;
+  final DateTime? startedAt;
   @override
   List<Object?> get props => [
     token,
@@ -132,5 +134,6 @@ final class InviteSession extends Equatable {
     pendingStatus,
     awaitingConsent,
     localSessionId,
+    startedAt,
   ];
 }
