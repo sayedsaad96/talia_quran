@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/services/device_timezone.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -22,6 +23,14 @@ void main() {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(timezoneChannel, null);
+  });
+
+  test('device timezone lookup does not round fractional OEM offsets', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(timezoneChannel, (_) async => 'GMT+03:30');
+    final device = await lookupDeviceTimezone();
+    expect(device.identifier, 'GMT+03:30');
+    expect(device.location, isNull);
   });
 
   test(

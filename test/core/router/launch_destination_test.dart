@@ -1,10 +1,80 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/router/launch_destination.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
 
 void main() {
+  test('Android delivers verified invite links through app_links', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    expect(
+      manifest,
+      contains(
+        'android:name="flutter_deeplinking_enabled" android:value="false"',
+      ),
+    );
+    expect(manifest, contains('android:autoVerify="true"'));
+    expect(manifest, contains(r'android:host="${shareGoodLinkHost}"'));
+    expect(manifest, contains('android:pathPrefix="/i/"'));
+    expect(manifest, contains('android:pathPrefix="/update-password"'));
+  });
+
   group('LaunchDestination.resolve', () {
+    test('a validated pending invite bypasses onboarding for this launch', () {
+      final token = 'a' * 43;
+      expect(
+        LaunchDestination.resolve(isFirstTime: true, pendingInvite: token),
+        '/invite/$token',
+      );
+      expect(
+        LaunchDestination.resolve(isFirstTime: true),
+        AppRoutes.onboarding,
+      );
+    });
+
+    test('password recovery outranks a validated invite and notification', () {
+      expect(
+        LaunchDestination.resolve(
+          isFirstTime: true,
+          passwordRecovery: true,
+          pendingInvite: 'a' * 43,
+          actionId: 'action_quran',
+        ),
+        AppRoutes.updatePassword,
+      );
+    });
+
+    test('disabled or malformed invites preserve ordinary launch routing', () {
+      expect(
+        LaunchDestination.resolve(
+          isFirstTime: false,
+          pendingInvite: 'a' * 43,
+          inviteEnabled: false,
+          actionId: 'action_quran',
+        ),
+        AppRoutes.quran,
+      );
+      expect(
+        LaunchDestination.resolve(isFirstTime: true, pendingInvite: 'bad'),
+        AppRoutes.onboarding,
+      );
+    });
+
+    test('notification payloads cannot supply invite bearer routes', () {
+      for (final prefix in ['/invite', '/%69nvite']) {
+        expect(
+          LaunchDestination.resolve(
+            isFirstTime: false,
+            payload: '$prefix/${'a' * 43}',
+          ),
+          AppRoutes.home,
+        );
+      }
+    });
+
     test('sends first-time users to onboarding even with a notification', () {
       final location = LaunchDestination.resolve(
         isFirstTime: true,

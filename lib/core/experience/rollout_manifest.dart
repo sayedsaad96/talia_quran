@@ -57,6 +57,10 @@ abstract final class RolloutManifest {
   ]);
 
   static RolloutEntry _experience(ExperienceFeature f) => switch (f) {
+    ExperienceFeature.shareGood => _off(
+      f.storageKey,
+      'Requires backend, link hosting, and signed-device release acceptance.',
+    ),
     ExperienceFeature.readingCheckpointCloud => _off(
       f.storageKey,
       'Additive SQL contract awaits isolated database and two-device validation.',

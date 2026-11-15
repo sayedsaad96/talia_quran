@@ -4,3 +4,6 @@ assets/data/khatm_dua.json text eol=lf
 assets/data/quran.json -text
 assets/data/similar_ayah_index.json text eol=lf
 docs/legal/*.html text eol=lf
+*.g.dart text eol=lf
+*.mocks.dart text eol=lf
+*.freezed.dart text eol=lf

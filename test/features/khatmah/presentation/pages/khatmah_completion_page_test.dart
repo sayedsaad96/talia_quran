@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
@@ -10,6 +9,8 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_completion_page.dart';
+import 'package:talia_quran/core/widgets/social_share/social_share_sheet.dart';
+import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
 
 void main() {
   final testPlan = KhatmahPlan(
@@ -83,6 +84,24 @@ void main() {
   }
 
   setUp(() {});
+
+  testWidgets('ordinary completion sharing opens the existing card sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+    final button = find.byKey(const Key('khatmah_completion_share_button'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    final sheet = tester.widget<SocialShareSheet>(
+      find.byType(SocialShareSheet),
+    );
+    expect(sheet.data.category, SocialShareCategory.khatmah);
+    expect(sheet.data.content, contains('5'));
+    expect(sheet.data.subtitle, contains('الوالدة حفظها الله'));
+    expect(sheet.data.linkUrl, isNull);
+  });
 
   testWidgets('shows actual elapsed days rather than planned duration', (
     tester,
@@ -220,28 +239,16 @@ void main() {
   testWidgets('share sheet receives actual days and unchanged dedication', (
     tester,
   ) async {
-    const channel = MethodChannel('dev.fluttercommunity.plus/share');
-    String? sharedText;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-      call,
-    ) async {
-      if (call.method == 'share') {
-        sharedText = (call.arguments as Map)['text'] as String;
-      }
-      return 'dev.fluttercommunity.plus/share/unavailable';
-    });
-    addTearDown(
-      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        channel,
-        null,
-      ),
-    );
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
     final share = find.byKey(const Key('khatmah_completion_share_button'));
     await tester.ensureVisible(share);
     await tester.tap(share);
     await tester.pumpAndSettle();
+    final data = tester
+        .widget<SocialShareSheet>(find.byType(SocialShareSheet))
+        .data;
+    final sharedText = data.toPlainShareText();
     expect(sharedText, contains('in 5 days'));
     expect(sharedText, isNot(contains('30 days')));
     expect(sharedText, contains('الوالدة حفظها الله'));

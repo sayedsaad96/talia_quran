@@ -11,18 +11,45 @@ class NotificationLaunchRequest {
 
 /// Resolves the first destination after the splash/init handoff.
 ///
-/// First-time users always go to onboarding, even if a notification launched
-/// the app. Returning users honor notification action buttons before the
-/// notification body payload.
+/// Recovery and a validated invite can supersede onboarding. Otherwise,
+/// returning users honor notification action buttons before the body payload.
 abstract final class LaunchDestination {
   static const firstTimePreferenceKey = 'isFirstTimeAppOpen';
+  static final _inviteToken = RegExp(r'^[A-Za-z0-9_-]{43}$');
+
+  static String? priorityRoute({
+    bool passwordRecovery = false,
+    bool inviteEnabled = true,
+    String? pendingInvite,
+  }) {
+    if (passwordRecovery) return AppRoutes.updatePassword;
+    if (inviteEnabled &&
+        pendingInvite != null &&
+        _inviteToken.hasMatch(pendingInvite)) {
+      return AppRoutes.inviteLocation(pendingInvite);
+    }
+    return null;
+  }
 
   static String resolve({
     required bool isFirstTime,
     String? payload,
     String? actionId,
+    bool passwordRecovery = false,
+    bool inviteEnabled = true,
+    String? pendingInvite,
   }) {
+    final priority = priorityRoute(
+      passwordRecovery: passwordRecovery,
+      inviteEnabled: inviteEnabled,
+      pendingInvite: pendingInvite,
+    );
+    if (priority != null) return priority;
     if (isFirstTime) return AppRoutes.onboarding;
+    if (payload != null &&
+        AppRouter.isInvitePreviewLocation(Uri.tryParse(payload)?.path ?? '')) {
+      payload = null;
+    }
 
     // The scheduled daily-ayah payload identifies an exact page. It must win
     // over the generic legacy action route so the notification opens the ayah

@@ -28,6 +28,13 @@ import 'settings_clarity_tile.dart';
 import 'settings_group.dart';
 import 'settings_nav_tile.dart';
 import 'settings_section.dart';
+import '../../../share_good/presentation/cubits/good_impact_cubit.dart';
+import '../../../share_good/presentation/widgets/share_good_settings_tiles.dart';
+import '../../../share_good/data/datasources/share_good_local_store.dart';
+import '../../../share_good/share_good_config.dart';
+import '../../../../core/identity/account_data_barrier.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsHubBody extends StatelessWidget {
   const SettingsHubBody({super.key, required this.state, required this.isDark});
@@ -66,6 +73,25 @@ class SettingsHubBody extends StatelessWidget {
         AccountSection(isDark: isDark),
         SettingsDivider(isDark: isDark),
         ProfileSettingTile(isDark: isDark),
+        if (state.isAdultPath && getIt.isRegistered<GoodImpactCubit>())
+          ShareGoodSettingsTile(
+            cubit: getIt<GoodImpactCubit>(),
+            onTap: () => context.push(AppRoutes.goodImpact),
+          ),
+        if (state.isAdultPath && getIt.isRegistered<ShareGoodLocalStore>())
+          ShareGoodIdentitySettingsTile(
+            auth: getIt<AuthCubit>(),
+            store: getIt<ShareGoodLocalStore>(),
+            barrier: AccountDataBarrier.forPreferences(
+              getIt<SharedPreferences>(),
+            ),
+            isAvailable: () => getIt<ShareGoodAvailability>().isAvailable,
+            isAdult: () async =>
+                (await getIt<MemorizationPathResolver>().currentProfile())
+                    ?.isAdult ==
+                true,
+            audienceChanges: getIt<MemorizationPathResolver>().changes,
+          ),
         BlocBuilder<AuthCubit, AuthState>(
           builder: (context, authState) {
             if (authState is! AuthAuthenticated) return const SizedBox.shrink();
@@ -152,8 +178,9 @@ class SettingsHubBody extends StatelessWidget {
         // Confirmed adult profile only (not the legacy `mem_plus_track` hint).
         if ((state.memorizationProfile?.isAdult ?? false) &&
             getIt.isRegistered<FeaturePreferences>() &&
-            getIt<FeaturePreferences>()
-                .isVisible(ExperienceFeature.audioDownloads))
+            getIt<FeaturePreferences>().isVisible(
+              ExperienceFeature.audioDownloads,
+            ))
           SettingsNavTile(
             icon: TaliaIcons.storage,
             iconColor: context.tokens.accent,
@@ -163,7 +190,9 @@ class SettingsHubBody extends StatelessWidget {
           ),
         if ((state.memorizationProfile?.isAdult ?? false) &&
             getIt.isRegistered<ExperienceFlags>() &&
-            getIt<ExperienceFlags>().isEnabled(ExperienceFeature.similarAyahTrainer))
+            getIt<ExperienceFlags>().isEnabled(
+              ExperienceFeature.similarAyahTrainer,
+            ))
           SettingsNavTile(
             icon: TaliaIcons.swapHorizontal,
             iconColor: context.tokens.accent,

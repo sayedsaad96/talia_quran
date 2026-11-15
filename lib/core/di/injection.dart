@@ -6,6 +6,7 @@ import 'prayer_review_injection.dart';
 import 'hands_free_injection.dart';
 import 'home_widget_injection.dart';
 import 'group_khatmah_injection.dart';
+import 'share_good_injection.dart';
 import '../sync/group_khatmah_environment.dart';
 import '../../features/group_khatmah/domain/repositories/group_khatmah_repository.dart';
 import '../home_widget/home_widget_publisher.dart';
@@ -1377,6 +1378,7 @@ Future<void> configureDependencies({
       getIt<RecordOwnerProvider>(),
     ),
   );
+  if (!background) registerShareGood(getIt);
   // User preference layer on top of the raw rollout switches (per owner).
   getIt.registerLazySingleton<FeaturePreferences>(
     () => FeaturePreferences(
@@ -1940,6 +1942,7 @@ Future<void> configureDependencies({
 Future<void> activateRuntimeDependencies({bool background = false}) async {
   if (!background) await registerHomeWidget(getIt);
   if (!background) await registerGroupKhatmah(getIt);
+  if (!background) unawaited(restoreShareGoodSessions(getIt));
 }
 
 void activateAuthenticationDependencies() {

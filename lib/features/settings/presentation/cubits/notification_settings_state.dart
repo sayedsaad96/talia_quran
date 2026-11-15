@@ -20,6 +20,8 @@ class NotificationSettingsState extends Equatable {
     this.forgettingForecastAvailable = false,
     this.tahajjud = false,
     this.khatmahReminder = true,
+    this.inviteReminder = true,
+    this.inviteReminderAvailable = false,
     this.prayerNotifications = false,
     this.prayerAthan = false,
     this.prayerFajr = true,
@@ -70,6 +72,8 @@ class NotificationSettingsState extends Equatable {
   final bool forgettingForecastAvailable;
   final bool tahajjud;
   final bool khatmahReminder;
+  final bool inviteReminder;
+  final bool inviteReminderAvailable;
 
   // Prayer Times and individual prayer filters
   final bool prayerNotifications;
@@ -119,11 +123,15 @@ class NotificationSettingsState extends Equatable {
     if (forgettingForecastAvailable && forgettingForecast) count++;
     if (tahajjud) count++;
     if (khatmahReminder) count++;
+    if (inviteReminderAvailable && inviteReminder) count++;
     return count;
   }
 
   /// Total number of customizable notification categories.
-  int get totalCount => forgettingForecastAvailable ? 12 : 11;
+  int get totalCount =>
+      11 +
+      (forgettingForecastAvailable ? 1 : 0) +
+      (inviteReminderAvailable ? 1 : 0);
 
   /// Returns true if system-level notifications are blocked by the OS.
   bool get isSystemPermissionBlocked => !hasSystemPermission;
@@ -144,6 +152,8 @@ class NotificationSettingsState extends Equatable {
     bool? forgettingForecastAvailable,
     bool? tahajjud,
     bool? khatmahReminder,
+    bool? inviteReminder,
+    bool? inviteReminderAvailable,
     bool? prayerNotifications,
     bool? prayerAthan,
     bool? prayerFajr,
@@ -190,6 +200,9 @@ class NotificationSettingsState extends Equatable {
           forgettingForecastAvailable ?? this.forgettingForecastAvailable,
       tahajjud: tahajjud ?? this.tahajjud,
       khatmahReminder: khatmahReminder ?? this.khatmahReminder,
+      inviteReminder: inviteReminder ?? this.inviteReminder,
+      inviteReminderAvailable:
+          inviteReminderAvailable ?? this.inviteReminderAvailable,
       prayerNotifications: prayerNotifications ?? this.prayerNotifications,
       prayerAthan: prayerAthan ?? this.prayerAthan,
       prayerFajr: prayerFajr ?? this.prayerFajr,
@@ -240,6 +253,8 @@ class NotificationSettingsState extends Equatable {
     forgettingForecastAvailable,
     tahajjud,
     khatmahReminder,
+    inviteReminder,
+    inviteReminderAvailable,
     prayerNotifications,
     prayerAthan,
     prayerFajr,

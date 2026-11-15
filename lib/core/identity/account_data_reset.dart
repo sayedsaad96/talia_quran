@@ -138,7 +138,14 @@ class AccountDataReset {
 
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
   /// also removes `mem_plus_local_records_claimed_by` and every migration flag.
+  static const Set<String> _shareGoodOwnerPrefixes = {
+    'share_good_identity_pref_v1|',
+    'share_good_prompt_v1|',
+    'share_good_impact_seen_v1|',
+  };
+
   static const Set<String> clearedPreferencePrefixes = {
+    ..._shareGoodOwnerPrefixes,
     'group_khatmah_cache_v1|',
     'hands_free_warning_seen|',
     'prayer_review_lengths|',
@@ -269,6 +276,9 @@ class AccountDataReset {
 
   Future<void> _clearDeletedAccountPreferences(String ownerId) async {
     final keys = _prefs.getKeys().where((key) {
+      for (final prefix in _shareGoodOwnerPrefixes) {
+        if (key.startsWith(prefix)) return key == '$prefix$ownerId';
+      }
       if (key.startsWith('prayer_review_lengths|')) {
         return key == 'prayer_review_lengths|$ownerId';
       }

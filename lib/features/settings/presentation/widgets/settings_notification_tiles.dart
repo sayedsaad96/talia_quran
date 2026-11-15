@@ -709,6 +709,19 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
             SettingsDivider(isDark: widget.isDark),
 
+            if (state.inviteReminderAvailable) ...[
+              SwitchListTile.adaptive(
+                title: Text(context.l10n.inviteReminderSetting),
+                value: state.inviteReminder,
+                onChanged: (value) => _cubit.toggleReminder(
+                  TaliaNotificationService.inviteReminderPreferenceKey,
+                  value,
+                  l10n: context.l10n,
+                ),
+              ),
+              SettingsDivider(isDark: widget.isDark),
+            ],
+
             // 11. Interactive Test Button & Picker
             Padding(
               padding: const EdgeInsets.symmetric(

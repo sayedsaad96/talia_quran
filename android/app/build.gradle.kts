@@ -1,5 +1,7 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.util.Base64
+import java.util.Locale
 
 plugins {
     id("com.android.application")
@@ -11,6 +13,32 @@ val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+// The Dart-generated invite URL and Android's claimed host must be identical.
+val shareGoodDartHosts = providers.gradleProperty("dart-defines").orNull
+    ?.split(",")?.mapNotNull { encoded ->
+        runCatching { String(Base64.getDecoder().decode(encoded), Charsets.UTF_8) }.getOrNull()
+            ?.takeIf { it.startsWith("SHARE_GOOD_LINK_HOST=") }
+            ?.substringAfter('=')
+    } ?: emptyList()
+require(shareGoodDartHosts.distinct().size <= 1) { "Conflicting SHARE_GOOD_LINK_HOST defines" }
+val shareGoodDartHost = shareGoodDartHosts.firstOrNull().orEmpty()
+val shareGoodGradleHost = providers.gradleProperty("shareGoodLinkHost").orNull.orEmpty()
+val shareGoodHostPattern = Regex("""^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$""")
+val normalizedShareGoodHost = if (shareGoodDartHost.isEmpty()) {
+    require(shareGoodGradleHost.isEmpty() || shareGoodGradleHost == "invalid.localhost") {
+        "shareGoodLinkHost requires a matching SHARE_GOOD_LINK_HOST"
+    }
+    "invalid.localhost"
+} else {
+    require(shareGoodHostPattern.matches(shareGoodDartHost) &&
+        shareGoodHostPattern.matches(shareGoodGradleHost) &&
+        shareGoodDartHost.lowercase(Locale.ROOT) == shareGoodGradleHost.lowercase(Locale.ROOT) &&
+        shareGoodDartHost.lowercase(Locale.ROOT) != "invalid.localhost") {
+        "SHARE_GOOD_LINK_HOST and shareGoodLinkHost must be matching valid hosts"
+    }
+    shareGoodDartHost.lowercase(Locale.ROOT)
 }
 
 android {
@@ -36,6 +64,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         testInstrumentationRunner = "android.test.InstrumentationTestRunner"
+        manifestPlaceholders["shareGoodLinkHost"] = normalizedShareGoodHost
     }
 
     signingConfigs {
@@ -74,6 +103,7 @@ flutter {
 }
 
 dependencies {
+    implementation("com.android.installreferrer:installreferrer:2.2")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // Pure-JVM unit tests for the prayer delivery identity/codec (Prayer V2).
     testImplementation("junit:junit:4.13.2")

@@ -85,14 +85,32 @@ bool isRegisteredRoute(String location) {
 
 void main() {
   group('notification payload → registered route guard', () {
+    test('opaque invite reminders never become arbitrary slash routes', () {
+      for (final payload in [
+        'sg1|abcdefghijklmnopqrstuvwx',
+        'sg1|/invite/secret',
+        'sg1|../secret',
+      ]) {
+        expect(
+          LaunchDestination.routeForResponse(
+            NotificationResponseEvent(payload: payload),
+          ),
+          AppRoutes.home,
+        );
+      }
+    });
     test('every static notification payload matches a registered route', () {
       final offenders = <String>[];
       _notificationPayloads.forEach((name, payload) {
         if (!isRegisteredRoute(payload)) offenders.add('$name → $payload');
       });
-      expect(offenders, isEmpty,
-          reason: 'Notification payloads must navigate somewhere real. '
-              'Invalid: $offenders');
+      expect(
+        offenders,
+        isEmpty,
+        reason:
+            'Notification payloads must navigate somewhere real. '
+            'Invalid: $offenders',
+      );
     });
 
     test('every notification action button maps to a registered route', () {
@@ -120,9 +138,13 @@ void main() {
           offenders.add('$actionId → $route');
         }
       }
-      expect(offenders, isEmpty,
-          reason: 'Action buttons must map to existing routes. '
-              'Invalid: $offenders');
+      expect(
+        offenders,
+        isEmpty,
+        reason:
+            'Action buttons must map to existing routes. '
+            'Invalid: $offenders',
+      );
     });
 
     test('LaunchDestination.resolve never returns an unregistered route', () {
@@ -168,7 +190,9 @@ void main() {
       // A companion `pc1` payload must fall through to home in the legacy
       // resolution path; the companion controller is the single writer.
       final route = LaunchDestination.routeForResponse(
-        const NotificationResponseEvent(payload: 'pc1|owner|2026-09-25|fajr|1|checkIn'),
+        const NotificationResponseEvent(
+          payload: 'pc1|owner|2026-09-25|fajr|1|checkIn',
+        ),
       );
       expect(route, AppRoutes.home);
     });

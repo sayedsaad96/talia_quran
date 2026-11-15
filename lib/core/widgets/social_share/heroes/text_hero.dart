@@ -24,7 +24,12 @@ class TextHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = SocialShareCopy.of(context);
     final isQuran = data.category == SocialShareCategory.quranAyah;
-    final text = isQuran ? '﴿ ${data.content} ﴾' : '« ${data.content} »';
+    final isInvitation = data.category == SocialShareCategory.invitation;
+    final text = isInvitation
+        ? data.title ?? ''
+        : isQuran
+        ? '﴿ ${data.content} ﴾'
+        : '« ${data.content} »';
     final reference = isQuran
         ? copy.ayahReference(data.surahName, data.ayahNumber)
         : data.subtitle;
@@ -40,10 +45,12 @@ class TextHero extends StatelessWidget {
             text,
             key: const ValueKey('share-hero-text'),
             textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
+            textDirection: isInvitation ? copy.direction : TextDirection.rtl,
             style: TaliaShareTypography.quranVerse(
               color: palette.textPrimary,
-              fontSize: metrics.verseSize(data.content.length),
+              fontSize: metrics.verseSize(
+                isInvitation ? text.length : data.content.length,
+              ),
               fontWeight: FontWeight.w600,
               height: 1.85,
             ),

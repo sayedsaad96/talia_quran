@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../identity/record_owner_provider.dart';
@@ -29,6 +30,9 @@ enum ExperienceFeature {
 
   /// Privacy and trust center.
   trustCenter,
+
+  /// Release-gated until Share Good deployment and device acceptance.
+  shareGood,
 
   seasonalRamadan,
   forgettingForecast,
@@ -92,6 +96,11 @@ class ExperienceFlags {
 
   bool isEnabled(ExperienceFeature feature) {
     try {
+      if (feature == ExperienceFeature.shareGood &&
+          !kDebugMode &&
+          !RolloutManifest.defaultFor(feature.storageKey)) {
+        return false;
+      }
       return _readBool(feature.storageKey) ?? false;
     } catch (_) {
       return false;

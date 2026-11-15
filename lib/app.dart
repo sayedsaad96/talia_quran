@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:app_links/app_links.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/accessibility/clarity_mode.dart';
+import 'core/config/supabase_config.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
@@ -41,6 +43,12 @@ import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
 import 'features/app_update/presentation/cubits/app_update_cubit.dart';
 import 'features/app_update/presentation/widgets/app_update_prompt_listener.dart';
+import 'features/share_good/application/incoming_invite_link_service.dart';
+import 'features/share_good/application/install_referrer_channel.dart';
+import 'features/share_good/data/datasources/share_good_local_store.dart';
+import 'features/share_good/share_good_config.dart';
+import 'features/share_good/application/good_impact_indicator_controller.dart';
+import 'features/share_good/application/share_good_notification_controller.dart';
 
 /// Notifier that signals when [AppInitializer] has finished.
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
@@ -63,12 +71,22 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   HomeWidgetLaunchController? _widgetLaunch;
   int _widgetNavigationEpoch = 0;
   QuranAudioNotificationController? _audioNotificationController;
+  AppLinks? _appLinks;
+  Future<bool>? _initialRecoveryLink;
+  IncomingInviteLinkService? _inviteLinks;
+  StreamSubscription<String>? _inviteSubscription;
+  String? _lastRoutedInvite;
+  bool _launchNavigationReady = false;
+  bool _suppressBufferedNavigation = false;
+  int _priorityNavigationEpoch = 0;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     appInitializedNotifier.addListener(_onInitialized);
     if (!kIsWeb && Platform.isAndroid) {
+      final links = _appLinks = AppLinks();
+      _initialRecoveryLink = _readInitialRecoveryLink(links);
       _audioNotificationController = QuranAudioNotificationController(
         notificationClicks: AudioService.notificationClicked,
         currentState: () => getIt<QuranContinuousPlayerService>().state,
@@ -86,7 +104,11 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   }
 
   bool _canOpenAudioReader() {
-    if (!AppInitializer.isInitialized) return false;
+    if (!AppInitializer.isInitialized ||
+        _suppressBufferedNavigation ||
+        _hasPasswordRecovery) {
+      return false;
+    }
     final path = AppRouter.router.routerDelegate.currentConfiguration.uri.path;
     // Kids listening keeps its existing reader context when the app is opened.
     if (path.startsWith(AppRoutes.memorizationPlusKids)) return false;
@@ -99,11 +121,14 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     appInitializedNotifier.removeListener(_onInitialized);
     unawaited(_widgetLaunch?.dispose());
     unawaited(_audioNotificationController?.dispose());
+    unawaited(_inviteSubscription?.cancel());
+    unawaited(_inviteLinks?.dispose());
     super.dispose();
   }
 
   void _onInitialized() {
     if (appInitializedNotifier.value && mounted) {
+      _refreshGoodImpact();
       setState(() {});
     }
   }
@@ -115,7 +140,11 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     getIt<AppUpdateCubit>().setForeground(state == AppLifecycleState.resumed);
 
     if (state == AppLifecycleState.resumed) {
-      _audioNotificationController?.setReady(_fullAppWired);
+      _refreshGoodImpact();
+      if (getIt.isRegistered<ShareGoodNotificationController>()) {
+        unawaited(getIt<ShareGoodNotificationController>().refresh());
+      }
+      _audioNotificationController?.setReady(_launchNavigationReady);
       if (getIt.isRegistered<HomeWidgetPublisher>()) {
         unawaited(getIt<HomeWidgetPublisher>().refresh());
       }
@@ -142,15 +171,24 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
   void _saveCurrentLocation() {
     if (!AppInitializer.isInitialized) return;
-    final location = AppRouter.router.routerDelegate.currentConfiguration.uri
-        .toString();
-    unawaited(getIt<AppSessionService>().saveLocation(location));
+    final uri = AppRouter.router.routerDelegate.currentConfiguration.uri;
+    if (AppRouter.isInvitePreviewLocation(uri.path)) return;
+    unawaited(getIt<AppSessionService>().saveLocation(uri.toString()));
+  }
+
+  void _refreshGoodImpact() {
+    if (getIt.isRegistered<GoodImpactIndicatorController>()) {
+      unawaited(getIt<GoodImpactIndicatorController>().onResume());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Before initialization, show a minimal app with only the splash route.
-    if (!AppInitializer.isInitialized) {
+    if (AppInitializer.isInitialized) _wireLaunchNavigation();
+    // Hold the splash until an enabled Android invite can claim the first
+    // route, before Home can redirect to onboarding.
+    if (!AppInitializer.isInitialized ||
+        (!_launchNavigationReady && _inviteIngressAvailable)) {
       return MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context).appName,
         debugShowCheckedModeBanner: false,
@@ -172,25 +210,24 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
   bool _fullAppWired = false;
 
-  Widget _buildFullApp() {
-    // Wire up notification handler only once.
-    if (!_fullAppWired) {
-      _fullAppWired = true;
-      final notificationService = getIt<TaliaNotificationService>();
-      notificationService.onPayloadReceived = _openNotification;
-      notificationService.onNotificationResponse = _handleNotificationResponse;
+  bool get _inviteIngressAvailable =>
+      _appLinks != null &&
+      getIt.isRegistered<ShareGoodAvailability>() &&
+      getIt<ShareGoodAvailability>().isAvailable;
 
-      // Theme, locale, and profile are already loaded during AppInitializer.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _audioNotificationController?.setReady(
-          mounted &&
-              WidgetsBinding.instance.lifecycleState ==
-                  AppLifecycleState.resumed,
-        );
+  void _wireLaunchNavigation() {
+    if (_fullAppWired) return;
+    _fullAppWired = true;
+    final notificationService = getIt<TaliaNotificationService>();
+    notificationService.onNotificationResponse = _handleNotificationResponse;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
         unawaited(_startPostInitializationTasks(notificationService));
-      });
-    }
+      }
+    });
+  }
 
+  Widget _buildFullApp() {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: getIt<ThemeCubit>()),
@@ -204,7 +241,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthPasswordRecoveryDetected) {
-            AppRouter.router.go(AppRoutes.updatePassword);
+            _priorityNavigationEpoch++;
           }
           if (state is AuthAccountDataDiscarded) {
             final locale = getIt<LocaleCubit>().state;
@@ -285,9 +322,15 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   Future<void> _startPostInitializationTasks(
     TaliaNotificationService notificationService,
   ) async {
-    await _applyLaunchNavigation(notificationService);
-    _widgetLaunch?.activate();
+    final hadPriority = await _applyLaunchNavigation(notificationService);
     if (!mounted) return;
+    setState(() => _launchNavigationReady = true);
+    _suppressBufferedNavigation = hadPriority;
+    _widgetLaunch?.activate();
+    _audioNotificationController?.setReady(
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+    );
+    _suppressBufferedNavigation = false;
     if (getIt.isRegistered<HomeWidgetPublisher>()) {
       unawaited(getIt<HomeWidgetPublisher>().refresh());
     }
@@ -306,7 +349,12 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   }
 
   Future<void> _openHomeWidget(Uri uri) async {
-    if (!mounted || !AppInitializer.isInitialized) return;
+    if (!mounted ||
+        !AppInitializer.isInitialized ||
+        _suppressBufferedNavigation ||
+        _hasPasswordRecovery) {
+      return;
+    }
     final epoch = ++_widgetNavigationEpoch;
     final prefs = getIt<SharedPreferences>();
     if (prefs.getBool(LaunchDestination.firstTimePreferenceKey) ?? true) return;
@@ -314,7 +362,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final lease = AccountDataBarrier.forPreferences(prefs).capture();
       final profile = await getIt<MemorizationPathResolver>().currentProfile();
       lease.check();
-      if (!mounted || epoch != _widgetNavigationEpoch) return;
+      if (!mounted || epoch != _widgetNavigationEpoch || _hasPasswordRecovery) {
+        return;
+      }
       final enabled = getIt<ExperienceFlags>().isEnabled(
         ExperienceFeature.homeWidget,
       );
@@ -324,7 +374,11 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       if (target == widgetWirdMarker) {
         final plan = await getIt<KhatmahRepository>().getActivePlan();
         lease.check();
-        if (!mounted || epoch != _widgetNavigationEpoch) return;
+        if (!mounted ||
+            epoch != _widgetNavigationEpoch ||
+            _hasPasswordRecovery) {
+          return;
+        }
         target = widgetWirdReadingRoute(plan, DateTime.now());
       }
       if (uri.path == '/prayer' && target != AppRoutes.home) {
@@ -336,62 +390,161 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     } catch (error, stack) {
       // An unreadable profile must not strand the tap: fall back to home.
       TaliaLogger.w('Home widget tap could not resolve profile', error, stack);
-      if (mounted && epoch == _widgetNavigationEpoch) {
+      if (mounted && epoch == _widgetNavigationEpoch && !_hasPasswordRecovery) {
         AppRouter.router.go(AppRoutes.home);
       }
     }
   }
 
-  /// Foreground notification tap: the companion controller persists any
-  /// companion command first, then navigation follows its outcome. Legacy
-  /// routing keeps flowing through [_openNotification]; companion (`pc1`)
-  /// payloads are a no-op there because they never start with '/'.
+  /// The raw response is the single path for Companion and legacy actions.
   Future<void> _handleNotificationResponse(
     NotificationResponseEvent event,
   ) async {
-    if (!mounted || !AppInitializer.isInitialized) return;
+    if (!mounted || !AppInitializer.isInitialized || _hasPasswordRecovery) {
+      return;
+    }
+    final epoch = _priorityNavigationEpoch;
+    if (await _claimInviteReminder(event.payload, epoch)) return;
     final outcome = await getIt<PrayerCompanionController>().handle(event);
-    if (!mounted) return;
+    if (!mounted || epoch != _priorityNavigationEpoch || _hasPasswordRecovery) {
+      return;
+    }
     AppRouter.router.go(outcome.route);
   }
 
   /// Cold start: dependencies are ready here, so the pending launch goes
   /// through the same controller — a companion action is written once during
   /// startup, then the route is applied.
-  Future<void> _applyLaunchNavigation(
+  Future<bool> _applyLaunchNavigation(
     TaliaNotificationService notificationService,
   ) async {
-    if (!mounted) return;
+    if (!mounted) return false;
+    final pending = notificationService.takePendingLaunch();
+    final recoveryLink = await _initialRecoveryLink ?? false;
+    if (!mounted) return false;
+    final invite = await _startInviteIngress();
+    if (!mounted) return false;
+    if (_hasPasswordRecovery) {
+      AppRouter.router.go(AppRoutes.updatePassword);
+      return true;
+    }
+    // Supabase owns validation of the recovery link and emits the auth state.
+    if (recoveryLink || _openInvite(invite)) return true;
     final isFirstTime =
         getIt<SharedPreferences>().getBool(
           LaunchDestination.firstTimePreferenceKey,
         ) ??
         true;
-    final pending = notificationService.takePendingLaunch();
     if (pending == null) {
-      if (!isFirstTime) return;
-      AppRouter.router.go(AppRoutes.onboarding);
-      return;
+      if (isFirstTime) AppRouter.router.go(AppRoutes.onboarding);
+      return false;
     }
     final event = NotificationResponseEvent(
       payload: pending.payload,
       actionId: pending.actionId,
     );
+    if (await _claimInviteReminder(event.payload, _priorityNavigationEpoch)) {
+      return true;
+    }
     if (isFirstTime) {
       // First-time users always go to onboarding; no notification response
       // (companion or legacy) is applied before onboarding completes.
       AppRouter.router.go(AppRoutes.onboarding);
-      return;
+      return false;
     }
     final outcome = await getIt<PrayerCompanionController>().handle(event);
-    if (!mounted) return;
+    if (!mounted) return false;
+    if (_hasPasswordRecovery) return true;
     if (outcome.route != AppRoutes.home) {
       AppRouter.router.go(outcome.route);
     }
+    return false;
   }
 
-  void _openNotification(String payload) {
-    if (!mounted || payload.isEmpty || !payload.startsWith('/')) return;
-    AppRouter.router.go(payload);
+  Future<bool> _claimInviteReminder(String? payload, int epoch) async {
+    if (payload == null || !payload.startsWith('sg1|')) return false;
+    if (!getIt.isRegistered<ShareGoodNotificationController>()) return true;
+    try {
+      final lease = AccountDataBarrier.forPreferences(
+        getIt<SharedPreferences>(),
+      ).capture();
+      final session = await getIt<ShareGoodNotificationController>().claim(
+        payload,
+      );
+      lease.check();
+      if (session == null ||
+          !mounted ||
+          epoch != _priorityNavigationEpoch ||
+          _hasPasswordRecovery) {
+        return true;
+      }
+      _priorityNavigationEpoch++;
+      _widgetNavigationEpoch++;
+      AppRouter.router.go(AppRoutes.inviteLocation(session.token));
+    } on AccountDataUnavailableException {
+      // A profile/account transition owns navigation.
+    }
+    return true;
+  }
+
+  bool get _hasPasswordRecovery {
+    if (getIt<AuthCubit>().state is AuthPasswordRecoveryDetected) return true;
+    final path = AppRouter.router.routerDelegate.currentConfiguration.uri.path;
+    return path == AppRoutes.updatePassword ||
+        path == AppRoutes.updatePasswordAlias;
+  }
+
+  Future<bool> _readInitialRecoveryLink(AppLinks links) async {
+    try {
+      final raw = await links.getInitialLinkString().timeout(
+        const Duration(seconds: 1),
+      );
+      final uri = raw == null ? null : Uri.tryParse(raw);
+      final recovery = Uri.tryParse(SupabaseConfig.passwordRecoveryRedirectTo);
+      return uri != null &&
+          recovery != null &&
+          uri.scheme == recovery.scheme &&
+          uri.host == recovery.host &&
+          uri.path == recovery.path;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String?> _startInviteIngress() async {
+    final links = _appLinks;
+    if (links == null || !getIt.isRegistered<ShareGoodAvailability>()) {
+      return null;
+    }
+    final availability = getIt<ShareGoodAvailability>();
+    final service = _inviteLinks = IncomingInviteLinkService(
+      appLinks: links,
+      referrer: const InstallReferrerChannel(),
+      store: getIt<ShareGoodLocalStore>(),
+      preferences: getIt<SharedPreferences>(),
+      links: availability.links,
+      isEnabled: () => availability.isAvailable,
+    );
+    _inviteSubscription = service.tokens.listen((token) {
+      if (_launchNavigationReady) _openInvite(token);
+    });
+    return service.initialToken();
+  }
+
+  bool _openInvite(String? token) {
+    if (!mounted ||
+        !_inviteIngressAvailable ||
+        token == null ||
+        token == _lastRoutedInvite ||
+        _hasPasswordRecovery) {
+      return false;
+    }
+    final route = LaunchDestination.priorityRoute(pendingInvite: token);
+    if (route == null) return false;
+    _lastRoutedInvite = token;
+    _widgetNavigationEpoch++;
+    _priorityNavigationEpoch++;
+    AppRouter.router.go(route);
+    return true;
   }
 }

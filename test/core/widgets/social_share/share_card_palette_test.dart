@@ -57,6 +57,7 @@ void main() {
       SocialShareCategory.memorization: SharePaletteId.forenoon,
       SocialShareCategory.progress: SharePaletteId.forenoon,
       SocialShareCategory.streak: SharePaletteId.forenoon,
+      SocialShareCategory.invitation: SharePaletteId.forenoon,
     };
     for (final category in SocialShareCategory.values) {
       expect(

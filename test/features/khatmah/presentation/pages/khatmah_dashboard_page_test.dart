@@ -17,6 +17,9 @@ import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_dedi
 import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_activity_target.dart';
+import 'package:talia_quran/features/share_good/domain/entities/invite_types.dart';
+import 'package:talia_quran/features/share_good/presentation/widgets/share_good_action.dart';
 
 class MockGetActiveKhatmahUsecase extends Mock
     implements GetActiveKhatmahUsecase {}
@@ -152,9 +155,7 @@ void main() {
     },
   );
 
-  testWidgets('a split plan shows the wird after each prayer', (
-    tester,
-  ) async {
+  testWidgets('a split plan shows the wird after each prayer', (tester) async {
     // Pages 1-20 are read, so the day's wird is 21-40 (20 pages, 4 each).
     when(() => mockGetActive()).thenAnswer(
       (_) async => testPlan.copyWith(targetPagesPerDay: 20, portionsPerDay: 5),
@@ -165,6 +166,20 @@ void main() {
       expect(find.byKey(Key('khatmah_dashboard_portion_$i')), findsOneWidget);
     }
     expect(find.byKey(const Key('khatmah_dashboard_portion_5')), findsNothing);
+  });
+
+  testWidgets('invitation targets the actual daily wird', (tester) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    final cubit = buildCubit();
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+    final state = cubit.state as KhatmahActive;
+    final action = tester.widget<ShareGoodAction>(find.byType(ShareGoodAction));
+    expect(
+      action.target,
+      QuranWirdInviteTarget(state.wirdStartPage, state.wirdEndPage),
+    );
+    expect(action.moment, InviteMoment.beforeActivity);
   });
 
   testWidgets('an unsplit plan shows no prayer portions', (tester) async {

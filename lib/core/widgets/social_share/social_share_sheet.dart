@@ -119,6 +119,7 @@ class SocialShareSheet extends StatefulWidget {
 }
 
 class _SocialShareSheetState extends State<SocialShareSheet> {
+  late final TextEditingController _messageController;
   // Auto follows the content type (and audience); night/day force one look.
   SocialShareMood _selectedMood = SocialShareMood.auto;
   SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
@@ -127,6 +128,25 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   // Name toggle: shown by default since personalization is a core marketing
   // hook — "رحلة [اسم المستخدم] مع القرآن" differentiates each share.
   bool _showUserName = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController = TextEditingController(text: widget.data.content);
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  String _shareText(SocialShareCopy copy) => widget.data.toPlainShareText(
+    footer: copy.plainShareFooter,
+    message: widget.data.category == SocialShareCategory.invitation
+        ? _messageController.text
+        : null,
+  );
 
   @override
   void didChangeDependencies() {
@@ -230,10 +250,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
       await file.writeAsBytes(imageBytes);
 
       await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: widget.data.toPlainShareText(footer: copy.plainShareFooter),
-        ),
+        ShareParams(files: [XFile(file.path)], text: _shareText(copy)),
       );
     } catch (e) {
       debugPrint('Error sharing social image: $e');
@@ -296,13 +313,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   void _shareAsText() {
     final copy = SocialShareCopy.of(context);
     unawaited(HapticFeedback.lightImpact());
-    unawaited(
-      SharePlus.instance.share(
-        ShareParams(
-          text: widget.data.toPlainShareText(footer: copy.plainShareFooter),
-        ),
-      ),
-    );
+    unawaited(SharePlus.instance.share(ShareParams(text: _shareText(copy))));
   }
 
   void _showSnackBar(String text) {
@@ -430,6 +441,22 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
               const SizedBox(height: AppSpacing.sm),
 
+              if (widget.data.category == SocialShareCategory.invitation)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: TextField(
+                    key: const ValueKey('invitation-message'),
+                    controller: _messageController,
+                    minLines: 1,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.inviteEditMessage,
+                    ),
+                  ),
+                ),
+
               // Format Picker (Aspect Ratio Selector with Horizontal Scroll Safety)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -506,7 +533,8 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
               const SizedBox(height: AppSpacing.sm),
 
               // ─── Name visibility toggle (only if a name was provided) ─────────
-              if (widget.data.userName != null &&
+              if (widget.data.category != SocialShareCategory.invitation &&
+                  widget.data.userName != null &&
                   widget.data.userName!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(

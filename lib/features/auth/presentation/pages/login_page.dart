@@ -20,7 +20,13 @@ import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/auth_error_code.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({
+    super.key,
+    this.returnToPreviousAfterLogin = false,
+    this.postLoginLocation,
+  });
+  final bool returnToPreviousAfterLogin;
+  final String? postLoginLocation;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -116,9 +122,13 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isSyncing = false);
     await _offerGuestImport(context);
     if (!context.mounted) return;
+    if (widget.returnToPreviousAfterLogin && context.canPop()) {
+      context.pop();
+      return;
+    }
     final destination = await _resolvePostLoginDestination();
     if (!context.mounted) return;
-    context.go(destination);
+    context.go(widget.postLoginLocation ?? destination);
   }
 
   /// Guest memorization stays under the guest owner after sign-in, so without
