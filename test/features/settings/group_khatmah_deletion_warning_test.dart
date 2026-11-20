@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/settings_account_tiles.dart';
 
 void main() {
@@ -12,7 +13,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           locale: Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DeleteAccountTile(isDark: false, email: 'test@example.com'),

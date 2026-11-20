@@ -1,3 +1,8 @@
+// ignore_for_file: deprecated_member_use
+// The generated `localizationsDelegates` list references the deprecated
+// flutter_localizations Material/Cupertino delegates. The app uses
+// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -97,6 +102,18 @@ abstract class AppLocalizations {
     Locale('ar'),
     Locale('en'),
   ];
+
+  /// No description provided for @notificationCalmModeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات هادئة'**
+  String get notificationCalmModeTitle;
+
+  /// No description provided for @notificationCalmModeDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تظهر التذكيرات في قائمة الإشعارات بدون صوت أو اهتزاز أو نوافذ منبثقة. إعدادات الصلاة والأذان مستقلة.'**
+  String get notificationCalmModeDescription;
 
   /// Application name
   ///
@@ -3390,25 +3407,25 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTestReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'مراجعة اليوم 📖'**
+  /// **'لحظة للمراجعة'**
   String get notificationTestReviewTitle;
 
   /// No description provided for @notificationTestReviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'لديك ٥ آيات مستحقة للمراجعة اليوم ⚡'**
+  /// **'يمكنك مراجعة ٥ آيات اليوم، بالقدر الذي يناسبك.'**
   String get notificationTestReviewBody;
 
   /// No description provided for @notificationTestStreakTitle.
   ///
   /// In ar, this message translates to:
-  /// **'حماية المواظبة 🔥'**
+  /// **'خطوة صغيرة اليوم'**
   String get notificationTestStreakTitle;
 
   /// No description provided for @notificationTestStreakBody.
   ///
   /// In ar, this message translates to:
-  /// **'لم تراجع اليوم بعد — حافظ على مواظبتك الآن 🔥'**
+  /// **'وقت قصير مع القرآن، عندما يناسبك.'**
   String get notificationTestStreakBody;
 
   /// No description provided for @notificationTestSuccess.
@@ -8113,49 +8130,49 @@ abstract class AppLocalizations {
   /// No description provided for @notificationDailyReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'جاهز نراجع سوا؟ 📖'**
+  /// **'لحظة هادئة للمراجعة'**
   String get notificationDailyReviewTitle;
 
   /// No description provided for @notificationDailyReviewBodyCount.
   ///
   /// In ar, this message translates to:
-  /// **'عندك {count} آية مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨'**
+  /// **'لديك {count} آية للمراجعة. ابدأ بما يناسب وقتك، خطوة بخطوة.'**
   String notificationDailyReviewBodyCount(Object count);
 
   /// No description provided for @notificationDailyReviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸'**
+  /// **'مراجعة قصيرة، بالقدر الذي يناسبك اليوم.'**
   String get notificationDailyReviewBody;
 
   /// No description provided for @notificationStreakMercyTitle.
   ///
   /// In ar, this message translates to:
-  /// **'الله رحيم — سلسلتك مستنياك 🌿'**
+  /// **'بداية جديدة بهدوء'**
   String get notificationStreakMercyTitle;
 
   /// No description provided for @notificationStreakMercyBody.
   ///
   /// In ar, this message translates to:
-  /// **'فاتك يوم، وسلسلتك رجعت من جديد… كمّل وردك النهاردة 🤍'**
+  /// **'يمكنك العودة اليوم بخطوة صغيرة، وفي الوقت الذي يناسبك.'**
   String get notificationStreakMercyBody;
 
   /// No description provided for @notificationStreakAlertTitle.
   ///
   /// In ar, this message translates to:
-  /// **'⚠️ متضيعش إنجاز {count} يوم!'**
+  /// **'{count} يومًا من المواظبة'**
   String notificationStreakAlertTitle(Object count);
 
   /// No description provided for @notificationStreakGentleTitle.
   ///
   /// In ar, this message translates to:
-  /// **'سلسلتك من {count} يوم مستنياك'**
+  /// **'خطواتك مستمرة منذ {count} يومًا'**
   String notificationStreakGentleTitle(Object count);
 
   /// No description provided for @notificationStreakGentleBody.
   ///
   /// In ar, this message translates to:
-  /// **'دقايق مراجعة النهاردة تحافظ على سلسلتك.. وقت ما تحب 🌿'**
+  /// **'إن كان وقتك يسمح، خذ لحظة قصيرة مع القرآن.'**
   String get notificationStreakGentleBody;
 
   /// No description provided for @notificationSmartReminderTitle.
@@ -8167,7 +8184,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSmartReminderBody.
   ///
   /// In ar, this message translates to:
-  /// **'الوقت ده عادةً بتقرا فيه.. في آيات مستنياك.'**
+  /// **'قد يناسبك الآن وقت قصير للقراءة. أكمل على مهل.'**
   String get notificationSmartReminderBody;
 
   /// No description provided for @notificationChannelStreakGentleName.
@@ -8197,13 +8214,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationStreakAlertBody.
   ///
   /// In ar, this message translates to:
-  /// **'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'**
+  /// **'يمكنك إضافة خطوة صغيرة اليوم. اختر ما يناسب وقتك وطاقتك.'**
   String get notificationStreakAlertBody;
 
   /// No description provided for @notificationActionReviewStart.
   ///
   /// In ar, this message translates to:
-  /// **'⚡ ابدأ المراجعة'**
+  /// **'ابدأ المراجعة'**
   String get notificationActionReviewStart;
 
   /// No description provided for @notificationActionDailyWird.
@@ -8215,7 +8232,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationActionStreakProtect.
   ///
   /// In ar, this message translates to:
-  /// **'🔥 احمي السلسلة الآن'**
+  /// **'لحظة للمراجعة'**
   String get notificationActionStreakProtect;
 
   /// No description provided for @notificationActionReadWird.
@@ -8263,7 +8280,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationActionKidsReview.
   ///
   /// In ar, this message translates to:
-  /// **'🌟 ابدأ التسميع يا بطل'**
+  /// **'نراجع معًا'**
   String get notificationActionKidsReview;
 
   /// No description provided for @notificationActionReadKahf.
@@ -8611,13 +8628,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationKidsReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'يلا يا بطل جاهز؟ 🌟'**
+  /// **'نراجع معًا؟ 🌿'**
   String get notificationKidsReviewTitle;
 
   /// No description provided for @notificationKidsReviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'مرحلتك الجديدة مستنياك.. يلا نكمل ونجمع نجوم جديدة! 🚀'**
+  /// **'يمكننا مراجعة آيات قليلة معًا، عندما تكون مستعدًا.'**
   String get notificationKidsReviewBody;
 
   /// No description provided for @notificationDailyDuaTitle.
@@ -8647,13 +8664,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationWeeklyImpactBody.
   ///
   /// In ar, this message translates to:
-  /// **'{count} أيام من أسبوعك كانت مع القرآن — وكل صفحة فيها أثر باقٍ'**
+  /// **'خصصت {count} أيام من أسبوعك للقرآن. واصل بالقدر الذي يناسبك.'**
   String notificationWeeklyImpactBody(String count);
 
   /// No description provided for @notificationWeeklyImpactQuietBody.
   ///
   /// In ar, this message translates to:
-  /// **'أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱'**
+  /// **'أسبوع جديد وفرصة لبداية هادئة. اختر وقتًا قصيرًا يناسبك.'**
   String get notificationWeeklyImpactQuietBody;
 
   /// No description provided for @notificationSettingsWeeklyImpact.
@@ -8689,13 +8706,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationKhatmahBody.
   ///
   /// In ar, this message translates to:
-  /// **'واصل مسيرتك المباركة مع الختمة.. وردك اليوم بانتظارك 🌿'**
+  /// **'يمكنك متابعة ورد الختمة اليوم، على مهل وبالقدر الذي يناسبك.'**
   String get notificationKhatmahBody;
 
   /// No description provided for @notificationKhatmahBodyWithTarget.
   ///
   /// In ar, this message translates to:
-  /// **'وردك اليوم: من صفحة {start} إلى {end}.. اقتربت من إتمام الختمة! ✨'**
+  /// **'وردك اليوم من صفحة {start} إلى {end}. اقرأ على مهل، ويمكنك تقسيمه على يومك.'**
   String notificationKhatmahBodyWithTarget(Object start, Object end);
 
   /// No description provided for @notificationPrayerTitle.
@@ -15409,7 +15426,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationForgettingForecastBody.
   ///
   /// In ar, this message translates to:
-  /// **'خصص وقتاً قصيراً لمراجعة ما تعلمته.'**
+  /// **'عندما يناسبك، خذ وقتًا قصيرًا لمراجعة ما تعلمته.'**
   String get notificationForgettingForecastBody;
 
   /// No description provided for @notificationSettingsForgettingForecast.

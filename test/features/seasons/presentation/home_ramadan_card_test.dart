@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -245,23 +247,24 @@ void main() {
     expect(prefs.getBool('season_pref_reminders|a'), isNull);
   });
 
-  testWidgets('reminder shows on only while opted in and the season is visible', (
-    tester,
-  ) async {
-    flag(true);
-    await prefs.setBool(lastTenReminderPreferenceKey, true);
-    final seasons = SeasonPreferences(
-      prefs,
-      const FixedRecordOwnerProvider('a'),
-    );
-    await pump(
-      tester,
-      info(RamadanPhase.ramadan, day: 5),
-      reminderPrefs: prefs,
-      seasonPrefs: seasons,
-    );
-    expect(find.text('سنذكّرك قبل بدئها'), findsOneWidget);
-  });
+  testWidgets(
+    'reminder shows on only while opted in and the season is visible',
+    (tester) async {
+      flag(true);
+      await prefs.setBool(lastTenReminderPreferenceKey, true);
+      final seasons = SeasonPreferences(
+        prefs,
+        const FixedRecordOwnerProvider('a'),
+      );
+      await pump(
+        tester,
+        info(RamadanPhase.ramadan, day: 5),
+        reminderPrefs: prefs,
+        seasonPrefs: seasons,
+      );
+      expect(find.text('سنذكّرك قبل بدئها'), findsOneWidget);
+    },
+  );
 
   testWidgets('no reminder toggle once the last ten have begun', (
     tester,
@@ -322,7 +325,7 @@ void main() {
     await pump(tester, const RamadanInfo(phase: RamadanPhase.none));
     expect(card, findsNothing);
 
-    getIt.unregister<ExperienceFlags>();
+    await getIt.unregister<ExperienceFlags>();
     flag(false);
     await pump(tester, info(RamadanPhase.invite));
     expect(card, findsNothing);
@@ -488,7 +491,7 @@ void main() {
       dismissStore: d,
       tarawihStore: t,
     );
-    getIt.unregister<ExperienceFlags>();
+    await getIt.unregister<ExperienceFlags>();
     // Flag on, phase none.
     flag(true);
     await pump(
@@ -644,33 +647,34 @@ void main() {
     });
 
     for (final length in [29, 30]) {
-      testWidgets('after Maghrib on day $length of $length there is no suhoor line', (
-        tester,
-      ) async {
-        flag(true);
-        final lastDay = RamadanInfo(
-          phase: RamadanPhase.lastTen,
-          day: length,
-          monthLength: length,
-          firstDay: first,
-          lastDay: last,
-        );
-        await pump(
-          tester,
-          lastDay,
-          now: DateTime(2027, 2, 20, 19),
-          prayerTimes: (_) async => times,
-        );
-        expect(find.byKey(line), findsNothing);
-        // Before Maghrib the iftar countdown still shows.
-        await pump(
-          tester,
-          lastDay,
-          now: DateTime(2027, 2, 20, 15, 30),
-          prayerTimes: (_) async => times,
-        );
-        expect(find.byKey(line), findsOneWidget);
-      });
+      testWidgets(
+        'after Maghrib on day $length of $length there is no suhoor line',
+        (tester) async {
+          flag(true);
+          final lastDay = RamadanInfo(
+            phase: RamadanPhase.lastTen,
+            day: length,
+            monthLength: length,
+            firstDay: first,
+            lastDay: last,
+          );
+          await pump(
+            tester,
+            lastDay,
+            now: DateTime(2027, 2, 20, 19),
+            prayerTimes: (_) async => times,
+          );
+          expect(find.byKey(line), findsNothing);
+          // Before Maghrib the iftar countdown still shows.
+          await pump(
+            tester,
+            lastDay,
+            now: DateTime(2027, 2, 20, 15, 30),
+            prayerTimes: (_) async => times,
+          );
+          expect(find.byKey(line), findsOneWidget);
+        },
+      );
     }
 
     testWidgets('the day before the last still shows suhoor after Maghrib', (
@@ -701,7 +705,10 @@ void main() {
 
     testWidgets('is not shown in the invite or summary phases', (tester) async {
       flag(true);
-      for (final i in [info(RamadanPhase.invite), info(RamadanPhase.afterEid)]) {
+      for (final i in [
+        info(RamadanPhase.invite),
+        info(RamadanPhase.afterEid),
+      ]) {
         await pump(
           tester,
           i,
@@ -782,5 +789,4 @@ void main() {
       expect(asked, isEmpty);
     });
   });
-
 }

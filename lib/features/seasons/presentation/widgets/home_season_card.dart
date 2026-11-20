@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -389,7 +389,9 @@ class _HomeSeasonCardState extends State<HomeSeasonCard> {
       );
     }
     if (_flags != null) {
-      actions.add(_button(l10n.seasonShawwalLogDay, _logShawwalDay, 'shawwal_log'));
+      actions.add(
+        _button(l10n.seasonShawwalLogDay, _logShawwalDay, 'shawwal_log'),
+      );
     }
     return done
         ? l10n.seasonShawwalDone

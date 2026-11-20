@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/pages/login_page.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
@@ -515,7 +516,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: KhatmahCompletionPage(
             completion: completion,
@@ -754,7 +755,7 @@ void main() {
           child: MaterialApp.router(
             routerConfig: router,
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
           ),
         ),
@@ -780,7 +781,9 @@ void main() {
       // A successful retry first completes the interrupted cleanup, then
       // resolves the still-pending A-to-B owner transition.
       expect(resetAttempts, 4);
-      verify(() => reset.clearAccountOwnedData(departingOwnerId: 'a')).called(4);
+      verify(
+        () => reset.clearAccountOwnedData(departingOwnerId: 'a'),
+      ).called(4);
       expect(find.text('ready home'), findsOneWidget);
       expect(barrier.isReady, isTrue);
       expect(prefs.getString(AuthCubit.lastSignedInUserIdKey), 'b');
@@ -853,7 +856,7 @@ void main() {
           child: MaterialApp.router(
             routerConfig: router,
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
           ),
         ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Removes this exact feedback route when its account/session expires.
 /// Other dialogs above it remain untouched.

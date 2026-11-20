@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_home_mission.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -77,7 +80,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(
         locale: const Locale('ar'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
       ),
@@ -195,7 +198,7 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     controller.dispose();
-    getIt.unregister<KidsWorldPhaseController>();
+    await getIt.unregister<KidsWorldPhaseController>();
   });
 
   testWidgets('renders at 320 px, Arabic, text scale 1.3 without errors', (

@@ -3,9 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  app_links_linux
   flutter_secure_storage_linux
   flutter_timezone
-  gtk
   isar_community_flutter_libs
   printing
   url_launcher_linux

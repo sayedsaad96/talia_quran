@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,14 +55,18 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         .catchError((_) => false);
     if (isClosed) return;
 
+    final calmMode =
+        _prefs.getBool(TaliaNotificationService.calmModePreferenceKey) ?? true;
+    _notificationService.setCalmMode(calmMode);
     final dailyReview =
         _prefs.getBool(TaliaNotificationService.dailyReviewPreferenceKey) ??
         true;
     final streakAlert =
         _prefs.getBool(TaliaNotificationService.streakAlertPreferenceKey) ??
-        true;
+        false;
     final dailyAyah =
-        _prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ?? true;
+        _prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ??
+        false;
     final morningAzkar =
         _prefs.getBool(TaliaNotificationService.morningAzkarPreferenceKey) ??
         true;
@@ -70,7 +74,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         _prefs.getBool(TaliaNotificationService.eveningAzkarPreferenceKey) ??
         true;
     final dailyDua =
-        _prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
+        _prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? false;
     final kidsReminder =
         _prefs.getBool(TaliaNotificationService.kidsReminderPreferenceKey) ??
         false;
@@ -142,6 +146,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       state.copyWith(
         isLoading: false,
         hasSystemPermission: permissionGranted,
+        calmMode: calmMode,
         dailyReview: dailyReview,
         streakAlert: streakAlert,
         dailyAyah: dailyAyah,
@@ -263,6 +268,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     final persistedValue = value;
 
     final updatedState = switch (preferenceKey) {
+      TaliaNotificationService.calmModePreferenceKey => state.copyWith(
+        calmMode: persistedValue,
+      ),
       TaliaNotificationService.dailyReviewPreferenceKey => state.copyWith(
         dailyReview: persistedValue,
       ),
@@ -316,6 +324,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     };
 
     if (!isClosed) emit(updatedState);
+    if (preferenceKey == TaliaNotificationService.calmModePreferenceKey) {
+      _notificationService.setCalmMode(persistedValue);
+    }
     if (preferenceKey == TaliaNotificationService.inviteReminderPreferenceKey &&
         !persistedValue) {
       if (_scheduler != null) {

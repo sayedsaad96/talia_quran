@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -112,10 +114,7 @@ void main() {
         // No phase controller registered: the kids world is at night.
         await tester.pumpWidget(content());
         expect(find.byKey(const ValueKey('kids-home-bedtime')), findsNothing);
-        expect(
-          find.byKey(const ValueKey('kids-bedtime-card')),
-          findsNothing,
-        );
+        expect(find.byKey(const ValueKey('kids-bedtime-card')), findsNothing);
 
         await tester.pumpWidget(content(onBedtimeTap: () => taps++));
         expect(find.byKey(const ValueKey('kids-bedtime-card')), findsOneWidget);
@@ -154,7 +153,7 @@ void main() {
 
       await tester.pumpWidget(const SizedBox.shrink());
       controller.dispose();
-      getIt.unregister<KidsWorldPhaseController>();
+      await getIt.unregister<KidsWorldPhaseController>();
     });
 
     testWidgets('renders progress, mission, and in-page navigation cards', (
@@ -708,7 +707,7 @@ void main() {
       addTearDown(() async {
         await tester.pumpWidget(const SizedBox());
         if (getIt.isRegistered<KidsJourneyCubit>()) {
-          getIt.unregister<KidsJourneyCubit>();
+          await getIt.unregister<KidsJourneyCubit>();
         }
       });
 
@@ -776,7 +775,7 @@ void main() {
         addTearDown(() async {
           await tester.pumpWidget(const SizedBox());
           if (getIt.isRegistered<KidsJourneyCubit>()) {
-            getIt.unregister<KidsJourneyCubit>();
+            await getIt.unregister<KidsJourneyCubit>();
           }
         });
 
@@ -952,7 +951,7 @@ void main() {
 
         await tester.pumpWidget(const SizedBox.shrink());
         controller.dispose();
-        getIt.unregister<KidsWorldPhaseController>();
+        await getIt.unregister<KidsWorldPhaseController>();
       });
 
       testWidgets('no missions renders no header', (tester) async {
@@ -1150,10 +1149,10 @@ void main() {
           addTearDown(() async {
             await tester.pumpWidget(const SizedBox());
             if (getIt.isRegistered<KidsJourneyCubit>()) {
-              getIt.unregister<KidsJourneyCubit>();
+              await getIt.unregister<KidsJourneyCubit>();
             }
             if (getIt.isRegistered<MemorizationPlusRepository>()) {
-              getIt.unregister<MemorizationPlusRepository>();
+              await getIt.unregister<MemorizationPlusRepository>();
             }
           });
 
@@ -1200,7 +1199,7 @@ void main() {
       addTearDown(() async {
         await tester.pumpWidget(const SizedBox());
         if (getIt.isRegistered<KidsJourneyCubit>()) {
-          getIt.unregister<KidsJourneyCubit>();
+          await getIt.unregister<KidsJourneyCubit>();
         }
       });
       await tester.pumpWidget(

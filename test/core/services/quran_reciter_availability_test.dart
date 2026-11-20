@@ -10,7 +10,7 @@ void main() {
     ('abdulbasit', 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/'),
     ('sudais', 'https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/'),
     ('minshawi', 'https://everyayah.com/data/Minshawy_Murattal_128kbps/'),
-    ('husary', 'https://everyayah.com/data/Mahmoud_Khussary_128kbps/'),
+    ('husary', 'https://everyayah.com/data/Husary_128kbps/'),
     ('shuraim', 'https://everyayah.com/data/Saood_ash-Shuraym_128kbps/'),
   ];
   const candidates = [

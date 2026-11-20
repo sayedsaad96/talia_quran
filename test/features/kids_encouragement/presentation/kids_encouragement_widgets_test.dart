@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/kids_encouragement/domain/entities/kids_encouragement.dart';
 import 'package:talia_quran/features/kids_encouragement/presentation/cubits/parent_encouragement_composer_cubit.dart';
 import 'package:talia_quran/features/kids_encouragement/presentation/widgets/child_encouragement_card.dart';
@@ -8,7 +9,7 @@ import 'package:talia_quran/features/kids_encouragement/presentation/widgets/enc
 
 Widget _app(Widget child, {bool reduceMotion = false}) => MaterialApp(
   locale: const Locale('ar'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: MediaQuery(
     data: MediaQueryData(disableAnimations: reduceMotion),
@@ -18,7 +19,7 @@ Widget _app(Widget child, {bool reduceMotion = false}) => MaterialApp(
 
 Widget _narrowArabicApp(Widget child) => MaterialApp(
   locale: const Locale('ar'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: MediaQuery(
     data: MediaQueryData.fromView(

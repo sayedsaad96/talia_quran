@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../widgets/settings_group.dart';
@@ -15,9 +15,7 @@ class NotificationSettingsPage extends StatelessWidget {
       title: context.l10n.notifications,
       children: [
         SettingsGroup(
-          children: [
-            NotificationSettingTile(isDark: context.isDark),
-          ],
+          children: [NotificationSettingTile(isDark: context.isDark)],
         ),
       ],
     );

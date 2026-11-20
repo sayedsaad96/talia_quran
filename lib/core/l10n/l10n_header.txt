@@ -1,0 +1,4 @@
+﻿// ignore_for_file: deprecated_member_use
+// The generated `localizationsDelegates` list references the deprecated
+// flutter_localizations Material/Cupertino delegates. The app uses
+// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.

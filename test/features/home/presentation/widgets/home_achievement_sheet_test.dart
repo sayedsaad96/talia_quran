@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/xp_constants.dart';
 import 'package:talia_quran/core/di/injection.dart';
@@ -11,12 +13,8 @@ import 'package:talia_quran/features/xp/domain/entities/xp_gain_result.dart';
 
 class FakeXpService implements XpService {
   @override
-  XpLevel getCurrentLevel(int xp) => const XpLevel(
-        name: 'طالب',
-        minXp: 100,
-        icon: '📚',
-        colorHex: 0xFF3B82F6,
-      );
+  XpLevel getCurrentLevel(int xp) =>
+      const XpLevel(name: 'طالب', minXp: 100, icon: '📚', colorHex: 0xFF3B82F6);
 
   @override
   double progressToNextLevel(int xp) => 0.5;
@@ -25,7 +23,8 @@ class FakeXpService implements XpService {
   Future<int> getTotalXp() async => 200;
 
   @override
-  Future<XpGainResult> addXp(String eventKey) async => const XpGainResult.zero();
+  Future<XpGainResult> addXp(String eventKey) async =>
+      const XpGainResult.zero();
 }
 
 void main() {

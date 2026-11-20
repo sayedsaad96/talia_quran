@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/router/group_khatmah_route_page.dart';
 import '../../features/group_khatmah/data/group_khatmah_test_support.dart'
@@ -43,7 +44,7 @@ void main() {
       MaterialApp.router(
         routerConfig: router,
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     );

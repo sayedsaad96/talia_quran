@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -221,32 +223,35 @@ void main() {
       playback.dispose();
     });
 
-    test('a superseded idle does not leave Start once playing resumes', () async {
-      final playback = ValueNotifier(
-        const ContinuousPlaybackState(
+    test(
+      'a superseded idle does not leave Start once playing resumes',
+      () async {
+        final playback = ValueNotifier(
+          const ContinuousPlaybackState(
+            status: PlaybackStatus.playing,
+            isSurahQueue: true,
+          ),
+        );
+        final cubit = _cubit(logs: _whole(114, 6), playback: playback);
+        await cubit.load();
+        expect(cubit.state.playing, isTrue);
+        playback.value = const ContinuousPlaybackState(
+          status: PlaybackStatus.idle,
+        );
+        playback.value = const ContinuousPlaybackState(
+          status: PlaybackStatus.loading,
+          isSurahQueue: true,
+        );
+        expect(cubit.state.playing, isTrue);
+        playback.value = const ContinuousPlaybackState(
           status: PlaybackStatus.playing,
           isSurahQueue: true,
-        ),
-      );
-      final cubit = _cubit(logs: _whole(114, 6), playback: playback);
-      await cubit.load();
-      expect(cubit.state.playing, isTrue);
-      playback.value = const ContinuousPlaybackState(
-        status: PlaybackStatus.idle,
-      );
-      playback.value = const ContinuousPlaybackState(
-        status: PlaybackStatus.loading,
-        isSurahQueue: true,
-      );
-      expect(cubit.state.playing, isTrue);
-      playback.value = const ContinuousPlaybackState(
-        status: PlaybackStatus.playing,
-        isSurahQueue: true,
-      );
-      expect(cubit.state.playing, isTrue);
-      await cubit.close();
-      playback.dispose();
-    });
+        );
+        expect(cubit.state.playing, isTrue);
+        await cubit.close();
+        playback.dispose();
+      },
+    );
   });
 
   group('KidsBedtimeView', () {

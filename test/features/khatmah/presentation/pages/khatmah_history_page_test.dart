@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +9,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
@@ -77,7 +78,7 @@ Future<void> _pumpHistoryPage(
   await tester.pumpWidget(
     MaterialApp(
       locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: taliaLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: textScale == 1
           ? null
@@ -120,7 +121,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: KhatmahHistoryPage(cubit: cubit),
         ),
@@ -154,12 +155,7 @@ void main() {
       'khatmah_history',
       jsonEncode([
         _historyRow(id: 'a', title: 'First', totalDays: 30),
-        _historyRow(
-          id: 'b',
-          title: 'Second',
-          totalDays: 20,
-          khatmahNumber: 2,
-        ),
+        _historyRow(id: 'b', title: 'Second', totalDays: 20, khatmahNumber: 2),
       ]),
     );
     cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
@@ -362,7 +358,7 @@ void main() {
           MaterialApp.router(
             routerConfig: router,
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
           ),
         );
@@ -409,7 +405,7 @@ void main() {
 
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: KhatmahHistoryPage(),
       ),
@@ -440,7 +436,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             locale: locale,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(

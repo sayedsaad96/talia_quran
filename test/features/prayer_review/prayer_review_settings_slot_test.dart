@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/prayer_companion/domain/entities/prayer_companion.dart';
 import 'package:talia_quran/features/prayer_review/domain/entities/prayer_review_authority.dart';
 import 'package:talia_quran/features/prayer_review/presentation/cubits/prayer_review_settings_cubit.dart';
@@ -29,7 +30,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider.value(
           value: cubit,
@@ -47,10 +48,8 @@ void main() {
   });
 }
 
-PrayerReviewAuthority _authority() => PrayerReviewAuthority(
-  ownerId: 'owner-a',
-  lease: _Lease(),
-);
+PrayerReviewAuthority _authority() =>
+    PrayerReviewAuthority(ownerId: 'owner-a', lease: _Lease());
 
 class _Lease implements AccountDataLease {
   @override

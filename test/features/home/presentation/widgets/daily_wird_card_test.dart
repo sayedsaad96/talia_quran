@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/l10n/app_localizations_ar.dart';
@@ -13,11 +14,19 @@ void main() {
   test('homeDailyWirdSurahPage keeps page then surah argument order', () {
     final en = AppLocalizationsEn();
     final ar = AppLocalizationsAr();
-    expect(en.homeDailyWirdSurahPage('431', 'Al-An\'am'), 'Surah Al-An\'am — Page 431');
-    expect(ar.homeDailyWirdSurahPage('431', 'الأنعام'), 'سورة الأنعام — صفحة 431');
+    expect(
+      en.homeDailyWirdSurahPage('431', 'Al-An\'am'),
+      'Surah Al-An\'am — Page 431',
+    );
+    expect(
+      ar.homeDailyWirdSurahPage('431', 'الأنعام'),
+      'سورة الأنعام — صفحة 431',
+    );
   });
 
-  testWidgets('DailyWirdCard renders page then surah, not swapped', (tester) async {
+  testWidgets('DailyWirdCard renders page then surah, not swapped', (
+    tester,
+  ) async {
     const surah = Surah(
       id: 6,
       nameAr: 'الأنعام',

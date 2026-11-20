@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_card.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_sheet.dart';

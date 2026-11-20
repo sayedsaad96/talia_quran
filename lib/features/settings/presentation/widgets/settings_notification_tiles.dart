@@ -1,6 +1,6 @@
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/utils/locale_number_formatter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -162,6 +162,27 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Column(
         children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              context.l10n.notificationCalmModeTitle,
+              style: AppTypography.bodyMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.notificationCalmModeDescription,
+              style: AppTypography.bodySmall.copyWith(color: subtextColor),
+            ),
+            value: state.calmMode,
+            onChanged: (value) => _cubit.toggleReminder(
+              TaliaNotificationService.calmModePreferenceKey,
+              value,
+              l10n: context.l10n,
+            ),
+            activeThumbColor: primary,
+          ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: Text(

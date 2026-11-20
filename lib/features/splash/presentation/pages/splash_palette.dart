@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Fixed palette for the splash scene. It renders before the theme and
 /// locale load, always on the nocturnal ground, so it can't use theme

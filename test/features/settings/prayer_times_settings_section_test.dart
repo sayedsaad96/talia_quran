@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/settings_prayer_tiles.dart';
 
@@ -31,7 +32,7 @@ void main() {
       const MaterialApp(
         locale: Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         home: Scaffold(
           body: SingleChildScrollView(
             child: PrayerTimesSettingsSection(isDark: false),
@@ -71,7 +72,7 @@ void main() {
       const MaterialApp(
         locale: Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         home: Scaffold(
           body: SingleChildScrollView(
             child: PrayerTimesSettingsSection(isDark: false),
@@ -81,6 +82,56 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('an added Egyptian city can be selected in Arabic', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('ar'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: taliaLocalizationsDelegates,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: PrayerTimesSettingsSection(isDark: false),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('مصر').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<String>).at(1));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('الجيزة').last);
+    await tester.pumpAndSettle();
+
+    final service = getIt<PrayerTimesService>();
+    expect(service.selectedCityId, 'giza');
+    expect(service.calculationMethod, 'egyptian');
+    expect(service.isReadyForNotificationScheduling, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an added city is restored in the English city picker', (
+    tester,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(PrayerTimesService.cityIdKey, 'desouk');
+    await prefs.setString(PrayerTimesService.methodKey, 'egyptian');
+    await prefs.setBool(PrayerTimesService.methodManualKey, false);
+    await pumpSection(tester);
+
+    final dropdowns = tester
+        .widgetList<DropdownButton<String>>(find.byType(DropdownButton<String>))
+        .toList();
+    expect(dropdowns[0].value, 'eg');
+    expect(dropdowns[1].value, 'desouk');
+    expect(find.text('Desouk'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('a city whose default is a newer method keeps a valid picker', (
     tester,
@@ -193,4 +244,3 @@ void main() {
     expect(find.textContaining('Check the coordinates'), findsOneWidget);
   });
 }
-

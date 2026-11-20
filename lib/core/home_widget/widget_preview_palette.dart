@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Matches Android's widget_colors.xml; the preview depicts the launcher
 /// widget, whose palette is independent of the in-app theme.

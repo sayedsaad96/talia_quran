@@ -5,3 +5,4 @@ output-class: AppLocalizations
 nullable-getter: false
 generate: true
 format: true
+header-file: l10n_header.txt

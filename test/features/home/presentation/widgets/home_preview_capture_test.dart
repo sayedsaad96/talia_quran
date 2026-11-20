@@ -3,12 +3,13 @@
 /// The regular goldens run without fonts and are only useful for regressions.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/theme/app_theme.dart';
 import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
 import 'package:talia_quran/features/home/domain/entities/ayah_of_day.dart';
@@ -155,7 +156,7 @@ void main() {
         MaterialApp(
           locale: const Locale('ar'),
           theme: brightness == Brightness.dark ? AppTheme.dark : AppTheme.light,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MultiBlocProvider(
             providers: [

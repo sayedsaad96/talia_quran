@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/memorization_plus/domain/services/kids_daily_missions.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_daily_mission_tile.dart';
 
@@ -18,7 +19,7 @@ void main() {
       MaterialApp(
         locale: const Locale('ar'),
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         home: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
           child: Scaffold(

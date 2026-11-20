@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
@@ -59,11 +61,12 @@ void main() {
     );
   }
 
-  testWidgets('renders all 6 prayer times, Hijri date, weekday, and city', (tester) async {
-    await tester.pumpWidget(createHarness(
-      snapshot: snapshot,
-      hijriLabel: '٢٤ ربيع الأول ١٤٤٨',
-    ));
+  testWidgets('renders all 6 prayer times, Hijri date, weekday, and city', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      createHarness(snapshot: snapshot, hijriLabel: '٢٤ ربيع الأول ١٤٤٨'),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('مواقيت الصلاة'), findsOneWidget);
@@ -118,7 +121,9 @@ void main() {
     expect(find.text('25 min'), findsOneWidget);
   });
 
-  testWidgets('tapping HomePrayerChip opens HomePrayerTimesSheet', (tester) async {
+  testWidgets('tapping HomePrayerChip opens HomePrayerTimesSheet', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [

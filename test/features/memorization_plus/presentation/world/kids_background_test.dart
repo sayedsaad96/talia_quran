@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_child_policy.dart';
@@ -13,10 +13,10 @@ import 'package:talia_quran/features/memorization_plus/presentation/world/kids_w
 void main() {
   tearDown(() async {
     if (getIt.isRegistered<KidsWorldPhaseController>()) {
-      getIt.unregister<KidsWorldPhaseController>();
+      await getIt.unregister<KidsWorldPhaseController>();
     }
     if (getIt.isRegistered<KidsPolicyController>()) {
-      getIt.unregister<KidsPolicyController>();
+      await getIt.unregister<KidsPolicyController>();
     }
   });
 

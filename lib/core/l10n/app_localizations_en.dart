@@ -1,3 +1,8 @@
+// ignore_for_file: deprecated_member_use
+// The generated `localizationsDelegates` list references the deprecated
+// flutter_localizations Material/Cupertino delegates. The app uses
+// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -7,6 +12,13 @@ import 'app_localizations.dart';
 /// The translations for English (`en`).
 class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get notificationCalmModeTitle => 'Quiet reminders';
+
+  @override
+  String get notificationCalmModeDescription =>
+      'Reminders stay in your notification list without sound, vibration or pop-ups. Prayer and athan settings are separate.';
 
   @override
   String get appName => 'Talia Quran';
@@ -1807,18 +1819,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'You will receive a sample notification with action buttons.';
 
   @override
-  String get notificationTestReviewTitle => 'Daily Review 📖';
+  String get notificationTestReviewTitle => 'A moment to review';
 
   @override
   String get notificationTestReviewBody =>
-      'You have 5 ayahs due for review today ⚡';
+      'You can review 5 ayahs today, at your own pace.';
 
   @override
-  String get notificationTestStreakTitle => 'Streak Protection 🔥';
+  String get notificationTestStreakTitle => 'A small step today';
 
   @override
   String get notificationTestStreakBody =>
-      'You haven\'t reviewed today — protect your streak now 🔥';
+      'A little time with the Quran, whenever it suits you.';
 
   @override
   String get notificationTestSuccess => 'Test notification sent successfully ✨';
@@ -4685,45 +4697,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGoToSettings => 'Go to Settings';
 
   @override
-  String get notificationDailyReviewTitle => 'Daily Review Time 📖';
+  String get notificationDailyReviewTitle => 'A quiet moment to review';
 
   @override
   String notificationDailyReviewBodyCount(Object count) {
-    return 'You have $count ayahs to review today';
+    return 'You have $count ayahs to review. Start with what fits your day, one step at a time.';
   }
 
   @override
   String get notificationDailyReviewBody =>
-      'It\'s time for your daily memorization review';
+      'A short review, at a pace that suits you today.';
 
   @override
-  String get notificationStreakMercyTitle =>
-      'Allah is Merciful — your streak awaits you 🌿';
+  String get notificationStreakMercyTitle => 'A gentle fresh start';
 
   @override
   String get notificationStreakMercyBody =>
-      'You missed a day, and your streak has been re-lit… continue your reading today 🤍';
+      'You can return today with a small step, whenever it suits you.';
 
   @override
   String notificationStreakAlertTitle(Object count) {
-    return '⚠️ Don\'t lose your $count day streak!';
+    return '$count days of steady progress';
   }
 
   @override
   String notificationStreakGentleTitle(Object count) {
-    return 'Your $count-day streak is waiting';
+    return '$count days, one step at a time';
   }
 
   @override
   String get notificationStreakGentleBody =>
-      'A few minutes of review today keeps your streak alive. Whenever you\'re ready 🌿';
+      'If you have a moment, spend a little time with the Quran.';
 
   @override
   String get notificationSmartReminderTitle => 'Time for your usual reading';
 
   @override
   String get notificationSmartReminderBody =>
-      'It\'s usually your reading time — a few ayahs are waiting for you.';
+      'This may be a good time for a little reading. Continue at your own pace.';
 
   @override
   String get notificationChannelStreakGentleName => 'Gentle streak reminder';
@@ -4741,16 +4752,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationStreakAlertBody =>
-      'You haven\'t reviewed today yet — you still can';
+      'You can take a small step today. Choose what fits your time and energy.';
 
   @override
-  String get notificationActionReviewStart => '⚡ Start review';
+  String get notificationActionReviewStart => 'Start review';
 
   @override
   String get notificationActionDailyWird => '📖 Daily wird';
 
   @override
-  String get notificationActionStreakProtect => '🔥 Protect your streak';
+  String get notificationActionStreakProtect => 'Take a moment to review';
 
   @override
   String get notificationActionReadWird => '📖 Read the wird';
@@ -4774,7 +4785,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationActionAzkar => '✨ Azkar';
 
   @override
-  String get notificationActionKidsReview => '🌟 Start reciting, champ';
+  String get notificationActionKidsReview => 'Review together';
 
   @override
   String get notificationActionReadKahf => '📖 Read Surah Al-Kahf';
@@ -4982,11 +4993,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'End your day with the remembrance and protection of Allah';
 
   @override
-  String get notificationKidsReviewTitle => 'Review Time Hero! 🌟';
+  String get notificationKidsReviewTitle => 'Shall we review together? 🌿';
 
   @override
   String get notificationKidsReviewBody =>
-      'Your new stage is ready, let\'s continue memorizing!';
+      'We can review a few ayahs together, whenever you are ready.';
 
   @override
   String get notificationDailyDuaTitle => 'Dua of the Day 🤲';
@@ -5003,12 +5014,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notificationWeeklyImpactBody(String count) {
-    return '$count days of your week were with the Quran — every page leaves a lasting impact';
+    return 'You spent $count days with the Quran this week. Continue at your own pace.';
   }
 
   @override
   String get notificationWeeklyImpactQuietBody =>
-      'A new week begins — one page makes a difference 🌱';
+      'A new week and a chance for a gentle start. Choose a little time that suits you.';
 
   @override
   String get notificationSettingsWeeklyImpact => 'Weekly impact (Friday)';
@@ -5029,11 +5040,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationKhatmahBody =>
-      'Continue your blessed journey with your Quran Khatmah today 🌿';
+      'You can continue your khatmah reading today, at your own pace.';
 
   @override
   String notificationKhatmahBodyWithTarget(Object start, Object end) {
-    return 'Today\'s portion: page $start to $end.. Keep going! ✨';
+    return 'Today\'s reading is pages $start to $end. Take your time; you can spread it through your day.';
   }
 
   @override
@@ -9193,7 +9204,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationForgettingForecastBody =>
-      'Set aside a short time to review what you learned.';
+      'When it suits you, take a little time to review what you learned.';
 
   @override
   String get notificationSettingsForgettingForecast => 'Forgetting forecast';

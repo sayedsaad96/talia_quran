@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -65,9 +65,8 @@ class _KidsQuranJourneyMapState extends State<KidsQuranJourneyMap> {
     });
   }
 
-  int _currentIndex() => widget.houses.indexWhere(
-    (h) => h.surahId == widget.currentSurahId,
-  );
+  int _currentIndex() =>
+      widget.houses.indexWhere((h) => h.surahId == widget.currentSurahId);
 
   @override
   void didUpdateWidget(covariant KidsQuranJourneyMap oldWidget) {
@@ -218,26 +217,23 @@ class _MapRow extends StatelessWidget {
           direction: direction,
           showJuz: false,
         ).taliaFoot;
-        KidsQuranRoadPainter roadPainter(double flash) =>
-            KidsQuranRoadPainter(
-              hereX: layout.taliaFoot.dx,
-              previousX: index == 0 ? 0 : neighbourFoot(index - 1).dx,
-              nextX: isLast ? 0 : neighbourFoot(index + 1).dx,
-              isFirst: index == 0,
-              isLast: isLast,
-              incomingLit: currentIndex >= 0 && index <= currentIndex && index > 0,
-              outgoingLit: currentIndex >= 0 && index < currentIndex,
-              night: night,
-              seed: index,
-              shimmer: flash,
-            );
+        KidsQuranRoadPainter roadPainter(double flash) => KidsQuranRoadPainter(
+          hereX: layout.taliaFoot.dx,
+          previousX: index == 0 ? 0 : neighbourFoot(index - 1).dx,
+          nextX: isLast ? 0 : neighbourFoot(index + 1).dx,
+          isFirst: index == 0,
+          isLast: isLast,
+          incomingLit: currentIndex >= 0 && index <= currentIndex && index > 0,
+          outgoingLit: currentIndex >= 0 && index < currentIndex,
+          night: night,
+          seed: index,
+          shimmer: flash,
+        );
         // One shimmer flash (0 → 1 over 600 ms) the first time the row
         // appears; the painter maps it to the coin highlight. Fixed at 0 when
         // animations are disabled or the row has already flashed.
         final road = animationsDisabled || !shimmer
-            ? RepaintBoundary(
-                child: CustomPaint(painter: roadPainter(0)),
-              )
+            ? RepaintBoundary(child: CustomPaint(painter: roadPainter(0)))
             : TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: const Duration(milliseconds: 600),
@@ -248,7 +244,8 @@ class _MapRow extends StatelessWidget {
         return Stack(
           children: [
             Positioned.fill(child: road),
-            if (night && (house.status == KidsSurahHouseStatus.completed || isCurrent))
+            if (night &&
+                (house.status == KidsSurahHouseStatus.completed || isCurrent))
               Positioned.fromRect(
                 rect: layout.island,
                 child: DecoratedBox(
@@ -266,10 +263,7 @@ class _MapRow extends StatelessWidget {
             Positioned.fromRect(
               rect: layout.island,
               child: ExcludeSemantics(
-                child: _IslandSprite(
-                  index: index,
-                  width: layout.island.width,
-                ),
+                child: _IslandSprite(index: index, width: layout.island.width),
               ),
             ),
             Positioned.fromRect(

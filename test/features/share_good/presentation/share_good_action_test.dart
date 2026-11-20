@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/config/supabase_config.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_profile.dart';
 import 'package:talia_quran/features/share_good/domain/entities/invite_activity_target.dart';
@@ -39,7 +40,7 @@ void main() {
   Future<void> show(WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: Locale('en'),
         home: Scaffold(

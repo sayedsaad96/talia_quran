@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
@@ -166,10 +166,12 @@ void main() {
     final pageView = tester.widget<PageView>(find.byType(PageView));
     final delegate = pageView.childrenDelegate as SliverChildBuilderDelegate;
     final built = delegate.builder(tester.element(find.byType(PageView)), 0)!;
-    final content = ((built as Column).children.last as Expanded).child
-        as AppQuranPageContent;
-    final guard = content.build(tester.element(find.byType(PageView)))
-        as QuranPageFontGuard;
+    final content =
+        ((built as Column).children.last as Expanded).child
+            as AppQuranPageContent;
+    final guard =
+        content.build(tester.element(find.byType(PageView)))
+            as QuranPageFontGuard;
     final scaled = guard.child as RepaintBoundary;
     double? pageScale;
     await tester.pumpWidget(
@@ -188,7 +190,9 @@ void main() {
     expect(pageScale, 1.1);
   });
 
-  testWidgets('uses canonical order by default for adult readers', (tester) async {
+  testWidgets('uses canonical order by default for adult readers', (
+    tester,
+  ) async {
     final controller = PageController();
     final changedPages = <int>[];
     addTearDown(controller.dispose);
@@ -221,9 +225,14 @@ void main() {
 _singlePageContent(Widget page, BuildContext context) {
   final column = page as Column;
   final expanded = column.children.single as Expanded;
-  final guard = (expanded.child as AppQuranPageContent).build(context) as QuranPageFontGuard;
+  final guard =
+      (expanded.child as AppQuranPageContent).build(context)
+          as QuranPageFontGuard;
   final repaintBoundary = guard.child as RepaintBoundary;
   final scale = repaintBoundary.child as SystemTextScale;
   final zoomablePage = scale.child as MushafZoomablePage;
-  return (guard: guard, quranPage: zoomablePage.child as qcf.QuranSinglePageWidget);
+  return (
+    guard: guard,
+    quranPage: zoomablePage.child as qcf.QuranSinglePageWidget,
+  );
 }

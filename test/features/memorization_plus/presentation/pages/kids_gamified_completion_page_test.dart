@@ -1,6 +1,8 @@
 import 'package:confetti/confetti.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -441,15 +443,13 @@ void _nextRouteTests() {
           ),
           GoRoute(
             path: AppRoutes.memorizationPlusKidsJourney,
-            builder: (_, state) => Text(
-              'journey ${state.uri.queryParameters['surahId']}',
-            ),
+            builder: (_, state) =>
+                Text('journey ${state.uri.queryParameters['surahId']}'),
           ),
           GoRoute(
             path: AppRoutes.memorizationPlusKids,
-            builder: (_, state) => Text(
-              'session ${state.uri.queryParameters['surahId']}',
-            ),
+            builder: (_, state) =>
+                Text('session ${state.uri.queryParameters['surahId']}'),
           ),
         ],
       );
@@ -499,7 +499,8 @@ class _CompletionRepository implements MemorizationPlusRepository {
   final ParentSettings settings;
 
   @override
-  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({ bool freezeForSession = false,
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    bool freezeForSession = false,
     required int surahId,
   }) async => Right([
     KidsJourneyStage(

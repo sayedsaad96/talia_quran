@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
@@ -140,29 +142,30 @@ void main() {
     expect(seasons.remindersEnabled, isTrue);
   });
 
-  testWidgets('reminders off also clears the last-ten opt-in; on does not set it', (
-    tester,
-  ) async {
-    getIt.registerSingleton<SharedPreferences>(prefs);
-    final l10n = await pumpPage(tester);
-    final toggle = find.descendant(
-      of: find.ancestor(
-        of: find.text(l10n.settingsSeasonsRemindersTitle),
-        matching: find.byType(Row),
-      ),
-      matching: find.byType(Switch),
-    );
-    await tester.tap(toggle);
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(seasons.remindersEnabled, isTrue);
-    expect(prefs.getBool(lastTenReminderPreferenceKey), isNull);
+  testWidgets(
+    'reminders off also clears the last-ten opt-in; on does not set it',
+    (tester) async {
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      final l10n = await pumpPage(tester);
+      final toggle = find.descendant(
+        of: find.ancestor(
+          of: find.text(l10n.settingsSeasonsRemindersTitle),
+          matching: find.byType(Row),
+        ),
+        matching: find.byType(Switch),
+      );
+      await tester.tap(toggle);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(seasons.remindersEnabled, isTrue);
+      expect(prefs.getBool(lastTenReminderPreferenceKey), isNull);
 
-    await prefs.setBool(lastTenReminderPreferenceKey, true);
-    await tester.tap(toggle);
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(seasons.remindersEnabled, isFalse);
-    expect(prefs.getBool(lastTenReminderPreferenceKey), isFalse);
-  });
+      await prefs.setBool(lastTenReminderPreferenceKey, true);
+      await tester.tap(toggle);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(seasons.remindersEnabled, isFalse);
+      expect(prefs.getBool(lastTenReminderPreferenceKey), isFalse);
+    },
+  );
 
   testWidgets('restore defaults keeps the guardian kids choice', (
     tester,

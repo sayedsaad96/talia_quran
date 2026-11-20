@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:io';
 import 'package:app_links/app_links.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/accessibility/clarity_mode.dart';
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_localizations.dart';
+import 'core/l10n/talia_localization_delegates.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
 import 'core/l10n/digit_material_localizations.dart';
@@ -198,7 +201,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           DigitMaterialLocalizations.delegate,
-          ...AppLocalizations.localizationsDelegates,
+          ...taliaLocalizationsDelegates,
         ],
         routerConfig: AppRouter.splashOnlyRouter,
       );

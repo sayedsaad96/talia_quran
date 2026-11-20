@@ -1,11 +1,12 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/backup/backup_file_format.dart';
 import '../../../../core/backup/backup_file_picker.dart';
 import '../../../../core/backup/backup_restorer.dart';
 import '../../../../core/backup/restore_maintenance_session.dart';
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/l10n/talia_localization_delegates.dart';
 
 /// A separate root app; the normal providers and router do not exist here.
 class RestoreMaintenanceApp extends StatefulWidget {
@@ -34,7 +35,7 @@ class _RestoreMaintenanceAppState extends State<RestoreMaintenanceApp> {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     locale: const Locale('ar'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: FutureBuilder<RestoreMaintenanceSession>(
       future: _session,
@@ -82,7 +83,7 @@ class RestoreAdmissionBusyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     locale: const Locale('ar'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Builder(
       builder: (context) {

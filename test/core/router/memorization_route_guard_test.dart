@@ -443,7 +443,7 @@ void main() {
     test('redirects guests without legacy path to memorization-plus', () async {
       SharedPreferences.setMockInitialValues({});
       if (getIt.isRegistered<SharedPreferences>()) {
-        getIt.unregister<SharedPreferences>();
+        await getIt.unregister<SharedPreferences>();
       }
       getIt.registerSingleton<SharedPreferences>(
         await SharedPreferences.getInstance(),

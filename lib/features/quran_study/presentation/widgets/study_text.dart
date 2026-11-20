@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Renders the source's Quran-quotation markers without changing their text.
 /// Unknown or incomplete markup remains visible rather than being discarded.

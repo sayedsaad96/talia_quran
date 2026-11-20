@@ -1,9 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/services/quran_audio_service.dart';
+import 'package:talia_quran/core/services/quran_reciter.dart';
 import 'package:talia_quran/core/constants/app_constants.dart';
 
 void main() {
   group('QuranAudioService', () {
+    test('Husary ayah URLs use the published EveryAyah directory', () {
+      // EveryAyah lists Husary_128kbps, not Mahmoud_Khussary_128kbps.
+      // Keep literal URLs so a broken reciter base cannot validate itself.
+      expect(
+        QuranAudioService.buildUrl(1, 1, reciter: QuranReciter.husary),
+        'https://everyayah.com/data/Husary_128kbps/001001.mp3',
+      );
+      expect(
+        QuranAudioService.buildUrl(2, 255, reciter: QuranReciter.husary),
+        'https://everyayah.com/data/Husary_128kbps/002255.mp3',
+      );
+      expect(
+        QuranAudioService.buildUrl(114, 6, reciter: QuranReciter.husary),
+        'https://everyayah.com/data/Husary_128kbps/114006.mp3',
+      );
+    });
+
     test('builds correct URL with zero-padded surah and ayah', () {
       final url = QuranAudioService.buildUrl(2, 255);
       expect(url, equals('${AppConstants.audioBaseUrl}002255.mp3'));

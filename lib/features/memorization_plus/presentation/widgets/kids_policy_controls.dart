@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -143,8 +143,11 @@ class KidsPolicyControls extends StatelessWidget {
             ),
           ),
           if (remotePlanEnabled)
-            KidsRemotePlanControls(plan: policy.remotePlan, enabled: enabled,
-              onChanged: (plan) => onChanged(policy.copyWith(remotePlan: plan))),
+            KidsRemotePlanControls(
+              plan: policy.remotePlan,
+              enabled: enabled,
+              onChanged: (plan) => onChanged(policy.copyWith(remotePlan: plan)),
+            ),
         ],
       ),
     );

@@ -4,7 +4,7 @@
 // Used by session-ending flows (memorization completion, khatmah wird
 // completion, …) to close with serenity instead of promotional noise.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';

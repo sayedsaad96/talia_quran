@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -59,9 +59,7 @@ class KidsHouseCard extends StatelessWidget {
               l10n.localeName,
             ),
           )
-        : (useStageWording
-              ? l10n.kidsStageTitle
-              : l10n.kidsGamifiedHouseTitle)(
+        : (useStageWording ? l10n.kidsStageTitle : l10n.kidsGamifiedHouseTitle)(
             LocaleNumberFormatter.format(
               (stage.stageNumber).toString(),
               l10n.localeName,

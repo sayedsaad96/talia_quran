@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/auth/domain/repositories/retained_account_recovery_repository.dart';
 import 'package:talia_quran/features/auth/presentation/pages/retained_account_recovery_app.dart';

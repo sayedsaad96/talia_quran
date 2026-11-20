@@ -5,7 +5,7 @@ import '../../../../core/l10n/cubit_message_codes.dart';
 // V2 session orchestrator — owns the BlocProvider and the phase router.
 // All phase UI widgets live in the v2/ subdirectory.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 

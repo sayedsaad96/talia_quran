@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
@@ -545,41 +547,42 @@ void main() {
       expect(find.byKey(const ValueKey('kids-journey-menu')), findsNothing);
     });
 
-    testWidgets('Quran journey cards say المرحلة; adventure cards keep بيت الحفظ', (
-      tester,
-    ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(() async {
-        await tester.pumpWidget(const SizedBox());
-        tester.view.reset();
-      });
+    testWidgets(
+      'Quran journey cards say المرحلة; adventure cards keep بيت الحفظ',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox());
+          tester.view.reset();
+        });
 
-      await tester.pumpWidget(
-        _TestApp(
-          locale: const Locale('ar'),
-          child: KidsGamifiedJourneyContent(
-            state: _loadedState.copyWith(isQuranJourney: true),
-            onBack: () {},
-            onStageSelected: (_) {},
+        await tester.pumpWidget(
+          _TestApp(
+            locale: const Locale('ar'),
+            child: KidsGamifiedJourneyContent(
+              state: _loadedState.copyWith(isQuranJourney: true),
+              onBack: () {},
+              onStageSelected: (_) {},
+            ),
           ),
-        ),
-      );
-      expect(find.textContaining('المرحلة'), findsWidgets);
-      expect(find.textContaining('بيت الحفظ'), findsNothing);
+        );
+        expect(find.textContaining('المرحلة'), findsWidgets);
+        expect(find.textContaining('بيت الحفظ'), findsNothing);
 
-      await tester.pumpWidget(
-        _TestApp(
-          locale: const Locale('ar'),
-          child: KidsGamifiedJourneyContent(
-            state: _loadedState,
-            onBack: () {},
-            onStageSelected: (_) {},
+        await tester.pumpWidget(
+          _TestApp(
+            locale: const Locale('ar'),
+            child: KidsGamifiedJourneyContent(
+              state: _loadedState,
+              onBack: () {},
+              onStageSelected: (_) {},
+            ),
           ),
-        ),
-      );
-      expect(find.textContaining('بيت الحفظ'), findsWidgets);
-    });
+        );
+        expect(find.textContaining('بيت الحفظ'), findsWidgets);
+      },
+    );
 
     testWidgets('back button triggers onBack callback', (tester) async {
       tester.view.devicePixelRatio = 1;

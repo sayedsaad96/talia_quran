@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/khatmah/presentation/widgets/group_khatmah_entry.dart';
 import '../../features/group_khatmah/data/group_khatmah_test_support.dart';
 
@@ -46,7 +47,7 @@ void main() {
 
 Widget _app(Widget child) => MaterialApp(
   locale: const Locale('ar'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(appBar: AppBar(actions: [child])),
 );

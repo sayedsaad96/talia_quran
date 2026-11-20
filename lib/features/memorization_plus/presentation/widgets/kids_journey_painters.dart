@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../theme/kids_theme.dart';
 
@@ -6,10 +6,9 @@ import '../theme/kids_theme.dart';
 /// card width and side margin from the available width so the winding path
 /// keeps a real margin on narrow screens (176px cards left only ~144px of
 /// path on a 320px screen). Floors at 136px for tiny phones.
-({
-  double cardWidth,
-  double sideMargin,
-}) resolveJourneySegmentMetrics(double totalWidth) {
+({double cardWidth, double sideMargin}) resolveJourneySegmentMetrics(
+  double totalWidth,
+) {
   if (totalWidth < 360) {
     return (
       cardWidth: (totalWidth * 0.44).clamp(136.0, 156.0),
@@ -56,26 +55,12 @@ class WindingPathPainter extends CustomPainter {
     path.moveTo(startX, startY);
 
     // Segment 1: from top to destination node
-    path.cubicTo(
-      startX,
-      h * 0.18,
-      nodeX,
-      h * 0.28,
-      nodeX,
-      nodeY,
-    );
+    path.cubicTo(startX, h * 0.18, nodeX, h * 0.28, nodeX, nodeY);
 
     // Segment 2: from destination node to bottom midpoint
     final endX = isLast ? nodeX : midX;
     final endY = h;
-    path.cubicTo(
-      nodeX,
-      h * 0.72,
-      endX,
-      h * 0.82,
-      endX,
-      endY,
-    );
+    path.cubicTo(nodeX, h * 0.72, endX, h * 0.82, endX, endY);
 
     // 1. Path Earth Border / Drop Shadow
     final borderPaint = Paint()

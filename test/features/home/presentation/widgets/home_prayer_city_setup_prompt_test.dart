@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
@@ -37,8 +38,7 @@ void main() {
     expect(find.text('Choose city'), findsOneWidget);
 
     await getIt<PrayerTimesService>().setCityId('cairo');
-    final snapshot =
-        await getIt<PrayerTimesService>().current(isArabic: false);
+    final snapshot = await getIt<PrayerTimesService>().current(isArabic: false);
     await tester.pumpWidget(_homeHeader(prayerSnapshot: snapshot));
     expect(find.text('Choose city'), findsNothing);
   });
@@ -72,7 +72,7 @@ Widget _homeHeader({PrayerTimesSnapshot? prayerSnapshot}) {
   return MaterialApp(
     locale: const Locale('en'),
     supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     home: Scaffold(
       body: SingleChildScrollView(
         child: HomeNightHeader(

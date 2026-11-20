@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +6,7 @@ import 'package:talia_quran/core/backup/backup_file_format.dart';
 import 'package:talia_quran/core/backup/restore_maintenance_session.dart';
 import 'package:talia_quran/core/backup/restore_request_store.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/settings/presentation/pages/restore_maintenance_page.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/cold_restore_request_button.dart';
 
@@ -29,7 +30,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: ColdRestoreRequestButton(

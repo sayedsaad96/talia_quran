@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -166,11 +166,7 @@ class _PreviewContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          TaliaIcons.mushaf,
-          size: 56,
-          color: theme.colorScheme.primary,
-        ),
+        Icon(TaliaIcons.mushaf, size: 56, color: theme.colorScheme.primary),
         const SizedBox(height: 24),
         Text(
           title,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/social_share/heroes/stat_hero.dart';
@@ -108,25 +108,28 @@ void main() {
     expect(find.text('أيام متتالية'), findsOneWidget);
   });
 
-  testWidgets('annual recap omits unknown pages and preserves qualified labels', (tester) async {
-    const data = SocialShareData(
-      category: SocialShareCategory.progress,
-      content: 'Current memorization last reviewed during the year',
-      subtitle: 'Two completed khatmas',
-      memorizedAyahsCount: 25,
-      streakDays: 45,
-      memorizedAyahsLabel: 'Approximate memorized ayahs',
-      streakDaysLabel: 'Lifetime longest streak',
-    );
-    await pump(tester, data.copyWith(showCharacter: false));
-    expect(find.text('صفحات مقروءة'), findsNothing);
-    expect(find.text('٠'), findsNothing);
-    expect(find.text('Approximate memorized ayahs'), findsOneWidget);
-    expect(find.text('Lifetime longest streak'), findsOneWidget);
-    expect(find.text(data.content), findsOneWidget);
-    expect(find.text(data.subtitle!), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'annual recap omits unknown pages and preserves qualified labels',
+    (tester) async {
+      const data = SocialShareData(
+        category: SocialShareCategory.progress,
+        content: 'Current memorization last reviewed during the year',
+        subtitle: 'Two completed khatmas',
+        memorizedAyahsCount: 25,
+        streakDays: 45,
+        memorizedAyahsLabel: 'Approximate memorized ayahs',
+        streakDaysLabel: 'Lifetime longest streak',
+      );
+      await pump(tester, data.copyWith(showCharacter: false));
+      expect(find.text('صفحات مقروءة'), findsNothing);
+      expect(find.text('٠'), findsNothing);
+      expect(find.text('Approximate memorized ayahs'), findsOneWidget);
+      expect(find.text('Lifetime longest streak'), findsOneWidget);
+      expect(find.text(data.content), findsOneWidget);
+      expect(find.text(data.subtitle!), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('azkar wird progress shows counts and a line', (tester) async {
     await pump(

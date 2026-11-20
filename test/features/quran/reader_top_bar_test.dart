@@ -1,11 +1,12 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
@@ -62,7 +63,7 @@ void main() {
   Widget topBar({VoidCallback? onBack, VoidCallback? onOpenMenu}) {
     return MaterialApp(
       locale: const Locale('ar'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: taliaLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: BlocProvider.value(
         value: cubit,
@@ -136,7 +137,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ReaderFooter(
@@ -160,7 +161,7 @@ void main() {
 
   Widget footer({required bool confirmed, Duration? countdown}) => MaterialApp(
     locale: const Locale('ar'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: ReaderFooter(
@@ -189,9 +190,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ReaderFooter hides page counting confirmation', (
-    tester,
-  ) async {
+  testWidgets('ReaderFooter hides page counting confirmation', (tester) async {
     await tester.pumpWidget(
       footer(confirmed: true, countdown: const Duration(seconds: 25)),
     );
@@ -204,7 +203,7 @@ void main() {
   testWidgets('ReaderDockedAudioBar renders nothing when idle', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider.value(
           value: cubit,
@@ -235,7 +234,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: BlocProvider.value(
           value: cubit,

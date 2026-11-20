@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/widgets/memorization_ayah_display.dart';
@@ -43,8 +45,9 @@ void main() {
     );
   }
 
-  testWidgets('renders the hidden active-recall card with actions',
-      (tester) async {
+  testWidgets('renders the hidden active-recall card with actions', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(record: _record(2, 255)));
     await tester.pumpAndSettle();
 
@@ -78,12 +81,12 @@ void main() {
     expect(find.text('Surah Al-Baqarah, Ayah 255'), findsOneWidget);
   });
 
-  testWidgets('renders nothing when the user has no memorized ayahs',
-      (tester) async {
+  testWidgets('renders nothing when the user has no memorized ayahs', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
 
     expect(find.text('Memory flash'), findsNothing);
   });
-
 }

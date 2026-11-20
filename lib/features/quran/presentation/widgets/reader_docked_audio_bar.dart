@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -168,7 +168,8 @@ class ReaderDockedAudioBar extends StatelessWidget {
                   icon: Icon(
                     TaliaIcons.repeat,
                     size: 20,
-                    color: state.repeat.isDefault &&
+                    color:
+                        state.repeat.isDefault &&
                             state.sleepChoice == SleepTimerChoice.off
                         ? context.tokens.textHint
                         : primary,

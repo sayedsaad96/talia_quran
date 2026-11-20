@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/l10n/talia_localization_delegates.dart';
 import '../../domain/repositories/retained_account_recovery_repository.dart';
 import '../cubits/retained_account_recovery_cubit.dart';
 
@@ -21,7 +22,7 @@ class RetainedAccountRecoveryApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     locale: locale,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider(
       create: (_) =>

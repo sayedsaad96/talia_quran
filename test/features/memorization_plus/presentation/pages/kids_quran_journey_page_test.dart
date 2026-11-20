@@ -1,7 +1,9 @@
 import 'dart:ui' show SemanticsAction;
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/constants/surah_names.dart';
 import 'package:talia_quran/core/di/injection.dart';
@@ -273,7 +275,7 @@ void _islandRowTests() {
   }
 
   testWidgets('a completed house shows three filled stars and no empty '
-  'ones', (tester) async {
+      'ones', (tester) async {
     final houses = _houses();
     replaceOne(
       houses,
@@ -409,19 +411,18 @@ void _islandRowTests() {
       return null;
     }
 
-    final islands =
-        tester
-            .widgetList<Image>(
-              find.byWidgetPredicate(
-                (w) =>
-                    w is Image &&
-                    (islandAssetName(w)?.startsWith(
-                          'assets/images/kids/islands/',
-                        ) ??
-                        false),
-              ),
-            )
-            .toList();
+    final islands = tester
+        .widgetList<Image>(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Image &&
+                (islandAssetName(
+                      w,
+                    )?.startsWith('assets/images/kids/islands/') ??
+                    false),
+          ),
+        )
+        .toList();
     expect(islands, isNotEmpty);
     for (final island in islands) {
       expect(island.errorBuilder, isNotNull);
@@ -436,7 +437,7 @@ void _islandRowTests() {
   });
 
   testWidgets('no overflow in English LTR at 1.3 text scale with a long '
-  'name', (tester) async {
+      'name', (tester) async {
     await tester.pumpWidget(
       _app(
         Center(
@@ -463,7 +464,7 @@ void _islandRowTests() {
   });
 
   testWidgets('no overflow in Arabic RTL at 1.3 text scale with a long '
-  'name', (tester) async {
+      'name', (tester) async {
     final longName = 'س' * 30;
     final names = {for (var id = 1; id <= 114; id++) id: longName};
     await _pump(
@@ -481,11 +482,8 @@ void _roadTests() {
     houses[replacement.surahId - 1] = replacement;
   }
 
-  KidsSurahHouse completedHouse(int id) => _house(
-    id,
-    status: KidsSurahHouseStatus.completed,
-    completedCount: 5,
-  );
+  KidsSurahHouse completedHouse(int id) =>
+      _house(id, status: KidsSurahHouseStatus.completed, completedCount: 5);
 
   testWidgets('the road is lit up to the current house', (tester) async {
     await _pump(tester, _state(current: 3));
@@ -531,7 +529,9 @@ void _roadTests() {
     if (phase != null) {
       map = KidsWorldPhaseScope(phase: phase, child: map);
     }
-    await tester.pumpWidget(_app(SizedBox(width: 800, height: 1000, child: map)));
+    await tester.pumpWidget(
+      _app(SizedBox(width: 800, height: 1000, child: map)),
+    );
     await tester.pump();
   }
 
@@ -615,10 +615,7 @@ void _taliaTests() {
       matching: find.byType(Transform),
     );
     if (transforms.evaluate().isEmpty) return null;
-    return tester
-        .widget<Transform>(transforms.first)
-        .transform
-        .storage[0];
+    return tester.widget<Transform>(transforms.first).transform.storage[0];
   }
 
   Finder cardOf(int surahId) => find.ancestor(
@@ -650,7 +647,7 @@ void _taliaTests() {
   });
 
   testWidgets('a celebration arriving while the map is mounted pops the '
-  'stars and starts the walk', (tester) async {
+      'stars and starts the walk', (tester) async {
     // The real scenario: the child completes a surah, returns to the map,
     // and the page reloads its cubit while the map stays mounted. The map
     // must celebrate on the widget update, not only on first mount.
@@ -697,7 +694,7 @@ void _taliaTests() {
   });
 
   testWidgets('opening with the current house places its row near the '
-  'viewport centre', (tester) async {
+      'viewport centre', (tester) async {
     await _pump(tester, _state(current: 60));
 
     final viewport = tester.getRect(find.byType(ListView).first);

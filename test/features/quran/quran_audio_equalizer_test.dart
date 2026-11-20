@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_audio_equalizer.dart';
 
@@ -7,10 +7,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: QuranAudioEqualizer(
-            isPlaying: true,
-            color: Colors.green,
-          ),
+          body: QuranAudioEqualizer(isPlaying: true, color: Colors.green),
         ),
       ),
     );
@@ -33,7 +30,9 @@ void main() {
     expect(containers, findsNWidgets(4));
   });
 
-  testWidgets('updates gracefully when isPlaying changes from true to false', (tester) async {
+  testWidgets('updates gracefully when isPlaying changes from true to false', (
+    tester,
+  ) async {
     bool isPlaying = true;
 
     await tester.pumpWidget(

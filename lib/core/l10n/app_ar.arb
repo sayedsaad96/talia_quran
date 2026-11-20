@@ -1,5 +1,7 @@
 {
   "@@locale": "ar",
+  "notificationCalmModeTitle": "تذكيرات هادئة",
+  "notificationCalmModeDescription": "تظهر التذكيرات في قائمة الإشعارات بدون صوت أو اهتزاز أو نوافذ منبثقة. إعدادات الصلاة والأذان مستقلة.",
   "appName": "Talia Quran",
   "@appName": {
     "description": "Application name"
@@ -663,10 +665,10 @@
   "notificationConfigurePrayerTimes": "إعداد مواقيت الصلاة",
   "notificationTestPickerTitle": "اختر إشعارًا لتجربته",
   "notificationTestPickerSubtitle": "سيصلك إشعار تجريبي مع أزرار تفاعل.",
-  "notificationTestReviewTitle": "مراجعة اليوم 📖",
-  "notificationTestReviewBody": "لديك ٥ آيات مستحقة للمراجعة اليوم ⚡",
-  "notificationTestStreakTitle": "حماية المواظبة 🔥",
-  "notificationTestStreakBody": "لم تراجع اليوم بعد — حافظ على مواظبتك الآن 🔥",
+  "notificationTestReviewTitle": "لحظة للمراجعة",
+  "notificationTestReviewBody": "يمكنك مراجعة ٥ آيات اليوم، بالقدر الذي يناسبك.",
+  "notificationTestStreakTitle": "خطوة صغيرة اليوم",
+  "notificationTestStreakBody": "وقت قصير مع القرآن، عندما يناسبك.",
   "notificationTestSuccess": "تم إرسال الإشعار التجريبي بنجاح ✨",
   "notificationSettingsSaveFailed": "تعذر حفظ التغيير. حاول مرة أخرى.",
   "notificationSettingsSchedulingFailed": "تم حفظ التغيير، لكن تعذر تحديث التنبيهات. حاول مرة أخرى.",
@@ -2042,34 +2044,34 @@
   "homeActionSettings": "الإعدادات",
   "homeActionTuneApp": "خصص تجربتك",
   "homeGoToSettings": "انتقل إلى الإعدادات",
-  "notificationDailyReviewTitle": "جاهز نراجع سوا؟ 📖",
-  "notificationDailyReviewBodyCount": "عندك {count} آية مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨",
-  "notificationDailyReviewBody": "يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸",
-  "notificationStreakMercyTitle": "الله رحيم — سلسلتك مستنياك 🌿",
-  "notificationStreakMercyBody": "فاتك يوم، وسلسلتك رجعت من جديد… كمّل وردك النهاردة 🤍",
-  "notificationStreakAlertTitle": "⚠️ متضيعش إنجاز {count} يوم!",
+  "notificationDailyReviewTitle": "لحظة هادئة للمراجعة",
+  "notificationDailyReviewBodyCount": "لديك {count} آية للمراجعة. ابدأ بما يناسب وقتك، خطوة بخطوة.",
+  "notificationDailyReviewBody": "مراجعة قصيرة، بالقدر الذي يناسبك اليوم.",
+  "notificationStreakMercyTitle": "بداية جديدة بهدوء",
+  "notificationStreakMercyBody": "يمكنك العودة اليوم بخطوة صغيرة، وفي الوقت الذي يناسبك.",
+  "notificationStreakAlertTitle": "{count} يومًا من المواظبة",
   "@notificationStreakAlertTitle": {
     "placeholders": {
       "count": {}
     }
   },
-  "notificationStreakGentleTitle": "سلسلتك من {count} يوم مستنياك",
+  "notificationStreakGentleTitle": "خطواتك مستمرة منذ {count} يومًا",
   "@notificationStreakGentleTitle": {
     "placeholders": {
       "count": {}
     }
   },
-  "notificationStreakGentleBody": "دقايق مراجعة النهاردة تحافظ على سلسلتك.. وقت ما تحب 🌿",
+  "notificationStreakGentleBody": "إن كان وقتك يسمح، خذ لحظة قصيرة مع القرآن.",
   "notificationSmartReminderTitle": "وقت قراءتك المعتاد",
-  "notificationSmartReminderBody": "الوقت ده عادةً بتقرا فيه.. في آيات مستنياك.",
+  "notificationSmartReminderBody": "قد يناسبك الآن وقت قصير للقراءة. أكمل على مهل.",
   "notificationChannelStreakGentleName": "تذكير لطيف بالسلسلة",
   "notificationChannelStreakGentleDescription": "تذكير هادئ قبل تنبيه حماية السلسلة",
   "notificationChannelSmartName": "تذكير ذكي",
   "notificationChannelSmartDescription": "تذكيرات في وقت قراءتك المعتاد",
-  "notificationStreakAlertBody": "فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥",
-  "notificationActionReviewStart": "⚡ ابدأ المراجعة",
+  "notificationStreakAlertBody": "يمكنك إضافة خطوة صغيرة اليوم. اختر ما يناسب وقتك وطاقتك.",
+  "notificationActionReviewStart": "ابدأ المراجعة",
   "notificationActionDailyWird": "📖 الورد اليومي",
-  "notificationActionStreakProtect": "🔥 احمي السلسلة الآن",
+  "notificationActionStreakProtect": "لحظة للمراجعة",
   "notificationActionReadWird": "📖 قراءة الورد",
   "notificationActionReadDailyAyah": "✨ قراءة آية اليوم",
   "notificationActionShareAyah": "↗️ مشاركة الآية",
@@ -2077,7 +2079,7 @@
   "notificationActionEveningAzkar": "🌙 قراءة أذكار المساء",
   "notificationActionDailyDua": "🤲 قراءة أدعية اليوم",
   "notificationActionAzkar": "✨ الأذكار",
-  "notificationActionKidsReview": "🌟 ابدأ التسميع يا بطل",
+  "notificationActionKidsReview": "نراجع معًا",
   "notificationActionReadKahf": "📖 قراءة سورة الكهف",
   "notificationActionOpenMushaf": "✨ المصحف",
   "notificationActionTahajjudDua": "🤲 أدعية قيام الليل",
@@ -2167,13 +2169,13 @@
   "notificationMorningAzkarBody": "يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك",
   "notificationEveningAzkarTitle": "مساء الخير والسكينة 🌙",
   "notificationEveningAzkarBody": "يومك كان زحمة؟ خذ لحظة هدوء مع أذكار المساء واختم يومك بحفظ الله",
-  "notificationKidsReviewTitle": "يلا يا بطل جاهز؟ 🌟",
-  "notificationKidsReviewBody": "مرحلتك الجديدة مستنياك.. يلا نكمل ونجمع نجوم جديدة! 🚀",
+  "notificationKidsReviewTitle": "نراجع معًا؟ 🌿",
+  "notificationKidsReviewBody": "يمكننا مراجعة آيات قليلة معًا، عندما تكون مستعدًا.",
   "notificationDailyDuaTitle": "دعوة من القلب 🤲",
   "notificationDailyDuaBody": "دعاء اليوم بانتظارك في تالية",
   "notificationFridayKahfTitle": "نور ما بين الجمعتين 🌿",
   "notificationWeeklyImpactTitle": "أثرك هذا الأسبوع 🌿",
-  "notificationWeeklyImpactBody": "{count} أيام من أسبوعك كانت مع القرآن — وكل صفحة فيها أثر باقٍ",
+  "notificationWeeklyImpactBody": "خصصت {count} أيام من أسبوعك للقرآن. واصل بالقدر الذي يناسبك.",
   "@notificationWeeklyImpactBody": {
     "placeholders": {
       "count": {
@@ -2181,14 +2183,14 @@
       }
     }
   },
-  "notificationWeeklyImpactQuietBody": "أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱",
+  "notificationWeeklyImpactQuietBody": "أسبوع جديد وفرصة لبداية هادئة. اختر وقتًا قصيرًا يناسبك.",
   "notificationSettingsWeeklyImpact": "أثر الأسبوع (الجمعة)",
   "notificationFridayKahfBody": "جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨",
   "notificationTahajjudTitle": "قيام الليل والدعاء المستجاب 🌙",
   "notificationTahajjudBody": "ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲",
   "notificationKhatmahTitle": "ورد الختمة اليومي 📖",
-  "notificationKhatmahBody": "واصل مسيرتك المباركة مع الختمة.. وردك اليوم بانتظارك 🌿",
-  "notificationKhatmahBodyWithTarget": "وردك اليوم: من صفحة {start} إلى {end}.. اقتربت من إتمام الختمة! ✨",
+  "notificationKhatmahBody": "يمكنك متابعة ورد الختمة اليوم، على مهل وبالقدر الذي يناسبك.",
+  "notificationKhatmahBodyWithTarget": "وردك اليوم من صفحة {start} إلى {end}. اقرأ على مهل، ويمكنك تقسيمه على يومك.",
   "@notificationKhatmahBodyWithTarget": {
     "placeholders": {
       "start": {},
@@ -3793,7 +3795,7 @@
   ,"@forgettingForecastPassage": {"placeholders": {"surah": {}, "start": {}, "end": {}}}
   ,"forgettingForecastReviewNow": "راجعها الآن"
   ,"notificationForgettingForecastTitle": "وقت للمراجعة"
-  ,"notificationForgettingForecastBody": "خصص وقتاً قصيراً لمراجعة ما تعلمته."
+  ,"notificationForgettingForecastBody": "عندما يناسبك، خذ وقتًا قصيرًا لمراجعة ما تعلمته."
   ,"notificationSettingsForgettingForecast": "توقع النسيان"
   ,"ayahNotesTitle": "تدبّراتي"
   ,"ayahNoteAction": "ملاحظتي"

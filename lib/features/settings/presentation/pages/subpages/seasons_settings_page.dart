@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,7 +71,10 @@ class _SeasonsSettingsPageState extends State<SeasonsSettingsPage> {
         final history = await getIt<KhatmahRepository>().getHistory();
         await store.syncFromKhatmahs([
           for (final h in history)
-            (start: h.startDate.toLocal(), completed: h.completedDate.toLocal()),
+            (
+              start: h.startDate.toLocal(),
+              completed: h.completedDate.toLocal(),
+            ),
         ], adjustmentDays: adjustment);
       }
     } catch (_) {

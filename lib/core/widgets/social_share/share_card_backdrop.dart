@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'share_card_palette.dart';
 import 'talia_share_tokens.dart';

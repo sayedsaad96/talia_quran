@@ -1,11 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/services/app_version_service.dart';
 import 'package:talia_quran/features/app_update/domain/repositories/app_update_repository.dart';
 import 'package:talia_quran/features/app_update/domain/usecases/google_play_update_usecase.dart';
@@ -49,7 +50,7 @@ void main() {
             value: cubit,
             child: MaterialApp.router(
               locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: taliaLocalizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               routerConfig: router,
               builder: (_, child) => AppUpdatePromptListener(child: child!),

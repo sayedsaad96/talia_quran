@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -18,15 +20,10 @@ void main() {
   setUp(() {
     audioCubit = _MockAudioPlayerCubit();
     when(() => audioCubit.state).thenReturn(const QuranAudioPlayerState());
-    when(() => audioCubit.stream).thenAnswer(
-      (_) => const Stream.empty(),
-    );
+    when(() => audioCubit.stream).thenAnswer((_) => const Stream.empty());
   });
 
-  AyahOfDay ayah({
-    String? surahType,
-    int? surahAyahCount,
-  }) {
+  AyahOfDay ayah({String? surahType, int? surahAyahCount}) {
     return AyahOfDay(
       surahId: 2,
       ayahNumber: 255,
@@ -63,8 +60,9 @@ void main() {
     );
   }
 
-  testWidgets('shows the factual surah context line when available',
-      (tester) async {
+  testWidgets('shows the factual surah context line when available', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       harness(ayah(surahType: 'medinan', surahAyahCount: 286)),
     );
@@ -79,8 +77,9 @@ void main() {
 
   // The middle dot is indistinguishable from the Eastern Arabic zero:
   // «مكية · ٢٠ آية» read as 200 ayahs on Al-Muzzammil.
-  testWidgets('the Arabic context line never puts a dot beside the digits',
-      (tester) async {
+  testWidgets('the Arabic context line never puts a dot beside the digits', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       harness(
         ayah(surahType: 'meccan', surahAyahCount: 20),
@@ -102,8 +101,9 @@ void main() {
     expect(find.text('Meccan · 7 ayahs'), findsOneWidget);
   });
 
-  testWidgets('omits the context line on legacy entities without metadata',
-      (tester) async {
+  testWidgets('omits the context line on legacy entities without metadata', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(ayah()));
     await tester.pumpAndSettle();
 

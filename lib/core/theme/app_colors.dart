@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Talia Design System — Color Tokens
 /// Inspired by deep night sky, moonlight on parchment, and Quranic ink

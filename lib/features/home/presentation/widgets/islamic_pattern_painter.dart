@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Paints a subtle repeating Islamic 8-point star pattern.
 /// Used as a faint texture overlay on the Hero Card.

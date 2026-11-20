@@ -7,7 +7,7 @@ import '../../../../../core/utils/locale_number_formatter.dart';
 
 // ignore_for_file: sort_child_properties_last
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../../core/constants/app_spacing.dart';

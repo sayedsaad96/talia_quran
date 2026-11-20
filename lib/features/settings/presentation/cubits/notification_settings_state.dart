@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum NotificationSettingsFeedback { saveFailed, schedulingFailed }
 
@@ -7,12 +7,13 @@ class NotificationSettingsState extends Equatable {
   const NotificationSettingsState({
     this.isLoading = false,
     this.hasSystemPermission = true,
+    this.calmMode = true,
     this.dailyReview = true,
-    this.streakAlert = true,
-    this.dailyAyah = true,
+    this.streakAlert = false,
+    this.dailyAyah = false,
     this.morningAzkar = true,
     this.eveningAzkar = true,
-    this.dailyDua = true,
+    this.dailyDua = false,
     this.kidsReminder = false,
     this.fridayKahf = true,
     this.weeklyImpact = true,
@@ -54,6 +55,7 @@ class NotificationSettingsState extends Equatable {
 
   final bool isLoading;
   final bool hasSystemPermission;
+  final bool calmMode;
 
   // 10 Notification Categories
   final bool dailyReview;
@@ -139,6 +141,7 @@ class NotificationSettingsState extends Equatable {
   NotificationSettingsState copyWith({
     bool? isLoading,
     bool? hasSystemPermission,
+    bool? calmMode,
     bool? dailyReview,
     bool? streakAlert,
     bool? dailyAyah,
@@ -186,6 +189,7 @@ class NotificationSettingsState extends Equatable {
     return NotificationSettingsState(
       isLoading: isLoading ?? this.isLoading,
       hasSystemPermission: hasSystemPermission ?? this.hasSystemPermission,
+      calmMode: calmMode ?? this.calmMode,
       dailyReview: dailyReview ?? this.dailyReview,
       streakAlert: streakAlert ?? this.streakAlert,
       dailyAyah: dailyAyah ?? this.dailyAyah,
@@ -240,6 +244,7 @@ class NotificationSettingsState extends Equatable {
   List<Object?> get props => [
     isLoading,
     hasSystemPermission,
+    calmMode,
     dailyReview,
     streakAlert,
     dailyAyah,

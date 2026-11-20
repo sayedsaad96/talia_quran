@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
@@ -42,10 +42,7 @@ final class PrayerReviewSettingsPanel extends StatelessWidget {
           title: context.l10n.prayerReviewSettingsTitle,
           children: [
             for (final prayer in PrayerKey.values)
-              _PrayerLengthTile(
-                prayer: prayer,
-                value: state.lengths[prayer]!,
-              ),
+              _PrayerLengthTile(prayer: prayer, value: state.lengths[prayer]!),
             if (state.saveFailed)
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -81,21 +78,25 @@ final class _PrayerLengthTile extends StatelessWidget {
             DropdownMenuItem(
               value: length,
               child: Text(
-                l10n.prayerReviewLengthOption(length).replaceFirst(
-                  length.toString(),
-                  LocaleNumberFormatter.number(length, l10n.localeName),
-                ),
+                l10n
+                    .prayerReviewLengthOption(length)
+                    .replaceFirst(
+                      length.toString(),
+                      LocaleNumberFormatter.number(length, l10n.localeName),
+                    ),
               ),
             ),
         ],
-        onChanged: stateSaving(context) ? null : (next) {
-          if (next != null) {
-            context.read<PrayerReviewSettingsCubit>().changeLength(
-              prayer,
-              next,
-            );
-          }
-        },
+        onChanged: stateSaving(context)
+            ? null
+            : (next) {
+                if (next != null) {
+                  context.read<PrayerReviewSettingsCubit>().changeLength(
+                    prayer,
+                    next,
+                  );
+                }
+              },
       ),
     );
   }

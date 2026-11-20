@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,7 @@ import 'package:talia_quran/core/config/supabase_config.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
@@ -106,7 +109,7 @@ class _MockBuildContext extends Mock implements BuildContext {}
 
 Widget buildRouterApp(GoRouter router) => MaterialApp.router(
   routerConfig: router,
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
 );
 
@@ -1085,7 +1088,7 @@ void main() {
         ).thenReturn(KhatmahWirdCompleted(plan: anchored));
         await tester.pumpWidget(
           MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: KhatmahReaderSessionBar(cubit: mockKhatmahCubit),

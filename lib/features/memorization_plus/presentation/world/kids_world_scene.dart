@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../domain/services/kids_world_growth_snapshot.dart';
 import '../../domain/services/kids_world_phase.dart';
 import 'kids_world_palette.dart';
-
 
 /// 2D scene behind kids screens. Day: sky, sun, drifting clouds, hills.
 /// Night: deep sky, twinkling stars, a crescent moon, dark hills.
@@ -256,7 +255,18 @@ class _ScenePainter extends CustomPainter {
   /// Fixed slots across the width (as fractions), so the same milestones
   /// always draw the same world; mirrored in RTL.
   static const _plantSlots = [
-    0.08, 0.92, 0.22, 0.78, 0.35, 0.65, 0.15, 0.85, 0.48, 0.28, 0.72, 0.57,
+    0.08,
+    0.92,
+    0.22,
+    0.78,
+    0.35,
+    0.65,
+    0.15,
+    0.85,
+    0.48,
+    0.28,
+    0.72,
+    0.57,
   ];
 
   final Paint _trunkPaint = Paint();
@@ -292,8 +302,9 @@ class _ScenePainter extends CustomPainter {
       final fraction = blossomSlots[i % blossomSlots.length];
       final x = size.width * (rtl ? 1 - fraction : fraction);
       final center = Offset(x, groundAt(x) - unit * 0.8);
-      _blossomPaint.color = blossomColors[i % blossomColors.length]
-          .withValues(alpha: day ? 1 : 0.75);
+      _blossomPaint.color = blossomColors[i % blossomColors.length].withValues(
+        alpha: day ? 1 : 0.75,
+      );
       for (var petal = 0; petal < 5; petal++) {
         final angle = petal * 2 * math.pi / 5;
         canvas.drawCircle(

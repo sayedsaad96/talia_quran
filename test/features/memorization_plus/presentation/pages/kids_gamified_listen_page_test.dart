@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -503,7 +505,9 @@ void main() {
         ),
         isNot(AppLocalizations.of(appContext).micPermissionError),
       );
-      final button = find.byKey(const ValueKey('kids-gamified-manual-complete'));
+      final button = find.byKey(
+        const ValueKey('kids-gamified-manual-complete'),
+      );
       expect(button, findsOneWidget);
       final rect = tester.getRect(button);
       expect(rect.top, greaterThanOrEqualTo(0));
@@ -1241,8 +1245,10 @@ void main() {
         enabled: false,
       );
 
-      expect(find.byKey(const ValueKey('kids-support-suggestion-firstWord')),
-          findsNothing);
+      expect(
+        find.byKey(const ValueKey('kids-support-suggestion-firstWord')),
+        findsNothing,
+      );
       expect(
         tester
             .widget<KidsChunkyButton>(
@@ -1434,7 +1440,7 @@ void main() {
 
     testWidgets('with the flag off there is no button', (tester) async {
       if (getIt.isRegistered<KidsEnrichmentFlags>()) {
-        getIt.unregister<KidsEnrichmentFlags>();
+        await getIt.unregister<KidsEnrichmentFlags>();
       }
       getIt.registerSingleton<KidsEnrichmentFlags>(
         KidsEnrichmentFlags((_) => false),
@@ -1448,7 +1454,7 @@ void main() {
 
     testWidgets('the flag on enables the entry', (tester) async {
       if (getIt.isRegistered<KidsEnrichmentFlags>()) {
-        getIt.unregister<KidsEnrichmentFlags>();
+        await getIt.unregister<KidsEnrichmentFlags>();
       }
       getIt.registerSingleton<KidsEnrichmentFlags>(
         KidsEnrichmentFlags(

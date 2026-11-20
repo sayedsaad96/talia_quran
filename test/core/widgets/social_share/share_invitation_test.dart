@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/widgets/social_share/share_card_links.dart';
 import 'package:talia_quran/core/widgets/social_share/share_signature_bar.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
@@ -72,7 +73,7 @@ void main() {
     useCanvasView(tester);
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
         home: Scaffold(body: SocialShareSheet(data: data)),

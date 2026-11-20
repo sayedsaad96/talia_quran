@@ -289,10 +289,11 @@ class AppInitializer {
           prefs.getBool(TaliaNotificationService.eveningAzkarPreferenceKey) ??
           true;
       final dailyDuaEnabled =
-          prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
+          prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ??
+          false;
       final dailyAyahEnabled =
           prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ??
-          true;
+          false;
 
       await prefs.setBool(
         TaliaNotificationService.morningAzkarPreferenceKey,

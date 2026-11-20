@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/backup/backup_sections.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
@@ -156,8 +157,10 @@ void main() {
     );
     expect(BackupPreferencePolicy.backupKeyFor(key, 'owner-b'), isNull);
     expect(() => BackupPreferencePolicy.validate(key, true), returnsNormally);
-    expect(() => BackupPreferencePolicy.validate(key, 'true'),
-        throwsA(isA<BackupSectionInvalid>()));
+    expect(
+      () => BackupPreferencePolicy.validate(key, 'true'),
+      throwsA(isA<BackupSectionInvalid>()),
+    );
   });
 
   testWidgets('flag-off slot does not resolve DI or fetch data', (
@@ -198,7 +201,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: HijriYearRecapCard(recap: _recap())),
       ),

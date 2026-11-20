@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/skeleton_loader.dart';
 
@@ -8,9 +8,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: HomeSkeletonLoader()),
-      ),
+      const MaterialApp(home: Scaffold(body: HomeSkeletonLoader())),
     );
     await tester.pump();
 

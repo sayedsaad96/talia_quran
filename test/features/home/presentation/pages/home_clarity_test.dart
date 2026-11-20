@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/accessibility/clarity_mode.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/theme/app_theme.dart';
 import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
 import 'package:talia_quran/features/home/domain/entities/continue_recitation.dart';
@@ -101,7 +102,7 @@ void main() {
       MaterialApp(
         locale: const Locale('ar'),
         theme: AppTheme.light,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MultiBlocProvider(
           providers: [
@@ -156,10 +157,7 @@ void main() {
     expect(find.byType(HomeContinueCard), findsNothing);
     expect(find.text('أكمل القراءة'), findsOneWidget);
     expect(find.text('مراجعة اليوم'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('home_clarity_prayer')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('home_clarity_prayer')), findsNothing);
     final button = tester.getSize(
       find.byKey(const ValueKey('home_clarity_continue')),
     );

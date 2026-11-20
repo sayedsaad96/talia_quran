@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/reader_repeat_plan.dart';
@@ -50,7 +51,7 @@ void main() {
 
   Widget host({required bool flag}) => MaterialApp(
     locale: const Locale('en'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider<QuranAudioPlayerCubit>.value(
       value: cubit,
@@ -66,7 +67,7 @@ void main() {
 
   Widget hostDefault() => MaterialApp(
     locale: const Locale('ar'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: taliaLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider<QuranAudioPlayerCubit>.value(
       value: cubit,

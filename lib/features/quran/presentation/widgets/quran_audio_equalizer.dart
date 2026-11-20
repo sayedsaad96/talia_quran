@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Animated audio waveform equalizer representing active recitation playback.
 ///
@@ -67,10 +67,16 @@ class _QuranAudioEqualizerState extends State<QuranAudioEqualizer>
       builder: (context, _) {
         final t = _controller.value;
         // Staggered fractions for 4 bars:
-        final h1 = (0.2 + 0.8 * (0.5 + 0.5 * (t * 2 - 1).abs())).clamp(0.2, 1.0);
+        final h1 = (0.2 + 0.8 * (0.5 + 0.5 * (t * 2 - 1).abs())).clamp(
+          0.2,
+          1.0,
+        );
         final h2 = (0.3 + 0.7 * t).clamp(0.2, 1.0);
         final h3 = (0.2 + 0.8 * (1.0 - t)).clamp(0.2, 1.0);
-        final h4 = (0.25 + 0.75 * (0.5 + 0.5 * ((t * 1.5) % 1.0))).clamp(0.2, 1.0);
+        final h4 = (0.25 + 0.75 * (0.5 + 0.5 * ((t * 1.5) % 1.0))).clamp(
+          0.2,
+          1.0,
+        );
 
         final heights = [h1, h2, h3, h4];
 
@@ -79,7 +85,10 @@ class _QuranAudioEqualizerState extends State<QuranAudioEqualizer>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(4, (index) {
             final barHeight = widget.isPlaying
-                ? (heights[index] * widget.maxHeight).clamp(4.0, widget.maxHeight)
+                ? (heights[index] * widget.maxHeight).clamp(
+                    4.0,
+                    widget.maxHeight,
+                  )
                 : 4.0;
 
             return Container(

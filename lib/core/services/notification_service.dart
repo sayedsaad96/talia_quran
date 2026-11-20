@@ -19,6 +19,7 @@ import '../utils/talia_logger.dart';
 import 'daily_ayah_notification_target.dart';
 import 'device_timezone.dart';
 import 'prayer_sound.dart';
+import 'reminder_presentation.dart';
 
 /// True when an exact alarm was refused and the same reminder can be
 /// retried with an inexact alarm. Other platform errors must surface.
@@ -149,6 +150,12 @@ class TaliaNotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
 
   bool _initialized = false;
+  bool _calmMode = true;
+
+  void setCalmMode(bool enabled) => _calmMode = enabled;
+
+  NotificationDetails _reminderDetails(NotificationDetails details) =>
+      reminderPresentation(details, calmMode: _calmMode);
   AppLocalizations? _attachedL10n;
   String? _pendingLaunchPayload;
   String? _pendingLaunchActionId;
@@ -294,6 +301,7 @@ class TaliaNotificationService {
   }
 
   static const String dailyReviewPreferenceKey = 'notifications_daily_review';
+  static const String calmModePreferenceKey = 'notif_calm_mode';
   static const String streakAlertPreferenceKey = 'notifications_streak_alert';
   static const String morningAzkarPreferenceKey = 'notifications_morning_azkar';
   static const String eveningAzkarPreferenceKey = 'notifications_evening_azkar';
@@ -789,288 +797,311 @@ class TaliaNotificationService {
   List<DarwinNotificationCategory> get debugDarwinCategories =>
       _darwinCategories;
 
-  NotificationDetails get _dailyReviewNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_reminders',
-          _l10n.notificationChannelRemindersName,
-          channelDescription: _l10n.notificationChannelRemindersDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFF2E7D4F),
-          icon: _notificationIcon,
-          playSound: true,
-          actions: _reviewActions,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          categoryIdentifier: 'review_category',
-        ),
-      );
-
-  NotificationDetails get _streakNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_streak',
-      _l10n.notificationChannelStreakName,
-      channelDescription: _l10n.notificationChannelStreakDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFFE67E22),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _streakActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'streak_category',
+  NotificationDetails get _dailyReviewNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_reminders',
+        _l10n.notificationChannelRemindersName,
+        channelDescription: _l10n.notificationChannelRemindersDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF2E7D4F),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _reviewActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'review_category',
+      ),
     ),
   );
 
-  NotificationDetails get _streakGentleNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_streak_gentle',
-          _l10n.notificationChannelStreakGentleName,
-          channelDescription: _l10n.notificationChannelStreakGentleDescription,
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-          color: const Color(0xFFE67E22),
-          icon: _notificationIcon,
-          playSound: false,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: false,
-          categoryIdentifier: 'streak_gentle_category',
-        ),
-      );
-
-  NotificationDetails get _smartReminderNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_smart',
-          _l10n.notificationChannelSmartName,
-          channelDescription: _l10n.notificationChannelSmartDescription,
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-          color: const Color(0xFF1B6B93),
-          icon: _notificationIcon,
-          playSound: true,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          categoryIdentifier: 'smart_category',
-        ),
-      );
-
-  NotificationDetails get _dailyAyahNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_daily_ayah',
-      _l10n.notificationChannelDailyAyahName,
-      channelDescription: _l10n.notificationChannelDailyAyahDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF1B6B93),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _dailyAyahActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'daily_ayah_category',
+  NotificationDetails get _streakNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_streak',
+        _l10n.notificationChannelStreakName,
+        channelDescription: _l10n.notificationChannelStreakDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFFE67E22),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _streakActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'streak_category',
+      ),
     ),
   );
 
-  NotificationDetails get _morningAzkarNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_morning_azkar',
-          _l10n.notificationChannelMorningAzkarName,
-          channelDescription: _l10n.notificationChannelMorningAzkarDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFFF39C12),
-          icon: _notificationIcon,
-          playSound: true,
-          actions: _morningAzkarActions,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          categoryIdentifier: 'morning_azkar_category',
-        ),
-      );
-
-  NotificationDetails get _eveningAzkarNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_evening_azkar',
-          _l10n.notificationChannelEveningAzkarName,
-          channelDescription: _l10n.notificationChannelEveningAzkarDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFF8E44AD),
-          icon: _notificationIcon,
-          playSound: true,
-          actions: _eveningAzkarActions,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          categoryIdentifier: 'evening_azkar_category',
-        ),
-      );
-
-  NotificationDetails get _dailyDuaNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_daily_dua',
-      _l10n.notificationChannelDailyDuaName,
-      channelDescription: _l10n.notificationChannelDailyDuaDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF2980B9),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _dailyDuaActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'daily_dua_category',
+  NotificationDetails get _streakGentleNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_streak_gentle',
+        _l10n.notificationChannelStreakGentleName,
+        channelDescription: _l10n.notificationChannelStreakGentleDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        color: const Color(0xFFE67E22),
+        icon: _notificationIcon,
+        playSound: false,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: false,
+        categoryIdentifier: 'streak_gentle_category',
+      ),
     ),
   );
 
-  NotificationDetails get _kidsReviewNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_kids',
-      _l10n.notificationChannelKidsName,
-      channelDescription: _l10n.notificationChannelKidsDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF27AE60),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _kidsReviewActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'kids_review_category',
-    ),
-  );
-
-  NotificationDetails get _fridayKahfNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_kahf',
-      _l10n.notificationChannelKahfName,
-      channelDescription: _l10n.notificationChannelKahfDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF2E7D4F),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _fridayKahfActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'friday_kahf_category',
+  NotificationDetails get _smartReminderNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_smart',
+        _l10n.notificationChannelSmartName,
+        channelDescription: _l10n.notificationChannelSmartDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        color: const Color(0xFF1B6B93),
+        icon: _notificationIcon,
+        playSound: true,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'smart_category',
+      ),
     ),
   );
 
-  NotificationDetails get _tahajjudNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_tahajjud',
-      _l10n.notificationChannelTahajjudName,
-      channelDescription: _l10n.notificationChannelTahajjudDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF16A085),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _tahajjudActions,
-    ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'tahajjud_category',
+  NotificationDetails get _dailyAyahNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_daily_ayah',
+        _l10n.notificationChannelDailyAyahName,
+        channelDescription: _l10n.notificationChannelDailyAyahDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF1B6B93),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _dailyAyahActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'daily_ayah_category',
+      ),
     ),
   );
 
-  NotificationDetails get _khatmahNotificationDetails => NotificationDetails(
-    android: AndroidNotificationDetails(
-      'talia_khatmah',
-      _l10n.notificationChannelKhatmahName,
-      channelDescription: _l10n.notificationChannelKhatmahDescription,
-      importance: Importance.high,
-      priority: Priority.high,
-      color: const Color(0xFF2E7D4F),
-      icon: _notificationIcon,
-      playSound: true,
-      actions: _khatmahActions,
+  NotificationDetails get _morningAzkarNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_morning_azkar',
+        _l10n.notificationChannelMorningAzkarName,
+        channelDescription: _l10n.notificationChannelMorningAzkarDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFFF39C12),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _morningAzkarActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'morning_azkar_category',
+      ),
     ),
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'khatmah_category',
+  );
+
+  NotificationDetails get _eveningAzkarNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_evening_azkar',
+        _l10n.notificationChannelEveningAzkarName,
+        channelDescription: _l10n.notificationChannelEveningAzkarDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF8E44AD),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _eveningAzkarActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'evening_azkar_category',
+      ),
+    ),
+  );
+
+  NotificationDetails get _dailyDuaNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_daily_dua',
+        _l10n.notificationChannelDailyDuaName,
+        channelDescription: _l10n.notificationChannelDailyDuaDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF2980B9),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _dailyDuaActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'daily_dua_category',
+      ),
+    ),
+  );
+
+  NotificationDetails get _kidsReviewNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_kids',
+        _l10n.notificationChannelKidsName,
+        channelDescription: _l10n.notificationChannelKidsDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF27AE60),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _kidsReviewActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'kids_review_category',
+      ),
+    ),
+  );
+
+  NotificationDetails get _fridayKahfNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_kahf',
+        _l10n.notificationChannelKahfName,
+        channelDescription: _l10n.notificationChannelKahfDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF2E7D4F),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _fridayKahfActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'friday_kahf_category',
+      ),
+    ),
+  );
+
+  NotificationDetails get _tahajjudNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_tahajjud',
+        _l10n.notificationChannelTahajjudName,
+        channelDescription: _l10n.notificationChannelTahajjudDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF16A085),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _tahajjudActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'tahajjud_category',
+      ),
+    ),
+  );
+
+  NotificationDetails get _khatmahNotificationDetails => _reminderDetails(
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_khatmah',
+        _l10n.notificationChannelKhatmahName,
+        channelDescription: _l10n.notificationChannelKhatmahDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF2E7D4F),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _khatmahActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'khatmah_category',
+      ),
     ),
   );
 
   /// Seasonal reminders share the khatmah reminders' channel (and so its
   /// user-visible channel settings), without the khatmah action buttons.
   NotificationDetails get _seasonReminderNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_khatmah',
-          _l10n.notificationChannelKhatmahName,
-          channelDescription: _l10n.notificationChannelKhatmahDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFF2E7D4F),
-          icon: _notificationIcon,
-          playSound: true,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
+      _reminderDetails(
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'talia_khatmah',
+            _l10n.notificationChannelKhatmahName,
+            channelDescription: _l10n.notificationChannelKhatmahDescription,
+            importance: Importance.high,
+            priority: Priority.high,
+            color: const Color(0xFF2E7D4F),
+            icon: _notificationIcon,
+            playSound: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
       );
 
   /// Immediate milestone celebration channel (juz/surah/khatmah completion).
   /// No interactive actions — a single tap opens the progress screen.
   NotificationDetails get _milestoneCelebrationNotificationDetails =>
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'talia_milestones',
-          _l10n.notificationChannelMilestonesName,
-          channelDescription: _l10n.notificationChannelMilestonesDesc,
-          importance: Importance.high,
-          priority: Priority.high,
-          color: const Color(0xFF1E824C),
-          icon: _notificationIcon,
-          playSound: true,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
+      _reminderDetails(
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'talia_milestones',
+            _l10n.notificationChannelMilestonesName,
+            channelDescription: _l10n.notificationChannelMilestonesDesc,
+            importance: Importance.high,
+            priority: Priority.high,
+            color: const Color(0xFF1E824C),
+            icon: _notificationIcon,
+            playSound: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
       );
 
@@ -1161,6 +1192,9 @@ class TaliaNotificationService {
   /// Initialize the notification system. Must be called on app startup.
   Future<void> initialize() async {
     if (_initialized) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    setCalmMode(prefs.getBool(calmModePreferenceKey) ?? true);
 
     if (!Platform.isAndroid && !Platform.isIOS) {
       _initialized = true;

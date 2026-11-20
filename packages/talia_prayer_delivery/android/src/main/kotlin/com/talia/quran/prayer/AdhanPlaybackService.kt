@@ -1,8 +1,6 @@
 package com.talia.quran.prayer
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -15,6 +13,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.os.Bundle
 import android.util.Log
 import com.talia.quran.prayer.R
 
@@ -23,7 +22,7 @@ import com.talia.quran.prayer.R
  *
  *   1. Read prayer/sound profile from the intent extras.
  *   2. Request transient alarm audio focus.
- *   3. Show a foreground media notification (low-importance channel) with
+ *   3. Promote the prayer notification with
  *      a "إيقاف الأذان" stop action.
  *   4. Play the bundled adhan clip via MediaPlayer.
  *   5. Handle the user stop action.
@@ -40,11 +39,11 @@ class AdhanPlaybackService : Service() {
         const val EXTRA_LOCAL_PRAYER_TIME = "localPrayerTime"
         const val EXTRA_SOUND_PROFILE = "soundProfile"
 
-        /** Low-importance channel: the media notification must not make sound. */
+        /** Legacy channel ID retained for compatibility. */
         const val CHANNEL_ID = "talia_adhan_playback"
 
         /** Media-notification id, outside every frozen alarm namespace (2200–2499). */
-        const val MEDIA_NOTIFICATION_ID = 2500
+        const val MEDIA_NOTIFICATION_ID = PrayerNotificationFactory.NOTIFICATION_ID
         private const val STOP_REQUEST_CODE = 2500
         private const val TAG = "PrayerV2"
 
@@ -54,6 +53,7 @@ class AdhanPlaybackService : Service() {
     private var player: MediaPlayer? = null
     private var audioManager: AudioManager? = null
     private var focusRequest: AudioFocusRequest? = null
+    private var activeEvent: PrayerEventData? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -65,9 +65,21 @@ class AdhanPlaybackService : Service() {
         }
         releasePlayer()
         abandonAudioFocus()
-        val prayerKey = intent?.getStringExtra(EXTRA_PRAYER_KEY) ?: "prayer"
-        val soundProfile = intent?.getStringExtra(EXTRA_SOUND_PROFILE) ?: "default"
-        startForegroundCompat(buildMediaNotification(prayerKey))
+        val event = intent?.let { PrayerEventCodec.fromIntentExtras(it) }
+        if (event == null) {
+            stopPlayback()
+            return START_NOT_STICKY
+        }
+        activeEvent = event
+        val prayerKey = event.prayerKey
+        val soundProfile = event.soundProfile
+        try {
+            startForegroundCompat(buildMediaNotification(event))
+        } catch (error: Exception) {
+            Log.w(TAG, "failed to promote adhan service", error)
+            stopPlayback()
+            return START_NOT_STICKY
+        }
         Log.d(TAG, "focus_requested profile=$soundProfile")
         if (!requestAudioFocus()) {
             Log.w(TAG, "audio focus denied; skipping adhan playback")
@@ -177,20 +189,27 @@ class AdhanPlaybackService : Service() {
     override fun onDestroy() {
         releasePlayer()
         abandonAudioFocus()
+        if (activeEvent != null) detachForeground()
+        restoreNotification()
         super.onDestroy()
     }
 
     private fun stopPlayback() {
         releasePlayer()
         abandonAudioFocus()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        detachForeground()
+        restoreNotification()
         stopSelf()
         Log.d(TAG, "service_stopped")
+    }
+
+    private fun detachForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_DETACH)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(false)
+        }
     }
 
     private fun startForegroundCompat(notification: Notification) {
@@ -205,17 +224,14 @@ class AdhanPlaybackService : Service() {
         }
     }
 
-    private fun buildMediaNotification(prayerKey: String): Notification {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ID,
-                    "الأذان",
-                    NotificationManager.IMPORTANCE_LOW,
-                ).apply { description = "تشغيل الأذان مع إمكانية الإيقاف" },
-            )
-        }
+    private fun restoreNotification() {
+        val event = activeEvent ?: return
+        activeEvent = null
+        PrayerNotificationFactory.restoreIfOwned(this, event)
+    }
+
+    private fun buildMediaNotification(event: PrayerEventData): Notification {
+        PrayerNotificationFactory.ensureChannel(this)
         val stopIntent = PendingIntent.getService(
             this,
             STOP_REQUEST_CODE,
@@ -232,16 +248,18 @@ class AdhanPlaybackService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, CHANNEL_ID)
+            Notification.Builder(this, PrayerNotificationFactory.CHANNEL_ID)
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
         return builder
-            .setContentTitle("صلاة ${PrayerNames.arabic(prayerKey)}")
+            .setContentTitle("صلاة ${PrayerNames.arabic(event.prayerKey)}")
             .setContentText("الأذان الآن")
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .addExtras(Bundle().apply { putString(PrayerAlarmContract.KEY_EVENT_ID, event.eventId) })
             .setCategory(Notification.CATEGORY_TRANSPORT)
             .setContentIntent(contentIntent)
             .addAction(0, "إيقاف الأذان", stopIntent)

@@ -49,9 +49,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         try {
             val intent = Intent(context, AdhanPlaybackService::class.java)
                 .setAction(AdhanPlaybackService.ACTION_START)
-                .putExtra(AdhanPlaybackService.EXTRA_PRAYER_KEY, event.prayerKey)
-                .putExtra(AdhanPlaybackService.EXTRA_LOCAL_PRAYER_TIME, event.localPrayerTime)
-                .putExtra(AdhanPlaybackService.EXTRA_SOUND_PROFILE, event.soundProfile)
+            PrayerEventCodec.toIntentExtras(intent, event)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {

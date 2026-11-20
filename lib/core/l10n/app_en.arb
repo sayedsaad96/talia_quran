@@ -1,5 +1,7 @@
 {
   "@@locale": "en",
+  "notificationCalmModeTitle": "Quiet reminders",
+  "notificationCalmModeDescription": "Reminders stay in your notification list without sound, vibration or pop-ups. Prayer and athan settings are separate.",
   "appName": "Talia Quran",
   "home": "Home",
   "quran": "Quran",
@@ -647,10 +649,10 @@
   "notificationConfigurePrayerTimes": "Configure prayer times",
   "notificationTestPickerTitle": "Select a notification to test",
   "notificationTestPickerSubtitle": "You will receive a sample notification with action buttons.",
-  "notificationTestReviewTitle": "Daily Review 📖",
-  "notificationTestReviewBody": "You have 5 ayahs due for review today ⚡",
-  "notificationTestStreakTitle": "Streak Protection 🔥",
-  "notificationTestStreakBody": "You haven't reviewed today — protect your streak now 🔥",
+  "notificationTestReviewTitle": "A moment to review",
+  "notificationTestReviewBody": "You can review 5 ayahs today, at your own pace.",
+  "notificationTestStreakTitle": "A small step today",
+  "notificationTestStreakBody": "A little time with the Quran, whenever it suits you.",
   "notificationTestSuccess": "Test notification sent successfully ✨",
   "notificationSettingsSaveFailed": "Your change could not be saved. Please try again.",
   "notificationSettingsSchedulingFailed": "Your change was saved, but reminders could not be updated. Please try again.",
@@ -1959,40 +1961,40 @@
   "homeKidsProgress": "Kids Progress",
   "homeYourProgress": "Your Progress",
   "homeGoToSettings": "Go to Settings",
-  "notificationDailyReviewTitle": "Daily Review Time 📖",
-  "notificationDailyReviewBodyCount": "You have {count} ayahs to review today",
+  "notificationDailyReviewTitle": "A quiet moment to review",
+  "notificationDailyReviewBodyCount": "You have {count} ayahs to review. Start with what fits your day, one step at a time.",
   "@notificationDailyReviewBodyCount": {
     "placeholders": {
       "count": {}
     }
   },
-  "notificationDailyReviewBody": "It's time for your daily memorization review",
-  "notificationStreakMercyTitle": "Allah is Merciful — your streak awaits you 🌿",
-  "notificationStreakMercyBody": "You missed a day, and your streak has been re-lit… continue your reading today 🤍",
-  "notificationStreakAlertTitle": "⚠️ Don't lose your {count} day streak!",
+  "notificationDailyReviewBody": "A short review, at a pace that suits you today.",
+  "notificationStreakMercyTitle": "A gentle fresh start",
+  "notificationStreakMercyBody": "You can return today with a small step, whenever it suits you.",
+  "notificationStreakAlertTitle": "{count} days of steady progress",
   "@notificationStreakAlertTitle": {
     "placeholders": {
       "count": {}
     }
   },
-  "notificationStreakGentleTitle": "Your {count}-day streak is waiting",
+  "notificationStreakGentleTitle": "{count} days, one step at a time",
   "@notificationStreakGentleTitle": {
     "placeholders": {
       "count": {}
     }
   },
-  "notificationStreakGentleBody": "A few minutes of review today keeps your streak alive. Whenever you're ready 🌿",
+  "notificationStreakGentleBody": "If you have a moment, spend a little time with the Quran.",
   "notificationSmartReminderTitle": "Time for your usual reading",
-  "notificationSmartReminderBody": "It's usually your reading time — a few ayahs are waiting for you.",
+  "notificationSmartReminderBody": "This may be a good time for a little reading. Continue at your own pace.",
   "notificationChannelStreakGentleName": "Gentle streak reminder",
   "notificationChannelStreakGentleDescription": "A quiet reminder before the streak protection alert",
   "notificationChannelSmartName": "Smart reminder",
   "notificationChannelSmartDescription": "Reminders at your usual reading time",
-  "notificationStreakAlertBody": "You haven't reviewed today yet — you still can",
+  "notificationStreakAlertBody": "You can take a small step today. Choose what fits your time and energy.",
   "notificationDailyAyahTitle": "Ayah of the Day ✨",
-  "notificationActionReviewStart": "⚡ Start review",
+  "notificationActionReviewStart": "Start review",
   "notificationActionDailyWird": "📖 Daily wird",
-  "notificationActionStreakProtect": "🔥 Protect your streak",
+  "notificationActionStreakProtect": "Take a moment to review",
   "notificationActionReadWird": "📖 Read the wird",
   "notificationActionReadDailyAyah": "✨ Read ayah of the day",
   "notificationActionShareAyah": "↗️ Share the ayah",
@@ -2000,7 +2002,7 @@
   "notificationActionEveningAzkar": "🌙 Evening azkar",
   "notificationActionDailyDua": "🤲 Read today's duas",
   "notificationActionAzkar": "✨ Azkar",
-  "notificationActionKidsReview": "🌟 Start reciting, champ",
+  "notificationActionKidsReview": "Review together",
   "notificationActionReadKahf": "📖 Read Surah Al-Kahf",
   "notificationActionOpenMushaf": "✨ The Quran",
   "notificationActionTahajjudDua": "🤲 Night prayer duas",
@@ -2089,13 +2091,13 @@
   "notificationMorningAzkarBody": "Start your day with the remembrance of Allah and peace of mind",
   "notificationEveningAzkarTitle": "Evening Azkar 🌙",
   "notificationEveningAzkarBody": "End your day with the remembrance and protection of Allah",
-  "notificationKidsReviewTitle": "Review Time Hero! 🌟",
-  "notificationKidsReviewBody": "Your new stage is ready, let's continue memorizing!",
+  "notificationKidsReviewTitle": "Shall we review together? 🌿",
+  "notificationKidsReviewBody": "We can review a few ayahs together, whenever you are ready.",
   "notificationDailyDuaTitle": "Dua of the Day 🤲",
   "notificationDailyDuaBody": "Today's dua is waiting for you in Talia",
   "notificationFridayKahfTitle": "Surah Al-Kahf Reminder 🌿",
   "notificationWeeklyImpactTitle": "Your impact this week 🌿",
-  "notificationWeeklyImpactBody": "{count} days of your week were with the Quran — every page leaves a lasting impact",
+  "notificationWeeklyImpactBody": "You spent {count} days with the Quran this week. Continue at your own pace.",
   "@notificationWeeklyImpactBody": {
     "placeholders": {
       "count": {
@@ -2103,14 +2105,14 @@
       }
     }
   },
-  "notificationWeeklyImpactQuietBody": "A new week begins — one page makes a difference 🌱",
+  "notificationWeeklyImpactQuietBody": "A new week and a chance for a gentle start. Choose a little time that suits you.",
   "notificationSettingsWeeklyImpact": "Weekly impact (Friday)",
   "notificationFridayKahfBody": "Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨",
   "notificationTahajjudTitle": "Tahajjud & Night Prayer 🌙",
   "notificationTahajjudBody": "A peaceful moment for prayer and supplication in the last third of the night.. May Allah accept your prayers 🤲",
   "notificationKhatmahTitle": "Daily Khatmah Reading 📖",
-  "notificationKhatmahBody": "Continue your blessed journey with your Quran Khatmah today 🌿",
-  "notificationKhatmahBodyWithTarget": "Today's portion: page {start} to {end}.. Keep going! ✨",
+  "notificationKhatmahBody": "You can continue your khatmah reading today, at your own pace.",
+  "notificationKhatmahBodyWithTarget": "Today's reading is pages {start} to {end}. Take your time; you can spread it through your day.",
   "@notificationKhatmahBodyWithTarget": {
     "placeholders": {
       "start": {},
@@ -3754,7 +3756,7 @@
   ,"@forgettingForecastPassage": {"placeholders": {"surah": {}, "start": {}, "end": {}}}
   ,"forgettingForecastReviewNow": "Review now"
   ,"notificationForgettingForecastTitle": "Time for review"
-  ,"notificationForgettingForecastBody": "Set aside a short time to review what you learned."
+  ,"notificationForgettingForecastBody": "When it suits you, take a little time to review what you learned."
   ,"notificationSettingsForgettingForecast": "Forgetting forecast"
   ,"ayahNotesTitle": "My reflections"
   ,"ayahNoteAction": "My note"

@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -13,25 +15,25 @@ import 'package:talia_quran/features/progress/domain/entities/progress_entities.
 
 void main() {
   OverallProgress emptyProgress() => const OverallProgress(
-        memorizedAyahs: 0,
-        totalAyahs: 6236,
-        memorizedSurahs: 0,
-        totalSurahs: 114,
-        memorizedJuz: 0,
-        totalJuz: 30,
-        readAyahs: 0,
-        readSurahs: 0,
-        readJuz: 0,
-        streakDays: 0,
-        lastActiveDate: null,
-        achievements: [],
-        readPagesCount: 0,
-        totalQuranPages: 604,
-        learningAyahs: 0,
-        reviewAyahs: 0,
-        kidsPoints: 0,
-        kidsStars: 0,
-      );
+    memorizedAyahs: 0,
+    totalAyahs: 6236,
+    memorizedSurahs: 0,
+    totalSurahs: 114,
+    memorizedJuz: 0,
+    totalJuz: 30,
+    readAyahs: 0,
+    readSurahs: 0,
+    readJuz: 0,
+    streakDays: 0,
+    lastActiveDate: null,
+    achievements: [],
+    readPagesCount: 0,
+    totalQuranPages: 604,
+    learningAyahs: 0,
+    reviewAyahs: 0,
+    kidsPoints: 0,
+    kidsStars: 0,
+  );
 
   Widget createHarness({
     required HomeLoaded state,
@@ -64,7 +66,9 @@ void main() {
               builder: (context, routerState) {
                 final page = routerState.pathParameters['page'];
                 final mode = routerState.uri.queryParameters['mode'];
-                pushedRoutes.add('/quran/page/$page${mode != null ? '?mode=$mode' : ''}');
+                pushedRoutes.add(
+                  '/quran/page/$page${mode != null ? '?mode=$mode' : ''}',
+                );
                 return Scaffold(body: Text('page-$page'));
               },
             ),
@@ -115,7 +119,9 @@ void main() {
     );
   }
 
-  testWidgets('does not render view all text button pointing to progress', (tester) async {
+  testWidgets('does not render view all text button pointing to progress', (
+    tester,
+  ) async {
     final pushedRoutes = <String>[];
     final state = HomeLoaded(
       progress: emptyProgress(),
@@ -131,14 +137,18 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
+    await tester.pumpWidget(
+      createHarness(state: state, pushedRoutes: pushedRoutes),
+    );
     await tester.pumpAndSettle();
 
     // Verify "عرض الكل" or "View all" is not rendered
     expect(find.byType(TextButton), findsNothing);
   });
 
-  testWidgets('tapping reading activity navigates directly to quran page', (tester) async {
+  testWidgets('tapping reading activity navigates directly to quran page', (
+    tester,
+  ) async {
     final pushedRoutes = <String>[];
     final state = HomeLoaded(
       progress: emptyProgress(),
@@ -154,7 +164,9 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
+    await tester.pumpWidget(
+      createHarness(state: state, pushedRoutes: pushedRoutes),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('٤٢'));
@@ -163,7 +175,9 @@ void main() {
     expect(pushedRoutes, contains('/quran/page/42'));
   });
 
-  testWidgets('tapping khatmah activity navigates to page in khatmah mode', (tester) async {
+  testWidgets('tapping khatmah activity navigates to page in khatmah mode', (
+    tester,
+  ) async {
     final pushedRoutes = <String>[];
     final plan = KhatmahPlan(
       id: 'kp1',
@@ -193,7 +207,9 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
+    await tester.pumpWidget(
+      createHarness(state: state, pushedRoutes: pushedRoutes),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('٣'));
@@ -202,7 +218,9 @@ void main() {
     expect(pushedRoutes, contains('/quran/page/3?mode=khatmah'));
   });
 
-  testWidgets('tapping review activity navigates to memorization session', (tester) async {
+  testWidgets('tapping review activity navigates to memorization session', (
+    tester,
+  ) async {
     final pushedRoutes = <String>[];
     final state = HomeLoaded(
       progress: emptyProgress(),
@@ -220,7 +238,9 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(createHarness(state: state, pushedRoutes: pushedRoutes));
+    await tester.pumpWidget(
+      createHarness(state: state, pushedRoutes: pushedRoutes),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byType(InkWell).first);

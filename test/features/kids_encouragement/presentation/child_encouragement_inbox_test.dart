@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/kids_encouragement/data/kids_encouragement_repository_impl.dart';
 import 'package:talia_quran/features/kids_encouragement/presentation/cubits/child_encouragement_inbox_cubit.dart';
 import 'package:talia_quran/features/kids_encouragement/presentation/widgets/child_encouragement_inbox.dart';
@@ -72,7 +73,7 @@ void main() {
 
 Widget _app(ChildEncouragementInboxCubit cubit) => MaterialApp(
   locale: const Locale('ar'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(
     body: BlocProvider.value(

@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/memorization/v2/self_grade.dart';
 import 'package:talia_quran/core/prayer_review/manual_prayer_review_committer.dart';
 import 'package:talia_quran/core/prayer_review/prayer_review_offer_service.dart';
@@ -84,7 +85,7 @@ Widget _app(
   double scale = 1,
 }) => MaterialApp(
   locale: locale,
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: taliaLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (context, child) => MediaQuery(
     data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
@@ -107,7 +108,7 @@ void main() {
       for (final ayah in _bodies) {
         expect(find.text(ayah.text), findsOneWidget);
       }
-    await tester.scrollUntilVisible(find.text('With hesitation'), 200);
+      await tester.scrollUntilVisible(find.text('With hesitation'), 200);
       await tester.tap(find.text('With hesitation'));
       await tester.pumpAndSettle();
       expect(grades, [V2SelfGrade.hesitated]);
@@ -133,7 +134,7 @@ void main() {
         _app(cubit, locale: const Locale('ar'), scale: 1.7),
       );
       await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('لم أستطع'), 200);
+      await tester.scrollUntilVisible(find.text('لم أستطع'), 200);
       await tester.tap(find.text('لم أستطع'));
       await tester.pumpAndSettle();
       expect(cubit.state.status, PrayerReviewStatus.saveFailed);

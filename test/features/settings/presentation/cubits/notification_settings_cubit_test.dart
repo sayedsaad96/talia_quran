@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +68,65 @@ void main() {
   tearDown(() => cubit.close());
 
   group('NotificationSettingsCubit', () {
+    test('calm defaults avoid enabling extra daily reminders', () async {
+      await cubit.load();
+
+      expect(cubit.state.calmMode, isTrue);
+      expect(cubit.state.dailyReview, isTrue);
+      expect(cubit.state.morningAzkar, isTrue);
+      expect(cubit.state.eveningAzkar, isTrue);
+      expect(cubit.state.dailyAyah, isFalse);
+      expect(cubit.state.dailyDua, isFalse);
+      expect(cubit.state.streakAlert, isFalse);
+      verify(() => mockNotificationService.setCalmMode(true)).called(1);
+    });
+
+    test('load preserves explicit reminder and calm mode choices', () async {
+      await prefs.setBool(
+        TaliaNotificationService.calmModePreferenceKey,
+        false,
+      );
+      await prefs.setBool(
+        TaliaNotificationService.dailyAyahPreferenceKey,
+        true,
+      );
+      await prefs.setBool(TaliaNotificationService.dailyDuaPreferenceKey, true);
+      await prefs.setBool(
+        TaliaNotificationService.streakAlertPreferenceKey,
+        true,
+      );
+      await cubit.load();
+
+      expect(cubit.state.calmMode, isFalse);
+      expect(cubit.state.dailyAyah, isTrue);
+      expect(cubit.state.dailyDua, isTrue);
+      expect(cubit.state.streakAlert, isTrue);
+      verify(() => mockNotificationService.setCalmMode(false)).called(1);
+    });
+
+    test('calm mode persists and replaces pending reminder details', () async {
+      await cubit.load();
+      final l10n = FakeAppLocalizations();
+
+      await cubit.toggleReminder(
+        TaliaNotificationService.calmModePreferenceKey,
+        false,
+        l10n: l10n,
+      );
+
+      expect(cubit.state.calmMode, isFalse);
+      expect(
+        prefs.getBool(TaliaNotificationService.calmModePreferenceKey),
+        false,
+      );
+      verify(() => mockNotificationService.setCalmMode(false)).called(1);
+      verify(
+        () => mockScheduler.refreshNotificationsForSettings(l10n, force: true),
+      ).called(1);
+      await cubit.load();
+      expect(cubit.state.calmMode, isFalse);
+    });
+
     test(
       'quiet-hours changes refresh the pending invitation reminder',
       () async {

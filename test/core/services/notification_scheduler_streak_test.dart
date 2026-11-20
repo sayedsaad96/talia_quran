@@ -35,10 +35,12 @@ void main() {
     });
 
     mockNotificationService = MockTaliaNotificationService();
-    when(() => mockNotificationService.cancelForgettingForecastReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelLastTenReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelForgettingForecastReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelLastTenReminder(),
+    ).thenAnswer((_) async {});
     mockStreakReader = MockStreakReader();
 
     when(
@@ -339,7 +341,7 @@ void main() {
           minute: any(named: 'minute'),
         ),
       ).captured;
-      expect(captured[1], equals('أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱'));
+      expect(captured[1], equals(l10n.notificationWeeklyImpactQuietBody));
       verifyNever(() => mockNotificationService.cancelWeeklyImpactReminder());
     },
   );

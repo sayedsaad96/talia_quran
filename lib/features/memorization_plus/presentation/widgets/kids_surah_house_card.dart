@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -204,9 +204,8 @@ class _StarRowState extends State<_StarRow>
   }
 
   /// Each filled star's own pop lasts 300 ms; stars are staggered 150 ms.
-  Duration get _popDuration => Duration(
-    milliseconds: 300 + 150 * (widget.stars - 1).clamp(0, 2),
-  );
+  Duration get _popDuration =>
+      Duration(milliseconds: 300 + 150 * (widget.stars - 1).clamp(0, 2));
 
   @override
   void didChangeDependencies() {
@@ -259,8 +258,8 @@ class _StarRowState extends State<_StarRow>
     );
     if (!filled || !_popping) return icon;
     final total = _pop.duration!.inMilliseconds;
-    final scale =
-        Tween<double>(begin: 0, end: 1).animate(
+    final scale = Tween<double>(begin: 0, end: 1)
+        .animate(
           CurvedAnimation(
             parent: _pop,
             curve: Interval(
@@ -269,7 +268,8 @@ class _StarRowState extends State<_StarRow>
               curve: Curves.elasticOut,
             ),
           ),
-        ).value;
+        )
+        .value;
     return Transform.scale(scale: scale, child: icon);
   }
 
@@ -280,9 +280,7 @@ class _StarRowState extends State<_StarRow>
       builder: (context, _) => Row(
         key: ValueKey('kids-quran-stars-${widget.surahId}'),
         mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < 3; i++) _star(i),
-        ],
+        children: [for (var i = 0; i < 3; i++) _star(i)],
       ),
     );
   }

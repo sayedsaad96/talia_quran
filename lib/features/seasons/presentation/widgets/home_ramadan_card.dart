@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -139,7 +139,9 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
 
   SeasonPreferences? get _seasonPrefs =>
       widget.seasonPrefs ??
-      (getIt.isRegistered<SeasonPreferences>() ? getIt<SeasonPreferences>() : null);
+      (getIt.isRegistered<SeasonPreferences>()
+          ? getIt<SeasonPreferences>()
+          : null);
 
   @override
   void initState() {
@@ -195,8 +197,10 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     final tomorrow = await service.timesForDate(
       DateTime(day.year, day.month, day.day + 1),
     );
-    DateTime? at(List<({String key, String nameAr, String nameEn, DateTime time})> l, String key) =>
-        l.where((p) => p.key == key).firstOrNull?.time;
+    DateTime? at(
+      List<({String key, String nameAr, String nameEn, DateTime time})> l,
+      String key,
+    ) => l.where((p) => p.key == key).firstOrNull?.time;
     return RamadanPrayerTimes(
       fajrToday: at(today, 'fajr'),
       maghribToday: at(today, 'maghrib'),
@@ -261,7 +265,8 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
     final minutes = (c.remaining ?? Duration.zero).inMinutes;
     final h = minutes ~/ 60;
     final m = minutes % 60;
-    String hours() => l10n.ramadanHoursPart(h, LocaleNumberFormatter.number(h, lang));
+    String hours() =>
+        l10n.ramadanHoursPart(h, LocaleNumberFormatter.number(h, lang));
     String mins(int n) =>
         l10n.ramadanMinutesPart(n, LocaleNumberFormatter.number(n, lang));
     final duration = h > 0 && m > 0
@@ -604,7 +609,9 @@ class _HomeRamadanCardState extends State<HomeRamadanCard> {
           onPressed: () => unawaited(_toggleReminder()),
           icon: Icon(TaliaIcons.bell, size: 18, color: skin.gold),
           label: Text(
-            _reminderOn ? l10n.ramadanLastTenReminderOn : l10n.ramadanLastTenRemind,
+            _reminderOn
+                ? l10n.ramadanLastTenReminderOn
+                : l10n.ramadanLastTenRemind,
             style: AppTypography.labelSmall.copyWith(color: skin.textOnHero),
           ),
         ),

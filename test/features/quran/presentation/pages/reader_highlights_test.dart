@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/memorization/strength_band.dart';
 import 'package:talia_quran/features/quran/domain/entities/bookmark_entry.dart';
@@ -44,22 +44,25 @@ void main() {
     expect(highlights.map((h) => h.verseNumber), unorderedEquals([4, 3]));
   });
 
-  test('strength goes first so audio/selected/bookmark win for the same ayah', () {
-    final highlights = readerHighlights(
-      page: 2,
-      accent: accent,
-      bookmarks: [bookmark],
-      selected: (surah: 2, ayah: 3),
-      strengthBands: {
-        (surah: 2, ayah: 5): StrengthBand.weak,
-        (surah: 2, ayah: 3): StrengthBand.due,
-        (surah: 2, ayah: 7): StrengthBand.solid,
-      },
-    );
-    final order = highlights.map((h) => h.verseNumber).toList();
-    expect(order.sublist(0, 3).toSet(), {5, 3, 7});
-    expect(order.sublist(3), [5, 3]);
-  });
+  test(
+    'strength goes first so audio/selected/bookmark win for the same ayah',
+    () {
+      final highlights = readerHighlights(
+        page: 2,
+        accent: accent,
+        bookmarks: [bookmark],
+        selected: (surah: 2, ayah: 3),
+        strengthBands: {
+          (surah: 2, ayah: 5): StrengthBand.weak,
+          (surah: 2, ayah: 3): StrengthBand.due,
+          (surah: 2, ayah: 7): StrengthBand.solid,
+        },
+      );
+      final order = highlights.map((h) => h.verseNumber).toList();
+      expect(order.sublist(0, 3).toSet(), {5, 3, 7});
+      expect(order.sublist(3), [5, 3]);
+    },
+  );
 
   test('strength colours share one alpha', () {
     Color colorFor(StrengthBand band) => readerHighlights(
@@ -92,8 +95,10 @@ void main() {
   });
 
   test('empty strengthBands equals the previous output', () {
-    List<(int, int, Color)> view(List<dynamic> hs) =>
-        [for (final h in hs) (h.surah as int, h.verseNumber as int, h.color as Color)];
+    List<(int, int, Color)> view(List<dynamic> hs) => [
+      for (final h in hs)
+        (h.surah as int, h.verseNumber as int, h.color as Color),
+    ];
     final before = readerHighlights(
       page: 2,
       accent: accent,

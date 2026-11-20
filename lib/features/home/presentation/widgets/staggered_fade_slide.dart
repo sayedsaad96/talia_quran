@@ -1,5 +1,5 @@
 // lib/features/home/presentation/widgets/staggered_fade_slide.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Wraps [child] in a one-shot fade + slide-up animation with a
 /// configurable [delay] for staggered cascade effects.

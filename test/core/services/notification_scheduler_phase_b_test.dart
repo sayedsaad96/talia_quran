@@ -31,6 +31,9 @@ void main() {
       () => mockNotificationService.cancelStreakGentleNudge(),
     ).thenAnswer((_) async {});
     when(
+      () => mockNotificationService.cancelPrayerCompanionReminders(),
+    ).thenAnswer((_) async {});
+    when(
       () => mockNotificationService.cancelSmartReminder(),
     ).thenAnswer((_) async {});
     when(
@@ -214,44 +217,71 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  group('progressive streak reminder', () {
-    test('schedules both gentle nudge and urgent alert when enabled and no '
-        'activity today', () async {
-      final now = DateTime.now();
-      when(
-        () => mockStreakReader.getStreak(),
-      ).thenAnswer((_) async => streakWithoutActivityToday());
+  test(
+    'does not invent a streak reminder when activity data is unavailable',
+    () async {
+      await getIt.unregister<StreakReader>();
+      final success = await NotificationScheduler(mockNotificationService)
+          .refreshNotificationsInBackground(
+            lookupAppLocalizations(const Locale('ar')),
+          );
 
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
-      );
-
-      final l10n = lookupAppLocalizations(const Locale('ar'));
-      await scheduler.refreshNotifications(l10n);
-
-      // Gentle nudge at 21:00 (one hour before the default 22:00 alert).
-      verify(
-        () => mockNotificationService.scheduleStreakGentleNudge(
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          currentStreak: 5,
-          hour: 21,
-          minute: 0,
-        ),
-      ).called(1);
-      verify(
+      expect(success, isTrue);
+      verify(() => mockNotificationService.cancelStreakAlert()).called(1);
+      verifyNever(
         () => mockNotificationService.scheduleStreakProtectionAlert(
           title: any(named: 'title'),
           body: any(named: 'body'),
-          currentStreak: 5,
-          hour: 22,
-          minute: 0,
+          currentStreak: any(named: 'currentStreak'),
+          hour: any(named: 'hour'),
+          minute: any(named: 'minute'),
         ),
-      ).called(1);
-      verifyNever(() => mockNotificationService.cancelStreakAlert());
-      verifyNever(() => mockNotificationService.cancelStreakGentleNudge());
-    });
+      );
+    },
+  );
+
+  group('single streak reminder', () {
+    test(
+      'schedules one alert and cancels the old gentle nudge when there is no '
+      'activity today',
+      () async {
+        final now = DateTime.now();
+        when(
+          () => mockStreakReader.getStreak(),
+        ).thenAnswer((_) async => streakWithoutActivityToday());
+
+        final scheduler = NotificationScheduler(
+          mockNotificationService,
+          streakRiskEvaluator: StreakRiskEvaluator(now: () => now),
+        );
+
+        final l10n = lookupAppLocalizations(const Locale('ar'));
+        await scheduler.refreshNotifications(l10n);
+
+        verifyNever(
+          () => mockNotificationService.scheduleStreakGentleNudge(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            currentStreak: any(named: 'currentStreak'),
+            hour: any(named: 'hour'),
+            minute: any(named: 'minute'),
+          ),
+        );
+        verify(
+          () => mockNotificationService.scheduleStreakProtectionAlert(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            currentStreak: 5,
+            hour: 22,
+            minute: 0,
+          ),
+        ).called(1);
+        verifyNever(() => mockNotificationService.cancelStreakAlert());
+        verify(
+          () => mockNotificationService.cancelStreakGentleNudge(),
+        ).called(1);
+      },
+    );
 
     test('skips gentle nudge when alert hour is 0', () async {
       final now = DateTime.now();
@@ -290,6 +320,34 @@ void main() {
           minute: 30,
         ),
       ).called(1);
+    });
+
+    test('moves streak reminder outside quiet hours', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(
+        TaliaNotificationService.quietHoursPreferenceKey,
+        true,
+      );
+      await prefs.setInt(TaliaNotificationService.quietHoursStartKey, 22);
+      await prefs.setInt(TaliaNotificationService.quietHoursEndKey, 8);
+      when(
+        () => mockStreakReader.getStreak(),
+      ).thenAnswer((_) async => streakWithoutActivityToday());
+
+      await NotificationScheduler(
+        mockNotificationService,
+      ).refreshNotifications(lookupAppLocalizations(const Locale('ar')));
+
+      verify(
+        () => mockNotificationService.scheduleStreakProtectionAlert(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          currentStreak: 5,
+          hour: 8,
+          minute: 0,
+        ),
+      ).called(1);
+      verify(() => mockNotificationService.cancelStreakGentleNudge()).called(1);
     });
 
     test('cancels both when user already has activity today', () async {
@@ -351,10 +409,11 @@ void main() {
       when(() => mockStreakReader.getStreak()).thenAnswer((_) async => entity);
     }
 
-    test('schedules at the mode hour when enabled with >= 3 open hours and '
+    test('standard mode schedules at the mode hour with >= 3 open hours and '
         'no activity today', () async {
       stubStreak(activityToday: false);
       SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.calmModePreferenceKey: false,
         TaliaNotificationService.streakAlertPreferenceKey: false,
         TaliaNotificationService.smartReminderPreferenceKey: true,
         'smart_reminder_open_hours': <String>['20', '20', '9', '20', '9', '20'],
@@ -374,6 +433,122 @@ void main() {
       ).captured;
       expect(capturedHours, [20]);
       verifyNever(() => mockNotificationService.cancelSmartReminder());
+    });
+
+    test(
+      'calm smart timing adjusts review without an extra notification',
+      () async {
+        stubStreak(activityToday: false);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(
+          TaliaNotificationService.dailyReviewPreferenceKey,
+          true,
+        );
+        await prefs.setBool(
+          TaliaNotificationService.smartReminderPreferenceKey,
+          true,
+        );
+        await prefs.setInt(
+          '${TaliaNotificationService.dailyReviewPreferenceKey}_hour',
+          18,
+        );
+        await prefs.setStringList('smart_reminder_open_hours', [
+          '20',
+          '20',
+          '9',
+          '20',
+          '9',
+          '20',
+        ]);
+
+        await NotificationScheduler(
+          mockNotificationService,
+        ).refreshNotifications(lookupAppLocalizations(const Locale('ar')));
+
+        verify(() => mockNotificationService.setCalmMode(true)).called(1);
+        verify(
+          () => mockNotificationService.scheduleDailyReviewReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            hour: 20,
+            minute: 0,
+          ),
+        ).called(1);
+        verify(() => mockNotificationService.cancelSmartReminder()).called(1);
+        verifyNever(
+          () => mockNotificationService.scheduleSmartReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            hour: any(named: 'hour'),
+            minute: any(named: 'minute'),
+          ),
+        );
+      },
+    );
+
+    test(
+      'standalone smart reminder respects quiet hours when review is disabled',
+      () async {
+        stubStreak(activityToday: false);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(
+          TaliaNotificationService.smartReminderPreferenceKey,
+          true,
+        );
+        await prefs.setBool(
+          TaliaNotificationService.quietHoursPreferenceKey,
+          true,
+        );
+        await prefs.setInt(TaliaNotificationService.quietHoursStartKey, 22);
+        await prefs.setInt(TaliaNotificationService.quietHoursEndKey, 8);
+        await prefs.setStringList('smart_reminder_open_hours', [
+          '23',
+          '23',
+          '23',
+          '9',
+          '23',
+          '23',
+        ]);
+
+        await NotificationScheduler(
+          mockNotificationService,
+        ).refreshNotifications(lookupAppLocalizations(const Locale('ar')));
+
+        verify(
+          () => mockNotificationService.scheduleSmartReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            hour: 8,
+            minute: 0,
+          ),
+        ).called(1);
+        verifyNever(
+          () => mockNotificationService.scheduleDailyReviewReminder(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            hour: any(named: 'hour'),
+            minute: any(named: 'minute'),
+          ),
+        );
+      },
+    );
+
+    test('headless refresh does not record a user app-open hour', () async {
+      stubStreak(activityToday: false);
+      final prefs = await SharedPreferences.getInstance();
+      const hours = ['20', '9', '20'];
+      await prefs.setStringList('smart_reminder_open_hours', hours);
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        ownerScopedRefresh: false,
+      );
+
+      final success = await scheduler.refreshNotificationsInBackground(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+
+      expect(success, isTrue);
+      expect(prefs.getStringList('smart_reminder_open_hours'), hours);
     });
 
     test('cancelled when disabled', () async {
@@ -472,5 +647,28 @@ void main() {
         ]);
       },
     );
+  });
+
+  test('weekly impact respects quiet hours', () async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(TaliaNotificationService.quietHoursPreferenceKey, true);
+    await prefs.setInt(TaliaNotificationService.quietHoursStartKey, 15);
+    await prefs.setInt(TaliaNotificationService.quietHoursEndKey, 18);
+    when(
+      () => mockStreakReader.getStreak(),
+    ).thenAnswer((_) async => streakWithoutActivityToday());
+
+    await NotificationScheduler(
+      mockNotificationService,
+    ).refreshNotifications(lookupAppLocalizations(const Locale('ar')));
+
+    verify(
+      () => mockNotificationService.scheduleWeeklyImpactReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: 18,
+        minute: 0,
+      ),
+    ).called(1);
   });
 }

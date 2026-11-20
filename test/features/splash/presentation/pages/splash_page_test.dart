@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -119,10 +121,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The brand tagline intentionally remains Arabic in every locale.
-      expect(
-        find.text('رفيقك في رحاب القرآن'),
-        findsOneWidget,
-      );
+      expect(find.text('رفيقك في رحاب القرآن'), findsOneWidget);
     });
   });
 }

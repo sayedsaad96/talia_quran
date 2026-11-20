@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/icons/talia_icons.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/settings_notification_tiles.dart';
 
 void main() {
@@ -17,6 +20,50 @@ void main() {
   });
 
   tearDown(() => getIt.reset());
+
+  for (final language in ['ar', 'en']) {
+    testWidgets('calm mode can be changed in $language settings', (
+      tester,
+    ) async {
+      final l10n = lookupAppLocalizations(Locale(language));
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: Locale(language),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: NotificationSettingTile(isDark: false),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final tile = find.widgetWithText(
+        SwitchListTile,
+        l10n.notificationCalmModeTitle,
+      );
+      expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+      expect(find.text(l10n.notificationCalmModeDescription), findsOneWidget);
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+      expect(
+        getIt<SharedPreferences>().getBool(
+          TaliaNotificationService.calmModePreferenceKey,
+        ),
+        isFalse,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets(
     'notification test picker excludes unapproved Azkar and Dua previews',
@@ -44,8 +91,8 @@ void main() {
       await tester.tap(testNotification);
       await tester.pumpAndSettle();
 
-      expect(find.text('Daily Review 📖'), findsOneWidget);
-      expect(find.text('Streak Protection 🔥'), findsOneWidget);
+      expect(find.text('A moment to review'), findsOneWidget);
+      expect(find.text('A small step today'), findsOneWidget);
       expect(find.text('Morning Azkar ☀️'), findsNothing);
       expect(find.text('Daily Dua 🤲'), findsNothing);
     },

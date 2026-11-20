@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/settings/domain/entities/data_protection_status.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/data_protection_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/widgets/data_protection_panel.dart';
@@ -27,7 +28,7 @@ void main() {
         value: cubit,
         child: const MaterialApp(
           locale: Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SingleChildScrollView(child: DataProtectionPanel()),

@@ -3,12 +3,13 @@ import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/memorization/retention_forecast.dart';
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/theme/app_theme.dart';
@@ -47,7 +48,7 @@ void main() {
             locale: locale,
             theme: theme,
             supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: taliaLocalizationsDelegates,
             home: const ProgressPage(),
           ),
         );
@@ -85,7 +86,7 @@ void main() {
         locale: const Locale('ar'),
         theme: AppTheme.light,
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(
             context,
@@ -120,7 +121,7 @@ void main() {
         (key) => key == ExperienceFeature.forgettingForecast.storageKey,
       ),
     );
-    getIt.unregister<ProgressCubit>();
+    await getIt.unregister<ProgressCubit>();
     getIt.registerFactory<ProgressCubit>(
       () => _SeededProgressCubit(bus, passages),
     );
@@ -140,7 +141,7 @@ void main() {
         routerConfig: router,
         locale: const Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
       ),
     );
     await tester.pumpAndSettle();

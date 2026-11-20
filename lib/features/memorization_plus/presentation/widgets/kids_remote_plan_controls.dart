@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -39,12 +39,10 @@ class KidsRemotePlanControls extends StatelessWidget {
     label: context.l10n.kidsRemotePlanNextSurah,
     value: clean.nextSurahId ?? 0,
     values: List.generate(114, (index) => index + 1),
-    text: (id) => context.isArabic ? SurahNames.nameAr(id) : SurahNames.nameEn(id),
-    changed: (id) => _change(
-      clean,
-      nextSurahId: id == 0 ? null : id,
-      clearSurah: id == 0,
-    ),
+    text: (id) =>
+        context.isArabic ? SurahNames.nameAr(id) : SurahNames.nameEn(id),
+    changed: (id) =>
+        _change(clean, nextSurahId: id == 0 ? null : id, clearSurah: id == 0),
   );
 
   Widget _sizeChoice(BuildContext context, KidsRemotePlan clean) => _choice(
@@ -80,16 +78,17 @@ class KidsRemotePlanControls extends StatelessWidget {
               : null,
         ),
         _dayChoices(l10n, clean),
-        Text(l10n.kidsRemotePlanDaysHint, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          l10n.kidsRemotePlanDaysHint,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
 
   Widget _dayChoices(AppLocalizations l10n, KidsRemotePlan clean) => Wrap(
     spacing: AppSpacing.xs,
-    children: [
-      for (var day = 1; day <= 7; day++) _dayChoice(l10n, clean, day),
-    ],
+    children: [for (var day = 1; day <= 7; day++) _dayChoice(l10n, clean, day)],
   );
 
   Widget _dayChoice(AppLocalizations l10n, KidsRemotePlan clean, int day) {

@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_gift_card.dart';
 
@@ -12,15 +13,14 @@ ParentReward _reward(ParentRewardStatus status, {int? surah}) => ParentReward(
   milestoneSurahId: surah,
 );
 
-Future<void> _pump(WidgetTester tester, KidsGiftCard card) =>
-    tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ar'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: Scaffold(body: card),
-      ),
-    );
+Future<void> _pump(WidgetTester tester, KidsGiftCard card) => tester.pumpWidget(
+  MaterialApp(
+    locale: const Locale('ar'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: taliaLocalizationsDelegates,
+    home: Scaffold(body: card),
+  ),
+);
 
 void main() {
   const progressKey = ValueKey('kids-gift-progress-g1');

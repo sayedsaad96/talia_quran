@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -82,7 +82,8 @@ class KidsGiftCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   reward.origin == ParentRewardOrigin.unknown
-                      ? l10n.parentRewardOriginUnknown : status,
+                      ? l10n.parentRewardOriginUnknown
+                      : status,
                   style: AppTypography.bodySmall.copyWith(
                     color: KidsTheme.inkOnParchment,
                     letterSpacing: 0,

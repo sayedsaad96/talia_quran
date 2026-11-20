@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -33,14 +33,11 @@ class SettingsNavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor =
-        iconColor ?? context.tokens.accent;
+    final effectiveIconColor = iconColor ?? context.tokens.accent;
     final effectiveIconBg =
         iconBackgroundColor ?? effectiveIconColor.withValues(alpha: 0.12);
-    final textPrimary =
-        context.tokens.textPrimary;
-    final textSecondary =
-        context.tokens.textSecondary;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     return Material(
       color: Colors.transparent,
@@ -63,11 +60,7 @@ class SettingsNavTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: effectiveIconColor,
-                ),
+                child: Icon(icon, size: 20, color: effectiveIconColor),
               ),
               const SizedBox(width: AppSpacing.md),
 

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../icons/talia_icons.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/talia_tokens.dart';

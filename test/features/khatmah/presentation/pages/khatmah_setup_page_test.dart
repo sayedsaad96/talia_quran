@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
@@ -54,7 +55,7 @@ void main() {
 
     return MaterialApp.router(
       routerConfig: router,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: taliaLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
@@ -119,9 +120,7 @@ void main() {
     expect(find.textContaining('121'), findsOneWidget);
   });
 
-  testWidgets('custom pages input accepts Arabic-Indic digits', (
-    tester,
-  ) async {
+  testWidgets('custom pages input accepts Arabic-Indic digits', (tester) async {
     final cubit = KhatmahSetupCubit(mockCreateKhatmah);
 
     await tester.pumpWidget(buildWidget(cubit: cubit));
@@ -357,9 +356,7 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('a same-settings prefill is submitted as chosen', (
-    tester,
-  ) async {
+  testWidgets('a same-settings prefill is submitted as chosen', (tester) async {
     when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
     final cubit = KhatmahSetupCubit(mockCreateKhatmah);
     final router = GoRouter(
@@ -381,7 +378,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(
         routerConfig: router,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
       ),

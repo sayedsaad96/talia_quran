@@ -1,6 +1,8 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
@@ -94,8 +96,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsOneWidget);
-      expect(find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'), findsOneWidget);
+      expect(
+        find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'),
+        findsOneWidget,
+      );
 
       // Search without diacritics / plain alef: "اللهم" should match testDua1
       final searchField = find.byType(TextField);
@@ -103,12 +111,20 @@ void main() {
       await tester.enterText(searchField, 'اللهم اني اسالك');
       await tester.pumpAndSettle();
 
-      expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsOneWidget);
-      expect(find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'), findsNothing);
+      expect(
+        find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'),
+        findsNothing,
+      );
     },
   );
 
-  testWidgets('tapping bookmark adds and removes ID from favorites store', (tester) async {
+  testWidgets('tapping bookmark adds and removes ID from favorites store', (
+    tester,
+  ) async {
     registerCubitWith([testDua1]);
 
     await tester.pumpWidget(
@@ -133,7 +149,9 @@ void main() {
     expect(prefsStore.isFavorite('dua-1'), isFalse);
   });
 
-  testWidgets('selecting favorites tab displays only favorited Duas', (tester) async {
+  testWidgets('selecting favorites tab displays only favorited Duas', (
+    tester,
+  ) async {
     await prefsStore.toggleFavorite('dua-2');
     registerCubitWith([testDua1, testDua2]);
 
@@ -143,8 +161,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Both visible initially
-    expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsOneWidget);
-    expect(find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'), findsOneWidget);
+    expect(
+      find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'),
+      findsOneWidget,
+    );
 
     // Select favorites tab
     final favoritesChip = find.text('المفضلة');
@@ -153,8 +177,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Only testDua2 should be visible
-    expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsNothing);
-    expect(find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'), findsOneWidget);
+    expect(
+      find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'),
+      findsNothing,
+    );
+    expect(
+      find.text('رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('favorite tooltips follow the app language', (tester) async {
@@ -183,7 +213,9 @@ void main() {
     expect(find.byTooltip('Remove from favorites'), findsOneWidget);
   });
 
-  testWidgets('subcategory chips show how many duas each holds', (tester) async {
+  testWidgets('subcategory chips show how many duas each holds', (
+    tester,
+  ) async {
     registerCubitWith([testDua1, testDua2]);
 
     await tester.pumpWidget(
@@ -195,18 +227,23 @@ void main() {
     expect(find.text('أدعية من القرآن (١)'), findsOneWidget);
   });
 
-  test('sharing from the duas page uses the dua card, from general the azkar card', () {
-    expect(
-      libraryShareData(testDua1, AzkarCategory.duas).category,
-      SocialShareCategory.dua,
-    );
-    expect(
-      libraryShareData(testDua1, AzkarCategory.general).category,
-      SocialShareCategory.azkar,
-    );
-  });
+  test(
+    'sharing from the duas page uses the dua card, from general the azkar card',
+    () {
+      expect(
+        libraryShareData(testDua1, AzkarCategory.duas).category,
+        SocialShareCategory.dua,
+      );
+      expect(
+        libraryShareData(testDua1, AzkarCategory.general).category,
+        SocialShareCategory.azkar,
+      );
+    },
+  );
 
-  testWidgets('empty search results shows empty state with clear button', (tester) async {
+  testWidgets('empty search results shows empty state with clear button', (
+    tester,
+  ) async {
     registerCubitWith([testDua1]);
 
     await tester.pumpWidget(
@@ -226,7 +263,10 @@ void main() {
     await tester.tap(clearButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'), findsOneWidget);
+    expect(
+      find.text('اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى'),
+      findsOneWidget,
+    );
   });
 }
 
@@ -240,7 +280,5 @@ class _FakeRepo implements AzkarRepository {
 
   @override
   Future<Either<Failure, Map<AzkarCategory, List<Zikr>>>> getAllAzkar() async =>
-      Right({
-        for (final category in AzkarCategory.values) category: items,
-      });
+      Right({for (final category in AzkarCategory.values) category: items});
 }

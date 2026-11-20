@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_background_exit_dialog.dart';
 
 void main() {
-  Widget buildTestApp({
-    required void Function(BuildContext) onOpenDialog,
-  }) {
+  Widget buildTestApp({required void Function(BuildContext) onOpenDialog}) {
     return MaterialApp(
       locale: const Locale('ar'),
       localizationsDelegates: const [
@@ -30,7 +30,9 @@ void main() {
     );
   }
 
-  testWidgets('renders dialog and returns continueInBackground on tap', (tester) async {
+  testWidgets('renders dialog and returns continueInBackground on tap', (
+    tester,
+  ) async {
     QuranBackgroundExitAction? result;
 
     await tester.pumpWidget(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../../core/icons/talia_icons.dart';
 import '../../../../core/journey/journey_presentation_data.dart';
 import '../../../../core/theme/app_colors.dart';

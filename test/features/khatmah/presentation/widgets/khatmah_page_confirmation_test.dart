@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
@@ -23,7 +24,7 @@ void main() {
   Future<void> pump(WidgetTester tester, KhatmahState state) =>
       tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: KhatmahPageConfirmation(
@@ -38,9 +39,7 @@ void main() {
 
   const button = Key('khatmah_confirm_page_button');
 
-  testWidgets('shows the button for the last page of the wird', (
-    tester,
-  ) async {
+  testWidgets('shows the button for the last page of the wird', (tester) async {
     await pump(
       tester,
       KhatmahActive(plan: plan, wirdStartPage: 1, wirdEndPage: 4),

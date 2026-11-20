@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -94,7 +96,8 @@ class _Repo implements MemorizationPlusRepository {
   }
 
   @override
-  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({ int? milestoneSurahId,
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
+    int? milestoneSurahId,
     required String childUserId,
     required String title,
   }) async {
@@ -104,7 +107,8 @@ class _Repo implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, KidsJourneyPathDefinition>>
-  getKidsJourneyPath() async => const Right(KidsJourneyPathDefinition.adventure);
+  getKidsJourneyPath() async =>
+      const Right(KidsJourneyPathDefinition.adventure);
 
   @override
   Future<Either<Failure, KidsChildPolicy>> saveRemoteChildPolicy({
@@ -549,7 +553,9 @@ void main() {
           tester,
           local ? _localChild(const []) : _remoteChild(const []),
         );
-        final button = find.byKey(const ValueKey('child-monthly-report-button'));
+        final button = find.byKey(
+          const ValueKey('child-monthly-report-button'),
+        );
         await _scrollTo(tester, button);
 
         expect(button, findsOneWidget);
@@ -789,11 +795,7 @@ void main() {
     testWidgets('the child on this device can link a gift to a surah', (
       tester,
     ) async {
-      final repo = await openDialog(
-        tester,
-        _localChild(const []),
-        flag: true,
-      );
+      final repo = await openDialog(tester, _localChild(const []), flag: true);
 
       expect(find.byKey(pickerKey), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'Park');
@@ -808,11 +810,7 @@ void main() {
     });
 
     testWidgets('a linked child gets no condition picker', (tester) async {
-      final repo = await openDialog(
-        tester,
-        _remoteChild(const []),
-        flag: true,
-      );
+      final repo = await openDialog(tester, _remoteChild(const []), flag: true);
 
       expect(find.byKey(pickerKey), findsNothing);
       await tester.enterText(find.byType(TextField), 'Park');
@@ -826,11 +824,7 @@ void main() {
     testWidgets('a 60-character gift title saves with the feature on', (
       tester,
     ) async {
-      final repo = await openDialog(
-        tester,
-        _remoteChild(const []),
-        flag: true,
-      );
+      final repo = await openDialog(tester, _remoteChild(const []), flag: true);
 
       await tester.enterText(find.byType(TextField), 'a' * 60);
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));

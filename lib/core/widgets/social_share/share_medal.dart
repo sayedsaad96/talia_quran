@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Eight-point star medal used by achievement and certificate cards.
 class ShareMedal extends StatelessWidget {

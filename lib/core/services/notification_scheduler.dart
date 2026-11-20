@@ -483,6 +483,9 @@ class NotificationScheduler {
       await _enqueueRefresh(() async {
         _service.attachLocalization(l10n);
         final prefs = await SharedPreferences.getInstance();
+        _service.setCalmMode(
+          prefs.getBool(TaliaNotificationService.calmModePreferenceKey) ?? true,
+        );
         final quietEnabled =
             prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
             false;
@@ -580,9 +583,12 @@ class NotificationScheduler {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // Every refresh call corresponds to an app open/resume: record the hour
-    // for the smart reminder heuristic.
-    await recordAppOpen();
+    final calmMode =
+        prefs.getBool(TaliaNotificationService.calmModePreferenceKey) ?? true;
+    _service.setCalmMode(calmMode);
+
+    // A headless refresh is not evidence of the user's preferred practice hour.
+    if (_ownerScopedRefresh) await recordAppOpen();
 
     // First, sync timezone
     await _service.configureLocalTimezone();
@@ -602,7 +608,7 @@ class NotificationScheduler {
       endHour: quietEndHour,
     );
 
-    int currentStreak = 1;
+    int currentStreak = 0;
     int dueReviews = 0;
     var kidsMissionCompletedToday = false;
     var hasStreakActivityToday = false;
@@ -632,7 +638,7 @@ class NotificationScheduler {
         true;
     final streakEnabled =
         prefs.getBool(TaliaNotificationService.streakAlertPreferenceKey) ??
-        true;
+        false;
     final morningAzkarEnabled =
         prefs.getBool(TaliaNotificationService.morningAzkarPreferenceKey) ??
         true;
@@ -640,12 +646,20 @@ class NotificationScheduler {
         prefs.getBool(TaliaNotificationService.eveningAzkarPreferenceKey) ??
         true;
     final dailyDuaEnabled =
-        prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
+        prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? false;
     final dailyAyahEnabled =
-        prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ?? true;
+        prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ?? false;
     final kidsReviewEnabled =
         prefs.getBool(TaliaNotificationService.kidsReminderPreferenceKey) ??
         false;
+
+    final smartEnabled =
+        prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey) ??
+        false;
+    final openHours = _loadRecordedOpenHours(prefs);
+    final smartHour = smartEnabled && openHours.length >= 3
+        ? _modeOfOpenHours(openHours)
+        : null;
 
     if (reviewEnabled) {
       final hour =
@@ -665,7 +679,12 @@ class NotificationScheduler {
             )
           : l10n.notificationDailyReviewBody;
 
-      final quietTime = quiet(hour, minute);
+      // In calm mode smart timing adjusts the review instead of adding a
+      // second daily invitation to the same memorization flow.
+      final quietTime = quiet(
+        calmMode && smartHour != null ? smartHour : hour,
+        calmMode && smartHour != null ? 0 : minute,
+      );
       await _service.scheduleDailyReviewReminder(
         title: l10n.notificationDailyReviewTitle,
         body: body,
@@ -688,28 +707,17 @@ class NotificationScheduler {
           ) ??
           0;
 
-      // Stage 1: gentle nudge one hour before the urgent alert.
-      if (hour > 0) {
-        await _service.scheduleStreakGentleNudge(
-          title: l10n.notificationStreakGentleTitle(
-            LocaleNumberFormatter.number(currentStreak, l10n.localeName),
-          ),
-          body: l10n.notificationStreakGentleBody,
-          currentStreak: currentStreak,
-          hour: hour - 1,
-          minute: minute,
-        );
-      }
-
-      // Stage 2: urgent high-importance protection alert.
+      // Retire the old two-stage escalation, including already pending nudges.
+      await _service.cancelStreakGentleNudge();
+      final quietTime = quiet(hour, minute);
       await _service.scheduleStreakProtectionAlert(
         title: l10n.notificationStreakAlertTitle(
           LocaleNumberFormatter.number(currentStreak, l10n.localeName),
         ),
         body: l10n.notificationStreakAlertBody,
         currentStreak: currentStreak,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelStreakAlert();
@@ -916,6 +924,7 @@ class NotificationScheduler {
             '${TaliaNotificationService.weeklyImpactPreferenceKey}_minute',
           ) ??
           0;
+      final quietTime = quiet(hour, minute);
       await _service.scheduleWeeklyImpactReminder(
         title: l10n.notificationWeeklyImpactTitle,
         body: daysWithQuran > 0
@@ -926,8 +935,8 @@ class NotificationScheduler {
                 ),
               )
             : l10n.notificationWeeklyImpactQuietBody,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelWeeklyImpactReminder();
@@ -1170,17 +1179,16 @@ class NotificationScheduler {
 
     // Smart Reminder (greenfield): schedule at the user's most frequent
     // app-open hour when they have a streak but no activity today.
-    final smartEnabled =
-        prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey) ??
-        false;
-    if (smartEnabled && !hasStreakActivityToday) {
-      final openHours = _loadRecordedOpenHours(prefs);
-      if (openHours.length >= 3) {
+    if (smartEnabled &&
+        !hasStreakActivityToday &&
+        !(calmMode && reviewEnabled)) {
+      if (smartHour != null) {
+        final quietTime = quiet(smartHour, 0);
         await _service.scheduleSmartReminder(
           title: l10n.notificationSmartReminderTitle,
           body: l10n.notificationSmartReminderBody,
-          hour: _modeOfOpenHours(openHours),
-          minute: 0,
+          hour: quietTime.hour,
+          minute: quietTime.minute,
         );
       } else {
         await _service.cancelSmartReminder();

@@ -1,6 +1,8 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
@@ -31,45 +33,50 @@ void main() {
 
   for (final handsFreeEnabled in [false, true]) {
     testWidgets(
-    'adult hub hierarchy with hands-free enabled=$handsFreeEnabled',
-    (tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1800);
-      addTearDown(tester.view.reset);
+      'adult hub hierarchy with hands-free enabled=$handsFreeEnabled',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1800);
+        addTearDown(tester.view.reset);
 
-      final repo = _ProfileRepository(
-        _profile(MemorizationPath.adult),
-        customPlan: _activeAdultPlan,
-      );
-      getIt.registerSingleton<ExperienceFlags>(ExperienceFlags((_) => handsFreeEnabled));
-      getIt.registerSingleton<MemorizationPlusRepository>(repo);
-      getIt.registerLazySingleton<MemorizationPathResolver>(
-        () => MemorizationPathResolver(repo),
-      );
-      getIt.registerFactory<MemorizationIdentityCubit>(
-        () => MemorizationIdentityCubit(
-          repository: repo,
-          pathResolver: getIt<MemorizationPathResolver>(),
-        ),
-      );
+        final repo = _ProfileRepository(
+          _profile(MemorizationPath.adult),
+          customPlan: _activeAdultPlan,
+        );
+        getIt.registerSingleton<ExperienceFlags>(
+          ExperienceFlags((_) => handsFreeEnabled),
+        );
+        getIt.registerSingleton<MemorizationPlusRepository>(repo);
+        getIt.registerLazySingleton<MemorizationPathResolver>(
+          () => MemorizationPathResolver(repo),
+        );
+        getIt.registerFactory<MemorizationIdentityCubit>(
+          () => MemorizationIdentityCubit(
+            repository: repo,
+            pathResolver: getIt<MemorizationPathResolver>(),
+          ),
+        );
 
-      await tester.pumpWidget(const _TestApp(child: MemorizationHubPage()));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(const _TestApp(child: MemorizationHubPage()));
+        await tester.pumpAndSettle();
 
-      expect(find.text("Today's Plan"), findsOneWidget);
-      expect(find.text("Continue Today's Plan"), findsOneWidget);
-      expect(find.text('Plan details'), findsOneWidget);
-      expect(find.text('Practice'), findsOneWidget);
-      expect(find.text('Practice by Surah'), findsOneWidget);
-      expect(find.text('Listening Quiz'), findsOneWidget);
-      expect(find.textContaining('Recite Practice'), findsOneWidget);
-      expect(find.text('Review Session'), findsWidgets);
-      expect(find.text('Settings'), findsOneWidget);
-      expect(find.text('Plan Settings'), findsOneWidget);
-      expect(find.text('Family Dashboard'), findsNothing);
-      expect(find.text('Hands-free Review'), handsFreeEnabled ? findsOneWidget : findsNothing);
-    },
-  );
+        expect(find.text("Today's Plan"), findsOneWidget);
+        expect(find.text("Continue Today's Plan"), findsOneWidget);
+        expect(find.text('Plan details'), findsOneWidget);
+        expect(find.text('Practice'), findsOneWidget);
+        expect(find.text('Practice by Surah'), findsOneWidget);
+        expect(find.text('Listening Quiz'), findsOneWidget);
+        expect(find.textContaining('Recite Practice'), findsOneWidget);
+        expect(find.text('Review Session'), findsWidgets);
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Plan Settings'), findsOneWidget);
+        expect(find.text('Family Dashboard'), findsNothing);
+        expect(
+          find.text('Hands-free Review'),
+          handsFreeEnabled ? findsOneWidget : findsNothing,
+        );
+      },
+    );
   }
 
   testWidgets('kids hub shows mission journey rewards only', (tester) async {

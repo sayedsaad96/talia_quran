@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -7,7 +7,6 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../theme/kids_theme.dart';
-
 
 /// Talia's official poses (cropped from `assets/talia/`), one per session
 /// moment.

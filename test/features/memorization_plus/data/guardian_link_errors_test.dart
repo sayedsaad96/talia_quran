@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/l10n/localization_helpers.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/collaborators/memorization_parent_access_service.dart';
@@ -87,7 +87,7 @@ void main() {
       await tester.pumpWidget(
         Localizations(
           locale: locale,
-          delegates: AppLocalizations.localizationsDelegates,
+          delegates: taliaLocalizationsDelegates,
           child: Builder(
             builder: (context) {
               captured = context;

@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/talia_localization_delegates.dart';
 import 'package:talia_quran/features/quran_study/domain/entities/study_entry.dart';
 import 'package:talia_quran/features/quran_study/domain/repositories/quran_study_repository.dart';
 import 'package:talia_quran/features/quran_study/domain/usecases/get_ayah_study.dart';
@@ -51,7 +52,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: Locale(locale),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: taliaLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(
@@ -77,7 +78,7 @@ void main() {
   testWidgets('shows source, range, literal text and footnote', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: taliaLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: AyahStudySheet(

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/accessibility/clarity_mode.dart';
 import '../../../../core/extensions/context_extensions.dart';

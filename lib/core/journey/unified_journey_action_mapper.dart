@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../constants/surah_names.dart';
 import '../extensions/context_extensions.dart';
 import '../icons/talia_icons.dart';

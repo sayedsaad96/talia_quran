@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_row_layout.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_quran_talia_overlay.dart';

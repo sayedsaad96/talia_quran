@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:shimmer/shimmer.dart';
 
@@ -186,10 +186,7 @@ class _QuranPageFontGuardState extends State<QuranPageFontGuard> {
 
 /// A shimmer skeleton loader designed to mimic the exact layout of a Mushaf page.
 class QuranPageSkeletonLoader extends StatelessWidget {
-  const QuranPageSkeletonLoader({
-    super.key,
-    required this.isDark,
-  });
+  const QuranPageSkeletonLoader({super.key, required this.isDark});
 
   final bool isDark;
 
@@ -260,7 +257,9 @@ class QuranPageSkeletonLoader extends StatelessWidget {
                         width: constraints.maxWidth * widthFactor,
                         decoration: BoxDecoration(
                           color: baseColor,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusXs,
+                          ),
                         ),
                       );
                     }),

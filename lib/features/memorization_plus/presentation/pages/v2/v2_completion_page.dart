@@ -2,7 +2,7 @@ import 'dart:async';
 import '../../../../../core/icons/talia_icons.dart';
 // lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 

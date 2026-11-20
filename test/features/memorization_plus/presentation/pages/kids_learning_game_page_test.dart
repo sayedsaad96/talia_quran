@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mockito/mockito.dart';
@@ -82,7 +84,9 @@ void main() {
     expect(find.byKey(const ValueKey('kids-game-listen')), findsNothing);
   });
 
-  testWidgets('shows the round counter and three surah options', (tester) async {
+  testWidgets('shows the round counter and three surah options', (
+    tester,
+  ) async {
     final cubit = await pump(tester, [_log(114), _log(113), _log(112)]);
     final round = cubit.state.round!;
 

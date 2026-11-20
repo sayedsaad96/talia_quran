@@ -31,7 +31,7 @@ enum QuranReciter {
     id: 'husary',
     nameAr: 'محمود خليل الحصري (مرتل)',
     nameEn: 'Mahmoud Khalil Al-Husary',
-    baseUrl: 'https://everyayah.com/data/Mahmoud_Khussary_128kbps/',
+    baseUrl: 'https://everyayah.com/data/Husary_128kbps/',
     availability: ReciterAvailability.legacyEnabled,
   ),
   shuraim(
