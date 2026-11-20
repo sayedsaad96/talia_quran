@@ -4,8 +4,8 @@ import 'package:equatable/equatable.dart';
 typedef WidgetPrayerTime = ({String key, DateTime at});
 typedef WidgetReviewCount = ({DateTime at, int count});
 
-/// Review and wird fields for one local day. The native side swaps to this
-/// after [WidgetSnapshot.dayEndsAt] without reading the account again.
+/// Review, wird, and Hijri fields for one local day. The native side swaps to
+/// this after [WidgetSnapshot.dayEndsAt] without reading the account again.
 final class WidgetNextDay extends Equatable {
   const WidgetNextDay({
     this.dueReviewCount = 0,
@@ -15,6 +15,8 @@ final class WidgetNextDay extends Equatable {
     this.wirdToPage,
     this.wirdDonePages,
     this.wirdSurahName,
+    this.wirdSurahNumber,
+    this.hijriLabel,
   });
 
   final int dueReviewCount;
@@ -24,6 +26,8 @@ final class WidgetNextDay extends Equatable {
   final int? wirdToPage;
   final int? wirdDonePages;
   final String? wirdSurahName;
+  final int? wirdSurahNumber;
+  final String? hijriLabel;
 
   Map<String, Object?> toJson() {
     final json = <String, Object?>{};
@@ -34,6 +38,8 @@ final class WidgetNextDay extends Equatable {
     _put(json, 'wirdToPage', wirdToPage);
     _put(json, 'wirdDonePages', wirdDonePages);
     _put(json, 'wirdSurahName', wirdSurahName);
+    _put(json, 'wirdSurahNumber', wirdSurahNumber);
+    _put(json, 'hijriLabel', hijriLabel);
     return Map.unmodifiable(json);
   }
 
@@ -50,6 +56,8 @@ final class WidgetNextDay extends Equatable {
     wirdToPage,
     wirdDonePages,
     wirdSurahName,
+    wirdSurahNumber,
+    hijriLabel,
   ];
 }
 
@@ -66,6 +74,8 @@ final class WidgetSnapshot extends Equatable {
     this.wirdToPage,
     this.wirdDonePages,
     this.wirdSurahName,
+    this.wirdSurahNumber,
+    this.hijriLabel,
     this.expiresAt,
     this.dayEndsAt,
     this.upcomingPrayers = const [],
@@ -77,6 +87,7 @@ final class WidgetSnapshot extends Equatable {
     this.showPrayer = true,
     this.showReviews = true,
     this.showWird = true,
+    this.showHijri = true,
     this.nextDay,
     this.reviewCounts = const [],
   });
@@ -91,6 +102,8 @@ final class WidgetSnapshot extends Equatable {
       expiresAt = null,
       dayEndsAt = null,
       wirdSurahName = null,
+      wirdSurahNumber = null,
+      hijriLabel = null,
       upcomingPrayers = const [],
       languageCode = null,
       adultNoData = false,
@@ -100,6 +113,7 @@ final class WidgetSnapshot extends Equatable {
       showPrayer = true,
       showReviews = true,
       showWird = true,
+      showHijri = true,
       nextDay = null,
       reviewCounts = const [];
 
@@ -114,6 +128,8 @@ final class WidgetSnapshot extends Equatable {
   final int? wirdToPage;
   final int? wirdDonePages;
   final String? wirdSurahName;
+  final int? wirdSurahNumber;
+  final String? hijriLabel;
   final DateTime? expiresAt;
 
   /// End of the snapshot's local day. From then on the native side uses
@@ -147,6 +163,7 @@ final class WidgetSnapshot extends Equatable {
   final bool showPrayer;
   final bool showReviews;
   final bool showWird;
+  final bool showHijri;
 
   /// Precomputed next local day. Drawn after [dayEndsAt] until [expiresAt]
   /// without opening the app or reading the account.
@@ -163,10 +180,15 @@ final class WidgetSnapshot extends Equatable {
       wirdToPage == null &&
       wirdDonePages == null &&
       wirdSurahName == null &&
+      wirdSurahNumber == null &&
       upcomingPrayers.isEmpty;
 
   bool get hasGuidance =>
-      prayerUnset || reviewsSettled || noKhatmahPlan || nextDay != null;
+      prayerUnset ||
+      reviewsSettled ||
+      noKhatmahPlan ||
+      nextDay != null ||
+      (hijriLabel != null && hijriLabel!.isNotEmpty);
 
   /// True when the native key must be removed rather than written.
   bool get clearsNative => isEmpty && !adultNoData && !hasGuidance;
@@ -224,6 +246,7 @@ final class WidgetSnapshot extends Equatable {
     _put(json, 'wirdToPage', wirdToPage);
     _put(json, 'wirdDonePages', wirdDonePages);
     _put(json, 'wirdSurahName', wirdSurahName);
+    _put(json, 'wirdSurahNumber', wirdSurahNumber);
     _writeGuidance(json);
     return Map.unmodifiable(json);
   }
@@ -235,12 +258,14 @@ final class WidgetSnapshot extends Equatable {
           {'at': review.at.millisecondsSinceEpoch, 'count': review.count},
       ];
     }
+    _put(json, 'hijriLabel', hijriLabel);
     if (prayerUnset) json['prayerUnset'] = true;
     if (reviewsSettled) json['reviewsSettled'] = true;
     if (noKhatmahPlan) json['noKhatmahPlan'] = true;
     if (!showPrayer) json['showPrayer'] = false;
     if (!showReviews) json['showReviews'] = false;
     if (!showWird) json['showWird'] = false;
+    if (!showHijri) json['showHijri'] = false;
     final day = nextDay;
     if (day != null) json['nextDay'] = day.toJson();
   }
@@ -261,6 +286,8 @@ final class WidgetSnapshot extends Equatable {
     wirdToPage,
     wirdDonePages,
     wirdSurahName,
+    wirdSurahNumber,
+    hijriLabel,
     expiresAt,
     dayEndsAt,
     upcomingPrayers,
@@ -272,6 +299,7 @@ final class WidgetSnapshot extends Equatable {
     showPrayer,
     showReviews,
     showWird,
+    showHijri,
     nextDay,
     reviewCounts,
   ];

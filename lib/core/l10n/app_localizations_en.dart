@@ -1,7 +1,8 @@
 // ignore_for_file: deprecated_member_use
 // The generated `localizationsDelegates` list references the deprecated
 // flutter_localizations Material/Cupertino delegates. The app uses
-// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
+// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
+
 
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
@@ -17,8 +18,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationCalmModeTitle => 'Quiet reminders';
 
   @override
-  String get notificationCalmModeDescription =>
-      'Reminders stay in your notification list without sound, vibration or pop-ups. Prayer and athan settings are separate.';
+  String get notificationCalmModeDescription => 'Reminders stay in your notification list without sound, vibration or pop-ups. Prayer and athan settings are separate.';
 
   @override
   String get appName => 'Talia Quran';
@@ -135,8 +135,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyBookmarksTitle => 'No bookmarks yet';
 
   @override
-  String get emptyBookmarksHint =>
-      'Long-press any ayah while reading to save it as a bookmark and reach it easily here';
+  String get emptyBookmarksHint => 'Long-press any ayah while reading to save it as a bookmark and reach it easily here';
 
   @override
   String get exitDialogTitle => 'Recitation is playing';
@@ -255,24 +254,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryAgain => 'Try Again';
 
   @override
-  String get errorCacheMessage =>
-      'Couldn\'t reach your saved data. Please try again.';
+  String get errorCacheMessage => 'Couldn\'t reach your saved data. Please try again.';
 
   @override
-  String get errorNetworkMessage =>
-      'Check your internet connection and try again.';
+  String get errorNetworkMessage => 'Check your internet connection and try again.';
 
   @override
-  String get errorNotFoundMessage =>
-      'The content you\'re looking for wasn\'t found.';
+  String get errorNotFoundMessage => 'The content you\'re looking for wasn\'t found.';
 
   @override
-  String get errorParseMessage =>
-      'Something went wrong while reading the content. Please try again.';
+  String get errorParseMessage => 'Something went wrong while reading the content. Please try again.';
 
   @override
-  String get errorUnknownMessage =>
-      'Something unexpected happened. Please try again.';
+  String get errorUnknownMessage => 'Something unexpected happened. Please try again.';
 
   @override
   String celebrationAyah(String xp) {
@@ -285,8 +279,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get celebrationJuzDone =>
-      'You\'ve completed the entire juz, by Allah\'s grace';
+  String get celebrationJuzDone => 'You\'ve completed the entire juz, by Allah\'s grace';
 
   @override
   String get tutorialQuickStartTitle => 'Your quick Talia map';
@@ -295,8 +288,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialQuickStartSubtitle => 'The five key areas for daily use';
 
   @override
-  String get tutorialQuickStartHint =>
-      'Use search or the filters below to open any detailed guide.';
+  String get tutorialQuickStartHint => 'Use search or the filters below to open any detailed guide.';
 
   @override
   String get tutorialShortcutHomeLabel => 'Home';
@@ -443,8 +435,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerTajweedColors => 'Tajweed colors';
 
   @override
-  String get readerTajweedColorsHint =>
-      'Color the tajweed rules on the Mushaf page';
+  String get readerTajweedColorsHint => 'Color the tajweed rules on the Mushaf page';
 
   @override
   String get strengthOverlayToggle => 'Show memorization strength';
@@ -543,11 +534,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String shareAchievementWithName(
-    Object description,
-    Object name,
-    Object title,
-  ) {
+  String shareAchievementWithName(Object description, Object name, Object title) {
     return '🏆 A new milestone in $name\'s Quran journey: \"$title\"\n📖 $description\n\nWith Talia, every step becomes visible progress and an achievement worth sharing.';
   }
 
@@ -557,11 +544,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String shareMemorizationAchievementWithName(
-    Object description,
-    Object name,
-    Object title,
-  ) {
+  String shareMemorizationAchievementWithName(Object description, Object name, Object title) {
     return '🌟 A blessed memorization milestone for $name: \"$title\"\n🧠 $description\n\nTalia supports the memorization journey with clear structure, steady motivation, and progress worth celebrating.';
   }
 
@@ -578,8 +561,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareApp => 'Share Talia App';
 
   @override
-  String get shareAppText =>
-      'Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://play.google.com/store/apps/details?id=com.talia.quran';
+  String get shareAppText => 'Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://play.google.com/store/apps/details?id=com.talia.quran';
 
   @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
@@ -587,12 +569,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String shareProgressWithName(
-    Object ayahs,
-    Object name,
-    Object pages,
-    Object streak,
-  ) {
+  String shareProgressWithName(Object ayahs, Object name, Object pages, Object streak) {
     return '📊 Here is a snapshot of $name\'s Quran journey with Talia:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.';
   }
 
@@ -621,8 +598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartMemorization => 'Smart Memorization';
 
   @override
-  String get smartMemorizationSubtitle =>
-      'Adaptive plan • Smart review • Self-assess';
+  String get smartMemorizationSubtitle => 'Adaptive plan • Smart review • Self-assess';
 
   @override
   String get recitationAccuracy => 'Recitation Accuracy';
@@ -661,12 +637,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioPlayError => 'Failed to play audio. Check your connection.';
 
   @override
-  String get micPermissionError =>
-      'The app needs microphone permission for voice recitation. Please allow it from device settings.';
+  String get micPermissionError => 'The app needs microphone permission for voice recitation. Please allow it from device settings.';
 
   @override
-  String get speechUnavailableError =>
-      'Voice recitation is unavailable on this device right now.';
+  String get speechUnavailableError => 'Voice recitation is unavailable on this device right now.';
 
   @override
   String get openSettingsAction => 'Open Settings';
@@ -732,26 +706,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupSuccess => 'Account created successfully ✓';
 
   @override
-  String get confirmationEmailSent =>
-      '✅ Confirmation email sent. Check your inbox';
+  String get confirmationEmailSent => '✅ Confirmation email sent. Check your inbox';
 
   @override
   String get resendConfirmation => 'Resend';
 
   @override
-  String get authEmailAlreadyRegistered =>
-      'This email is already registered. Try signing in.';
+  String get authEmailAlreadyRegistered => 'This email is already registered. Try signing in.';
 
   @override
-  String get authConfirmEmailFirst =>
-      'Please confirm your email first. Check your inbox.';
+  String get authConfirmEmailFirst => 'Please confirm your email first. Check your inbox.';
 
   @override
   String get authInvalidCredentials => 'Email or password is incorrect';
 
   @override
-  String get authTooManyRequests =>
-      'Too many attempts. Please wait and try again.';
+  String get authTooManyRequests => 'Too many attempts. Please wait and try again.';
 
   @override
   String get authNoInternet => 'No internet connection';
@@ -775,23 +745,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authPasswordSameAsOld => 'Password must be different.';
 
   @override
-  String get authSessionExpired =>
-      'Session expired. Please request a new link.';
+  String get authSessionExpired => 'Session expired. Please request a new link.';
 
   @override
   String get profileSavedToCloud => 'Signed in to your account';
 
   @override
-  String get guestModeWarning =>
-      'Sign in to manage your account, recovery, and family features.';
+  String get guestModeWarning => 'Sign in to manage your account, recovery, and family features.';
 
   @override
-  String get signOutWarning =>
-      'Do you want to sign out? Your account progress returns when you sign in again. Your khatmah plan and khatmah history are kept only on this device and will be removed when you sign out.';
+  String get signOutWarning => 'Do you want to sign out? Your account progress returns when you sign in again. Your khatmah plan and khatmah history are kept only on this device and will be removed when you sign out.';
 
   @override
-  String get memorizationHubNothingToReview =>
-      'Nothing to review yet. Start memorizing first; your ayahs will appear here when their review is due.';
+  String get memorizationHubNothingToReview => 'Nothing to review yet. Start memorizing first; your ayahs will appear here when their review is due.';
 
   @override
   String homeMemorizedAyahsCaption(int count, String countText) {
@@ -809,8 +775,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSetupDiscardTitle => 'Discard child setup?';
 
   @override
-  String get kidsSetupDiscardBody =>
-      'The kids path setup isn\'t saved yet. Leave without saving?';
+  String get kidsSetupDiscardBody => 'The kids path setup isn\'t saved yet. Leave without saving?';
 
   @override
   String get kidsSetupKeepEditing => 'Keep editing';
@@ -825,8 +790,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanChildSwitchTitle => 'Switch to the kids path?';
 
   @override
-  String get customPlanChildSwitchBody =>
-      'Kids plans are managed in the kids path. This ends your adult path and current plan (your achievements, history and certificates are kept), then opens the kids path setup.';
+  String get customPlanChildSwitchBody => 'Kids plans are managed in the kids path. This ends your adult path and current plan (your achievements, history and certificates are kept), then opens the kids path setup.';
 
   @override
   String get customPlanChildSwitchConfirm => 'Switch to kids path';
@@ -835,8 +799,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestImportTitle => 'Import local memorization data?';
 
   @override
-  String get guestImportBody =>
-      'You have memorization progress from before you signed in. Move it to this account so it appears in your progress and reviews.';
+  String get guestImportBody => 'You have memorization progress from before you signed in. Move it to this account so it appears in your progress and reviews.';
 
   @override
   String get guestImportConfirm => 'Import';
@@ -853,8 +816,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutPendingDataTitle => 'Unsynced progress';
 
   @override
-  String get signOutPendingDataWarning =>
-      'Some memorization progress has not reached the cloud yet. Signing out now will delete it from this device.';
+  String get signOutPendingDataWarning => 'Some memorization progress has not reached the cloud yet. Signing out now will delete it from this device.';
 
   @override
   String get signOutAnyway => 'Sign out anyway';
@@ -875,8 +837,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eveningAzkarTime => 'Everyday at 6:00 PM';
 
   @override
-  String get taliaDescription =>
-      'A premium app for memorizing and reviewing the Holy Quran';
+  String get taliaDescription => 'A premium app for memorizing and reviewing the Holy Quran';
 
   @override
   String get settingsAppBrand => 'Talia Quran';
@@ -888,8 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialGuideSubtitle => 'Learn every feature and how to use it';
 
   @override
-  String get tutorialGuideHeroSubtitle =>
-      'Talia\'s knowledge hub and feature guide';
+  String get tutorialGuideHeroSubtitle => 'Talia\'s knowledge hub and feature guide';
 
   @override
   String tutorialGuideTopicsCount(String count) {
@@ -908,12 +868,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialGuideNoResults => 'No matching results';
 
   @override
-  String get tutorialGuideNoResultsHint =>
-      'Try a shorter word, like: Quran, memorization, azkar, notifications.';
+  String get tutorialGuideNoResultsHint => 'Try a shorter word, like: Quran, memorization, azkar, notifications.';
 
   @override
-  String get arabicNameHint =>
-      '💡 It is better to enter the name in Arabic to appear nicely in certificates';
+  String get arabicNameHint => '💡 It is better to enter the name in Arabic to appear nicely in certificates';
 
   @override
   String get invalidAge => 'Enter a valid age between 1 and 120';
@@ -1041,8 +999,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveProgress => 'Save your progress';
 
   @override
-  String get syncProgressDesc =>
-      'Sign in to manage your account, recovery, and family features';
+  String get syncProgressDesc => 'Sign in to manage your account, recovery, and family features';
 
   @override
   String get restoringProgress => 'Restoring your data…';
@@ -1060,8 +1017,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completedJuzAmma => 'You have successfully memorized Juz Amma.';
 
   @override
-  String get completedQuran =>
-      'You have successfully memorized the entire Holy Quran.';
+  String get completedQuran => 'You have successfully memorized the entire Holy Quran.';
 
   @override
   String get continueMemorizing => 'Continue Memorizing';
@@ -1073,8 +1029,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endSessionTitle => 'End Session?';
 
   @override
-  String get endSessionDesc =>
-      'Are you sure you want to end the session? Your current progress will be lost.';
+  String get endSessionDesc => 'Are you sure you want to end the session? Your current progress will be lost.';
 
   @override
   String get continueAction => 'Continue';
@@ -1140,8 +1095,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugCertificatePreview => 'Debug: Certificate Preview';
 
   @override
-  String get debugCertificatePreviewDesc =>
-      'Test certificate rendering without earning one.';
+  String get debugCertificatePreviewDesc => 'Test certificate rendering without earning one.';
 
   @override
   String get debugCertJuz30 => 'Juz 30';
@@ -1159,15 +1113,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupProgressTitle => 'Manage your account';
 
   @override
-  String get backupProgressDesc =>
-      'Sign in from Settings to manage your account and family features';
+  String get backupProgressDesc => 'Sign in from Settings to manage your account and family features';
 
   @override
   String get azkarSubtitle => 'Remember Allah often';
 
   @override
-  String get azkarContentUnderReview =>
-      'Azkar content is being reviewed and will appear here once approved.';
+  String get azkarContentUnderReview => 'Azkar content is being reviewed and will appear here once approved.';
 
   @override
   String zikrCount(Object count) {
@@ -1221,12 +1173,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarWirdCompletedToday => 'Today\'s wird is complete ✨';
 
   @override
-  String get azkarMorningHeroSubtitle =>
-      'Begin your day with remembrance and peace of heart';
+  String get azkarMorningHeroSubtitle => 'Begin your day with remembrance and peace of heart';
 
   @override
-  String get azkarEveningHeroSubtitle =>
-      'End your day with serenity and forgiveness';
+  String get azkarEveningHeroSubtitle => 'End your day with serenity and forgiveness';
 
   @override
   String get azkarReviewWird => 'Review wird';
@@ -1250,8 +1200,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarFavoritesEmptyTitle => 'No favorites yet';
 
   @override
-  String get azkarFavoritesEmptyDesc =>
-      'Tap the bookmark icon next to any dua to save it here';
+  String get azkarFavoritesEmptyDesc => 'Tap the bookmark icon next to any dua to save it here';
 
   @override
   String get azkarFavoriteAdd => 'Add to favorites';
@@ -1263,8 +1212,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarSearchNoResultsTitle => 'No matching results';
 
   @override
-  String get azkarSearchNoResultsDesc =>
-      'We couldn\'t find any duas for your search';
+  String get azkarSearchNoResultsDesc => 'We couldn\'t find any duas for your search';
 
   @override
   String get azkarSearchClear => 'Clear search';
@@ -1426,8 +1374,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizedJuzLabel => 'Juz Memorized';
 
   @override
-  String get earnCertificatesHint =>
-      'Memorize complete Surahs and Juz to earn certificates!';
+  String get earnCertificatesHint => 'Memorize complete Surahs and Juz to earn certificates!';
 
   @override
   String certificateTitleJuz(Object juz) {
@@ -1461,8 +1408,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certificateShareError => 'An error occurred while sharing';
 
   @override
-  String get certificateGalleryPermissionError =>
-      'Gallery permission is required to save the certificate';
+  String get certificateGalleryPermissionError => 'Gallery permission is required to save the certificate';
 
   @override
   String get certificateGallerySaveSuccess => 'Certificate saved to gallery ✓';
@@ -1483,8 +1429,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certificateTemplateMemorizedAction => 'has successfully memorized';
 
   @override
-  String get certificateTemplateReadingAction =>
-      'has successfully completed reading';
+  String get certificateTemplateReadingAction => 'has successfully completed reading';
 
   @override
   String get certificateTemplateDate => 'Date';
@@ -1520,16 +1465,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get certificateTemplateSignature => 'Signature';
 
   @override
-  String certificateTemplateVerseReference(
-    Object ayahNumber,
-    Object surahName,
-  ) {
+  String certificateTemplateVerseReference(Object ayahNumber, Object surahName) {
     return '($surahName: $ayahNumber)';
   }
 
   @override
-  String get certificateTemplateBlessing =>
-      'We ask Allah the Exalted to make the Holy Quran the spring of their heart, the light of their chest, and their companion in this world and the Hereafter.';
+  String get certificateTemplateBlessing => 'We ask Allah the Exalted to make the Holy Quran the spring of their heart, the light of their chest, and their companion in this world and the Hereafter.';
 
   @override
   String shareCertificateJuz(Object juz) {
@@ -1542,12 +1483,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareCertificateHalfQuran =>
-      'By Allah\'s grace, I memorized half of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+  String get shareCertificateHalfQuran => 'By Allah\'s grace, I memorized half of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
 
   @override
-  String get shareCertificateFullQuran =>
-      'By Allah\'s grace, I memorized the entire Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+  String get shareCertificateFullQuran => 'By Allah\'s grace, I memorized the entire Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
 
   @override
   String get achievementTitleFirstPage => 'First Page';
@@ -1595,8 +1534,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementTitleFirstAyah => 'First Ayah';
 
   @override
-  String get achievementDescFirstAyah =>
-      'Memorize your first ayah of the Quran';
+  String get achievementDescFirstAyah => 'Memorize your first ayah of the Quran';
 
   @override
   String get achievementTitleTenAyahs => '10 Ayahs';
@@ -1662,15 +1600,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievementTitleHalfQuranMemorized => 'Half Quran';
 
   @override
-  String get achievementDescHalfQuranMemorized =>
-      'Memorize half of the Holy Quran';
+  String get achievementDescHalfQuranMemorized => 'Memorize half of the Holy Quran';
 
   @override
   String get achievementTitleFullQuranMemorized => 'Hafiz of Quran';
 
   @override
-  String get achievementDescFullQuranMemorized =>
-      'Memorize the entire Holy Quran';
+  String get achievementDescFullQuranMemorized => 'Memorize the entire Holy Quran';
 
   @override
   String get achievementTitleThreeDayStreak => '3-Day Streak';
@@ -1750,8 +1686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBackgroundPlaybackTitle => 'Background playback';
 
   @override
-  String get settingsBackgroundPlaybackSubtitle =>
-      'Recitation keeps playing after you leave the app, with controls in the notification.';
+  String get settingsBackgroundPlaybackSubtitle => 'Recitation keeps playing after you leave the app, with controls in the notification.';
 
   @override
   String get settingsHubPractice => 'Practice';
@@ -1778,19 +1713,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRemindersProgress => 'Progress';
 
   @override
-  String get notificationPermissionBlockedTitle =>
-      'App notifications are off in phone settings';
+  String get notificationPermissionBlockedTitle => 'App notifications are off in phone settings';
 
   @override
-  String get notificationPermissionBlockedBody =>
-      'Review and adhkar reminders will not arrive until notifications are allowed in system settings.';
+  String get notificationPermissionBlockedBody => 'Review and adhkar reminders will not arrive until notifications are allowed in system settings.';
 
   @override
   String get notificationOpenSystemSettings => 'Open phone settings';
 
   @override
-  String get notificationStatusBlocked =>
-      'Notifications are turned off in system settings';
+  String get notificationStatusBlocked => 'Notifications are turned off in system settings';
 
   @override
   String notificationStatusSummary(String enabled, String total) {
@@ -1801,12 +1733,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationTestInteractiveTitle => 'Try a notification';
 
   @override
-  String get notificationTestInteractiveSubtitle =>
-      'Send a sample reminder to confirm alerts work';
+  String get notificationTestInteractiveSubtitle => 'Send a sample reminder to confirm alerts work';
 
   @override
-  String get notificationPrayerPermissionBlockedBody =>
-      'Prayer alerts will not arrive until notifications are allowed in phone settings.';
+  String get notificationPrayerPermissionBlockedBody => 'Prayer alerts will not arrive until notifications are allowed in phone settings.';
 
   @override
   String get notificationConfigurePrayerTimes => 'Configure prayer times';
@@ -1815,37 +1745,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationTestPickerTitle => 'Select a notification to test';
 
   @override
-  String get notificationTestPickerSubtitle =>
-      'You will receive a sample notification with action buttons.';
+  String get notificationTestPickerSubtitle => 'You will receive a sample notification with action buttons.';
 
   @override
   String get notificationTestReviewTitle => 'A moment to review';
 
   @override
-  String get notificationTestReviewBody =>
-      'You can review 5 ayahs today, at your own pace.';
+  String get notificationTestReviewBody => 'You can review 5 ayahs today, at your own pace.';
 
   @override
   String get notificationTestStreakTitle => 'A small step today';
 
   @override
-  String get notificationTestStreakBody =>
-      'A little time with the Quran, whenever it suits you.';
+  String get notificationTestStreakBody => 'A little time with the Quran, whenever it suits you.';
 
   @override
   String get notificationTestSuccess => 'Test notification sent successfully ✨';
 
   @override
-  String get notificationSettingsSaveFailed =>
-      'Your change could not be saved. Please try again.';
+  String get notificationSettingsSaveFailed => 'Your change could not be saved. Please try again.';
 
   @override
-  String get notificationSettingsSchedulingFailed =>
-      'Your change was saved, but reminders could not be updated. Please try again.';
+  String get notificationSettingsSchedulingFailed => 'Your change was saved, but reminders could not be updated. Please try again.';
 
   @override
-  String get prayerChooseCityForAccurateTimes =>
-      'Choose your city to show accurate prayer times.';
+  String get prayerChooseCityForAccurateTimes => 'Choose your city to show accurate prayer times.';
 
   @override
   String get prayerChooseCityAction => 'Choose city';
@@ -1854,8 +1778,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGuestStatusTitle => 'Using Talia as guest';
 
   @override
-  String get settingsGuestStatusSubtitle =>
-      'Your local progress remains on this device. Create an account for account management and family features.';
+  String get settingsGuestStatusSubtitle => 'Your local progress remains on this device. Create an account for account management and family features.';
 
   @override
   String get settingsSignInCreateAccount => 'Sign in / Create account';
@@ -1864,23 +1787,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSignedInStatus => 'Signed in to your account';
 
   @override
-  String get settingsPrivacyPolicySubtitle =>
-      'How your data and privacy are handled';
+  String get settingsPrivacyPolicySubtitle => 'How your data and privacy are handled';
 
   @override
   String get settingsMemorizationPathNotSelected => 'No path selected';
 
   @override
-  String get settingsMemorizationPathNotSelectedDesc =>
-      'Choose the adult or kids path the next time you open the Memorization tab.';
+  String get settingsMemorizationPathNotSelectedDesc => 'Choose the adult or kids path the next time you open the Memorization tab.';
 
   @override
-  String get settingsResetPathKeeps =>
-      'Keeps: achievements, history, and certificates';
+  String get settingsResetPathKeeps => 'Keeps: achievements, history, and certificates';
 
   @override
-  String get settingsResetPathChanges =>
-      'Changes: selected path and current plan';
+  String get settingsResetPathChanges => 'Changes: selected path and current plan';
 
   @override
   String get settingsResetPathInstruction => 'Type \"Reset path\" to confirm.';
@@ -1892,8 +1811,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeleteAccountTitle => 'Delete account';
 
   @override
-  String get settingsDeleteAccountSubtitle =>
-      'Permanently delete your account and its progress';
+  String get settingsDeleteAccountSubtitle => 'Permanently delete your account and its progress';
 
   @override
   String settingsDeleteAccountWarning(Object email) {
@@ -1901,8 +1819,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsAccountDeletedMessage =>
-      'Account deleted and its data cleared from this device.';
+  String get settingsAccountDeletedMessage => 'Account deleted and its data cleared from this device.';
 
   @override
   String settingsVersion(Object version) {
@@ -1927,19 +1844,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardTitle => 'Family Dashboard';
 
   @override
-  String get parentDashboardSubtitle =>
-      'Track your child\'s memorization, rewards, and remote link';
+  String get parentDashboardSubtitle => 'Track your child\'s memorization, rewards, and remote link';
 
   @override
-  String get parentModeSubtitle =>
-      'Enable this to follow your child\'s memorization and remote link';
+  String get parentModeSubtitle => 'Enable this to follow your child\'s memorization and remote link';
 
   @override
   String get resetMemorizationPathQuestion => 'Reset memorization path?';
 
   @override
-  String get resetMemorizationIdentityWarning =>
-      'This will clear the selected path and guardian link state, while keeping your smart memorization settings.';
+  String get resetMemorizationIdentityWarning => 'This will clear the selected path and guardian link state, while keeping your smart memorization settings.';
 
   @override
   String get confirmResetMemorizationPath => 'Confirm reset';
@@ -1948,16 +1862,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetMemorizationPathTileTitle => 'Reset path';
 
   @override
-  String get resetMemorizationPathTileSubtitle =>
-      'Choose the adult or kids path again without losing smart memorization settings.';
+  String get resetMemorizationPathTileSubtitle => 'Choose the adult or kids path again without losing smart memorization settings.';
 
   @override
-  String get resetMemorizationPathPreserveProgressDesc =>
-      'Switch between the adult and kids memorization paths while keeping your memorization data.';
+  String get resetMemorizationPathPreserveProgressDesc => 'Switch between the adult and kids memorization paths while keeping your memorization data.';
 
   @override
-  String get resetMemorizationPathPreserveProgressDialog =>
-      'This will clear the current memorization path so you can choose a new one. Your memorized ayahs will not be lost.';
+  String get resetMemorizationPathPreserveProgressDialog => 'This will clear the current memorization path so you can choose a new one. Your memorized ayahs will not be lost.';
 
   @override
   String completePreviousSurahFirst(Object surahName) {
@@ -1974,12 +1885,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianLinkTitle => 'Link guardian account';
 
   @override
-  String get guardianLinkDesc =>
-      'Choose whether to link a guardian to this path so they can follow the child\'s memorization.';
+  String get guardianLinkDesc => 'Choose whether to link a guardian to this path so they can follow the child\'s memorization.';
 
   @override
-  String get guardianCreateCodeMessage =>
-      'Create a new code valid for 15 minutes.';
+  String get guardianCreateCodeMessage => 'Create a new code valid for 15 minutes.';
 
   @override
   String get guardianCodeUsedMessage => 'This code cannot be used again.';
@@ -2010,23 +1919,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianPairingStepsTitle => 'Pairing steps';
 
   @override
-  String get guardianPairingStepOpenParentDevice =>
-      'Open Talia on the guardian device';
+  String get guardianPairingStepOpenParentDevice => 'Open Talia on the guardian device';
 
   @override
-  String get guardianPairingStepOpenDashboard =>
-      'Go to Settings → Kids & Guardian → Family Dashboard → “Link New Child”';
+  String get guardianPairingStepOpenDashboard => 'Go to Settings → Kids & Guardian → Family Dashboard → “Link New Child”';
 
   @override
-  String get guardianPairingStepScanOrEnterCode =>
-      'Scan the QR code or enter the code manually';
+  String get guardianPairingStepScanOrEnterCode => 'Scan the QR code or enter the code manually';
 
   @override
   String get guardianLinkLater => 'Link later';
 
   @override
-  String get guardianLinkLaterHint =>
-      'You can link any time from ⚙ in your journey.';
+  String get guardianLinkLaterHint => 'You can link any time from ⚙ in your journey.';
 
   @override
   String get guardianCheckNow => 'Scanned? Check now';
@@ -2041,8 +1946,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyDashboardLinking => 'Linking the child…';
 
   @override
-  String get familyPinOptionalHelp =>
-      'You can skip the PIN. It is required only when linking a child to a guardian.';
+  String get familyPinOptionalHelp => 'You can skip the PIN. It is required only when linking a child to a guardian.';
 
   @override
   String get familyPinSkip => 'Continue without a PIN';
@@ -2054,8 +1958,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyPinLockRemove => 'Remove saved PIN';
 
   @override
-  String get familyPinLockRemoveConfirm =>
-      'The saved PIN will be removed from this device. You can set one again; a PIN is required when linking a child to a guardian.';
+  String get familyPinLockRemoveConfirm => 'The saved PIN will be removed from this device. You can set one again; a PIN is required when linking a child to a guardian.';
 
   @override
   String get kidsGuardianLinkedBadge => 'Your guardian follows your journey 💚';
@@ -2064,8 +1967,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianRegenerateCode => 'Regenerate code';
 
   @override
-  String get guardianSignInRequired =>
-      'Sign in to access guardian tools. Your local progress remains on this device.';
+  String get guardianSignInRequired => 'Sign in to access guardian tools. Your local progress remains on this device.';
 
   @override
   String get guardianSignInAction => 'Sign in or create account';
@@ -2080,12 +1982,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianLinkingFailedTitle => 'Guardian linking failed';
 
   @override
-  String get guardianLinkingTimeoutMessage =>
-      'Guardian linking is taking too long. Check your connection and try again, or continue without a guardian for now.';
+  String get guardianLinkingTimeoutMessage => 'Guardian linking is taking too long. Check your connection and try again, or continue without a guardian for now.';
 
   @override
-  String get splashSubtitle =>
-      'Read, memorize, review, and grow with the Quran.';
+  String get splashSubtitle => 'Read, memorize, review, and grow with the Quran.';
 
   @override
   String get splashTagline => 'Your Companion in the Journey of the Quran';
@@ -2109,8 +2009,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSlide1Title => 'Your Daily Quran Sanctuary';
 
   @override
-  String get onboardingSlide1Subtitle =>
-      'Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and khatmah plans at your own pace.';
+  String get onboardingSlide1Subtitle => 'Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and khatmah plans at your own pace.';
 
   @override
   String get onboardingBentoMushafSurah => 'Surat Al-Isra';
@@ -2134,8 +2033,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSlide2Title => 'Smart Memorization & Mastery';
 
   @override
-  String get onboardingSlide2Subtitle =>
-      'Intelligent spaced repetition algorithms that track memory strength and prevent forgetting.';
+  String get onboardingSlide2Subtitle => 'Intelligent spaced repetition algorithms that track memory strength and prevent forgetting.';
 
   @override
   String get onboardingBentoMasteryTitle => 'Mastery & Retention';
@@ -2171,8 +2069,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSlide3Title => 'Daily Habit & Family Journeys';
 
   @override
-  String get onboardingSlide3Subtitle =>
-      'Build an unbreakable daily Quran habit, with a fun interactive kids path, even offline.';
+  String get onboardingSlide3Subtitle => 'Build an unbreakable daily Quran habit, with a fun interactive kids path, even offline.';
 
   @override
   String get onboardingBentoStreakTitle => 'Daily Streak';
@@ -2202,22 +2099,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingChooseExpTitle => 'Choose Your Experience';
 
   @override
-  String get onboardingChooseExpSubtitle =>
-      'Select how you\'d like Talia configured. You can easily switch anytime in settings.';
+  String get onboardingChooseExpSubtitle => 'Select how you\'d like Talia configured. You can easily switch anytime in settings.';
 
   @override
   String get onboardingAdultPathTitle => 'Adult & General Journey';
 
   @override
-  String get onboardingAdultPathSubtitle =>
-      'A focused workspace for reading, memorization, review, and personal progress.';
+  String get onboardingAdultPathSubtitle => 'A focused workspace for reading, memorization, review, and personal progress.';
 
   @override
   String get onboardingKidsPathTitle => 'Kids & Buds Journey';
 
   @override
-  String get onboardingKidsPathSubtitle =>
-      'A playful, interactive journey with bite-sized missions, positive repetition, and rewards.';
+  String get onboardingKidsPathSubtitle => 'A playful, interactive journey with bite-sized missions, positive repetition, and rewards.';
 
   @override
   String get onboardingKidsFeatureMissions => 'Bite-sized missions';
@@ -2238,12 +2132,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingAyahReference => 'Al-Muzzammil 73:4';
 
   @override
-  String get onboardingOfflineTrustLine =>
-      'Works offline · your data stays on your device';
+  String get onboardingOfflineTrustLine => 'Works offline · your data stays on your device';
 
   @override
-  String get onboardingErrorGeneric =>
-      'Setup could not finish. Make sure the device has storage space and try again, or skip setup for now.';
+  String get onboardingErrorGeneric => 'Setup could not finish. Make sure the device has storage space and try again, or skip setup for now.';
 
   @override
   String get onboardingSkip => 'Skip';
@@ -2255,36 +2147,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationPathQuestion => 'Who will use this feature?';
 
   @override
-  String get memorizationPathDescription =>
-      'Choose the path that fits you or your child for a personalized memorization experience.';
+  String get memorizationPathDescription => 'Choose the path that fits you or your child for a personalized memorization experience.';
 
   @override
   String get memorizationPathAdultsTitle => 'Adult path';
 
   @override
-  String get memorizationPathAdultsDesc =>
-      'A flexible memorization plan with smart review and daily progress tracking.';
+  String get memorizationPathAdultsDesc => 'A flexible memorization plan with smart review and daily progress tracking.';
 
   @override
   String get memorizationPathKidsTitle => 'Kids path';
 
   @override
-  String get memorizationPathKidsDesc =>
-      'A fun interactive memorization journey with guardian supervision.';
+  String get memorizationPathKidsDesc => 'A fun interactive memorization journey with guardian supervision.';
 
   @override
   String get kidsJourneyTitle => 'Memorization journey';
 
   @override
-  String get kidsJourneySubtitle =>
-      'Listen, repeat, and collect stars step by step';
+  String get kidsJourneySubtitle => 'Listen, repeat, and collect stars step by step';
 
   @override
   String get kidsJourneyMapTitle => 'Memorization map';
 
   @override
-  String get kidsJourneyMotivation =>
-      'With every ayah, you draw closer to Allah\'s Book';
+  String get kidsJourneyMotivation => 'With every ayah, you draw closer to Allah\'s Book';
 
   @override
   String get kidsJourneySignpost1 => 'Our Quran journey is beautiful';
@@ -2323,22 +2210,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renew => 'Renew';
 
   @override
-  String get remoteGuardianLinkInstruction =>
-      'Open the guardian dashboard on the other device and scan the code.';
+  String get remoteGuardianLinkInstruction => 'Open the guardian dashboard on the other device and scan the code.';
 
   @override
-  String kidsStageProgress(
-    String startAyah,
-    String endAyah,
-    String completed,
-    String total,
-  ) {
+  String kidsStageProgress(String startAyah, String endAyah, String completed, String total) {
     return 'Ayahs $startAyah-$endAyah • $completed/$total';
   }
 
   @override
-  String get quranLongPressHint =>
-      'Long-press an ayah to listen or add a bookmark';
+  String get quranLongPressHint => 'Long-press an ayah to listen or add a bookmark';
 
   @override
   String get readPageConfirmed => 'Page counted';
@@ -2350,12 +2230,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsProgressTitle => 'My progress';
 
   @override
-  String get kidsProgressSubtitle =>
-      'Your stars, achievements and certificates';
+  String get kidsProgressSubtitle => 'Your stars, achievements and certificates';
 
   @override
-  String get kidsProgressTaliaStart =>
-      'Let\'s begin! Memorize your first ayah to earn your first achievement';
+  String get kidsProgressTaliaStart => 'Let\'s begin! Memorize your first ayah to earn your first achievement';
 
   @override
   String kidsProgressTaliaNew(String title) {
@@ -2368,8 +2246,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsProgressTaliaAllDone =>
-      'Masha\'Allah! You collected every achievement';
+  String get kidsProgressTaliaAllDone => 'Masha\'Allah! You collected every achievement';
 
   @override
   String kidsProgressLevel(String levelText) {
@@ -2395,12 +2272,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsProgressRecentTitle => 'Recent activity';
 
   @override
-  String get kidsProgressRecentEmpty =>
-      'Read or memorize and your activity shows here';
+  String get kidsProgressRecentEmpty => 'Read or memorize and your activity shows here';
 
   @override
-  String get kidsProgressCertificatesEmpty =>
-      'Finish a surah to earn your first certificate';
+  String get kidsProgressCertificatesEmpty => 'Finish a surah to earn your first certificate';
 
   @override
   String get kidsAchievementsTitle => 'My achievements';
@@ -2496,32 +2371,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsWeeklyCoachingUnavailable =>
-      'A weekly summary isn\'t available for this child yet.';
+  String get kidsWeeklyCoachingUnavailable => 'A weekly summary isn\'t available for this child yet.';
 
   @override
-  String get kidsWeeklyCoachingNoHistory =>
-      'No sessions yet. The summary appears after the first session.';
+  String get kidsWeeklyCoachingNoHistory => 'No sessions yet. The summary appears after the first session.';
 
   @override
-  String get kidsWeeklyCoachingTipListenTogether =>
-      'Hints were used in many sessions. Try listening to the ayah together first, then let the child try alone.';
+  String get kidsWeeklyCoachingTipListenTogether => 'Hints were used in many sessions. Try listening to the ayah together first, then let the child try alone.';
 
   @override
-  String get kidsWeeklyCoachingTipCelebrateEffort =>
-      'The child tried again and succeeded this week. Praise the effort, not only the result.';
+  String get kidsWeeklyCoachingTipCelebrateEffort => 'The child tried again and succeeded this week. Praise the effort, not only the result.';
 
   @override
-  String get kidsWeeklyCoachingTipKeepRhythm =>
-      'A steady week. Keep the same short time each day.';
+  String get kidsWeeklyCoachingTipKeepRhythm => 'A steady week. Keep the same short time each day.';
 
   @override
-  String get kidsWeeklyCoachingTipAddReview =>
-      'Next time, add one short review before a new ayah.';
+  String get kidsWeeklyCoachingTipAddReview => 'Next time, add one short review before a new ayah.';
 
   @override
-  String get kidsWeeklyCoachingTipStartSmall =>
-      'A quiet week. A short session of a few minutes is a good way back.';
+  String get kidsWeeklyCoachingTipStartSmall => 'A quiet week. A short session of a few minutes is a good way back.';
 
   @override
   String get monthlyReportTitle => 'Monthly report';
@@ -2589,15 +2457,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthlyReportNote => 'Guardian note';
 
   @override
-  String get monthlyReportNoteHint =>
-      'An encouraging word shown in the image only, not saved';
+  String get monthlyReportNoteHint => 'An encouraging word shown in the image only, not saved';
 
   @override
   String get monthlyReportEmpty => 'No sessions this month';
 
   @override
-  String get monthlyReportIncompleteHistory =>
-      'These numbers may not include every session because the linked child\'s history from another device is partial';
+  String get monthlyReportIncompleteHistory => 'These numbers may not include every session because the linked child\'s history from another device is partial';
 
   @override
   String get monthlyReportSavePdf => 'Save PDF';
@@ -2627,39 +2493,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsFamilyPracticeStepListen =>
-      'Listen to the ayah together, as many times as the child likes.';
+  String get kidsFamilyPracticeStepListen => 'Listen to the ayah together, as many times as the child likes.';
 
   @override
-  String get kidsFamilyPracticeStepGrownUp =>
-      'A grown-up says the ayah slowly while the child follows along.';
+  String get kidsFamilyPracticeStepGrownUp => 'A grown-up says the ayah slowly while the child follows along.';
 
   @override
-  String get kidsFamilyPracticeStepChildTries =>
-      'Now the child tries to say it alone, and a grown-up listens kindly.';
+  String get kidsFamilyPracticeStepChildTries => 'Now the child tries to say it alone, and a grown-up listens kindly.';
 
   @override
-  String get kidsFamilyPracticeStepPraise =>
-      'Praise the effort, not only the result.';
+  String get kidsFamilyPracticeStepPraise => 'Praise the effort, not only the result.';
 
   @override
-  String get kidsFamilyPracticeFinished =>
-      'Well done, together! You can go back to the ayah now.';
+  String get kidsFamilyPracticeFinished => 'Well done, together! You can go back to the ayah now.';
 
   @override
-  String get kidsFamilyPracticeNote =>
-      'This is shared practice. It does not complete the ayah.';
+  String get kidsFamilyPracticeNote => 'This is shared practice. It does not complete the ayah.';
 
   @override
-  String get kidsFamilyPracticeConfirm =>
-      'Grown-up: confirm we practised together';
+  String get kidsFamilyPracticeConfirm => 'Grown-up: confirm we practised together';
 
   @override
   String get kidsFamilyPracticeConfirmed => 'Saved: you practised together.';
 
   @override
-  String get kidsFamilyPracticeConfirmFailed =>
-      'It could not be saved. Try again.';
+  String get kidsFamilyPracticeConfirmFailed => 'It could not be saved. Try again.';
 
   @override
   String get kidsAchievementFamilyPractice => 'Learned together';
@@ -2692,27 +2550,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsGameUnavailable =>
-      'Memorize an ayah first, then come back to play.';
+  String get kidsGameUnavailable => 'Memorize an ayah first, then come back to play.';
 
   @override
-  String get kidsGameAudioFailed =>
-      'The recitation couldn\'t play. Check the connection and try again.';
+  String get kidsGameAudioFailed => 'The recitation couldn\'t play. Check the connection and try again.';
 
   @override
-  String get kidsGameNote =>
-      'Just for fun and learning. It doesn\'t change your journey.';
+  String get kidsGameNote => 'Just for fun and learning. It doesn\'t change your journey.';
 
   @override
-  String get kidsSupportSuggestFirstWord =>
-      'Stuck? Tap «Give me the start» and try again.';
+  String get kidsSupportSuggestFirstWord => 'Stuck? Tap «Give me the start» and try again.';
 
   @override
   String get kidsSupportSuggestTryAgain => 'So close! Say it once more.';
 
   @override
-  String get kidsSupportSuggestGuardian =>
-      'Ask a grown-up to listen to you recite.';
+  String get kidsSupportSuggestGuardian => 'Ask a grown-up to listen to you recite.';
 
   @override
   String get kidsSupportTitle => 'Learning support';
@@ -2730,35 +2583,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSupportReadingNotYet => 'Not reading yet';
 
   @override
-  String get kidsSupportReadingNote =>
-      'With help or not reading yet, the session suggests a hint before the child gets stuck. Applies from the next session; daily limits and listens stay the same.';
+  String get kidsSupportReadingNote => 'With help or not reading yet, the session suggests a hint before the child gets stuck. Applies from the next session; daily limits and listens stay the same.';
 
   @override
-  String get kidsSupportSaveFailed =>
-      'The answer could not be saved. Try again.';
+  String get kidsSupportSaveFailed => 'The answer could not be saved. Try again.';
 
   @override
-  String get kidsSupportLinkedNote =>
-      'Saved for your child\'s device; it applies after that device syncs.';
+  String get kidsSupportLinkedNote => 'Saved for your child\'s device; it applies after that device syncs.';
 
   @override
-  String get kidsSupportLinkedUnavailable =>
-      'This setting isn\'t available for this child right now.';
+  String get kidsSupportLinkedUnavailable => 'This setting isn\'t available for this child right now.';
 
   @override
-  String get childDetailProgressTitle =>
-      'Progress, achievements and certificates';
+  String get childDetailProgressTitle => 'Progress, achievements and certificates';
 
   @override
-  String get childDetailProgressUnavailable =>
-      'The child\'s progress hasn\'t arrived yet. It appears after the child opens the app online.';
+  String get childDetailProgressUnavailable => 'The child\'s progress hasn\'t arrived yet. It appears after the child opens the app online.';
 
   @override
   String get childDetailCertificatesEmpty => 'No certificates yet';
 
   @override
-  String get childDetailCertificateOpenHint =>
-      'Tap a certificate to print or share it';
+  String get childDetailCertificateOpenHint => 'Tap a certificate to print or share it';
 
   @override
   String get dailyPlanRatingWeakDesc => 'Needed the Mushaf';
@@ -2773,8 +2619,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanRatingHintTitle => 'How to choose a rating';
 
   @override
-  String get dailyPlanRatingHintBody =>
-      'Your rating affects the next review: weak means sooner review, average means moderate spacing, and excellent means a longer gap.';
+  String get dailyPlanRatingHintBody => 'Your rating affects the next review: weak means sooner review, average means moderate spacing, and excellent means a longer gap.';
 
   @override
   String get understood => 'Got it';
@@ -2783,8 +2628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hifzSkipHintTitle => 'Skip ayah';
 
   @override
-  String get hifzSkipHintBody =>
-      'We will add this ayah to review later, no worries.';
+  String get hifzSkipHintBody => 'We will add this ayah to review later, no worries.';
 
   @override
   String get accuracyEasyTitle => 'Lenient';
@@ -2816,16 +2660,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qcfPocTitle => 'QCF rendering proof of concept';
 
   @override
-  String get qcfPocIntro =>
-      'Temporary visual test screen for Quran rendering inside the memorization area.';
+  String get qcfPocIntro => 'Temporary visual test screen for Quran rendering inside the memorization area.';
 
   @override
-  String get qcfPocNoProduction =>
-      'This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.';
+  String get qcfPocNoProduction => 'This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.';
 
   @override
-  String get qcfPocVisualOnly =>
-      'qcf_quran_plus is used here only for visual Quran rendering.';
+  String get qcfPocVisualOnly => 'qcf_quran_plus is used here only for visual Quran rendering.';
 
   @override
   String get qcfPocSingleVerse => 'Single verse';
@@ -2870,28 +2711,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qcfPocFullPageSample => 'Mushaf page 1 preview';
 
   @override
-  String get qcfPocVerseSupported =>
-      'Verse text renders visually with QCF helpers.';
+  String get qcfPocVerseSupported => 'Verse text renders visually with QCF helpers.';
 
   @override
-  String get qcfPocMultiVerseSupported =>
-      'Grouped verses render visually from the same surah.';
+  String get qcfPocMultiVerseSupported => 'Grouped verses render visually from the same surah.';
 
   @override
-  String get qcfPocFullPageSupported =>
-      'Full page rendering is available in a constrained preview.';
+  String get qcfPocFullPageSupported => 'Full page rendering is available in a constrained preview.';
 
   @override
-  String get qcfPocNoLimitations =>
-      'No limitation observed in this isolated POC.';
+  String get qcfPocNoLimitations => 'No limitation observed in this isolated POC.';
 
   @override
-  String get qcfPocLimitationInstruction =>
-      'Any limitation listed here must be reviewed before production Hifz screens change.';
+  String get qcfPocLimitationInstruction => 'Any limitation listed here must be reviewed before production Hifz screens change.';
 
   @override
-  String get parentDashboardCardSubtitle =>
-      'Track child\'s memorization & rewards';
+  String get parentDashboardCardSubtitle => 'Track child\'s memorization & rewards';
 
   @override
   String get viewDashboard => 'View Dashboard';
@@ -2927,8 +2762,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completeTodaysHifz => 'Complete today\'s memorization';
 
   @override
-  String get planReadySmallStep =>
-      'Your plan is ready, a small step is enough.';
+  String get planReadySmallStep => 'Your plan is ready, a small step is enough.';
 
   @override
   String get readTodaysPortion => 'Read today\'s portion';
@@ -2946,15 +2780,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get followChildJourney => 'Follow the child\'s journey';
 
   @override
-  String get reviewProgressOrReward =>
-      'Review progress or add an encouraging reward.';
+  String get reviewProgressOrReward => 'Review progress or add an encouraging reward.';
 
   @override
   String get startQuranStepNow => 'Start a Quran step now';
 
   @override
-  String get chooseReadingOrMemorization =>
-      'Choose reading or simple memorization for today.';
+  String get chooseReadingOrMemorization => 'Choose reading or simple memorization for today.';
 
   @override
   String get kidsFirstMissionToday => 'Your first mission today';
@@ -2965,8 +2797,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsFirstMissionSubtitle =>
-      'Start listening and repeating, every step brings you closer to a new star.';
+  String get kidsFirstMissionSubtitle => 'Start listening and repeating, every step brings you closer to a new star.';
 
   @override
   String kidsRemainingAyahs(String count) {
@@ -3073,8 +2904,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedRepeatStep => 'Repeat';
 
   @override
-  String get kidsGamifiedRepeatStepSubtitle =>
-      'Repeat after the reciter until it settles';
+  String get kidsGamifiedRepeatStepSubtitle => 'Repeat after the reciter until it settles';
 
   @override
   String get kidsGamifiedTestStep => 'Test yourself';
@@ -3092,15 +2922,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedGiveMeTheStart => 'Give me the start';
 
   @override
-  String get kidsGamifiedFirstWordShown =>
-      'Here is the first word — you finish it';
+  String get kidsGamifiedFirstWordShown => 'Here is the first word — you finish it';
 
   @override
   String get kidsGamifiedReviewChallenge => '⭐ Review challenge';
 
   @override
-  String get kidsGamifiedReviewChallengeSubtitle =>
-      'Do you remember it? Recite it from memory';
+  String get kidsGamifiedReviewChallengeSubtitle => 'Do you remember it? Recite it from memory';
 
   @override
   String get kidsGamifiedRemindMe => 'Remind me';
@@ -3133,8 +2961,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsTreasuresTitle => 'My treasures';
 
   @override
-  String get kidsTreasuresEmpty =>
-      'Memorize your first surah to find your first treasure!';
+  String get kidsTreasuresEmpty => 'Memorize your first surah to find your first treasure!';
 
   @override
   String get kidsRegionBeginning => 'The beginning';
@@ -3152,12 +2979,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsRegionPearlSea => 'Pearl Sea';
 
   @override
-  String kidsRegionProgress(
-    int memorized,
-    int total,
-    String memorizedText,
-    String totalText,
-  ) {
+  String kidsRegionProgress(int memorized, int total, String memorizedText, String totalText) {
     return '$memorizedText of $totalText surahs';
   }
 
@@ -3180,12 +3002,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsWelcomeBackSubtitle => 'Let\'s start with an easy step';
 
   @override
-  String get kidsGamifiedEnoughForToday =>
-      'Well done! That\'s enough time for today — you can stop here.';
+  String get kidsGamifiedEnoughForToday => 'Well done! That\'s enough time for today — you can stop here.';
 
   @override
-  String get parentSupportTip =>
-      'Try together: listen to the ayah twice, then let your child start with the first word';
+  String get parentSupportTip => 'Try together: listen to the ayah twice, then let your child start with the first word';
 
   @override
   String get kidsGamifiedStartMission => 'Start mission';
@@ -3203,15 +3023,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedDoneRecording => 'Done Recording';
 
   @override
-  String get kidsGamifiedAudioUnavailable =>
-      'Audio is unavailable right now. Please try again soon.';
+  String get kidsGamifiedAudioUnavailable => 'Audio is unavailable right now. Please try again soon.';
 
   @override
   String get kidsManualCompleteAction => 'I finished memorizing';
 
   @override
-  String get kidsManualCompleteHint =>
-      'Audio or microphone unavailable? A guardian can confirm completion.';
+  String get kidsManualCompleteHint => 'Audio or microphone unavailable? A guardian can confirm completion.';
 
   @override
   String kidsGamifiedListenFirst(int count, String countText) {
@@ -3253,12 +3071,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedReturnToMap => 'Return to map';
 
   @override
-  String get kidsGamifiedJourneyComplete =>
-      'You completed the current memorization journey. May Allah bless you!';
+  String get kidsGamifiedJourneyComplete => 'You completed the current memorization journey. May Allah bless you!';
 
   @override
-  String get kidsGamifiedFallbackMessage =>
-      'We will return to the old experience to protect your progress.';
+  String get kidsGamifiedFallbackMessage => 'We will return to the old experience to protect your progress.';
 
   @override
   String get privacyPolicy => 'Privacy Policy';
@@ -3267,19 +3083,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get passwordResetEmailSent =>
-      '✅ A password reset link has been sent to your email';
+  String get passwordResetEmailSent => '✅ A password reset link has been sent to your email';
 
   @override
-  String get forgotPasswordEnterEmail =>
-      'Enter your email first to reset your password';
+  String get forgotPasswordEnterEmail => 'Enter your email first to reset your password';
 
   @override
   String get updatePasswordTitle => 'Set a new password';
 
   @override
-  String get updatePasswordSubtitle =>
-      'Enter a strong new password for your account.';
+  String get updatePasswordSubtitle => 'Enter a strong new password for your account.';
 
   @override
   String get newPassword => 'New password';
@@ -3291,15 +3104,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get passwordUpdated =>
-      'Password updated successfully. Please sign in again.';
+  String get passwordUpdated => 'Password updated successfully. Please sign in again.';
 
   @override
   String get updatePasswordButton => 'Update password';
 
   @override
-  String get invalidPasswordRecoveryLink =>
-      'This reset link is invalid or expired. Request a new password reset email.';
+  String get invalidPasswordRecoveryLink => 'This reset link is invalid or expired. Request a new password reset email.';
 
   @override
   String get dailyPlanQuizAction => 'Review Session';
@@ -3317,12 +3128,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanRetentionReview => 'Retention Review';
 
   @override
-  String get dailyPlanRetentionReviewHint =>
-      'Optional review for ayahs you have already memorized.';
+  String get dailyPlanRetentionReviewHint => 'Optional review for ayahs you have already memorized.';
 
   @override
-  String get dailyPlanCompletedTitle =>
-      'MashaAllah! You completed Today\'s Plan';
+  String get dailyPlanCompletedTitle => 'MashaAllah! You completed Today\'s Plan';
 
   @override
   String dailyPlanCompletedSubtitle(String count) {
@@ -3344,8 +3153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dailyPlanRatingAverage =>
-      '⏰ Good effort, this will be reviewed after a moderate interval';
+  String get dailyPlanRatingAverage => '⏰ Good effort, this will be reviewed after a moderate interval';
 
   @override
   String dailyPlanRatingWeak(String ayahNumber) {
@@ -3374,20 +3182,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationHubReviewSectionTitle => 'Review';
 
   @override
-  String get memorizationHubReviewSectionSubtitle =>
-      'Recite what you memorized from memory; the app checks your recitation.';
+  String get memorizationHubReviewSectionSubtitle => 'Recite what you memorized from memory; the app checks your recitation.';
 
   @override
-  String get memorizationHubReviewCardDescription =>
-      'Recite the ayahs due for review from memory.';
+  String get memorizationHubReviewCardDescription => 'Recite the ayahs due for review from memory.';
 
   @override
-  String get memorizationHubDailyPlanSubtitle =>
-      'Your default place for daily memorization and review.';
+  String get memorizationHubDailyPlanSubtitle => 'Your default place for daily memorization and review.';
 
   @override
-  String get memorizationHubContinuePlanDescription =>
-      'Open your current memorization and review plan.';
+  String get memorizationHubContinuePlanDescription => 'Open your current memorization and review plan.';
 
   @override
   String get memorizationHubViewPlanTitle => 'View Today\'s Plan';
@@ -3396,22 +3200,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationHubPracticeSectionTitle => 'Practice';
 
   @override
-  String get memorizationHubPracticeSectionSubtitle =>
-      'Choose a surah or use recite practice.';
+  String get memorizationHubPracticeSectionSubtitle => 'Choose a surah or use recite practice.';
 
   @override
   String get memorizationHubPracticeBySurahTitle => 'Practice by Surah';
 
   @override
-  String get memorizationHubPracticeBySurahDescription =>
-      'Recite Practice: choose a surah and start a speech-to-text session.';
+  String get memorizationHubPracticeBySurahDescription => 'Recite Practice: choose a surah and start a speech-to-text session.';
 
   @override
   String get listeningReviewTitle => 'Listening Quiz';
 
   @override
-  String get listeningReviewHubDescription =>
-      'Hear an ayah you memorized: name its surah or recite what comes next.';
+  String get listeningReviewHubDescription => 'Hear an ayah you memorized: name its surah or recite what comes next.';
 
   @override
   String get listeningReviewStartPrompt => 'Choose a round type';
@@ -3434,12 +3235,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listeningReviewNotEnoughTitle => 'Memorize a few ayahs first';
 
   @override
-  String get listeningReviewNotEnoughBody =>
-      'The listening quiz needs at least 5 memorized ayahs that can be played.';
+  String get listeningReviewNotEnoughBody => 'The listening quiz needs at least 5 memorized ayahs that can be played.';
 
   @override
-  String get listeningReviewErrorBody =>
-      'Couldn\'t prepare the round. Please try again.';
+  String get listeningReviewErrorBody => 'Couldn\'t prepare the round. Please try again.';
 
   @override
   String get listeningReviewRetry => 'Try again';
@@ -3455,8 +3254,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get listeningReviewWhichSurahPrompt =>
-      'Which surah is this ayah from?';
+  String get listeningReviewWhichSurahPrompt => 'Which surah is this ayah from?';
 
   @override
   String listeningReviewNextAyahPrompt(String surah) {
@@ -3529,56 +3327,46 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get memorizationHubSettingsSectionSubtitle =>
-      'Adjust the plan without changing memorization systems.';
+  String get memorizationHubSettingsSectionSubtitle => 'Adjust the plan without changing memorization systems.';
 
   @override
   String get memorizationHubPlanSettingsTitle => 'Plan Settings';
 
   @override
-  String get memorizationHubPlanSettingsDescription =>
-      'Adjust your daily plan or memorization path settings.';
+  String get memorizationHubPlanSettingsDescription => 'Adjust your daily plan or memorization path settings.';
 
   @override
-  String get memorizationHubKidsMissionSectionSubtitle =>
-      'Start from the child’s active mission.';
+  String get memorizationHubKidsMissionSectionSubtitle => 'Start from the child’s active mission.';
 
   @override
-  String get memorizationHubKidsMissionCardDescription =>
-      'Start the next memorization mission in the kids journey.';
+  String get memorizationHubKidsMissionCardDescription => 'Start the next memorization mission in the kids journey.';
 
   @override
   String get memorizationHubKidsJourneyTitle => 'Journey';
 
   @override
-  String get memorizationHubKidsJourneySubtitle =>
-      'See current and upcoming journey stages.';
+  String get memorizationHubKidsJourneySubtitle => 'See current and upcoming journey stages.';
 
   @override
-  String get memorizationHubKidsJourneyDescription =>
-      'See current and upcoming journey stages.';
+  String get memorizationHubKidsJourneyDescription => 'See current and upcoming journey stages.';
 
   @override
   String get memorizationHubKidsRewardsTitle => 'Rewards / Progress';
 
   @override
-  String get memorizationHubKidsRewardsSubtitle =>
-      'Review stars and points from Progress.';
+  String get memorizationHubKidsRewardsSubtitle => 'Review stars and points from Progress.';
 
   @override
-  String get memorizationHubKidsRewardsDescription =>
-      'Review points and stars from the Progress screen.';
+  String get memorizationHubKidsRewardsDescription => 'Review points and stars from the Progress screen.';
 
   @override
-  String get memorizationHubHeaderSubtitle =>
-      'One place for every memorization path';
+  String get memorizationHubHeaderSubtitle => 'One place for every memorization path';
 
   @override
   String get backAction => 'Back';
 
   @override
-  String get hifzKidsRedirectedFromAdult =>
-      'This path is for adults. You will be taken to the Kids path.';
+  String get hifzKidsRedirectedFromAdult => 'This path is for adults. You will be taken to the Kids path.';
 
   @override
   String get parentDashboardLastSession => 'Last session';
@@ -3587,12 +3375,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardNoSessionsYet => 'No sessions recorded yet.';
 
   @override
-  String parentDashboardSessionSummary(
-    String surahId,
-    String ayahNumber,
-    String repeats,
-    String points,
-  ) {
+  String parentDashboardSessionSummary(String surahId, String ayahNumber, String repeats, String points) {
     return 'Surah $surahId • Ayah $ayahNumber\n$repeats repeats • $points points';
   }
 
@@ -3603,8 +3386,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardPinMismatch => 'PIN codes do not match';
 
   @override
-  String get parentDashboardPinHelp =>
-      'PIN entry is optional here. A PIN is required only when linking a child to a guardian.';
+  String get parentDashboardPinHelp => 'PIN entry is optional here. A PIN is required only when linking a child to a guardian.';
 
   @override
   String get parentDashboardPinConfirm => 'Confirm PIN';
@@ -3642,51 +3424,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardForgotPinConfirm => 'Verify';
 
   @override
-  String get parentDashboardAccountPasswordIncorrect =>
-      'Incorrect account password';
+  String get parentDashboardAccountPasswordIncorrect => 'Incorrect account password';
 
   @override
-  String get parentDashboardAccountCheckUnavailable =>
-      'Couldn\'t verify the account right now. Check your connection and try again.';
+  String get parentDashboardAccountCheckUnavailable => 'Couldn\'t verify the account right now. Check your connection and try again.';
 
   @override
   String get parentDashboardChangePin => 'Change guardian code';
 
   @override
-  String get parentDashboardChangePinConfirm =>
-      'You\'ll create a new code now. Rewards and settings stay as they are.';
+  String get parentDashboardChangePinConfirm => 'You\'ll create a new code now. Rewards and settings stay as they are.';
 
   @override
-  String get guardianErrorSignInRequired =>
-      'Sign in to your account first, then try again.';
+  String get guardianErrorSignInRequired => 'Sign in to your account first, then try again.';
 
   @override
-  String get guardianErrorCloudUnavailable =>
-      'Linking children isn\'t available in this version because cloud sync is not enabled.';
+  String get guardianErrorCloudUnavailable => 'Linking children isn\'t available in this version because cloud sync is not enabled.';
 
   @override
-  String get guardianErrorOnlyForChildren =>
-      'Guardian linking is only available for child profiles.';
+  String get guardianErrorOnlyForChildren => 'Guardian linking is only available for child profiles.';
 
   @override
-  String get guardianErrorAlreadyLinked =>
-      'This account is already linked to a guardian.';
+  String get guardianErrorAlreadyLinked => 'This account is already linked to a guardian.';
 
   @override
-  String get guardianErrorParentModeAdultsOnly =>
-      'Guardian mode is only available on the adults path.';
+  String get guardianErrorParentModeAdultsOnly => 'Guardian mode is only available on the adults path.';
 
   @override
-  String get guardianErrorLinkCodeInvalid =>
-      'The linking code is incorrect or has expired. Ask the child to create a new code and try again.';
+  String get guardianErrorLinkCodeInvalid => 'The linking code is incorrect or has expired. Ask the child to create a new code and try again.';
 
   @override
-  String get guardianErrorChildHasGuardian =>
-      'This child is already linked to another guardian. The current link must be removed first.';
+  String get guardianErrorChildHasGuardian => 'This child is already linked to another guardian. The current link must be removed first.';
 
   @override
-  String get guardianErrorSameAccount =>
-      'A child can\'t be linked to the same account. The child needs an account separate from the guardian\'s.';
+  String get guardianErrorSameAccount => 'A child can\'t be linked to the same account. The child needs an account separate from the guardian\'s.';
 
   @override
   String get parentRewardErrorTitleRequired => 'Enter the reward name first.';
@@ -3695,8 +3466,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentRewardErrorLimitReached => 'You can add up to 3 rewards.';
 
   @override
-  String get parentRewardErrorUnavailable =>
-      'This gift isn\'t available for that step right now. Refresh and try again.';
+  String get parentRewardErrorUnavailable => 'This gift isn\'t available for that step right now. Refresh and try again.';
 
   @override
   String get parentRewardUnlockedFeedback => 'Gift unlocked';
@@ -3705,8 +3475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentRewardApprovedFeedback => 'Gift hand-over confirmed';
 
   @override
-  String get parentRewardStatusWaitingForChild =>
-      'Unlocked, waiting for the child to ask';
+  String get parentRewardStatusWaitingForChild => 'Unlocked, waiting for the child to ask';
 
   @override
   String get parentRewardStatusRequested => 'The child is asking for it';
@@ -3723,19 +3492,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familyDashboardRemoteUnavailable =>
-      'Couldn\'t load your linked children. Check your connection and try again.';
+  String get familyDashboardRemoteUnavailable => 'Couldn\'t load your linked children. Check your connection and try again.';
 
   @override
-  String get kidsHomeMissionsUnavailable =>
-      'Couldn\'t load the home missions right now.';
+  String get kidsHomeMissionsUnavailable => 'Couldn\'t load the home missions right now.';
 
   @override
   String get guardianSessionTileTitle => 'Family Dashboard';
 
   @override
-  String get guardianSessionTileSubtitle =>
-      'Open guardian tools; PIN entry is optional';
+  String get guardianSessionTileSubtitle => 'Open guardian tools; PIN entry is optional';
 
   @override
   String get guardianSessionBackToChild => 'Back to child';
@@ -3801,22 +3567,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guardianErrorChildNotLinked =>
-      'This child is no longer linked to your account.';
+  String get guardianErrorChildNotLinked => 'This child is no longer linked to your account.';
 
   @override
   String get guardianUnlinkTileTitle => 'Remove guardian link';
 
   @override
-  String get guardianUnlinkTileSubtitle =>
-      'Needs an internet connection; PIN entry is optional';
+  String get guardianUnlinkTileSubtitle => 'Needs an internet connection; PIN entry is optional';
 
   @override
   String get guardianUnlinkConfirmTitle => 'Remove the guardian link?';
 
   @override
-  String get guardianUnlinkConfirmBody =>
-      'Your guardian won\'t follow your progress anymore, and no new missions or gifts will arrive. Gifts you received stay; unfinished gifts and missions disappear from this device. You can link again later.';
+  String get guardianUnlinkConfirmBody => 'Your guardian won\'t follow your progress anymore, and no new missions or gifts will arrive. Gifts you received stay; unfinished gifts and missions disappear from this device. You can link again later.';
 
   @override
   String get guardianUnlinkAction => 'Remove link';
@@ -3825,19 +3588,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianUnlinkDone => 'Guardian link removed';
 
   @override
-  String get guardianErrorUnlinkFailed =>
-      'Couldn\'t remove the link, so nothing changed. Check you\'re online and signed in, then try again.';
+  String get guardianErrorUnlinkFailed => 'Couldn\'t remove the link, so nothing changed. Check you\'re online and signed in, then try again.';
 
   @override
-  String get pinRecoveryUnavailable =>
-      'Recovering the PIN needs a connection and an account linked to a guardian, or the request has expired.';
+  String get pinRecoveryUnavailable => 'Recovering the PIN needs a connection and an account linked to a guardian, or the request has expired.';
 
   @override
   String get pinRecoveryTitle => 'Replace a forgotten PIN';
 
   @override
-  String get pinRecoveryInstructions =>
-      'Ask your guardian to open your page in the family dashboard on their device and approve the request. Then type the code they see and a new PIN.';
+  String get pinRecoveryInstructions => 'Ask your guardian to open your page in the family dashboard on their device and approve the request. Then type the code they see and a new PIN.';
 
   @override
   String get pinRecoveryCodeLabel => 'Guardian\'s code';
@@ -3846,8 +3606,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinRecoveryNewPinLabel => 'New PIN (4 digits)';
 
   @override
-  String get pinRecoveryWrongCode =>
-      'The code is wrong, not approved yet, or expired.';
+  String get pinRecoveryWrongCode => 'The code is wrong, not approved yet, or expired.';
 
   @override
   String get pinRecoveryDone => 'PIN changed';
@@ -3856,8 +3615,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinRecoveryRequestTitle => 'PIN change request';
 
   @override
-  String get pinRecoveryRequestBody =>
-      'Your child\'s device asked to change the PIN. Approve only if you\'re with them or asked for it yourself.';
+  String get pinRecoveryRequestBody => 'Your child\'s device asked to change the PIN. Approve only if you\'re with them or asked for it yourself.';
 
   @override
   String get pinRecoveryApproveAction => 'Approve and show code';
@@ -3871,16 +3629,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guardianErrorUnlinkBeforePathChange =>
-      'Couldn\'t remove the guardian link, so the path wasn\'t changed. Check you\'re online and signed in, then try again.';
+  String get guardianErrorUnlinkBeforePathChange => 'Couldn\'t remove the guardian link, so the path wasn\'t changed. Check you\'re online and signed in, then try again.';
 
   @override
-  String get resetPathUnlinksGuardianWarning =>
-      'This account is linked to a guardian. Changing the path removes the link, so the guardian won\'t follow progress anymore. This needs an internet connection.';
+  String get resetPathUnlinksGuardianWarning => 'This account is linked to a guardian. Changing the path removes the link, so the guardian won\'t follow progress anymore. This needs an internet connection.';
 
   @override
-  String get childErrorIdentityUpdateUnavailable =>
-      'Editing the child\'s details isn\'t available right now. Try again later.';
+  String get childErrorIdentityUpdateUnavailable => 'Editing the child\'s details isn\'t available right now. Try again later.';
 
   @override
   String childAgeYears(int age, String ageText) {
@@ -3897,22 +3652,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get childEditIdentity => 'Edit name and age';
 
   @override
-  String get childIdentitySaved =>
-      'Saved. The child\'s device shows the change after its next sync.';
+  String get childIdentitySaved => 'Saved. The child\'s device shows the change after its next sync.';
 
   @override
   String get kidsLinkGuardianTileTitle => 'Link guardian';
 
   @override
-  String get kidsLinkGuardianTileSubtitle =>
-      'Needs the guardian\'s code. Once linked, your guardian follows your progress from their device.';
+  String get kidsLinkGuardianTileSubtitle => 'Needs the guardian\'s code. Once linked, your guardian follows your progress from their device.';
 
   @override
   String get parentDashboardTodaySummary => 'Today';
 
   @override
-  String get parentDashboardTodayEmpty =>
-      'Today: no sessions yet. Encourage a short session.';
+  String get parentDashboardTodayEmpty => 'Today: no sessions yet. Encourage a short session.';
 
   @override
   String parentDashboardTodayCompleted(String count) {
@@ -3950,8 +3702,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardDailyReminder => 'Daily reminder for the child';
 
   @override
-  String get parentDashboardReminderSubtitle =>
-      'The time can be changed later from parent settings';
+  String get parentDashboardReminderSubtitle => 'The time can be changed later from parent settings';
 
   @override
   String get parentDashboardRemoteFollowup => 'Remote follow-up';
@@ -3971,11 +3722,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String parentDashboardMemorizedSummary(
-    String memorized,
-    String total,
-    String percent,
-  ) {
+  String parentDashboardMemorizedSummary(String memorized, String total, String percent) {
     return '$memorized/$total ayahs memorized • $percent%';
   }
 
@@ -4024,8 +3771,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardRewardHint => 'Example: extra play time';
 
   @override
-  String get parentDashboardRewardEmpty =>
-      'Add rewards that appear for the child after reaching the weekly goal.';
+  String get parentDashboardRewardEmpty => 'Add rewards that appear for the child after reaching the weekly goal.';
 
   @override
   String get parentDashboardRewardLocked => 'Locked';
@@ -4062,11 +3808,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanHeaderTitle => 'Today\'s Plan';
 
   @override
-  String dailyPlanHeaderSummary(
-    int total,
-    String totalText,
-    String completedText,
-  ) {
+  String dailyPlanHeaderSummary(int total, String totalText, String completedText) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -4082,8 +3824,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dailyPlanAllDoneShort =>
-      'Well done! You completed your plan today';
+  String get dailyPlanAllDoneShort => 'Well done! You completed your plan today';
 
   @override
   String dailyPlanRemainingItems(int count, String countText) {
@@ -4118,16 +3859,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanEmptyTitle => 'Well done! No reviews are due today';
 
   @override
-  String get dailyPlanEmptySubtitle =>
-      'Check again tomorrow to continue your schedule';
+  String get dailyPlanEmptySubtitle => 'Check again tomorrow to continue your schedule';
 
   @override
-  String get dailyPlanNoPlanTitle =>
-      'You haven\'t created a memorization plan yet';
+  String get dailyPlanNoPlanTitle => 'You haven\'t created a memorization plan yet';
 
   @override
-  String get dailyPlanNoPlanSubtitle =>
-      'Create your plan to see your daily memorization and review ayahs here.';
+  String get dailyPlanNoPlanSubtitle => 'Create your plan to see your daily memorization and review ayahs here.';
 
   @override
   String get dailyPlanCreatePlanAction => 'Create your plan';
@@ -4139,8 +3877,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanDeleteTitle => 'Confirm plan deletion';
 
   @override
-  String get customPlanDeleteKeeps =>
-      'Keeps: achievements, history, and certificates';
+  String get customPlanDeleteKeeps => 'Keeps: achievements, history, and certificates';
 
   @override
   String get customPlanDeleteRemoves => 'Deletes: current plan only';
@@ -4173,8 +3910,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanTargetUserTitle => 'Who is this plan for?';
 
   @override
-  String get customPlanChildFeaturesNote =>
-      'Parent follow-up features will be enabled automatically.';
+  String get customPlanChildFeaturesNote => 'Parent follow-up features will be enabled automatically.';
 
   @override
   String get customPlanSurahRange => 'Surah range';
@@ -4260,8 +3996,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanNearRevision => 'Near review';
 
   @override
-  String get customPlanNearRevisionSubtitle =>
-      'Review ayahs from the last 5 days';
+  String get customPlanNearRevisionSubtitle => 'Review ayahs from the last 5 days';
 
   @override
   String get customPlanNearRevisionCount => 'Near review ayah count';
@@ -4270,8 +4005,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanFarRevision => 'Far review';
 
   @override
-  String get customPlanFarRevisionSubtitle =>
-      'Smart repetition for older ayahs';
+  String get customPlanFarRevisionSubtitle => 'Smart repetition for older ayahs';
 
   @override
   String get customPlanFarRevisionCount => 'Far review ayah count';
@@ -4301,12 +4035,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanEstimatedScope(
-    int surahs,
-    String surahsText,
-    int ayahs,
-    String ayahsText,
-  ) {
+  String customPlanEstimatedScope(int surahs, String surahsText, int ayahs, String ayahsText) {
     String _temp0 = intl.Intl.pluralLogic(
       surahs,
       locale: localeName,
@@ -4338,8 +4067,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanPresetBalanced => 'Balanced';
 
   @override
-  String get customPlanPresetBalancedDesc =>
-      '5 ayahs/day • 6 days • 30 minutes';
+  String get customPlanPresetBalancedDesc => '5 ayahs/day • 6 days • 30 minutes';
 
   @override
   String get customPlanPresetBalancedName => 'Balanced plan';
@@ -4348,8 +4076,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanPresetIntensive => 'Intensive';
 
   @override
-  String get customPlanPresetIntensiveDesc =>
-      '10 ayahs/day • every day • 50 minutes';
+  String get customPlanPresetIntensiveDesc => '10 ayahs/day • every day • 50 minutes';
 
   @override
   String get customPlanPresetIntensiveName => 'Intensive plan';
@@ -4358,8 +4085,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customPlanPresetJuzAmma => 'Juz Amma';
 
   @override
-  String get customPlanPresetJuzAmmaDesc =>
-      'From An-Nas to An-Naba • 3 ayahs/day • 20 minutes';
+  String get customPlanPresetJuzAmmaDesc => 'From An-Nas to An-Naba • 3 ayahs/day • 20 minutes';
 
   @override
   String customPlanMinutesLimitHint(String minutes, String count) {
@@ -4378,12 +4104,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanSummaryLoad(
-    int ayahsPerDay,
-    String ayahsText,
-    int daysPerWeek,
-    String daysText,
-  ) {
+  String customPlanSummaryLoad(int ayahsPerDay, String ayahsText, int daysPerWeek, String daysText) {
     String _temp0 = intl.Intl.pluralLogic(
       ayahsPerDay,
       locale: localeName,
@@ -4400,11 +4121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customPlanSummarySession(
-    int minutes,
-    String minutesText,
-    String difficulty,
-  ) {
+  String customPlanSummarySession(int minutes, String minutesText, String difficulty) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
       locale: localeName,
@@ -4415,15 +4132,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get memorizationPathSelectionFailedTitle =>
-      'Could not save your choice';
+  String get memorizationPathSelectionFailedTitle => 'Could not save your choice';
 
   @override
   String get memorizationPathConfirmTitle => 'What happens next?';
 
   @override
-  String get memorizationPathCanChangeLater =>
-      'You can change this later from Settings without losing progress.';
+  String get memorizationPathCanChangeLater => 'You can change this later from Settings without losing progress.';
 
   @override
   String get parentDashboardLinkAction => 'Link';
@@ -4438,8 +4153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeParentToolsTitle => 'Parent / Guardian Tools';
 
   @override
-  String get homeParentToolsSubtitle =>
-      'Monitor your child’s progress and rewards';
+  String get homeParentToolsSubtitle => 'Monitor your child’s progress and rewards';
 
   @override
   String get homeParentToolsAction => 'Open Parent Dashboard';
@@ -4448,23 +4162,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestUpgradeTitle => 'Manage your account';
 
   @override
-  String get guestUpgradeMessage =>
-      'Create an account for account management and family features.';
+  String get guestUpgradeMessage => 'Create an account for account management and family features.';
 
   @override
-  String get guestUpgradeLocalProgress =>
-      'Your local progress remains on this device.';
+  String get guestUpgradeLocalProgress => 'Your local progress remains on this device.';
 
   @override
-  String get parentDashboardGuestSubtitle =>
-      'Sign in to manage your account and access guardian tools. Your local progress remains on this device.';
+  String get parentDashboardGuestSubtitle => 'Sign in to manage your account and access guardian tools. Your local progress remains on this device.';
 
   @override
   String get kidsQuranTitle => 'Kids Quran';
 
   @override
-  String get kidsQuranSubtitle =>
-      'Read quietly and move between pages at your pace.';
+  String get kidsQuranSubtitle => 'Read quietly and move between pages at your pace.';
 
   @override
   String get kidsQuranBackToHome => 'Back to Kids Home';
@@ -4517,8 +4227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardSettingsSaved => 'Settings saved';
 
   @override
-  String get guardianLinkingSlowHint =>
-      'This is taking longer than expected. You can continue and link later.';
+  String get guardianLinkingSlowHint => 'This is taking longer than expected. You can continue and link later.';
 
   @override
   String get bookmarkSaveError => 'Failed to save bookmark';
@@ -4533,8 +4242,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hifzReviewTimeTitle => 'Time to review';
 
   @override
-  String get hifzReviewFullSurahHint =>
-      'Review the full surah before finishing it';
+  String get hifzReviewFullSurahHint => 'Review the full surah before finishing it';
 
   @override
   String hifzReviewRangeHint(String startAyah, String endAyah) {
@@ -4545,12 +4253,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hifzEvaluatingReview => 'Evaluating review…';
 
   @override
-  String get hifzLeaveSessionMessage =>
-      'Do you want to leave the memorization session? Your current progress will be saved.';
+  String get hifzLeaveSessionMessage => 'Do you want to leave the memorization session? Your current progress will be saved.';
 
   @override
-  String get memorizationExitSessionMessage =>
-      'Continue this session later from where you stopped, or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
+  String get memorizationExitSessionMessage => 'Continue this session later from where you stopped, or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
 
   @override
   String get memorizationExitSessionTitle => 'Leave this session?';
@@ -4582,8 +4288,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hifzNoVoiceRecognized => '(No voice recognized)';
 
   @override
-  String get hifzRecordingReviewHint =>
-      'Recording — recite the passage from memory…';
+  String get hifzRecordingReviewHint => 'Recording — recite the passage from memory…';
 
   @override
   String get hifzFinishRecitation => 'Finish recitation';
@@ -4601,16 +4306,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hifzStartRecitation => 'Start recitation';
 
   @override
-  String get hifzAudioPlaybackFailed =>
-      'Audio playback failed. Check your internet connection.';
+  String get hifzAudioPlaybackFailed => 'Audio playback failed. Check your internet connection.';
 
   @override
-  String get hifzReviewSaveFailed =>
-      'Failed to save review progress. Try again.';
+  String get hifzReviewSaveFailed => 'Failed to save review progress. Try again.';
 
   @override
-  String get hifzMemorizationSaveFailed =>
-      'Failed to save memorization progress. Try again.';
+  String get hifzMemorizationSaveFailed => 'Failed to save memorization progress. Try again.';
 
   @override
   String hifzSurahLockedMessage(String surahName) {
@@ -4618,8 +4320,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsAudioPlaybackFailed =>
-      'Audio didn\'t work. Try again or ask a parent to check the internet connection.';
+  String get kidsAudioPlaybackFailed => 'Audio didn\'t work. Try again or ask a parent to check the internet connection.';
 
   @override
   String get smartCoachMemorizedReviewDueTitle => 'Retention review due';
@@ -4639,8 +4340,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStartKidsMission => 'Start the child\'s current mission.';
 
   @override
-  String get homeChooseKidsPath =>
-      'Choose the kids path or continue the current mission.';
+  String get homeChooseKidsPath => 'Choose the kids path or continue the current mission.';
 
   @override
   String homeDailyWirdPage(Object page) {
@@ -4705,15 +4405,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationDailyReviewBody =>
-      'A short review, at a pace that suits you today.';
+  String get notificationDailyReviewBody => 'A short review, at a pace that suits you today.';
 
   @override
   String get notificationStreakMercyTitle => 'A gentle fresh start';
 
   @override
-  String get notificationStreakMercyBody =>
-      'You can return today with a small step, whenever it suits you.';
+  String get notificationStreakMercyBody => 'You can return today with a small step, whenever it suits you.';
 
   @override
   String notificationStreakAlertTitle(Object count) {
@@ -4726,33 +4424,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationStreakGentleBody =>
-      'If you have a moment, spend a little time with the Quran.';
+  String get notificationStreakGentleBody => 'If you have a moment, spend a little time with the Quran.';
 
   @override
   String get notificationSmartReminderTitle => 'Time for your usual reading';
 
   @override
-  String get notificationSmartReminderBody =>
-      'This may be a good time for a little reading. Continue at your own pace.';
+  String get notificationSmartReminderBody => 'This may be a good time for a little reading. Continue at your own pace.';
 
   @override
   String get notificationChannelStreakGentleName => 'Gentle streak reminder';
 
   @override
-  String get notificationChannelStreakGentleDescription =>
-      'A quiet reminder before the streak protection alert';
+  String get notificationChannelStreakGentleDescription => 'A quiet reminder before the streak protection alert';
 
   @override
   String get notificationChannelSmartName => 'Smart reminder';
 
   @override
-  String get notificationChannelSmartDescription =>
-      'Reminders at your usual reading time';
+  String get notificationChannelSmartDescription => 'Reminders at your usual reading time';
 
   @override
-  String get notificationStreakAlertBody =>
-      'You can take a small step today. Choose what fits your time and energy.';
+  String get notificationStreakAlertBody => 'You can take a small step today. Choose what fits your time and energy.';
 
   @override
   String get notificationActionReviewStart => 'Start review';
@@ -4809,78 +4502,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationChannelRemindersName => 'Talia reminders';
 
   @override
-  String get notificationChannelRemindersDescription =>
-      'Daily review and memorization reminders';
+  String get notificationChannelRemindersDescription => 'Daily review and memorization reminders';
 
   @override
   String get notificationChannelStreakName => 'Streak protection';
 
   @override
-  String get notificationChannelStreakDescription =>
-      'Alerts to protect your memorization streak';
+  String get notificationChannelStreakDescription => 'Alerts to protect your memorization streak';
 
   @override
   String get notificationChannelDailyAyahName => 'Ayah of the Day';
 
   @override
-  String get notificationChannelDailyAyahDescription =>
-      'A daily ayah from the Holy Quran with reflection';
+  String get notificationChannelDailyAyahDescription => 'A daily ayah from the Holy Quran with reflection';
 
   @override
   String get notificationChannelMorningAzkarName => 'Morning azkar';
 
   @override
-  String get notificationChannelMorningAzkarDescription =>
-      'Morning azkar reminders';
+  String get notificationChannelMorningAzkarDescription => 'Morning azkar reminders';
 
   @override
   String get notificationChannelEveningAzkarName => 'Evening azkar';
 
   @override
-  String get notificationChannelEveningAzkarDescription =>
-      'Evening azkar reminders';
+  String get notificationChannelEveningAzkarDescription => 'Evening azkar reminders';
 
   @override
   String get notificationChannelDailyDuaName => 'Dua of the Day';
 
   @override
-  String get notificationChannelDailyDuaDescription =>
-      'Daily dua and supplication reminders';
+  String get notificationChannelDailyDuaDescription => 'Daily dua and supplication reminders';
 
   @override
   String get notificationChannelKidsName => 'Kids recitation';
 
   @override
-  String get notificationChannelKidsDescription =>
-      'Kids review and recitation reminders';
+  String get notificationChannelKidsDescription => 'Kids review and recitation reminders';
 
   @override
   String get notificationChannelKahfName => 'Surah Al-Kahf';
 
   @override
-  String get notificationChannelKahfDescription =>
-      'Friday Surah Al-Kahf reading reminders';
+  String get notificationChannelKahfDescription => 'Friday Surah Al-Kahf reading reminders';
 
   @override
   String get notificationChannelTahajjudName => 'Night prayer & Witr';
 
   @override
-  String get notificationChannelTahajjudDescription =>
-      'Qiyam al-layl reminders in the last third of the night';
+  String get notificationChannelTahajjudDescription => 'Qiyam al-layl reminders in the last third of the night';
 
   @override
   String get notificationChannelKhatmahName => 'Khatmah wird';
 
   @override
-  String get notificationChannelKhatmahDescription =>
-      'Khatmah progress reminders';
+  String get notificationChannelKhatmahDescription => 'Khatmah progress reminders';
 
   @override
   String get notificationChannelMilestonesName => 'Achievement celebrations';
 
   @override
-  String get notificationChannelMilestonesDesc =>
-      'Celebrations when you complete a juz, a surah, or a full khatmah';
+  String get notificationChannelMilestonesDesc => 'Celebrations when you complete a juz, a surah, or a full khatmah';
 
   @override
   String notificationMilestoneJuzTitle(String juz) {
@@ -4903,40 +4585,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationMilestoneKhatmahTitle =>
-      '🎉 Khatmah of the Noble Quran complete!';
+  String get notificationMilestoneKhatmahTitle => '🎉 Khatmah of the Noble Quran complete!';
 
   @override
-  String get notificationMilestoneKhatmahBody =>
-      'Alhamdulillah! You have completed a full khatmah of the Quran. May Allah accept it from you and reward you with the best of rewards.';
+  String get notificationMilestoneKhatmahBody => 'Alhamdulillah! You have completed a full khatmah of the Quran. May Allah accept it from you and reward you with the best of rewards.';
 
   @override
   String get notificationMilestoneStreakTitle => '🔥 30 consecutive days!';
 
   @override
-  String get notificationMilestoneStreakBody =>
-      'Thirty days of steady review, masha\'Allah! Keep your chain of light going.';
+  String get notificationMilestoneStreakBody => 'Thirty days of steady review, masha\'Allah! Keep your chain of light going.';
 
   @override
   String get notificationChannelPrayerName => 'Prayer times & Adhan';
 
   @override
-  String get notificationChannelPrayerDescription =>
-      'Alerts when a prayer time enters';
+  String get notificationChannelPrayerDescription => 'Alerts when a prayer time enters';
 
   @override
   String get notificationChannelPrayerAthanName => 'Prayer athan sound';
 
   @override
-  String get notificationChannelPrayerAthanDescription =>
-      'Prayer alerts with the bundled athan clip';
+  String get notificationChannelPrayerAthanDescription => 'Prayer alerts with the bundled athan clip';
 
   @override
   String get notificationChannelPrayerCompanionName => 'Prayer Companion';
 
   @override
-  String get notificationChannelPrayerCompanionDescription =>
-      'Gentle Prayer Companion self-confirmation reminders';
+  String get notificationChannelPrayerCompanionDescription => 'Gentle Prayer Companion self-confirmation reminders';
 
   @override
   String get notificationActionCompanionConfirm => 'Yes, I prayed it';
@@ -4975,36 +4651,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
 
   @override
-  String get notificationDailyAyahBody =>
-      'Read your daily Wird from the Holy Quran';
+  String get notificationDailyAyahBody => 'Read your daily Wird from the Holy Quran';
 
   @override
   String get notificationMorningAzkarTitle => 'Morning Azkar ☀️';
 
   @override
-  String get notificationMorningAzkarBody =>
-      'Start your day with the remembrance of Allah and peace of mind';
+  String get notificationMorningAzkarBody => 'Start your day with the remembrance of Allah and peace of mind';
 
   @override
   String get notificationEveningAzkarTitle => 'Evening Azkar 🌙';
 
   @override
-  String get notificationEveningAzkarBody =>
-      'End your day with the remembrance and protection of Allah';
+  String get notificationEveningAzkarBody => 'End your day with the remembrance and protection of Allah';
 
   @override
   String get notificationKidsReviewTitle => 'Shall we review together? 🌿';
 
   @override
-  String get notificationKidsReviewBody =>
-      'We can review a few ayahs together, whenever you are ready.';
+  String get notificationKidsReviewBody => 'We can review a few ayahs together, whenever you are ready.';
 
   @override
   String get notificationDailyDuaTitle => 'Dua of the Day 🤲';
 
   @override
-  String get notificationDailyDuaBody =>
-      'Today\'s dua is waiting for you in Talia';
+  String get notificationDailyDuaBody => 'Today\'s dua is waiting for you in Talia';
 
   @override
   String get notificationFridayKahfTitle => 'Surah Al-Kahf Reminder 🌿';
@@ -5018,29 +4689,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationWeeklyImpactQuietBody =>
-      'A new week and a chance for a gentle start. Choose a little time that suits you.';
+  String get notificationWeeklyImpactQuietBody => 'A new week and a chance for a gentle start. Choose a little time that suits you.';
 
   @override
   String get notificationSettingsWeeklyImpact => 'Weekly impact (Friday)';
 
   @override
-  String get notificationFridayKahfBody =>
-      'Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨';
+  String get notificationFridayKahfBody => 'Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨';
 
   @override
   String get notificationTahajjudTitle => 'Tahajjud & Night Prayer 🌙';
 
   @override
-  String get notificationTahajjudBody =>
-      'A peaceful moment for prayer and supplication in the last third of the night.. May Allah accept your prayers 🤲';
+  String get notificationTahajjudBody => 'A peaceful moment for prayer and supplication in the last third of the night.. May Allah accept your prayers 🤲';
 
   @override
   String get notificationKhatmahTitle => 'Daily Khatmah Reading 📖';
 
   @override
-  String get notificationKhatmahBody =>
-      'You can continue your khatmah reading today, at your own pace.';
+  String get notificationKhatmahBody => 'You can continue your khatmah reading today, at your own pace.';
 
   @override
   String notificationKhatmahBodyWithTarget(Object start, Object end) {
@@ -5053,50 +4720,43 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationPrayerBody =>
-      'Come to prayer, come to success.. May Allah bless your prayer';
+  String get notificationPrayerBody => 'Come to prayer, come to success.. May Allah bless your prayer';
 
   @override
   String get notificationSettingsFridayKahf => 'Surah Al-Kahf (Friday)';
 
   @override
-  String get notificationSettingsFridayKahfSub =>
-      'Weekly Friday reminder to read Surah Al-Kahf';
+  String get notificationSettingsFridayKahfSub => 'Weekly Friday reminder to read Surah Al-Kahf';
 
   @override
   String get notificationSettingsTahajjud => 'Tahajjud & Night Prayer';
 
   @override
-  String get notificationSettingsTahajjudSub =>
-      'Daily reminder in the last third of the night';
+  String get notificationSettingsTahajjudSub => 'Daily reminder in the last third of the night';
 
   @override
   String get notificationSettingsKhatmah => 'Khatmah Progress';
 
   @override
-  String get notificationSettingsKhatmahSub =>
-      'Daily reminder for your active Khatmah target';
+  String get notificationSettingsKhatmahSub => 'Daily reminder for your active Khatmah target';
 
   @override
   String get notificationSettingsPrayerTimes => 'Prayer Times';
 
   @override
-  String get notificationSettingsPrayerTimesSub =>
-      'Reminders at the time of each of the 5 daily prayers';
+  String get notificationSettingsPrayerTimesSub => 'Reminders at the time of each of the 5 daily prayers';
 
   @override
   String get notificationSettingsPrayerAthan => 'Full Adhan';
 
   @override
-  String get notificationSettingsPrayerAthanSub =>
-      'Plays the full adhan at prayer time with a stop control';
+  String get notificationSettingsPrayerAthanSub => 'Plays the full adhan at prayer time with a stop control';
 
   @override
   String get muezzinPickerTitle => 'Choose muezzin';
 
   @override
-  String get muezzinPickerSubtitle =>
-      'Pick your favorite adhan voice and preview it before saving';
+  String get muezzinPickerSubtitle => 'Pick your favorite adhan voice and preview it before saving';
 
   @override
   String get muezzinDefault => 'Default adhan';
@@ -5125,8 +4785,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationSettingsPrayerNeedsTimes =>
-      'Set up prayer times and choose your city first';
+  String get notificationSettingsPrayerNeedsTimes => 'Set up prayer times and choose your city first';
 
   @override
   String get homeTourTitle => 'Need a quick tour?';
@@ -5181,8 +4840,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journeyCurrentMissionTitle => 'Current Mission';
 
   @override
-  String get journeyCurrentMissionDesc =>
-      'Continue the child\'s current mission.';
+  String get journeyCurrentMissionDesc => 'Continue the child\'s current mission.';
 
   @override
   String get journeyContinueSessionTitle => 'Continue Session';
@@ -5218,43 +4876,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS1Cat => 'Start';
 
   @override
-  String get tutorialS1Does =>
-      'Talia opens with a short intro, lets you choose the adult or kids path, then takes you to Home. You can use it as a guest and sign in later.';
+  String get tutorialS1Does => 'Talia opens with a short intro, lets you choose the adult or kids path, then takes you to Home. You can use it as a guest and sign in later.';
 
   @override
-  String get tutorialS1Open =>
-      'It appears the first time you open the app. Afterwards, use the bottom bar to move between Home, Quran, Memorization, Adhkar and Progress.';
+  String get tutorialS1Open => 'It appears the first time you open the app. Afterwards, use the bottom bar to move between Home, Quran, Memorization, Adhkar and Progress.';
 
   @override
-  String get tutorialS1Useful =>
-      'Helpful for new users who want the map of the app before reading or memorizing.';
+  String get tutorialS1Useful => 'Helpful for new users who want the map of the app before reading or memorizing.';
 
   @override
   String get tutorialS1Step1 => 'Go through the intro pages, or tap Skip.';
 
   @override
-  String get tutorialS1Step2 =>
-      'Choose the adult or kids path, then continue as a guest or sign in.';
+  String get tutorialS1Step2 => 'Choose the adult or kids path, then continue as a guest or sign in.';
 
   @override
-  String get tutorialS1Step3 =>
-      'Use the bottom bar to move between the main sections.';
+  String get tutorialS1Step3 => 'Use the bottom bar to move between the main sections.';
 
   @override
-  String get tutorialS1Tip1 =>
-      'Start from Home: it gathers today\'s reading, your progress and shortcuts.';
+  String get tutorialS1Tip1 => 'Start from Home: it gathers today\'s reading, your progress and shortcuts.';
 
   @override
-  String get tutorialS1Tip2 =>
-      'You can change the memorization path later in Settings > Quran & Memorization.';
+  String get tutorialS1Tip2 => 'You can change the memorization path later in Settings > Quran & Memorization.';
 
   @override
-  String get tutorialS1Note1 =>
-      'Signing in is optional. Without it your progress stays on this device.';
+  String get tutorialS1Note1 => 'Signing in is optional. Without it your progress stays on this device.';
 
   @override
-  String get tutorialS1Note2 =>
-      'Settings are behind the gear icon at the top of Home.';
+  String get tutorialS1Note2 => 'Settings are behind the gear icon at the top of Home.';
 
   @override
   String get tutorialS2Title => 'Home';
@@ -5263,19 +4912,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS2Cat => 'Start';
 
   @override
-  String get tutorialS2Does =>
-      'Home shows the next prayer, a main card for what to do next, today\'s wird, your streak and XP, the ayah of the day and your recent activity.';
+  String get tutorialS2Does => 'Home shows the next prayer, a main card for what to do next, today\'s wird, your streak and XP, the ayah of the day and your recent activity.';
 
   @override
   String get tutorialS2Open => 'Tap Home in the bottom bar.';
 
   @override
-  String get tutorialS2Useful =>
-      'The best daily starting point: reading, memorizing and follow-up in one screen.';
+  String get tutorialS2Useful => 'The best daily starting point: reading, memorizing and follow-up in one screen.';
 
   @override
-  String get tutorialS2Step1 =>
-      'Tap the main card to continue reading, resume a session or open today\'s plan.';
+  String get tutorialS2Step1 => 'Tap the main card to continue reading, resume a session or open today\'s plan.';
 
   @override
   String get tutorialS2Step2 => 'Tap \"Something else\" to see other options.';
@@ -5284,20 +4930,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS2Step3 => 'Open Settings with the gear icon at the top.';
 
   @override
-  String get tutorialS2Step4 =>
-      'Tap \"Choose city\" to set your city for prayer times.';
+  String get tutorialS2Step4 => 'Tap \"Choose city\" to set your city for prayer times.';
 
   @override
-  String get tutorialS2Tip1 =>
-      'The ring shows the share of the whole Quran you have memorized, so it grows slowly. The seven dots are the last seven days, ending today.';
+  String get tutorialS2Tip1 => 'The ring shows the share of the whole Quran you have memorized, so it grows slowly. The seven dots are the last seven days, ending today.';
 
   @override
-  String get tutorialS2Tip2 =>
-      'Tap the icons under the ayah of the day to share it, open it in the Mushaf or listen to it.';
+  String get tutorialS2Tip2 => 'Tap the icons under the ayah of the day to share it, open it in the Mushaf or listen to it.';
 
   @override
-  String get tutorialS2Note1 =>
-      'Some cards appear only when there is data, such as a started khatmah or a saved reading position.';
+  String get tutorialS2Note1 => 'Some cards appear only when there is data, such as a started khatmah or a saved reading position.';
 
   @override
   String get tutorialS2Note2 => 'The account card can be dismissed with the X.';
@@ -5309,51 +4951,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS3Cat => 'Quran';
 
   @override
-  String get tutorialS3Does =>
-      'The Quran tab lists the surahs, the juz and your bookmarks. The reader shows the Mushaf page with tajweed colors, audio, bookmarks and a focus mode.';
+  String get tutorialS3Does => 'The Quran tab lists the surahs, the juz and your bookmarks. The reader shows the Mushaf page with tajweed colors, audio, bookmarks and a focus mode.';
 
   @override
-  String get tutorialS3Open =>
-      'Tap Quran, then choose a surah or a juz. You can also open today\'s wird from Home.';
+  String get tutorialS3Open => 'Tap Quran, then choose a surah or a juz. You can also open today\'s wird from Home.';
 
   @override
-  String get tutorialS3Useful =>
-      'For your daily wird, looking up an ayah, or reading before a memorization session.';
+  String get tutorialS3Useful => 'For your daily wird, looking up an ayah, or reading before a memorization session.';
 
   @override
-  String get tutorialS3Step1 =>
-      'Choose a surah from the list, or use the search box at the top.';
+  String get tutorialS3Step1 => 'Choose a surah from the list, or use the search box at the top.';
 
   @override
   String get tutorialS3Step2 => 'Swipe to turn the page.';
 
   @override
-  String get tutorialS3Step3 =>
-      'Long-press an ayah to listen to it, copy it, bookmark it, share it or start memorizing it.';
+  String get tutorialS3Step3 => 'Long-press an ayah to listen to it, copy it, bookmark it, share it or start memorizing it.';
 
   @override
-  String get tutorialS3Step4 =>
-      'Open the menu with the three dots to go to a page, surah or juz, choose a reciter, switch tajweed colors on or off, or enter focus mode.';
+  String get tutorialS3Step4 => 'Open the menu with the three dots to go to a page, surah or juz, choose a reciter, switch tajweed colors on or off, or enter focus mode.';
 
   @override
-  String get tutorialS3Step5 =>
-      'Stay on a page for a few seconds while reading: it is counted as read automatically.';
+  String get tutorialS3Step5 => 'Stay on a page for a few seconds while reading: it is counted as read automatically.';
 
   @override
-  String get tutorialS3Tip1 =>
-      'Listen to an ayah before memorizing it to get the pronunciation right.';
+  String get tutorialS3Tip1 => 'Listen to an ayah before memorizing it to get the pronunciation right.';
 
   @override
-  String get tutorialS3Tip2 =>
-      'The Continue reading card on the Quran tab takes you back to your last page.';
+  String get tutorialS3Tip2 => 'The Continue reading card on the Quran tab takes you back to your last page.';
 
   @override
-  String get tutorialS3Note1 =>
-      'The Quran text is bundled with the app, so it displays without a connection.';
+  String get tutorialS3Note1 => 'The Quran text is bundled with the app, so it displays without a connection.';
 
   @override
-  String get tutorialS3Note2 =>
-      'Audio needs a connection unless it was already cached.';
+  String get tutorialS3Note2 => 'Audio needs a connection unless it was already cached.';
 
   @override
   String get tutorialS4Title => 'Search and bookmarks';
@@ -5362,16 +4993,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS4Cat => 'Quran';
 
   @override
-  String get tutorialS4Does =>
-      'Find a surah by name or an ayah by its words, and keep important ayahs as bookmarks.';
+  String get tutorialS4Does => 'Find a surah by name or an ayah by its words, and keep important ayahs as bookmarks.';
 
   @override
-  String get tutorialS4Open =>
-      'Use the search box at the top of the Quran tab, or the search icon on Home. Bookmarks have their own tab on the Quran screen.';
+  String get tutorialS4Open => 'Use the search box at the top of the Quran tab, or the search icon on Home. Bookmarks have their own tab on the Quran screen.';
 
   @override
-  String get tutorialS4Useful =>
-      'For collecting ayahs to review, similar ayahs, or places you want to come back to.';
+  String get tutorialS4Useful => 'For collecting ayahs to review, similar ayahs, or places you want to come back to.';
 
   @override
   String get tutorialS4Step1 => 'Type a surah name or words from an ayah.';
@@ -5380,28 +5008,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS4Step2 => 'Open the surah or the ayah from the results.';
 
   @override
-  String get tutorialS4Step3 =>
-      'Long-press an ayah in the reader and choose Bookmark.';
+  String get tutorialS4Step3 => 'Long-press an ayah in the reader and choose Bookmark.';
 
   @override
-  String get tutorialS4Step4 =>
-      'Open the Bookmark tab to return to saved ayahs or remove them.';
+  String get tutorialS4Step4 => 'Open the Bookmark tab to return to saved ayahs or remove them.';
 
   @override
-  String get tutorialS4Tip1 =>
-      'Bookmark the start of each memorization section to return to it quickly.';
+  String get tutorialS4Tip1 => 'Bookmark the start of each memorization section to return to it quickly.';
 
   @override
-  String get tutorialS4Tip2 =>
-      'Search ignores diacritics, so you can type plain Arabic.';
+  String get tutorialS4Tip2 => 'Search ignores diacritics, so you can type plain Arabic.';
 
   @override
-  String get tutorialS4Note1 =>
-      'Ayah search shows at most 50 results: add more words to narrow it.';
+  String get tutorialS4Note1 => 'Ayah search shows at most 50 results: add more words to narrow it.';
 
   @override
-  String get tutorialS4Note2 =>
-      'Removing a bookmark does not affect any reading or memorization progress.';
+  String get tutorialS4Note2 => 'Removing a bookmark does not affect any reading or memorization progress.';
 
   @override
   String get tutorialS5Title => 'Memorizing step by step';
@@ -5410,47 +5032,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS5Cat => 'Memorization';
 
   @override
-  String get tutorialS5Does =>
-      'The Memorization tab brings together today\'s plan, practice by surah, the listening quiz and reviews by recitation. Every ayah goes through learn, memorize and recite.';
+  String get tutorialS5Does => 'The Memorization tab brings together today\'s plan, practice by surah, the listening quiz and reviews by recitation. Every ayah goes through learn, memorize and recite.';
 
   @override
-  String get tutorialS5Open =>
-      'Tap Memorization. On first use you choose the adult or kids path.';
+  String get tutorialS5Open => 'Tap Memorization. On first use you choose the adult or kids path.';
 
   @override
-  String get tutorialS5Useful =>
-      'For systematic memorization with spaced reviews, so what you memorize stays.';
+  String get tutorialS5Useful => 'For systematic memorization with spaced reviews, so what you memorize stays.';
 
   @override
-  String get tutorialS5Step1 =>
-      'Create a plan, or pick a surah under Practice by Surah.';
+  String get tutorialS5Step1 => 'Create a plan, or pick a surah under Practice by Surah.';
 
   @override
   String get tutorialS5Step2 => 'Learn: listen to the ayah and read it.';
 
   @override
-  String get tutorialS5Step3 =>
-      'Memorize: try without looking, and use the hints (first word, first letters, show the ayah) only when needed.';
+  String get tutorialS5Step3 => 'Memorize: try without looking, and use the hints (first word, first letters, show the ayah) only when needed.';
 
   @override
-  String get tutorialS5Step4 =>
-      'Recite: record your recitation, or grade yourself honestly if speech recognition is unavailable. A block of ayahs is then recited together.';
+  String get tutorialS5Step4 => 'Recite: record your recitation, or grade yourself honestly if speech recognition is unavailable. A block of ayahs is then recited together.';
 
   @override
-  String get tutorialS5Tip1 =>
-      'Hints are recorded and affect when the ayah comes back for review.';
+  String get tutorialS5Tip1 => 'Hints are recorded and affect when the ayah comes back for review.';
 
   @override
-  String get tutorialS5Tip2 =>
-      'Change how strict recitation checking is in Settings > Quran & Memorization > Accuracy level.';
+  String get tutorialS5Tip2 => 'Change how strict recitation checking is in Settings > Quran & Memorization > Accuracy level.';
 
   @override
-  String get tutorialS5Note1 =>
-      'Leaving a session asks whether to continue later or discard it.';
+  String get tutorialS5Note1 => 'Leaving a session asks whether to continue later or discard it.';
 
   @override
-  String get tutorialS5Note2 =>
-      'Without speech recognition or microphone permission, grading yourself is a fully supported route.';
+  String get tutorialS5Note2 => 'Without speech recognition or microphone permission, grading yourself is a fully supported route.';
 
   @override
   String get tutorialS6Title => 'Daily adhkar and the counter';
@@ -5459,51 +5071,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS6Cat => 'Adhkar';
 
   @override
-  String get tutorialS6Does =>
-      'Morning and evening adhkar, general adhkar and duas, with a repetition counter, an index, free tasbeeh and a smart wird that follows the time of day.';
+  String get tutorialS6Does => 'Morning and evening adhkar, general adhkar and duas, with a repetition counter, an index, free tasbeeh and a smart wird that follows the time of day.';
 
   @override
-  String get tutorialS6Open =>
-      'Tap Adhkar, then choose morning, evening, general adhkar, duas, smart wird or free tasbeeh.';
+  String get tutorialS6Open => 'Tap Adhkar, then choose morning, evening, general adhkar, duas, smart wird or free tasbeeh.';
 
   @override
-  String get tutorialS6Useful =>
-      'For the morning and evening wird, tasbeeh sessions, and sharing a dua quickly.';
+  String get tutorialS6Useful => 'For the morning and evening wird, tasbeeh sessions, and sharing a dua quickly.';
 
   @override
-  String get tutorialS6Step1 =>
-      'Choose a category; the one for the current time is highlighted at the top.';
+  String get tutorialS6Step1 => 'Choose a category; the one for the current time is highlighted at the top.';
 
   @override
-  String get tutorialS6Step2 =>
-      'Tap the counter once for each repetition; it moves to the next dhikr when you finish.';
+  String get tutorialS6Step2 => 'Tap the counter once for each repetition; it moves to the next dhikr when you finish.';
 
   @override
   String get tutorialS6Step3 => 'Open the index to jump to a specific dhikr.';
 
   @override
-  String get tutorialS6Step4 =>
-      'Change the text size, copy or share the dhikr when needed.';
+  String get tutorialS6Step4 => 'Change the text size, copy or share the dhikr when needed.';
 
   @override
-  String get tutorialS6Step5 =>
-      'When you finish, reset the session or go back.';
+  String get tutorialS6Step5 => 'When you finish, reset the session or go back.';
 
   @override
-  String get tutorialS6Tip1 =>
-      'Turn on morning and evening reminders in Settings > Notifications.';
+  String get tutorialS6Tip1 => 'Turn on morning and evening reminders in Settings > Notifications.';
 
   @override
-  String get tutorialS6Tip2 =>
-      'Press and hold the counter to undo the last count.';
+  String get tutorialS6Tip2 => 'Press and hold the counter to undo the last count.';
 
   @override
-  String get tutorialS6Note1 =>
-      'The adhkar are bundled with the app and work offline.';
+  String get tutorialS6Note1 => 'The adhkar are bundled with the app and work offline.';
 
   @override
-  String get tutorialS6Note2 =>
-      'Counters belong to the current day\'s session; they are not a memorization certificate.';
+  String get tutorialS6Note2 => 'Counters belong to the current day\'s session; they are not a memorization certificate.';
 
   @override
   String get tutorialS7Title => 'Daily plan and reviews';
@@ -5512,51 +5113,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS7Cat => 'Memorization';
 
   @override
-  String get tutorialS7Does =>
-      'Your plan serves new ayahs and reviews every day. Reviews return on a schedule based on how well you recited, so what you memorize stays firm.';
+  String get tutorialS7Does => 'Your plan serves new ayahs and reviews every day. Reviews return on a schedule based on how well you recited, so what you memorize stays firm.';
 
   @override
-  String get tutorialS7Open =>
-      'Memorization > Continue Today\'s Plan, or the main card on Home.';
+  String get tutorialS7Open => 'Memorization > Continue Today\'s Plan, or the main card on Home.';
 
   @override
-  String get tutorialS7Useful =>
-      'For steady memorization with smart review instead of relying on memory alone.';
+  String get tutorialS7Useful => 'For steady memorization with smart review instead of relying on memory alone.';
 
   @override
-  String get tutorialS7Step1 =>
-      'Open Continue Today\'s Plan from the Memorization tab.';
+  String get tutorialS7Step1 => 'Open Continue Today\'s Plan from the Memorization tab.';
 
   @override
   String get tutorialS7Step2 => 'Finish the new ayahs of the day.';
 
   @override
-  String get tutorialS7Step3 =>
-      'Do the Review Session when ayahs are due: the badge shows how many.';
+  String get tutorialS7Step3 => 'Do the Review Session when ayahs are due: the badge shows how many.';
 
   @override
-  String get tutorialS7Step4 =>
-      'Open View Today\'s Plan to see what is done and what remains.';
+  String get tutorialS7Step4 => 'Open View Today\'s Plan to see what is done and what remains.';
 
   @override
-  String get tutorialS7Step5 =>
-      'Try the Listening Quiz once you have memorized a few ayahs: it plays an ayah and asks you to name its surah or continue it.';
+  String get tutorialS7Step5 => 'Try the Listening Quiz once you have memorized a few ayahs: it plays an ayah and asks you to name its surah or continue it.';
 
   @override
-  String get tutorialS7Tip1 =>
-      'Grade yourself honestly: it decides how strong the ayah is and when it returns.';
+  String get tutorialS7Tip1 => 'Grade yourself honestly: it decides how strong the ayah is and when it returns.';
 
   @override
-  String get tutorialS7Tip2 =>
-      'If the plan feels heavy, lower the daily ayahs in Plan Settings.';
+  String get tutorialS7Tip2 => 'If the plan feels heavy, lower the daily ayahs in Plan Settings.';
 
   @override
-  String get tutorialS7Note1 =>
-      'On rest days (set by days per week) you get reviews only.';
+  String get tutorialS7Note1 => 'On rest days (set by days per week) you get reviews only.';
 
   @override
-  String get tutorialS7Note2 =>
-      'The Listening Quiz needs at least five memorized ayahs.';
+  String get tutorialS7Note2 => 'The Listening Quiz needs at least five memorized ayahs.';
 
   @override
   String get tutorialS8Title => 'Setting up your plan';
@@ -5565,50 +5155,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS8Cat => 'Memorization';
 
   @override
-  String get tutorialS8Does =>
-      'Create your plan from a quick preset or from scratch: name, surah range, ayahs per day, days per week, session length, difficulty and reviews.';
+  String get tutorialS8Does => 'Create your plan from a quick preset or from scratch: name, surah range, ayahs per day, days per week, session length, difficulty and reviews.';
 
   @override
-  String get tutorialS8Open =>
-      'Memorization > Create plan, or Plan Settings later.';
+  String get tutorialS8Open => 'Memorization > Create plan, or Plan Settings later.';
 
   @override
-  String get tutorialS8Useful =>
-      'For a specific goal, such as memorizing a particular juz, or planning a child\'s memorization.';
+  String get tutorialS8Useful => 'For a specific goal, such as memorizing a particular juz, or planning a child\'s memorization.';
 
   @override
-  String get tutorialS8Step1 =>
-      'Pick a quick preset (Light, Balanced, Intensive, Juz Amma) or fill in the fields yourself.';
+  String get tutorialS8Step1 => 'Pick a quick preset (Light, Balanced, Intensive, Juz Amma) or fill in the fields yourself.';
 
   @override
-  String get tutorialS8Step2 =>
-      'Choose the surah range. Choosing Child takes you to the kids path, where kids plans are managed.';
+  String get tutorialS8Step2 => 'Choose the surah range. Choosing Child takes you to the kids path, where kids plans are managed.';
 
   @override
-  String get tutorialS8Step3 =>
-      'Set ayahs per day, days per week and session length.';
+  String get tutorialS8Step3 => 'Set ayahs per day, days per week and session length.';
 
   @override
-  String get tutorialS8Step4 =>
-      'Choose the difficulty and turn near and far revision on or off.';
+  String get tutorialS8Step4 => 'Choose the difficulty and turn near and far revision on or off.';
 
   @override
   String get tutorialS8Step5 => 'Save and start the plan.';
 
   @override
-  String get tutorialS8Tip1 =>
-      'The session length limits new ayahs, at about four minutes each. A note appears if the minutes are too short for your goal.';
+  String get tutorialS8Tip1 => 'The session length limits new ayahs, at about four minutes each. A note appears if the minutes are too short for your goal.';
 
   @override
   String get tutorialS8Tip2 => 'Start small to build a habit, then increase.';
 
   @override
-  String get tutorialS8Note1 =>
-      'The plan can be deleted from the setup screen.';
+  String get tutorialS8Note1 => 'The plan can be deleted from the setup screen.';
 
   @override
-  String get tutorialS8Note2 =>
-      'The finishing time shown on the screen is an estimate.';
+  String get tutorialS8Note2 => 'The finishing time shown on the screen is an estimate.';
 
   @override
   String get tutorialS9Title => 'Kids mode and parent tools';
@@ -5617,48 +5197,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS9Cat => 'Memorization';
 
   @override
-  String get tutorialS9Does =>
-      'A journey of memorization houses with stars, levels and repeated listening for children, plus parent tools for follow-up.';
+  String get tutorialS9Does => 'A journey of memorization houses with stars, levels and repeated listening for children, plus parent tools for follow-up.';
 
   @override
-  String get tutorialS9Open =>
-      'Choose the kids path. PIN setup is optional; a PIN is required only when linking a guardian. Parent tools appear on Home once you are signed in.';
+  String get tutorialS9Open => 'Choose the kids path. PIN setup is optional; a PIN is required only when linking a guardian. Parent tools appear on Home once you are signed in.';
 
   @override
-  String get tutorialS9Useful =>
-      'For children and beginners, or for a parent who wants to follow stars, sessions and rewards.';
+  String get tutorialS9Useful => 'For children and beginners, or for a parent who wants to follow stars, sessions and rewards.';
 
   @override
-  String get tutorialS9Step1 =>
-      'Choose the kids path, then enter the child\'s name, age and starting surah. You can skip setting up a parent PIN.';
+  String get tutorialS9Step1 => 'Choose the kids path, then enter the child\'s name, age and starting surah. You can skip setting up a parent PIN.';
 
   @override
-  String get tutorialS9Step2 =>
-      'On the kids home tap Continue now, listen to the ayah three times, then try from memory.';
+  String get tutorialS9Step2 => 'On the kids home tap Continue now, listen to the ayah three times, then try from memory.';
 
   @override
-  String get tutorialS9Step3 =>
-      'If recording does not work, tap \"I finished memorizing\" for the parent to confirm. PIN entry is optional.';
+  String get tutorialS9Step3 => 'If recording does not work, tap \"I finished memorizing\" for the parent to confirm. PIN entry is optional.';
 
   @override
-  String get tutorialS9Step4 =>
-      'Follow the journey map: houses open one after another as missions are completed.';
+  String get tutorialS9Step4 => 'Follow the journey map: houses open one after another as missions are completed.';
 
   @override
-  String get tutorialS9Tip1 =>
-      'Keep the PIN private. It is required only when linking a child to a guardian and can be skipped in other actions.';
+  String get tutorialS9Tip1 => 'Keep the PIN private. It is required only when linking a child to a guardian and can be skipped in other actions.';
 
   @override
-  String get tutorialS9Tip2 =>
-      'Use the Mushaf tab on the kids home to let the child read in the Quran.';
+  String get tutorialS9Tip2 => 'Use the Mushaf tab on the kids home to let the child read in the Quran.';
 
   @override
-  String get tutorialS9Note1 =>
-      'Linking a child from another device needs an account.';
+  String get tutorialS9Note1 => 'Linking a child from another device needs an account.';
 
   @override
-  String get tutorialS9Note2 =>
-      'One child per device: more children use their own devices, linked to the guardian.';
+  String get tutorialS9Note2 => 'One child per device: more children use their own devices, linked to the guardian.';
 
   @override
   String get tutorialS10Title => 'Progress, achievements and certificates';
@@ -5667,51 +5236,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS10Cat => 'Progress';
 
   @override
-  String get tutorialS10Does =>
-      'Shows your reading and memorization statistics, your daily streak, achievements, your certificates, and lets you share your progress.';
+  String get tutorialS10Does => 'Shows your reading and memorization statistics, your daily streak, achievements, your certificates, and lets you share your progress.';
 
   @override
   String get tutorialS10Open => 'Tap Progress in the bottom bar.';
 
   @override
-  String get tutorialS10Useful =>
-      'For a weekly review, celebrating achievements and tracking consistency.';
+  String get tutorialS10Useful => 'For a weekly review, celebrating achievements and tracking consistency.';
 
   @override
-  String get tutorialS10Step1 =>
-      'Review the top cards for streak days, pages read, XP and reviews.';
+  String get tutorialS10Step1 => 'Review the top cards for streak days, pages read, XP and reviews.';
 
   @override
-  String get tutorialS10Step2 =>
-      'Open the reading and memorization sections for pages, ayahs, surahs and juz.';
+  String get tutorialS10Step2 => 'Open the reading and memorization sections for pages, ayahs, surahs and juz.';
 
   @override
-  String get tutorialS10Step3 =>
-      'Switch the achievement filters between all, reading, memorization and streak.';
+  String get tutorialS10Step3 => 'Switch the achievement filters between all, reading, memorization and streak.';
 
   @override
-  String get tutorialS10Step4 =>
-      'Tap an unlocked achievement for details and sharing.';
+  String get tutorialS10Step4 => 'Tap an unlocked achievement for details and sharing.';
 
   @override
-  String get tutorialS10Step5 =>
-      'Your certificates appear when you complete a surah, a juz or the whole Quran.';
+  String get tutorialS10Step5 => 'Your certificates appear when you complete a surah, a juz or the whole Quran.';
 
   @override
-  String get tutorialS10Tip1 =>
-      'Reading a khatmah counts toward your streak, but not toward free-reading statistics.';
+  String get tutorialS10Tip1 => 'Reading a khatmah counts toward your streak, but not toward free-reading statistics.';
 
   @override
-  String get tutorialS10Tip2 =>
-      'Certificates depend on genuinely memorizing the required ayahs.';
+  String get tutorialS10Tip2 => 'Certificates depend on genuinely memorizing the required ayahs.';
 
   @override
-  String get tutorialS10Note1 =>
-      'Some statistics appear only after you start memorizing.';
+  String get tutorialS10Note1 => 'Some statistics appear only after you start memorizing.';
 
   @override
-  String get tutorialS10Note2 =>
-      'Sharing happens only when you choose to share.';
+  String get tutorialS10Note2 => 'Sharing happens only when you choose to share.';
 
   @override
   String get tutorialS11Title => 'Settings, account and notifications';
@@ -5720,54 +5278,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS11Cat => 'Settings';
 
   @override
-  String get tutorialS11Does =>
-      'Gathers your account and profile, language and theme, Quran and memorization settings, prayer times, notifications and information about the app.';
+  String get tutorialS11Does => 'Gathers your account and profile, language and theme, Quran and memorization settings, prayer times, notifications and information about the app.';
 
   @override
   String get tutorialS11Open => 'Tap the gear icon on Home.';
 
   @override
-  String get tutorialS11Useful =>
-      'For personalizing the app, protecting your progress and setting reminders that suit your day.';
+  String get tutorialS11Useful => 'For personalizing the app, protecting your progress and setting reminders that suit your day.';
 
   @override
-  String get tutorialS11Step1 =>
-      'Sign in or create an account with an email and password to manage your account.';
+  String get tutorialS11Step1 => 'Sign in or create an account with an email and password to manage your account.';
 
   @override
   String get tutorialS11Step2 => 'Edit your name under Profile.';
 
   @override
-  String get tutorialS11Step3 =>
-      'Choose Arabic or English, and the light, dark, pure black or system theme.';
+  String get tutorialS11Step3 => 'Choose Arabic or English, and the light, dark, pure black or system theme.';
 
   @override
-  String get tutorialS11Step4 =>
-      'Under Quran & Memorization, set background playback and the accuracy level, or reset your path.';
+  String get tutorialS11Step4 => 'Under Quran & Memorization, set background playback and the accuracy level, or reset your path.';
 
   @override
-  String get tutorialS11Step5 =>
-      'Under Prayer times, choose your city and calculation method.';
+  String get tutorialS11Step5 => 'Under Prayer times, choose your city and calculation method.';
 
   @override
-  String get tutorialS11Step6 =>
-      'Under Notifications, turn reminders for reviews, streak, adhkar and prayers on or off.';
+  String get tutorialS11Step6 => 'Under Notifications, turn reminders for reviews, streak, adhkar and prayers on or off.';
 
   @override
-  String get tutorialS11Tip1 =>
-      'Write your name in Arabic so it looks right on certificates.';
+  String get tutorialS11Tip1 => 'Write your name in Arabic so it looks right on certificates.';
 
   @override
-  String get tutorialS11Tip2 =>
-      'Reset the path under Quran & Memorization to switch between adult and kids.';
+  String get tutorialS11Tip2 => 'Reset the path under Quran & Memorization to switch between adult and kids.';
 
   @override
-  String get tutorialS11Note1 =>
-      'Notifications need the system permission to work.';
+  String get tutorialS11Note1 => 'Notifications need the system permission to work.';
 
   @override
-  String get tutorialS11Note2 =>
-      'Language and theme are stored on this device.';
+  String get tutorialS11Note2 => 'Language and theme are stored on this device.';
 
   @override
   String get tutorialS12Title => 'Working offline and your data';
@@ -5776,88 +5323,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS12Cat => 'Settings';
 
   @override
-  String get tutorialS12Does =>
-      'The Quran and adhkar texts are bundled with the app. Your progress, plans and settings are stored on the device. With an account, some of it also syncs online.';
+  String get tutorialS12Does => 'The Quran and adhkar texts are bundled with the app. Your progress, plans and settings are stored on the device. With an account, some of it also syncs online.';
 
   @override
-  String get tutorialS12Open =>
-      'There is no separate screen: it works automatically while you use the app.';
+  String get tutorialS12Open => 'There is no separate screen: it works automatically while you use the app.';
 
   @override
-  String get tutorialS12Useful =>
-      'For understanding what works offline and avoiding the loss of important progress.';
+  String get tutorialS12Useful => 'For understanding what works offline and avoiding the loss of important progress.';
 
   @override
-  String get tutorialS12Step1 =>
-      'Read the Quran and use the adhkar even without internet.';
+  String get tutorialS12Step1 => 'Read the Quran and use the adhkar even without internet.';
 
   @override
-  String get tutorialS12Step2 =>
-      'Keep reading and memorizing: progress is saved on the device.';
+  String get tutorialS12Step2 => 'Keep reading and memorizing: progress is saved on the device.';
 
   @override
-  String get tutorialS12Step3 =>
-      'Sign in when you want account features or to restore your memorization progress.';
+  String get tutorialS12Step3 => 'Sign in when you want account features or to restore your memorization progress.';
 
   @override
-  String get tutorialS12Tip1 =>
-      'On a new device, sign in to restore what your account supports.';
+  String get tutorialS12Tip1 => 'On a new device, sign in to restore what your account supports.';
 
   @override
-  String get tutorialS12Tip2 =>
-      'Connect to the internet to play recitations that are not cached.';
+  String get tutorialS12Tip2 => 'Connect to the internet to play recitations that are not cached.';
 
   @override
-  String get tutorialS12Note1 =>
-      'Clearing the app\'s data in system settings removes anything not saved to your account.';
+  String get tutorialS12Note1 => 'Clearing the app\'s data in system settings removes anything not saved to your account.';
 
   @override
-  String get tutorialS12Note2 =>
-      'Signing out removes your khatmah plan and history from this device: they are stored only here.';
+  String get tutorialS12Note2 => 'Signing out removes your khatmah plan and history from this device: they are stored only here.';
 
   @override
-  String get tutorialS14Note2 =>
-      'Reliable alerts may need the exact-alarm permission in phone settings.';
+  String get tutorialS14Note2 => 'Reliable alerts may need the exact-alarm permission in phone settings.';
 
   @override
-  String get tutorialS14Note1 =>
-      'Times are calculated on the device, so they work offline.';
+  String get tutorialS14Note1 => 'Times are calculated on the device, so they work offline.';
 
   @override
-  String get tutorialS14Tip2 =>
-      'If you are unsure which method fits, pick the one your local authority uses.';
+  String get tutorialS14Tip2 => 'If you are unsure which method fits, pick the one your local authority uses.';
 
   @override
-  String get tutorialS14Tip1 =>
-      'If your city is not listed, use a custom location: copy its coordinates from a maps app.';
+  String get tutorialS14Tip1 => 'If your city is not listed, use a custom location: copy its coordinates from a maps app.';
 
   @override
-  String get tutorialS14Step4 =>
-      'Turn on prayer calm mode if you want recitation to pause when prayer time starts.';
+  String get tutorialS14Step4 => 'Turn on prayer calm mode if you want recitation to pause when prayer time starts.';
 
   @override
-  String get tutorialS14Step3 =>
-      'Turn on prayer alerts: they switch on automatically the first time you set a location.';
+  String get tutorialS14Step3 => 'Turn on prayer alerts: they switch on automatically the first time you set a location.';
 
   @override
-  String get tutorialS14Step2 =>
-      'Choose the calculation method (automatic by country by default) and the Asr calculation.';
+  String get tutorialS14Step2 => 'Choose the calculation method (automatic by country by default) and the Asr calculation.';
 
   @override
-  String get tutorialS14Step1 =>
-      'Choose your country and city, or Custom location to enter coordinates.';
+  String get tutorialS14Step1 => 'Choose your country and city, or Custom location to enter coordinates.';
 
   @override
-  String get tutorialS14Useful =>
-      'For knowing prayer times wherever you are, with an alert when it is time.';
+  String get tutorialS14Useful => 'For knowing prayer times wherever you are, with an alert when it is time.';
 
   @override
-  String get tutorialS14Open =>
-      'On Home tap Choose city, or open Settings > Prayer times.';
+  String get tutorialS14Open => 'On Home tap Choose city, or open Settings > Prayer times.';
 
   @override
-  String get tutorialS14Does =>
-      'Shows prayer times and the next prayer on Home, and can alert you at each prayer.';
+  String get tutorialS14Does => 'Shows prayer times and the next prayer on Home, and can alert you at each prayer.';
 
   @override
   String get tutorialS14Cat => 'Settings';
@@ -5866,48 +5392,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS14Title => 'Prayer times and alerts';
 
   @override
-  String get tutorialS13Note2 =>
-      'It is stored only on this device, and is removed when you sign out.';
+  String get tutorialS13Note2 => 'It is stored only on this device, and is removed when you sign out.';
 
   @override
-  String get tutorialS13Note1 =>
-      'The khatmah is separate from free reading: neither moves the other\'s position.';
+  String get tutorialS13Note1 => 'The khatmah is separate from free reading: neither moves the other\'s position.';
 
   @override
-  String get tutorialS13Tip2 =>
-      'If you fall behind, use the options on the dashboard to catch up.';
+  String get tutorialS13Tip2 => 'If you fall behind, use the options on the dashboard to catch up.';
 
   @override
-  String get tutorialS13Tip1 =>
-      'You can dedicate the khatmah to someone you love when you create it.';
+  String get tutorialS13Tip1 => 'You can dedicate the khatmah to someone you love when you create it.';
 
   @override
-  String get tutorialS13Step4 =>
-      'If you read from a printed Mushaf, use Record to enter the pages.';
+  String get tutorialS13Step4 => 'If you read from a printed Mushaf, use Record to enter the pages.';
 
   @override
-  String get tutorialS13Step3 =>
-      'Read the day\'s wird: each page you read is recorded.';
+  String get tutorialS13Step3 => 'Read the day\'s wird: each page you read is recorded.';
 
   @override
-  String get tutorialS13Step2 =>
-      'Start the khatmah and tap Continue reading on the dashboard.';
+  String get tutorialS13Step2 => 'Start the khatmah and tap Continue reading on the dashboard.';
 
   @override
-  String get tutorialS13Step1 =>
-      'Choose pages per day or a duration, and optionally a start page.';
+  String get tutorialS13Step1 => 'Choose pages per day or a duration, and optionally a start page.';
 
   @override
-  String get tutorialS13Useful =>
-      'For reading the Quran regularly with a clear goal, such as in Ramadan.';
+  String get tutorialS13Useful => 'For reading the Quran regularly with a clear goal, such as in Ramadan.';
 
   @override
-  String get tutorialS13Open =>
-      'On Home tap Start your khatmah, or open the khatmah card once you have started one.';
+  String get tutorialS13Open => 'On Home tap Start your khatmah, or open the khatmah card once you have started one.';
 
   @override
-  String get tutorialS13Does =>
-      'Plan a full reading of the Quran at the pace you choose, by pages per day or by number of days. Talia tracks your progress page by page and keeps a history of completed khatmahs.';
+  String get tutorialS13Does => 'Plan a full reading of the Quran at the pace you choose, by pages per day or by number of days. Talia tracks your progress page by page and keeps a history of completed khatmahs.';
 
   @override
   String get tutorialS13Cat => 'Quran';
@@ -5950,15 +5465,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learningAlertReduceNewTitle => 'Reduce New Memorization';
 
   @override
-  String get learningAlertReduceNewSubtitle =>
-      'Your workload is heavy, focus on review';
+  String get learningAlertReduceNewSubtitle => 'Your workload is heavy, focus on review';
 
   @override
   String get learningAlertFocusWeakTitle => 'Focus on Weak Ayahs';
 
   @override
-  String get learningAlertFocusWeakSubtitle =>
-      'You have difficult ayahs to review';
+  String get learningAlertFocusWeakSubtitle => 'You have difficult ayahs to review';
 
   @override
   String get learningAlertGenericTitle => 'Learning Alert';
@@ -6038,8 +5551,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyDashboardNoChildren => 'No children linked yet';
 
   @override
-  String get familyDashboardNoChildrenHint =>
-      'On your child\'s device: open the kids track → tap ⚙ → “Link guardian”, then scan the code shown or type it here.';
+  String get familyDashboardNoChildrenHint => 'On your child\'s device: open the kids track → tap ⚙ → “Link guardian”, then scan the code shown or type it here.';
 
   @override
   String get familyDashboardTodaySummaryTitle => 'Today in Our Family';
@@ -6109,8 +5621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get childDetailActivityTitle => 'Child activity';
 
   @override
-  String get childDetailActivityNotReceived =>
-      'No activity has arrived from the child\'s device yet';
+  String get childDetailActivityNotReceived => 'No activity has arrived from the child\'s device yet';
 
   @override
   String childDetailActivityUpdatedAt(String date) {
@@ -6165,8 +5676,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2MemorizingTitle => 'Memorize the ayah';
 
   @override
-  String get v2MemorizingSubtitle =>
-      'Practice from memory. Hints are only available here.';
+  String get v2MemorizingSubtitle => 'Practice from memory. Hints are only available here.';
 
   @override
   String get v2ReadyToRecite => 'I am ready';
@@ -6181,8 +5691,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2RecitationTitle => 'Recite from memory';
 
   @override
-  String get v2RecitationSubtitle =>
-      'The ayah text is hidden. Record without hints.';
+  String get v2RecitationSubtitle => 'The ayah text is hidden. Record without hints.';
 
   @override
   String get v2StartRecording => 'Start recording';
@@ -6209,8 +5718,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2SelfGradeHesitated => 'Hesitated a little';
 
   @override
-  String get v2SelfGradeHesitatedHint =>
-      'Recited with a pause or small slip; it will come back soon';
+  String get v2SelfGradeHesitatedHint => 'Recited with a pause or small slip; it will come back soon';
 
   @override
   String get v2SelfGradeForgot => 'Could not recall it';
@@ -6219,8 +5727,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2SelfGradeForgotHint => 'We will go over it again now';
 
   @override
-  String get v2SelfGradeRevealHint =>
-      'Recite from memory first, then reveal the text and compare before grading.';
+  String get v2SelfGradeRevealHint => 'Recite from memory first, then reveal the text and compare before grading.';
 
   @override
   String get v2SelfGradeRevealAction => 'Show the ayah to compare';
@@ -6229,8 +5736,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2BlockRevealAction => 'Show the block to compare';
 
   @override
-  String get v2BlockGradeMastered =>
-      'Recited the whole block without stumbling';
+  String get v2BlockGradeMastered => 'Recited the whole block without stumbling';
 
   @override
   String get v2BlockGradeHesitated => 'Hesitated on an ayah';
@@ -6247,8 +5753,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get v2ManualRecallHint =>
-      'No microphone? Confirm you recited from memory and your progress will be saved.';
+  String get v2ManualRecallHint => 'No microphone? Confirm you recited from memory and your progress will be saved.';
 
   @override
   String get v2ManualBlockReviewAction => 'Grade the block recitation yourself';
@@ -6257,8 +5762,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2RemediationTitle => 'Short remediation';
 
   @override
-  String get v2RemediationSubtitle =>
-      'Listen and read again, then return to recitation.';
+  String get v2RemediationSubtitle => 'Listen and read again, then return to recitation.';
 
   @override
   String get v2TryAgain => 'Try again';
@@ -6267,8 +5771,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2BlockReviewPendingTitle => 'Block review';
 
   @override
-  String get v2BlockReviewPendingSubtitle =>
-      'All individual ayahs passed. Next, recite the full block from memory.';
+  String get v2BlockReviewPendingSubtitle => 'All individual ayahs passed. Next, recite the full block from memory.';
 
   @override
   String get v2StartBlockReview => 'Start Block Review';
@@ -6285,8 +5788,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2CompletionTitle => 'Session complete';
 
   @override
-  String get v2CompletionSubtitle =>
-      'This memorization block has been completed.';
+  String get v2CompletionSubtitle => 'This memorization block has been completed.';
 
   @override
   String get closingMomentLabel => 'A moment of closure';
@@ -6303,15 +5805,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get closingSummaryReview =>
-      'Your review is complete — may it stay firmly rooted in your heart.';
+  String get closingSummaryReview => 'Your review is complete — may it stay firmly rooted in your heart.';
 
   @override
   String get v2ReviewSessionTitle => 'Review Session';
 
   @override
-  String get v2HintSchedulingNotice =>
-      'Hints are recorded and shape your next review schedule.';
+  String get v2HintSchedulingNotice => 'Hints are recorded and shape your next review schedule.';
 
   @override
   String dailyPlanBacklogNotice(int count, String countText) {
@@ -6328,8 +5828,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanStartReview => 'Start today\'s review';
 
   @override
-  String get dailyPlanReviewDayNotice =>
-      'Today is a review day in your plan: no new ayahs, strengthen what you\'ve memorized.';
+  String get dailyPlanReviewDayNotice => 'Today is a review day in your plan: no new ayahs, strengthen what you\'ve memorized.';
 
   @override
   String closingSummaryKhatmahWird(String start, String end) {
@@ -6346,8 +5845,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closingDone => 'Done, praise be to Allah';
 
   @override
-  String get closingRestNote =>
-      'Take a breath… your memorization awaits you tomorrow, in shaa Allah.';
+  String get closingRestNote => 'Take a breath… your memorization awaits you tomorrow, in shaa Allah.';
 
   @override
   String get v2MemorizationHub => 'Memorization Hub';
@@ -6373,27 +5871,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2PressRecord => 'Press record when you are ready';
 
   @override
-  String get v2MicrophoneUnavailable =>
-      'Speech recognition is not available on this device. Grade your recitation yourself.';
+  String get v2MicrophoneUnavailable => 'Speech recognition is not available on this device. Grade your recitation yourself.';
 
   @override
   String get v2TryRecordingAgain => 'Try recording again';
 
   @override
-  String get v2NoSpeechDetected =>
-      'We could not hear a recitation. Please record again.';
+  String get v2NoSpeechDetected => 'We could not hear a recitation. Please record again.';
 
   @override
-  String get v2MicrophonePermissionDenied =>
-      'Microphone permission is required to record.';
+  String get v2MicrophonePermissionDenied => 'Microphone permission is required to record.';
 
   @override
-  String get v2MicrophoneOpenSettings =>
-      'Microphone access is blocked. Open Settings to allow it.';
+  String get v2MicrophoneOpenSettings => 'Microphone access is blocked. Open Settings to allow it.';
 
   @override
-  String get v2AudioPlaybackFailed =>
-      'Could not play the ayah audio. Try again.';
+  String get v2AudioPlaybackFailed => 'Could not play the ayah audio. Try again.';
 
   @override
   String v2RemediationAttempts(String count) {
@@ -6530,8 +6023,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tarawihInvalidRange =>
-      'Pages must be between 1 and 604, and the start must not come after the end';
+  String get tarawihInvalidRange => 'Pages must be between 1 and 604, and the start must not come after the end';
 
   @override
   String streakDaysUnit(int count) {
@@ -6548,24 +6040,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get v2SurahLoadFailed => 'Could not load surah data.';
 
   @override
-  String get v2NoAyahsInRange =>
-      'No ayahs are available in the selected range.';
+  String get v2NoAyahsInRange => 'No ayahs are available in the selected range.';
 
   @override
-  String get kidsRecordingUnavailable =>
-      'The microphone did not work. Try again or ask a parent for help.';
+  String get kidsRecordingUnavailable => 'The microphone did not work. Try again or ask a parent for help.';
 
   @override
-  String get kidsVoiceConsentDeclined =>
-      'We won\'t use the microphone. Ask your guardian to confirm your memorization.';
+  String get kidsVoiceConsentDeclined => 'We won\'t use the microphone. Ask your guardian to confirm your memorization.';
 
   @override
-  String get kidsRecordingNotCaptured =>
-      'We could not hear your recitation clearly. Please record the ayah again.';
+  String get kidsRecordingNotCaptured => 'We could not hear your recitation clearly. Please record the ayah again.';
 
   @override
-  String get kidsRecitationMismatch =>
-      'The ayah did not match. Listen again and then record your recitation.';
+  String get kidsRecitationMismatch => 'The ayah did not match. Listen again and then record your recitation.';
 
   @override
   String kidsRecitationCloseMatch(String matched, String total) {
@@ -6573,12 +6060,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsJourneyCompleteHint =>
-      'You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.';
+  String get kidsJourneyCompleteHint => 'You completed Al-Fatiha and the whole Juz Amma! Tell your parent about this great achievement.';
 
   @override
-  String get kidsHomeMissionInvalidTitle =>
-      'Write a mission between 1 and 120 characters';
+  String get kidsHomeMissionInvalidTitle => 'Write a mission between 1 and 120 characters';
 
   @override
   String get kidsPolicyReduceMotion => 'Reduce motion';
@@ -6593,12 +6078,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsPolicyConflict => 'Settings changed on another device';
 
   @override
-  String get kidsHomeMissionUnavailable =>
-      'This mission is not available for this action';
+  String get kidsHomeMissionUnavailable => 'This mission is not available for this action';
 
   @override
-  String get kidsPolicyUnavailable =>
-      'Couldn\'t load the child\'s settings right now.';
+  String get kidsPolicyUnavailable => 'Couldn\'t load the child\'s settings right now.';
 
   @override
   String get childDetailHomeMissions => 'Home missions';
@@ -6625,12 +6108,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHomeMissionNew => 'New mission';
 
   @override
-  String get kidsHomeMissionWaitingGuardian =>
-      'You told your guardian. Waiting for them to see it';
+  String get kidsHomeMissionWaitingGuardian => 'You told your guardian. Waiting for them to see it';
 
   @override
-  String get kidsHomeMissionsPaused =>
-      'Your guardian paused home missions for now. They\'ll show here again when turned back on.';
+  String get kidsHomeMissionsPaused => 'Your guardian paused home missions for now. They\'ll show here again when turned back on.';
 
   @override
   String get kidsHomeMissionReported => 'Child says it\'s done';
@@ -6648,27 +6129,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHomeMissionSuggestHelp => 'Help set the table';
 
   @override
-  String get kidsHomeMissionSuggestKind =>
-      'Say something kind to a family member';
+  String get kidsHomeMissionSuggestKind => 'Say something kind to a family member';
 
   @override
   String get kidsHomeMissionSuggestShare => 'Share your toy with someone';
 
   @override
-  String get kidsHomeMissionSuggestLearning =>
-      'Tell your family one thing you learned today';
+  String get kidsHomeMissionSuggestLearning => 'Tell your family one thing you learned today';
 
   @override
-  String get kidsHomeMissionSuggestBag =>
-      'Get your school bag ready for tomorrow';
+  String get kidsHomeMissionSuggestBag => 'Get your school bag ready for tomorrow';
 
   @override
-  String get kidsAyahAlreadyCompleted =>
-      'You already completed this ayah. Open the map to continue.';
+  String get kidsAyahAlreadyCompleted => 'You already completed this ayah. Open the map to continue.';
 
   @override
-  String get accountSwitchOfflineDataDiscarded =>
-      'Unsynced progress from the previous account was not uploaded and has been removed from this device.';
+  String get accountSwitchOfflineDataDiscarded => 'Unsynced progress from the previous account was not uploaded and has been removed from this device.';
 
   @override
   String get startYourJourneyWithQuran => 'Start your journey with the Quran';
@@ -6680,15 +6156,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsJourneyBetaTitle => 'New memorization journey';
 
   @override
-  String get kidsJourneyBetaDescription =>
-      'Enable Today\'s Mission and spaced review, with the option to return.';
+  String get kidsJourneyBetaDescription => 'Enable Today\'s Mission and spaced review, with the option to return.';
 
   @override
   String get kidsGuidanceAudioTitle => 'Guide voice';
 
   @override
-  String get kidsGuidanceAudioDescription =>
-      'Short prompts that never play over Quran recitation.';
+  String get kidsGuidanceAudioDescription => 'Short prompts that never play over Quran recitation.';
 
   @override
   String get kidsSessionGoalTitle => 'Target session length';
@@ -6750,8 +6224,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahNoPlanTitle => 'No Khatmah plan yet';
 
   @override
-  String get khatmahNoPlanDescription =>
-      'Start a new Khatmah at a pace that suits you.';
+  String get khatmahNoPlanDescription => 'Start a new Khatmah at a pace that suits you.';
 
   @override
   String get khatmahPausedSummary => 'Khatmah paused — Resume to continue';
@@ -6780,8 +6253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahEndPlanAction => 'End Khatmah';
 
   @override
-  String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
-      'Choose your daily reading pace to complete the Quran with serenity.';
+  String get khatmahChooseYourDailyReadingPaceToCompleteThe => 'Choose your daily reading pace to complete the Quran with serenity.';
 
   @override
   String get khatmahDailyPages => 'Daily Pages';
@@ -6807,8 +6279,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahStartFromPage => 'Start from page (optional)';
 
   @override
-  String get khatmahStartFromPageHint =>
-      'After page 604 you continue from page 1 until the khatmah is complete';
+  String get khatmahStartFromPageHint => 'After page 604 you continue from page 1 until the khatmah is complete';
 
   @override
   String khatmahDurationDays(int count, String countText) {
@@ -6848,22 +6319,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahStartKhatmah => 'Start Khatmah';
 
   @override
-  String get khatmahPhysicalMushafProgressSavedSuccessfully =>
-      'Physical Mushaf progress saved successfully';
+  String get khatmahPhysicalMushafProgressSavedSuccessfully => 'Physical Mushaf progress saved successfully';
 
   @override
   String get khatmahEndKhatmah => 'End Khatmah';
 
   @override
-  String get khatmahAreYouSureYouWantToEndThis =>
-      'Are you sure you want to end this Khatmah? You can always start anew whenever you feel ready.';
+  String get khatmahAreYouSureYouWantToEndThis => 'Are you sure you want to end this Khatmah? You can always start anew whenever you feel ready.';
 
   @override
   String get khatmahCancel => 'Cancel';
 
   @override
-  String get khatmahUnableToSaveKhatmahProgress =>
-      'Unable to save Khatmah progress.';
+  String get khatmahUnableToSaveKhatmahProgress => 'Unable to save Khatmah progress.';
 
   @override
   String get khatmahRetry => 'Retry';
@@ -6886,8 +6354,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahUnableToLoadYourKhatmah => 'Unable to load your Khatmah';
 
   @override
-  String get khatmahCheckYourConnectionAndTryAgain =>
-      'Check your connection and try again.';
+  String get khatmahCheckYourConnectionAndTryAgain => 'Check your connection and try again.';
 
   @override
   String get khatmahReload => 'Reload';
@@ -6922,15 +6389,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahCalmAdaptiveControls => 'Calm Adaptive Controls';
 
   @override
-  String get khatmahEndDateRecalibratedSmoothly =>
-      'End date recalibrated smoothly';
+  String get khatmahEndDateRecalibratedSmoothly => 'End date recalibrated smoothly';
 
   @override
   String get khatmahCalmAdjust => 'Calm Adjust';
 
   @override
-  String get khatmahAdded1PageDayMildCompensation =>
-      'Added 1 page/day mild compensation';
+  String get khatmahAdded1PageDayMildCompensation => 'Added 1 page/day mild compensation';
 
   @override
   String get khatmahMildBoost => 'Mild Boost';
@@ -6953,8 +6418,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahApplyAdjustment => 'Apply';
 
   @override
-  String get khatmahLoadFailureHint =>
-      'Couldn\'t read the khatmah data on this device. Please try again.';
+  String get khatmahLoadFailureHint => 'Couldn\'t read the khatmah data on this device. Please try again.';
 
   @override
   String get khatmahPause => 'Pause';
@@ -6966,8 +6430,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahLogPhysicalMushafReading => 'Log Physical Mushaf Reading';
 
   @override
-  String get khatmahEnterTheLastPageReadFromYourPhysical =>
-      'Enter the last page read from your physical Mushaf (1 - 604):';
+  String get khatmahEnterTheLastPageReadFromYourPhysical => 'Enter the last page read from your physical Mushaf (1 - 604):';
 
   @override
   String get khatmahPageNumber => 'Page number';
@@ -6981,8 +6444,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahSaveProgress => 'Save Progress';
 
   @override
-  String get khatmahNoSavedCompletionAvailable =>
-      'No saved completion available';
+  String get khatmahNoSavedCompletionAvailable => 'No saved completion available';
 
   @override
   String get khatmahPagesLabel => 'Pages';
@@ -7080,12 +6542,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get khatmahRedistributeAction =>
-      'Redistribute to keep the finish date';
+  String get khatmahRedistributeAction => 'Redistribute to keep the finish date';
 
   @override
-  String get khatmahRedistributed =>
-      'Pages redistributed to keep your finish date';
+  String get khatmahRedistributed => 'Pages redistributed to keep your finish date';
 
   @override
   String khatmahPaceBehind(int count, String countText) {
@@ -7107,8 +6567,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get khatmahCongratulations =>
-      'Congratulations on completing the Quran';
+  String get khatmahCongratulations => 'Congratulations on completing the Quran';
 
   @override
   String khatmahShareSummary(String title, int days, String daysText) {
@@ -7143,22 +6602,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get khatmahSetupSaveError =>
-      'Unable to start Khatmah. Please try again.';
+  String get khatmahSetupSaveError => 'Unable to start Khatmah. Please try again.';
 
   @override
   String get khatmahEndError => 'Unable to end Khatmah. Please try again.';
 
   @override
-  String get khatmahDedicationPreference =>
-      'Dedication is available for living and deceased recipients. Deceased recipients are preferred, and Allah knows best.';
+  String get khatmahDedicationPreference => 'Dedication is available for living and deceased recipients. Deceased recipients are preferred, and Allah knows best.';
 
   @override
   String get khatmahWriteYourOwnNote => 'Write your personal note here';
 
   @override
-  String get khatmahPhysicalRangeHint =>
-      'Record the pages you read, starting from the next unread page.';
+  String get khatmahPhysicalRangeHint => 'Record the pages you read, starting from the next unread page.';
 
   @override
   String khatmahConfirmRange(String start, String end) {
@@ -7180,16 +6636,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahSaving => 'Saving…';
 
   @override
-  String get khatmahDuaLoadError =>
-      'Unable to load the supplication. Please try again.';
+  String get khatmahDuaLoadError => 'Unable to load the supplication. Please try again.';
 
   @override
-  String get khatmahSuggestedDua =>
-      'Suggested general supplication after Khatmah';
+  String get khatmahSuggestedDua => 'Suggested general supplication after Khatmah';
 
   @override
-  String get khatmahDuaPendingReview =>
-      'Text and source review pending. This is a suggested general supplication, not a prescribed Khatmah formula or a text attributed to the Prophet. Its source has not yet been verified.';
+  String get khatmahDuaPendingReview => 'Text and source review pending. This is a suggested general supplication, not a prescribed Khatmah formula or a text attributed to the Prophet. Its source has not yet been verified.';
 
   @override
   String get khatmahGeneralGuidance => 'General supplication';
@@ -7263,12 +6716,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get khatmahHistoryEmpty => 'No saved Khatmah certificates yet.';
 
   @override
-  String get khatmahHistoryLoadError =>
-      'Unable to load saved Khatmah certificates. Please try again.';
+  String get khatmahHistoryLoadError => 'Unable to load saved Khatmah certificates. Please try again.';
 
   @override
-  String get khatmahHistoryCorrupt =>
-      'Some saved Khatmah certificates are invalid and were withheld. Please retry after restoring your data.';
+  String get khatmahHistoryCorrupt => 'Some saved Khatmah certificates are invalid and were withheld. Please retry after restoring your data.';
 
   @override
   String get khatmahReopenCertificate => 'Reopen certificate';
@@ -7366,8 +6817,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAyahContextReading => 'An ayah for your reading journey';
 
   @override
-  String get homeAyahContextMemorization =>
-      'An ayah for your memorization journey';
+  String get homeAyahContextMemorization => 'An ayah for your memorization journey';
 
   @override
   String get homeAyahContextSmartReview => 'An ayah for your review';
@@ -7404,26 +6854,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSlotFridayTitle => 'Surah Al-Kahf';
 
   @override
-  String get homeSlotFridayBody =>
-      'It is recommended to read Surah Al-Kahf on Friday.';
+  String get homeSlotFridayBody => 'It is recommended to read Surah Al-Kahf on Friday.';
 
   @override
   String get homeSlotRamadanTitle => 'Ramadan reading';
 
   @override
-  String get homeSlotRamadanBody =>
-      'A blessed month — keep your daily portion going.';
+  String get homeSlotRamadanBody => 'A blessed month — keep your daily portion going.';
 
   @override
   String get homeSlotLastTenTitle => 'Last ten nights';
 
   @override
-  String get homeSlotLastTenBody =>
-      'Seek Laylat al-Qadr with extra reading and prayer.';
+  String get homeSlotLastTenBody => 'Seek Laylat al-Qadr with extra reading and prayer.';
 
   @override
-  String get homeSlotStreakBody =>
-      'Record today\'s activity before midnight to keep your streak.';
+  String get homeSlotStreakBody => 'Record today\'s activity before midnight to keep your streak.';
 
   @override
   String get homeSlotKhatmahTitle => 'Khatmah almost complete';
@@ -7446,8 +6892,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFirstRunTitle => 'Start your first step';
 
   @override
-  String get homeFirstRunBody =>
-      'Read a page, begin memorizing, or start a Khatmah.';
+  String get homeFirstRunBody => 'Read a page, begin memorizing, or start a Khatmah.';
 
   @override
   String get homeFirstRunRead => 'Read the Quran';
@@ -7563,8 +7008,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCustomLongitude => 'Longitude';
 
   @override
-  String get prayerCustomHint =>
-      'City not listed? Copy its coordinates from a maps app.';
+  String get prayerCustomHint => 'City not listed? Copy its coordinates from a maps app.';
 
   @override
   String prayerCustomTimeZone(String zone) {
@@ -7575,16 +7019,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCustomSave => 'Save location';
 
   @override
-  String get prayerCustomSaved =>
-      'Location saved. Prayer times now use your coordinates.';
+  String get prayerCustomSaved => 'Location saved. Prayer times now use your coordinates.';
 
   @override
-  String get prayerCustomInvalid =>
-      'Check the coordinates: latitude between -90 and 90, longitude between -180 and 180.';
+  String get prayerCustomInvalid => 'Check the coordinates: latitude between -90 and 90, longitude between -180 and 180.';
 
   @override
-  String get prayerCustomTimeZoneUnavailable =>
-      'Couldn\'t determine your device\'s time zone.';
+  String get prayerCustomTimeZoneUnavailable => 'Couldn\'t determine your device\'s time zone.';
 
   @override
   String get prayerMadhabAuto => 'Automatic by city';
@@ -7615,11 +7056,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeAyahProgressCount(
-    String currentText,
-    int total,
-    String totalText,
-  ) {
+  String homeAyahProgressCount(String currentText, int total, String totalText) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -7630,11 +7067,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homePageProgressCount(
-    String currentText,
-    int total,
-    String totalText,
-  ) {
+  String homePageProgressCount(String currentText, int total, String totalText) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -7712,8 +7145,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeJourneyNotStartedTitle => 'Your journey hasn\'t started yet';
 
   @override
-  String get homeJourneyNotStartedBody =>
-      'Begin memorizing or open a khatmah, and your real progress will be tracked here';
+  String get homeJourneyNotStartedBody => 'Begin memorizing or open a khatmah, and your real progress will be tracked here';
 
   @override
   String get homeJourneyStartMemorization => 'Start memorizing';
@@ -7734,8 +7166,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeActivityViewAll => 'View all';
 
   @override
-  String get homeActivityEmpty =>
-      'Start reading or memorizing to see activity here';
+  String get homeActivityEmpty => 'Start reading or memorizing to see activity here';
 
   @override
   String get homeActivityReading => 'Reading';
@@ -7795,8 +7226,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStartKhatmahTitle => 'Start Your Quran Khatmah Now';
 
   @override
-  String get homeStartKhatmahSubtitle =>
-      'Set your daily portion and pace to maintain a regular Quran habit';
+  String get homeStartKhatmahSubtitle => 'Set your daily portion and pace to maintain a regular Quran habit';
 
   @override
   String get homeStartKhatmahCta => 'Create New Khatmah';
@@ -7805,8 +7235,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAchievementSheetTitle => 'Your Achievements & Level';
 
   @override
-  String get homeAchievementSheetSubtitle =>
-      'Continue reciting and memorizing to advance your rank';
+  String get homeAchievementSheetSubtitle => 'Continue reciting and memorizing to advance your rank';
 
   @override
   String get homePrayerTimesSheetTitle => 'Prayer Times';
@@ -7858,8 +7287,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get microReviewTitle => 'Memory flash';
 
   @override
-  String get microReviewQuestion =>
-      'From your older memorization — do you still recall it?';
+  String get microReviewQuestion => 'From your older memorization — do you still recall it?';
 
   @override
   String microReviewReference(String surah, String ayah) {
@@ -7876,15 +7304,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerSerenityTitle => 'Prayer Serenity Mode';
 
   @override
-  String get prayerSerenitySubtitle =>
-      'Recitation pauses gently at prayer time';
+  String get prayerSerenitySubtitle => 'Recitation pauses gently at prayer time';
 
   @override
   String get prayerSerenityNotificationTitle => 'It is time for the meeting 🕌';
 
   @override
-  String get prayerSerenityNotificationBody =>
-      'We paused the recitation gently… it is time for prayer. May Allah accept it';
+  String get prayerSerenityNotificationBody => 'We paused the recitation gently… it is time for prayer. May Allah accept it';
 
   @override
   String get prayerCompanionEnable => 'Enable Prayer Companion';
@@ -7904,33 +7330,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCompanionCheckIn => 'Post-prayer check-in';
 
   @override
-  String get prayerCompanionCheckInSub =>
-      'A gentle reminder arrives 20 minutes after the prayer.';
+  String get prayerCompanionCheckInSub => 'A gentle reminder arrives 20 minutes after the prayer.';
 
   @override
   String get prayerCompanionFollowUp => 'Allow one follow-up reminder';
 
   @override
-  String get prayerCompanionFollowUpSub =>
-      'Sent once when you choose \"I will pray now\" or \"Remind me later\".';
+  String get prayerCompanionFollowUpSub => 'Sent once when you choose \"I will pray now\" or \"Remind me later\".';
 
   @override
-  String get prayerCompanionLocalOnly =>
-      'Your confirmations stay on this device only and are never uploaded.';
+  String get prayerCompanionLocalOnly => 'Your confirmations stay on this device only and are never uploaded.';
 
   @override
   String get prayerCompanionClear => 'Clear prayer confirmations';
 
   @override
-  String get prayerCompanionClearSub =>
-      'Deletes your saved confirmations on this device.';
+  String get prayerCompanionClearSub => 'Deletes your saved confirmations on this device.';
 
   @override
   String get prayerCompanionClearConfirmTitle => 'Clear confirmations?';
 
   @override
-  String get prayerCompanionClearConfirmBody =>
-      'Do you want to clear the confirmations saved on this device?';
+  String get prayerCompanionClearConfirmBody => 'Do you want to clear the confirmations saved on this device?';
 
   @override
   String get prayerCompanionClearConfirmButton => 'Clear';
@@ -7939,8 +7360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerCompanionClearCancel => 'Cancel';
 
   @override
-  String get prayerCompanionClearFailed =>
-      'Could not clear confirmations. Please try again.';
+  String get prayerCompanionClearFailed => 'Could not clear confirmations. Please try again.';
 
   @override
   String get prayerCompanionCleared => 'Confirmations cleared.';
@@ -7970,27 +7390,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationExactAlarmRequest => 'Enable exact alarms';
 
   @override
-  String get notificationExactAlarmExplanation =>
-      'Ensures prayer reminders and the adhan fire exactly on time';
+  String get notificationExactAlarmExplanation => 'Ensures prayer reminders and the adhan fire exactly on time';
 
   @override
-  String get notificationExactAlarmGranted =>
-      'Exact prayer-time alarms are enabled.';
+  String get notificationExactAlarmGranted => 'Exact prayer-time alarms are enabled.';
 
   @override
-  String get notificationExactAlarmDenied =>
-      'Reminders still arrive approximately on time; you can grant exact alarms later in system settings.';
+  String get notificationExactAlarmDenied => 'Reminders still arrive approximately on time; you can grant exact alarms later in system settings.';
 
   @override
-  String get notificationTestFailed =>
-      'Could not send the notification. Check notification permission in device settings.';
+  String get notificationTestFailed => 'Could not send the notification. Check notification permission in device settings.';
 
   @override
   String get notificationQuietHours => 'Quiet hours';
 
   @override
-  String get notificationQuietHoursSub =>
-      'Move regular reminders outside the chosen period. Prayer times remain unchanged.';
+  String get notificationQuietHoursSub => 'Move regular reminders outside the chosen period. Prayer times remain unchanged.';
 
   @override
   String get notificationQuietHoursStart => 'Starts';
@@ -8002,8 +7417,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSmartReminder => 'Smart reminder';
 
   @override
-  String get notificationSmartReminderSub =>
-      'Uses your recent on-device opening times to choose a reminder time.';
+  String get notificationSmartReminderSub => 'Uses your recent on-device opening times to choose a reminder time.';
 
   @override
   String memorizationHubReviewDueBadge(int count, String countText) {
@@ -8044,12 +7458,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizedPageAction => 'Memorize this page';
 
   @override
-  String get memorizedPageSubtext =>
-      'Start a memorization session for the current page\'s ayahs';
+  String get memorizedPageSubtext => 'Start a memorization session for the current page\'s ayahs';
 
   @override
-  String get memorizedPageUnavailable =>
-      'Page memorization is available when all its ayahs belong to one surah.';
+  String get memorizedPageUnavailable => 'Page memorization is available when all its ayahs belong to one surah.';
 
   @override
   String customPlanDirectionForward(String from, String to) {
@@ -8092,8 +7504,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get progressAllAchievementsUnlocked =>
-      'Masha\'Allah! You\'ve unlocked every achievement';
+  String get progressAllAchievementsUnlocked => 'Masha\'Allah! You\'ve unlocked every achievement';
 
   @override
   String progressDueReviewsNudge(int count, String countText) {
@@ -8128,161 +7539,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyEffectiveDate => 'Effective date: October 9, 2026';
 
   @override
-  String get privacyIntro =>
-      'This policy explains how Talia Quran handles your data on your device and through cloud services, and how you control permissions and request deletion.';
+  String get privacyIntro => 'This policy explains how Talia Quran handles your data on your device and through cloud services, and how you control permissions and request deletion.';
 
   @override
-  String get privacyManualOptionAction =>
-      'Open memorization to use manual self-grade';
+  String get privacyManualOptionAction => 'Open memorization to use manual self-grade';
 
   @override
   String get privacyControllerTitle => '1. Introduction and Data Controller';
 
   @override
-  String get privacyControllerBody =>
-      'Talia Quran is an app for reading, memorization, revision and Azkar. The developer and controller responsible for app data is Sayed Saad. This policy covers Talia, its account features and guardian linking. Privacy enquiries and requests: elsayed.saad2014@feps.edu.eg.';
+  String get privacyControllerBody => 'Talia Quran is an app for reading, memorization, revision and Azkar. The developer and controller responsible for app data is Sayed Saad. This policy covers Talia, its account features and guardian linking. Privacy enquiries and requests: elsayed.saad2014@feps.edu.eg.';
 
   @override
-  String get privacyDataTitle =>
-      '2. Information We Collect and Where It Is Stored';
+  String get privacyDataTitle => '2. Information We Collect and Where It Is Stored';
 
   @override
-  String get privacyAccountData =>
-      'Account: Registration processes your email and password through Supabase for authentication, verification and recovery, together with an account ID and session tokens. Profile details, such as a name or child nickname and age when supplied, personalize the experience, appear to a linked guardian and support certificates. Never send your password to support.';
+  String get privacyAccountData => 'Account: Registration processes your email and password through Supabase for authentication, verification and recovery, together with an account ID and session tokens. Profile details, such as a name or child nickname and age when supplied, personalize the experience, appear to a linked guardian and support certificates. Never send your password to support.';
 
   @override
-  String get privacyProgressData =>
-      'Progress and preferences: The app stores reading progress, bookmarks, memorization plans, reviews and ratings, sessions, XP, streaks, achievements, certificates and child/guardian settings. Operational data is stored on your device; supported cloud features synchronize associated account data when signed in and connected. Pending operations may upload automatically when connectivity returns. Some local features and preferences do not synchronize.';
+  String get privacyProgressData => 'Progress and preferences: The app stores reading progress, bookmarks, memorization plans, reviews and ratings, sessions, XP, streaks, achievements, certificates and child/guardian settings. Operational data is stored on your device; supported cloud features synchronize associated account data when signed in and connected. Pending operations may upload automatically when connectivity returns. Some local features and preferences do not synchronize.';
 
   @override
-  String get privacyTechnicalData =>
-      'Technical data and support: Account and audio services receive ordinary connection information such as IP address, request time and technical data needed for service operation and security. The app logs technical errors locally. If you contact us, we process your email, message and information you choose to send to resolve your request. The current version does not include third-party advertising or behavioral analytics SDKs. The app also creates a random installation ID on this device. It is not an advertising ID or a hardware identifier; it is sent with family-monitoring updates and parent PIN recovery so the service can tell your devices apart. A new one is created if you clear app data or reinstall the app.';
+  String get privacyTechnicalData => 'Technical data and support: Account and audio services receive ordinary connection information such as IP address, request time and technical data needed for service operation and security. The app logs technical errors locally. If you contact us, we process your email, message and information you choose to send to resolve your request. The current version does not include third-party advertising or behavioral analytics SDKs. The app also creates a random installation ID on this device. It is not an advertising ID or a hardware identifier; it is sent with family-monitoring updates and parent PIN recovery so the service can tell your devices apart. A new one is created if you clear app data or reinstall the app.';
 
   @override
   String get privacyPurposeTitle => '3. Purposes of Processing';
 
   @override
-  String get privacyPurposeBody =>
-      'We use data to operate accounts, synchronize progress, provide revision, reminders and certificates, enable guardian linking you choose, protect the service and respond to support. We do not sell your data or use progress or children’s data for targeted advertising. Permission requests are separate from this policy; you can refuse optional permissions and continue using features that do not require them.';
+  String get privacyPurposeBody => 'We use data to operate accounts, synchronize progress, provide revision, reminders and certificates, enable guardian linking you choose, protect the service and respond to support. We do not sell your data or use progress or children’s data for targeted advertising. Permission requests are separate from this policy; you can refuse optional permissions and continue using features that do not require them.';
 
   @override
   String get privacyPermissionsTitle => '4. Device Permissions and Speech';
 
   @override
-  String get privacyMicrophone =>
-      'Microphone: Used when you start recitation assessment to recognize your reading. Recognition uses your operating system\'s built-in speech service; the platform provider may process audio under its own policies, and offline processing is not guaranteed. Talia does not retain raw audio and does not send it to Talia servers. An assessment result may be saved with progress. A manual self-grade option is available; revoke microphone and speech-recognition permissions in device settings.';
+  String get privacyMicrophone => 'Microphone: Used when you start recitation assessment to recognize your reading. Recognition uses your operating system\'s built-in speech service; the platform provider may process audio under its own policies, and offline processing is not guaranteed. Talia does not retain raw audio and does not send it to Talia servers. An assessment result may be saved with progress. A manual self-grade option is available; revoke microphone and speech-recognition permissions in device settings.';
 
   @override
-  String get privacyCamera =>
-      'Camera: Used when you choose to scan a guardian-link QR code. The scanner processes camera frames to read the code; the app does not save or upload camera images. The pairing token is sent to the account service to validate and establish the link. The scanner uses Google ML Kit, which reads the code on the device; camera images are not sent to Google. Google may collect limited usage and diagnostic information about ML Kit\'s performance, such as device and app details, under its own policies.';
+  String get privacyCamera => 'Camera: Used when you choose to scan a guardian-link QR code. The scanner processes camera frames to read the code; the app does not save or upload camera images. The pairing token is sent to the account service to validate and establish the link. The scanner uses Google ML Kit, which reads the code on the device; camera images are not sent to Google. Google may collect limited usage and diagnostic information about ML Kit\'s performance, such as device and app details, under its own policies.';
 
   @override
-  String get privacyNotifications =>
-      'Notifications: Reminders for memorization, reading, Azkar and prayer times are scheduled locally. Disable them in the app or system settings. Reminder information may appear on the lock screen depending on your device settings.';
+  String get privacyNotifications => 'Notifications: Reminders for memorization, reading, Azkar and prayer times are scheduled locally. Disable them in the app or system settings. Reminder information may appear on the lock screen depending on your device settings.';
 
   @override
-  String get privacyPhotos =>
-      'Photos, files and sharing: Used when you choose to save, export or share a certificate or card. Files may contain the name and progress you choose to display. Copies saved outside the app or sent to another app are subject to your control and the recipient’s policy; deleting your account does not erase them.';
+  String get privacyPhotos => 'Photos, files and sharing: Used when you choose to save, export or share a certificate or card. Files may contain the name and progress you choose to display. Copies saved outside the app or sent to another app are subject to your control and the recipient’s policy; deleting your account does not erase them.';
 
   @override
-  String get privacyLocation =>
-      'Prayer times: Calculated on your device using the city you select or coordinates you enter manually. These settings are stored locally. This version does not request GPS location or track your location in the background.';
+  String get privacyLocation => 'Prayer times: Calculated on your device using the city you select or coordinates you enter manually. These settings are stored locally. This version does not request GPS location or track your location in the background.';
 
   @override
   String get privacyChildrenTitle => '5. Children’s Privacy and Guardians';
 
   @override
-  String get privacyChildrenBody =>
-      'The app includes a children’s path that may process a child’s nickname, age, memorization progress, assessments, sessions and rewards. A guardian should supervise account use, synchronization, speech assessment and sharing, use a nickname instead of a full name and avoid providing unnecessary details. Local child profiles are not necessarily separate accounts.';
+  String get privacyChildrenBody => 'The app includes a children’s path that may process a child’s nickname, age, memorization progress, assessments, sessions and rewards. A guardian should supervise account use, synchronization, speech assessment and sharing, use a nickname instead of a full name and avoid providing unnecessary details. Local child profiles are not necessarily separate accounts.';
 
   @override
-  String get privacyGuardianSharing =>
-      'When you approve and complete guardian account linking, the linked guardian can view available child monitoring data through the cloud, including the name or nickname, age, progress, sessions and achievements, and manage rewards. Linking is not exclusively local. Unlink using the guardian tools and request review or deletion of child data through the privacy email. Unlinking cannot erase copies a recipient previously saved.';
+  String get privacyGuardianSharing => 'When you approve and complete guardian account linking, the linked guardian can view available child monitoring data through the cloud, including the name or nickname, age, progress, sessions and achievements, and manage rewards. Linking is not exclusively local. Unlink using the guardian tools and request review or deletion of child data through the privacy email. Unlinking cannot erase copies a recipient previously saved.';
 
   @override
-  String get privacyChildrenSpeech =>
-      'We do not serve targeted advertising to children. Speech assessment is optional; the operating system’s recognition provider may process audio away from the device. Guardians can choose manual assessment and revoke permissions. QR linking alone is not proof of legally required parental consent.';
+  String get privacyChildrenSpeech => 'We do not serve targeted advertising to children. Speech assessment is optional; the operating system’s recognition provider may process audio away from the device. Guardians can choose manual assessment and revoke permissions. QR linking alone is not proof of legally required parental consent.';
 
   @override
   String get privacyProvidersTitle => '6. Who May Receive Data';
 
   @override
-  String get privacyProvidersBody =>
-      'Supabase processes authentication, account and cloud progress data for the app. Your device’s speech-recognition provider may process recitation audio. EveryAyah provides reciter recordings online and receives ordinary technical request data during streaming or downloads. Email services may process verification and support messages. Linked guardians and apps you select for sharing receive the data described above. Google ML Kit, used for QR scanning, may receive limited diagnostic data.';
+  String get privacyProvidersBody => 'Supabase processes authentication, account and cloud progress data for the app. Your device’s speech-recognition provider may process recitation audio. EveryAyah provides reciter recordings online and receives ordinary technical request data during streaming or downloads. Email services may process verification and support messages. Linked guardians and apps you select for sharing receive the data described above. Google ML Kit, used for QR scanning, may receive limited diagnostic data.';
 
   @override
-  String get privacyProviderProtection =>
-      'We limit processing to what the service needs and require processors to protect data consistently with this policy, store requirements and applicable law. Device platform services and apps you choose for sharing also have their own policies. We may disclose information necessary to comply with a binding legal request or protect rights and service security.';
+  String get privacyProviderProtection => 'We limit processing to what the service needs and require processors to protect data consistently with this policy, store requirements and applicable law. Device platform services and apps you choose for sharing also have their own policies. We may disclose information necessary to comply with a binding legal request or protect rights and service security.';
 
   @override
   String get privacySecurityTitle => '7. Security and International Transfers';
 
   @override
-  String get privacySecurityBody =>
-      'Account connections use HTTPS. Cloud access depends on account identity and access rules that allow the specified sharing with linked guardians. Selected sensitive data, including guardian PIN protection and selected account data, uses secure storage; the authentication library persists a session on the device to keep you signed in. No security measure is absolute. Service providers may process data outside your country; transfers are handled subject to applicable safeguards and legal requirements.';
+  String get privacySecurityBody => 'Account connections use HTTPS. Cloud access depends on account identity and access rules that allow the specified sharing with linked guardians. Selected sensitive data, including guardian PIN protection and selected account data, uses secure storage; the authentication library persists a session on the device to keep you signed in. No security measure is absolute. Service providers may process data outside your country; transfers are handled subject to applicable safeguards and legal requirements.';
 
   @override
   String get privacyRetentionTitle => '8. Data Retention';
 
   @override
-  String get privacyRetentionBody =>
-      'Active account data and profile are retained while your account exists, until the data or account is deleted. Local data remains until you erase it or clear app data. Successful account deletion removes account data from operational databases. Provider backups or security logs may remain during their limited retention cycle and are not used to recreate the account. Your device platform may keep backups according to your backup settings; manage these in system settings. Support correspondence is retained as necessary to resolve requests and meet legal obligations. Contact us for the retention period applicable to your data; if a legal exception requires retention, we explain the categories, reason and duration in our response.';
+  String get privacyRetentionBody => 'Active account data and profile are retained while your account exists, until the data or account is deleted. Local data remains until you erase it or clear app data. Successful account deletion removes account data from operational databases. Provider backups or security logs may remain during their limited retention cycle and are not used to recreate the account. Your device platform may keep backups according to your backup settings; manage these in system settings. Support correspondence is retained as necessary to resolve requests and meet legal obligations. Contact us for the retention period applicable to your data; if a legal exception requires retention, we explain the categories, reason and duration in our response.';
 
   @override
   String get privacyDeletionTitle => '9. Account and Data Deletion';
 
   @override
-  String get privacyDeletionBody =>
-      'To delete your account, open Settings → Account → Delete account, read the warning and confirm. Internet access is required. This deletes your login account, profile and associated cloud data, including progress, plans, bookmarks, certificates, guardian links and associated rewards. It ends the session and clears account data on this device, including progress, dependent local profiles and pending operations. Deletion is permanent; signing out or unlinking is not a substitute. Success is shown after cleanup finishes; follow any retry instructions if completion is interrupted.';
+  String get privacyDeletionBody => 'To delete your account, open Settings → Account → Delete account, read the warning and confirm. Internet access is required. This deletes your login account, profile and associated cloud data, including progress, plans, bookmarks, certificates, guardian links and associated rewards. It ends the session and clears account data on this device, including progress, dependent local profiles and pending operations. Deletion is permanent; signing out or unlinking is not a substitute. Success is shown after cleanup finishes; follow any retry instructions if completion is interrupted.';
 
   @override
-  String get privacyDeletionLimits =>
-      'Deleting a guardian account does not delete independent child or other guardian accounts; their links to the deleted account are removed. Certificates or cards exported outside the app, shared copies and local copies on other devices are not erased by this operation; clear app data on those devices as well. General device preferences, downloaded Quran content and separately identifiable guest data may remain.';
+  String get privacyDeletionLimits => 'Deleting a guardian account does not delete independent child or other guardian accounts; their links to the deleted account are removed. Certificates or cards exported outside the app, shared copies and local copies on other devices are not erased by this operation; clear app data on those devices as well. General device preferences, downloaded Quran content and separately identifiable guest data may remain.';
 
   @override
-  String get privacyExternalDeletion =>
-      'You can request deletion without installing the app: email elsayed.saad2014@feps.edu.eg from your account email with the subject “Talia Quran account deletion request” and ask to delete the account and associated data. We verify account ownership before acting and notify you of completion or any legally required retention. Do not send passwords or verification codes. Use the same email to request deletion of particular data while keeping your account.';
+  String get privacyExternalDeletion => 'You can request deletion without installing the app: email elsayed.saad2014@feps.edu.eg from your account email with the subject “Talia Quran account deletion request” and ask to delete the account and associated data. We verify account ownership before acting and notify you of completion or any legally required retention. Do not send passwords or verification codes. Use the same email to request deletion of particular data while keeping your account.';
 
   @override
   String get privacyRightsTitle => '10. Your Choices and Rights';
 
   @override
-  String get privacyRightsBody =>
-      'Edit your profile in the app, revoke device permissions, disable reminders and unlink guardians. Depending on applicable law, you may request access, a copy, correction or erasure of data, restriction of processing, object to processing, withdraw consent or complain to the relevant authority. Contact us from your account email and describe your request; we may request limited identity verification. Withdrawal does not affect processing that occurred before it.';
+  String get privacyRightsBody => 'Edit your profile in the app, revoke device permissions, disable reminders and unlink guardians. Depending on applicable law, you may request access, a copy, correction or erasure of data, restriction of processing, object to processing, withdraw consent or complain to the relevant authority. Contact us from your account email and describe your request; we may request limited identity verification. Withdrawal does not affect processing that occurred before it.';
 
   @override
   String get privacyChangesTitle => '11. Changes to This Policy';
 
   @override
-  String get privacyChangesBody =>
-      'We update the effective date when the policy changes and provide appropriate notice of material changes. If a new use of your data requires consent, we request it before that use begins. Review the policy when updating the app.';
+  String get privacyChangesBody => 'We update the effective date when the policy changes and provide appropriate notice of material changes. If a new use of your data requires consent, we request it before that use begins. Review the policy when updating the app.';
 
   @override
   String get privacyContactTitle => '12. Contact Us';
 
   @override
-  String get privacyContactBody =>
-      'Developer: Sayed Saad\nApp: Talia Quran — تالية القرآن\nPrivacy, account deletion and children’s data: elsayed.saad2014@feps.edu.eg';
+  String get privacyContactBody => 'Developer: Sayed Saad\nApp: Talia Quran — تالية القرآن\nPrivacy, account deletion and children’s data: elsayed.saad2014@feps.edu.eg';
 
   @override
-  String get accountDeletionRemoteConfirmedCleanupFailed =>
-      'Your cloud account was deleted, but device cleanup is incomplete. Retry to finish cleanup.';
+  String get accountDeletionRemoteConfirmedCleanupFailed => 'Your cloud account was deleted, but device cleanup is incomplete. Retry to finish cleanup.';
 
   @override
-  String get accountDeletionSessionCleanupFailed =>
-      'Your account was deleted, but removing the device session is incomplete. Retry.';
+  String get accountDeletionSessionCleanupFailed => 'Your account was deleted, but removing the device session is incomplete. Retry.';
 
   @override
-  String get accountDeletionProgressMarkerFailed =>
-      'The deletion state could not be saved safely. Account deletion has not started; retry.';
+  String get accountDeletionProgressMarkerFailed => 'The deletion state could not be saved safely. Account deletion has not started; retry.';
 
   @override
-  String get accountDeletionUnavailable =>
-      'Account deletion is currently unavailable. Retry or contact the privacy email.';
+  String get accountDeletionUnavailable => 'Account deletion is currently unavailable. Retry or contact the privacy email.';
 
   @override
-  String get accountDeletionFailed =>
-      'Account deletion could not be confirmed. Check your connection and retry; wait for the success message before assuming deletion is complete.';
+  String get accountDeletionFailed => 'Account deletion could not be confirmed. Check your connection and retry; wait for the success message before assuming deletion is complete.';
 
   @override
   String get accountDeletionRetryTitle => 'Finish account deletion';
@@ -8294,50 +7674,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourcesLicensesTitle => 'Sources & licenses';
 
   @override
-  String get sourcesLicensesSubtitle =>
-      'Where the Quran text, audio and code come from';
+  String get sourcesLicensesSubtitle => 'Where the Quran text, audio and code come from';
 
   @override
   String get sourcesQuranTextTitle => 'Quran text';
 
   @override
-  String get sourcesQuranTextBody =>
-      'Uthmani script, Hafs narration, from the Tanzil Project via alquran.cloud.';
+  String get sourcesQuranTextBody => 'Uthmani script, Hafs narration, from the Tanzil Project via alquran.cloud.';
 
   @override
   String get sourcesMushafTitle => 'Mushaf pages';
 
   @override
-  String get sourcesMushafBody =>
-      'Mushaf page fonts (QCF) are rendered with the qcf_quran_plus package, MIT license.';
+  String get sourcesMushafBody => 'Mushaf page fonts (QCF) are rendered with the qcf_quran_plus package, MIT license.';
 
   @override
   String get sourcesRecitationTitle => 'Recitations';
 
   @override
-  String get sourcesRecitationBody =>
-      'Ayah recitations are streamed from EveryAyah.com.';
+  String get sourcesRecitationBody => 'Ayah recitations are streamed from EveryAyah.com.';
 
   @override
   String get sourcesAdhanTitle => 'Adhan';
 
   @override
-  String get sourcesAdhanBody =>
-      'The selectable muezzin recordings come from the Internet Archive and carry the Public Domain Mark 1.0.';
+  String get sourcesAdhanBody => 'The selectable muezzin recordings come from the Internet Archive and carry the Public Domain Mark 1.0.';
 
   @override
   String get sourcesKhatmDuaTitle => 'Khatm al-Quran dua';
 
   @override
-  String get sourcesKhatmDuaBody =>
-      'From the appendix of the King Fahd Complex Mushaf.';
+  String get sourcesKhatmDuaBody => 'From the appendix of the King Fahd Complex Mushaf.';
 
   @override
   String get sourcesOpenSourceTitle => 'Open-source licenses';
 
   @override
-  String get sourcesOpenSourceBody =>
-      'Full licenses of the libraries used in the app.';
+  String get sourcesOpenSourceBody => 'Full licenses of the libraries used in the app.';
 
   @override
   String sourcesOpenLink(String site) {
@@ -8345,8 +7718,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get authCloudUnavailable =>
-      'Accounts aren\'t available in this version. You can keep using Talia as a guest.';
+  String get authCloudUnavailable => 'Accounts aren\'t available in this version. You can keep using Talia as a guest.';
 
   @override
   String surahNamed(String name) {
@@ -8360,8 +7732,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hijriAdjustmentTitle => 'Hijri date';
 
   @override
-  String get hijriAdjustmentSubtitle =>
-      'Shift the Hijri date to match your country\'s announcement of the new month.';
+  String get hijriAdjustmentSubtitle => 'Shift the Hijri date to match your country\'s announcement of the new month.';
 
   @override
   String hijriAdjustmentToday(String date) {
@@ -8369,27 +7740,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guardianPinCreateReason =>
-      'A 4-digit PIN is required when linking a child to a guardian. You can skip it for other actions.';
+  String get guardianPinCreateReason => 'A 4-digit PIN is required when linking a child to a guardian. You can skip it for other actions.';
 
   @override
-  String get childSetupPinOptionalHelp =>
-      'Optional: set it up now or when linking a child to a guardian.';
+  String get childSetupPinOptionalHelp => 'Optional: set it up now or when linking a child to a guardian.';
 
   @override
-  String get childSetupPinAlreadySet =>
-      'A guardian PIN is already set on this device and will be kept.';
+  String get childSetupPinAlreadySet => 'A guardian PIN is already set on this device and will be kept.';
 
   @override
   String get recitationVoiceDisclosureTitle => 'Before you recite';
 
   @override
-  String get recitationVoiceDisclosureBody =>
-      'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
+  String get recitationVoiceDisclosureBody => 'To check your recitation, the app uses the microphone and your device\'s built-in speech recognition service (such as Google\'s). That service may send the audio to its provider\'s servers to turn it into text, under the provider\'s policies. Talia does not keep the recording or send it to Talia servers. Only the assessment result is saved with your progress, and hands-free review rounds save no result at all. You can grade yourself instead without the microphone, and you can revoke microphone access later in device settings.';
 
   @override
-  String get recitationVoiceDisclosureGuardian =>
-      'If the user is a child, a parent or guardian should read this and decide.';
+  String get recitationVoiceDisclosureGuardian => 'If the user is a child, a parent or guardian should read this and decide.';
 
   @override
   String get recitationVoiceDisclosureAccept => 'Agree, use the microphone';
@@ -8401,8 +7767,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practicePassageTitle => 'Choose your practice passage';
 
   @override
-  String get practicePassageMessage =>
-      'Practice the whole surah or choose a passage for this session.';
+  String get practicePassageMessage => 'Practice the whole surah or choose a passage for this session.';
 
   @override
   String get practiceWholeSurah => 'Whole surah';
@@ -8411,8 +7776,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceChoosePassage => 'Choose passage';
 
   @override
-  String get practicePassageFieldsHint =>
-      'Enter the first ayah and how many ayahs to include.';
+  String get practicePassageFieldsHint => 'Enter the first ayah and how many ayahs to include.';
 
   @override
   String get practiceStartAyah => 'Start ayah';
@@ -8453,8 +7817,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDetailsMastery => 'Mastery of studied ayahs';
 
   @override
-  String get planDetailsMasteryHint =>
-      'The share of studied ayahs that reached memorized status through practice and review.';
+  String get planDetailsMasteryHint => 'The share of studied ayahs that reached memorized status through practice and review.';
 
   @override
   String get planDetailsNoAssessment => 'Available after you start practicing.';
@@ -8496,12 +7859,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDetailsBySurah => 'Progress by surah';
 
   @override
-  String get planDetailsScopeHint =>
-      'Counts cover the ayahs included in your plan, starting from your selected first ayah.';
+  String get planDetailsScopeHint => 'Counts cover the ayahs included in your plan, starting from your selected first ayah.';
 
   @override
-  String get planDetailsTodayHint =>
-      'Today\'s session may include reviews from other surahs you have studied.';
+  String get planDetailsTodayHint => 'Today\'s session may include reviews from other surahs you have studied.';
 
   @override
   String get planDetailsStartSession => 'Start session';
@@ -8510,8 +7871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDetailsEdit => 'Edit plan';
 
   @override
-  String get planDetailsTodayDone =>
-      'Today\'s work is complete. Your next assignment will appear on your next study day.';
+  String get planDetailsTodayDone => 'Today\'s work is complete. Your next assignment will appear on your next study day.';
 
   @override
   String get planDetailsRestDay => 'Rest day: reviews only.';
@@ -8520,12 +7880,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDetailsTodayEmpty => 'No work is scheduled for today.';
 
   @override
-  String get planDetailsTodayUnavailable =>
-      'Today\'s assignment could not be loaded. Pull to refresh before starting.';
+  String get planDetailsTodayUnavailable => 'Today\'s assignment could not be loaded. Pull to refresh before starting.';
 
   @override
-  String get planDetailsBacklog =>
-      'New memorization is paused while you catch up on due reviews.';
+  String get planDetailsBacklog => 'New memorization is paused while you catch up on due reviews.';
 
   @override
   String get planDetailsTodayNew => 'New ayahs today';
@@ -8534,8 +7892,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planDetailsTodayReview => 'Review ayahs today';
 
   @override
-  String get planDetailsInScope =>
-      'In-plan progress includes your existing memorization in this range.';
+  String get planDetailsInScope => 'In-plan progress includes your existing memorization in this range.';
 
   @override
   String get planDetailsRemaining => 'Remaining to memorize';
@@ -8556,31 +7913,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHouseSizeTitle => 'Ayahs in each mission (house)';
 
   @override
-  String get kidsDailyGuardianHint =>
-      'These tasks were chosen by your guardian.';
+  String get kidsDailyGuardianHint => 'These tasks were chosen by your guardian.';
 
   @override
-  String get kidsDailySuggestedHint =>
-      'New daily suggestions to suit your reading and practice.';
+  String get kidsDailySuggestedHint => 'New daily suggestions to suit your reading and practice.';
 
   @override
   String get kidsDailyReadTwoPages => 'Read two Mushaf pages and confirm them';
 
   @override
-  String get kidsDailyReciteAyah =>
-      'Recite an ayah from memory in your practice';
+  String get kidsDailyReciteAyah => 'Recite an ayah from memory in your practice';
 
   @override
-  String get kidsDailyListenAndRecite =>
-      'Listen, repeat, then recite your ayah';
+  String get kidsDailyListenAndRecite => 'Listen, repeat, then recite your ayah';
 
   @override
-  String get kidsDailyReviewAyah =>
-      'Review and recite an ayah in your review session';
+  String get kidsDailyReviewAyah => 'Review and recite an ayah in your review session';
 
   @override
-  String get kidsHouseSizeHint =>
-      'Choose 1–10 ayahs on this child\'s device. The new size applies to surahs not yet started; houses already in progress keep their grouping.';
+  String get kidsHouseSizeHint => 'Choose 1–10 ayahs on this child\'s device. The new size applies to surahs not yet started; houses already in progress keep their grouping.';
 
   @override
   String get kidsHouseSizeSaved => 'House mission size saved.';
@@ -8589,15 +7940,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsHouseReviewTitle => 'Recite this house';
 
   @override
-  String get kidsHouseReviewHint =>
-      'Review and recite every ayah in this house to open the next house.';
+  String get kidsHouseReviewHint => 'Review and recite every ayah in this house to open the next house.';
 
   @override
   String get kidsHouseReviewAction => 'Start house recitation';
 
   @override
-  String get kidsGuardianAuditionHint =>
-      'Guardian: first listen to the child reciting this ayah correctly, then confirm the assessment. PIN entry is optional.';
+  String get kidsGuardianAuditionHint => 'Guardian: first listen to the child reciting this ayah correctly, then confirm the assessment. PIN entry is optional.';
 
   @override
   String kidsHouseReviewRemaining(String count) {
@@ -8608,8 +7957,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyInviteTitle => 'Make your journey fit you';
 
   @override
-  String get adultJourneyInviteBody =>
-      'Pick what you want to focus on now. You can change it or skip it any time.';
+  String get adultJourneyInviteBody => 'Pick what you want to focus on now. You can change it or skip it any time.';
 
   @override
   String get adultJourneyInviteAction => 'Personalize your journey';
@@ -8642,12 +7990,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyGoalAzkar => 'Azkar';
 
   @override
-  String get adultJourneyExperienceLabel =>
-      'How would you describe yourself? (optional)';
+  String get adultJourneyExperienceLabel => 'How would you describe yourself? (optional)';
 
   @override
-  String get adultJourneyExperienceHint =>
-      'This only shapes wording and suggestions. It never changes your memorization or plan.';
+  String get adultJourneyExperienceHint => 'This only shapes wording and suggestions. It never changes your memorization or plan.';
 
   @override
   String get adultJourneyExperienceBeginner => 'Beginner';
@@ -8659,23 +8005,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyExperienceReturning => 'Returning after a break';
 
   @override
-  String get adultJourneyErrorSaveFailed =>
-      'Could not save. Your previous choice is unchanged; you can try again.';
+  String get adultJourneyErrorSaveFailed => 'Could not save. Your previous choice is unchanged; you can try again.';
 
   @override
-  String get adultJourneyErrorUnavailable =>
-      'Your account is not ready right now. Try again shortly.';
+  String get adultJourneyErrorUnavailable => 'Your account is not ready right now. Try again shortly.';
 
   @override
-  String get adultJourneyErrorUnsupported =>
-      'Preferences cannot be changed in this version.';
+  String get adultJourneyErrorUnsupported => 'Preferences cannot be changed in this version.';
 
   @override
   String get adultJourneyTodayTitle => 'How much time do you have today?';
 
   @override
-  String get adultJourneyTodayHint =>
-      'We suggest what fits your time. Durations are approximate and never cut a session short.';
+  String get adultJourneyTodayHint => 'We suggest what fits your time. Durations are approximate and never cut a session short.';
 
   @override
   String get adultJourneyFitTitle => 'Fits your time today';
@@ -8689,8 +8031,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyDurationUnavailable => 'Duration unavailable';
 
   @override
-  String get adultJourneyExceedsBudget =>
-      'May take longer than the time you picked. It stays visible because it is a priority.';
+  String get adultJourneyExceedsBudget => 'May take longer than the time you picked. It stays visible because it is a priority.';
 
   @override
   String get adultJourneyChangeTime => 'Change time';
@@ -8705,19 +8046,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyResumeSubtitle => 'Go back to the section you were in';
 
   @override
-  String get adultJourneyNeedsPlanTitle =>
-      'Start by setting up a memorization plan';
+  String get adultJourneyNeedsPlanTitle => 'Start by setting up a memorization plan';
 
   @override
-  String get adultJourneyNeedsPlanSubtitle =>
-      'There is no memorization plan yet.';
+  String get adultJourneyNeedsPlanSubtitle => 'There is no memorization plan yet.';
 
   @override
   String get adultJourneyNoReviewTitle => 'Nothing memorized to review yet';
 
   @override
-  String get adultJourneyNoReviewSubtitle =>
-      'You can begin by setting up a memorization plan.';
+  String get adultJourneyNoReviewSubtitle => 'You can begin by setting up a memorization plan.';
 
   @override
   String get adultJourneyOpenMemorization => 'Open the memorization hub';
@@ -8729,15 +8067,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adultJourneyOpenAzkar => 'Open Azkar';
 
   @override
-  String get adultJourneyReturnTitleAbsence =>
-      'Welcome back. Shall we start with a light step?';
+  String get adultJourneyReturnTitleAbsence => 'Welcome back. Shall we start with a light step?';
 
   @override
   String get adultJourneyReturnTitleSelf => 'Shall we start with a light step?';
 
   @override
-  String get adultJourneyReturnBody =>
-      'Your plans and reviews stay exactly as they are. Choose what suits you today.';
+  String get adultJourneyReturnBody => 'Your plans and reviews stay exactly as they are. Choose what suits you today.';
 
   @override
   String get adultJourneyReturnLight => 'Light start today';
@@ -8755,15 +8091,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appUpdateInstallAction => 'Install and restart';
 
   @override
-  String get appUpdateInstallFailed =>
-      'The update could not start. Please try again.';
+  String get appUpdateInstallFailed => 'The update could not start. Please try again.';
 
   @override
   String get kidsChangeJourneyTitle => 'Change memorization journey';
 
   @override
-  String get kidsChangeJourneyDescription =>
-      'Choose another journey. Your progress will be kept.';
+  String get kidsChangeJourneyDescription => 'Choose another journey. Your progress will be kept.';
 
   @override
   String get kidsJourneyPathTitle => 'Memorization path';
@@ -8797,8 +8131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsQuranJourneyJumpNo => 'Not now';
 
   @override
-  String get kidsQuranJourneyComplete =>
-      'You finished the whole Quran journey! Tell your guardian about this great achievement.';
+  String get kidsQuranJourneyComplete => 'You finished the whole Quran journey! Tell your guardian about this great achievement.';
 
   @override
   String get kidsHouseStatusNotStarted => 'Not started';
@@ -8907,8 +8240,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trustSourcesTitle => 'Content sources';
 
   @override
-  String get trustSourcesBody =>
-      'Talia contains no generated religious text. Every text is copied as-is from a named source, and documentation such as source links and hadith grades is still being completed for some azkar and hadith.';
+  String get trustSourcesBody => 'Talia contains no generated religious text. Every text is copied as-is from a named source, and documentation such as source links and hadith grades is still being completed for some azkar and hadith.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
@@ -8925,15 +8257,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trustVoiceTitle => 'Your voice';
 
   @override
-  String get trustVoiceBody =>
-      'Talia does not keep a recording of your voice or send it to Talia\'s servers. Speech recognition uses your device\'s system service (such as Google), which may send the audio to its provider under its own policies.';
+  String get trustVoiceBody => 'Talia does not keep a recording of your voice or send it to Talia\'s servers. Speech recognition uses your device\'s system service (such as Google), which may send the audio to its provider under its own policies.';
 
   @override
   String get trustDataTitle => 'Your data';
 
   @override
-  String get trustDataBody =>
-      'You can use Talia without an account. Sync is optional, and each account\'s data is kept separate.';
+  String get trustDataBody => 'You can use Talia without an account. Sync is optional, and each account\'s data is kept separate.';
 
   @override
   String get trustViewSources => 'View sources and licenses';
@@ -8945,8 +8275,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clarityModeTitle => 'Clarity mode';
 
   @override
-  String get clarityModeSubtitle =>
-      'Larger text, higher contrast and a simpler home';
+  String get clarityModeSubtitle => 'Larger text, higher contrast and a simpler home';
 
   @override
   String get clarityContinueReading => 'Continue reading';
@@ -9002,8 +8331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ramadanInviteTitle => 'Get ready for Ramadan';
 
   @override
-  String get ramadanInviteBody =>
-      'Pick your khatmah plan before the month starts';
+  String get ramadanInviteBody => 'Pick your khatmah plan before the month starts';
 
   @override
   String ramadanDayTitle(String day) {
@@ -9022,8 +8350,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ramadanLastTenTonight =>
-      'The last ten nights begin tonight after Maghrib';
+  String get ramadanLastTenTonight => 'The last ten nights begin tonight after Maghrib';
 
   @override
   String get ramadanLastTenRemind => 'Remind me before they begin';
@@ -9043,8 +8370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ramadanTemplateTwoHint =>
-      'Start with the first; when you finish it, we suggest the second over the days left in the month.';
+  String get ramadanTemplateTwoHint => 'Start with the first; when you finish it, we suggest the second over the days left in the month.';
 
   @override
   String ramadanStartNextKhatmah(int count, String countText) {
@@ -9101,23 +8427,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupImport => 'Restore from a file';
 
   @override
-  String get backupImportSignedIn =>
-      'Restore is only available without an account. Your personal notes stay only on this device.';
+  String get backupImportSignedIn => 'Restore is only available without an account. Your personal notes stay only on this device.';
 
   @override
-  String get backupIncludes =>
-      'Version 5 includes memorization, review, khatmah, reading, streaks and XP, adhkar and child progress, notes, bookmarks, and this user\'s saved Quran page.';
+  String get backupIncludes => 'Version 5 includes memorization, review, khatmah, reading, streaks and XP, adhkar and child progress, notes, bookmarks, and this user\'s saved Quran page.';
 
   @override
-  String get backupExcludes =>
-      'Excludes device and notification settings, the guardian PIN, and account keys.';
+  String get backupExcludes => 'Excludes device and notification settings, the guardian PIN, and account keys.';
 
   @override
   String get backupConfirmTitle => 'Replace current data?';
 
   @override
-  String get backupConfirmBody =>
-      'The file replaces the data domains it contains on this device. Domains absent from older versions are preserved, such as notes in version 1 and bookmarks and reading position before version 5.';
+  String get backupConfirmBody => 'The file replaces the data domains it contains on this device. Domains absent from older versions are preserved, such as notes in version 1 and bookmarks and reading position before version 5.';
 
   @override
   String get backupConfirm => 'Replace';
@@ -9126,20 +8448,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupErrorInvalid => 'This file is not a valid Talia backup.';
 
   @override
-  String get backupErrorNewer =>
-      'This backup is from a newer app version. Update the app first.';
+  String get backupErrorNewer => 'This backup is from a newer app version. Update the app first.';
 
   @override
-  String get backupErrorProtection =>
-      'A safety copy could not be prepared before restoring, so nothing was changed. Free up space on the device or try again.';
+  String get backupErrorProtection => 'A safety copy could not be prepared before restoring, so nothing was changed. Free up space on the device or try again.';
 
   @override
-  String get backupErrorRecoveryBlocked =>
-      'A previous restore could not be completed. Restart the app before restoring again.';
+  String get backupErrorRecoveryBlocked => 'A previous restore could not be completed. Restart the app before restoring again.';
 
   @override
-  String get backupErrorCorrupt =>
-      'The file is damaged and cannot be restored.';
+  String get backupErrorCorrupt => 'The file is damaged and cannot be restored.';
 
   @override
   String get backupDone => 'Restore complete';
@@ -9157,8 +8475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsBedtimeTimer => 'Stops after';
 
   @override
-  String get kidsBedtimeEmpty =>
-      'Memorize a surah first to listen to it before bed';
+  String get kidsBedtimeEmpty => 'Memorize a surah first to listen to it before bed';
 
   @override
   String get kidsBedtimeCard => 'Quiet time: listen to your surahs before bed';
@@ -9188,8 +8505,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianRecitationExit => 'End';
 
   @override
-  String get forgettingForecastTitle =>
-      'May weaken within 7 days without review';
+  String get forgettingForecastTitle => 'May weaken within 7 days without review';
 
   @override
   String forgettingForecastPassage(Object surah, Object start, Object end) {
@@ -9203,8 +8519,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationForgettingForecastTitle => 'Time for review';
 
   @override
-  String get notificationForgettingForecastBody =>
-      'When it suits you, take a little time to review what you learned.';
+  String get notificationForgettingForecastBody => 'When it suits you, take a little time to review what you learned.';
 
   @override
   String get notificationSettingsForgettingForecast => 'Forgetting forecast';
@@ -9225,16 +8540,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahNotesEmpty => 'No reflections yet';
 
   @override
-  String get ayahNoteSaveFailed =>
-      'Couldn\'t save your note. Please try again.';
+  String get ayahNoteSaveFailed => 'Couldn\'t save your note. Please try again.';
 
   @override
-  String get ayahNotesLoadFailed =>
-      'Couldn\'t load your notes. Please try again.';
+  String get ayahNotesLoadFailed => 'Couldn\'t load your notes. Please try again.';
 
   @override
-  String get ayahNoteNavigationFailed =>
-      'Couldn\'t open this ayah. Please try again.';
+  String get ayahNoteNavigationFailed => 'Couldn\'t open this ayah. Please try again.';
 
   @override
   String get audioDownloadsTitle => 'Download recitations';
@@ -9254,20 +8566,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioDownloadsWifiOnly => 'Wi-Fi only';
 
   @override
-  String get audioDownloadsWaitingForWifi =>
-      'You\'re on a network that may count against your data plan. Connect to Wi-Fi, or turn off Wi-Fi only.';
+  String get audioDownloadsWaitingForWifi => 'You\'re on a network that may count against your data plan. Connect to Wi-Fi, or turn off Wi-Fi only.';
 
   @override
-  String get audioDownloadsWifiUnavailable =>
-      'This device\'s network type cannot be checked. Connect to Wi-Fi before continuing.';
+  String get audioDownloadsWifiUnavailable => 'This device\'s network type cannot be checked. Connect to Wi-Fi before continuing.';
 
   @override
-  String get audioDownloadsSpaceUnknown =>
-      'Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size.';
+  String get audioDownloadsSpaceUnknown => 'Free storage space cannot be measured. Downloads may be large; leave at least 200 MB free in addition to the recording size.';
 
   @override
-  String get audioDownloadsNetworkWarning =>
-      'Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading.';
+  String get audioDownloadsNetworkWarning => 'Network type and free storage cannot be checked. Continuing may use mobile data. Check your Wi-Fi connection and storage before downloading.';
 
   @override
   String get audioDownloadsProceed => 'Continue downloading';
@@ -9279,15 +8587,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioDownloadsCompleted => 'Download finished';
 
   @override
-  String get audioDownloadsCancelled =>
-      'Download cancelled; saved files remain available';
+  String get audioDownloadsCancelled => 'Download cancelled; saved files remain available';
 
   @override
   String get audioDownloadsInsufficientSpace => 'Not enough storage space';
 
   @override
-  String get audioDownloadsFailed =>
-      'Download failed. You can resume without downloading saved files again.';
+  String get audioDownloadsFailed => 'Download failed. You can resume without downloading saved files again.';
 
   @override
   String get audioDownloadsInProgress => 'Downloading recitations…';
@@ -9301,8 +8607,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioDownloadsDelete => 'Delete this reciter\'s downloads';
 
   @override
-  String get audioDownloadsDeleteConfirm =>
-      'Delete the saved recordings for this reciter from this device?';
+  String get audioDownloadsDeleteConfirm => 'Delete the saved recordings for this reciter from this device?';
 
   @override
   String get hijriYearRecapTitle => 'Hijri year recap';
@@ -9314,8 +8619,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hijriYearRecapMemorizedApprox => 'Approx. memorized ayahs';
 
   @override
-  String get hijriYearRecapApproxDefinition =>
-      'Currently memorized ayahs last reviewed this Hijri year';
+  String get hijriYearRecapApproxDefinition => 'Currently memorized ayahs last reviewed this Hijri year';
 
   @override
   String get hijriYearRecapLifetimeStreak => 'Lifetime longest streak';
@@ -9333,8 +8637,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get similarAyahTrainerTitle => 'Similar passages practice';
 
   @override
-  String get similarAyahTrainerMachineNote =>
-      'For comparison and review, not a recitation assessment.';
+  String get similarAyahTrainerMachineNote => 'For comparison and review, not a recitation assessment.';
 
   @override
   String get similarAyahHistoryTitle => 'Review history';
@@ -9346,8 +8649,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get similarAyahLookupAction => 'Similar wording (machine-computed)';
 
   @override
-  String get similarAyahTrainerEmpty =>
-      'No historical similar-passage patterns yet';
+  String get similarAyahTrainerEmpty => 'No historical similar-passage patterns yet';
 
   @override
   String get similarAyahTrainerTryAgain => 'Try again';
@@ -9362,15 +8664,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get similarAyahTrainerPrevious => 'Previous ayah';
 
   @override
-  String get similarAyahTrainerPractice =>
-      'Recall the target passage, then reveal it when ready.';
+  String get similarAyahTrainerPractice => 'Recall the target passage, then reveal it when ready.';
 
   @override
   String get similarAyahTrainerReveal => 'Show target passage';
 
   @override
-  String get similarAyahTrainerUnavailable =>
-      'This practice is available only for eligible adult accounts.';
+  String get similarAyahTrainerUnavailable => 'This practice is available only for eligible adult accounts.';
 
   @override
   String similarAyahFailureNotice(Object reference) {
@@ -9381,8 +8681,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get similarAyahOpenComparison => 'Compare similar passages';
 
   @override
-  String get v2AccountChanged =>
-      'The account changed. Open the session from your current account to continue.';
+  String get v2AccountChanged => 'The account changed. Open the session from your current account to continue.';
 
   @override
   String get similarAyahTrainerNoPrevious => 'No previous ayah in this surah';
@@ -9408,15 +8707,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerReviewSaved => 'Your self-assessment was saved.';
 
   @override
-  String get prayerReviewUnavailable =>
-      'No prayer review passage is available right now.';
+  String get prayerReviewUnavailable => 'No prayer review passage is available right now.';
 
   @override
   String get prayerReviewLoadFailed => 'Could not load the passage. Try again.';
 
   @override
-  String get prayerReviewSaveFailed =>
-      'Could not save. You can retry with the same passage.';
+  String get prayerReviewSaveFailed => 'Could not save. You can retry with the same passage.';
 
   @override
   String get prayerReviewGradeMastered => 'Mastered';
@@ -9464,8 +8761,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsRemotePlanDeviceDefault => 'Use device setting';
 
   @override
-  String get kidsRemotePlanDaysHint =>
-      'These days affect reminders only. Learning stays available every day.';
+  String get kidsRemotePlanDaysHint => 'These days affect reminders only. Learning stays available every day.';
 
   @override
   String get encouragementTitle => 'Send encouragement';
@@ -9498,48 +8794,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get encouragementSend => 'Send encouragement';
 
   @override
-  String get encouragementSent =>
-      'Your encouragement was sent and will appear when the child syncs.';
+  String get encouragementSent => 'Your encouragement was sent and will appear when the child syncs.';
 
   @override
   String get encouragementFailed => 'Could not send. Try again.';
 
   @override
-  String get encouragementQuota =>
-      'You reached this child’s daily limit. Try tomorrow.';
+  String get encouragementQuota => 'You reached this child’s daily limit. Try tomorrow.';
 
   @override
-  String get encouragementLimit =>
-      'Up to 10 messages per child each day. The day starts at midnight UTC.';
+  String get encouragementLimit => 'Up to 10 messages per child each day. The day starts at midnight UTC.';
 
   @override
   String get encouragementDone => 'Done';
 
   @override
-  String get parentRewardOriginUnknown =>
-      'This older gift is kept for viewing. Your guardian can create a new gift.';
+  String get parentRewardOriginUnknown => 'This older gift is kept for viewing. Your guardian can create a new gift.';
 
   @override
-  String get kidsLegacyResumeTitle =>
-      'How would you like to continue this surah?';
+  String get kidsLegacyResumeTitle => 'How would you like to continue this surah?';
 
   @override
-  String get kidsLegacyResumeExplanation =>
-      'Your paused ayah is saved. Choose a split to continue this older session; its previous split is unavailable.';
+  String get kidsLegacyResumeExplanation => 'Your paused ayah is saved. Choose a split to continue this older session; its previous split is unavailable.';
 
   @override
   String get kidsLegacyResumeChoose => 'Choose how to continue';
 
   @override
-  String get kidsLegacyResumeSaveFailed =>
-      'Your choice was not saved. Your paused ayah is still saved. You can try again.';
+  String get kidsLegacyResumeSaveFailed => 'Your choice was not saved. Your paused ayah is still saved. You can try again.';
 
   @override
   String get audioDownloadsLeaveTitle => 'Stop the download?';
 
   @override
-  String get audioDownloadsLeaveBody =>
-      'A download is in progress. Leaving this page stops it; files already saved stay available.';
+  String get audioDownloadsLeaveBody => 'A download is in progress. Leaving this page stops it; files already saved stay available.';
 
   @override
   String get audioDownloadsLeaveStay => 'Stay';
@@ -9548,15 +8836,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioDownloadsLeaveStop => 'Stop download';
 
   @override
-  String get similarAyahIndexUnavailable =>
-      'The similar-ayah list has not been approved yet, so it is not available here.';
+  String get similarAyahIndexUnavailable => 'The similar-ayah list has not been approved yet, so it is not available here.';
 
   @override
   String get handsFreeTitle => 'Hands-free Review';
 
   @override
-  String get handsFreeDrivingWarning =>
-      'For your safety, do not use this while driving.';
+  String get handsFreeDrivingWarning => 'For your safety, do not use this while driving.';
 
   @override
   String get handsFreeAcceptWarning => 'I understand';
@@ -9586,12 +8872,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handsFreeNoDue => 'No review is due right now.';
 
   @override
-  String get handsFreeMicFallback =>
-      'Speech recognition is unavailable. Use the buttons below.';
+  String get handsFreeMicFallback => 'Speech recognition is unavailable. Use the buttons below.';
 
   @override
-  String get handsFreeDescription =>
-      'Listen to a short prompt, then recite. This practice does not change your memorization progress.';
+  String get handsFreeDescription => 'Listen to a short prompt, then recite. This practice does not change your memorization progress.';
 
   @override
   String get handsFreePrompt => 'Listen to the prompt';
@@ -9636,12 +8920,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupKhatmahInvalidTitle => 'Use 1–80 characters for the title.';
 
   @override
-  String get groupKhatmahInvalidName =>
-      'Use 2–24 characters for the display name.';
+  String get groupKhatmahInvalidName => 'Use 2–24 characters for the display name.';
 
   @override
-  String get groupKhatmahInvalidCode =>
-      'Enter the six-character invitation code.';
+  String get groupKhatmahInvalidCode => 'Enter the six-character invitation code.';
 
   @override
   String groupKhatmahMembersCount(int count) {
@@ -9703,12 +8985,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupKhatmahDelete => 'Delete group';
 
   @override
-  String get groupKhatmahLeaveConfirm =>
-      'Leave this group? Your unfinished claims will be released.';
+  String get groupKhatmahLeaveConfirm => 'Leave this group? Your unfinished claims will be released.';
 
   @override
-  String get groupKhatmahDeleteConfirm =>
-      'Delete this group for every member? Its shared progress will be removed.';
+  String get groupKhatmahDeleteConfirm => 'Delete this group for every member? Its shared progress will be removed.';
 
   @override
   String get groupKhatmahCancel => 'Cancel';
@@ -9720,68 +9000,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupKhatmahError => 'Could not update the group. Try again.';
 
   @override
-  String get groupKhatmahConflict =>
-      'This part changed. The group has been refreshed.';
+  String get groupKhatmahConflict => 'This part changed. The group has been refreshed.';
 
   @override
-  String get groupKhatmahConflictClaimed =>
-      'Someone else claimed it. The group has been refreshed.';
+  String get groupKhatmahConflictClaimed => 'Someone else claimed it. The group has been refreshed.';
 
   @override
-  String get groupKhatmahOutcomePending =>
-      'Your request is being sent and will be confirmed automatically when you are back online. There is no need to repeat it.';
+  String get groupKhatmahOutcomePending => 'Your request is being sent and will be confirmed automatically when you are back online. There is no need to repeat it.';
 
   @override
-  String get groupKhatmahGroupCompleted =>
-      'This Khatmah is complete and its parts can no longer change.';
+  String get groupKhatmahGroupCompleted => 'This Khatmah is complete and its parts can no longer change.';
 
   @override
-  String get groupKhatmahStaleOperation =>
-      'Your membership in the group changed before this request finished. The data has been refreshed.';
+  String get groupKhatmahStaleOperation => 'Your membership in the group changed before this request finished. The data has been refreshed.';
 
   @override
-  String get groupKhatmahInvalidInput =>
-      'The entered details were not accepted. Check them and try again.';
+  String get groupKhatmahInvalidInput => 'The entered details were not accepted. Check them and try again.';
 
   @override
   String get groupKhatmahNetwork => 'Connect to the internet and try again.';
 
   @override
-  String get groupKhatmahNotMember =>
-      'You are no longer a member of this group.';
+  String get groupKhatmahNotMember => 'You are no longer a member of this group.';
 
   @override
-  String get groupKhatmahNotEligible =>
-      'Group Khatmah is unavailable for this account.';
+  String get groupKhatmahNotEligible => 'Group Khatmah is unavailable for this account.';
 
   @override
   String get groupKhatmahFull => 'This group is full.';
 
   @override
-  String get groupKhatmahInvalidInvite =>
-      'This invitation code is unavailable.';
+  String get groupKhatmahInvalidInvite => 'This invitation code is unavailable.';
 
   @override
   String get groupKhatmahRateLimited => 'Too many attempts. Try again later.';
 
   @override
-  String get groupKhatmahOwnerHasMembers =>
-      'Other members must leave before you can delete this group.';
+  String get groupKhatmahOwnerHasMembers => 'Other members must leave before you can delete this group.';
 
   @override
   String get groupKhatmahDuaOpen => 'Read Khatmah supplication';
 
   @override
-  String get groupKhatmahDuaUnavailable =>
-      'The Khatmah supplication is unavailable until its text and source are approved.';
+  String get groupKhatmahDuaUnavailable => 'The Khatmah supplication is unavailable until its text and source are approved.';
 
   @override
-  String get groupKhatmahStale =>
-      'Last saved group data; reconnect to check membership.';
+  String get groupKhatmahStale => 'Last saved group data; reconnect to check membership.';
 
   @override
-  String get groupKhatmahAccountDeletionWarning =>
-      'Deleting your account will delete every group Khatmah you own for all its members.';
+  String get groupKhatmahAccountDeletionWarning => 'Deleting your account will delete every group Khatmah you own for all its members.';
 
   @override
   String get groupKhatmahCompletionFailed => 'Completion needs your attention';
@@ -9793,19 +9060,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupKhatmahDiscardCompletion => 'Discard local request';
 
   @override
-  String get groupKhatmahDiscardConfirm =>
-      'Discard this local completion request? It may already have reached the group. This will not undo a server-confirmed completion.';
+  String get groupKhatmahDiscardConfirm => 'Discard this local completion request? It may already have reached the group. This will not undo a server-confirmed completion.';
 
   @override
-  String get groupKhatmahRecoveryRequired =>
-      'This completion could not be sent. Retry it or discard the local request.';
+  String get groupKhatmahRecoveryRequired => 'This completion could not be sent. Retry it or discard the local request.';
 
   @override
   String get groupKhatmahRetryRequest => 'Retry request';
 
   @override
-  String get groupKhatmahDiscardRequestConfirm =>
-      'Discard this local request? It may already have reached the group. Discarding will not undo any server changes.';
+  String get groupKhatmahDiscardRequestConfirm => 'Discard this local request? It may already have reached the group. Discarding will not undo any server changes.';
 
   @override
   String get groupKhatmahFailedRequests => 'Requests needing your attention';
@@ -9820,8 +9084,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeasonsMasterTitle => 'Accompany me through the seasons';
 
   @override
-  String get settingsSeasonsMasterSubtitle =>
-      'Season cards and their challenges appear at their time, controlled from here.';
+  String get settingsSeasonsMasterSubtitle => 'Season cards and their challenges appear at their time, controlled from here.';
 
   @override
   String get settingsSeasonsYearGroup => 'Seasons of the year';
@@ -9836,8 +9099,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeasonsRemindersTitle => 'Season reminders';
 
   @override
-  String get settingsSeasonsRemindersHint =>
-      'Reminders for season days, at most one a day. Turning it off stops all seasonal reminders.';
+  String get settingsSeasonsRemindersHint => 'Reminders for season days, at most one a day. Turning it off stops all seasonal reminders.';
 
   @override
   String get settingsSeasonsShaban => 'Shaban: preparing for Ramadan';
@@ -9849,8 +9111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeasonsEid => 'Eid al-Fitr and the six days of Shawwal';
 
   @override
-  String get settingsSeasonsHajj =>
-      'The ten of Dhul-Hijjah, Arafah and Eid al-Adha';
+  String get settingsSeasonsHajj => 'The ten of Dhul-Hijjah, Arafah and Eid al-Adha';
 
   @override
   String get settingsSeasonsNewYear => 'Hijri new year and the year harvest';
@@ -9890,22 +9151,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeasonsKidsTitle => 'Child\'s seasons';
 
   @override
-  String get settingsSeasonsKidsSubtitle =>
-      'Season cards on your child\'s page.';
+  String get settingsSeasonsKidsSubtitle => 'Season cards on your child\'s page.';
 
   @override
   String get ramadanHideSeason => 'Hide this season';
 
   @override
-  String get ramadanHideSeasonDone =>
-      'Hidden. You can bring it back from Settings › Seasons & occasions';
+  String get ramadanHideSeasonDone => 'Hidden. You can bring it back from Settings › Seasons & occasions';
 
   @override
   String get settingsFeaturesPageTitle => 'App features';
 
   @override
-  String get settingsFeaturesNavSubtitle =>
-      'Turn on what helps you, turn off what you don\'t need';
+  String get settingsFeaturesNavSubtitle => 'Turn on what helps you, turn off what you don\'t need';
 
   @override
   String get settingsFeaturesGroupReading => 'Reading';
@@ -9929,95 +9187,121 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFeatureReaderRepeatTitle => 'Recitation repeat';
 
   @override
-  String get settingsFeatureReaderRepeatSubtitle =>
-      'Repeat recitation automatically a number of times you choose.';
+  String get settingsFeatureReaderRepeatSubtitle => 'Repeat recitation automatically a number of times you choose.';
 
   @override
   String get settingsFeatureAyahNotesTitle => 'Ayah notes';
 
   @override
-  String get settingsFeatureAyahNotesSubtitle =>
-      'Note any ayah and find it again when you review.';
+  String get settingsFeatureAyahNotesSubtitle => 'Note any ayah and find it again when you review.';
 
   @override
   String get settingsFeatureAudioDownloadsTitle => 'Recitation downloads';
 
   @override
-  String get settingsFeatureAudioDownloadsSubtitle =>
-      'Download recitations once and listen without internet.';
+  String get settingsFeatureAudioDownloadsSubtitle => 'Download recitations once and listen without internet.';
 
   @override
-  String get settingsFeatureStrengthOverlayTitle =>
-      'Memorization strength in the Mushaf';
+  String get settingsFeatureStrengthOverlayTitle => 'Memorization strength in the Mushaf';
 
   @override
-  String get settingsFeatureStrengthOverlaySubtitle =>
-      'Ayahs colored by how strong your memorization is; controlled in the reader menu.';
+  String get settingsFeatureStrengthOverlaySubtitle => 'Ayahs colored by how strong your memorization is; controlled in the reader menu.';
 
   @override
   String get settingsFeatureForgettingForecastTitle => 'Forgetting forecast';
 
   @override
-  String get settingsFeatureForgettingForecastSubtitle =>
-      'See what you are close to forgetting and review it in time.';
+  String get settingsFeatureForgettingForecastSubtitle => 'See what you are close to forgetting and review it in time.';
 
   @override
   String get settingsFeaturePrayerReviewTitle => 'Review after prayer';
 
   @override
-  String get settingsFeaturePrayerReviewSubtitle =>
-      'A short review attached to prayer times.';
+  String get settingsFeaturePrayerReviewSubtitle => 'A short review attached to prayer times.';
 
   @override
   String get settingsFeatureHandsFreeTitle => 'Hands-free review';
 
   @override
-  String get settingsFeatureHandsFreeSubtitle =>
-      'Review out loud without touching the screen.';
+  String get settingsFeatureHandsFreeSubtitle => 'Review out loud without touching the screen.';
 
   @override
   String get settingsFeatureAfterPrayerAzkarTitle => 'After-prayer azkar';
 
   @override
-  String get settingsFeatureAfterPrayerAzkarSubtitle =>
-      'After-prayer azkar shown at their time.';
+  String get settingsFeatureAfterPrayerAzkarSubtitle => 'After-prayer azkar shown at their time.';
 
   @override
   String get settingsFeatureGroupKhatmahTitle => 'Group khatmah';
 
   @override
-  String get settingsFeatureGroupKhatmahSubtitle =>
-      'A khatmah with friends, following each other\'s progress.';
+  String get settingsFeatureGroupKhatmahSubtitle => 'A khatmah with friends, following each other\'s progress.';
 
   @override
   String get settingsFeatureHomeWidgetTitle => 'Home-screen widget';
 
   @override
-  String get settingsFeatureHomeWidgetSubtitle =>
-      'Your prayers and progress on your phone\'s home screen.';
+  String get settingsFeatureHomeWidgetSubtitle => 'Your prayers and progress on your phone\'s home screen.';
 
   @override
   String get settingsHomeWidgetAdd => 'Add to home screen';
 
   @override
-  String get settingsHomeWidgetUnsupported =>
-      'This phone can\'t add the widget directly from the app.';
+  String get settingsHomeWidgetAddAnother => 'Add another widget';
 
   @override
-  String get settingsHomeWidgetManualSteps =>
-      'Touch and hold the home screen, choose Widgets, then Talia.';
+  String get settingsHomeWidgetInstalled => 'Widget added to your home screen';
+
+  @override
+  String get settingsHomeWidgetPinRequested => 'Confirm adding the widget in the system prompt.';
+
+  @override
+  String get settingsHomeWidgetUnsupported => 'This phone can\'t add the widget directly from the app.';
+
+  @override
+  String get settingsHomeWidgetManualSteps => 'Touch and hold the home screen, choose Widgets, then Talia.';
 
   @override
   String get settingsHomeWidgetPreviewCaption => 'Widget preview';
 
   @override
-  String get settingsHomeWidgetPreviewPrayer => 'Fajr · 05:12';
+  String get settingsHomeWidgetPreviewLiveBadge => 'Your live data';
+
+  @override
+  String get settingsHomeWidgetPreviewSampleBadge => 'Sample preview';
+
+  @override
+  String get settingsHomeWidgetPreviewHijri => '15 Ramadan 1447';
+
+  @override
+  String get settingsHomeWidgetPreviewPrayer => 'Fajr · 5:12 AM';
 
   @override
   String get settingsHomeWidgetPreviewReview => 'You\'ve finished your reviews';
 
   @override
-  String get settingsHomeWidgetPreviewWird => '12–15';
+  String get settingsHomeWidgetPreviewWird => 'Al-Baqarah · 1/3 pages';
+
+  @override
+  String get settingsHomeWidgetPreviewWirdRange => 'Pages 12–15';
+
+  @override
+  String get settingsHomeWidgetPreviewWirdAction => 'Complete your portion';
+
+  @override
+  String get settingsHomeWidgetPreviewEmpty => 'Choose at least one item to display';
+
+  @override
+  String get settingsHomeWidgetSizeSmall => 'Small';
+
+  @override
+  String get settingsHomeWidgetSizeMedium => 'Medium';
+
+  @override
+  String get settingsHomeWidgetSizeLarge => 'Large';
+
+  @override
+  String get settingsHomeWidgetShowHijri => 'Show Hijri date';
 
   @override
   String get settingsHomeWidgetShowPrayer => 'Show prayer';
@@ -10027,6 +9311,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHomeWidgetShowWird => 'Show the daily portion';
+
+  @override
+  String get settingsHomeWidgetMinOneSection => 'Keep at least one item visible on the widget.';
+
+  @override
+  String settingsHomeWidgetLiveReviewsDue(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText reviews due',
+      one: '1 review due',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsHomeWidgetLiveWird(String surah, String done, String total) {
+    return '$surah · $done/$total pages';
+  }
+
+  @override
+  String settingsHomeWidgetLiveWirdRange(String from, String to) {
+    return 'Pages $from–$to';
+  }
+
+  @override
+  String get settingsHomeWidgetLivePrayerUnset => 'Set prayer times';
+
+  @override
+  String get settingsHomeWidgetLiveNoKhatmah => 'You haven\'t started a khatmah plan';
 
   @override
   String seasonDaysUntil(int days, String daysText) {
@@ -10096,8 +9410,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonHajjKhatmah => '10-day khatmah';
 
   @override
-  String get seasonArafahTomorrow =>
-      'Reminder: the fast of the day of Arafah is tomorrow';
+  String get seasonArafahTomorrow => 'Reminder: the fast of the day of Arafah is tomorrow';
 
   @override
   String get seasonArafahToday => 'Today is the day of Arafah';
@@ -10126,11 +9439,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonWhiteDaysTitle => 'The white days';
 
   @override
-  String seasonWhiteDaysInvite(
-    String firstText,
-    String secondText,
-    String thirdText,
-  ) {
+  String seasonWhiteDaysInvite(String firstText, String secondText, String thirdText) {
     return 'Reminder: the white days (days $firstText, $secondText and $thirdText) begin tomorrow';
   }
 
@@ -10152,8 +9461,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonMonThuTitle => 'Monday and Thursday';
 
   @override
-  String get seasonMonThuBody =>
-      'A weekly voluntary-fast day, for those who wish';
+  String get seasonMonThuBody => 'A weekly voluntary-fast day, for those who wish';
 
   @override
   String get seasonBadgesTitle => 'Your badges';
@@ -10214,25 +9522,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSeasonTitle => 'A reminder from Talia';
 
   @override
-  String get notificationSeasonArafah =>
-      'Reminder: the fast of the day of Arafah is tomorrow';
+  String get notificationSeasonArafah => 'Reminder: the fast of the day of Arafah is tomorrow';
 
   @override
-  String get notificationSeasonAshura =>
-      'Reminder: fasting the 9th and 10th of Muharram begins tomorrow';
+  String get notificationSeasonAshura => 'Reminder: fasting the 9th and 10th of Muharram begins tomorrow';
 
   @override
-  String notificationSeasonWhiteDays(
-    String firstText,
-    String secondText,
-    String thirdText,
-  ) {
+  String notificationSeasonWhiteDays(String firstText, String secondText, String thirdText) {
     return 'Reminder: the white days (days $firstText, $secondText and $thirdText) begin tomorrow';
   }
 
   @override
-  String get notificationSeasonMonThu =>
-      'Reminder: tomorrow is a weekly voluntary-fast day';
+  String get notificationSeasonMonThu => 'Reminder: tomorrow is a weekly voluntary-fast day';
 
   @override
   String get ayahStudyAction => 'Understand this ayah';
@@ -10244,12 +9545,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahStudyTranslation => 'Translation of meanings';
 
   @override
-  String get ayahStudyUnavailable =>
-      'Approved study content is currently unavailable. You can continue reading.';
+  String get ayahStudyUnavailable => 'Approved study content is currently unavailable. You can continue reading.';
 
   @override
-  String get ayahStudyInvalid =>
-      'This ayah’s study content could not be displayed. You can continue reading.';
+  String get ayahStudyInvalid => 'This ayah’s study content could not be displayed. You can continue reading.';
 
   @override
   String get ayahStudyLoading => 'Loading study content';
@@ -10270,15 +9569,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahStudySelectAyah => 'Choose an ayah to understand';
 
   @override
-  String get dailyReviewNoReviews =>
-      'There are no reviews yet. Start by setting up a memorization plan.';
+  String get dailyReviewNoReviews => 'There are no reviews yet. Start by setting up a memorization plan.';
 
   @override
   String get dailyReviewNoDue => 'No reviews are due now.';
 
   @override
-  String get dailyReviewUnavailable =>
-      'Reviews could not be refreshed. Open the memorization center to check.';
+  String get dailyReviewUnavailable => 'Reviews could not be refreshed. Open the memorization center to check.';
 
   @override
   String get dailyReviewOtherOptions => 'Other options';
@@ -10337,16 +9634,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get protectionPendingCount => 'Pending changes';
 
   @override
-  String get protectionImportScope =>
-      'Account file imports add new bookmarks and a reading position you select only. Memorization progress and points are recovered through account sync.';
+  String get protectionImportScope => 'Account file imports add new bookmarks and a reading position you select only. Memorization progress and points are recovered through account sync.';
 
   @override
-  String get backupUnencryptedWarning =>
-      'The backup file is not encrypted and may contain your notes and progress. Keep it private and share it only with people you trust.';
+  String get backupUnencryptedWarning => 'The backup file is not encrypted and may contain your notes and progress. Keep it private and share it only with people you trust.';
 
   @override
-  String get backupRestoreNotReady =>
-      'Full device replacement from a file is temporarily paused to protect your progress while recovery checks are completed. You can still export a backup and keep it.';
+  String get backupRestoreNotReady => 'Full device replacement from a file is temporarily paused to protect your progress while recovery checks are completed. You can still export a backup and keep it.';
 
   @override
   String get backupPortableImport => 'Import bookmarks and reading position';
@@ -10358,41 +9652,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPortablePreview => 'Review additions before importing';
 
   @override
-  String get backupPortableCheckpoint =>
-      'Restore the reading position from this file';
+  String get backupPortableCheckpoint => 'Restore the reading position from this file';
 
   @override
   String backupPortablePartial(int added) {
     String _temp0 = intl.Intl.pluralLogic(
       added,
       locale: localeName,
-      other:
-          '$added bookmarks were added, but the reading position could not be saved. You can retry without duplicating them.',
-      one:
-          'One bookmark was added, but the reading position could not be saved. You can retry without duplicating it.',
-      zero:
-          'No new bookmarks were added, and the reading position could not be saved. You can retry.',
+      other: '$added bookmarks were added, but the reading position could not be saved. You can retry without duplicating them.',
+      one: 'One bookmark was added, but the reading position could not be saved. You can retry without duplicating it.',
+      zero: 'No new bookmarks were added, and the reading position could not be saved. You can retry.',
     );
     return '$_temp0';
   }
 
   @override
-  String get backupPortableStale =>
-      'The account or data changed. Open the file again to review additions.';
+  String get backupPortableStale => 'The account or data changed. Open the file again to review additions.';
 
   @override
-  String backupPortableSummary(
-    int added,
-    int existing,
-    int deleted,
-    int invalid,
-  ) {
+  String backupPortableSummary(int added, int existing, int deleted, int invalid) {
     return 'New: $added, existing: $existing, previously deleted: $deleted, invalid: $invalid';
   }
 
   @override
-  String get backupMaintenanceRestart =>
-      'The request is ready. Fully stop Talia from Android app info, then open it again. You will choose the backup and confirm replacement at startup. Your data has not changed.';
+  String get backupMaintenanceRestart => 'The request is ready. Fully stop Talia from Android app info, then open it again. You will choose the backup and confirm replacement at startup. Your data has not changed.';
 
   @override
   String get backupMaintenanceTitle => 'Safe restore';
@@ -10401,53 +9684,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupMaintenanceContinue => 'Continue to the app';
 
   @override
-  String get backupMaintenanceBody =>
-      'Restore runs before progress and sync start. Choose a file, review it, and confirm replacement. Continue to the app to cancel the request.';
+  String get backupMaintenanceBody => 'Restore runs before progress and sync start. Choose a file, review it, and confirm replacement. Continue to the app to cancel the request.';
 
   @override
-  String get backupMaintenanceUnavailable =>
-      'Restore is unavailable for this data or release. You can continue to the app.';
+  String get backupMaintenanceUnavailable => 'Restore is unavailable for this data or release. You can continue to the app.';
 
   @override
   String get backupMaintenancePin => 'Guardian PIN';
 
   @override
-  String get backupMaintenanceFinished =>
-      'This request has ended. Continue to the app to schedule a new request.';
+  String get backupMaintenanceFinished => 'This request has ended. Continue to the app to schedule a new request.';
 
   @override
-  String get backupMaintenanceBusy =>
-      'Data is in use. Retry shortly. If this continues, fully stop Talia from Android app info, then open it again.';
+  String get backupMaintenanceBusy => 'Data is in use. Retry shortly. If this continues, fully stop Talia from Android app info, then open it again.';
 
   @override
   String get backupMaintenanceSchedule => 'Prepare restore at app startup';
 
   @override
-  String get backupMaintenancePinRejected =>
-      'The PIN could not be verified. Wait briefly, then try again.';
+  String get backupMaintenancePinRejected => 'The PIN could not be verified. Wait briefly, then try again.';
 
   @override
   String get retainedAccountRecoveryTitle => 'Recover your account';
 
   @override
-  String get retainedAccountRecoveryBody =>
-      'Some account data remains on this device and is not visible to a guest. Sign in to the same account to continue and protect any changes that have not synced.';
+  String get retainedAccountRecoveryBody => 'Some account data remains on this device and is not visible to a guest. Sign in to the same account to continue and protect any changes that have not synced.';
 
   @override
-  String get retainedAccountRecoveryWrongAccount =>
-      'This is not the previous account.';
+  String get retainedAccountRecoveryWrongAccount => 'This is not the previous account.';
 
   @override
-  String get retainedAccountRecoveryFailed =>
-      'We couldn\'t complete recovery. Check your details and try again.';
+  String get retainedAccountRecoveryFailed => 'We couldn\'t complete recovery. Check your details and try again.';
 
   @override
-  String get retainedAccountRecoveryUnavailable =>
-      'Account recovery is unavailable right now. Please try again later.';
+  String get retainedAccountRecoveryUnavailable => 'Account recovery is unavailable right now. Please try again later.';
 
   @override
-  String get retainedAccountRecoveryUnknownOwner =>
-      'We can\'t identify the previous account safely. Try again when the account becomes available.';
+  String get retainedAccountRecoveryUnknownOwner => 'We can\'t identify the previous account safely. Try again when the account becomes available.';
 
   @override
   String inviteFromNamed(String name) {
@@ -10464,19 +9737,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteExpiredTitle => 'This invitation has expired';
 
   @override
-  String get inviteExpiredBody =>
-      'You can start reading for yourself; it will not count towards this invitation.';
+  String get inviteExpiredBody => 'You can start reading for yourself; it will not count towards this invitation.';
 
   @override
   String get inviteInvalid => 'This invitation could not be opened';
 
   @override
-  String get inviteOfflineRetry =>
-      'Connect to the internet to open this invitation for the first time';
+  String get inviteOfflineRetry => 'Connect to the internet to open this invitation for the first time';
 
   @override
-  String get inviteKidsBlocked =>
-      'Invitations are unavailable in the children’s space';
+  String get inviteKidsBlocked => 'Invitations are unavailable in the children’s space';
 
   @override
   String get inviteUnavailable => 'This activity is currently unavailable';
@@ -10508,8 +9778,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteCompleteReading => 'I finished reading';
 
   @override
-  String get inviteCompletionError =>
-      'Could not record completion. Please try again.';
+  String get inviteCompletionError => 'Could not record completion. Please try again.';
 
   @override
   String get inviteAzkarAlreadyDone => 'I completed these today';
@@ -10535,12 +9804,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteGuestSignIn => 'Create an account and save your impact';
 
   @override
-  String get inviteDisclosureError =>
-      'Could not share your completion. Please try again.';
+  String get inviteDisclosureError => 'Could not share your completion. Please try again.';
 
   @override
-  String get inviteNameUnavailable =>
-      'Add a name to your account before sharing your completion.';
+  String get inviteNameUnavailable => 'Add a name to your account before sharing your completion.';
 
   @override
   String get inviteEditMessage => 'Edit message';
@@ -10573,8 +9840,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteCreateAction => 'Create invitation';
 
   @override
-  String get inviteCreateError =>
-      'Could not create the invitation. Please try again.';
+  String get inviteCreateError => 'Could not create the invitation. Please try again.';
 
   @override
   String get inviteSignInToCreate => 'Sign in to create an invitation';
@@ -10613,8 +9879,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteContinueChain => 'Continue the chain';
 
   @override
-  String get inviteChainExpired =>
-      'The original invitation has expired. You can create a new standalone invitation.';
+  String get inviteChainExpired => 'The original invitation has expired. You can create a new standalone invitation.';
 
   @override
   String get inviteChainFresh => 'Create a new invitation';
@@ -10626,8 +9891,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareGoodPromptHint => 'Invite someone to do this activity too';
 
   @override
-  String get shareGoodEducation =>
-      'Your invitation records participation only. Your completion stays private unless you choose to share your name.';
+  String get shareGoodEducation => 'Your invitation records participation only. Your completion stays private unless you choose to share your name.';
 
   @override
   String get inviteReminderTitle => 'Invitation reminder';
@@ -10683,8 +9947,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodImpactRecentlyExpired => 'Recently expired';
 
   @override
-  String get goodImpactEmpty =>
-      'Your invitations and responses will appear here.';
+  String get goodImpactEmpty => 'Your invitations and responses will appear here.';
 
   @override
   String get goodImpactError => 'Could not load Good Impact. Please try again.';
@@ -10693,20 +9956,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodImpactNew => 'New';
 
   @override
-  String get goodImpactAcknowledgements =>
-      'People who chose to share their completion';
+  String get goodImpactAcknowledgements => 'People who chose to share their completion';
 
   @override
   String get goodImpactMilestoneFirstChain => 'A chain has started';
 
   @override
-  String get goodImpactMilestoneFiveReach =>
-      'Five responses and downstream reach';
+  String get goodImpactMilestoneFiveReach => 'Five responses and downstream reach';
 
   @override
   String get goodImpactMilestoneTenResponses => 'Ten responses';
 
   @override
-  String get goodImpactMilestoneTwentyFiveReach =>
-      'Twenty-five responses and downstream reach';
+  String get goodImpactMilestoneTwentyFiveReach => 'Twenty-five responses and downstream reach';
 }

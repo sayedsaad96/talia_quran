@@ -120,9 +120,18 @@ class MainActivity : AudioServiceActivity() {
                 }
                 "isPinSupported" -> result.success(pinSupported())
                 "requestPin" -> result.success(requestPin())
+                "getInstalledCount" -> result.success(installedWidgetCount())
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun installedWidgetCount(): Int = try {
+        val manager = AppWidgetManager.getInstance(this)
+        val provider = ComponentName(this, TaliaHomeWidgetProvider::class.java)
+        manager.getAppWidgetIds(provider).size
+    } catch (_: Exception) {
+        0
     }
 
     private fun pinSupported(): Boolean {
@@ -136,6 +145,17 @@ class MainActivity : AudioServiceActivity() {
         return try {
             val manager = AppWidgetManager.getInstance(this)
             val provider = ComponentName(this, TaliaHomeWidgetProvider::class.java)
+            // Ensure the receiver is enabled before requesting pin so toggling
+            // the feature on and tapping Add immediately cannot race and fail.
+            if (packageManager.getComponentEnabledSetting(provider) !=
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            ) {
+                packageManager.setComponentEnabledSetting(
+                    provider,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
             val extras = Bundle()
             @Suppress("DEPRECATION")
             extras.putParcelable(

@@ -14,6 +14,15 @@ void main() {
       '"([^"]+)"',
     ).allMatches(section).map((match) => match[1]!).toSet();
     expect(actual, SurahNames.arabic.values.toSet());
+
+    final enSection = source
+        .split('canonicalEnglishSurahNames = listOf(')[1]
+        .split(')')[0];
+    final actualEn = RegExp(
+      '"([^"]+)"',
+    ).allMatches(enSection).map((match) => match[1]!).toList();
+    final expectedEn = [for (var i = 1; i <= 114; i++) SurahNames.english[i]!];
+    expect(actualEn, expectedEn);
   });
   test('native renderer remains synchronous in the application process', () {
     final source = File(
@@ -23,6 +32,9 @@ void main() {
     expect(source, contains('appWidgetManager.updateAppWidget'));
     expect(source, isNot(contains('CoroutineScope')));
     expect(source, isNot(contains('goAsync(')));
+    // Must tint the rounded drawable instead of replacing it with a square color.
+    expect(source, contains('setBackgroundTintList'));
+    expect(source, isNot(contains('"setBackgroundColor"')));
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
@@ -43,6 +55,8 @@ void main() {
         contains('es.antonborri.home_widget.HomeWidgetScheduledUpdateReceiver'),
       );
       expect(manifest, contains('android.permission.RECEIVE_BOOT_COMPLETED'));
+      expect(manifest, contains('android.intent.action.TIME_SET'));
+      expect(manifest, contains('android.intent.action.TIMEZONE_CHANGED'));
       expect(manifest, isNot(contains('supportsRtl')));
       final activity = File(
         'android/app/src/main/kotlin/com/talia/quran/MainActivity.kt',
@@ -50,6 +64,7 @@ void main() {
       expect(activity, contains('talia/home_widget_component'));
       expect(activity, contains('isPinSupported'));
       expect(activity, contains('requestPin'));
+      expect(activity, contains('getInstalledCount'));
       expect(activity, contains('setComponentEnabledSetting'));
       expect(activity, contains('DONT_KILL_APP'));
     },
@@ -65,7 +80,9 @@ void main() {
     expect(ltr, isNot(contains('android:gravity="right"')));
     expect(rtl, contains('android:gravity="right"'));
     expect(rtl, isNot(contains('android:gravity="left"')));
+    expect(rtl, contains('android:scaleX="-1"'));
     for (final id in [
+      'widget_hijri',
       'widget_prayer',
       'widget_review',
       'widget_wird',
@@ -99,6 +116,7 @@ void main() {
         expect(xml, contains('name="widget_prayer_unset"'));
         expect(xml, contains('name="widget_wird_action"'));
         expect(xml, contains('name="widget_preview_prayer"'));
+        expect(xml, contains('name="widget_preview_hijri"'));
       }
     },
   );

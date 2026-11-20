@@ -2,11 +2,14 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations, MaterialLocalizationAr;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/experience/experience_feature_flags.dart';
 import 'package:talia_quran/core/experience/feature_preferences.dart';
+import 'package:talia_quran/core/home_widget/widget_section_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/settings/presentation/pages/subpages/features_settings_page.dart';
@@ -50,14 +53,19 @@ void main() {
       const FixedRecordOwnerProvider('a'),
       flags,
     );
+    getIt.registerSingleton<SharedPreferences>(prefs);
     getIt.registerSingleton<FeaturePreferences>(store);
   }
 
   setUp(() async {});
 
   tearDown(() async {
+    debugDefaultTargetPlatformOverride = null;
     if (getIt.isRegistered<FeaturePreferences>()) {
       await getIt.unregister<FeaturePreferences>();
+    }
+    if (getIt.isRegistered<SharedPreferences>()) {
+      await getIt.unregister<SharedPreferences>();
     }
   });
 
@@ -143,12 +151,32 @@ void main() {
     expect(tryButton, findsNothing);
   });
 
-  testWidgets('restore defaults turns everything back on', (tester) async {
+  testWidgets('restore defaults turns everything and widget sections back on', (
+    tester,
+  ) async {
     await register();
+    final sections = WidgetSectionPreferences(getIt<SharedPreferences>());
+    await sections.setShowPrayer(false);
+    await sections.setShowHijri(false);
     final l10n = await pumpPage(tester);
     await store.setEnabled(ExperienceFeature.readerRepeat, false);
     await tester.tap(find.text(l10n.settingsRestoreDefaults));
     await tester.pump(const Duration(milliseconds: 100));
     expect(store.isEnabled(ExperienceFeature.readerRepeat), isTrue);
+    expect(sections.showPrayer, isTrue);
+    expect(sections.showHijri, isTrue);
+  });
+
+  testWidgets('home widget row is hidden on iOS', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await register();
+      final l10n = await pumpPage(tester);
+      expect(find.text(l10n.settingsFeatureHomeWidgetTitle), findsNothing);
+      expect(find.text(l10n.settingsFeaturesGroupHome), findsNothing);
+      expect(find.text(l10n.settingsFeatureReaderRepeatTitle), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

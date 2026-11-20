@@ -12,16 +12,32 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
+        android:text="@string/widget_preview_hijri"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="11sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
         android:text="@string/widget_preview_prayer"
         android:textAppearance="@android:style/TextAppearance.Material.Medium"
-        android:textColor="@color/widget_text_primary" />
+        android:textColor="@color/widget_text_primary"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:text="@string/widget_preview_review"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
         android:textColor="@color/widget_text_secondary" />
@@ -30,7 +46,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:text="@string/widget_preview_wird"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
         android:textColor="@color/widget_text_secondary" />

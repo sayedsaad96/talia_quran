@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import '../identity/account_data_barrier.dart';
 import '../identity/record_owner_provider.dart';
 import '../utils/talia_logger.dart';
@@ -70,6 +71,11 @@ final class HomeWidgetPublisher {
   final Duration clearTimeout;
   final DateTime Function() _now;
   final _subscriptions = <StreamSubscription<void>>[];
+  final _latestSnapshot = ValueNotifier<WidgetSnapshot?>(null);
+
+  /// The last snapshot published to the native widget, or null when cleared.
+  ValueListenable<WidgetSnapshot?> get latestSnapshot => _latestSnapshot;
+
   Future<void> _tail = Future.value();
   Future<void> _lastClear = Future.value();
   Future<void>? _running;
@@ -223,6 +229,9 @@ final class HomeWidgetPublisher {
         );
         await bridge.requestUpdate();
         _audience = audienceKey;
+        if (!_disposed) {
+          _latestSnapshot.value = snapshot.clearsNative ? null : snapshot;
+        }
         await _scheduleRedraws(snapshot);
       });
     } catch (error, stack) {
@@ -270,6 +279,7 @@ final class HomeWidgetPublisher {
     final clearRevision = ++_clearRevision;
     _ready = false;
     _audience = null;
+    if (!_disposed) _latestSnapshot.value = null;
     Future<void> attempt() => _enqueue(() async {
       await clearHomeWidgetProjection(bridge);
       if (clearRevision == _clearRevision) _ready = true;
@@ -310,6 +320,7 @@ final class HomeWidgetPublisher {
   }
 
   Future<void> dispose() async {
+    if (_disposed) return;
     _disposed = true;
     _removeInvalidationParticipant?.call();
     _revision++;
@@ -317,5 +328,6 @@ final class HomeWidgetPublisher {
       await sub.cancel();
     }
     await clear();
+    _latestSnapshot.dispose();
   }
 }

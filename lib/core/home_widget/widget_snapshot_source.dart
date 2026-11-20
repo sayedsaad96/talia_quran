@@ -1,3 +1,5 @@
+import 'package:hijri/hijri_calendar.dart';
+
 import '../../features/khatmah/domain/repositories/khatmah_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../identity/account_data_barrier.dart';
@@ -7,6 +9,7 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/review_record_audience_scope.dart';
 import '../memorization/review_record_filters.dart';
 import '../services/prayer_times_service.dart';
+import '../utils/locale_number_formatter.dart';
 import 'widget_section_preferences.dart';
 import 'widget_snapshot.dart';
 import 'widget_snapshot_builder.dart';
@@ -22,8 +25,10 @@ final class WidgetSnapshotSource {
     this.sections,
     DateTime Function()? now,
     String Function()? languageCode,
+    int Function()? hijriOffsetDays,
   }) : now = now ?? DateTime.now,
-       languageCode = languageCode ?? (() => 'ar');
+       languageCode = languageCode ?? (() => 'ar'),
+       hijriOffsetDays = hijriOffsetDays ?? (() => 0);
   final RecordOwnerProvider owner;
   final MemorizationPlusRepository records;
   final MemorizationPathResolver path;
@@ -35,6 +40,9 @@ final class WidgetSnapshotSource {
 
   /// App language (`ar`/`en`) the native renderer should use.
   final String Function() languageCode;
+
+  /// User's Hijri day offset (`HijriDateAdjustment.days`).
+  final int Function() hijriOffsetDays;
 
   Future<WidgetSnapshot> load(AccountDataLease lease, String ownerId) async {
     lease.checkOwner(ownerId);
@@ -91,7 +99,9 @@ final class WidgetSnapshotSource {
         reviewCounts.add((at: deadline, count: count));
       }
     }
+    final lang = languageCode();
     final choices = sections;
+    final offset = hijriOffsetDays();
     return buildWidgetSnapshot(
       enabled: isEnabled(),
       isAdult: true,
@@ -100,17 +110,38 @@ final class WidgetSnapshotSource {
       tomorrow: null,
       tomorrowFajr: tomorrowFajr,
       tomorrowPrayers: tomorrowPrayers,
-      languageCode: languageCode(),
+      languageCode: lang,
       dueReviewCount: metrics.dueReviews,
       reviewsKnown: true,
       nextDueReviewCount: nextMetrics.dueReviews,
       reviewCounts: reviewCounts,
+      hijriLabel: _formatHijri(local, offset, lang),
+      nextHijriLabel: _formatHijri(
+        midnight.add(const Duration(hours: 12)),
+        offset,
+        lang,
+      ),
       showPrayer: choices?.showPrayer ?? true,
       showReviews: choices?.showReviews ?? true,
       showWird: choices?.showWird ?? true,
+      showHijri: choices?.showHijri ?? true,
       activePlan: plan,
       now: instant,
     );
+  }
+
+  String? _formatHijri(DateTime date, int offsetDays, String lang) {
+    try {
+      final isArabic = lang != 'en';
+      HijriCalendar.setLocal(isArabic ? 'ar' : 'en');
+      final hijri = HijriCalendar.fromDate(
+        date.add(Duration(days: offsetDays)),
+      );
+      final raw = hijri.toFormat('d MMMM yyyy');
+      return isArabic ? LocaleNumberFormatter.format(raw, 'ar') : raw;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Tomorrow's five fard prayers so the widget survives local midnight.

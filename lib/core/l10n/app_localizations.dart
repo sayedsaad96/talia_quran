@@ -16749,6 +16749,24 @@ abstract class AppLocalizations {
   /// **'أضف إلى الشاشة الرئيسية'**
   String get settingsHomeWidgetAdd;
 
+  /// No description provided for @settingsHomeWidgetAddAnother.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة نسخة أخرى'**
+  String get settingsHomeWidgetAddAnother;
+
+  /// No description provided for @settingsHomeWidgetInstalled.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأداة مضافة على شاشتك الرئيسية'**
+  String get settingsHomeWidgetInstalled;
+
+  /// No description provided for @settingsHomeWidgetPinRequested.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكّد الإضافة من النافذة التي ظهرت على شاشتك.'**
+  String get settingsHomeWidgetPinRequested;
+
   /// No description provided for @settingsHomeWidgetUnsupported.
   ///
   /// In ar, this message translates to:
@@ -16767,10 +16785,28 @@ abstract class AppLocalizations {
   /// **'معاينة الأداة'**
   String get settingsHomeWidgetPreviewCaption;
 
+  /// No description provided for @settingsHomeWidgetPreviewLiveBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'بياناتك الحالية'**
+  String get settingsHomeWidgetPreviewLiveBadge;
+
+  /// No description provided for @settingsHomeWidgetPreviewSampleBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة تقريبية'**
+  String get settingsHomeWidgetPreviewSampleBadge;
+
+  /// No description provided for @settingsHomeWidgetPreviewHijri.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٥ رمضان ١٤٤٧'**
+  String get settingsHomeWidgetPreviewHijri;
+
   /// No description provided for @settingsHomeWidgetPreviewPrayer.
   ///
   /// In ar, this message translates to:
-  /// **'الفجر · ٠٥:١٢'**
+  /// **'الفجر · ٥:١٢ ص'**
   String get settingsHomeWidgetPreviewPrayer;
 
   /// No description provided for @settingsHomeWidgetPreviewReview.
@@ -16782,8 +16818,50 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHomeWidgetPreviewWird.
   ///
   /// In ar, this message translates to:
-  /// **'١٢–١٥'**
+  /// **'البقرة · ١/٣ صفحة'**
   String get settingsHomeWidgetPreviewWird;
+
+  /// No description provided for @settingsHomeWidgetPreviewWirdRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'ص ١٢–١٥'**
+  String get settingsHomeWidgetPreviewWirdRange;
+
+  /// No description provided for @settingsHomeWidgetPreviewWirdAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل وردك'**
+  String get settingsHomeWidgetPreviewWirdAction;
+
+  /// No description provided for @settingsHomeWidgetPreviewEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر عنصرًا واحدًا على الأقل لعرضه'**
+  String get settingsHomeWidgetPreviewEmpty;
+
+  /// No description provided for @settingsHomeWidgetSizeSmall.
+  ///
+  /// In ar, this message translates to:
+  /// **'صغير'**
+  String get settingsHomeWidgetSizeSmall;
+
+  /// No description provided for @settingsHomeWidgetSizeMedium.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط'**
+  String get settingsHomeWidgetSizeMedium;
+
+  /// No description provided for @settingsHomeWidgetSizeLarge.
+  ///
+  /// In ar, this message translates to:
+  /// **'كبير'**
+  String get settingsHomeWidgetSizeLarge;
+
+  /// No description provided for @settingsHomeWidgetShowHijri.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار التاريخ الهجري'**
+  String get settingsHomeWidgetShowHijri;
 
   /// No description provided for @settingsHomeWidgetShowPrayer.
   ///
@@ -16802,6 +16880,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إظهار الورد'**
   String get settingsHomeWidgetShowWird;
+
+  /// No description provided for @settingsHomeWidgetMinOneSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'اترك عنصرًا واحدًا على الأقل ليظهر في الأداة.'**
+  String get settingsHomeWidgetMinOneSection;
+
+  /// No description provided for @settingsHomeWidgetLiveReviewsDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{مراجعة واحدة مستحقة} =2{مراجعتان مستحقتان} few{{countText} مراجعات مستحقة} many{{countText} مراجعة مستحقة} other{{countText} مراجعة مستحقة}}'**
+  String settingsHomeWidgetLiveReviewsDue(int count, String countText);
+
+  /// No description provided for @settingsHomeWidgetLiveWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surah} · {done}/{total} صفحة'**
+  String settingsHomeWidgetLiveWird(String surah, String done, String total);
+
+  /// No description provided for @settingsHomeWidgetLiveWirdRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'ص {from}–{to}'**
+  String settingsHomeWidgetLiveWirdRange(String from, String to);
+
+  /// No description provided for @settingsHomeWidgetLivePrayerUnset.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضبط مواقيت الصلاة'**
+  String get settingsHomeWidgetLivePrayerUnset;
+
+  /// No description provided for @settingsHomeWidgetLiveNoKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تبدأ خطة ختمة'**
+  String get settingsHomeWidgetLiveNoKhatmah;
 
   /// No description provided for @seasonDaysUntil.
   ///

@@ -1,8 +1,7 @@
 // ignore_for_file: deprecated_member_use
 // The generated `localizationsDelegates` list references the deprecated
 // flutter_localizations Material/Cupertino delegates. The app uses
-// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
-
+// `taliaLocalizationsDelegates` (talia_localization_delegates.dart) instead.
 
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
@@ -18,7 +17,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationCalmModeTitle => 'تذكيرات هادئة';
 
   @override
-  String get notificationCalmModeDescription => 'تظهر التذكيرات في قائمة الإشعارات بدون صوت أو اهتزاز أو نوافذ منبثقة. إعدادات الصلاة والأذان مستقلة.';
+  String get notificationCalmModeDescription =>
+      'تظهر التذكيرات في قائمة الإشعارات بدون صوت أو اهتزاز أو نوافذ منبثقة. إعدادات الصلاة والأذان مستقلة.';
 
   @override
   String get appName => 'Talia Quran';
@@ -135,7 +135,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emptyBookmarksTitle => 'لا توجد علامات مرجعية بعد';
 
   @override
-  String get emptyBookmarksHint => 'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا';
+  String get emptyBookmarksHint =>
+      'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا';
 
   @override
   String get exitDialogTitle => 'التلاوة قيد التشغيل';
@@ -254,7 +255,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryAgain => 'حاول مجدداً';
 
   @override
-  String get errorCacheMessage => 'تعذّر الوصول إلى البيانات المحفوظة. حاول مجدداً.';
+  String get errorCacheMessage =>
+      'تعذّر الوصول إلى البيانات المحفوظة. حاول مجدداً.';
 
   @override
   String get errorNetworkMessage => 'تحقّق من اتصالك بالإنترنت وحاول مجدداً.';
@@ -263,7 +265,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorNotFoundMessage => 'لم يتم العثور على المحتوى المطلوب.';
 
   @override
-  String get errorParseMessage => 'حدثت مشكلة أثناء قراءة المحتوى. حاول مجدداً.';
+  String get errorParseMessage =>
+      'حدثت مشكلة أثناء قراءة المحتوى. حاول مجدداً.';
 
   @override
   String get errorUnknownMessage => 'حدث خطأ غير متوقع. حاول مجدداً.';
@@ -285,10 +288,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialQuickStartTitle => 'خريطة تالية السريعة';
 
   @override
-  String get tutorialQuickStartSubtitle => 'أهم خمسة أقسام لاستخدام التطبيق يومياً';
+  String get tutorialQuickStartSubtitle =>
+      'أهم خمسة أقسام لاستخدام التطبيق يومياً';
 
   @override
-  String get tutorialQuickStartHint => 'استخدم البحث أو التصفية للوصول إلى أي شرح تفصيلي.';
+  String get tutorialQuickStartHint =>
+      'استخدم البحث أو التصفية للوصول إلى أي شرح تفصيلي.';
 
   @override
   String get tutorialShortcutHomeLabel => 'الرئيسية';
@@ -534,7 +539,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String shareAchievementWithName(Object description, Object name, Object title) {
+  String shareAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  ) {
     return '🏆 إنجاز جديد يُضاف في رحلة $name مع القرآن: \"$title\"\n📖 $description\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.';
   }
 
@@ -544,7 +553,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String shareMemorizationAchievementWithName(Object description, Object name, Object title) {
+  String shareMemorizationAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  ) {
     return '🌟 إنجاز مبارك في مسيرة حفظ $name: \"$title\"\n🧠 $description\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.';
   }
 
@@ -561,7 +574,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareApp => 'شارك تطبيق تالية';
 
   @override
-  String get shareAppText => 'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://play.google.com/store/apps/details?id=com.talia.quran';
+  String get shareAppText =>
+      'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://play.google.com/store/apps/details?id=com.talia.quran';
 
   @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
@@ -569,7 +583,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String shareProgressWithName(Object ayahs, Object name, Object pages, Object streak) {
+  String shareProgressWithName(
+    Object ayahs,
+    Object name,
+    Object pages,
+    Object streak,
+  ) {
     return '📊 هذا ملخص تقدم $name في رحلته مع القرآن عبر تالية:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام من الاستمرارية\n\nتالية يساعد على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.';
   }
 
@@ -598,7 +617,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get smartMemorization => 'نظام الحفظ الذكي';
 
   @override
-  String get smartMemorizationSubtitle => 'جدول تكيّفي • مراجعة ذكية • تقييم ذاتي';
+  String get smartMemorizationSubtitle =>
+      'جدول تكيّفي • مراجعة ذكية • تقييم ذاتي';
 
   @override
   String get recitationAccuracy => 'دقة التسميع';
@@ -637,10 +657,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioPlayError => 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.';
 
   @override
-  String get micPermissionError => 'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.';
+  String get micPermissionError =>
+      'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.';
 
   @override
-  String get speechUnavailableError => 'التسميع الصوتي غير متاح على هذا الجهاز حالياً.';
+  String get speechUnavailableError =>
+      'التسميع الصوتي غير متاح على هذا الجهاز حالياً.';
 
   @override
   String get openSettingsAction => 'فتح الإعدادات';
@@ -712,16 +734,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resendConfirmation => 'إعادة إرسال';
 
   @override
-  String get authEmailAlreadyRegistered => 'البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.';
+  String get authEmailAlreadyRegistered =>
+      'البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.';
 
   @override
-  String get authConfirmEmailFirst => 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
+  String get authConfirmEmailFirst =>
+      'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
 
   @override
-  String get authInvalidCredentials => 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+  String get authInvalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة';
 
   @override
-  String get authTooManyRequests => 'محاولات كثيرة. انتظر قليلاً ثم حاول مرة أخرى.';
+  String get authTooManyRequests =>
+      'محاولات كثيرة. انتظر قليلاً ثم حاول مرة أخرى.';
 
   @override
   String get authNoInternet => 'لا يوجد اتصال بالإنترنت';
@@ -742,22 +768,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authGenericError => 'حدث خطأ، حاول مرة أخرى';
 
   @override
-  String get authPasswordSameAsOld => 'كلمة المرور الجديدة مطابقة للقديمة. يرجى اختيار كلمة مرور مختلفة.';
+  String get authPasswordSameAsOld =>
+      'كلمة المرور الجديدة مطابقة للقديمة. يرجى اختيار كلمة مرور مختلفة.';
 
   @override
-  String get authSessionExpired => 'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
+  String get authSessionExpired =>
+      'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
 
   @override
   String get profileSavedToCloud => 'تم تسجيل الدخول إلى حسابك';
 
   @override
-  String get guestModeWarning => 'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة.';
+  String get guestModeWarning =>
+      'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة.';
 
   @override
-  String get signOutWarning => 'هل تريد تسجيل الخروج؟ يعود تقدم حسابك عند تسجيل الدخول مجددًا، أما خطة الختمة وسجل الختمات فمحفوظان على هذا الجهاز فقط وسيُحذفان عند تسجيل الخروج.';
+  String get signOutWarning =>
+      'هل تريد تسجيل الخروج؟ يعود تقدم حسابك عند تسجيل الدخول مجددًا، أما خطة الختمة وسجل الختمات فمحفوظان على هذا الجهاز فقط وسيُحذفان عند تسجيل الخروج.';
 
   @override
-  String get memorizationHubNothingToReview => 'لا توجد آيات للمراجعة بعد. ابدأ الحفظ أولًا، وستظهر آياتك هنا عندما يحين موعد مراجعتها.';
+  String get memorizationHubNothingToReview =>
+      'لا توجد آيات للمراجعة بعد. ابدأ الحفظ أولًا، وستظهر آياتك هنا عندما يحين موعد مراجعتها.';
 
   @override
   String homeMemorizedAyahsCaption(int count, String countText) {
@@ -777,7 +808,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsSetupDiscardTitle => 'تجاهل إعداد الطفل؟';
 
   @override
-  String get kidsSetupDiscardBody => 'لم يُحفظ إعداد مسار الأطفال بعد. هل تريد الخروج دون حفظ؟';
+  String get kidsSetupDiscardBody =>
+      'لم يُحفظ إعداد مسار الأطفال بعد. هل تريد الخروج دون حفظ؟';
 
   @override
   String get kidsSetupKeepEditing => 'متابعة الإعداد';
@@ -792,7 +824,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanChildSwitchTitle => 'الانتقال إلى مسار الأطفال؟';
 
   @override
-  String get customPlanChildSwitchBody => 'خطط الأطفال تُدار من مسار الأطفال. سيُنهى مسار الكبار وخطتك الحالية، وتبقى إنجازاتك وسجلك وشهاداتك، ثم يُفتح إعداد مسار الأطفال.';
+  String get customPlanChildSwitchBody =>
+      'خطط الأطفال تُدار من مسار الأطفال. سيُنهى مسار الكبار وخطتك الحالية، وتبقى إنجازاتك وسجلك وشهاداتك، ثم يُفتح إعداد مسار الأطفال.';
 
   @override
   String get customPlanChildSwitchConfirm => 'انتقل إلى مسار الأطفال';
@@ -801,7 +834,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestImportTitle => 'نقل بيانات الحفظ المحلية؟';
 
   @override
-  String get guestImportBody => 'لديك بيانات حفظ أنشأتها قبل تسجيل الدخول. انقلها إلى هذا الحساب حتى تظهر في تقدمك ومراجعاتك.';
+  String get guestImportBody =>
+      'لديك بيانات حفظ أنشأتها قبل تسجيل الدخول. انقلها إلى هذا الحساب حتى تظهر في تقدمك ومراجعاتك.';
 
   @override
   String get guestImportConfirm => 'نقل';
@@ -818,7 +852,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signOutPendingDataTitle => 'تقدم غير مزامن';
 
   @override
-  String get signOutPendingDataWarning => 'بعض تقدم الحفظ لم يصل إلى السحابة بعد. تسجيل الخروج الآن سيحذفه من هذا الجهاز.';
+  String get signOutPendingDataWarning =>
+      'بعض تقدم الحفظ لم يصل إلى السحابة بعد. تسجيل الخروج الآن سيحذفه من هذا الجهاز.';
 
   @override
   String get signOutAnyway => 'تسجيل الخروج على أي حال';
@@ -848,7 +883,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialGuideTitle => 'دليل استخدام تالية';
 
   @override
-  String get tutorialGuideSubtitle => 'تعرف على كل مزايا التطبيق وطريقة استخدامها';
+  String get tutorialGuideSubtitle =>
+      'تعرف على كل مزايا التطبيق وطريقة استخدامها';
 
   @override
   String get tutorialGuideHeroSubtitle => 'مركز المعرفة وشرح مزايا تالية';
@@ -870,10 +906,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialGuideNoResults => 'لا توجد نتائج مطابقة';
 
   @override
-  String get tutorialGuideNoResultsHint => 'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.';
+  String get tutorialGuideNoResultsHint =>
+      'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.';
 
   @override
-  String get arabicNameHint => '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات';
+  String get arabicNameHint =>
+      '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات';
 
   @override
   String get invalidAge => 'أدخل عمرًا صحيحًا بين ١ و١٢٠';
@@ -1001,7 +1039,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get saveProgress => 'احفظ تقدمك';
 
   @override
-  String get syncProgressDesc => 'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة';
+  String get syncProgressDesc =>
+      'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة';
 
   @override
   String get restoringProgress => 'جارٍ استعادة بياناتك…';
@@ -1031,7 +1070,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get endSessionTitle => 'إنهاء الجلسة؟';
 
   @override
-  String get endSessionDesc => 'هل أنت متأكد من رغبتك في إنهاء جلسة الحفظ؟ لن يتم حفظ تقدمك الحالي.';
+  String get endSessionDesc =>
+      'هل أنت متأكد من رغبتك في إنهاء جلسة الحفظ؟ لن يتم حفظ تقدمك الحالي.';
 
   @override
   String get continueAction => 'متابعة';
@@ -1097,7 +1137,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get debugCertificatePreview => 'معاينة الشهادات للتجربة';
 
   @override
-  String get debugCertificatePreviewDesc => 'اختبار عرض الشهادة دون الحصول عليها فعلياً.';
+  String get debugCertificatePreviewDesc =>
+      'اختبار عرض الشهادة دون الحصول عليها فعلياً.';
 
   @override
   String get debugCertJuz30 => 'جزء ٣٠';
@@ -1115,13 +1156,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupProgressTitle => 'إدارة الحساب';
 
   @override
-  String get backupProgressDesc => 'سجّل دخولك من الإعدادات لإدارة حسابك وميزات العائلة';
+  String get backupProgressDesc =>
+      'سجّل دخولك من الإعدادات لإدارة حسابك وميزات العائلة';
 
   @override
   String get azkarSubtitle => 'اذكر الله كثيراً';
 
   @override
-  String get azkarContentUnderReview => 'محتوى الأذكار قيد المراجعة والاعتماد، وسيظهر هنا فور اعتماده.';
+  String get azkarContentUnderReview =>
+      'محتوى الأذكار قيد المراجعة والاعتماد، وسيظهر هنا فور اعتماده.';
 
   @override
   String zikrCount(Object count) {
@@ -1202,7 +1245,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get azkarFavoritesEmptyTitle => 'لا توجد أدعية في المفضلة';
 
   @override
-  String get azkarFavoritesEmptyDesc => 'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا';
+  String get azkarFavoritesEmptyDesc =>
+      'اضغط على علامة الإشارة المرجعية بجانب أي دعاء لحفظه هنا';
 
   @override
   String get azkarFavoriteAdd => 'إضافة إلى المفضلة';
@@ -1376,7 +1420,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizedJuzLabel => 'الأجزاء المحفوظة';
 
   @override
-  String get earnCertificatesHint => 'احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!';
+  String get earnCertificatesHint =>
+      'احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!';
 
   @override
   String certificateTitleJuz(Object juz) {
@@ -1410,10 +1455,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateShareError => 'حدث خطأ أثناء المشاركة';
 
   @override
-  String get certificateGalleryPermissionError => 'يجب منح صلاحية الوصول للاستوديو لحفظ الشهادة';
+  String get certificateGalleryPermissionError =>
+      'يجب منح صلاحية الوصول للاستوديو لحفظ الشهادة';
 
   @override
-  String get certificateGallerySaveSuccess => 'تم حفظ الشهادة في الاستوديو بنجاح ✓';
+  String get certificateGallerySaveSuccess =>
+      'تم حفظ الشهادة في الاستوديو بنجاح ✓';
 
   @override
   String get certificateSaveError => 'حدث خطأ أثناء الحفظ';
@@ -1425,7 +1472,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateNotFound => 'لم يتم العثور على الشهادة';
 
   @override
-  String get certificateTemplateRecipientIntro => 'تشهد منصة تالية لتحفيظ القرآن الكريم بأن';
+  String get certificateTemplateRecipientIntro =>
+      'تشهد منصة تالية لتحفيظ القرآن الكريم بأن';
 
   @override
   String get certificateTemplateMemorizedAction => 'قد أتم بنجاح حفظ';
@@ -1467,12 +1515,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get certificateTemplateSignature => 'التوقيع';
 
   @override
-  String certificateTemplateVerseReference(Object ayahNumber, Object surahName) {
+  String certificateTemplateVerseReference(
+    Object ayahNumber,
+    Object surahName,
+  ) {
     return '($surahName: $ayahNumber)';
   }
 
   @override
-  String get certificateTemplateBlessing => 'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.';
+  String get certificateTemplateBlessing =>
+      'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.';
 
   @override
   String shareCertificateJuz(Object juz) {
@@ -1485,10 +1537,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get shareCertificateHalfQuran => 'بفضل الله أتممت حفظ نصف القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
+  String get shareCertificateHalfQuran =>
+      'بفضل الله أتممت حفظ نصف القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
 
   @override
-  String get shareCertificateFullQuran => 'بفضل الله أتممت حفظ القرآن الكريم كاملاً 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
+  String get shareCertificateFullQuran =>
+      'بفضل الله أتممت حفظ القرآن الكريم كاملاً 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
 
   @override
   String get achievementTitleFirstPage => 'الصفحة الأولى';
@@ -1688,7 +1742,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsBackgroundPlaybackTitle => 'التشغيل في الخلفية';
 
   @override
-  String get settingsBackgroundPlaybackSubtitle => 'تستمر التلاوة بعد مغادرة التطبيق، ويمكن التحكم بها من شريط الإشعارات.';
+  String get settingsBackgroundPlaybackSubtitle =>
+      'تستمر التلاوة بعد مغادرة التطبيق، ويمكن التحكم بها من شريط الإشعارات.';
 
   @override
   String get settingsHubPractice => 'الممارسة';
@@ -1715,16 +1770,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsRemindersProgress => 'التقدم';
 
   @override
-  String get notificationPermissionBlockedTitle => 'إشعارات التطبيق معطلة في إعدادات الهاتف';
+  String get notificationPermissionBlockedTitle =>
+      'إشعارات التطبيق معطلة في إعدادات الهاتف';
 
   @override
-  String get notificationPermissionBlockedBody => 'لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.';
+  String get notificationPermissionBlockedBody =>
+      'لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.';
 
   @override
   String get notificationOpenSystemSettings => 'فتح إعدادات الهاتف';
 
   @override
-  String get notificationStatusBlocked => 'أذونات الإشعارات معطلة في إعدادات النظام';
+  String get notificationStatusBlocked =>
+      'أذونات الإشعارات معطلة في إعدادات النظام';
 
   @override
   String notificationStatusSummary(String enabled, String total) {
@@ -1735,10 +1793,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationTestInteractiveTitle => 'تجربة الإشعارات';
 
   @override
-  String get notificationTestInteractiveSubtitle => 'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل';
+  String get notificationTestInteractiveSubtitle =>
+      'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل';
 
   @override
-  String get notificationPrayerPermissionBlockedBody => 'لن تصلك تنبيهات الصلاة حتى تسمح بالإشعارات من إعدادات الهاتف.';
+  String get notificationPrayerPermissionBlockedBody =>
+      'لن تصلك تنبيهات الصلاة حتى تسمح بالإشعارات من إعدادات الهاتف.';
 
   @override
   String get notificationConfigurePrayerTimes => 'إعداد مواقيت الصلاة';
@@ -1747,13 +1807,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationTestPickerTitle => 'اختر إشعارًا لتجربته';
 
   @override
-  String get notificationTestPickerSubtitle => 'سيصلك إشعار تجريبي مع أزرار تفاعل.';
+  String get notificationTestPickerSubtitle =>
+      'سيصلك إشعار تجريبي مع أزرار تفاعل.';
 
   @override
   String get notificationTestReviewTitle => 'لحظة للمراجعة';
 
   @override
-  String get notificationTestReviewBody => 'يمكنك مراجعة ٥ آيات اليوم، بالقدر الذي يناسبك.';
+  String get notificationTestReviewBody =>
+      'يمكنك مراجعة ٥ آيات اليوم، بالقدر الذي يناسبك.';
 
   @override
   String get notificationTestStreakTitle => 'خطوة صغيرة اليوم';
@@ -1765,13 +1827,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationTestSuccess => 'تم إرسال الإشعار التجريبي بنجاح ✨';
 
   @override
-  String get notificationSettingsSaveFailed => 'تعذر حفظ التغيير. حاول مرة أخرى.';
+  String get notificationSettingsSaveFailed =>
+      'تعذر حفظ التغيير. حاول مرة أخرى.';
 
   @override
-  String get notificationSettingsSchedulingFailed => 'تم حفظ التغيير، لكن تعذر تحديث التنبيهات. حاول مرة أخرى.';
+  String get notificationSettingsSchedulingFailed =>
+      'تم حفظ التغيير، لكن تعذر تحديث التنبيهات. حاول مرة أخرى.';
 
   @override
-  String get prayerChooseCityForAccurateTimes => 'اختر مدينتك لإظهار مواقيت صلاة دقيقة.';
+  String get prayerChooseCityForAccurateTimes =>
+      'اختر مدينتك لإظهار مواقيت صلاة دقيقة.';
 
   @override
   String get prayerChooseCityAction => 'اختيار المدينة';
@@ -1780,7 +1845,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsGuestStatusTitle => 'تستخدم تالية كضيف';
 
   @override
-  String get settingsGuestStatusSubtitle => 'يبقى تقدمك المحلي على هذا الجهاز. أنشئ حساباً لإدارة الحساب وميزات العائلة.';
+  String get settingsGuestStatusSubtitle =>
+      'يبقى تقدمك المحلي على هذا الجهاز. أنشئ حساباً لإدارة الحساب وميزات العائلة.';
 
   @override
   String get settingsSignInCreateAccount => 'تسجيل الدخول / إنشاء حساب';
@@ -1795,16 +1861,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsMemorizationPathNotSelected => 'لم يتم اختيار مسار';
 
   @override
-  String get settingsMemorizationPathNotSelectedDesc => 'اختر مسار الكبار أو الأطفال عند فتح تبويب الحفظ.';
+  String get settingsMemorizationPathNotSelectedDesc =>
+      'اختر مسار الكبار أو الأطفال عند فتح تبويب الحفظ.';
 
   @override
   String get settingsResetPathKeeps => 'سيبقى: الإنجازات والسجل والشهادات';
 
   @override
-  String get settingsResetPathChanges => 'سيتغير: المسار المختار والخطة الحالية';
+  String get settingsResetPathChanges =>
+      'سيتغير: المسار المختار والخطة الحالية';
 
   @override
-  String get settingsResetPathInstruction => 'اكتب \"اعادة ضبط\" لتأكيد العملية.';
+  String get settingsResetPathInstruction =>
+      'اكتب \"اعادة ضبط\" لتأكيد العملية.';
 
   @override
   String get settingsResetPathConfirmPhrase => 'اعادة ضبط';
@@ -1813,7 +1882,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsDeleteAccountTitle => 'حذف الحساب';
 
   @override
-  String get settingsDeleteAccountSubtitle => 'حذف الحساب والتقدم المرتبط به نهائيًا';
+  String get settingsDeleteAccountSubtitle =>
+      'حذف الحساب والتقدم المرتبط به نهائيًا';
 
   @override
   String settingsDeleteAccountWarning(Object email) {
@@ -1821,7 +1891,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get settingsAccountDeletedMessage => 'تم حذف الحساب وتنظيف بياناته من هذا الجهاز.';
+  String get settingsAccountDeletedMessage =>
+      'تم حذف الحساب وتنظيف بياناته من هذا الجهاز.';
 
   @override
   String settingsVersion(Object version) {
@@ -1846,7 +1917,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardTitle => 'لوحة العائلة';
 
   @override
-  String get parentDashboardSubtitle => 'تابع حفظ الطفل والمكافآت والربط عن بعد';
+  String get parentDashboardSubtitle =>
+      'تابع حفظ الطفل والمكافآت والربط عن بعد';
 
   @override
   String get parentModeSubtitle => 'فعّل لمتابعة حفظ طفلك والربط عن بعد';
@@ -1855,7 +1927,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resetMemorizationPathQuestion => 'اعادة ضبط مسار الحفظ؟';
 
   @override
-  String get resetMemorizationIdentityWarning => 'سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.';
+  String get resetMemorizationIdentityWarning =>
+      'سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.';
 
   @override
   String get confirmResetMemorizationPath => 'تأكيد إعادة الضبط';
@@ -1864,13 +1937,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resetMemorizationPathTileTitle => 'اعادة ضبط المسار';
 
   @override
-  String get resetMemorizationPathTileSubtitle => 'اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.';
+  String get resetMemorizationPathTileSubtitle =>
+      'اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.';
 
   @override
-  String get resetMemorizationPathPreserveProgressDesc => 'تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.';
+  String get resetMemorizationPathPreserveProgressDesc =>
+      'تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.';
 
   @override
-  String get resetMemorizationPathPreserveProgressDialog => 'هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.';
+  String get resetMemorizationPathPreserveProgressDialog =>
+      'هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.';
 
   @override
   String completePreviousSurahFirst(Object surahName) {
@@ -1887,10 +1963,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianLinkTitle => 'ربط حساب ولي الأمر';
 
   @override
-  String get guardianLinkDesc => 'اختر ما إذا كنت تريد ربط ولي أمر بهذا المسار لمتابعة حفظ الطفل.';
+  String get guardianLinkDesc =>
+      'اختر ما إذا كنت تريد ربط ولي أمر بهذا المسار لمتابعة حفظ الطفل.';
 
   @override
-  String get guardianCreateCodeMessage => 'قم بإنشاء رمز جديد صالح لمدة ١٥ دقيقة.';
+  String get guardianCreateCodeMessage =>
+      'قم بإنشاء رمز جديد صالح لمدة ١٥ دقيقة.';
 
   @override
   String get guardianCodeUsedMessage => 'لا يمكن استخدام هذا الرمز مرة أخرى.';
@@ -1921,19 +1999,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianPairingStepsTitle => 'خطوات الربط';
 
   @override
-  String get guardianPairingStepOpenParentDevice => 'افتح تالية على جهاز ولي الأمر';
+  String get guardianPairingStepOpenParentDevice =>
+      'افتح تالية على جهاز ولي الأمر';
 
   @override
-  String get guardianPairingStepOpenDashboard => 'اذهب إلى الإعدادات ← الأطفال وولي الأمر ← لوحة العائلة ← «ربط طفل جديد»';
+  String get guardianPairingStepOpenDashboard =>
+      'اذهب إلى الإعدادات ← الأطفال وولي الأمر ← لوحة العائلة ← «ربط طفل جديد»';
 
   @override
-  String get guardianPairingStepScanOrEnterCode => 'امسح رمز QR أو أدخل الرمز يدوياً';
+  String get guardianPairingStepScanOrEnterCode =>
+      'امسح رمز QR أو أدخل الرمز يدوياً';
 
   @override
   String get guardianLinkLater => 'سأربط لاحقاً';
 
   @override
-  String get guardianLinkLaterHint => 'يمكنك الربط في أي وقت من ⚙ في رحلة الحفظ.';
+  String get guardianLinkLaterHint =>
+      'يمكنك الربط في أي وقت من ⚙ في رحلة الحفظ.';
 
   @override
   String get guardianCheckNow => 'تمّ المسح؟ تحقّق الآن';
@@ -1948,7 +2030,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get familyDashboardLinking => 'جارٍ ربط الطفل…';
 
   @override
-  String get familyPinOptionalHelp => 'يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.';
+  String get familyPinOptionalHelp =>
+      'يمكنك تخطّي الرمز. يلزم فقط عند ربط الطفل بولي الأمر.';
 
   @override
   String get familyPinSkip => 'المتابعة دون رمز';
@@ -1960,7 +2043,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get familyPinLockRemove => 'إزالة الرمز المحفوظ';
 
   @override
-  String get familyPinLockRemoveConfirm => 'سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.';
+  String get familyPinLockRemoveConfirm =>
+      'سيُحذف الرمز المحفوظ من هذا الجهاز. يمكنك إعداده مجددًا؛ ويلزم رمز عند ربط الطفل بولي الأمر.';
 
   @override
   String get kidsGuardianLinkedBadge => 'ولي أمرك يتابع رحلتك 💚';
@@ -1969,7 +2053,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianRegenerateCode => 'تجديد الرمز';
 
   @override
-  String get guardianSignInRequired => 'سجّل دخولك للوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.';
+  String get guardianSignInRequired =>
+      'سجّل دخولك للوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.';
 
   @override
   String get guardianSignInAction => 'تسجيل الدخول أو إنشاء حساب';
@@ -1984,7 +2069,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianLinkingFailedTitle => 'تعذر ربط ولي الأمر';
 
   @override
-  String get guardianLinkingTimeoutMessage => 'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.';
+  String get guardianLinkingTimeoutMessage =>
+      'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.';
 
   @override
   String get splashSubtitle => 'اقرأ، احفظ، راجع، وانمُ مع القرآن.';
@@ -2011,7 +2097,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSlide1Title => 'مصحفك اليومي بتلاوة وتدبر';
 
   @override
-  String get onboardingSlide1Subtitle => 'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء، وخطط ختمة بالوتيرة التي تناسبك.';
+  String get onboardingSlide1Subtitle =>
+      'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء، وخطط ختمة بالوتيرة التي تناسبك.';
 
   @override
   String get onboardingBentoMushafSurah => 'سورة الإسراء';
@@ -2035,7 +2122,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSlide2Title => 'احفظ القرآن ورسّخه بذكاء';
 
   @override
-  String get onboardingSlide2Subtitle => 'تقنيات تكرار ذكية ومتباعدة تقيس قوة حفظك وتمنع النسيان قبل وقوعه.';
+  String get onboardingSlide2Subtitle =>
+      'تقنيات تكرار ذكية ومتباعدة تقيس قوة حفظك وتمنع النسيان قبل وقوعه.';
 
   @override
   String get onboardingBentoMasteryTitle => 'نسبة الإتقان والتثبيت';
@@ -2071,7 +2159,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSlide3Title => 'ورد مستمر وتجربة لكل العائلة';
 
   @override
-  String get onboardingSlide3Subtitle => 'ابنِ عادة قرآنية يومية لا تنقطع، مع مسار تفاعلي ممتع مخصص للأطفال، وبدون إنترنت.';
+  String get onboardingSlide3Subtitle =>
+      'ابنِ عادة قرآنية يومية لا تنقطع، مع مسار تفاعلي ممتع مخصص للأطفال، وبدون إنترنت.';
 
   @override
   String get onboardingBentoStreakTitle => 'سلسلة الورد اليومي';
@@ -2101,19 +2190,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingChooseExpTitle => 'اختر التجربة المناسبة';
 
   @override
-  String get onboardingChooseExpSubtitle => 'خصص تجربة تالية لتلائم احتياجك. يمكنك تبديل المسار دائماً من الإعدادات.';
+  String get onboardingChooseExpSubtitle =>
+      'خصص تجربة تالية لتلائم احتياجك. يمكنك تبديل المسار دائماً من الإعدادات.';
 
   @override
   String get onboardingAdultPathTitle => 'مسار الكبار واليافعين';
 
   @override
-  String get onboardingAdultPathSubtitle => 'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.';
+  String get onboardingAdultPathSubtitle =>
+      'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.';
 
   @override
   String get onboardingKidsPathTitle => 'مسار البراعم والأطفال';
 
   @override
-  String get onboardingKidsPathSubtitle => 'رحلة تفاعلية ممتعة بالمهام المبسطة والتكرار الإيجابي والمكافآت.';
+  String get onboardingKidsPathSubtitle =>
+      'رحلة تفاعلية ممتعة بالمهام المبسطة والتكرار الإيجابي والمكافآت.';
 
   @override
   String get onboardingKidsFeatureMissions => 'مهام قصيرة وميسرة';
@@ -2134,10 +2226,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingAyahReference => 'سورة المزمّل ٤';
 
   @override
-  String get onboardingOfflineTrustLine => 'يعمل دون إنترنت، بياناتك محفوظة على جهازك';
+  String get onboardingOfflineTrustLine =>
+      'يعمل دون إنترنت، بياناتك محفوظة على جهازك';
 
   @override
-  String get onboardingErrorGeneric => 'تعذّر إكمال الإعداد. تأكد من توفر مساحة على الجهاز ثم حاول مجدداً، أو تخطَّ الإعداد الآن.';
+  String get onboardingErrorGeneric =>
+      'تعذّر إكمال الإعداد. تأكد من توفر مساحة على الجهاز ثم حاول مجدداً، أو تخطَّ الإعداد الآن.';
 
   @override
   String get onboardingSkip => 'تخطي';
@@ -2149,19 +2243,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizationPathQuestion => 'من سيستخدم هذه الميزة؟';
 
   @override
-  String get memorizationPathDescription => 'اختر المسار المناسب لك أو لطفلك لتجربة حفظ مخصصة.';
+  String get memorizationPathDescription =>
+      'اختر المسار المناسب لك أو لطفلك لتجربة حفظ مخصصة.';
 
   @override
   String get memorizationPathAdultsTitle => 'مسار البالغين';
 
   @override
-  String get memorizationPathAdultsDesc => 'خطة حفظ مرنة مع مراجعة ذكية وتتبع يومي للإنجاز.';
+  String get memorizationPathAdultsDesc =>
+      'خطة حفظ مرنة مع مراجعة ذكية وتتبع يومي للإنجاز.';
 
   @override
   String get memorizationPathKidsTitle => 'مسار الأطفال';
 
   @override
-  String get memorizationPathKidsDesc => 'رحلة حفظ تفاعلية ممتعة بإشراف ولي الأمر.';
+  String get memorizationPathKidsDesc =>
+      'رحلة حفظ تفاعلية ممتعة بإشراف ولي الأمر.';
 
   @override
   String get kidsJourneyTitle => 'رحلة الحفظ';
@@ -2212,15 +2309,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get renew => 'تجديد';
 
   @override
-  String get remoteGuardianLinkInstruction => 'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
+  String get remoteGuardianLinkInstruction =>
+      'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
 
   @override
-  String kidsStageProgress(String startAyah, String endAyah, String completed, String total) {
+  String kidsStageProgress(
+    String startAyah,
+    String endAyah,
+    String completed,
+    String total,
+  ) {
     return 'الآيات $startAyah-$endAyah • $completed/$total';
   }
 
   @override
-  String get quranLongPressHint => 'اضغط مطولاً على الآية للاستماع أو إضافة علامة';
+  String get quranLongPressHint =>
+      'اضغط مطولاً على الآية للاستماع أو إضافة علامة';
 
   @override
   String get readPageConfirmed => 'تم احتساب الصفحة';
@@ -2235,7 +2339,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsProgressSubtitle => 'نجومك وإنجازاتك وشهاداتك';
 
   @override
-  String get kidsProgressTaliaStart => 'هيا نبدأ! احفظ أول آية لتحصل على أول إنجاز';
+  String get kidsProgressTaliaStart =>
+      'هيا نبدأ! احفظ أول آية لتحصل على أول إنجاز';
 
   @override
   String kidsProgressTaliaNew(String title) {
@@ -2373,25 +2478,32 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsWeeklyCoachingUnavailable => 'الملخص الأسبوعي غير متاح لهذا الطفل بعد.';
+  String get kidsWeeklyCoachingUnavailable =>
+      'الملخص الأسبوعي غير متاح لهذا الطفل بعد.';
 
   @override
-  String get kidsWeeklyCoachingNoHistory => 'لا توجد جلسات بعد. يظهر الملخص بعد الجلسة الأولى.';
+  String get kidsWeeklyCoachingNoHistory =>
+      'لا توجد جلسات بعد. يظهر الملخص بعد الجلسة الأولى.';
 
   @override
-  String get kidsWeeklyCoachingTipListenTogether => 'استُخدمت التلميحات في كثير من الجلسات. جرّبوا الاستماع للآية معًا أولًا، ثم دعوا الطفل يحاول وحده.';
+  String get kidsWeeklyCoachingTipListenTogether =>
+      'استُخدمت التلميحات في كثير من الجلسات. جرّبوا الاستماع للآية معًا أولًا، ثم دعوا الطفل يحاول وحده.';
 
   @override
-  String get kidsWeeklyCoachingTipCelebrateEffort => 'حاول الطفل من جديد ونجح هذا الأسبوع. امدحوا المحاولة وليس النتيجة فقط.';
+  String get kidsWeeklyCoachingTipCelebrateEffort =>
+      'حاول الطفل من جديد ونجح هذا الأسبوع. امدحوا المحاولة وليس النتيجة فقط.';
 
   @override
-  String get kidsWeeklyCoachingTipKeepRhythm => 'أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.';
+  String get kidsWeeklyCoachingTipKeepRhythm =>
+      'أسبوع منتظم. حافظوا على الوقت القصير نفسه كل يوم.';
 
   @override
-  String get kidsWeeklyCoachingTipAddReview => 'في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.';
+  String get kidsWeeklyCoachingTipAddReview =>
+      'في المرة القادمة أضيفوا مراجعة قصيرة واحدة قبل الآية الجديدة.';
 
   @override
-  String get kidsWeeklyCoachingTipStartSmall => 'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
+  String get kidsWeeklyCoachingTipStartSmall =>
+      'أسبوع هادئ. جلسة قصيرة من بضع دقائق بداية جيدة للعودة.';
 
   @override
   String get monthlyReportTitle => 'تقرير الشهر';
@@ -2477,7 +2589,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get monthlyReportEmpty => 'لا جلسات في هذا الشهر';
 
   @override
-  String get monthlyReportIncompleteHistory => 'قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي';
+  String get monthlyReportIncompleteHistory =>
+      'قد لا تشمل هذه الأرقام كل الجلسات لأن سجل الطفل المرتبط من جهاز آخر جزئي';
 
   @override
   String get monthlyReportSavePdf => 'حفظ PDF';
@@ -2507,22 +2620,28 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsFamilyPracticeStepListen => 'استمعوا إلى الآية معًا، بقدر ما يحب الطفل.';
+  String get kidsFamilyPracticeStepListen =>
+      'استمعوا إلى الآية معًا، بقدر ما يحب الطفل.';
 
   @override
-  String get kidsFamilyPracticeStepGrownUp => 'يقرأ الكبير الآية ببطء بينما يتابع الطفل.';
+  String get kidsFamilyPracticeStepGrownUp =>
+      'يقرأ الكبير الآية ببطء بينما يتابع الطفل.';
 
   @override
-  String get kidsFamilyPracticeStepChildTries => 'الآن يحاول الطفل قولها وحده، والكبير يُنصت بلطف.';
+  String get kidsFamilyPracticeStepChildTries =>
+      'الآن يحاول الطفل قولها وحده، والكبير يُنصت بلطف.';
 
   @override
-  String get kidsFamilyPracticeStepPraise => 'امدحوا المحاولة وليس النتيجة فقط.';
+  String get kidsFamilyPracticeStepPraise =>
+      'امدحوا المحاولة وليس النتيجة فقط.';
 
   @override
-  String get kidsFamilyPracticeFinished => 'أحسنتم معًا! يمكنكم العودة إلى الآية الآن.';
+  String get kidsFamilyPracticeFinished =>
+      'أحسنتم معًا! يمكنكم العودة إلى الآية الآن.';
 
   @override
-  String get kidsFamilyPracticeNote => 'هذه مشاركة في التعلّم، ولا تُكمل الآية.';
+  String get kidsFamilyPracticeNote =>
+      'هذه مشاركة في التعلّم، ولا تُكمل الآية.';
 
   @override
   String get kidsFamilyPracticeConfirm => 'للكبير: أكّد أننا تعلّمنا معًا';
@@ -2567,19 +2686,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGameUnavailable => 'احفظ آية أولًا، ثم عُد لتلعب.';
 
   @override
-  String get kidsGameAudioFailed => 'تعذّر تشغيل التلاوة. تحقق من الاتصال وحاول مجددًا.';
+  String get kidsGameAudioFailed =>
+      'تعذّر تشغيل التلاوة. تحقق من الاتصال وحاول مجددًا.';
 
   @override
   String get kidsGameNote => 'للمتعة والتعلّم فقط، ولا يغيّر رحلتك.';
 
   @override
-  String get kidsSupportSuggestFirstWord => 'تحتاج مساعدة؟ اضغط «أعطني البداية» ثم حاول مرة أخرى.';
+  String get kidsSupportSuggestFirstWord =>
+      'تحتاج مساعدة؟ اضغط «أعطني البداية» ثم حاول مرة أخرى.';
 
   @override
   String get kidsSupportSuggestTryAgain => 'اقتربت جدًا! قُلها مرة أخرى.';
 
   @override
-  String get kidsSupportSuggestGuardian => 'اطلب من أحد الكبار أن يستمع إلى تلاوتك.';
+  String get kidsSupportSuggestGuardian =>
+      'اطلب من أحد الكبار أن يستمع إلى تلاوتك.';
 
   @override
   String get kidsSupportTitle => 'مساندة التعلّم';
@@ -2597,28 +2719,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsSupportReadingNotYet => 'لا يقرأ بعد';
 
   @override
-  String get kidsSupportReadingNote => 'مع القراءة بمساعدة أو عدم القراءة بعد، تقترح الجلسة المساعدة قبل أن يتعثر الطفل. يُطبَّق من الجلسة القادمة، وتبقى الحدود اليومية وعدد مرات الاستماع كما هي.';
+  String get kidsSupportReadingNote =>
+      'مع القراءة بمساعدة أو عدم القراءة بعد، تقترح الجلسة المساعدة قبل أن يتعثر الطفل. يُطبَّق من الجلسة القادمة، وتبقى الحدود اليومية وعدد مرات الاستماع كما هي.';
 
   @override
   String get kidsSupportSaveFailed => 'تعذّر حفظ الإجابة. حاول مرة أخرى.';
 
   @override
-  String get kidsSupportLinkedNote => 'يُحفظ لجهاز طفلك، ويُطبَّق بعد مزامنة ذلك الجهاز.';
+  String get kidsSupportLinkedNote =>
+      'يُحفظ لجهاز طفلك، ويُطبَّق بعد مزامنة ذلك الجهاز.';
 
   @override
-  String get kidsSupportLinkedUnavailable => 'هذا الإعداد غير متاح لهذا الطفل حاليًا.';
+  String get kidsSupportLinkedUnavailable =>
+      'هذا الإعداد غير متاح لهذا الطفل حاليًا.';
 
   @override
   String get childDetailProgressTitle => 'التقدم والإنجازات والشهادات';
 
   @override
-  String get childDetailProgressUnavailable => 'لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.';
+  String get childDetailProgressUnavailable =>
+      'لم يصل تقدم الطفل بعد. سيظهر بعد أن يفتح الطفل التطبيق متصلًا بالإنترنت.';
 
   @override
   String get childDetailCertificatesEmpty => 'لا توجد شهادات بعد';
 
   @override
-  String get childDetailCertificateOpenHint => 'اضغط على الشهادة لطباعتها أو مشاركتها';
+  String get childDetailCertificateOpenHint =>
+      'اضغط على الشهادة لطباعتها أو مشاركتها';
 
   @override
   String get dailyPlanRatingWeakDesc => 'احتجت للمصحف';
@@ -2633,7 +2760,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanRatingHintTitle => 'كيف تختار التقييم؟';
 
   @override
-  String get dailyPlanRatingHintBody => 'التقييم يحدد موعد المراجعة القادمة: ضعيف للمراجعة القريبة، متوسط للمراجعة المعتدلة، وممتاز للمراجعة بعد فترة أطول.';
+  String get dailyPlanRatingHintBody =>
+      'التقييم يحدد موعد المراجعة القادمة: ضعيف للمراجعة القريبة، متوسط للمراجعة المعتدلة، وممتاز للمراجعة بعد فترة أطول.';
 
   @override
   String get understood => 'فهمت';
@@ -2674,13 +2802,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qcfPocTitle => 'تجربة عرض QCF';
 
   @override
-  String get qcfPocIntro => 'شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.';
+  String get qcfPocIntro =>
+      'شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.';
 
   @override
-  String get qcfPocNoProduction => 'هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.';
+  String get qcfPocNoProduction =>
+      'هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.';
 
   @override
-  String get qcfPocVisualOnly => 'يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.';
+  String get qcfPocVisualOnly =>
+      'يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.';
 
   @override
   String get qcfPocSingleVerse => 'آية واحدة';
@@ -2728,16 +2859,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qcfPocVerseSupported => 'تظهر الآية بصرياً باستخدام أدوات QCF.';
 
   @override
-  String get qcfPocMultiVerseSupported => 'تظهر الآيات المجموعة بصرياً من السورة نفسها.';
+  String get qcfPocMultiVerseSupported =>
+      'تظهر الآيات المجموعة بصرياً من السورة نفسها.';
 
   @override
-  String get qcfPocFullPageSupported => 'عرض الصفحة الكاملة متاح داخل معاينة محددة.';
+  String get qcfPocFullPageSupported =>
+      'عرض الصفحة الكاملة متاح داخل معاينة محددة.';
 
   @override
   String get qcfPocNoLimitations => 'لم تظهر قيود في هذه التجربة المعزولة.';
 
   @override
-  String get qcfPocLimitationInstruction => 'يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.';
+  String get qcfPocLimitationInstruction =>
+      'يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.';
 
   @override
   String get parentDashboardCardSubtitle => 'تابع حفظ الطفل والمكافآت';
@@ -2800,7 +2934,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get startQuranStepNow => 'ابدأ خطوة قرآنية الآن';
 
   @override
-  String get chooseReadingOrMemorization => 'اختر قراءة أو حفظاً بسيطاً لهذا اليوم.';
+  String get chooseReadingOrMemorization =>
+      'اختر قراءة أو حفظاً بسيطاً لهذا اليوم.';
 
   @override
   String get kidsFirstMissionToday => 'مهمتك الأولى اليوم';
@@ -2811,7 +2946,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsFirstMissionSubtitle => 'ابدأ بالاستماع والتكرار، وكل خطوة تقربك من نجمة جديدة.';
+  String get kidsFirstMissionSubtitle =>
+      'ابدأ بالاستماع والتكرار، وكل خطوة تقربك من نجمة جديدة.';
 
   @override
   String kidsRemainingAyahs(String count) {
@@ -2946,7 +3082,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedReviewChallenge => '⭐ تحدّي المراجعة';
 
   @override
-  String get kidsGamifiedReviewChallengeSubtitle => 'هل تتذكّرها؟ سمّعها من ذاكرتك';
+  String get kidsGamifiedReviewChallengeSubtitle =>
+      'هل تتذكّرها؟ سمّعها من ذاكرتك';
 
   @override
   String get kidsGamifiedRemindMe => 'ذكّرني';
@@ -2997,7 +3134,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsRegionPearlSea => 'بحر اللؤلؤ';
 
   @override
-  String kidsRegionProgress(int memorized, int total, String memorizedText, String totalText) {
+  String kidsRegionProgress(
+    int memorized,
+    int total,
+    String memorizedText,
+    String totalText,
+  ) {
     return '$memorizedText من $totalText سور';
   }
 
@@ -3020,10 +3162,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsWelcomeBackSubtitle => 'نبدأ بخطوة سهلة';
 
   @override
-  String get kidsGamifiedEnoughForToday => 'أحسنت! هذا وقت كافٍ لليوم، يمكنك التوقف.';
+  String get kidsGamifiedEnoughForToday =>
+      'أحسنت! هذا وقت كافٍ لليوم، يمكنك التوقف.';
 
   @override
-  String get parentSupportTip => 'جرّبا معاً: استمعا للآية مرتين، ثم دع طفلك يبدأ بأول كلمة';
+  String get parentSupportTip =>
+      'جرّبا معاً: استمعا للآية مرتين، ثم دع طفلك يبدأ بأول كلمة';
 
   @override
   String get kidsGamifiedStartMission => 'ابدأ المهمة';
@@ -3041,13 +3185,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedDoneRecording => 'انتهيت من التسجيل';
 
   @override
-  String get kidsGamifiedAudioUnavailable => 'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.';
+  String get kidsGamifiedAudioUnavailable =>
+      'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.';
 
   @override
   String get kidsManualCompleteAction => 'أتممت الحفظ بنفسي';
 
   @override
-  String get kidsManualCompleteHint => 'لا يتوفر الصوت أو الميكروفون؟ يمكن لولي الأمر تأكيد إتمام الحفظ.';
+  String get kidsManualCompleteHint =>
+      'لا يتوفر الصوت أو الميكروفون؟ يمكن لولي الأمر تأكيد إتمام الحفظ.';
 
   @override
   String kidsGamifiedListenFirst(int count, String countText) {
@@ -3095,10 +3241,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedReturnToMap => 'العودة للخريطة';
 
   @override
-  String get kidsGamifiedJourneyComplete => 'أتممت رحلة الحفظ الحالية، بارك الله فيك!';
+  String get kidsGamifiedJourneyComplete =>
+      'أتممت رحلة الحفظ الحالية، بارك الله فيك!';
 
   @override
-  String get kidsGamifiedFallbackMessage => 'سنعود للتجربة القديمة للحفاظ على تقدمك.';
+  String get kidsGamifiedFallbackMessage =>
+      'سنعود للتجربة القديمة للحفاظ على تقدمك.';
 
   @override
   String get privacyPolicy => 'سياسة الخصوصية';
@@ -3107,10 +3255,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get forgotPassword => 'نسيت كلمة المرور؟';
 
   @override
-  String get passwordResetEmailSent => '✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
+  String get passwordResetEmailSent =>
+      '✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
 
   @override
-  String get forgotPasswordEnterEmail => 'أدخل بريدك الإلكتروني أولاً لإعادة تعيين كلمة المرور';
+  String get forgotPasswordEnterEmail =>
+      'أدخل بريدك الإلكتروني أولاً لإعادة تعيين كلمة المرور';
 
   @override
   String get updatePasswordTitle => 'تعيين كلمة مرور جديدة';
@@ -3128,13 +3278,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get passwordsDoNotMatch => 'كلمتا المرور غير متطابقتين';
 
   @override
-  String get passwordUpdated => 'تم تحديث كلمة المرور بنجاح. سجل الدخول مرة أخرى.';
+  String get passwordUpdated =>
+      'تم تحديث كلمة المرور بنجاح. سجل الدخول مرة أخرى.';
 
   @override
   String get updatePasswordButton => 'تحديث كلمة المرور';
 
   @override
-  String get invalidPasswordRecoveryLink => 'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
+  String get invalidPasswordRecoveryLink =>
+      'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
 
   @override
   String get dailyPlanQuizAction => 'مراجعة بالتسميع';
@@ -3152,7 +3304,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanRetentionReview => 'مراجعة تثبيت';
 
   @override
-  String get dailyPlanRetentionReviewHint => 'مراجعة اختيارية لتثبيت الآيات التي حفظتها بالفعل.';
+  String get dailyPlanRetentionReviewHint =>
+      'مراجعة اختيارية لتثبيت الآيات التي حفظتها بالفعل.';
 
   @override
   String get dailyPlanCompletedTitle => 'ما شاء الله! أكملت خطة اليوم';
@@ -3177,7 +3330,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get dailyPlanRatingAverage => '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة';
+  String get dailyPlanRatingAverage =>
+      '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة';
 
   @override
   String dailyPlanRatingWeak(String ayahNumber) {
@@ -3206,16 +3360,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizationHubReviewSectionTitle => 'المراجعة';
 
   @override
-  String get memorizationHubReviewSectionSubtitle => 'سمّع ما حفظته من ذاكرتك، ويقيّم التطبيق تسميعك.';
+  String get memorizationHubReviewSectionSubtitle =>
+      'سمّع ما حفظته من ذاكرتك، ويقيّم التطبيق تسميعك.';
 
   @override
-  String get memorizationHubReviewCardDescription => 'سمّع الآيات المستحقة للمراجعة من حفظك.';
+  String get memorizationHubReviewCardDescription =>
+      'سمّع الآيات المستحقة للمراجعة من حفظك.';
 
   @override
-  String get memorizationHubDailyPlanSubtitle => 'وجهتك الأساسية للحفظ والمراجعة اليومية.';
+  String get memorizationHubDailyPlanSubtitle =>
+      'وجهتك الأساسية للحفظ والمراجعة اليومية.';
 
   @override
-  String get memorizationHubContinuePlanDescription => 'افتح ورد الحفظ والمراجعة الحالي.';
+  String get memorizationHubContinuePlanDescription =>
+      'افتح ورد الحفظ والمراجعة الحالي.';
 
   @override
   String get memorizationHubViewPlanTitle => 'تفاصيل خطة اليوم';
@@ -3224,19 +3382,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizationHubPracticeSectionTitle => 'التدريب';
 
   @override
-  String get memorizationHubPracticeSectionSubtitle => 'اختر سورة أو تدرب بالتسميع الصوتي.';
+  String get memorizationHubPracticeSectionSubtitle =>
+      'اختر سورة أو تدرب بالتسميع الصوتي.';
 
   @override
   String get memorizationHubPracticeBySurahTitle => 'تدرّب بالسورة';
 
   @override
-  String get memorizationHubPracticeBySurahDescription => 'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.';
+  String get memorizationHubPracticeBySurahDescription =>
+      'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.';
 
   @override
   String get listeningReviewTitle => 'اختبار الاستماع';
 
   @override
-  String get listeningReviewHubDescription => 'اسمع آية من محفوظك: حدّد سورتها أو أكمل ما بعدها.';
+  String get listeningReviewHubDescription =>
+      'اسمع آية من محفوظك: حدّد سورتها أو أكمل ما بعدها.';
 
   @override
   String get listeningReviewStartPrompt => 'اختر نوع الجولة';
@@ -3259,7 +3420,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get listeningReviewNotEnoughTitle => 'احفظ بضع آيات أولًا';
 
   @override
-  String get listeningReviewNotEnoughBody => 'يحتاج اختبار الاستماع إلى ٥ آيات محفوظة على الأقل يمكن تشغيلها.';
+  String get listeningReviewNotEnoughBody =>
+      'يحتاج اختبار الاستماع إلى ٥ آيات محفوظة على الأقل يمكن تشغيلها.';
 
   @override
   String get listeningReviewErrorBody => 'تعذّر تحضير الجولة. حاول مرة أخرى.';
@@ -3351,37 +3513,45 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get memorizationHubSettingsSectionSubtitle => 'اضبط خطة الحفظ بدون تغيير المسار.';
+  String get memorizationHubSettingsSectionSubtitle =>
+      'اضبط خطة الحفظ بدون تغيير المسار.';
 
   @override
   String get memorizationHubPlanSettingsTitle => 'إعدادات الخطة';
 
   @override
-  String get memorizationHubPlanSettingsDescription => 'عدّل الخطة اليومية أو إعدادات مسار الحفظ.';
+  String get memorizationHubPlanSettingsDescription =>
+      'عدّل الخطة اليومية أو إعدادات مسار الحفظ.';
 
   @override
-  String get memorizationHubKidsMissionSectionSubtitle => 'ابدأ من المهمة النشطة للطفل.';
+  String get memorizationHubKidsMissionSectionSubtitle =>
+      'ابدأ من المهمة النشطة للطفل.';
 
   @override
-  String get memorizationHubKidsMissionCardDescription => 'ابدأ مهمة الحفظ التالية في رحلة الأطفال.';
+  String get memorizationHubKidsMissionCardDescription =>
+      'ابدأ مهمة الحفظ التالية في رحلة الأطفال.';
 
   @override
   String get memorizationHubKidsJourneyTitle => 'الرحلة';
 
   @override
-  String get memorizationHubKidsJourneySubtitle => 'شاهد مراحل الطفل الحالية والقادمة.';
+  String get memorizationHubKidsJourneySubtitle =>
+      'شاهد مراحل الطفل الحالية والقادمة.';
 
   @override
-  String get memorizationHubKidsJourneyDescription => 'شاهد المراحل الحالية والقادمة.';
+  String get memorizationHubKidsJourneyDescription =>
+      'شاهد المراحل الحالية والقادمة.';
 
   @override
   String get memorizationHubKidsRewardsTitle => 'المكافآت / التقدم';
 
   @override
-  String get memorizationHubKidsRewardsSubtitle => 'راجع نجوم الطفل ونقاطه من شاشة التقدم.';
+  String get memorizationHubKidsRewardsSubtitle =>
+      'راجع نجوم الطفل ونقاطه من شاشة التقدم.';
 
   @override
-  String get memorizationHubKidsRewardsDescription => 'راجع النقاط والنجوم من شاشة التقدم.';
+  String get memorizationHubKidsRewardsDescription =>
+      'راجع النقاط والنجوم من شاشة التقدم.';
 
   @override
   String get memorizationHubHeaderSubtitle => 'مكان واحد لكل مسارات الحفظ';
@@ -3390,7 +3560,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backAction => 'العودة';
 
   @override
-  String get hifzKidsRedirectedFromAdult => 'هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.';
+  String get hifzKidsRedirectedFromAdult =>
+      'هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.';
 
   @override
   String get parentDashboardLastSession => 'آخر جلسة';
@@ -3399,7 +3570,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardNoSessionsYet => 'لا توجد جلسات مسجلة بعد.';
 
   @override
-  String parentDashboardSessionSummary(String surahId, String ayahNumber, String repeats, String points) {
+  String parentDashboardSessionSummary(
+    String surahId,
+    String ayahNumber,
+    String repeats,
+    String points,
+  ) {
     return 'سورة $surahId • آية $ayahNumber\n$repeats تكرارات • $points نقطة';
   }
 
@@ -3410,7 +3586,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardPinMismatch => 'رمزا PIN غير متطابقين';
 
   @override
-  String get parentDashboardPinHelp => 'إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.';
+  String get parentDashboardPinHelp =>
+      'إدخال الرمز هنا اختياري. يلزم فقط عند ربط الطفل بولي الأمر.';
 
   @override
   String get parentDashboardPinConfirm => 'تأكيد PIN';
@@ -3448,40 +3625,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardForgotPinConfirm => 'تحقّق';
 
   @override
-  String get parentDashboardAccountPasswordIncorrect => 'كلمة مرور الحساب غير صحيحة';
+  String get parentDashboardAccountPasswordIncorrect =>
+      'كلمة مرور الحساب غير صحيحة';
 
   @override
-  String get parentDashboardAccountCheckUnavailable => 'تعذّر التحقق من الحساب الآن. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
+  String get parentDashboardAccountCheckUnavailable =>
+      'تعذّر التحقق من الحساب الآن. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.';
 
   @override
   String get parentDashboardChangePin => 'تغيير رمز ولي الأمر';
 
   @override
-  String get parentDashboardChangePinConfirm => 'ستنشئ رمزاً جديداً الآن. تبقى المكافآت والإعدادات كما هي.';
+  String get parentDashboardChangePinConfirm =>
+      'ستنشئ رمزاً جديداً الآن. تبقى المكافآت والإعدادات كما هي.';
 
   @override
-  String get guardianErrorSignInRequired => 'سجّل الدخول بحسابك أولاً ثم أعد المحاولة.';
+  String get guardianErrorSignInRequired =>
+      'سجّل الدخول بحسابك أولاً ثم أعد المحاولة.';
 
   @override
-  String get guardianErrorCloudUnavailable => 'ربط الأطفال غير متاح في هذا الإصدار لأن المزامنة السحابية غير مفعّلة.';
+  String get guardianErrorCloudUnavailable =>
+      'ربط الأطفال غير متاح في هذا الإصدار لأن المزامنة السحابية غير مفعّلة.';
 
   @override
-  String get guardianErrorOnlyForChildren => 'ربط ولي الأمر متاح لحسابات الأطفال فقط.';
+  String get guardianErrorOnlyForChildren =>
+      'ربط ولي الأمر متاح لحسابات الأطفال فقط.';
 
   @override
   String get guardianErrorAlreadyLinked => 'هذا الحساب مرتبط بولي أمر بالفعل.';
 
   @override
-  String get guardianErrorParentModeAdultsOnly => 'وضع ولي الأمر متاح لمسار الكبار فقط.';
+  String get guardianErrorParentModeAdultsOnly =>
+      'وضع ولي الأمر متاح لمسار الكبار فقط.';
 
   @override
-  String get guardianErrorLinkCodeInvalid => 'رمز الربط غير صحيح أو انتهت صلاحيته. اطلب من الطفل إنشاء رمز جديد ثم أعد المحاولة.';
+  String get guardianErrorLinkCodeInvalid =>
+      'رمز الربط غير صحيح أو انتهت صلاحيته. اطلب من الطفل إنشاء رمز جديد ثم أعد المحاولة.';
 
   @override
-  String get guardianErrorChildHasGuardian => 'هذا الطفل مرتبط بولي أمر آخر. يجب فك الربط الحالي أولاً.';
+  String get guardianErrorChildHasGuardian =>
+      'هذا الطفل مرتبط بولي أمر آخر. يجب فك الربط الحالي أولاً.';
 
   @override
-  String get guardianErrorSameAccount => 'لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.';
+  String get guardianErrorSameAccount =>
+      'لا يمكن ربط الطفل بنفس الحساب. يجب أن يستخدم الطفل حساباً مختلفاً عن حساب ولي الأمر.';
 
   @override
   String get parentRewardErrorTitleRequired => 'اكتب اسم المكافأة أولاً.';
@@ -3490,7 +3677,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentRewardErrorLimitReached => 'يمكن إضافة ٣ مكافآت فقط.';
 
   @override
-  String get parentRewardErrorUnavailable => 'هذه الهدية غير متاحة لهذه الخطوة الآن. حدّث الصفحة وحاول مرة أخرى.';
+  String get parentRewardErrorUnavailable =>
+      'هذه الهدية غير متاحة لهذه الخطوة الآن. حدّث الصفحة وحاول مرة أخرى.';
 
   @override
   String get parentRewardUnlockedFeedback => 'تم فتح الهدية';
@@ -3516,7 +3704,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get familyDashboardRemoteUnavailable => 'تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.';
+  String get familyDashboardRemoteUnavailable =>
+      'تعذّر تحميل الأطفال المرتبطين. تحقّق من الاتصال وحاول مرة أخرى.';
 
   @override
   String get kidsHomeMissionsUnavailable => 'تعذّر تحميل مهام البيت الآن.';
@@ -3525,7 +3714,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianSessionTileTitle => 'لوحة العائلة';
 
   @override
-  String get guardianSessionTileSubtitle => 'فتح أدوات ولي الأمر؛ إدخال الرمز اختياري';
+  String get guardianSessionTileSubtitle =>
+      'فتح أدوات ولي الأمر؛ إدخال الرمز اختياري';
 
   @override
   String get guardianSessionBackToChild => 'العودة إلى الطفل';
@@ -3599,13 +3789,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianUnlinkTileTitle => 'إلغاء ربط ولي الأمر';
 
   @override
-  String get guardianUnlinkTileSubtitle => 'يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري';
+  String get guardianUnlinkTileSubtitle =>
+      'يحتاج اتصالًا بالإنترنت؛ إدخال الرمز اختياري';
 
   @override
   String get guardianUnlinkConfirmTitle => 'إلغاء ربط ولي الأمر؟';
 
   @override
-  String get guardianUnlinkConfirmBody => 'لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.';
+  String get guardianUnlinkConfirmBody =>
+      'لن يتابع ولي الأمر تقدّمك بعد الآن، ولن تصل منه مهام أو هدايا جديدة. الهدايا التي استلمتها تبقى، أما الهدايا والمهام التي لم تكتمل فتختفي من هذا الجهاز. يمكن الربط من جديد لاحقاً.';
 
   @override
   String get guardianUnlinkAction => 'إلغاء الربط';
@@ -3614,16 +3806,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianUnlinkDone => 'تم إلغاء ربط ولي الأمر';
 
   @override
-  String get guardianErrorUnlinkFailed => 'تعذّر إلغاء الربط، ولم يتغير شيء. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
+  String get guardianErrorUnlinkFailed =>
+      'تعذّر إلغاء الربط، ولم يتغير شيء. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
 
   @override
-  String get pinRecoveryUnavailable => 'استعادة الرقم السري تحتاج اتصالاً بالإنترنت وحساباً مرتبطاً بولي أمر، أو أن الطلب انتهت صلاحيته.';
+  String get pinRecoveryUnavailable =>
+      'استعادة الرقم السري تحتاج اتصالاً بالإنترنت وحساباً مرتبطاً بولي أمر، أو أن الطلب انتهت صلاحيته.';
 
   @override
   String get pinRecoveryTitle => 'تغيير الرقم السري المنسي';
 
   @override
-  String get pinRecoveryInstructions => 'اطلب من ولي الأمر فتح صفحتك في لوحة العائلة على جهازه والموافقة على الطلب، ثم اكتب الرمز الذي يظهر له والرقم السري الجديد.';
+  String get pinRecoveryInstructions =>
+      'اطلب من ولي الأمر فتح صفحتك في لوحة العائلة على جهازه والموافقة على الطلب، ثم اكتب الرمز الذي يظهر له والرقم السري الجديد.';
 
   @override
   String get pinRecoveryCodeLabel => 'رمز ولي الأمر';
@@ -3632,7 +3827,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinRecoveryNewPinLabel => 'الرقم السري الجديد (4 أرقام)';
 
   @override
-  String get pinRecoveryWrongCode => 'الرمز غير صحيح، أو لم يوافق عليه ولي الأمر بعد، أو انتهت صلاحيته.';
+  String get pinRecoveryWrongCode =>
+      'الرمز غير صحيح، أو لم يوافق عليه ولي الأمر بعد، أو انتهت صلاحيته.';
 
   @override
   String get pinRecoveryDone => 'تم تغيير الرقم السري';
@@ -3641,7 +3837,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinRecoveryRequestTitle => 'طلب تغيير الرقم السري';
 
   @override
-  String get pinRecoveryRequestBody => 'طلب جهاز طفلك تغيير الرقم السري. وافق فقط إن كنت بجانبه أو طلبت ذلك بنفسك.';
+  String get pinRecoveryRequestBody =>
+      'طلب جهاز طفلك تغيير الرقم السري. وافق فقط إن كنت بجانبه أو طلبت ذلك بنفسك.';
 
   @override
   String get pinRecoveryApproveAction => 'موافقة وإظهار الرمز';
@@ -3655,13 +3852,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get guardianErrorUnlinkBeforePathChange => 'تعذّر إلغاء ربط ولي الأمر، فلم يتغير المسار. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
+  String get guardianErrorUnlinkBeforePathChange =>
+      'تعذّر إلغاء ربط ولي الأمر، فلم يتغير المسار. تأكد من الاتصال بالإنترنت وتسجيل الدخول ثم حاول مرة أخرى.';
 
   @override
-  String get resetPathUnlinksGuardianWarning => 'هذا الحساب مرتبط بولي أمر. تغيير المسار يلغي الربط، فلن يتابع ولي الأمر التقدم بعدها. يحتاج ذلك اتصالاً بالإنترنت.';
+  String get resetPathUnlinksGuardianWarning =>
+      'هذا الحساب مرتبط بولي أمر. تغيير المسار يلغي الربط، فلن يتابع ولي الأمر التقدم بعدها. يحتاج ذلك اتصالاً بالإنترنت.';
 
   @override
-  String get childErrorIdentityUpdateUnavailable => 'تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.';
+  String get childErrorIdentityUpdateUnavailable =>
+      'تعديل بيانات الطفل غير متاح حالياً. حاول لاحقاً.';
 
   @override
   String childAgeYears(int age, String ageText) {
@@ -3680,19 +3880,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get childEditIdentity => 'تعديل اسم الطفل وعمره';
 
   @override
-  String get childIdentitySaved => 'تم حفظ بيانات الطفل، وتظهر على جهازه بعد المزامنة التالية.';
+  String get childIdentitySaved =>
+      'تم حفظ بيانات الطفل، وتظهر على جهازه بعد المزامنة التالية.';
 
   @override
   String get kidsLinkGuardianTileTitle => 'ربط ولي الأمر';
 
   @override
-  String get kidsLinkGuardianTileSubtitle => 'يحتاج رمز ولي الأمر. بعد الربط يتابع ولي الأمر تقدّمك من جهازه.';
+  String get kidsLinkGuardianTileSubtitle =>
+      'يحتاج رمز ولي الأمر. بعد الربط يتابع ولي الأمر تقدّمك من جهازه.';
 
   @override
   String get parentDashboardTodaySummary => 'ملخص اليوم';
 
   @override
-  String get parentDashboardTodayEmpty => 'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.';
+  String get parentDashboardTodayEmpty =>
+      'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.';
 
   @override
   String parentDashboardTodayCompleted(String count) {
@@ -3730,7 +3933,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardDailyReminder => 'تذكير يومي للطفل';
 
   @override
-  String get parentDashboardReminderSubtitle => 'يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر';
+  String get parentDashboardReminderSubtitle =>
+      'يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر';
 
   @override
   String get parentDashboardRemoteFollowup => 'المتابعة عن بعد';
@@ -3742,7 +3946,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardManualEntry => 'إدخال يدوي';
 
   @override
-  String get parentDashboardNoRemoteChild => 'لا يوجد طفل مرتبط عن بعد حتى الآن.';
+  String get parentDashboardNoRemoteChild =>
+      'لا يوجد طفل مرتبط عن بعد حتى الآن.';
 
   @override
   String parentDashboardRemoteChildSummary(String ayahs, String points) {
@@ -3750,7 +3955,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String parentDashboardMemorizedSummary(String memorized, String total, String percent) {
+  String parentDashboardMemorizedSummary(
+    String memorized,
+    String total,
+    String percent,
+  ) {
     return '$memorized/$total آية محفوظة • $percent%';
   }
 
@@ -3799,7 +4008,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardRewardHint => 'مثال: وقت لعب إضافي';
 
   @override
-  String get parentDashboardRewardEmpty => 'أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.';
+  String get parentDashboardRewardEmpty =>
+      'أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.';
 
   @override
   String get parentDashboardRewardLocked => 'مقفلة';
@@ -3836,7 +4046,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanHeaderTitle => 'خطتك اليومية';
 
   @override
-  String dailyPlanHeaderSummary(int total, String totalText, String completedText) {
+  String dailyPlanHeaderSummary(
+    int total,
+    String totalText,
+    String completedText,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -3900,7 +4114,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanNoPlanTitle => 'لم تنشئ خطة حفظ بعد';
 
   @override
-  String get dailyPlanNoPlanSubtitle => 'أنشئ خطتك لتظهر لك هنا آيات الحفظ والمراجعة كل يوم.';
+  String get dailyPlanNoPlanSubtitle =>
+      'أنشئ خطتك لتظهر لك هنا آيات الحفظ والمراجعة كل يوم.';
 
   @override
   String get dailyPlanCreatePlanAction => 'أنشئ خطتك';
@@ -3918,7 +4133,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanDeleteRemoves => 'سيُحذف: الخطة الحالية فقط';
 
   @override
-  String get customPlanDeleteInstruction => 'اكتب \"حذف الخطة\" لتأكيد العملية.';
+  String get customPlanDeleteInstruction =>
+      'اكتب \"حذف الخطة\" لتأكيد العملية.';
 
   @override
   String get customPlanDeleteAction => 'تأكيد حذف الخطة';
@@ -3945,7 +4161,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanTargetUserTitle => 'الخطة لمن؟';
 
   @override
-  String get customPlanChildFeaturesNote => 'سيتم تفعيل ميزات ولي الأمر والمتابعة تلقائياً.';
+  String get customPlanChildFeaturesNote =>
+      'سيتم تفعيل ميزات ولي الأمر والمتابعة تلقائياً.';
 
   @override
   String get customPlanSurahRange => 'نطاق السور';
@@ -4078,7 +4295,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String customPlanEstimatedScope(int surahs, String surahsText, int ayahs, String ayahsText) {
+  String customPlanEstimatedScope(
+    int surahs,
+    String surahsText,
+    int ayahs,
+    String ayahsText,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       surahs,
       locale: localeName,
@@ -4127,7 +4349,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanPresetIntensive => 'مكثف';
 
   @override
-  String get customPlanPresetIntensiveDesc => '١٠ آيات/يوم • كل الأسبوع • ٥٠ دقيقة';
+  String get customPlanPresetIntensiveDesc =>
+      '١٠ آيات/يوم • كل الأسبوع • ٥٠ دقيقة';
 
   @override
   String get customPlanPresetIntensiveName => 'خطة مكثفة';
@@ -4136,7 +4359,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customPlanPresetJuzAmma => 'جزء عم';
 
   @override
-  String get customPlanPresetJuzAmmaDesc => 'من الناس إلى النبأ • ٣ آيات/يوم • ٢٠ دقيقة';
+  String get customPlanPresetJuzAmmaDesc =>
+      'من الناس إلى النبأ • ٣ آيات/يوم • ٢٠ دقيقة';
 
   @override
   String customPlanMinutesLimitHint(String minutes, String count) {
@@ -4155,7 +4379,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String customPlanSummaryLoad(int ayahsPerDay, String ayahsText, int daysPerWeek, String daysText) {
+  String customPlanSummaryLoad(
+    int ayahsPerDay,
+    String ayahsText,
+    int daysPerWeek,
+    String daysText,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       ayahsPerDay,
       locale: localeName,
@@ -4180,7 +4409,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String customPlanSummarySession(int minutes, String minutesText, String difficulty) {
+  String customPlanSummarySession(
+    int minutes,
+    String minutesText,
+    String difficulty,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       minutes,
       locale: localeName,
@@ -4201,7 +4434,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizationPathConfirmTitle => 'ماذا سيحدث بعد ذلك؟';
 
   @override
-  String get memorizationPathCanChangeLater => 'يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.';
+  String get memorizationPathCanChangeLater =>
+      'يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.';
 
   @override
   String get parentDashboardLinkAction => 'ربط';
@@ -4231,7 +4465,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestUpgradeLocalProgress => 'يبقى تقدمك المحلي على هذا الجهاز.';
 
   @override
-  String get parentDashboardGuestSubtitle => 'سجّل دخولك لإدارة حسابك والوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.';
+  String get parentDashboardGuestSubtitle =>
+      'سجّل دخولك لإدارة حسابك والوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.';
 
   @override
   String get kidsQuranTitle => 'قرآن الأطفال';
@@ -4290,7 +4525,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentDashboardSettingsSaved => 'تم حفظ الإعدادات';
 
   @override
-  String get guardianLinkingSlowHint => 'تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.';
+  String get guardianLinkingSlowHint =>
+      'تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.';
 
   @override
   String get bookmarkSaveError => 'حدث خطأ أثناء حفظ العلامة المرجعية';
@@ -4316,10 +4552,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hifzEvaluatingReview => 'جارِ تقييم المراجعة...';
 
   @override
-  String get hifzLeaveSessionMessage => 'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.';
+  String get hifzLeaveSessionMessage =>
+      'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.';
 
   @override
-  String get memorizationExitSessionMessage => 'هل تريد إكمال هذه الجلسة لاحقًا من حيث توقفت، أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
+  String get memorizationExitSessionMessage =>
+      'هل تريد إكمال هذه الجلسة لاحقًا من حيث توقفت، أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
 
   @override
   String get memorizationExitSessionTitle => 'الخروج من الجلسة؟';
@@ -4369,7 +4607,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hifzStartRecitation => 'ابدأ التسميع';
 
   @override
-  String get hifzAudioPlaybackFailed => 'فشل تشغيل الصوت. تحقق من الاتصال بالइंटترنت.';
+  String get hifzAudioPlaybackFailed =>
+      'فشل تشغيل الصوت. تحقق من الاتصال بالइंटترنت.';
 
   @override
   String get hifzReviewSaveFailed => 'فشل حفظ تقدم المراجعة. حاول مرة أخرى.';
@@ -4383,7 +4622,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsAudioPlaybackFailed => 'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.';
+  String get kidsAudioPlaybackFailed =>
+      'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.';
 
   @override
   String get smartCoachMemorizedReviewDueTitle => 'مراجعة تثبيت مستحقة';
@@ -4468,13 +4708,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationDailyReviewBody => 'مراجعة قصيرة، بالقدر الذي يناسبك اليوم.';
+  String get notificationDailyReviewBody =>
+      'مراجعة قصيرة، بالقدر الذي يناسبك اليوم.';
 
   @override
   String get notificationStreakMercyTitle => 'بداية جديدة بهدوء';
 
   @override
-  String get notificationStreakMercyBody => 'يمكنك العودة اليوم بخطوة صغيرة، وفي الوقت الذي يناسبك.';
+  String get notificationStreakMercyBody =>
+      'يمكنك العودة اليوم بخطوة صغيرة، وفي الوقت الذي يناسبك.';
 
   @override
   String notificationStreakAlertTitle(Object count) {
@@ -4487,28 +4729,33 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationStreakGentleBody => 'إن كان وقتك يسمح، خذ لحظة قصيرة مع القرآن.';
+  String get notificationStreakGentleBody =>
+      'إن كان وقتك يسمح، خذ لحظة قصيرة مع القرآن.';
 
   @override
   String get notificationSmartReminderTitle => 'وقت قراءتك المعتاد';
 
   @override
-  String get notificationSmartReminderBody => 'قد يناسبك الآن وقت قصير للقراءة. أكمل على مهل.';
+  String get notificationSmartReminderBody =>
+      'قد يناسبك الآن وقت قصير للقراءة. أكمل على مهل.';
 
   @override
   String get notificationChannelStreakGentleName => 'تذكير لطيف بالسلسلة';
 
   @override
-  String get notificationChannelStreakGentleDescription => 'تذكير هادئ قبل تنبيه حماية السلسلة';
+  String get notificationChannelStreakGentleDescription =>
+      'تذكير هادئ قبل تنبيه حماية السلسلة';
 
   @override
   String get notificationChannelSmartName => 'تذكير ذكي';
 
   @override
-  String get notificationChannelSmartDescription => 'تذكيرات في وقت قراءتك المعتاد';
+  String get notificationChannelSmartDescription =>
+      'تذكيرات في وقت قراءتك المعتاد';
 
   @override
-  String get notificationStreakAlertBody => 'يمكنك إضافة خطوة صغيرة اليوم. اختر ما يناسب وقتك وطاقتك.';
+  String get notificationStreakAlertBody =>
+      'يمكنك إضافة خطوة صغيرة اليوم. اختر ما يناسب وقتك وطاقتك.';
 
   @override
   String get notificationActionReviewStart => 'ابدأ المراجعة';
@@ -4565,67 +4812,78 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationChannelRemindersName => 'تذكيرات تالية';
 
   @override
-  String get notificationChannelRemindersDescription => 'تذكيرات يومية للمراجعة والحفظ';
+  String get notificationChannelRemindersDescription =>
+      'تذكيرات يومية للمراجعة والحفظ';
 
   @override
   String get notificationChannelStreakName => 'حماية السلسلة';
 
   @override
-  String get notificationChannelStreakDescription => 'تنبيهات للحفاظ على سلسلة أيام الحفظ';
+  String get notificationChannelStreakDescription =>
+      'تنبيهات للحفاظ على سلسلة أيام الحفظ';
 
   @override
   String get notificationChannelDailyAyahName => 'آية اليوم';
 
   @override
-  String get notificationChannelDailyAyahDescription => 'آية يومية من القرآن الكريم مع التدبر';
+  String get notificationChannelDailyAyahDescription =>
+      'آية يومية من القرآن الكريم مع التدبر';
 
   @override
   String get notificationChannelMorningAzkarName => 'أذكار الصباح';
 
   @override
-  String get notificationChannelMorningAzkarDescription => 'تذكيرات أذكار الصباح';
+  String get notificationChannelMorningAzkarDescription =>
+      'تذكيرات أذكار الصباح';
 
   @override
   String get notificationChannelEveningAzkarName => 'أذكار المساء';
 
   @override
-  String get notificationChannelEveningAzkarDescription => 'تذكيرات أذكار المساء';
+  String get notificationChannelEveningAzkarDescription =>
+      'تذكيرات أذكار المساء';
 
   @override
   String get notificationChannelDailyDuaName => 'دعاء اليوم';
 
   @override
-  String get notificationChannelDailyDuaDescription => 'تذكيرات دعاء اليوم والابتهالات';
+  String get notificationChannelDailyDuaDescription =>
+      'تذكيرات دعاء اليوم والابتهالات';
 
   @override
   String get notificationChannelKidsName => 'تسميع الأطفال';
 
   @override
-  String get notificationChannelKidsDescription => 'تذكيرات مراجعة وتسميع الأطفال';
+  String get notificationChannelKidsDescription =>
+      'تذكيرات مراجعة وتسميع الأطفال';
 
   @override
   String get notificationChannelKahfName => 'سورة الكهف';
 
   @override
-  String get notificationChannelKahfDescription => 'تذكيرات قراءة سورة الكهف يوم الجمعة';
+  String get notificationChannelKahfDescription =>
+      'تذكيرات قراءة سورة الكهف يوم الجمعة';
 
   @override
   String get notificationChannelTahajjudName => 'قيام الليل والوتر';
 
   @override
-  String get notificationChannelTahajjudDescription => 'تذكيرات قيام الليل في الثلث الأخير';
+  String get notificationChannelTahajjudDescription =>
+      'تذكيرات قيام الليل في الثلث الأخير';
 
   @override
   String get notificationChannelKhatmahName => 'ورد الختمة';
 
   @override
-  String get notificationChannelKhatmahDescription => 'تذكيرات متابعة ورد الختمة';
+  String get notificationChannelKhatmahDescription =>
+      'تذكيرات متابعة ورد الختمة';
 
   @override
   String get notificationChannelMilestonesName => 'احتفالات الإنجاز';
 
   @override
-  String get notificationChannelMilestonesDesc => 'احتفال عند إتمام حفظ جزء أو سورة أو ختمة كاملة';
+  String get notificationChannelMilestonesDesc =>
+      'احتفال عند إتمام حفظ جزء أو سورة أو ختمة كاملة';
 
   @override
   String notificationMilestoneJuzTitle(String juz) {
@@ -4648,34 +4906,40 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationMilestoneKhatmahTitle => '🎉 أتممت ختمة القرآن الكريم!';
+  String get notificationMilestoneKhatmahTitle =>
+      '🎉 أتممت ختمة القرآن الكريم!';
 
   @override
-  String get notificationMilestoneKhatmahBody => 'الحمد لله! أتممت ختمة كاملة من القرآن الكريم. تقبّل الله منك وجازاك بأفضل الجزاء.';
+  String get notificationMilestoneKhatmahBody =>
+      'الحمد لله! أتممت ختمة كاملة من القرآن الكريم. تقبّل الله منك وجازاك بأفضل الجزاء.';
 
   @override
   String get notificationMilestoneStreakTitle => '🔥 ٣٠ يوماً متتالياً!';
 
   @override
-  String get notificationMilestoneStreakBody => 'ثلاثون يوماً من المواظبة على المراجعة، ما شاء الله! أكمل سلسلة نورك.';
+  String get notificationMilestoneStreakBody =>
+      'ثلاثون يوماً من المواظبة على المراجعة، ما شاء الله! أكمل سلسلة نورك.';
 
   @override
   String get notificationChannelPrayerName => 'مواقيت الصلاة والأذان';
 
   @override
-  String get notificationChannelPrayerDescription => 'تنبيهات عند دخول وقت الصلاة';
+  String get notificationChannelPrayerDescription =>
+      'تنبيهات عند دخول وقت الصلاة';
 
   @override
   String get notificationChannelPrayerAthanName => 'صوت أذان الصلاة';
 
   @override
-  String get notificationChannelPrayerAthanDescription => 'تنبيهات الصلوات بمقطع الأذان المرفق';
+  String get notificationChannelPrayerAthanDescription =>
+      'تنبيهات الصلوات بمقطع الأذان المرفق';
 
   @override
   String get notificationChannelPrayerCompanionName => 'رفيق الصلاة ';
 
   @override
-  String get notificationChannelPrayerCompanionDescription => 'تنبيهات رفيق الصلاة  اللطيفة للتأكيد الذاتي';
+  String get notificationChannelPrayerCompanionDescription =>
+      'تنبيهات رفيق الصلاة  اللطيفة للتأكيد الذاتي';
 
   @override
   String get notificationActionCompanionConfirm => 'نعم، صليتها';
@@ -4714,25 +4978,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
 
   @override
-  String get notificationDailyAyahBody => 'خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿';
+  String get notificationDailyAyahBody =>
+      'خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿';
 
   @override
   String get notificationMorningAzkarTitle => 'صبحك الله بالخير ☀️';
 
   @override
-  String get notificationMorningAzkarBody => 'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك';
+  String get notificationMorningAzkarBody =>
+      'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك';
 
   @override
   String get notificationEveningAzkarTitle => 'مساء الخير والسكينة 🌙';
 
   @override
-  String get notificationEveningAzkarBody => 'يومك كان زحمة؟ خذ لحظة هدوء مع أذكار المساء واختم يومك بحفظ الله';
+  String get notificationEveningAzkarBody =>
+      'يومك كان زحمة؟ خذ لحظة هدوء مع أذكار المساء واختم يومك بحفظ الله';
 
   @override
   String get notificationKidsReviewTitle => 'نراجع معًا؟ 🌿';
 
   @override
-  String get notificationKidsReviewBody => 'يمكننا مراجعة آيات قليلة معًا، عندما تكون مستعدًا.';
+  String get notificationKidsReviewBody =>
+      'يمكننا مراجعة آيات قليلة معًا، عندما تكون مستعدًا.';
 
   @override
   String get notificationDailyDuaTitle => 'دعوة من القلب 🤲';
@@ -4752,25 +5020,29 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationWeeklyImpactQuietBody => 'أسبوع جديد وفرصة لبداية هادئة. اختر وقتًا قصيرًا يناسبك.';
+  String get notificationWeeklyImpactQuietBody =>
+      'أسبوع جديد وفرصة لبداية هادئة. اختر وقتًا قصيرًا يناسبك.';
 
   @override
   String get notificationSettingsWeeklyImpact => 'أثر الأسبوع (الجمعة)';
 
   @override
-  String get notificationFridayKahfBody => 'جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨';
+  String get notificationFridayKahfBody =>
+      'جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨';
 
   @override
   String get notificationTahajjudTitle => 'قيام الليل والدعاء المستجاب 🌙';
 
   @override
-  String get notificationTahajjudBody => 'ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲';
+  String get notificationTahajjudBody =>
+      'ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲';
 
   @override
   String get notificationKhatmahTitle => 'ورد الختمة اليومي 📖';
 
   @override
-  String get notificationKhatmahBody => 'يمكنك متابعة ورد الختمة اليوم، على مهل وبالقدر الذي يناسبك.';
+  String get notificationKhatmahBody =>
+      'يمكنك متابعة ورد الختمة اليوم، على مهل وبالقدر الذي يناسبك.';
 
   @override
   String notificationKhatmahBodyWithTarget(Object start, Object end) {
@@ -4783,43 +5055,50 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationPrayerBody => 'حي على الصلاة، حي على الفلاح.. بارك الله في صلاتك';
+  String get notificationPrayerBody =>
+      'حي على الصلاة، حي على الفلاح.. بارك الله في صلاتك';
 
   @override
   String get notificationSettingsFridayKahf => 'سورة الكهف (الجمعة)';
 
   @override
-  String get notificationSettingsFridayKahfSub => 'تذكير أسبوعي بقراءة سورة الكهف يوم الجمعة';
+  String get notificationSettingsFridayKahfSub =>
+      'تذكير أسبوعي بقراءة سورة الكهف يوم الجمعة';
 
   @override
   String get notificationSettingsTahajjud => 'قيام الليل والوتر';
 
   @override
-  String get notificationSettingsTahajjudSub => 'تذكير يومي في الثلث الأخير من الليل';
+  String get notificationSettingsTahajjudSub =>
+      'تذكير يومي في الثلث الأخير من الليل';
 
   @override
   String get notificationSettingsKhatmah => 'متابعة الختمة';
 
   @override
-  String get notificationSettingsKhatmahSub => 'تذكير يومي بالورد المحدد لختمتك الحالية';
+  String get notificationSettingsKhatmahSub =>
+      'تذكير يومي بالورد المحدد لختمتك الحالية';
 
   @override
   String get notificationSettingsPrayerTimes => 'مواقيت الصلاة';
 
   @override
-  String get notificationSettingsPrayerTimesSub => 'تنبيهات عند حلول أوقات الصلوات الخمس';
+  String get notificationSettingsPrayerTimesSub =>
+      'تنبيهات عند حلول أوقات الصلوات الخمس';
 
   @override
   String get notificationSettingsPrayerAthan => 'الأذان الكامل';
 
   @override
-  String get notificationSettingsPrayerAthanSub => 'تشغيل الأذان الكامل عند دخول وقت الصلاة مع إمكانية إيقافه';
+  String get notificationSettingsPrayerAthanSub =>
+      'تشغيل الأذان الكامل عند دخول وقت الصلاة مع إمكانية إيقافه';
 
   @override
   String get muezzinPickerTitle => 'اختيار المؤذن';
 
   @override
-  String get muezzinPickerSubtitle => 'اختر صوت الأذان المفضل لديك، واستمع لمعاينة قبل الحفظ';
+  String get muezzinPickerSubtitle =>
+      'اختر صوت الأذان المفضل لديك، واستمع لمعاينة قبل الحفظ';
 
   @override
   String get muezzinDefault => 'الأذان الافتراضي';
@@ -4848,7 +5127,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationSettingsPrayerNeedsTimes => 'أكمل إعداد مواقيت الصلاة واختر مدينتك أولًا';
+  String get notificationSettingsPrayerNeedsTimes =>
+      'أكمل إعداد مواقيت الصلاة واختر مدينتك أولًا';
 
   @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';
@@ -4917,7 +5197,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journeyHifzReviewDueTitle => 'مراجعة الحفظ مستحقة';
 
   @override
-  String get journeyHifzReviewDueDesc => 'راجع مواضع الحفظ المستحقة في مسار الحفظ.';
+  String get journeyHifzReviewDueDesc =>
+      'راجع مواضع الحفظ المستحقة في مسار الحفظ.';
 
   @override
   String get journeyFallbackSurah => 'السورة';
@@ -4939,31 +5220,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS1Cat => 'البدء';
 
   @override
-  String get tutorialS1Does => 'تبدأ تالية بتعريف قصير تختار فيه مسار الكبار أو الأطفال، ثم تنقلك إلى الرئيسية. يمكنك استخدامها كضيف وتسجيل الدخول لاحقًا.';
+  String get tutorialS1Does =>
+      'تبدأ تالية بتعريف قصير تختار فيه مسار الكبار أو الأطفال، ثم تنقلك إلى الرئيسية. يمكنك استخدامها كضيف وتسجيل الدخول لاحقًا.';
 
   @override
-  String get tutorialS1Open => 'يظهر عند أول فتح للتطبيق. بعد ذلك استخدم الشريط السفلي للتنقل بين الرئيسية والقرآن والحفظ والأذكار والتقدم.';
+  String get tutorialS1Open =>
+      'يظهر عند أول فتح للتطبيق. بعد ذلك استخدم الشريط السفلي للتنقل بين الرئيسية والقرآن والحفظ والأذكار والتقدم.';
 
   @override
-  String get tutorialS1Useful => 'مفيد للمستخدم الجديد الذي يريد فهم خريطة التطبيق قبل القراءة أو الحفظ.';
+  String get tutorialS1Useful =>
+      'مفيد للمستخدم الجديد الذي يريد فهم خريطة التطبيق قبل القراءة أو الحفظ.';
 
   @override
   String get tutorialS1Step1 => 'أنهِ صفحات التعريف، أو اضغط «تخطي».';
 
   @override
-  String get tutorialS1Step2 => 'اختر مسار الكبار أو الأطفال، ثم تابع كضيف أو سجّل الدخول.';
+  String get tutorialS1Step2 =>
+      'اختر مسار الكبار أو الأطفال، ثم تابع كضيف أو سجّل الدخول.';
 
   @override
-  String get tutorialS1Step3 => 'استخدم الشريط السفلي للانتقال بين الأقسام الأساسية.';
+  String get tutorialS1Step3 =>
+      'استخدم الشريط السفلي للانتقال بين الأقسام الأساسية.';
 
   @override
-  String get tutorialS1Tip1 => 'ابدأ من الرئيسية فهي تجمع قراءة اليوم وتقدمك والاختصارات.';
+  String get tutorialS1Tip1 =>
+      'ابدأ من الرئيسية فهي تجمع قراءة اليوم وتقدمك والاختصارات.';
 
   @override
-  String get tutorialS1Tip2 => 'يمكنك تغيير مسار الحفظ لاحقًا من الإعدادات ثم «القرآن والحفظ».';
+  String get tutorialS1Tip2 =>
+      'يمكنك تغيير مسار الحفظ لاحقًا من الإعدادات ثم «القرآن والحفظ».';
 
   @override
-  String get tutorialS1Note1 => 'تسجيل الدخول اختياري. بدونه يبقى تقدمك على هذا الجهاز.';
+  String get tutorialS1Note1 =>
+      'تسجيل الدخول اختياري. بدونه يبقى تقدمك على هذا الجهاز.';
 
   @override
   String get tutorialS1Note2 => 'الإعدادات خلف أيقونة الترس أعلى الرئيسية.';
@@ -4975,16 +5264,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS2Cat => 'البدء';
 
   @override
-  String get tutorialS2Does => 'تعرض الرئيسية الصلاة القادمة، وبطاقة رئيسية لما تفعله بعد ذلك، والورد اليومي، وسلسلتك ونقاطك، وآية اليوم، ونشاطك الأخير.';
+  String get tutorialS2Does =>
+      'تعرض الرئيسية الصلاة القادمة، وبطاقة رئيسية لما تفعله بعد ذلك، والورد اليومي، وسلسلتك ونقاطك، وآية اليوم، ونشاطك الأخير.';
 
   @override
   String get tutorialS2Open => 'اضغط تبويب الرئيسية في الشريط السفلي.';
 
   @override
-  String get tutorialS2Useful => 'أفضل نقطة انطلاق يومية: القراءة والحفظ والمتابعة في شاشة واحدة.';
+  String get tutorialS2Useful =>
+      'أفضل نقطة انطلاق يومية: القراءة والحفظ والمتابعة في شاشة واحدة.';
 
   @override
-  String get tutorialS2Step1 => 'اضغط البطاقة الرئيسية لاستكمال القراءة أو استئناف جلسة أو فتح خطة اليوم.';
+  String get tutorialS2Step1 =>
+      'اضغط البطاقة الرئيسية لاستكمال القراءة أو استئناف جلسة أو فتح خطة اليوم.';
 
   @override
   String get tutorialS2Step2 => 'اضغط «شيء آخر» لعرض خيارات أخرى.';
@@ -4993,16 +5285,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS2Step3 => 'افتح الإعدادات من أيقونة الترس أعلى الصفحة.';
 
   @override
-  String get tutorialS2Step4 => 'اضغط «اختيار المدينة» لتحديد مدينتك لمواقيت الصلاة.';
+  String get tutorialS2Step4 =>
+      'اضغط «اختيار المدينة» لتحديد مدينتك لمواقيت الصلاة.';
 
   @override
-  String get tutorialS2Tip1 => 'الحلقة تُظهر نسبة ما حفظته من القرآن كله فتنمو ببطء. النقاط السبع هي آخر سبعة أيام وتنتهي باليوم.';
+  String get tutorialS2Tip1 =>
+      'الحلقة تُظهر نسبة ما حفظته من القرآن كله فتنمو ببطء. النقاط السبع هي آخر سبعة أيام وتنتهي باليوم.';
 
   @override
-  String get tutorialS2Tip2 => 'اضغط الأيقونات تحت آية اليوم لمشاركتها أو فتحها في المصحف أو الاستماع إليها.';
+  String get tutorialS2Tip2 =>
+      'اضغط الأيقونات تحت آية اليوم لمشاركتها أو فتحها في المصحف أو الاستماع إليها.';
 
   @override
-  String get tutorialS2Note1 => 'بعض البطاقات تظهر فقط عند وجود بيانات، مثل ختمة بدأتها أو موضع قراءة محفوظ.';
+  String get tutorialS2Note1 =>
+      'بعض البطاقات تظهر فقط عند وجود بيانات، مثل ختمة بدأتها أو موضع قراءة محفوظ.';
 
   @override
   String get tutorialS2Note2 => 'يمكن إخفاء بطاقة الحساب بعلامة ✕.';
@@ -5014,34 +5310,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS3Cat => 'القرآن';
 
   @override
-  String get tutorialS3Does => 'يعرض تبويب القرآن السور والأجزاء وعلاماتك المرجعية. ويعرض القارئ صفحة المصحف بألوان التجويد مع الصوت والعلامات ووضع التركيز.';
+  String get tutorialS3Does =>
+      'يعرض تبويب القرآن السور والأجزاء وعلاماتك المرجعية. ويعرض القارئ صفحة المصحف بألوان التجويد مع الصوت والعلامات ووضع التركيز.';
 
   @override
-  String get tutorialS3Open => 'اضغط تبويب القرآن ثم اختر سورة أو جزءًا. ويمكنك فتح ورد اليوم من الرئيسية.';
+  String get tutorialS3Open =>
+      'اضغط تبويب القرآن ثم اختر سورة أو جزءًا. ويمكنك فتح ورد اليوم من الرئيسية.';
 
   @override
-  String get tutorialS3Useful => 'للورد اليومي، وللبحث عن آية، وللقراءة قبل جلسة الحفظ.';
+  String get tutorialS3Useful =>
+      'للورد اليومي، وللبحث عن آية، وللقراءة قبل جلسة الحفظ.';
 
   @override
-  String get tutorialS3Step1 => 'اختر سورة من القائمة، أو استخدم مربع البحث في الأعلى.';
+  String get tutorialS3Step1 =>
+      'اختر سورة من القائمة، أو استخدم مربع البحث في الأعلى.';
 
   @override
   String get tutorialS3Step2 => 'اسحب لتقليب الصفحة.';
 
   @override
-  String get tutorialS3Step3 => 'اضغط على الآية مطولًا للاستماع إليها أو نسخها أو وضع علامة أو مشاركتها أو بدء حفظها.';
+  String get tutorialS3Step3 =>
+      'اضغط على الآية مطولًا للاستماع إليها أو نسخها أو وضع علامة أو مشاركتها أو بدء حفظها.';
 
   @override
-  String get tutorialS3Step4 => 'افتح القائمة (النقاط الثلاث) للانتقال إلى صفحة أو سورة أو جزء، أو اختيار القارئ، أو تشغيل ألوان التجويد وإيقافها، أو الدخول إلى وضع التركيز.';
+  String get tutorialS3Step4 =>
+      'افتح القائمة (النقاط الثلاث) للانتقال إلى صفحة أو سورة أو جزء، أو اختيار القارئ، أو تشغيل ألوان التجويد وإيقافها، أو الدخول إلى وضع التركيز.';
 
   @override
-  String get tutorialS3Step5 => 'ابقَ في الصفحة بضع ثوانٍ أثناء القراءة: تُحتسب مقروءة تلقائيًا.';
+  String get tutorialS3Step5 =>
+      'ابقَ في الصفحة بضع ثوانٍ أثناء القراءة: تُحتسب مقروءة تلقائيًا.';
 
   @override
   String get tutorialS3Tip1 => 'استمع إلى الآية قبل حفظها لتضبط النطق.';
 
   @override
-  String get tutorialS3Tip2 => 'بطاقة «أكمل القراءة» في تبويب القرآن تعيدك إلى آخر صفحة.';
+  String get tutorialS3Tip2 =>
+      'بطاقة «أكمل القراءة» في تبويب القرآن تعيدك إلى آخر صفحة.';
 
   @override
   String get tutorialS3Note1 => 'نص القرآن مضمّن في التطبيق فيُعرض دون اتصال.';
@@ -5056,13 +5360,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS4Cat => 'القرآن';
 
   @override
-  String get tutorialS4Does => 'ابحث عن سورة باسمها أو عن آية بكلماتها، واحفظ الآيات المهمة كعلامات مرجعية.';
+  String get tutorialS4Does =>
+      'ابحث عن سورة باسمها أو عن آية بكلماتها، واحفظ الآيات المهمة كعلامات مرجعية.';
 
   @override
-  String get tutorialS4Open => 'استخدم مربع البحث أعلى تبويب القرآن أو أيقونة البحث في الرئيسية. وللعلامات تبويب خاص في شاشة القرآن.';
+  String get tutorialS4Open =>
+      'استخدم مربع البحث أعلى تبويب القرآن أو أيقونة البحث في الرئيسية. وللعلامات تبويب خاص في شاشة القرآن.';
 
   @override
-  String get tutorialS4Useful => 'لجمع آيات المراجعة أو الآيات المتشابهة أو مواضع تريد الرجوع إليها.';
+  String get tutorialS4Useful =>
+      'لجمع آيات المراجعة أو الآيات المتشابهة أو مواضع تريد الرجوع إليها.';
 
   @override
   String get tutorialS4Step1 => 'اكتب اسم سورة أو كلمات من آية.';
@@ -5071,19 +5378,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS4Step2 => 'افتح السورة أو الآية من النتائج.';
 
   @override
-  String get tutorialS4Step3 => 'اضغط الآية مطولًا في القارئ واختر «إشارة مرجعية».';
+  String get tutorialS4Step3 =>
+      'اضغط الآية مطولًا في القارئ واختر «إشارة مرجعية».';
 
   @override
-  String get tutorialS4Step4 => 'افتح تبويب الإشارة المرجعية للرجوع إلى الآيات المحفوظة أو حذفها.';
+  String get tutorialS4Step4 =>
+      'افتح تبويب الإشارة المرجعية للرجوع إلى الآيات المحفوظة أو حذفها.';
 
   @override
-  String get tutorialS4Tip1 => 'ضع علامة عند بداية كل مقطع حفظ لتعود إليه بسرعة.';
+  String get tutorialS4Tip1 =>
+      'ضع علامة عند بداية كل مقطع حفظ لتعود إليه بسرعة.';
 
   @override
   String get tutorialS4Tip2 => 'البحث يتجاهل التشكيل فيمكنك الكتابة بدونه.';
 
   @override
-  String get tutorialS4Note1 => 'بحث الآيات يعرض ٥٠ نتيجة كحد أقصى: أضف كلمات لتضييقه.';
+  String get tutorialS4Note1 =>
+      'بحث الآيات يعرض ٥٠ نتيجة كحد أقصى: أضف كلمات لتضييقه.';
 
   @override
   String get tutorialS4Note2 => 'حذف علامة لا يؤثر في أي تقدم قراءة أو حفظ.';
@@ -5095,13 +5406,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS5Cat => 'الحفظ';
 
   @override
-  String get tutorialS5Does => 'يجمع تبويب الحفظ خطة اليوم والتدرب بالسورة واختبار الاستماع والمراجعة بالتسميع. وتمر كل آية بالتعلّم ثم الحفظ ثم التسميع.';
+  String get tutorialS5Does =>
+      'يجمع تبويب الحفظ خطة اليوم والتدرب بالسورة واختبار الاستماع والمراجعة بالتسميع. وتمر كل آية بالتعلّم ثم الحفظ ثم التسميع.';
 
   @override
-  String get tutorialS5Open => 'اضغط تبويب الحفظ. وعند أول استخدام تختار مسار الكبار أو الأطفال.';
+  String get tutorialS5Open =>
+      'اضغط تبويب الحفظ. وعند أول استخدام تختار مسار الكبار أو الأطفال.';
 
   @override
-  String get tutorialS5Useful => 'للحفظ المنهجي مع مراجعات متباعدة حتى يثبت ما تحفظه.';
+  String get tutorialS5Useful =>
+      'للحفظ المنهجي مع مراجعات متباعدة حتى يثبت ما تحفظه.';
 
   @override
   String get tutorialS5Step1 => 'أنشئ خطة، أو اختر سورة من «تدرّب بالسورة».';
@@ -5110,22 +5424,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS5Step2 => 'التعلّم: استمع إلى الآية واقرأها.';
 
   @override
-  String get tutorialS5Step3 => 'الحفظ: جرّب دون النظر، واستعن بالتلميحات (أول كلمة، أوائل الكلمات، إظهار الآية) عند الحاجة فقط.';
+  String get tutorialS5Step3 =>
+      'الحفظ: جرّب دون النظر، واستعن بالتلميحات (أول كلمة، أوائل الكلمات، إظهار الآية) عند الحاجة فقط.';
 
   @override
-  String get tutorialS5Step4 => 'التسميع: سجّل تلاوتك، أو قيّم نفسك بصدق إن لم يتوفر التعرّف على الكلام. ثم تُسمَّع مجموعة الآيات معًا.';
+  String get tutorialS5Step4 =>
+      'التسميع: سجّل تلاوتك، أو قيّم نفسك بصدق إن لم يتوفر التعرّف على الكلام. ثم تُسمَّع مجموعة الآيات معًا.';
 
   @override
-  String get tutorialS5Tip1 => 'التلميحات تُسجَّل وتؤثر في موعد عودة الآية للمراجعة.';
+  String get tutorialS5Tip1 =>
+      'التلميحات تُسجَّل وتؤثر في موعد عودة الآية للمراجعة.';
 
   @override
-  String get tutorialS5Tip2 => 'غيّر صرامة التحقق من التسميع من الإعدادات ثم «القرآن والحفظ» ثم «مستوى الدقة».';
+  String get tutorialS5Tip2 =>
+      'غيّر صرامة التحقق من التسميع من الإعدادات ثم «القرآن والحفظ» ثم «مستوى الدقة».';
 
   @override
-  String get tutorialS5Note1 => 'الخروج من الجلسة يسألك: أكمل لاحقًا أم تخلَّ عنها.';
+  String get tutorialS5Note1 =>
+      'الخروج من الجلسة يسألك: أكمل لاحقًا أم تخلَّ عنها.';
 
   @override
-  String get tutorialS5Note2 => 'إن لم يتوفر التعرّف على الكلام أو إذن الميكروفون فالتقييم الذاتي مسار معتمد.';
+  String get tutorialS5Note2 =>
+      'إن لم يتوفر التعرّف على الكلام أو إذن الميكروفون فالتقييم الذاتي مسار معتمد.';
 
   @override
   String get tutorialS6Title => 'الأذكار اليومية والعداد';
@@ -5134,31 +5454,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS6Cat => 'الأذكار';
 
   @override
-  String get tutorialS6Does => 'أذكار الصباح والمساء وأذكار عامة وأدعية، مع عداد تكرار وفهرس ومسبحة حرة وورد ذكي يتبع وقت اليوم.';
+  String get tutorialS6Does =>
+      'أذكار الصباح والمساء وأذكار عامة وأدعية، مع عداد تكرار وفهرس ومسبحة حرة وورد ذكي يتبع وقت اليوم.';
 
   @override
-  String get tutorialS6Open => 'اضغط تبويب الأذكار ثم اختر الصباح أو المساء أو الأذكار العامة أو الأدعية أو الورد الذكي أو المسبحة الحرة.';
+  String get tutorialS6Open =>
+      'اضغط تبويب الأذكار ثم اختر الصباح أو المساء أو الأذكار العامة أو الأدعية أو الورد الذكي أو المسبحة الحرة.';
 
   @override
-  String get tutorialS6Useful => 'للورد الصباحي والمسائي وجلسات التسبيح ومشاركة دعاء بسرعة.';
+  String get tutorialS6Useful =>
+      'للورد الصباحي والمسائي وجلسات التسبيح ومشاركة دعاء بسرعة.';
 
   @override
-  String get tutorialS6Step1 => 'اختر فئة؛ وتظهر فئة الوقت الحالي مميّزة في الأعلى.';
+  String get tutorialS6Step1 =>
+      'اختر فئة؛ وتظهر فئة الوقت الحالي مميّزة في الأعلى.';
 
   @override
-  String get tutorialS6Step2 => 'اضغط العداد مرة لكل تكرار؛ وينتقل إلى الذكر التالي عند الإتمام.';
+  String get tutorialS6Step2 =>
+      'اضغط العداد مرة لكل تكرار؛ وينتقل إلى الذكر التالي عند الإتمام.';
 
   @override
   String get tutorialS6Step3 => 'افتح الفهرس للانتقال إلى ذكر محدد.';
 
   @override
-  String get tutorialS6Step4 => 'غيّر حجم الخط، وانسخ الذكر أو شاركه عند الحاجة.';
+  String get tutorialS6Step4 =>
+      'غيّر حجم الخط، وانسخ الذكر أو شاركه عند الحاجة.';
 
   @override
   String get tutorialS6Step5 => 'عند الانتهاء أعد ضبط الجلسة أو ارجع.';
 
   @override
-  String get tutorialS6Tip1 => 'فعّل تذكيرات الصباح والمساء من الإعدادات ثم «الإشعارات».';
+  String get tutorialS6Tip1 =>
+      'فعّل تذكيرات الصباح والمساء من الإعدادات ثم «الإشعارات».';
 
   @override
   String get tutorialS6Tip2 => 'اضغط العداد مطولًا للتراجع عن آخر عدّة.';
@@ -5167,7 +5494,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS6Note1 => 'الأذكار مضمّنة في التطبيق وتعمل دون اتصال.';
 
   @override
-  String get tutorialS6Note2 => 'العدّادات لجلسة اليوم الحالي، وليست شهادة حفظ.';
+  String get tutorialS6Note2 =>
+      'العدّادات لجلسة اليوم الحالي، وليست شهادة حفظ.';
 
   @override
   String get tutorialS7Title => 'الخطة اليومية والمراجعة';
@@ -5176,13 +5504,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS7Cat => 'الحفظ';
 
   @override
-  String get tutorialS7Does => 'تقدّم خطتك كل يوم آيات جديدة ومراجعات. وتعود المراجعات بجدول يعتمد على جودة تسميعك فيثبت ما تحفظه.';
+  String get tutorialS7Does =>
+      'تقدّم خطتك كل يوم آيات جديدة ومراجعات. وتعود المراجعات بجدول يعتمد على جودة تسميعك فيثبت ما تحفظه.';
 
   @override
-  String get tutorialS7Open => 'الحفظ ثم «أكمل خطة اليوم»، أو البطاقة الرئيسية في الرئيسية.';
+  String get tutorialS7Open =>
+      'الحفظ ثم «أكمل خطة اليوم»، أو البطاقة الرئيسية في الرئيسية.';
 
   @override
-  String get tutorialS7Useful => 'لحفظ متدرج مع مراجعة ذكية بدل الاعتماد على الذاكرة وحدها.';
+  String get tutorialS7Useful =>
+      'لحفظ متدرج مع مراجعة ذكية بدل الاعتماد على الذاكرة وحدها.';
 
   @override
   String get tutorialS7Step1 => 'افتح «أكمل خطة اليوم» من تبويب الحفظ.';
@@ -5191,25 +5522,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS7Step2 => 'أتمم آيات اليوم الجديدة.';
 
   @override
-  String get tutorialS7Step3 => 'ابدأ «مراجعة بالتسميع» عندما تستحق آيات المراجعة: تعرض الشارة عددها.';
+  String get tutorialS7Step3 =>
+      'ابدأ «مراجعة بالتسميع» عندما تستحق آيات المراجعة: تعرض الشارة عددها.';
 
   @override
-  String get tutorialS7Step4 => 'افتح «تفاصيل خطة اليوم» لترى ما أُنجز وما بقي.';
+  String get tutorialS7Step4 =>
+      'افتح «تفاصيل خطة اليوم» لترى ما أُنجز وما بقي.';
 
   @override
-  String get tutorialS7Step5 => 'جرّب «اختبار الاستماع» بعد حفظ بضع آيات: يشغّل آية ويطلب منك ذكر سورتها أو إكمالها.';
+  String get tutorialS7Step5 =>
+      'جرّب «اختبار الاستماع» بعد حفظ بضع آيات: يشغّل آية ويطلب منك ذكر سورتها أو إكمالها.';
 
   @override
-  String get tutorialS7Tip1 => 'قيّم نفسك بصدق: فهو يحدد قوة الآية وموعد عودتها.';
+  String get tutorialS7Tip1 =>
+      'قيّم نفسك بصدق: فهو يحدد قوة الآية وموعد عودتها.';
 
   @override
-  String get tutorialS7Tip2 => 'إن بدت الخطة ثقيلة فخفّض عدد الآيات اليومية من «إعدادات الخطة».';
+  String get tutorialS7Tip2 =>
+      'إن بدت الخطة ثقيلة فخفّض عدد الآيات اليومية من «إعدادات الخطة».';
 
   @override
-  String get tutorialS7Note1 => 'في أيام الراحة (حسب أيام الأسبوع المحددة) تحصل على المراجعات فقط.';
+  String get tutorialS7Note1 =>
+      'في أيام الراحة (حسب أيام الأسبوع المحددة) تحصل على المراجعات فقط.';
 
   @override
-  String get tutorialS7Note2 => 'يحتاج اختبار الاستماع إلى خمس آيات محفوظة على الأقل.';
+  String get tutorialS7Note2 =>
+      'يحتاج اختبار الاستماع إلى خمس آيات محفوظة على الأقل.';
 
   @override
   String get tutorialS8Title => 'إعداد خطتك';
@@ -5218,31 +5556,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS8Cat => 'الحفظ';
 
   @override
-  String get tutorialS8Does => 'أنشئ خطتك من قالب سريع أو من الصفر: الاسم ونطاق السور والآيات اليومية وأيام الأسبوع ومدة الجلسة والصعوبة والمراجعات.';
+  String get tutorialS8Does =>
+      'أنشئ خطتك من قالب سريع أو من الصفر: الاسم ونطاق السور والآيات اليومية وأيام الأسبوع ومدة الجلسة والصعوبة والمراجعات.';
 
   @override
-  String get tutorialS8Open => 'الحفظ ثم «أنشئ خطتك»، أو «إعدادات الخطة» لاحقًا.';
+  String get tutorialS8Open =>
+      'الحفظ ثم «أنشئ خطتك»، أو «إعدادات الخطة» لاحقًا.';
 
   @override
-  String get tutorialS8Useful => 'لهدف محدد مثل حفظ جزء بعينه، أو لتنظيم حفظ طفل.';
+  String get tutorialS8Useful =>
+      'لهدف محدد مثل حفظ جزء بعينه، أو لتنظيم حفظ طفل.';
 
   @override
-  String get tutorialS8Step1 => 'اختر قالبًا سريعًا (خفيف، متوازن، مكثف، جزء عم) أو املأ الحقول بنفسك.';
+  String get tutorialS8Step1 =>
+      'اختر قالبًا سريعًا (خفيف، متوازن، مكثف، جزء عم) أو املأ الحقول بنفسك.';
 
   @override
-  String get tutorialS8Step2 => 'اختر نطاق السور. إن اخترت «طفل» فستُنقل إلى مسار الأطفال، لأن خطط الأطفال تُدار منه.';
+  String get tutorialS8Step2 =>
+      'اختر نطاق السور. إن اخترت «طفل» فستُنقل إلى مسار الأطفال، لأن خطط الأطفال تُدار منه.';
 
   @override
-  String get tutorialS8Step3 => 'اضبط عدد الآيات اليومية وأيام الأسبوع ومدة الجلسة.';
+  String get tutorialS8Step3 =>
+      'اضبط عدد الآيات اليومية وأيام الأسبوع ومدة الجلسة.';
 
   @override
-  String get tutorialS8Step4 => 'اختر الصعوبة وشغّل المراجعة القريبة والبعيدة أو أوقفها.';
+  String get tutorialS8Step4 =>
+      'اختر الصعوبة وشغّل المراجعة القريبة والبعيدة أو أوقفها.';
 
   @override
   String get tutorialS8Step5 => 'احفظ الخطة وابدأها.';
 
   @override
-  String get tutorialS8Tip1 => 'مدة الجلسة تحدد الآيات الجديدة بنحو أربع دقائق للآية. وتظهر ملاحظة إن قصرت الدقائق عن هدفك.';
+  String get tutorialS8Tip1 =>
+      'مدة الجلسة تحدد الآيات الجديدة بنحو أربع دقائق للآية. وتظهر ملاحظة إن قصرت الدقائق عن هدفك.';
 
   @override
   String get tutorialS8Tip2 => 'ابدأ بقدر صغير لتبني العادة ثم زِد.';
@@ -5260,37 +5606,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS9Cat => 'الحفظ';
 
   @override
-  String get tutorialS9Does => 'رحلة بيوت حفظ للأطفال بنجوم ومستويات واستماع متكرر، مع أدوات لولي الأمر للمتابعة.';
+  String get tutorialS9Does =>
+      'رحلة بيوت حفظ للأطفال بنجوم ومستويات واستماع متكرر، مع أدوات لولي الأمر للمتابعة.';
 
   @override
-  String get tutorialS9Open => 'اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.';
+  String get tutorialS9Open =>
+      'اختر مسار الأطفال. إعداد الرمز اختياري، ويلزم فقط عند ربط ولي الأمر. تظهر أدوات ولي الأمر في الرئيسية بعد تسجيل الدخول.';
 
   @override
-  String get tutorialS9Useful => 'للأطفال والمبتدئين، أو لولي أمر يريد متابعة النجوم والجلسات والمكافآت.';
+  String get tutorialS9Useful =>
+      'للأطفال والمبتدئين، أو لولي أمر يريد متابعة النجوم والجلسات والمكافآت.';
 
   @override
-  String get tutorialS9Step1 => 'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.';
+  String get tutorialS9Step1 =>
+      'اختر مسار الأطفال، ثم أدخل اسم الطفل وعمره وسورة البداية. يمكنك تخطّي إعداد رمز ولي الأمر.';
 
   @override
-  String get tutorialS9Step2 => 'في رئيسية الأطفال اضغط «استكمل الآن»، واستمع إلى الآية ثلاث مرات، ثم جرّب من حفظك.';
+  String get tutorialS9Step2 =>
+      'في رئيسية الأطفال اضغط «استكمل الآن»، واستمع إلى الآية ثلاث مرات، ثم جرّب من حفظك.';
 
   @override
-  String get tutorialS9Step3 => 'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.';
+  String get tutorialS9Step3 =>
+      'إن لم يعمل التسجيل فاضغط «أتممت الحفظ بنفسي» ليؤكّد ولي الأمر الإتمام. إدخال الرمز اختياري.';
 
   @override
-  String get tutorialS9Step4 => 'تابع خريطة الرحلة: تُفتح البيوت واحدًا بعد آخر كلما أتممت المهام.';
+  String get tutorialS9Step4 =>
+      'تابع خريطة الرحلة: تُفتح البيوت واحدًا بعد آخر كلما أتممت المهام.';
 
   @override
-  String get tutorialS9Tip1 => 'حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.';
+  String get tutorialS9Tip1 =>
+      'حافظ على سرية الرمز. يلزم فقط عند ربط الطفل بولي الأمر، ويمكن تخطّيه في باقي الإجراءات.';
 
   @override
-  String get tutorialS9Tip2 => 'استخدم تبويب المصحف في رئيسية الأطفال ليقرأ الطفل في القرآن.';
+  String get tutorialS9Tip2 =>
+      'استخدم تبويب المصحف في رئيسية الأطفال ليقرأ الطفل في القرآن.';
 
   @override
   String get tutorialS9Note1 => 'ربط طفل من جهاز آخر يحتاج إلى حساب.';
 
   @override
-  String get tutorialS9Note2 => 'طفل واحد لكل جهاز: يستخدم بقية الأطفال أجهزتهم الخاصة مرتبطة بولي الأمر.';
+  String get tutorialS9Note2 =>
+      'طفل واحد لكل جهاز: يستخدم بقية الأطفال أجهزتهم الخاصة مرتبطة بولي الأمر.';
 
   @override
   String get tutorialS10Title => 'التقدم والإنجازات والشهادات';
@@ -5299,31 +5655,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS10Cat => 'التقدم';
 
   @override
-  String get tutorialS10Does => 'يعرض إحصاءات القراءة والحفظ وسلسلتك اليومية والإنجازات وشهاداتك، ويتيح مشاركة تقدمك.';
+  String get tutorialS10Does =>
+      'يعرض إحصاءات القراءة والحفظ وسلسلتك اليومية والإنجازات وشهاداتك، ويتيح مشاركة تقدمك.';
 
   @override
   String get tutorialS10Open => 'اضغط تبويب التقدم في الشريط السفلي.';
 
   @override
-  String get tutorialS10Useful => 'للمراجعة الأسبوعية والاحتفال بالإنجازات ومتابعة الاستمرار.';
+  String get tutorialS10Useful =>
+      'للمراجعة الأسبوعية والاحتفال بالإنجازات ومتابعة الاستمرار.';
 
   @override
-  String get tutorialS10Step1 => 'راجع البطاقات العليا لأيام السلسلة والصفحات المقروءة والنقاط والمراجعات.';
+  String get tutorialS10Step1 =>
+      'راجع البطاقات العليا لأيام السلسلة والصفحات المقروءة والنقاط والمراجعات.';
 
   @override
-  String get tutorialS10Step2 => 'افتح قسمي القراءة والحفظ لمعرفة الصفحات والآيات والسور والأجزاء.';
+  String get tutorialS10Step2 =>
+      'افتح قسمي القراءة والحفظ لمعرفة الصفحات والآيات والسور والأجزاء.';
 
   @override
-  String get tutorialS10Step3 => 'بدّل فلاتر الإنجازات بين الكل والقراءة والحفظ والسلسلة.';
+  String get tutorialS10Step3 =>
+      'بدّل فلاتر الإنجازات بين الكل والقراءة والحفظ والسلسلة.';
 
   @override
-  String get tutorialS10Step4 => 'اضغط إنجازًا مفتوحًا لعرض التفاصيل والمشاركة.';
+  String get tutorialS10Step4 =>
+      'اضغط إنجازًا مفتوحًا لعرض التفاصيل والمشاركة.';
 
   @override
-  String get tutorialS10Step5 => 'تظهر شهاداتك عند إتمام سورة أو جزء أو القرآن كله.';
+  String get tutorialS10Step5 =>
+      'تظهر شهاداتك عند إتمام سورة أو جزء أو القرآن كله.';
 
   @override
-  String get tutorialS10Tip1 => 'قراءة الختمة تُحتسب في سلسلتك لكن لا تدخل في إحصاءات القراءة الحرة.';
+  String get tutorialS10Tip1 =>
+      'قراءة الختمة تُحتسب في سلسلتك لكن لا تدخل في إحصاءات القراءة الحرة.';
 
   @override
   String get tutorialS10Tip2 => 'الشهادات تعتمد على حفظ حقيقي للآيات المطلوبة.';
@@ -5341,37 +5705,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS11Cat => 'الإعدادات';
 
   @override
-  String get tutorialS11Does => 'تجمع حسابك وملفك الشخصي واللغة والمظهر وإعدادات القرآن والحفظ ومواقيت الصلاة والإشعارات ومعلومات التطبيق.';
+  String get tutorialS11Does =>
+      'تجمع حسابك وملفك الشخصي واللغة والمظهر وإعدادات القرآن والحفظ ومواقيت الصلاة والإشعارات ومعلومات التطبيق.';
 
   @override
   String get tutorialS11Open => 'اضغط أيقونة الترس في الرئيسية.';
 
   @override
-  String get tutorialS11Useful => 'لتخصيص التطبيق وحماية تقدمك وضبط تذكيرات تناسب يومك.';
+  String get tutorialS11Useful =>
+      'لتخصيص التطبيق وحماية تقدمك وضبط تذكيرات تناسب يومك.';
 
   @override
-  String get tutorialS11Step1 => 'سجّل الدخول أو أنشئ حسابًا بالبريد وكلمة المرور لإدارة حسابك.';
+  String get tutorialS11Step1 =>
+      'سجّل الدخول أو أنشئ حسابًا بالبريد وكلمة المرور لإدارة حسابك.';
 
   @override
   String get tutorialS11Step2 => 'عدّل اسمك من الملف الشخصي.';
 
   @override
-  String get tutorialS11Step3 => 'اختر العربية أو English، والمظهر الفاتح أو الداكن أو الأسود الكامل أو حسب النظام.';
+  String get tutorialS11Step3 =>
+      'اختر العربية أو English، والمظهر الفاتح أو الداكن أو الأسود الكامل أو حسب النظام.';
 
   @override
-  String get tutorialS11Step4 => 'من «القرآن والحفظ» اضبط التشغيل في الخلفية ومستوى الدقة، أو أعد ضبط المسار.';
+  String get tutorialS11Step4 =>
+      'من «القرآن والحفظ» اضبط التشغيل في الخلفية ومستوى الدقة، أو أعد ضبط المسار.';
 
   @override
-  String get tutorialS11Step5 => 'من «مواقيت الصلاة» اختر مدينتك وطريقة الحساب.';
+  String get tutorialS11Step5 =>
+      'من «مواقيت الصلاة» اختر مدينتك وطريقة الحساب.';
 
   @override
-  String get tutorialS11Step6 => 'من «الإشعارات» فعّل أو أوقف تذكيرات المراجعة والسلسلة والأذكار والصلاة.';
+  String get tutorialS11Step6 =>
+      'من «الإشعارات» فعّل أو أوقف تذكيرات المراجعة والسلسلة والأذكار والصلاة.';
 
   @override
-  String get tutorialS11Tip1 => 'اكتب اسمك بالعربية ليظهر على الشهادات بشكل جميل.';
+  String get tutorialS11Tip1 =>
+      'اكتب اسمك بالعربية ليظهر على الشهادات بشكل جميل.';
 
   @override
-  String get tutorialS11Tip2 => 'أعد ضبط المسار من «القرآن والحفظ» للتبديل بين الكبار والأطفال.';
+  String get tutorialS11Tip2 =>
+      'أعد ضبط المسار من «القرآن والحفظ» للتبديل بين الكبار والأطفال.';
 
   @override
   String get tutorialS11Note1 => 'تحتاج الإشعارات إلى إذن النظام لتعمل.';
@@ -5386,67 +5759,85 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS12Cat => 'الإعدادات';
 
   @override
-  String get tutorialS12Does => 'نصوص القرآن والأذكار مضمّنة في التطبيق. وتُحفظ تقدّمك وخططك وإعداداتك على الجهاز، ومع الحساب يُزامَن بعضها عبر الإنترنت.';
+  String get tutorialS12Does =>
+      'نصوص القرآن والأذكار مضمّنة في التطبيق. وتُحفظ تقدّمك وخططك وإعداداتك على الجهاز، ومع الحساب يُزامَن بعضها عبر الإنترنت.';
 
   @override
-  String get tutorialS12Open => 'لا توجد شاشة منفصلة: يعمل تلقائيًا أثناء استخدامك التطبيق.';
+  String get tutorialS12Open =>
+      'لا توجد شاشة منفصلة: يعمل تلقائيًا أثناء استخدامك التطبيق.';
 
   @override
-  String get tutorialS12Useful => 'لفهم ما يعمل دون اتصال وتجنب فقدان تقدم مهم.';
+  String get tutorialS12Useful =>
+      'لفهم ما يعمل دون اتصال وتجنب فقدان تقدم مهم.';
 
   @override
   String get tutorialS12Step1 => 'اقرأ القرآن واستخدم الأذكار حتى دون إنترنت.';
 
   @override
-  String get tutorialS12Step2 => 'واصل القراءة والحفظ: يُحفظ التقدم على الجهاز.';
+  String get tutorialS12Step2 =>
+      'واصل القراءة والحفظ: يُحفظ التقدم على الجهاز.';
 
   @override
-  String get tutorialS12Step3 => 'سجّل الدخول عندما تريد ميزات الحساب أو استعادة تقدم حفظك.';
+  String get tutorialS12Step3 =>
+      'سجّل الدخول عندما تريد ميزات الحساب أو استعادة تقدم حفظك.';
 
   @override
-  String get tutorialS12Tip1 => 'على جهاز جديد سجّل الدخول لاستعادة ما يدعمه حسابك.';
+  String get tutorialS12Tip1 =>
+      'على جهاز جديد سجّل الدخول لاستعادة ما يدعمه حسابك.';
 
   @override
   String get tutorialS12Tip2 => 'اتصل بالإنترنت لتشغيل تلاوات غير مخزّنة.';
 
   @override
-  String get tutorialS12Note1 => 'مسح بيانات التطبيق من إعدادات النظام يزيل كل ما لم يُحفظ في حسابك.';
+  String get tutorialS12Note1 =>
+      'مسح بيانات التطبيق من إعدادات النظام يزيل كل ما لم يُحفظ في حسابك.';
 
   @override
-  String get tutorialS12Note2 => 'تسجيل الخروج يزيل خطة الختمة وسجلها من هذا الجهاز: فهما محفوظان هنا فقط.';
+  String get tutorialS12Note2 =>
+      'تسجيل الخروج يزيل خطة الختمة وسجلها من هذا الجهاز: فهما محفوظان هنا فقط.';
 
   @override
-  String get tutorialS14Note2 => 'قد تحتاج التنبيهات الدقيقة إلى إذن المنبّهات الدقيقة في إعدادات الهاتف.';
+  String get tutorialS14Note2 =>
+      'قد تحتاج التنبيهات الدقيقة إلى إذن المنبّهات الدقيقة في إعدادات الهاتف.';
 
   @override
   String get tutorialS14Note1 => 'تُحسب المواقيت على الجهاز فتعمل دون اتصال.';
 
   @override
-  String get tutorialS14Tip2 => 'إن لم تعرف الطريقة الأنسب فاختر ما تعتمده الجهة الرسمية في بلدك.';
+  String get tutorialS14Tip2 =>
+      'إن لم تعرف الطريقة الأنسب فاختر ما تعتمده الجهة الرسمية في بلدك.';
 
   @override
-  String get tutorialS14Tip1 => 'إن لم تكن مدينتك في القائمة فاستخدم موقعًا مخصصًا: انسخ إحداثياتها من تطبيق الخرائط.';
+  String get tutorialS14Tip1 =>
+      'إن لم تكن مدينتك في القائمة فاستخدم موقعًا مخصصًا: انسخ إحداثياتها من تطبيق الخرائط.';
 
   @override
-  String get tutorialS14Step4 => 'فعّل وضع سكينة الصلاة إن أردت أن تتوقف التلاوة عند دخول وقت الصلاة.';
+  String get tutorialS14Step4 =>
+      'فعّل وضع سكينة الصلاة إن أردت أن تتوقف التلاوة عند دخول وقت الصلاة.';
 
   @override
-  String get tutorialS14Step3 => 'فعّل تنبيهات الصلاة: تُفعَّل تلقائيًا أول مرة تحدد فيها موقعًا.';
+  String get tutorialS14Step3 =>
+      'فعّل تنبيهات الصلاة: تُفعَّل تلقائيًا أول مرة تحدد فيها موقعًا.';
 
   @override
-  String get tutorialS14Step2 => 'اختر طريقة الحساب (تلقائي حسب البلد افتراضيًا) وحساب وقت العصر.';
+  String get tutorialS14Step2 =>
+      'اختر طريقة الحساب (تلقائي حسب البلد افتراضيًا) وحساب وقت العصر.';
 
   @override
-  String get tutorialS14Step1 => 'اختر البلد والمدينة، أو «موقع مخصص» لإدخال الإحداثيات.';
+  String get tutorialS14Step1 =>
+      'اختر البلد والمدينة، أو «موقع مخصص» لإدخال الإحداثيات.';
 
   @override
-  String get tutorialS14Useful => 'لمعرفة مواقيت الصلاة أينما كنت مع تنبيه عند حلول الوقت.';
+  String get tutorialS14Useful =>
+      'لمعرفة مواقيت الصلاة أينما كنت مع تنبيه عند حلول الوقت.';
 
   @override
-  String get tutorialS14Open => 'في الرئيسية اضغط «اختيار المدينة»، أو افتح الإعدادات ثم «مواقيت الصلاة».';
+  String get tutorialS14Open =>
+      'في الرئيسية اضغط «اختيار المدينة»، أو افتح الإعدادات ثم «مواقيت الصلاة».';
 
   @override
-  String get tutorialS14Does => 'تعرض الرئيسية مواقيت الصلاة والصلاة القادمة، ويمكنها تنبيهك عند كل صلاة.';
+  String get tutorialS14Does =>
+      'تعرض الرئيسية مواقيت الصلاة والصلاة القادمة، ويمكنها تنبيهك عند كل صلاة.';
 
   @override
   String get tutorialS14Cat => 'الإعدادات';
@@ -5455,10 +5846,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS14Title => 'مواقيت الصلاة والتنبيهات';
 
   @override
-  String get tutorialS13Note2 => 'تُحفظ على هذا الجهاز فقط، وتُحذف عند تسجيل الخروج.';
+  String get tutorialS13Note2 =>
+      'تُحفظ على هذا الجهاز فقط، وتُحذف عند تسجيل الخروج.';
 
   @override
-  String get tutorialS13Note1 => 'الختمة منفصلة عن القراءة الحرة: لا يحرّك أحدهما موضع الآخر.';
+  String get tutorialS13Note1 =>
+      'الختمة منفصلة عن القراءة الحرة: لا يحرّك أحدهما موضع الآخر.';
 
   @override
   String get tutorialS13Tip2 => 'إن تأخرت فاستخدم خيارات اللوحة للتعويض.';
@@ -5467,25 +5860,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tutorialS13Tip1 => 'يمكنك إهداء الختمة لشخص عزيز عند إنشائها.';
 
   @override
-  String get tutorialS13Step4 => 'إن قرأت من مصحف ورقي فاستخدم «تسجيل» لإدخال الصفحات.';
+  String get tutorialS13Step4 =>
+      'إن قرأت من مصحف ورقي فاستخدم «تسجيل» لإدخال الصفحات.';
 
   @override
   String get tutorialS13Step3 => 'اقرأ ورد اليوم: تُسجَّل كل صفحة تقرؤها.';
 
   @override
-  String get tutorialS13Step2 => 'ابدأ الختمة واضغط «متابعة القراءة» في اللوحة.';
+  String get tutorialS13Step2 =>
+      'ابدأ الختمة واضغط «متابعة القراءة» في اللوحة.';
 
   @override
-  String get tutorialS13Step1 => 'اختر عدد الصفحات يوميًا أو المدة، ويمكنك تحديد صفحة البداية.';
+  String get tutorialS13Step1 =>
+      'اختر عدد الصفحات يوميًا أو المدة، ويمكنك تحديد صفحة البداية.';
 
   @override
-  String get tutorialS13Useful => 'لقراءة القرآن بانتظام بهدف واضح، كما في رمضان.';
+  String get tutorialS13Useful =>
+      'لقراءة القرآن بانتظام بهدف واضح، كما في رمضان.';
 
   @override
-  String get tutorialS13Open => 'في الرئيسية اضغط «ابدأ ختمتك»، أو افتح بطاقة الختمة بعد أن تبدأها.';
+  String get tutorialS13Open =>
+      'في الرئيسية اضغط «ابدأ ختمتك»، أو افتح بطاقة الختمة بعد أن تبدأها.';
 
   @override
-  String get tutorialS13Does => 'خطط لقراءة القرآن كاملًا بالوتيرة التي تختارها: صفحات يوميًا أو عدد أيام. وتتابع تالية تقدمك صفحة بصفحة وتحفظ سجل الختمات المكتملة.';
+  String get tutorialS13Does =>
+      'خطط لقراءة القرآن كاملًا بالوتيرة التي تختارها: صفحات يوميًا أو عدد أيام. وتتابع تالية تقدمك صفحة بصفحة وتحفظ سجل الختمات المكتملة.';
 
   @override
   String get tutorialS13Cat => 'القرآن';
@@ -5528,13 +5927,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get learningAlertReduceNewTitle => 'تقليل الحفظ الجديد';
 
   @override
-  String get learningAlertReduceNewSubtitle => 'حِملك الدراسي ثقيل، ركز على المراجعة';
+  String get learningAlertReduceNewSubtitle =>
+      'حِملك الدراسي ثقيل، ركز على المراجعة';
 
   @override
   String get learningAlertFocusWeakTitle => 'ركز على الآيات الصعبة';
 
   @override
-  String get learningAlertFocusWeakSubtitle => 'لديك آيات صعبة تحتاج مراجعة مكثفة';
+  String get learningAlertFocusWeakSubtitle =>
+      'لديك آيات صعبة تحتاج مراجعة مكثفة';
 
   @override
   String get learningAlertGenericTitle => 'تنبيه تعليمي';
@@ -5616,7 +6017,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get familyDashboardNoChildren => 'لم يتم ربط أي طفل بعد';
 
   @override
-  String get familyDashboardNoChildrenHint => 'على جهاز طفلك: افتح مسار الأطفال ← اضغط ⚙ ← «ربط ولي الأمر»، ثم امسح الرمز الظاهر أو اكتبه هنا.';
+  String get familyDashboardNoChildrenHint =>
+      'على جهاز طفلك: افتح مسار الأطفال ← اضغط ⚙ ← «ربط ولي الأمر»، ثم امسح الرمز الظاهر أو اكتبه هنا.';
 
   @override
   String get familyDashboardTodaySummaryTitle => 'اليوم في عائلتنا';
@@ -5686,7 +6088,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get childDetailActivityTitle => 'نشاط الطفل';
 
   @override
-  String get childDetailActivityNotReceived => 'لم تصل بيانات النشاط من جهاز الطفل بعد';
+  String get childDetailActivityNotReceived =>
+      'لم تصل بيانات النشاط من جهاز الطفل بعد';
 
   @override
   String childDetailActivityUpdatedAt(String date) {
@@ -5756,7 +6159,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2RecitationTitle => 'سمّع من حفظك';
 
   @override
-  String get v2RecitationSubtitle => 'النص مخفي الآن. سجّل تسميعك بدون تلميحات.';
+  String get v2RecitationSubtitle =>
+      'النص مخفي الآن. سجّل تسميعك بدون تلميحات.';
 
   @override
   String get v2StartRecording => 'بدء التسجيل';
@@ -5783,7 +6187,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2SelfGradeHesitated => 'تردّدت قليلاً';
 
   @override
-  String get v2SelfGradeHesitatedHint => 'سمّعتها مع توقف أو خطأ بسيط؛ ستُراجَع قريباً';
+  String get v2SelfGradeHesitatedHint =>
+      'سمّعتها مع توقف أو خطأ بسيط؛ ستُراجَع قريباً';
 
   @override
   String get v2SelfGradeForgot => 'لم أتذكّرها';
@@ -5792,7 +6197,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2SelfGradeForgotHint => 'سنعيدها معك الآن';
 
   @override
-  String get v2SelfGradeRevealHint => 'سمّع من حفظك أولاً، ثم اكشف النص وقارن قبل أن تقيّم.';
+  String get v2SelfGradeRevealHint =>
+      'سمّع من حفظك أولاً، ثم اكشف النص وقارن قبل أن تقيّم.';
 
   @override
   String get v2SelfGradeRevealAction => 'اعرض الآية وقارن';
@@ -5818,7 +6224,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get v2ManualRecallHint => 'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.';
+  String get v2ManualRecallHint =>
+      'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.';
 
   @override
   String get v2ManualBlockReviewAction => 'قيّم تسميع المقطع بنفسك';
@@ -5827,7 +6234,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2RemediationTitle => 'مراجعة قصيرة';
 
   @override
-  String get v2RemediationSubtitle => 'استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.';
+  String get v2RemediationSubtitle =>
+      'استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.';
 
   @override
   String get v2TryAgain => 'أحاول مرة أخرى';
@@ -5836,7 +6244,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2BlockReviewPendingTitle => 'مراجعة المقطع';
 
   @override
-  String get v2BlockReviewPendingSubtitle => 'أنهيت الآيات منفردة. الخطوة التالية تسميع المقطع كاملاً من الذاكرة.';
+  String get v2BlockReviewPendingSubtitle =>
+      'أنهيت الآيات منفردة. الخطوة التالية تسميع المقطع كاملاً من الذاكرة.';
 
   @override
   String get v2StartBlockReview => 'ابدأ مراجعة المقطع';
@@ -5874,13 +6283,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get closingSummaryReview => 'أتممتَ مراجعتك بثبات — ثبتها الله في قلبك.';
+  String get closingSummaryReview =>
+      'أتممتَ مراجعتك بثبات — ثبتها الله في قلبك.';
 
   @override
   String get v2ReviewSessionTitle => 'مراجعة الحفظ';
 
   @override
-  String get v2HintSchedulingNotice => 'التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.';
+  String get v2HintSchedulingNotice =>
+      'التلميحات تُسجَّل وتؤثر على جدولة مراجعتك القادمة.';
 
   @override
   String dailyPlanBacklogNotice(int count, String countText) {
@@ -5899,7 +6310,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanStartReview => 'ابدأ مراجعة اليوم';
 
   @override
-  String get dailyPlanReviewDayNotice => 'اليوم يوم مراجعة في خطتك: لا آيات جديدة، ثبّت ما حفظت.';
+  String get dailyPlanReviewDayNotice =>
+      'اليوم يوم مراجعة في خطتك: لا آيات جديدة، ثبّت ما حفظت.';
 
   @override
   String closingSummaryKhatmahWird(String start, String end) {
@@ -5942,7 +6354,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2PressRecord => 'اضغط التسجيل عندما تكون جاهزًا';
 
   @override
-  String get v2MicrophoneUnavailable => 'التعرّف على الكلام غير متوفر على هذا الجهاز. قيّم تسميعك بنفسك.';
+  String get v2MicrophoneUnavailable =>
+      'التعرّف على الكلام غير متوفر على هذا الجهاز. قيّم تسميعك بنفسك.';
 
   @override
   String get v2TryRecordingAgain => 'حاول التسجيل مجددًا';
@@ -5954,7 +6367,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2MicrophonePermissionDenied => 'يلزم السماح بالميكروفون للتسجيل.';
 
   @override
-  String get v2MicrophoneOpenSettings => 'الوصول للميكروفون محظور. افتح الإعدادات للسماح به.';
+  String get v2MicrophoneOpenSettings =>
+      'الوصول للميكروفون محظور. افتح الإعدادات للسماح به.';
 
   @override
   String get v2AudioPlaybackFailed => 'تعذر تشغيل صوت الآية. حاول مرة أخرى.';
@@ -6102,7 +6516,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get tarawihInvalidRange => 'تأكد أن الصفحتين بين ١ و٦٠٤ وأن البداية قبل النهاية';
+  String get tarawihInvalidRange =>
+      'تأكد أن الصفحتين بين ١ و٦٠٤ وأن البداية قبل النهاية';
 
   @override
   String streakDaysUnit(int count) {
@@ -6123,16 +6538,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2NoAyahsInRange => 'لا توجد آيات في النطاق المحدد.';
 
   @override
-  String get kidsRecordingUnavailable => 'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.';
+  String get kidsRecordingUnavailable =>
+      'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.';
 
   @override
-  String get kidsVoiceConsentDeclined => 'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.';
+  String get kidsVoiceConsentDeclined =>
+      'لن نستخدم الميكروفون. اطلب من ولي الأمر أن يؤكد حفظك.';
 
   @override
-  String get kidsRecordingNotCaptured => 'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.';
+  String get kidsRecordingNotCaptured =>
+      'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.';
 
   @override
-  String get kidsRecitationMismatch => 'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.';
+  String get kidsRecitationMismatch =>
+      'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.';
 
   @override
   String kidsRecitationCloseMatch(String matched, String total) {
@@ -6140,7 +6559,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get kidsJourneyCompleteHint => 'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
+  String get kidsJourneyCompleteHint =>
+      'أتممت الفاتحة وجزء عمّ كاملاً! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
   String get kidsHomeMissionInvalidTitle => 'اكتب مهمة من حرف إلى ١٢٠ حرفًا';
@@ -6188,10 +6608,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionNew => 'مهمة جديدة';
 
   @override
-  String get kidsHomeMissionWaitingGuardian => 'أخبرت ولي الأمر، وننتظر أن يراها';
+  String get kidsHomeMissionWaitingGuardian =>
+      'أخبرت ولي الأمر، وننتظر أن يراها';
 
   @override
-  String get kidsHomeMissionsPaused => 'أوقف ولي الأمر مهام البيت مؤقتًا، وستظهر هنا من جديد عند إعادة تشغيلها.';
+  String get kidsHomeMissionsPaused =>
+      'أوقف ولي الأمر مهام البيت مؤقتًا، وستظهر هنا من جديد عند إعادة تشغيلها.';
 
   @override
   String get kidsHomeMissionReported => 'أخبرنا الطفل أنه أنجزها';
@@ -6215,16 +6637,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHomeMissionSuggestShare => 'شارك لعبتك مع غيرك';
 
   @override
-  String get kidsHomeMissionSuggestLearning => 'احكِ لأسرتك شيئًا تعلّمته اليوم';
+  String get kidsHomeMissionSuggestLearning =>
+      'احكِ لأسرتك شيئًا تعلّمته اليوم';
 
   @override
   String get kidsHomeMissionSuggestBag => 'جهّز حقيبتك المدرسية لليوم التالي';
 
   @override
-  String get kidsAyahAlreadyCompleted => 'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
+  String get kidsAyahAlreadyCompleted =>
+      'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
 
   @override
-  String get accountSwitchOfflineDataDiscarded => 'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.';
+  String get accountSwitchOfflineDataDiscarded =>
+      'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.';
 
   @override
   String get startYourJourneyWithQuran => 'ابدأ رحلتك مع القرآن';
@@ -6236,13 +6661,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsJourneyBetaTitle => 'رحلة الحفظ الجديدة';
 
   @override
-  String get kidsJourneyBetaDescription => 'تفعيل مهمة اليوم والمراجعة المتباعدة مع إمكانية الرجوع.';
+  String get kidsJourneyBetaDescription =>
+      'تفعيل مهمة اليوم والمراجعة المتباعدة مع إمكانية الرجوع.';
 
   @override
   String get kidsGuidanceAudioTitle => 'صوت المرشد';
 
   @override
-  String get kidsGuidanceAudioDescription => 'إرشادات قصيرة لا تعمل أثناء تلاوة القرآن.';
+  String get kidsGuidanceAudioDescription =>
+      'إرشادات قصيرة لا تعمل أثناء تلاوة القرآن.';
 
   @override
   String get kidsSessionGoalTitle => 'مدة الجلسة المستهدفة';
@@ -6304,7 +6731,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahNoPlanTitle => 'لا توجد ختمة حالية';
 
   @override
-  String get khatmahNoPlanDescription => 'ابدأ ختمة جديدة بالوتيرة التي تناسبك.';
+  String get khatmahNoPlanDescription =>
+      'ابدأ ختمة جديدة بالوتيرة التي تناسبك.';
 
   @override
   String get khatmahPausedSummary => 'الختمة متوقفة مؤقتاً — استأنف للمتابعة';
@@ -6333,7 +6761,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahEndPlanAction => 'إنهاء الختمة';
 
   @override
-  String get khatmahChooseYourDailyReadingPaceToCompleteThe => 'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة';
+  String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
+      'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة';
 
   @override
   String get khatmahDailyPages => 'الصفحات اليومية';
@@ -6363,7 +6792,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahStartFromPage => 'ابدأ من الصفحة (اختياري)';
 
   @override
-  String get khatmahStartFromPageHint => 'بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة';
+  String get khatmahStartFromPageHint =>
+      'بعد الصفحة ٦٠٤ تكمل من الصفحة ١ حتى تتم الختمة';
 
   @override
   String khatmahDurationDays(int count, String countText) {
@@ -6411,13 +6841,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahStartKhatmah => 'ابدأ الختمة';
 
   @override
-  String get khatmahPhysicalMushafProgressSavedSuccessfully => 'تم تسجيل القراءة بنجاح';
+  String get khatmahPhysicalMushafProgressSavedSuccessfully =>
+      'تم تسجيل القراءة بنجاح';
 
   @override
   String get khatmahEndKhatmah => 'إنهاء الختمة';
 
   @override
-  String get khatmahAreYouSureYouWantToEndThis => 'هل أنت متأكد من رغبتك في إنهاء هذه الختمة؟ يمكنك دائماً البدء من جديد بهدوء وبدون أي حرج.';
+  String get khatmahAreYouSureYouWantToEndThis =>
+      'هل أنت متأكد من رغبتك في إنهاء هذه الختمة؟ يمكنك دائماً البدء من جديد بهدوء وبدون أي حرج.';
 
   @override
   String get khatmahCancel => 'إلغاء';
@@ -6446,7 +6878,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahUnableToLoadYourKhatmah => 'تعذر تحميل الختمة';
 
   @override
-  String get khatmahCheckYourConnectionAndTryAgain => 'تحقق من الاتصال وحاول مرة أخرى.';
+  String get khatmahCheckYourConnectionAndTryAgain =>
+      'تحقق من الاتصال وحاول مرة أخرى.';
 
   @override
   String get khatmahReload => 'إعادة المحاولة';
@@ -6481,13 +6914,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahCalmAdaptiveControls => 'خيارات التكيّف الهادئ';
 
   @override
-  String get khatmahEndDateRecalibratedSmoothly => 'تمت إعادة ضبط موعد الختام بهدوء وسكينة';
+  String get khatmahEndDateRecalibratedSmoothly =>
+      'تمت إعادة ضبط موعد الختام بهدوء وسكينة';
 
   @override
   String get khatmahCalmAdjust => 'تعديل هادئ';
 
   @override
-  String get khatmahAdded1PageDayMildCompensation => 'تمت إضافة صفحة يومياً للتعويض الخفيف';
+  String get khatmahAdded1PageDayMildCompensation =>
+      'تمت إضافة صفحة يومياً للتعويض الخفيف';
 
   @override
   String get khatmahMildBoost => 'تعويض خفيف';
@@ -6514,7 +6949,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahApplyAdjustment => 'تطبيق';
 
   @override
-  String get khatmahLoadFailureHint => 'تعذّرت قراءة بيانات الختمة على هذا الجهاز. أعد المحاولة.';
+  String get khatmahLoadFailureHint =>
+      'تعذّرت قراءة بيانات الختمة على هذا الجهاز. أعد المحاولة.';
 
   @override
   String get khatmahPause => 'إيقاف مؤقت';
@@ -6526,7 +6962,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahLogPhysicalMushafReading => 'تسجيل قراءة من المصحف';
 
   @override
-  String get khatmahEnterTheLastPageReadFromYourPhysical => 'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (١ - ٦٠٤):';
+  String get khatmahEnterTheLastPageReadFromYourPhysical =>
+      'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (١ - ٦٠٤):';
 
   @override
   String get khatmahPageNumber => 'رقم الصفحة';
@@ -6645,7 +7082,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahRedistributeAction => 'أعد التوزيع للحفاظ على الموعد';
 
   @override
-  String get khatmahRedistributed => 'أُعيد توزيع الصفحات للحفاظ على موعد الختام';
+  String get khatmahRedistributed =>
+      'أُعيد توزيع الصفحات للحفاظ على موعد الختام';
 
   @override
   String khatmahPaceBehind(int count, String countText) {
@@ -6713,13 +7151,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahEndError => 'تعذر إنهاء الختمة. حاول مرة أخرى.';
 
   @override
-  String get khatmahDedicationPreference => 'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى، والله أعلى وأعلم.';
+  String get khatmahDedicationPreference =>
+      'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى، والله أعلى وأعلم.';
 
   @override
   String get khatmahWriteYourOwnNote => 'اكتب ملاحظتك الشخصية هنا';
 
   @override
-  String get khatmahPhysicalRangeHint => 'سجّل نطاق الصفحات الذي قرأته من الصفحة التالية غير المقروءة.';
+  String get khatmahPhysicalRangeHint =>
+      'سجّل نطاق الصفحات الذي قرأته من الصفحة التالية غير المقروءة.';
 
   @override
   String khatmahConfirmRange(String start, String end) {
@@ -6747,7 +7187,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahSuggestedDua => 'دعاء عام مقترح بعد الختم';
 
   @override
-  String get khatmahDuaPendingReview => 'مراجعة النص والمصدر معلّقة. هذا دعاء عام مقترح، وليس صيغة مخصوصة لازمة للختم أو منسوبة للنبي ﷺ. لم يوثّق مصدر هذا النص بعد.';
+  String get khatmahDuaPendingReview =>
+      'مراجعة النص والمصدر معلّقة. هذا دعاء عام مقترح، وليس صيغة مخصوصة لازمة للختم أو منسوبة للنبي ﷺ. لم يوثّق مصدر هذا النص بعد.';
 
   @override
   String get khatmahGeneralGuidance => 'دعاء عام';
@@ -6821,10 +7262,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get khatmahHistoryEmpty => 'لا توجد شهادات ختمة محفوظة بعد.';
 
   @override
-  String get khatmahHistoryLoadError => 'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.';
+  String get khatmahHistoryLoadError =>
+      'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.';
 
   @override
-  String get khatmahHistoryCorrupt => 'بعض شهادات الختمة المحفوظة غير صالحة وتم حجبها. حاول مرة أخرى بعد استعادة بياناتك.';
+  String get khatmahHistoryCorrupt =>
+      'بعض شهادات الختمة المحفوظة غير صالحة وتم حجبها. حاول مرة أخرى بعد استعادة بياناتك.';
 
   @override
   String get khatmahReopenCertificate => 'فتح الشهادة مجدداً';
@@ -6975,10 +7418,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeSlotLastTenTitle => 'العشر الأواخر';
 
   @override
-  String get homeSlotLastTenBody => 'التمس ليلة القدر بمزيد من القراءة والقيام.';
+  String get homeSlotLastTenBody =>
+      'التمس ليلة القدر بمزيد من القراءة والقيام.';
 
   @override
-  String get homeSlotStreakBody => 'سجّل نشاط اليوم قبل منتصف الليل لتحافظ على سلسلتك.';
+  String get homeSlotStreakBody =>
+      'سجّل نشاط اليوم قبل منتصف الليل لتحافظ على سلسلتك.';
 
   @override
   String get homeSlotKhatmahTitle => 'الختمة قاربت الاكتمال';
@@ -7117,7 +7562,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerCustomLongitude => 'خط الطول';
 
   @override
-  String get prayerCustomHint => 'مدينتك غير موجودة؟ انسخ إحداثياتها من تطبيق الخرائط.';
+  String get prayerCustomHint =>
+      'مدينتك غير موجودة؟ انسخ إحداثياتها من تطبيق الخرائط.';
 
   @override
   String prayerCustomTimeZone(String zone) {
@@ -7128,13 +7574,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerCustomSave => 'حفظ الموقع';
 
   @override
-  String get prayerCustomSaved => 'حُفظ الموقع. تُحسب مواقيت الصلاة الآن لإحداثياتك.';
+  String get prayerCustomSaved =>
+      'حُفظ الموقع. تُحسب مواقيت الصلاة الآن لإحداثياتك.';
 
   @override
-  String get prayerCustomInvalid => 'تحقق من الإحداثيات: خط العرض بين ‎-٩٠‎ و‎٩٠‎، وخط الطول بين ‎-١٨٠‎ و‎١٨٠‎.';
+  String get prayerCustomInvalid =>
+      'تحقق من الإحداثيات: خط العرض بين ‎-٩٠‎ و‎٩٠‎، وخط الطول بين ‎-١٨٠‎ و‎١٨٠‎.';
 
   @override
-  String get prayerCustomTimeZoneUnavailable => 'تعذّر تحديد المنطقة الزمنية لجهازك.';
+  String get prayerCustomTimeZoneUnavailable =>
+      'تعذّر تحديد المنطقة الزمنية لجهازك.';
 
   @override
   String get prayerMadhabAuto => 'تلقائي حسب المدينة';
@@ -7165,7 +7614,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String homeAyahProgressCount(String currentText, int total, String totalText) {
+  String homeAyahProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -7178,7 +7631,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String homePageProgressCount(String currentText, int total, String totalText) {
+  String homePageProgressCount(
+    String currentText,
+    int total,
+    String totalText,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
@@ -7258,7 +7715,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeJourneyNotStartedTitle => 'لم تبدأ رحلتك بعد';
 
   @override
-  String get homeJourneyNotStartedBody => 'ابدأ الحفظ أو افتح ختمة، وسيتابع التطبيق تقدّمك الفعلي هنا';
+  String get homeJourneyNotStartedBody =>
+      'ابدأ الحفظ أو افتح ختمة، وسيتابع التطبيق تقدّمك الفعلي هنا';
 
   @override
   String get homeJourneyStartMemorization => 'ابدأ الحفظ';
@@ -7342,7 +7800,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeStartKhatmahTitle => 'ابدأ ختمتك القرآنية الآن';
 
   @override
-  String get homeStartKhatmahSubtitle => 'رتّب وِردك اليومي وحدد مدة الختمة لتنال أجر التلاوة المستمرة';
+  String get homeStartKhatmahSubtitle =>
+      'رتّب وِردك اليومي وحدد مدة الختمة لتنال أجر التلاوة المستمرة';
 
   @override
   String get homeStartKhatmahCta => 'إنشاء ختمة جديدة';
@@ -7351,7 +7810,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeAchievementSheetTitle => 'إنجازاتك ومستواك';
 
   @override
-  String get homeAchievementSheetSubtitle => 'واصل التلاوة والحفظ لترقية مستواك القرآني';
+  String get homeAchievementSheetSubtitle =>
+      'واصل التلاوة والحفظ لترقية مستواك القرآني';
 
   @override
   String get homePrayerTimesSheetTitle => 'مواقيت الصلاة';
@@ -7426,7 +7886,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerSerenityNotificationTitle => 'حان وقت اللقاء 🕌';
 
   @override
-  String get prayerSerenityNotificationBody => 'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله';
+  String get prayerSerenityNotificationBody =>
+      'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله';
 
   @override
   String get prayerCompanionEnable => 'تفعيل رفيق الصلاة ';
@@ -7446,28 +7907,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerCompanionCheckIn => 'تذكير بعد الصلاة';
 
   @override
-  String get prayerCompanionCheckInSub => 'يصل تذكير لطيف بعد ٢٠ دقيقة من وقت الصلاة.';
+  String get prayerCompanionCheckInSub =>
+      'يصل تذكير لطيف بعد ٢٠ دقيقة من وقت الصلاة.';
 
   @override
   String get prayerCompanionFollowUp => 'السماح بتذكير لاحق واحد';
 
   @override
-  String get prayerCompanionFollowUpSub => 'يُرسل مرة واحدة عند اختيار «سأصلي الآن» أو «ذكرني لاحقاً».';
+  String get prayerCompanionFollowUpSub =>
+      'يُرسل مرة واحدة عند اختيار «سأصلي الآن» أو «ذكرني لاحقاً».';
 
   @override
-  String get prayerCompanionLocalOnly => 'تُحفظ تأكيداتك على هذا الجهاز فقط ولا تُرفع إلى أي خدمة سحابية.';
+  String get prayerCompanionLocalOnly =>
+      'تُحفظ تأكيداتك على هذا الجهاز فقط ولا تُرفع إلى أي خدمة سحابية.';
 
   @override
   String get prayerCompanionClear => 'مسح تأكيدات الصلاة';
 
   @override
-  String get prayerCompanionClearSub => 'يحذف التأكيدات المحفوظة على هذا الجهاز.';
+  String get prayerCompanionClearSub =>
+      'يحذف التأكيدات المحفوظة على هذا الجهاز.';
 
   @override
   String get prayerCompanionClearConfirmTitle => 'مسح التأكيدات؟';
 
   @override
-  String get prayerCompanionClearConfirmBody => 'هل تريد مسح التأكيدات المحفوظة على هذا الجهاز؟';
+  String get prayerCompanionClearConfirmBody =>
+      'هل تريد مسح التأكيدات المحفوظة على هذا الجهاز؟';
 
   @override
   String get prayerCompanionClearConfirmButton => 'مسح';
@@ -7476,7 +7942,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerCompanionClearCancel => 'إلغاء';
 
   @override
-  String get prayerCompanionClearFailed => 'تعذّر مسح التأكيدات. حاول مرة أخرى.';
+  String get prayerCompanionClearFailed =>
+      'تعذّر مسح التأكيدات. حاول مرة أخرى.';
 
   @override
   String get prayerCompanionCleared => 'تم مسح التأكيدات.';
@@ -7506,22 +7973,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationExactAlarmRequest => 'تفعيل التنبيهات الدقيقة';
 
   @override
-  String get notificationExactAlarmExplanation => 'تضمن وصول تنبيه الصلاة والأذان في وقتهما بالضبط';
+  String get notificationExactAlarmExplanation =>
+      'تضمن وصول تنبيه الصلاة والأذان في وقتهما بالضبط';
 
   @override
-  String get notificationExactAlarmGranted => 'تم تفعيل دقة تنبيهات مواقيت الصلاة.';
+  String get notificationExactAlarmGranted =>
+      'تم تفعيل دقة تنبيهات مواقيت الصلاة.';
 
   @override
-  String get notificationExactAlarmDenied => 'ستصلك التنبيهات في وقتها تقريبًا بالوضع العادي، ويمكنك تفعيل الدقة الكاملة لاحقًا من إعدادات الهاتف.';
+  String get notificationExactAlarmDenied =>
+      'ستصلك التنبيهات في وقتها تقريبًا بالوضع العادي، ويمكنك تفعيل الدقة الكاملة لاحقًا من إعدادات الهاتف.';
 
   @override
-  String get notificationTestFailed => 'تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف.';
+  String get notificationTestFailed =>
+      'تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف.';
 
   @override
   String get notificationQuietHours => 'الساعات الهادئة';
 
   @override
-  String get notificationQuietHoursSub => 'ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير.';
+  String get notificationQuietHoursSub =>
+      'ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير.';
 
   @override
   String get notificationQuietHoursStart => 'البداية';
@@ -7533,7 +8005,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationSmartReminder => 'تذكير ذكي';
 
   @override
-  String get notificationSmartReminderSub => 'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.';
+  String get notificationSmartReminderSub =>
+      'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.';
 
   @override
   String memorizationHubReviewDueBadge(int count, String countText) {
@@ -7579,7 +8052,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizedPageSubtext => 'ابدأ جلسة حفظ لآيات الصفحة الحالية';
 
   @override
-  String get memorizedPageUnavailable => 'حفظ الصفحة متاح عندما تنتمي كل آياتها لسورة واحدة.';
+  String get memorizedPageUnavailable =>
+      'حفظ الصفحة متاح عندما تنتمي كل آياتها لسورة واحدة.';
 
   @override
   String customPlanDirectionForward(String from, String to) {
@@ -7626,7 +8100,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get progressAllAchievementsUnlocked => 'ما شاء الله! أتممت جميع الإنجازات، ثبّتك الله';
+  String get progressAllAchievementsUnlocked =>
+      'ما شاء الله! أتممت جميع الإنجازات، ثبّتك الله';
 
   @override
   String progressDueReviewsNudge(int count, String countText) {
@@ -7666,7 +8141,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyEffectiveDate => 'تاريخ النفاذ: ٩ أكتوبر ٢٠٢٦';
 
   @override
-  String get privacyIntro => 'توضح هذه السياسة كيف يتعامل تطبيق تالية القرآن مع بياناتك على الجهاز وفي الخدمات السحابية، وكيف تتحكم في الأذونات وتطلب حذف بياناتك.';
+  String get privacyIntro =>
+      'توضح هذه السياسة كيف يتعامل تطبيق تالية القرآن مع بياناتك على الجهاز وفي الخدمات السحابية، وكيف تتحكم في الأذونات وتطلب حذف بياناتك.';
 
   @override
   String get privacyManualOptionAction => 'افتح الحفظ لاستخدام التقييم الذاتي';
@@ -7675,121 +8151,149 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacyControllerTitle => '١. مقدمة والمسؤول عن البيانات';
 
   @override
-  String get privacyControllerBody => 'تالية القرآن (Talia Quran) تطبيق للقراءة والحفظ والمراجعة والأذكار. المطوّر والمسؤول عن معالجة بيانات التطبيق هو Sayed Saad. تنطبق هذه السياسة على تطبيق تالية وميزات الحساب وربط ولي الأمر. للاستفسارات وطلبات الخصوصية: elsayed.saad2014@feps.edu.eg.';
+  String get privacyControllerBody =>
+      'تالية القرآن (Talia Quran) تطبيق للقراءة والحفظ والمراجعة والأذكار. المطوّر والمسؤول عن معالجة بيانات التطبيق هو Sayed Saad. تنطبق هذه السياسة على تطبيق تالية وميزات الحساب وربط ولي الأمر. للاستفسارات وطلبات الخصوصية: elsayed.saad2014@feps.edu.eg.';
 
   @override
   String get privacyDataTitle => '٢. المعلومات التي نجمعها وأين تُحفظ';
 
   @override
-  String get privacyAccountData => 'الحساب: عند التسجيل نعالج البريد الإلكتروني وكلمة المرور عبر Supabase للمصادقة والتحقق واستعادة الحساب، ومعرّف الحساب ورموز الجلسة. تُستخدم بيانات الملف مثل الاسم أو لقب الطفل والعمر عند تقديمها لتخصيص التجربة وعرضها لولي الأمر المرتبط وإصدار الشهادات. لا تطلب إرسال كلمة المرور إلى الدعم.';
+  String get privacyAccountData =>
+      'الحساب: عند التسجيل نعالج البريد الإلكتروني وكلمة المرور عبر Supabase للمصادقة والتحقق واستعادة الحساب، ومعرّف الحساب ورموز الجلسة. تُستخدم بيانات الملف مثل الاسم أو لقب الطفل والعمر عند تقديمها لتخصيص التجربة وعرضها لولي الأمر المرتبط وإصدار الشهادات. لا تطلب إرسال كلمة المرور إلى الدعم.';
 
   @override
-  String get privacyProgressData => 'التقدم والتفضيلات: يحفظ التطبيق القراءة والعلامات المرجعية وخطط الحفظ والمراجعات وتقييماتها وسجل الجلسات والنقاط والسلاسل اليومية والإنجازات والشهادات وإعدادات الطفل وولي الأمر. تُحفظ بيانات التشغيل على الجهاز، وتُزامن الميزات السحابية المتاحة بيانات الحساب المرتبطة عند تسجيل الدخول وتوفر الاتصال. قد تُرسل العمليات المعلقة تلقائيًا عند عودة الاتصال. ليست كل التفضيلات أو الميزات المحلية قابلة للمزامنة.';
+  String get privacyProgressData =>
+      'التقدم والتفضيلات: يحفظ التطبيق القراءة والعلامات المرجعية وخطط الحفظ والمراجعات وتقييماتها وسجل الجلسات والنقاط والسلاسل اليومية والإنجازات والشهادات وإعدادات الطفل وولي الأمر. تُحفظ بيانات التشغيل على الجهاز، وتُزامن الميزات السحابية المتاحة بيانات الحساب المرتبطة عند تسجيل الدخول وتوفر الاتصال. قد تُرسل العمليات المعلقة تلقائيًا عند عودة الاتصال. ليست كل التفضيلات أو الميزات المحلية قابلة للمزامنة.';
 
   @override
-  String get privacyTechnicalData => 'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث. ينشئ التطبيق أيضًا معرّف تثبيت عشوائيًا على هذا الجهاز؛ ليس معرّفًا إعلانيًا ولا معرّف عتاد، ويُرسل مع تحديثات المتابعة الأسرية واستعادة رمز ولي الأمر ليميّز الخادم بين أجهزتك. يُنشأ معرّف جديد إذا مسحت بيانات التطبيق أو أعدت تثبيته.';
+  String get privacyTechnicalData =>
+      'البيانات التقنية والدعم: تتلقى خدمات الحساب والصوت بيانات الاتصال المعتادة مثل عنوان IP وتوقيت الطلب وبيانات تقنية لازمة لتشغيل الخدمة وأمنها. يسجّل التطبيق الأخطاء التقنية محليًا. إذا تواصلت معنا نعالج بريدك ومحتوى الرسالة وما تختار إرساله لحل الطلب. لا يتضمن الإصدار الحالي أدوات إعلانات أو تحليلات سلوكية تابعة لطرف ثالث. ينشئ التطبيق أيضًا معرّف تثبيت عشوائيًا على هذا الجهاز؛ ليس معرّفًا إعلانيًا ولا معرّف عتاد، ويُرسل مع تحديثات المتابعة الأسرية واستعادة رمز ولي الأمر ليميّز الخادم بين أجهزتك. يُنشأ معرّف جديد إذا مسحت بيانات التطبيق أو أعدت تثبيته.';
 
   @override
   String get privacyPurposeTitle => '٣. أغراض المعالجة';
 
   @override
-  String get privacyPurposeBody => 'نستخدم البيانات لتشغيل الحساب ومزامنة التقدم وإتاحة المراجعة والتذكيرات والشهادات وربط ولي الأمر الذي تختاره، ولحماية الخدمة والاستجابة للدعم. لا نبيع بياناتك، ولا نستخدم تقدمك أو بيانات الأطفال للإعلانات الموجّهة. طلب الأذونات منفصل عن قبول هذه السياسة؛ يمكنك رفض الأذونات الاختيارية ومواصلة استخدام الوظائف التي لا تحتاجها.';
+  String get privacyPurposeBody =>
+      'نستخدم البيانات لتشغيل الحساب ومزامنة التقدم وإتاحة المراجعة والتذكيرات والشهادات وربط ولي الأمر الذي تختاره، ولحماية الخدمة والاستجابة للدعم. لا نبيع بياناتك، ولا نستخدم تقدمك أو بيانات الأطفال للإعلانات الموجّهة. طلب الأذونات منفصل عن قبول هذه السياسة؛ يمكنك رفض الأذونات الاختيارية ومواصلة استخدام الوظائف التي لا تحتاجها.';
 
   @override
   String get privacyPermissionsTitle => '٤. أذونات الجهاز والصوت';
 
   @override
-  String get privacyMicrophone => 'الميكروفون: يُستخدم عند بدء التسميع للتعرف على قراءتك. يعمل عبر خدمة التعرف الصوتي المدمجة في نظام الجهاز؛ وقد يعالج الصوت مزوّد نظام التشغيل وفق سياساته الخاصة، ولا نضمن بقاء المعالجة دون اتصال. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا. قد تُحفظ نتيجة التقييم ضمن التقدم. يتوفر خيار التقييم الذاتي اليدوي؛ يمكنك إلغاء إذن الميكروفون والتعرف على الكلام من إعدادات الجهاز.';
+  String get privacyMicrophone =>
+      'الميكروفون: يُستخدم عند بدء التسميع للتعرف على قراءتك. يعمل عبر خدمة التعرف الصوتي المدمجة في نظام الجهاز؛ وقد يعالج الصوت مزوّد نظام التشغيل وفق سياساته الخاصة، ولا نضمن بقاء المعالجة دون اتصال. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا. قد تُحفظ نتيجة التقييم ضمن التقدم. يتوفر خيار التقييم الذاتي اليدوي؛ يمكنك إلغاء إذن الميكروفون والتعرف على الكلام من إعدادات الجهاز.';
 
   @override
-  String get privacyCamera => 'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط. يستخدم الماسح مكتبة Google ML Kit التي تقرأ الرمز على الجهاز، ولا تُرسل صور الكاميرا إلى Google. قد تجمع Google معلومات استخدام وتشخيص محدودة عن أداء المكتبة، مثل بيانات الجهاز والتطبيق، وفق سياساتها.';
+  String get privacyCamera =>
+      'الكاميرا: تُستخدم عند اختيار مسح رمز QR لربط ولي الأمر. يحلل الماسح صورة الكاميرا لقراءة الرمز؛ لا يحفظ التطبيق صور الكاميرا أو يرفعها. يُرسل رمز الربط إلى خدمة الحساب للتحقق وإتمام الربط. يستخدم الماسح مكتبة Google ML Kit التي تقرأ الرمز على الجهاز، ولا تُرسل صور الكاميرا إلى Google. قد تجمع Google معلومات استخدام وتشخيص محدودة عن أداء المكتبة، مثل بيانات الجهاز والتطبيق، وفق سياساتها.';
 
   @override
-  String get privacyNotifications => 'الإشعارات: تُجدول التذكيرات محليًا على الجهاز للحفظ والقراءة والأذكار ومواقيت الصلاة، ويمكن تعطيلها من التطبيق أو إعدادات النظام. قد تظهر معلومات التذكير على شاشة القفل حسب إعدادات جهازك.';
+  String get privacyNotifications =>
+      'الإشعارات: تُجدول التذكيرات محليًا على الجهاز للحفظ والقراءة والأذكار ومواقيت الصلاة، ويمكن تعطيلها من التطبيق أو إعدادات النظام. قد تظهر معلومات التذكير على شاشة القفل حسب إعدادات جهازك.';
 
   @override
-  String get privacyPhotos => 'الصور والملفات والمشاركة: تُستخدم عند اختيار حفظ شهادة أو بطاقة أو تصديرها أو مشاركتها. قد تحتوي الملفات على الاسم والتقدم الذي اخترت عرضه. تصبح النسخ التي تحفظها خارج التطبيق أو ترسلها لتطبيق آخر تحت سيطرتك وسياسة الجهة المستقبلة؛ حذف الحساب لا يمحوها.';
+  String get privacyPhotos =>
+      'الصور والملفات والمشاركة: تُستخدم عند اختيار حفظ شهادة أو بطاقة أو تصديرها أو مشاركتها. قد تحتوي الملفات على الاسم والتقدم الذي اخترت عرضه. تصبح النسخ التي تحفظها خارج التطبيق أو ترسلها لتطبيق آخر تحت سيطرتك وسياسة الجهة المستقبلة؛ حذف الحساب لا يمحوها.';
 
   @override
-  String get privacyLocation => 'مواقيت الصلاة: تُحسب على الجهاز باستخدام المدينة التي تختارها أو الإحداثيات التي تدخلها يدويًا. تُحفظ هذه الإعدادات محليًا. لا يطلب هذا الإصدار تحديد موقع GPS ولا يتتبع موقعك في الخلفية.';
+  String get privacyLocation =>
+      'مواقيت الصلاة: تُحسب على الجهاز باستخدام المدينة التي تختارها أو الإحداثيات التي تدخلها يدويًا. تُحفظ هذه الإعدادات محليًا. لا يطلب هذا الإصدار تحديد موقع GPS ولا يتتبع موقعك في الخلفية.';
 
   @override
   String get privacyChildrenTitle => '٥. خصوصية الأطفال وولي الأمر';
 
   @override
-  String get privacyChildrenBody => 'يتضمن التطبيق مسارًا للأطفال، وقد تتضمن بياناته لقب الطفل والعمر وتقدم الحفظ والتقييمات والجلسات والمكافآت. ندعو ولي الأمر للإشراف على استخدام الطفل للحساب والمزامنة والتسميع والمشاركة، واستخدام لقب بدلاً من الاسم الكامل وتجنب إرسال معلومات إضافية غير لازمة. ملفات الأطفال المحلية ليست حسابات مستقلة بالضرورة.';
+  String get privacyChildrenBody =>
+      'يتضمن التطبيق مسارًا للأطفال، وقد تتضمن بياناته لقب الطفل والعمر وتقدم الحفظ والتقييمات والجلسات والمكافآت. ندعو ولي الأمر للإشراف على استخدام الطفل للحساب والمزامنة والتسميع والمشاركة، واستخدام لقب بدلاً من الاسم الكامل وتجنب إرسال معلومات إضافية غير لازمة. ملفات الأطفال المحلية ليست حسابات مستقلة بالضرورة.';
 
   @override
-  String get privacyGuardianSharing => 'عند إتمام ربط حساب ولي الأمر بموافقتك، يستطيع ولي الأمر المرتبط الاطلاع عبر السحابة على بيانات الطفل المتاحة للمتابعة، ومنها الاسم أو اللقب والعمر والتقدم والجلسات والإنجازات، وإدارة المكافآت. الربط ليس محليًا فقط. يمكنك إلغاء الربط من أدوات ولي الأمر، وطلب مراجعة بيانات الطفل أو حذفها عبر بريد الخصوصية. لا يمحو إلغاء الربط النسخ التي سبق للمستلم حفظها.';
+  String get privacyGuardianSharing =>
+      'عند إتمام ربط حساب ولي الأمر بموافقتك، يستطيع ولي الأمر المرتبط الاطلاع عبر السحابة على بيانات الطفل المتاحة للمتابعة، ومنها الاسم أو اللقب والعمر والتقدم والجلسات والإنجازات، وإدارة المكافآت. الربط ليس محليًا فقط. يمكنك إلغاء الربط من أدوات ولي الأمر، وطلب مراجعة بيانات الطفل أو حذفها عبر بريد الخصوصية. لا يمحو إلغاء الربط النسخ التي سبق للمستلم حفظها.';
 
   @override
-  String get privacyChildrenSpeech => 'لا نعرض إعلانات موجهة للأطفال. التسميع الصوتي اختياري، وخدمة التعرف التابعة للنظام قد تعالج الصوت خارج الجهاز؛ يمكن لولي الأمر اختيار التقييم اليدوي وإلغاء الأذونات. لا يُعد ربط QR وحده إثباتًا للموافقة الأبوية القانونية.';
+  String get privacyChildrenSpeech =>
+      'لا نعرض إعلانات موجهة للأطفال. التسميع الصوتي اختياري، وخدمة التعرف التابعة للنظام قد تعالج الصوت خارج الجهاز؛ يمكن لولي الأمر اختيار التقييم اليدوي وإلغاء الأذونات. لا يُعد ربط QR وحده إثباتًا للموافقة الأبوية القانونية.';
 
   @override
   String get privacyProvidersTitle => '٦. الجهات التي قد تتلقى البيانات';
 
   @override
-  String get privacyProvidersBody => 'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه. قد تتلقى Google ML Kit، المستخدمة لمسح رمز QR، بيانات تشخيص محدودة.';
+  String get privacyProvidersBody =>
+      'Supabase يعالج بيانات الحساب والمصادقة والتقدم السحابي نيابة عن التطبيق. مزوّد التعرف على الكلام في جهازك قد يعالج صوت التسميع. EveryAyah يوفّر تسجيلات القرّاء عبر الإنترنت ويتلقى بيانات الطلب التقنية المعتادة عند البث أو التنزيل. قد تتلقى خدمات البريد بيانات الرسائل التي نرسلها للتحقق والدعم. يحصل ولي الأمر المرتبط أو التطبيق الذي تختاره للمشاركة على البيانات الموضحة أعلاه. قد تتلقى Google ML Kit، المستخدمة لمسح رمز QR، بيانات تشخيص محدودة.';
 
   @override
-  String get privacyProviderProtection => 'نقتصر على البيانات اللازمة للخدمة ونشترط على مزودي المعالجة حماية البيانات بما يتفق مع هذه السياسة ومتطلبات المتاجر والقانون الساري. خدمات نظام الجهاز والتطبيقات التي تختارها للمشاركة تخضع كذلك لسياساتها. قد نفصح بالقدر اللازم للامتثال لطلب قانوني ملزم أو لحماية الحقوق وأمن الخدمة.';
+  String get privacyProviderProtection =>
+      'نقتصر على البيانات اللازمة للخدمة ونشترط على مزودي المعالجة حماية البيانات بما يتفق مع هذه السياسة ومتطلبات المتاجر والقانون الساري. خدمات نظام الجهاز والتطبيقات التي تختارها للمشاركة تخضع كذلك لسياساتها. قد نفصح بالقدر اللازم للامتثال لطلب قانوني ملزم أو لحماية الحقوق وأمن الخدمة.';
 
   @override
   String get privacySecurityTitle => '٧. الحماية ونقل البيانات';
 
   @override
-  String get privacySecurityBody => 'تستخدم اتصالات الحساب HTTPS، وتعتمد صلاحيات السحابة على هوية الحساب وقواعد وصول تسمح بالمشاركة المحددة مع ولي الأمر المرتبط. تُحفظ بعض البيانات الحساسة، مثل رمز حماية ولي الأمر وبيانات حساب مختارة، باستخدام تخزين آمن؛ وتحفظ مكتبة المصادقة الجلسة على الجهاز لتسجيل الدخول المستمر. لا توجد وسيلة حماية مضمونة تمامًا. قد تُعالج بيانات الخدمات لدى مزودين خارج بلدك؛ ونتعامل مع النقل وفق الضمانات والمتطلبات القانونية المنطبقة.';
+  String get privacySecurityBody =>
+      'تستخدم اتصالات الحساب HTTPS، وتعتمد صلاحيات السحابة على هوية الحساب وقواعد وصول تسمح بالمشاركة المحددة مع ولي الأمر المرتبط. تُحفظ بعض البيانات الحساسة، مثل رمز حماية ولي الأمر وبيانات حساب مختارة، باستخدام تخزين آمن؛ وتحفظ مكتبة المصادقة الجلسة على الجهاز لتسجيل الدخول المستمر. لا توجد وسيلة حماية مضمونة تمامًا. قد تُعالج بيانات الخدمات لدى مزودين خارج بلدك؛ ونتعامل مع النقل وفق الضمانات والمتطلبات القانونية المنطبقة.';
 
   @override
   String get privacyRetentionTitle => '٨. الاحتفاظ بالبيانات';
 
   @override
-  String get privacyRetentionBody => 'يبقى تقدم الحساب وملفه في الخدمة النشطة ما دام الحساب قائمًا وحتى حذف البيانات أو الحساب. تبقى البيانات المحلية حتى حذفها أو تنظيف بيانات التطبيق. تُزال بيانات الحساب من قواعد التشغيل عند نجاح حذف الحساب؛ قد تبقى نسخ احتياطية أو سجلات أمنية لدى مزود الخدمة خلال دورة الاحتفاظ المحدودة، ولا تُستخدم لإعادة إنشاء الحساب. قد يحتفظ نظام جهازك بنسخة احتياطية وفق إعدادات النسخ الاحتياطي لديك؛ يمكنك إدارتها من إعدادات النظام. تُحفظ مراسلات الدعم بقدر ما يلزم لحل الطلب والالتزامات القانونية. للاستفسار عن المدة المنطبقة على بياناتك تواصل معنا؛ وإذا لزم الاحتفاظ ببيانات لسبب قانوني نوضح الفئات والسبب والمدة في الرد على طلبك.';
+  String get privacyRetentionBody =>
+      'يبقى تقدم الحساب وملفه في الخدمة النشطة ما دام الحساب قائمًا وحتى حذف البيانات أو الحساب. تبقى البيانات المحلية حتى حذفها أو تنظيف بيانات التطبيق. تُزال بيانات الحساب من قواعد التشغيل عند نجاح حذف الحساب؛ قد تبقى نسخ احتياطية أو سجلات أمنية لدى مزود الخدمة خلال دورة الاحتفاظ المحدودة، ولا تُستخدم لإعادة إنشاء الحساب. قد يحتفظ نظام جهازك بنسخة احتياطية وفق إعدادات النسخ الاحتياطي لديك؛ يمكنك إدارتها من إعدادات النظام. تُحفظ مراسلات الدعم بقدر ما يلزم لحل الطلب والالتزامات القانونية. للاستفسار عن المدة المنطبقة على بياناتك تواصل معنا؛ وإذا لزم الاحتفاظ ببيانات لسبب قانوني نوضح الفئات والسبب والمدة في الرد على طلبك.';
 
   @override
   String get privacyDeletionTitle => '٩. حذف الحساب والبيانات';
 
   @override
-  String get privacyDeletionBody => 'لحذف الحساب: افتح الإعدادات ← الحساب ← حذف الحساب، واقرأ التحذير ثم أكّد. يلزم اتصال بالإنترنت. يحذف ذلك حساب تسجيل الدخول وملفه وبياناته السحابية المرتبطة، بما فيها التقدم والخطط والعلامات المرجعية والشهادات وروابط ولي الأمر والمكافآت المرتبطة. ينهي الجلسة وينظف بيانات الحساب المحلية على هذا الجهاز، بما فيها التقدم والملفات المحلية التابعة للحساب والعمليات المعلقة. الحذف نهائي ولا يُعد تسجيل الخروج أو إلغاء الربط بديلاً عنه. تظهر رسالة النجاح بعد إتمام التنظيف؛ إذا ظهر طلب إعادة المحاولة فاتبع تعليماته.';
+  String get privacyDeletionBody =>
+      'لحذف الحساب: افتح الإعدادات ← الحساب ← حذف الحساب، واقرأ التحذير ثم أكّد. يلزم اتصال بالإنترنت. يحذف ذلك حساب تسجيل الدخول وملفه وبياناته السحابية المرتبطة، بما فيها التقدم والخطط والعلامات المرجعية والشهادات وروابط ولي الأمر والمكافآت المرتبطة. ينهي الجلسة وينظف بيانات الحساب المحلية على هذا الجهاز، بما فيها التقدم والملفات المحلية التابعة للحساب والعمليات المعلقة. الحذف نهائي ولا يُعد تسجيل الخروج أو إلغاء الربط بديلاً عنه. تظهر رسالة النجاح بعد إتمام التنظيف؛ إذا ظهر طلب إعادة المحاولة فاتبع تعليماته.';
 
   @override
-  String get privacyDeletionLimits => 'لا يحذف حذف حساب ولي الأمر حسابات الأطفال المستقلة أو حسابات أولياء الأمور الآخرين؛ تزال روابطها بالحساب المحذوف. لا تُحذف ملفات الشهادات أو البطاقات التي حفظتها أو شاركتها خارج التطبيق، أو النسخ المحلية على أجهزة أخرى بهذه العملية؛ نظّف بيانات التطبيق على تلك الأجهزة أيضًا. قد تبقى إعدادات الجهاز العامة والمحتوى القرآني المحمّل وبيانات الضيف التي يمكن فصلها عن الحساب.';
+  String get privacyDeletionLimits =>
+      'لا يحذف حذف حساب ولي الأمر حسابات الأطفال المستقلة أو حسابات أولياء الأمور الآخرين؛ تزال روابطها بالحساب المحذوف. لا تُحذف ملفات الشهادات أو البطاقات التي حفظتها أو شاركتها خارج التطبيق، أو النسخ المحلية على أجهزة أخرى بهذه العملية؛ نظّف بيانات التطبيق على تلك الأجهزة أيضًا. قد تبقى إعدادات الجهاز العامة والمحتوى القرآني المحمّل وبيانات الضيف التي يمكن فصلها عن الحساب.';
 
   @override
-  String get privacyExternalDeletion => 'يمكن طلب الحذف دون تثبيت التطبيق: أرسل من بريد الحساب إلى elsayed.saad2014@feps.edu.eg بعنوان «طلب حذف حساب تالية القرآن»، واذكر أنك تريد حذف الحساب والبيانات المرتبطة به. سنتحقق من ملكية الحساب قبل التنفيذ ونبلغك بإتمام الحذف أو أي احتفاظ قانوني واجب. لا ترسل كلمة المرور أو رموز التحقق. يمكنك استخدام البريد نفسه لطلب حذف فئات من البيانات مع الإبقاء على الحساب.';
+  String get privacyExternalDeletion =>
+      'يمكن طلب الحذف دون تثبيت التطبيق: أرسل من بريد الحساب إلى elsayed.saad2014@feps.edu.eg بعنوان «طلب حذف حساب تالية القرآن»، واذكر أنك تريد حذف الحساب والبيانات المرتبطة به. سنتحقق من ملكية الحساب قبل التنفيذ ونبلغك بإتمام الحذف أو أي احتفاظ قانوني واجب. لا ترسل كلمة المرور أو رموز التحقق. يمكنك استخدام البريد نفسه لطلب حذف فئات من البيانات مع الإبقاء على الحساب.';
 
   @override
   String get privacyRightsTitle => '١٠. خياراتك وحقوقك';
 
   @override
-  String get privacyRightsBody => 'يمكنك تعديل بيانات ملفك داخل التطبيق، وإلغاء الأذونات من إعدادات الجهاز، وتعطيل التذكيرات وإلغاء ربط ولي الأمر. بحسب القانون المنطبق، يمكنك طلب الوصول أو نسخة من بياناتك أو تصحيحها أو حذفها أو تقييد المعالجة أو الاعتراض عليها أو سحب الموافقة أو تقديم شكوى للجهة المختصة. تواصل معنا من بريد الحساب لتحديد طلبك؛ قد نطلب معلومات محدودة للتحقق من الهوية. لا يؤثر سحب الموافقة في المعالجة التي تمت قبله.';
+  String get privacyRightsBody =>
+      'يمكنك تعديل بيانات ملفك داخل التطبيق، وإلغاء الأذونات من إعدادات الجهاز، وتعطيل التذكيرات وإلغاء ربط ولي الأمر. بحسب القانون المنطبق، يمكنك طلب الوصول أو نسخة من بياناتك أو تصحيحها أو حذفها أو تقييد المعالجة أو الاعتراض عليها أو سحب الموافقة أو تقديم شكوى للجهة المختصة. تواصل معنا من بريد الحساب لتحديد طلبك؛ قد نطلب معلومات محدودة للتحقق من الهوية. لا يؤثر سحب الموافقة في المعالجة التي تمت قبله.';
 
   @override
   String get privacyChangesTitle => '١١. التغييرات على السياسة';
 
   @override
-  String get privacyChangesBody => 'نحدّث تاريخ النفاذ عند تعديل السياسة، ونُظهر إشعارًا مناسبًا بالتغييرات الجوهرية. إذا احتاج استخدام جديد لبياناتك إلى موافقة، نطلبها قبل بدء هذا الاستخدام. راجع السياسة عند تحديث التطبيق.';
+  String get privacyChangesBody =>
+      'نحدّث تاريخ النفاذ عند تعديل السياسة، ونُظهر إشعارًا مناسبًا بالتغييرات الجوهرية. إذا احتاج استخدام جديد لبياناتك إلى موافقة، نطلبها قبل بدء هذا الاستخدام. راجع السياسة عند تحديث التطبيق.';
 
   @override
   String get privacyContactTitle => '١٢. تواصل معنا';
 
   @override
-  String get privacyContactBody => 'المطوّر: Sayed Saad\nالتطبيق: تالية القرآن — Talia Quran\nللخصوصية وحذف الحساب وبيانات الأطفال: elsayed.saad2014@feps.edu.eg';
+  String get privacyContactBody =>
+      'المطوّر: Sayed Saad\nالتطبيق: تالية القرآن — Talia Quran\nللخصوصية وحذف الحساب وبيانات الأطفال: elsayed.saad2014@feps.edu.eg';
 
   @override
-  String get accountDeletionRemoteConfirmedCleanupFailed => 'تم حذف الحساب من السحابة، لكن تنظيف بيانات الجهاز لم يكتمل. أعد المحاولة لإتمام التنظيف.';
+  String get accountDeletionRemoteConfirmedCleanupFailed =>
+      'تم حذف الحساب من السحابة، لكن تنظيف بيانات الجهاز لم يكتمل. أعد المحاولة لإتمام التنظيف.';
 
   @override
-  String get accountDeletionSessionCleanupFailed => 'تم حذف الحساب، لكن إنهاء الجلسة على الجهاز لم يكتمل. أعد المحاولة.';
+  String get accountDeletionSessionCleanupFailed =>
+      'تم حذف الحساب، لكن إنهاء الجلسة على الجهاز لم يكتمل. أعد المحاولة.';
 
   @override
-  String get accountDeletionProgressMarkerFailed => 'تعذر حفظ حالة عملية الحذف بأمان. لم يبدأ حذف الحساب؛ أعد المحاولة.';
+  String get accountDeletionProgressMarkerFailed =>
+      'تعذر حفظ حالة عملية الحذف بأمان. لم يبدأ حذف الحساب؛ أعد المحاولة.';
 
   @override
-  String get accountDeletionUnavailable => 'خدمة حذف الحساب غير متاحة حاليًا. أعد المحاولة أو تواصل معنا عبر بريد الخصوصية.';
+  String get accountDeletionUnavailable =>
+      'خدمة حذف الحساب غير متاحة حاليًا. أعد المحاولة أو تواصل معنا عبر بريد الخصوصية.';
 
   @override
-  String get accountDeletionFailed => 'تعذر تأكيد اكتمال حذف الحساب. تحقق من الاتصال وأعد المحاولة؛ لا تفترض اكتمال الحذف حتى تظهر رسالة النجاح.';
+  String get accountDeletionFailed =>
+      'تعذر تأكيد اكتمال حذف الحساب. تحقق من الاتصال وأعد المحاولة؛ لا تفترض اكتمال الحذف حتى تظهر رسالة النجاح.';
 
   @override
   String get accountDeletionRetryTitle => 'إتمام حذف الحساب';
@@ -7807,37 +8311,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sourcesQuranTextTitle => 'نص القرآن الكريم';
 
   @override
-  String get sourcesQuranTextBody => 'الرسم العثماني برواية حفص، من مشروع تنزيل عبر خدمة alquran.cloud.';
+  String get sourcesQuranTextBody =>
+      'الرسم العثماني برواية حفص، من مشروع تنزيل عبر خدمة alquran.cloud.';
 
   @override
   String get sourcesMushafTitle => 'صفحات المصحف';
 
   @override
-  String get sourcesMushafBody => 'تُعرض خطوط صفحات المصحف (QCF) عبر مكتبة qcf_quran_plus بترخيص MIT.';
+  String get sourcesMushafBody =>
+      'تُعرض خطوط صفحات المصحف (QCF) عبر مكتبة qcf_quran_plus بترخيص MIT.';
 
   @override
   String get sourcesRecitationTitle => 'التلاوات';
 
   @override
-  String get sourcesRecitationBody => 'تُبث تلاوات الآيات من موقع EveryAyah.com.';
+  String get sourcesRecitationBody =>
+      'تُبث تلاوات الآيات من موقع EveryAyah.com.';
 
   @override
   String get sourcesAdhanTitle => 'الأذان';
 
   @override
-  String get sourcesAdhanBody => 'تسجيلات المؤذنين القابلة للاختيار مصدرها أرشيف الإنترنت (Internet Archive)، وتحمل علامة الملكية العامة 1.0.';
+  String get sourcesAdhanBody =>
+      'تسجيلات المؤذنين القابلة للاختيار مصدرها أرشيف الإنترنت (Internet Archive)، وتحمل علامة الملكية العامة 1.0.';
 
   @override
   String get sourcesKhatmDuaTitle => 'دعاء ختم القرآن';
 
   @override
-  String get sourcesKhatmDuaBody => 'من ملحق مصحف مجمع الملك فهد لطباعة المصحف الشريف.';
+  String get sourcesKhatmDuaBody =>
+      'من ملحق مصحف مجمع الملك فهد لطباعة المصحف الشريف.';
 
   @override
   String get sourcesOpenSourceTitle => 'تراخيص البرمجيات مفتوحة المصدر';
 
   @override
-  String get sourcesOpenSourceBody => 'التراخيص الكاملة للمكتبات المستخدمة في التطبيق.';
+  String get sourcesOpenSourceBody =>
+      'التراخيص الكاملة للمكتبات المستخدمة في التطبيق.';
 
   @override
   String sourcesOpenLink(String site) {
@@ -7845,7 +8355,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get authCloudUnavailable => 'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.';
+  String get authCloudUnavailable =>
+      'الحسابات غير متاحة في هذا الإصدار. يمكنك متابعة استخدام تالية كضيف.';
 
   @override
   String surahNamed(String name) {
@@ -7859,7 +8370,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hijriAdjustmentTitle => 'التاريخ الهجري';
 
   @override
-  String get hijriAdjustmentSubtitle => 'عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر.';
+  String get hijriAdjustmentSubtitle =>
+      'عدّل التاريخ الهجري ليوافق إعلان بلدك لبداية الشهر.';
 
   @override
   String hijriAdjustmentToday(String date) {
@@ -7867,22 +8379,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get guardianPinCreateReason => 'يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات.';
+  String get guardianPinCreateReason =>
+      'يلزم رمز من ٤ أرقام عند ربط الطفل بولي الأمر. يمكنك تخطّيه في باقي الإجراءات.';
 
   @override
-  String get childSetupPinOptionalHelp => 'اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر.';
+  String get childSetupPinOptionalHelp =>
+      'اختياري: أنشئه الآن أو عند ربط الطفل بولي الأمر.';
 
   @override
-  String get childSetupPinAlreadySet => 'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.';
+  String get childSetupPinAlreadySet =>
+      'رمز ولي الأمر محفوظ على هذا الجهاز من قبل، وسيبقى كما هو.';
 
   @override
   String get recitationVoiceDisclosureTitle => 'قبل بدء التسميع';
 
   @override
-  String get recitationVoiceDisclosureBody => 'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
+  String get recitationVoiceDisclosureBody =>
+      'لتقييم تلاوتك يستخدم التطبيق الميكروفون وخدمة التعرّف على الكلام المدمجة في نظام جهازك (مثل خدمة Google). قد ترسل هذه الخدمة الصوت إلى خوادم مزوّدها لتحويله إلى نص وفق سياساته. لا تحفظ تالية التسجيل الصوتي ولا ترسله إلى خوادمها. ما يُحفظ هو نتيجة التقييم فقط ضمن تقدّمك، ولا تحفظ جولات «سمّع لي» أي نتيجة. يمكنك بدلًا من ذلك تقييم تسميعك بنفسك دون ميكروفون، ويمكنك إلغاء إذن الميكروفون لاحقًا من إعدادات الجهاز.';
 
   @override
-  String get recitationVoiceDisclosureGuardian => 'إذا كان المستخدم طفلًا، فليقرأ وليّ الأمر هذا البيان ويقرّر.';
+  String get recitationVoiceDisclosureGuardian =>
+      'إذا كان المستخدم طفلًا، فليقرأ وليّ الأمر هذا البيان ويقرّر.';
 
   @override
   String get recitationVoiceDisclosureAccept => 'موافق، استخدم الميكروفون';
@@ -7894,7 +8411,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get practicePassageTitle => 'اختر مقطع التمرين';
 
   @override
-  String get practicePassageMessage => 'تمرّن على السورة كاملة أو اختر مقطعًا لهذه الجلسة.';
+  String get practicePassageMessage =>
+      'تمرّن على السورة كاملة أو اختر مقطعًا لهذه الجلسة.';
 
   @override
   String get practiceWholeSurah => 'السورة كاملة';
@@ -7944,7 +8462,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planDetailsMastery => 'إتقان الآيات التي تدربت عليها';
 
   @override
-  String get planDetailsMasteryHint => 'نسبة الآيات التي وصلت إلى الحفظ المتقن من الآيات التي تدربت عليها، بناءً على التدريب والمراجعة.';
+  String get planDetailsMasteryHint =>
+      'نسبة الآيات التي وصلت إلى الحفظ المتقن من الآيات التي تدربت عليها، بناءً على التدريب والمراجعة.';
 
   @override
   String get planDetailsNoAssessment => 'يظهر بعد بدء التدريب.';
@@ -7986,10 +8505,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planDetailsBySurah => 'التقدم لكل سورة';
 
   @override
-  String get planDetailsScopeHint => 'تشمل الأعداد الآيات الموجودة في خطتك بدءًا من آية البداية التي اخترتها.';
+  String get planDetailsScopeHint =>
+      'تشمل الأعداد الآيات الموجودة في خطتك بدءًا من آية البداية التي اخترتها.';
 
   @override
-  String get planDetailsTodayHint => 'قد تشمل جلسة اليوم مراجعات من سور أخرى سبق لك التدريب عليها.';
+  String get planDetailsTodayHint =>
+      'قد تشمل جلسة اليوم مراجعات من سور أخرى سبق لك التدريب عليها.';
 
   @override
   String get planDetailsStartSession => 'ابدأ الجلسة';
@@ -7998,7 +8519,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planDetailsEdit => 'تعديل الخطة';
 
   @override
-  String get planDetailsTodayDone => 'أكملت ورد اليوم. يظهر الورد التالي في يوم الحفظ القادم.';
+  String get planDetailsTodayDone =>
+      'أكملت ورد اليوم. يظهر الورد التالي في يوم الحفظ القادم.';
 
   @override
   String get planDetailsRestDay => 'يوم راحة: مراجعات فقط.';
@@ -8007,10 +8529,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planDetailsTodayEmpty => 'لا يوجد ورد مجدول اليوم.';
 
   @override
-  String get planDetailsTodayUnavailable => 'تعذر تحميل ورد اليوم. اسحب للتحديث قبل بدء الجلسة.';
+  String get planDetailsTodayUnavailable =>
+      'تعذر تحميل ورد اليوم. اسحب للتحديث قبل بدء الجلسة.';
 
   @override
-  String get planDetailsBacklog => 'الحفظ الجديد متوقف مؤقتًا حتى تستدرك المراجعات المستحقة.';
+  String get planDetailsBacklog =>
+      'الحفظ الجديد متوقف مؤقتًا حتى تستدرك المراجعات المستحقة.';
 
   @override
   String get planDetailsTodayNew => 'آيات الحفظ الجديدة اليوم';
@@ -8019,7 +8543,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planDetailsTodayReview => 'آيات المراجعة اليوم';
 
   @override
-  String get planDetailsInScope => 'يشمل التقدم ما حفظته سابقًا داخل نطاق هذه الخطة.';
+  String get planDetailsInScope =>
+      'يشمل التقدم ما حفظته سابقًا داخل نطاق هذه الخطة.';
 
   @override
   String get planDetailsRemaining => 'المتبقي للحفظ';
@@ -8043,7 +8568,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsDailyGuardianHint => 'هذه مهام اختارها لك وليّ أمرك.';
 
   @override
-  String get kidsDailySuggestedHint => 'اقتراحات تتجدد كل يوم، تناسب قراءتك وتدريبك.';
+  String get kidsDailySuggestedHint =>
+      'اقتراحات تتجدد كل يوم، تناسب قراءتك وتدريبك.';
 
   @override
   String get kidsDailyReadTwoPages => 'اقرأ صفحتين من المصحف وأكّد قراءتهما';
@@ -8058,7 +8584,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsDailyReviewAyah => 'راجع آية وسمّعها في جلسة المراجعة';
 
   @override
-  String get kidsHouseSizeHint => 'اختر من ١ إلى ١٠ آيات على جهاز الطفل. يطبَّق العدد الجديد على السور التي لم يبدأها بعد، وتحتفظ السور الجاري حفظها بتقسيم بيوتها.';
+  String get kidsHouseSizeHint =>
+      'اختر من ١ إلى ١٠ آيات على جهاز الطفل. يطبَّق العدد الجديد على السور التي لم يبدأها بعد، وتحتفظ السور الجاري حفظها بتقسيم بيوتها.';
 
   @override
   String get kidsHouseSizeSaved => 'تم حفظ عدد آيات المهمة.';
@@ -8067,13 +8594,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsHouseReviewTitle => 'تسميع آيات البيت';
 
   @override
-  String get kidsHouseReviewHint => 'نراجع ونسمّع كل آيات هذا البيت قبل فتح البيت التالي.';
+  String get kidsHouseReviewHint =>
+      'نراجع ونسمّع كل آيات هذا البيت قبل فتح البيت التالي.';
 
   @override
   String get kidsHouseReviewAction => 'ابدأ تسميع آيات البيت';
 
   @override
-  String get kidsGuardianAuditionHint => 'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري.';
+  String get kidsGuardianAuditionHint =>
+      'لولي الأمر: استمع أولًا إلى تسميع الطفل لهذه الآية بشكل صحيح، ثم أكّد التقييم. إدخال الرمز اختياري.';
 
   @override
   String kidsHouseReviewRemaining(String count) {
@@ -8084,7 +8613,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adultJourneyInviteTitle => 'خلّي رحلتك مناسبة لك';
 
   @override
-  String get adultJourneyInviteBody => 'اختر ما تريد التركيز عليه الآن. يمكنك تغييره أو تجاهله في أي وقت.';
+  String get adultJourneyInviteBody =>
+      'اختر ما تريد التركيز عليه الآن. يمكنك تغييره أو تجاهله في أي وقت.';
 
   @override
   String get adultJourneyInviteAction => 'خصص رحلتك';
@@ -8120,7 +8650,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adultJourneyExperienceLabel => 'كيف تصف نفسك؟ (اختياري)';
 
   @override
-  String get adultJourneyExperienceHint => 'يؤثر في الصياغة والاقتراحات فقط، ولا يغيّر حفظك أو خطتك.';
+  String get adultJourneyExperienceHint =>
+      'يؤثر في الصياغة والاقتراحات فقط، ولا يغيّر حفظك أو خطتك.';
 
   @override
   String get adultJourneyExperienceBeginner => 'مبتدئ';
@@ -8132,19 +8663,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adultJourneyExperienceReturning => 'عائد بعد انقطاع';
 
   @override
-  String get adultJourneyErrorSaveFailed => 'تعذّر الحفظ. اختيارك السابق باقٍ كما هو، يمكنك المحاولة مرة أخرى.';
+  String get adultJourneyErrorSaveFailed =>
+      'تعذّر الحفظ. اختيارك السابق باقٍ كما هو، يمكنك المحاولة مرة أخرى.';
 
   @override
-  String get adultJourneyErrorUnavailable => 'حسابك غير جاهز الآن. حاول بعد قليل.';
+  String get adultJourneyErrorUnavailable =>
+      'حسابك غير جاهز الآن. حاول بعد قليل.';
 
   @override
-  String get adultJourneyErrorUnsupported => 'تعذّر تعديل التفضيلات في هذا الإصدار.';
+  String get adultJourneyErrorUnsupported =>
+      'تعذّر تعديل التفضيلات في هذا الإصدار.';
 
   @override
   String get adultJourneyTodayTitle => 'كم من الوقت لديك اليوم؟';
 
   @override
-  String get adultJourneyTodayHint => 'نقترح ما يناسب وقتك. المدد تقريبية ولا تقطع أي جلسة.';
+  String get adultJourneyTodayHint =>
+      'نقترح ما يناسب وقتك. المدد تقريبية ولا تقطع أي جلسة.';
 
   @override
   String get adultJourneyFitTitle => 'مناسب لوقتك اليوم';
@@ -8158,7 +8693,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adultJourneyDurationUnavailable => 'المدة غير متاحة';
 
   @override
-  String get adultJourneyExceedsBudget => 'قد يحتاج أكثر من وقتك المختار، ويبقى ظاهرًا لأنه من أولوياتك.';
+  String get adultJourneyExceedsBudget =>
+      'قد يحتاج أكثر من وقتك المختار، ويبقى ظاهرًا لأنه من أولوياتك.';
 
   @override
   String get adultJourneyChangeTime => 'غيّر الوقت';
@@ -8194,13 +8730,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adultJourneyOpenAzkar => 'افتح الأذكار';
 
   @override
-  String get adultJourneyReturnTitleAbsence => 'أهلًا برجوعك، نبدأ بخطوة خفيفة؟';
+  String get adultJourneyReturnTitleAbsence =>
+      'أهلًا برجوعك، نبدأ بخطوة خفيفة؟';
 
   @override
   String get adultJourneyReturnTitleSelf => 'نبدأ بخطوة خفيفة؟';
 
   @override
-  String get adultJourneyReturnBody => 'خططك ومراجعاتك باقية كما هي. اختر ما يناسبك اليوم.';
+  String get adultJourneyReturnBody =>
+      'خططك ومراجعاتك باقية كما هي. اختر ما يناسبك اليوم.';
 
   @override
   String get adultJourneyReturnLight => 'بداية خفيفة اليوم';
@@ -8224,7 +8762,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsChangeJourneyTitle => 'تغيير رحلة الحفظ';
 
   @override
-  String get kidsChangeJourneyDescription => 'اختر رحلة أخرى، وسيبقى تقدمك محفوظًا.';
+  String get kidsChangeJourneyDescription =>
+      'اختر رحلة أخرى، وسيبقى تقدمك محفوظًا.';
 
   @override
   String get kidsJourneyPathTitle => 'مسار الحفظ';
@@ -8258,7 +8797,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsQuranJourneyJumpNo => 'ليس الآن';
 
   @override
-  String get kidsQuranJourneyComplete => 'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
+  String get kidsQuranJourneyComplete =>
+      'أتممت رحلة القرآن كلها! أخبر وليّ أمرك بهذا الإنجاز العظيم.';
 
   @override
   String get kidsHouseStatusNotStarted => 'لم تبدأ بعد';
@@ -8370,7 +8910,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trustSourcesTitle => 'مصادر المحتوى';
 
   @override
-  String get trustSourcesBody => 'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.';
+  String get trustSourcesBody =>
+      'لا يوجد في تالية أي نص ديني مولَّد. كل نص منقول كما هو من مصدر مسمّى، وما زال استكمال التوثيق جارياً لبعض الأذكار والأحاديث، كرابط المصدر ودرجة الحديث.';
 
   @override
   String trustSourcesMeta(String version, int count, String countText) {
@@ -8390,13 +8931,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trustVoiceTitle => 'صوتك';
 
   @override
-  String get trustVoiceBody => 'تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته.';
+  String get trustVoiceBody =>
+      'تالية لا تحتفظ بتسجيل صوتك ولا ترسله إلى خوادم تالية. يتم التعرّف على الكلام عبر خدمة النظام في جهازك (مثل Google)، وقد ترسل هذه الخدمة الصوت إلى مزوّدها وفق سياساته.';
 
   @override
   String get trustDataTitle => 'بياناتك';
 
   @override
-  String get trustDataBody => 'يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره.';
+  String get trustDataBody =>
+      'يمكنك استخدام تالية دون حساب. المزامنة اختيارية، وبيانات كل حساب معزولة عن غيره.';
 
   @override
   String get trustViewSources => 'عرض المصادر والتراخيص';
@@ -8510,7 +9053,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get ramadanTemplateTwoHint => 'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.';
+  String get ramadanTemplateTwoHint =>
+      'تبدأ بالأولى، وعند إتمامها نقترح الثانية بما بقي من أيام الشهر.';
 
   @override
   String ramadanStartNextKhatmah(int count, String countText) {
@@ -8577,34 +9121,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupImport => 'استعادة من ملف';
 
   @override
-  String get backupImportSignedIn => 'الاستعادة متاحة فقط دون حساب. ملاحظاتك الشخصية تبقى على هذا الجهاز فقط.';
+  String get backupImportSignedIn =>
+      'الاستعادة متاحة فقط دون حساب. ملاحظاتك الشخصية تبقى على هذا الجهاز فقط.';
 
   @override
-  String get backupIncludes => 'يشمل الإصدار 5: الحفظ والمراجعة والختمة والقراءة والسلاسل والنقاط وتقدم الأذكار والطفل والملاحظات، والعلامات المرجعية وموضع المصحف المحفوظ لهذا المستخدم.';
+  String get backupIncludes =>
+      'يشمل الإصدار 5: الحفظ والمراجعة والختمة والقراءة والسلاسل والنقاط وتقدم الأذكار والطفل والملاحظات، والعلامات المرجعية وموضع المصحف المحفوظ لهذا المستخدم.';
 
   @override
-  String get backupExcludes => 'لا يشمل: إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر، ومفاتيح الحساب.';
+  String get backupExcludes =>
+      'لا يشمل: إعدادات الجهاز والإشعارات، وكلمة سر ولي الأمر، ومفاتيح الحساب.';
 
   @override
   String get backupConfirmTitle => 'استبدال البيانات الحالية؟';
 
   @override
-  String get backupConfirmBody => 'ستستبدل بيانات الملف المجالات التي يحتويها على هذا الجهاز. المجالات غير الموجودة في النسخ الأقدم تبقى محفوظة؛ مثل الملاحظات في الإصدار 1 والعلامات وموضع القراءة قبل الإصدار 5.';
+  String get backupConfirmBody =>
+      'ستستبدل بيانات الملف المجالات التي يحتويها على هذا الجهاز. المجالات غير الموجودة في النسخ الأقدم تبقى محفوظة؛ مثل الملاحظات في الإصدار 1 والعلامات وموضع القراءة قبل الإصدار 5.';
 
   @override
   String get backupConfirm => 'استبدال';
 
   @override
-  String get backupErrorInvalid => 'هذا الملف ليس نسخة احتياطية صالحة من تالية.';
+  String get backupErrorInvalid =>
+      'هذا الملف ليس نسخة احتياطية صالحة من تالية.';
 
   @override
-  String get backupErrorNewer => 'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.';
+  String get backupErrorNewer =>
+      'هذه النسخة من إصدار أحدث من التطبيق. حدّث التطبيق أولاً.';
 
   @override
-  String get backupErrorProtection => 'تعذّر تجهيز نسخة أمان قبل الاستعادة، فلم يتغيّر شيء من بياناتك. أفرغ مساحة على الجهاز أو أعد المحاولة.';
+  String get backupErrorProtection =>
+      'تعذّر تجهيز نسخة أمان قبل الاستعادة، فلم يتغيّر شيء من بياناتك. أفرغ مساحة على الجهاز أو أعد المحاولة.';
 
   @override
-  String get backupErrorRecoveryBlocked => 'تعذّر إكمال استعادة سابقة. أعد تشغيل التطبيق قبل محاولة استعادة أخرى.';
+  String get backupErrorRecoveryBlocked =>
+      'تعذّر إكمال استعادة سابقة. أعد تشغيل التطبيق قبل محاولة استعادة أخرى.';
 
   @override
   String get backupErrorCorrupt => 'الملف تالف ولا يمكن استعادته.';
@@ -8669,7 +9221,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationForgettingForecastTitle => 'وقت للمراجعة';
 
   @override
-  String get notificationForgettingForecastBody => 'عندما يناسبك، خذ وقتًا قصيرًا لمراجعة ما تعلمته.';
+  String get notificationForgettingForecastBody =>
+      'عندما يناسبك، خذ وقتًا قصيرًا لمراجعة ما تعلمته.';
 
   @override
   String get notificationSettingsForgettingForecast => 'توقع النسيان';
@@ -8716,16 +9269,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioDownloadsWifiOnly => 'عبر Wi-Fi فقط';
 
   @override
-  String get audioDownloadsWaitingForWifi => 'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».';
+  String get audioDownloadsWaitingForWifi =>
+      'أنت متصل بشبكة قد تُحتسب على باقة البيانات. اتصل بشبكة Wi-Fi، أو أطفئ «عبر Wi-Fi فقط».';
 
   @override
-  String get audioDownloadsWifiUnavailable => 'لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة.';
+  String get audioDownloadsWifiUnavailable =>
+      'لا يمكن التحقق من نوع الاتصال على هذا الجهاز. اتصل بشبكة Wi-Fi قبل المتابعة.';
 
   @override
-  String get audioDownloadsSpaceUnknown => 'لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات.';
+  String get audioDownloadsSpaceUnknown =>
+      'لا يمكن قياس المساحة المتاحة. قد يكون التنزيل كبيرًا؛ اترك ٢٠٠ ميغابايت على الأقل إضافة إلى حجم التسجيلات.';
 
   @override
-  String get audioDownloadsNetworkWarning => 'لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل.';
+  String get audioDownloadsNetworkWarning =>
+      'لا يمكن التحقق من نوع الاتصال والمساحة المتاحة. قد تستهلك المتابعة بيانات الهاتف. تحقق من اتصال Wi-Fi والمساحة قبل التنزيل.';
 
   @override
   String get audioDownloadsProceed => 'متابعة التنزيل';
@@ -8737,13 +9294,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioDownloadsCompleted => 'اكتمل التنزيل';
 
   @override
-  String get audioDownloadsCancelled => 'أُلغي التنزيل؛ تبقى الملفات المحفوظة متاحة';
+  String get audioDownloadsCancelled =>
+      'أُلغي التنزيل؛ تبقى الملفات المحفوظة متاحة';
 
   @override
   String get audioDownloadsInsufficientSpace => 'المساحة المتاحة غير كافية';
 
   @override
-  String get audioDownloadsFailed => 'تعذّر التنزيل. يمكنك الاستئناف دون إعادة تنزيل الملفات المحفوظة.';
+  String get audioDownloadsFailed =>
+      'تعذّر التنزيل. يمكنك الاستئناف دون إعادة تنزيل الملفات المحفوظة.';
 
   @override
   String get audioDownloadsInProgress => 'جارٍ تنزيل التلاوات…';
@@ -8757,7 +9316,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioDownloadsDelete => 'حذف تنزيلات هذا القارئ';
 
   @override
-  String get audioDownloadsDeleteConfirm => 'هل تريد حذف التسجيلات المحفوظة لهذا القارئ من هذا الجهاز؟';
+  String get audioDownloadsDeleteConfirm =>
+      'هل تريد حذف التسجيلات المحفوظة لهذا القارئ من هذا الجهاز؟';
 
   @override
   String get hijriYearRecapTitle => 'حصاد العام الهجري';
@@ -8769,7 +9329,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hijriYearRecapMemorizedApprox => 'آيات محفوظة تقريبًا';
 
   @override
-  String get hijriYearRecapApproxDefinition => 'الآيات المحفوظة حاليًا والمراجَعة في هذا العام الهجري';
+  String get hijriYearRecapApproxDefinition =>
+      'الآيات المحفوظة حاليًا والمراجَعة في هذا العام الهجري';
 
   @override
   String get hijriYearRecapLifetimeStreak => 'أطول سلسلة على الإطلاق';
@@ -8787,7 +9348,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get similarAyahTrainerTitle => 'تدريب المتشابهات';
 
   @override
-  String get similarAyahTrainerMachineNote => 'للمقارنة والمراجعة، وليست حكمًا على التلاوة.';
+  String get similarAyahTrainerMachineNote =>
+      'للمقارنة والمراجعة، وليست حكمًا على التلاوة.';
 
   @override
   String get similarAyahHistoryTitle => 'سجل المراجعة';
@@ -8814,13 +9376,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get similarAyahTrainerPrevious => 'الآية السابقة';
 
   @override
-  String get similarAyahTrainerPractice => 'استدعِ الموضع المقصود، ثم أظهره عندما تكون مستعدًا.';
+  String get similarAyahTrainerPractice =>
+      'استدعِ الموضع المقصود، ثم أظهره عندما تكون مستعدًا.';
 
   @override
   String get similarAyahTrainerReveal => 'إظهار الموضع المقصود';
 
   @override
-  String get similarAyahTrainerUnavailable => 'هذا التدريب متاح لحسابات البالغين المؤهلة فقط.';
+  String get similarAyahTrainerUnavailable =>
+      'هذا التدريب متاح لحسابات البالغين المؤهلة فقط.';
 
   @override
   String similarAyahFailureNotice(Object reference) {
@@ -8831,7 +9395,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get similarAyahOpenComparison => 'تمييز المتشابهات';
 
   @override
-  String get v2AccountChanged => 'تغيّر الحساب. افتح الجلسة من حسابك الحالي للمتابعة.';
+  String get v2AccountChanged =>
+      'تغيّر الحساب. افتح الجلسة من حسابك الحالي للمتابعة.';
 
   @override
   String get similarAyahTrainerNoPrevious => 'لا توجد آية سابقة في هذه السورة';
@@ -8865,7 +9430,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerReviewLoadFailed => 'تعذّر تحميل المقطع. حاول مرة أخرى.';
 
   @override
-  String get prayerReviewSaveFailed => 'تعذّر الحفظ. يمكنك إعادة المحاولة للمقطع نفسه.';
+  String get prayerReviewSaveFailed =>
+      'تعذّر الحفظ. يمكنك إعادة المحاولة للمقطع نفسه.';
 
   @override
   String get prayerReviewGradeMastered => 'متقن';
@@ -8917,7 +9483,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsRemotePlanDeviceDefault => 'حسب إعداد الجهاز';
 
   @override
-  String get kidsRemotePlanDaysHint => 'تؤثر الأيام في التذكير فقط، ويظل التعلم متاحًا كل يوم.';
+  String get kidsRemotePlanDaysHint =>
+      'تؤثر الأيام في التذكير فقط، ويظل التعلم متاحًا كل يوم.';
 
   @override
   String get encouragementTitle => 'أرسل تشجيعًا';
@@ -8956,34 +9523,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get encouragementFailed => 'تعذّر الإرسال. حاول مجددًا.';
 
   @override
-  String get encouragementQuota => 'وصلت إلى الحد اليومي لهذا الطفل. حاول غدًا.';
+  String get encouragementQuota =>
+      'وصلت إلى الحد اليومي لهذا الطفل. حاول غدًا.';
 
   @override
-  String get encouragementLimit => 'حتى ١٠ رسائل يوميًا لكل طفل، ويبدأ اليوم بتوقيت UTC.';
+  String get encouragementLimit =>
+      'حتى ١٠ رسائل يوميًا لكل طفل، ويبدأ اليوم بتوقيت UTC.';
 
   @override
   String get encouragementDone => 'تم';
 
   @override
-  String get parentRewardOriginUnknown => 'هذه الهدية القديمة محفوظة للعرض فقط. يمكن لولي الأمر إنشاء هدية جديدة.';
+  String get parentRewardOriginUnknown =>
+      'هذه الهدية القديمة محفوظة للعرض فقط. يمكن لولي الأمر إنشاء هدية جديدة.';
 
   @override
   String get kidsLegacyResumeTitle => 'كيف تحب أن تكمل هذه السورة؟';
 
   @override
-  String get kidsLegacyResumeExplanation => 'نقطة توقفك محفوظة. اختر تقسيمًا لاستكمال هذه الجلسة القديمة؛ لا يتوفر تقسيمها السابق.';
+  String get kidsLegacyResumeExplanation =>
+      'نقطة توقفك محفوظة. اختر تقسيمًا لاستكمال هذه الجلسة القديمة؛ لا يتوفر تقسيمها السابق.';
 
   @override
   String get kidsLegacyResumeChoose => 'اختيار طريقة الاستكمال';
 
   @override
-  String get kidsLegacyResumeSaveFailed => 'لم يُحفظ الاختيار. ما زالت نقطة توقفك محفوظة، ويمكنك المحاولة مجددًا.';
+  String get kidsLegacyResumeSaveFailed =>
+      'لم يُحفظ الاختيار. ما زالت نقطة توقفك محفوظة، ويمكنك المحاولة مجددًا.';
 
   @override
   String get audioDownloadsLeaveTitle => 'إيقاف التنزيل؟';
 
   @override
-  String get audioDownloadsLeaveBody => 'التنزيل جارٍ. إذا غادرت هذه الصفحة سيتوقف التنزيل وتبقى الملفات المحفوظة متاحة.';
+  String get audioDownloadsLeaveBody =>
+      'التنزيل جارٍ. إذا غادرت هذه الصفحة سيتوقف التنزيل وتبقى الملفات المحفوظة متاحة.';
 
   @override
   String get audioDownloadsLeaveStay => 'البقاء';
@@ -8992,7 +9565,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioDownloadsLeaveStop => 'إيقاف التنزيل';
 
   @override
-  String get similarAyahIndexUnavailable => 'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
+  String get similarAyahIndexUnavailable =>
+      'قائمة الآيات المتقاربة لم تُعتمد بعد، فلا تتوفر هنا حالياً.';
 
   @override
   String get handsFreeTitle => 'سمّع لي';
@@ -9031,10 +9605,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handsFreeNoDue => 'لا توجد مراجعات مستحقة الآن.';
 
   @override
-  String get handsFreeMicFallback => 'التعرّف على الصوت غير متاح. استخدم الأزرار أدناه.';
+  String get handsFreeMicFallback =>
+      'التعرّف على الصوت غير متاح. استخدم الأزرار أدناه.';
 
   @override
-  String get handsFreeDescription => 'استمع إلى بداية قصيرة ثم سمّع. هذا التدريب لا يغيّر تقدّم حفظك.';
+  String get handsFreeDescription =>
+      'استمع إلى بداية قصيرة ثم سمّع. هذا التدريب لا يغيّر تقدّم حفظك.';
 
   @override
   String get handsFreePrompt => 'استمع إلى البداية';
@@ -9150,10 +9726,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupKhatmahDelete => 'حذف المجموعة';
 
   @override
-  String get groupKhatmahLeaveConfirm => 'هل تريد مغادرة المجموعة؟ ستُحرّر الأجزاء التي حجزتها ولم تكملها.';
+  String get groupKhatmahLeaveConfirm =>
+      'هل تريد مغادرة المجموعة؟ ستُحرّر الأجزاء التي حجزتها ولم تكملها.';
 
   @override
-  String get groupKhatmahDeleteConfirm => 'هل تريد حذف المجموعة لجميع الأعضاء؟ سيُحذف تقدمها المشترك.';
+  String get groupKhatmahDeleteConfirm =>
+      'هل تريد حذف المجموعة لجميع الأعضاء؟ سيُحذف تقدمها المشترك.';
 
   @override
   String get groupKhatmahCancel => 'إلغاء';
@@ -9168,19 +9746,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupKhatmahConflict => 'تغيّر هذا الجزء. حُدّثت بيانات المجموعة.';
 
   @override
-  String get groupKhatmahConflictClaimed => 'حجزه غيرك. حُدّثت بيانات المجموعة.';
+  String get groupKhatmahConflictClaimed =>
+      'حجزه غيرك. حُدّثت بيانات المجموعة.';
 
   @override
-  String get groupKhatmahOutcomePending => 'الطلب قيد الإرسال وسيُؤكَّد تلقائيًا عند عودة الاتصال. لا حاجة إلى إعادته.';
+  String get groupKhatmahOutcomePending =>
+      'الطلب قيد الإرسال وسيُؤكَّد تلقائيًا عند عودة الاتصال. لا حاجة إلى إعادته.';
 
   @override
-  String get groupKhatmahGroupCompleted => 'اكتملت هذه الختمة ولا يمكن تغيير أجزائها.';
+  String get groupKhatmahGroupCompleted =>
+      'اكتملت هذه الختمة ولا يمكن تغيير أجزائها.';
 
   @override
-  String get groupKhatmahStaleOperation => 'تغيّرت عضويتك في المجموعة قبل اكتمال هذا الطلب. حُدّثت البيانات.';
+  String get groupKhatmahStaleOperation =>
+      'تغيّرت عضويتك في المجموعة قبل اكتمال هذا الطلب. حُدّثت البيانات.';
 
   @override
-  String get groupKhatmahInvalidInput => 'تعذّر قبول البيانات المدخلة. راجعها وحاول مرة أخرى.';
+  String get groupKhatmahInvalidInput =>
+      'تعذّر قبول البيانات المدخلة. راجعها وحاول مرة أخرى.';
 
   @override
   String get groupKhatmahNetwork => 'اتصل بالإنترنت ثم حاول مرة أخرى.';
@@ -9189,7 +9772,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupKhatmahNotMember => 'لم تعد عضوًا في هذه المجموعة.';
 
   @override
-  String get groupKhatmahNotEligible => 'الختمة الجماعية غير متاحة لهذا الحساب.';
+  String get groupKhatmahNotEligible =>
+      'الختمة الجماعية غير متاحة لهذا الحساب.';
 
   @override
   String get groupKhatmahFull => 'اكتمل عدد أعضاء هذه المجموعة.';
@@ -9201,19 +9785,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupKhatmahRateLimited => 'محاولات كثيرة. حاول لاحقًا.';
 
   @override
-  String get groupKhatmahOwnerHasMembers => 'يجب أن يغادر الأعضاء الآخرون قبل حذف المجموعة.';
+  String get groupKhatmahOwnerHasMembers =>
+      'يجب أن يغادر الأعضاء الآخرون قبل حذف المجموعة.';
 
   @override
   String get groupKhatmahDuaOpen => 'قراءة دعاء الختم';
 
   @override
-  String get groupKhatmahDuaUnavailable => 'دعاء الختم غير متاح حتى اعتماد نصه ومصدره.';
+  String get groupKhatmahDuaUnavailable =>
+      'دعاء الختم غير متاح حتى اعتماد نصه ومصدره.';
 
   @override
-  String get groupKhatmahStale => 'هذه آخر بيانات محفوظة؛ اتصل للتحقق من العضوية.';
+  String get groupKhatmahStale =>
+      'هذه آخر بيانات محفوظة؛ اتصل للتحقق من العضوية.';
 
   @override
-  String get groupKhatmahAccountDeletionWarning => 'حذف حسابك سيحذف كل ختمة جماعية تملكها لجميع أعضائها.';
+  String get groupKhatmahAccountDeletionWarning =>
+      'حذف حسابك سيحذف كل ختمة جماعية تملكها لجميع أعضائها.';
 
   @override
   String get groupKhatmahCompletionFailed => 'إكمال الجزء يحتاج إلى مراجعتك';
@@ -9225,16 +9813,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupKhatmahDiscardCompletion => 'حذف الطلب المحلي';
 
   @override
-  String get groupKhatmahDiscardConfirm => 'هل تريد حذف طلب الإكمال المحلي؟ ربما وصل إلى المجموعة بالفعل. لن يؤدي هذا إلى التراجع عن إكمال أكده الخادم.';
+  String get groupKhatmahDiscardConfirm =>
+      'هل تريد حذف طلب الإكمال المحلي؟ ربما وصل إلى المجموعة بالفعل. لن يؤدي هذا إلى التراجع عن إكمال أكده الخادم.';
 
   @override
-  String get groupKhatmahRecoveryRequired => 'تعذّر إرسال إكمال الجزء. أعد المحاولة أو احذف الطلب المحلي.';
+  String get groupKhatmahRecoveryRequired =>
+      'تعذّر إرسال إكمال الجزء. أعد المحاولة أو احذف الطلب المحلي.';
 
   @override
   String get groupKhatmahRetryRequest => 'إعادة إرسال الطلب';
 
   @override
-  String get groupKhatmahDiscardRequestConfirm => 'حذف هذا الطلب المحلي؟ ربما وصل إلى المجموعة بالفعل. حذفه لن يتراجع عن أي تغييرات حُفظت على الخادم.';
+  String get groupKhatmahDiscardRequestConfirm =>
+      'حذف هذا الطلب المحلي؟ ربما وصل إلى المجموعة بالفعل. حذفه لن يتراجع عن أي تغييرات حُفظت على الخادم.';
 
   @override
   String get groupKhatmahFailedRequests => 'طلبات تحتاج إلى مراجعتك';
@@ -9249,7 +9840,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSeasonsMasterTitle => 'رافقني في المواسم';
 
   @override
-  String get settingsSeasonsMasterSubtitle => 'بطاقات المواسم وتحدياتها تظهر في وقتها، وأنت تتحكم بها من هنا.';
+  String get settingsSeasonsMasterSubtitle =>
+      'بطاقات المواسم وتحدياتها تظهر في وقتها، وأنت تتحكم بها من هنا.';
 
   @override
   String get settingsSeasonsYearGroup => 'مواسم السنة';
@@ -9264,7 +9856,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSeasonsRemindersTitle => 'تذكيرات المواسم';
 
   @override
-  String get settingsSeasonsRemindersHint => 'تذكيرات بأيام المواسم، بحد أقصى تذكير واحد في اليوم. إيقافه يوقف كل تذكيرات المواسم.';
+  String get settingsSeasonsRemindersHint =>
+      'تذكيرات بأيام المواسم، بحد أقصى تذكير واحد في اليوم. إيقافه يوقف كل تذكيرات المواسم.';
 
   @override
   String get settingsSeasonsShaban => 'شعبان: الاستعداد لرمضان';
@@ -9325,7 +9918,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ramadanHideSeason => 'إخفاء هذا الموسم';
 
   @override
-  String get ramadanHideSeasonDone => 'أخفيناه. تقدر ترجّعه من الإعدادات ‹ المواسم والمناسبات';
+  String get ramadanHideSeasonDone =>
+      'أخفيناه. تقدر ترجّعه من الإعدادات ‹ المواسم والمناسبات';
 
   @override
   String get settingsFeaturesPageTitle => 'مزايا التطبيق';
@@ -9355,82 +9949,135 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsFeatureReaderRepeatTitle => 'تكرار التلاوة';
 
   @override
-  String get settingsFeatureReaderRepeatSubtitle => 'تكرار التلاوة تلقائيًا بعدد تختاره أثناء الحفظ.';
+  String get settingsFeatureReaderRepeatSubtitle =>
+      'تكرار التلاوة تلقائيًا بعدد تختاره أثناء الحفظ.';
 
   @override
   String get settingsFeatureAyahNotesTitle => 'ملاحظات الآيات';
 
   @override
-  String get settingsFeatureAyahNotesSubtitle => 'اكتب ملاحظتك على أي آية وارجع إليها وقت المراجعة.';
+  String get settingsFeatureAyahNotesSubtitle =>
+      'اكتب ملاحظتك على أي آية وارجع إليها وقت المراجعة.';
 
   @override
   String get settingsFeatureAudioDownloadsTitle => 'تنزيل التلاوات';
 
   @override
-  String get settingsFeatureAudioDownloadsSubtitle => 'نزّل التلاوات مرة واحدة واسمعها من غير إنترنت.';
+  String get settingsFeatureAudioDownloadsSubtitle =>
+      'نزّل التلاوات مرة واحدة واسمعها من غير إنترنت.';
 
   @override
   String get settingsFeatureStrengthOverlayTitle => 'قوة الحفظ في المصحف';
 
   @override
-  String get settingsFeatureStrengthOverlaySubtitle => 'تلوين الآيات بحسب قوة حفظك، والتحكم فيها من قائمة المصحف.';
+  String get settingsFeatureStrengthOverlaySubtitle =>
+      'تلوين الآيات بحسب قوة حفظك، والتحكم فيها من قائمة المصحف.';
 
   @override
   String get settingsFeatureForgettingForecastTitle => 'توقع النسيان';
 
   @override
-  String get settingsFeatureForgettingForecastSubtitle => 'توقّع ما يقارب النسيان وراجعه قبل أن يفلت.';
+  String get settingsFeatureForgettingForecastSubtitle =>
+      'توقّع ما يقارب النسيان وراجعه قبل أن يفلت.';
 
   @override
   String get settingsFeaturePrayerReviewTitle => 'المراجعة بعد الصلاة';
 
   @override
-  String get settingsFeaturePrayerReviewSubtitle => 'مراجعة قصيرة تلحق بأوقات الصلاة.';
+  String get settingsFeaturePrayerReviewSubtitle =>
+      'مراجعة قصيرة تلحق بأوقات الصلاة.';
 
   @override
   String get settingsFeatureHandsFreeTitle => 'المراجعة بلا يدين';
 
   @override
-  String get settingsFeatureHandsFreeSubtitle => 'راجع بصوتك من غير لمس الشاشة.';
+  String get settingsFeatureHandsFreeSubtitle =>
+      'راجع بصوتك من غير لمس الشاشة.';
 
   @override
   String get settingsFeatureAfterPrayerAzkarTitle => 'أذكار بعد الصلاة';
 
   @override
-  String get settingsFeatureAfterPrayerAzkarSubtitle => 'أذكار بعد الصلاة تظهر لك في وقتها.';
+  String get settingsFeatureAfterPrayerAzkarSubtitle =>
+      'أذكار بعد الصلاة تظهر لك في وقتها.';
 
   @override
   String get settingsFeatureGroupKhatmahTitle => 'الختمة الجماعية';
 
   @override
-  String get settingsFeatureGroupKhatmahSubtitle => 'ختمة مع أصحابك وتابع تقدم بعضكم.';
+  String get settingsFeatureGroupKhatmahSubtitle =>
+      'ختمة مع أصحابك وتابع تقدم بعضكم.';
 
   @override
   String get settingsFeatureHomeWidgetTitle => 'أداة الشاشة الرئيسية';
 
   @override
-  String get settingsFeatureHomeWidgetSubtitle => 'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.';
+  String get settingsFeatureHomeWidgetSubtitle =>
+      'ملخص صلاتك وتقدمك على شاشة هاتفك الرئيسية.';
 
   @override
   String get settingsHomeWidgetAdd => 'أضف إلى الشاشة الرئيسية';
 
   @override
-  String get settingsHomeWidgetUnsupported => 'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.';
+  String get settingsHomeWidgetAddAnother => 'إضافة نسخة أخرى';
 
   @override
-  String get settingsHomeWidgetManualSteps => 'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.';
+  String get settingsHomeWidgetInstalled => 'الأداة مضافة على شاشتك الرئيسية';
+
+  @override
+  String get settingsHomeWidgetPinRequested =>
+      'أكّد الإضافة من النافذة التي ظهرت على شاشتك.';
+
+  @override
+  String get settingsHomeWidgetUnsupported =>
+      'هذا الهاتف لا يدعم إضافة الأداة مباشرة من التطبيق.';
+
+  @override
+  String get settingsHomeWidgetManualSteps =>
+      'المس الشاشة الرئيسية مطولًا، ثم اختر الأدوات، ثم تالية.';
 
   @override
   String get settingsHomeWidgetPreviewCaption => 'معاينة الأداة';
 
   @override
-  String get settingsHomeWidgetPreviewPrayer => 'الفجر · ٠٥:١٢';
+  String get settingsHomeWidgetPreviewLiveBadge => 'بياناتك الحالية';
+
+  @override
+  String get settingsHomeWidgetPreviewSampleBadge => 'معاينة تقريبية';
+
+  @override
+  String get settingsHomeWidgetPreviewHijri => '١٥ رمضان ١٤٤٧';
+
+  @override
+  String get settingsHomeWidgetPreviewPrayer => 'الفجر · ٥:١٢ ص';
 
   @override
   String get settingsHomeWidgetPreviewReview => 'أنجزت مراجعاتك';
 
   @override
-  String get settingsHomeWidgetPreviewWird => '١٢–١٥';
+  String get settingsHomeWidgetPreviewWird => 'البقرة · ١/٣ صفحة';
+
+  @override
+  String get settingsHomeWidgetPreviewWirdRange => 'ص ١٢–١٥';
+
+  @override
+  String get settingsHomeWidgetPreviewWirdAction => 'أكمل وردك';
+
+  @override
+  String get settingsHomeWidgetPreviewEmpty =>
+      'اختر عنصرًا واحدًا على الأقل لعرضه';
+
+  @override
+  String get settingsHomeWidgetSizeSmall => 'صغير';
+
+  @override
+  String get settingsHomeWidgetSizeMedium => 'متوسط';
+
+  @override
+  String get settingsHomeWidgetSizeLarge => 'كبير';
+
+  @override
+  String get settingsHomeWidgetShowHijri => 'إظهار التاريخ الهجري';
 
   @override
   String get settingsHomeWidgetShowPrayer => 'إظهار الصلاة';
@@ -9440,6 +10087,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsHomeWidgetShowWird => 'إظهار الورد';
+
+  @override
+  String get settingsHomeWidgetMinOneSection =>
+      'اترك عنصرًا واحدًا على الأقل ليظهر في الأداة.';
+
+  @override
+  String settingsHomeWidgetLiveReviewsDue(int count, String countText) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countText مراجعة مستحقة',
+      many: '$countText مراجعة مستحقة',
+      few: '$countText مراجعات مستحقة',
+      two: 'مراجعتان مستحقتان',
+      one: 'مراجعة واحدة مستحقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsHomeWidgetLiveWird(String surah, String done, String total) {
+    return '$surah · $done/$total صفحة';
+  }
+
+  @override
+  String settingsHomeWidgetLiveWirdRange(String from, String to) {
+    return 'ص $from–$to';
+  }
+
+  @override
+  String get settingsHomeWidgetLivePrayerUnset => 'اضبط مواقيت الصلاة';
+
+  @override
+  String get settingsHomeWidgetLiveNoKhatmah => 'لم تبدأ خطة ختمة';
 
   @override
   String seasonDaysUntil(int days, String daysText) {
@@ -9541,7 +10222,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seasonWhiteDaysTitle => 'الأيام البيض';
 
   @override
-  String seasonWhiteDaysInvite(String firstText, String secondText, String thirdText) {
+  String seasonWhiteDaysInvite(
+    String firstText,
+    String secondText,
+    String thirdText,
+  ) {
     return 'تذكير: صيام الأيام البيض ($firstText و$secondText و$thirdText) يبدأ غدًا';
   }
 
@@ -9633,15 +10318,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationSeasonArafah => 'تذكير: صيام يوم عرفة غدًا';
 
   @override
-  String get notificationSeasonAshura => 'تذكير: صيام التاسع والعاشر من محرم يبدأ غدًا';
+  String get notificationSeasonAshura =>
+      'تذكير: صيام التاسع والعاشر من محرم يبدأ غدًا';
 
   @override
-  String notificationSeasonWhiteDays(String firstText, String secondText, String thirdText) {
+  String notificationSeasonWhiteDays(
+    String firstText,
+    String secondText,
+    String thirdText,
+  ) {
     return 'تذكير: صيام الأيام البيض ($firstText و$secondText و$thirdText) يبدأ غدًا';
   }
 
   @override
-  String get notificationSeasonMonThu => 'تذكير: غدًا يوم من أيام صيام النافلة الأسبوعية';
+  String get notificationSeasonMonThu =>
+      'تذكير: غدًا يوم من أيام صيام النافلة الأسبوعية';
 
   @override
   String get ayahStudyAction => 'فهم الآية';
@@ -9653,10 +10344,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ayahStudyTranslation => 'ترجمة المعاني';
 
   @override
-  String get ayahStudyUnavailable => 'محتوى الفهم المعتمد غير متاح حاليًا. يمكنك متابعة القراءة.';
+  String get ayahStudyUnavailable =>
+      'محتوى الفهم المعتمد غير متاح حاليًا. يمكنك متابعة القراءة.';
 
   @override
-  String get ayahStudyInvalid => 'تعذّر عرض المحتوى لهذه الآية. يمكنك متابعة القراءة.';
+  String get ayahStudyInvalid =>
+      'تعذّر عرض المحتوى لهذه الآية. يمكنك متابعة القراءة.';
 
   @override
   String get ayahStudyLoading => 'جارٍ تحميل المحتوى';
@@ -9677,13 +10370,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ayahStudySelectAyah => 'اختر آية لفهم معناها';
 
   @override
-  String get dailyReviewNoReviews => 'لا توجد مراجعات بعد. ابدأ بإعداد خطة الحفظ.';
+  String get dailyReviewNoReviews =>
+      'لا توجد مراجعات بعد. ابدأ بإعداد خطة الحفظ.';
 
   @override
   String get dailyReviewNoDue => 'لا توجد مراجعات مستحقة الآن.';
 
   @override
-  String get dailyReviewUnavailable => 'تعذّر تحديث المراجعات. افتح مركز الحفظ للمراجعة.';
+  String get dailyReviewUnavailable =>
+      'تعذّر تحديث المراجعات. افتح مركز الحفظ للمراجعة.';
 
   @override
   String get dailyReviewOtherOptions => 'خيارات أخرى';
@@ -9742,13 +10437,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get protectionPendingCount => 'التغييرات المعلقة';
 
   @override
-  String get protectionImportScope => 'استعادة الحساب من الملف تضيف العلامات الجديدة وموضع قراءة تختاره فقط. تقدم الحفظ والنقاط يستعادان عبر مزامنة الحساب.';
+  String get protectionImportScope =>
+      'استعادة الحساب من الملف تضيف العلامات الجديدة وموضع قراءة تختاره فقط. تقدم الحفظ والنقاط يستعادان عبر مزامنة الحساب.';
 
   @override
-  String get backupUnencryptedWarning => 'ملف النسخة الاحتياطية غير مشفر وقد يحتوي على ملاحظاتك وتقدمك. احفظه في مكان خاص ولا تشاركه إلا مع من تثق به.';
+  String get backupUnencryptedWarning =>
+      'ملف النسخة الاحتياطية غير مشفر وقد يحتوي على ملاحظاتك وتقدمك. احفظه في مكان خاص ولا تشاركه إلا مع من تثق به.';
 
   @override
-  String get backupRestoreNotReady => 'استبدال بيانات الجهاز من ملف متوقف مؤقتًا لحماية تقدمك أثناء استكمال التحقق من التعافي. يمكنك تصدير نسخة والاحتفاظ بها.';
+  String get backupRestoreNotReady =>
+      'استبدال بيانات الجهاز من ملف متوقف مؤقتًا لحماية تقدمك أثناء استكمال التحقق من التعافي. يمكنك تصدير نسخة والاحتفاظ بها.';
 
   @override
   String get backupPortableImport => 'استيراد العلامات وموضع القراءة';
@@ -9767,23 +10465,33 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       added,
       locale: localeName,
-      other: 'أُضيفت $added من العلامات، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
-      one: 'أُضيفت علامة واحدة، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
-      zero: 'لم تُضف علامات جديدة، وتعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة.',
+      other:
+          'أُضيفت $added من العلامات، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
+      one:
+          'أُضيفت علامة واحدة، لكن تعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة دون تكرارها.',
+      zero:
+          'لم تُضف علامات جديدة، وتعذّر حفظ موضع القراءة. يمكنك إعادة المحاولة.',
     );
     return '$_temp0';
   }
 
   @override
-  String get backupPortableStale => 'تغيرت البيانات أو الحساب. افتح الملف مجددًا لمراجعة الإضافات.';
+  String get backupPortableStale =>
+      'تغيرت البيانات أو الحساب. افتح الملف مجددًا لمراجعة الإضافات.';
 
   @override
-  String backupPortableSummary(int added, int existing, int deleted, int invalid) {
+  String backupPortableSummary(
+    int added,
+    int existing,
+    int deleted,
+    int invalid,
+  ) {
     return 'علامات جديدة: $added، موجودة: $existing، محذوفة سابقًا: $deleted، غير صالحة: $invalid';
   }
 
   @override
-  String get backupMaintenanceRestart => 'تم تجهيز الطلب. أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه. ستختار ملف النسخة وتؤكد الاستبدال عند بدء التشغيل. لن تتغير بياناتك الآن.';
+  String get backupMaintenanceRestart =>
+      'تم تجهيز الطلب. أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه. ستختار ملف النسخة وتؤكد الاستبدال عند بدء التشغيل. لن تتغير بياناتك الآن.';
 
   @override
   String get backupMaintenanceTitle => 'استعادة آمنة';
@@ -9792,43 +10500,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupMaintenanceContinue => 'المتابعة إلى التطبيق';
 
   @override
-  String get backupMaintenanceBody => 'تعمل الاستعادة قبل فتح بيانات التقدم والمزامنة. اختر الملف وراجعه ثم أكد الاستبدال. يمكنك المتابعة إلى التطبيق لإلغاء الطلب.';
+  String get backupMaintenanceBody =>
+      'تعمل الاستعادة قبل فتح بيانات التقدم والمزامنة. اختر الملف وراجعه ثم أكد الاستبدال. يمكنك المتابعة إلى التطبيق لإلغاء الطلب.';
 
   @override
-  String get backupMaintenanceUnavailable => 'الاستعادة غير متاحة لهذه البيانات أو لهذا الإصدار. يمكنك المتابعة إلى التطبيق.';
+  String get backupMaintenanceUnavailable =>
+      'الاستعادة غير متاحة لهذه البيانات أو لهذا الإصدار. يمكنك المتابعة إلى التطبيق.';
 
   @override
   String get backupMaintenancePin => 'رمز ولي الأمر';
 
   @override
-  String get backupMaintenanceFinished => 'انتهى هذا الطلب. للبدء مجددًا، تابع إلى التطبيق وأنشئ طلبًا جديدًا.';
+  String get backupMaintenanceFinished =>
+      'انتهى هذا الطلب. للبدء مجددًا، تابع إلى التطبيق وأنشئ طلبًا جديدًا.';
 
   @override
-  String get backupMaintenanceBusy => 'البيانات مستخدمة الآن. أعد المحاولة بعد قليل. إذا استمر ذلك، أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه.';
+  String get backupMaintenanceBusy =>
+      'البيانات مستخدمة الآن. أعد المحاولة بعد قليل. إذا استمر ذلك، أغلق تالية إغلاقًا كاملًا من معلومات التطبيق ثم افتحه.';
 
   @override
   String get backupMaintenanceSchedule => 'تجهيز الاستعادة عند بدء التطبيق';
 
   @override
-  String get backupMaintenancePinRejected => 'تعذر التحقق من الرمز. انتظر قليلًا ثم أعد المحاولة.';
+  String get backupMaintenancePinRejected =>
+      'تعذر التحقق من الرمز. انتظر قليلًا ثم أعد المحاولة.';
 
   @override
   String get retainedAccountRecoveryTitle => 'استعادة حسابك';
 
   @override
-  String get retainedAccountRecoveryBody => 'لا تزال بعض بيانات الحساب محفوظة على هذا الجهاز ولا تظهر للضيف. سجّل الدخول إلى الحساب نفسه للمتابعة وحماية التغييرات التي لم تُزامن بعد.';
+  String get retainedAccountRecoveryBody =>
+      'لا تزال بعض بيانات الحساب محفوظة على هذا الجهاز ولا تظهر للضيف. سجّل الدخول إلى الحساب نفسه للمتابعة وحماية التغييرات التي لم تُزامن بعد.';
 
   @override
   String get retainedAccountRecoveryWrongAccount => 'هذا ليس الحساب السابق.';
 
   @override
-  String get retainedAccountRecoveryFailed => 'تعذرت الاستعادة. تحقق من بياناتك وحاول مجددًا.';
+  String get retainedAccountRecoveryFailed =>
+      'تعذرت الاستعادة. تحقق من بياناتك وحاول مجددًا.';
 
   @override
-  String get retainedAccountRecoveryUnavailable => 'استعادة الحساب غير متاحة الآن. حاول مرة أخرى لاحقًا.';
+  String get retainedAccountRecoveryUnavailable =>
+      'استعادة الحساب غير متاحة الآن. حاول مرة أخرى لاحقًا.';
 
   @override
-  String get retainedAccountRecoveryUnknownOwner => 'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.';
+  String get retainedAccountRecoveryUnknownOwner =>
+      'لا يمكن تحديد الحساب السابق بأمان. حاول مجددًا عندما يصبح الحساب متاحًا.';
 
   @override
   String inviteFromNamed(String name) {
@@ -9845,7 +10562,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteExpiredTitle => 'انتهت مدة هذه الدعوة';
 
   @override
-  String get inviteExpiredBody => 'يمكنك أن تبدأ القراءة الآن لنفسك، ولن تُحتسب ضمن الدعوة.';
+  String get inviteExpiredBody =>
+      'يمكنك أن تبدأ القراءة الآن لنفسك، ولن تُحتسب ضمن الدعوة.';
 
   @override
   String get inviteInvalid => 'تعذّر فتح هذه الدعوة';
@@ -9987,7 +10705,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteContinueChain => 'واصل سلسلة الخير';
 
   @override
-  String get inviteChainExpired => 'انتهت الدعوة الأصلية. يمكنك إنشاء دعوة جديدة مستقلة.';
+  String get inviteChainExpired =>
+      'انتهت الدعوة الأصلية. يمكنك إنشاء دعوة جديدة مستقلة.';
 
   @override
   String get inviteChainFresh => 'إنشاء دعوة جديدة';
@@ -9999,7 +10718,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareGoodPromptHint => 'ادعُ شخصًا ليشاركك هذا العمل';
 
   @override
-  String get shareGoodEducation => 'تسجّل الدعوة المشاركة فقط. يظل إتمامك خاصًا ما لم تختر مشاركة اسمك.';
+  String get shareGoodEducation =>
+      'تسجّل الدعوة المشاركة فقط. يظل إتمامك خاصًا ما لم تختر مشاركة اسمك.';
 
   @override
   String get inviteReminderTitle => 'تذكير بالدعوة';

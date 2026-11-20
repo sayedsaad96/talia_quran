@@ -5,11 +5,12 @@
     <string name="widget_reviews_done">أنجزت مراجعاتك</string>
     <string name="widget_no_khatmah">لم تبدأ خطة ختمة</string>
     <string name="widget_prayer_unset">اضبط مواقيت الصلاة</string>
-    <string name="widget_wird_range">%1$d–%2$d</string>
+    <string name="widget_wird_range">ص %1$d–%2$d</string>
     <string name="widget_wird_action">أكمل وردك</string>
-    <string name="widget_preview_prayer">الفجر · ٠٥:١٢</string>
+    <string name="widget_preview_hijri">١٥ رمضان ١٤٤٧</string>
+    <string name="widget_preview_prayer">الفجر · ٥:١٢ ص</string>
     <string name="widget_preview_review">أنجزت مراجعاتك</string>
-    <string name="widget_preview_wird">١٢–١٥</string>
+    <string name="widget_preview_wird">البقرة · ١/٣ صفحة</string>
     <string name="widget_description">الصلاة والمراجعات وورد اليوم</string>
     <string name="widget_prayer_fajr">الفجر</string>
     <string name="widget_prayer_dhuhr">الظهر</string>

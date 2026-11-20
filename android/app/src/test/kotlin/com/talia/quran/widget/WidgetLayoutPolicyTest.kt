@@ -10,12 +10,13 @@ class WidgetLayoutPolicyTest {
     private val full = WidgetRows(
         prayerLine = "Fajr",
         reviewLine = "2 reviews due",
-        wirdLine = "الفاتحة · 1/3 pages",
+        wirdLine = "Al-Fatihah · 1/3 pages",
         empty = false,
-        wirdRange = "10–12",
+        wirdRange = "Pages 10–12",
         wirdDone = 1,
         wirdTotal = 3,
         showWirdAction = true,
+        hijriLine = "15 Ramadan 1447",
     )
 
     @Test
@@ -44,18 +45,21 @@ class WidgetLayoutPolicyTest {
         val medium = WidgetLayoutPolicy.apply(full, WidgetSize.MEDIUM)
         val large = WidgetLayoutPolicy.apply(full, WidgetSize.LARGE)
 
+        assertNull(small.hijriLine)
         assertEquals("Fajr", small.prayerLine)
         assertNull(small.reviewLine)
         assertNull(small.wirdLine)
         assertNull(small.wirdRange)
         assertFalse(small.showWirdAction)
 
+        assertEquals("15 Ramadan 1447", medium.hijriLine)
         assertEquals("2 reviews due", medium.reviewLine)
-        assertEquals("الفاتحة · 1/3 pages", medium.wirdLine)
+        assertEquals("Al-Fatihah · 1/3 pages", medium.wirdLine)
         assertNull(medium.wirdRange)
         assertFalse(medium.showWirdAction)
 
-        assertEquals("10–12", large.wirdRange)
+        assertEquals("15 Ramadan 1447", large.hijriLine)
+        assertEquals("Pages 10–12", large.wirdRange)
         assertTrue(large.showWirdAction)
         assertEquals(1, large.wirdDone)
     }
@@ -65,8 +69,24 @@ class WidgetLayoutPolicyTest {
         val reviewsOnly = full.copy(prayerLine = null)
         val shown = WidgetLayoutPolicy.apply(reviewsOnly, WidgetSize.SMALL)
 
+        assertNull(shown.hijriLine)
         assertNull(shown.prayerLine)
         assertEquals("2 reviews due", shown.reviewLine)
         assertNull(shown.wirdLine)
+    }
+
+    @Test
+    fun `a small widget with only hijri keeps hijri`() {
+        val hijriOnly = WidgetRows(
+            prayerLine = null,
+            reviewLine = null,
+            wirdLine = null,
+            empty = false,
+            hijriLine = "15 Ramadan 1447",
+        )
+        val shown = WidgetLayoutPolicy.apply(hijriOnly, WidgetSize.SMALL)
+
+        assertEquals("15 Ramadan 1447", shown.hijriLine)
+        assertFalse(shown.empty)
     }
 }

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/home_widget/home_widget_publisher.dart';
 import '../../../../core/services/hijri_date_adjustment.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../home/domain/services/home_occasion_service.dart';
@@ -23,6 +26,9 @@ class _HijriAdjustmentTileState extends State<HijriAdjustmentTile> {
   Future<void> _select(int days) async {
     setState(() => _days = days);
     await _adjustment.setDays(days);
+    if (getIt.isRegistered<HomeWidgetPublisher>()) {
+      unawaited(getIt<HomeWidgetPublisher>().refresh());
+    }
   }
 
   String _label(int days) {

@@ -20,9 +20,12 @@ WidgetSnapshot buildWidgetSnapshot({
   bool reviewsKnown = false,
   int? nextDueReviewCount,
   List<WidgetReviewCount> reviewCounts = const [],
+  String? hijriLabel,
+  String? nextHijriLabel,
   bool showPrayer = true,
   bool showReviews = true,
   bool showWird = true,
+  bool showHijri = true,
 }) {
   if (!enabled || !isAdult || signedOutOrSwitching) {
     return const WidgetSnapshot.empty();
@@ -60,11 +63,14 @@ WidgetSnapshot buildWidgetSnapshot({
       tomorrowPrayers.isEmpty;
   final noPlan = activePlan == null;
   final settled = reviewsKnown && reviews == 0;
+  final cleanHijri = _cleanHijri(hijriLabel);
+  final cleanNextHijri = _cleanHijri(nextHijriLabel);
   final nextDay = _nextDay(
     plan: activePlan,
     at: dayEndsAt.add(const Duration(hours: 12)),
     nextDueReviewCount: nextDueReviewCount,
     reviewsKnown: reviewsKnown,
+    hijriLabel: cleanNextHijri,
   );
   final nothingToday = next == null && reviews == 0 && wird == null;
   if (nothingToday) {
@@ -72,6 +78,7 @@ WidgetSnapshot buildWidgetSnapshot({
       expiresAt: nextDay == null ? dayEndsAt : expiresAt,
       dayEndsAt: nextDay == null ? null : dayEndsAt,
       languageCode: language,
+      hijriLabel: cleanHijri,
       adultNoData: true,
       prayerUnset: prayerUnset,
       reviewsSettled: settled,
@@ -79,6 +86,7 @@ WidgetSnapshot buildWidgetSnapshot({
       showPrayer: showPrayer,
       showReviews: showReviews,
       showWird: showWird,
+      showHijri: showHijri,
       nextDay: nextDay,
       reviewCounts: reviewCounts,
     );
@@ -95,27 +103,39 @@ WidgetSnapshot buildWidgetSnapshot({
     wirdToPage: wird?.to,
     wirdDonePages: wird?.done,
     wirdSurahName: wird?.surahName,
+    wirdSurahNumber: wird?.surahNumber,
+    hijriLabel: cleanHijri,
     prayerUnset: prayerUnset,
     reviewsSettled: settled,
     noKhatmahPlan: noPlan && wird == null,
     showPrayer: showPrayer,
     showReviews: showReviews,
     showWird: showWird,
+    showHijri: showHijri,
     nextDay: nextDay,
     reviewCounts: reviewCounts,
   );
 }
 
-/// Tomorrow's review count and wird, computed while the app is open.
-/// Null when the caller did not supply a next-day review count and there is
-/// no plan: older call sites keep the previous "hide after midnight" behavior.
+String? _cleanHijri(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed;
+}
+
+/// Tomorrow's review count, wird, and Hijri label computed while open.
+/// Null when the caller did not supply a next-day review count, there is no
+/// plan, and there is no next-day Hijri label.
 WidgetNextDay? _nextDay({
   required KhatmahPlan? plan,
   required DateTime at,
   required int? nextDueReviewCount,
   required bool reviewsKnown,
+  String? hijriLabel,
 }) {
-  if (nextDueReviewCount == null && plan == null) return null;
+  if (nextDueReviewCount == null && plan == null && hijriLabel == null) {
+    return null;
+  }
   final wird = _wird(plan, at);
   final count = nextDueReviewCount == null
       ? 0
@@ -128,6 +148,8 @@ WidgetNextDay? _nextDay({
     wirdToPage: wird?.to,
     wirdDonePages: wird?.done,
     wirdSurahName: wird?.surahName,
+    wirdSurahNumber: wird?.surahNumber,
+    hijriLabel: hijriLabel,
   );
 }
 
@@ -176,7 +198,7 @@ List<WidgetPrayerTime> _upcomingPrayers(
   return List.unmodifiable(candidates);
 }
 
-({int from, int to, int done, String surahName})? _wird(
+({int from, int to, int done, String surahName, int surahNumber})? _wird(
   KhatmahPlan? plan,
   DateTime now,
 ) {
@@ -185,29 +207,30 @@ List<WidgetPrayerTime> _upcomingPrayers(
   }
   final range = plan.dailyTargetFor(now);
   if (!_validRange(range.startPage, range.endPage)) return null;
-  final surahName = _surahNameForPage(range.startPage);
-  if (surahName == null) return null;
+  final surah = _surahForPage(range.startPage);
+  if (surah == null) return null;
   final length = range.endPage - range.startPage + 1;
   final done = plan.dailyCompletedPages(now).clamp(0, length);
   return (
     from: range.startPage,
     to: range.endPage,
     done: done,
-    surahName: surahName,
+    surahName: surah.nameAr,
+    surahNumber: surah.number,
   );
 }
 
 bool _validRange(int start, int end) =>
     start >= 1 && end >= start && end <= 604;
 
-String? _surahNameForPage(int page) {
+({int number, String nameAr})? _surahForPage(int page) {
   if (page < 1 || page > 604) return null;
   try {
     final raw = qcf.getPageData(page);
     if (raw.isEmpty || raw.first is! Map) return null;
     final surah = (raw.first as Map)['surah'];
     return surah is int && SurahNames.arabic.containsKey(surah)
-        ? SurahNames.nameAr(surah)
+        ? (number: surah, nameAr: SurahNames.nameAr(surah))
         : null;
   } catch (_) {
     return null;

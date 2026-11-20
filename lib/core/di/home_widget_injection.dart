@@ -13,6 +13,7 @@ import '../l10n/locale_cubit.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
+import '../services/hijri_date_adjustment.dart';
 import '../services/prayer_times_service.dart';
 
 Future<void> registerHomeWidget(GetIt getIt) async {
@@ -43,6 +44,9 @@ Future<void> registerHomeWidget(GetIt getIt) async {
     isEnabled: flagOn,
     sections: WidgetSectionPreferences(getIt<SharedPreferences>()),
     languageCode: () => getIt<LocaleCubit>().state.languageCode,
+    hijriOffsetDays: () => getIt.isRegistered<HijriDateAdjustment>()
+        ? getIt<HijriDateAdjustment>().days
+        : 0,
   );
   final publisher = HomeWidgetPublisher(
     bridge: PlatformHomeWidgetBridge(),

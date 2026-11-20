@@ -2,6 +2,7 @@ package com.talia.quran.widget
 
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.SimpleTimeZone
@@ -21,6 +22,7 @@ data class WidgetRows(
     val showWirdAction: Boolean = false,
     // `wird` opens the reading position; `khatmah-setup` opens plan setup.
     val wirdDestination: String = "wird",
+    val hijriLine: String? = null,
 )
 
 data class WidgetSnapshotLabels(
@@ -36,7 +38,23 @@ data class WidgetSnapshotLabels(
 object WidgetSnapshotFormatter {
     private const val schemaVersion = 1
     private const val maxUpcoming = 12
+    private const val maxHijriLength = 40
     private val fardPrayerKeys = setOf("fajr", "dhuhr", "asr", "maghrib", "isha")
+
+    // Copied from SurahNames.arabic in order (1..114).
+    private val canonicalArabicSurahList = listOf(
+        "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس",
+        "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل", "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج",
+        "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة", "الأحزاب",
+        "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف",
+        "محمد", "الفتح", "الحجرات", "ق", "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة",
+        "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم", "الملك", "القلم", "الحاقة",
+        "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير",
+        "الانفطار", "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل",
+        "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة",
+        "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس",
+    )
+
     // Copied from SurahNames.arabic. The Dart contract test keeps this exact
     // native allow-list aligned with the canonical source of truth.
     private val canonicalSurahNames = setOf(
@@ -50,6 +68,25 @@ object WidgetSnapshotFormatter {
         "الانفطار", "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل",
         "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة",
         "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس",
+    )
+
+    // Copied from SurahNames.english in order (1..114). The Dart contract test
+    // keeps this exact allow-list aligned with SurahNames.english.
+    private val canonicalEnglishSurahNames = listOf(
+        "Al-Fatihah", "Al-Baqarah", "Aal-E-Imran", "An-Nisa", "Al-Maidah", "Al-Anam", "Al-Araf", "Al-Anfal",
+        "At-Tawbah", "Yunus", "Hud", "Yusuf", "Ar-Rad", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra", "Al-Kahf",
+        "Maryam", "Taha", "Al-Anbiya", "Al-Hajj", "Al-Muminun", "An-Nur", "Al-Furqan", "Ash-Shuara", "An-Naml",
+        "Al-Qasas", "Al-Ankabut", "Ar-Rum", "Luqman", "As-Sajdah", "Al-Ahzab", "Saba", "Fatir", "Ya-Sin",
+        "As-Saffat", "Sad", "Az-Zumar", "Ghafir", "Fussilat", "Ash-Shura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jathiyah",
+        "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf", "Adh-Dhariyat", "At-Tur", "An-Najm", "Al-Qamar",
+        "Ar-Rahman", "Al-Waqiah", "Al-Hadid", "Al-Mujadila", "Al-Hashr", "Al-Mumtahanah", "As-Saf", "Al-Jumuah",
+        "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Maarij",
+        "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddaththir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba",
+        "An-Naziat", "Abasa", "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Inshiqaq", "Al-Buruj", "At-Tariq",
+        "Al-Ala", "Al-Ghashiyah", "Al-Fajr", "Al-Balad", "Ash-Shams", "Al-Lail", "Ad-Dhuha", "Ash-Sharh", "At-Tin",
+        "Al-Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-Adiyat", "Al-Qariah", "At-Takathur", "Al-Asr",
+        "Al-Humazah", "Al-Fil", "Quraysh", "Al-Maun", "Al-Kawthar", "Al-Kafirun", "An-Nasr", "Al-Masad", "Al-Ikhlas",
+        "Al-Falaq", "An-Nas",
     )
 
     fun format(
@@ -73,6 +110,12 @@ object WidgetSnapshotFormatter {
         val showPrayer = sectionVisible(objectValue, "showPrayer")
         val showReviews = sectionVisible(objectValue, "showReviews")
         val showWird = sectionVisible(objectValue, "showWird")
+        val showHijri = sectionVisible(objectValue, "showHijri")
+        val hijri = if (daySlice != null && showHijri) {
+            hijriLine(daySlice)
+        } else {
+            null
+        }
         val prayer = if (showPrayer) {
             prayerLine(objectValue, labels, arabic, nowMillis)
                 ?: if (objectValue.optBoolean("prayerUnset", false)) labels.prayerUnset else null
@@ -89,7 +132,7 @@ object WidgetSnapshotFormatter {
         } else {
             null
         }
-        val blank = prayer == null && review == null && wird?.line == null
+        val blank = hijri == null && prayer == null && review == null && wird?.line == null
         if (blank && objectValue.optBoolean("isEmpty", false)) {
             return if (objectValue.optBoolean("adultNoData", false)) {
                 WidgetRows(null, null, null, true, adultNoData = true)
@@ -109,7 +152,16 @@ object WidgetSnapshotFormatter {
             wirdTotal = wird?.total,
             showWirdAction = wird?.action == true,
             wirdDestination = wird?.destination ?: "wird",
+            hijriLine = hijri,
         )
+    }
+
+    private fun hijriLine(objectValue: JSONObject): String? {
+        val raw = objectValue.opt("hijriLabel") as? String ?: return null
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty() || trimmed.length > maxHijriLength) return null
+        if (trimmed.contains('\n') || trimmed.contains('\r')) return null
+        return trimmed
     }
 
     private fun parse(json: String?): JSONObject? = try {
@@ -200,6 +252,26 @@ object WidgetSnapshotFormatter {
         val destination: String,
     )
 
+    private fun resolveSurahName(objectValue: JSONObject, arabic: Boolean): String? {
+        val number = integer(objectValue, "wirdSurahNumber")
+        if (number != null && number in 1..114) {
+            return if (arabic) {
+                canonicalArabicSurahList[number - 1]
+            } else {
+                canonicalEnglishSurahNames[number - 1]
+            }
+        }
+        val legacyArabic = objectValue.optString("wirdSurahName").takeIf { it in canonicalSurahNames }
+            ?: return null
+        if (arabic) return legacyArabic
+        val index = canonicalArabicSurahList.indexOf(legacyArabic)
+        return if (index in canonicalEnglishSurahNames.indices) {
+            canonicalEnglishSurahNames[index]
+        } else {
+            legacyArabic
+        }
+    }
+
     private fun wirdPresentation(
         objectValue: JSONObject,
         labels: WidgetSnapshotLabels,
@@ -208,7 +280,7 @@ object WidgetSnapshotFormatter {
         val from = integer(objectValue, "wirdFromPage")
         val to = integer(objectValue, "wirdToPage")
         val done = integer(objectValue, "wirdDonePages")
-        val name = objectValue.optString("wirdSurahName").takeIf { it in canonicalSurahNames }
+        val name = resolveSurahName(objectValue, arabic)
         if (from != null && to != null && done != null && name != null &&
             from in 1..604 && to in from..604 && done >= 0
         ) {
@@ -233,11 +305,22 @@ object WidgetSnapshotFormatter {
     }
 
     private fun formatTime(millis: Long, offsetMinutes: Int, arabic: Boolean): String {
-        val formatter = SimpleDateFormat("HH:mm", Locale.US).apply {
-            timeZone = SimpleTimeZone(offsetMinutes * 60_000, "widget")
+        val tz = SimpleTimeZone(offsetMinutes * 60_000, "widget")
+        val calendar = Calendar.getInstance(tz, Locale.US).apply {
+            timeInMillis = millis
         }
-        val time = formatter.format(Date(millis))
-        return if (arabic) digits(time) else time
+        val formatter = SimpleDateFormat("h:mm", Locale.US).apply {
+            timeZone = tz
+        }
+        val clock = formatter.format(Date(millis))
+        val isPm = calendar.get(Calendar.HOUR_OF_DAY) >= 12
+        val period = if (arabic) {
+            if (isPm) "م" else "ص"
+        } else {
+            if (isPm) "PM" else "AM"
+        }
+        val formatted = "$clock $period"
+        return if (arabic) digits(formatted) else formatted
     }
 
     private fun digits(value: Any): String = value.toString().map { char ->

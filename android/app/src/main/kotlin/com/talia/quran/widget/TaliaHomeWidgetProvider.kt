@@ -3,7 +3,9 @@ package com.talia.quran.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
@@ -15,9 +17,26 @@ import com.talia.quran.MainActivity
 import com.talia.quran.R
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetPlugin
+import es.antonborri.home_widget.HomeWidgetScheduler
 import java.util.Locale
 
 class TaliaHomeWidgetProvider : AppWidgetProvider() {
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == Intent.ACTION_TIME_CHANGED ||
+            intent.action == Intent.ACTION_TIMEZONE_CHANGED
+        ) {
+            HomeWidgetScheduler.rescheduleAll(context)
+            val manager = AppWidgetManager.getInstance(context)
+            val ids = manager.getAppWidgetIds(
+                ComponentName(context, TaliaHomeWidgetProvider::class.java),
+            )
+            if (ids.isNotEmpty()) {
+                render(context, manager, ids)
+            }
+        }
+    }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -125,14 +144,36 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
     private fun views(context: Context, localized: Context, rows: WidgetRows, arabic: Boolean): RemoteViews {
         val layout = if (arabic) R.layout.talia_home_widget_rtl else R.layout.talia_home_widget
         val views = RemoteViews(context.packageName, layout)
-        setRow(views, R.id.widget_prayer, rows.prayerLine, link(context, "prayer"))
-        setRow(views, R.id.widget_review, rows.reviewLine, link(context, "review"))
-        setRow(views, R.id.widget_wird, rows.wirdLine, link(context, rows.wirdDestination))
+        setTextRow(views, R.id.widget_hijri, rows.hijriLine, link(context, ""))
+        setIconRow(
+            views,
+            R.id.widget_prayer_row,
+            R.id.widget_prayer,
+            rows.prayerLine,
+            link(context, "prayer"),
+        )
+        setIconRow(
+            views,
+            R.id.widget_review_row,
+            R.id.widget_review,
+            rows.reviewLine,
+            link(context, "review"),
+        )
+        setIconRow(
+            views,
+            R.id.widget_wird_row,
+            R.id.widget_wird,
+            rows.wirdLine,
+            link(context, rows.wirdDestination),
+        )
         val done = rows.wirdDone
         val total = rows.wirdTotal
         val detail = rows.wirdRange != null && done != null && total != null
         views.setViewVisibility(R.id.widget_wird_range, if (rows.wirdRange != null) View.VISIBLE else View.GONE)
-        if (rows.wirdRange != null) views.setTextViewText(R.id.widget_wird_range, rows.wirdRange)
+        if (rows.wirdRange != null) {
+            views.setTextViewText(R.id.widget_wird_range, rows.wirdRange)
+            views.setOnClickPendingIntent(R.id.widget_wird_range, link(context, rows.wirdDestination))
+        }
         views.setViewVisibility(R.id.widget_wird_progress, if (detail) View.VISIBLE else View.GONE)
         if (detail && done != null && total != null) {
             views.setProgressBar(
@@ -141,11 +182,15 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
                 done.coerceIn(0, total),
                 false,
             )
+            views.setOnClickPendingIntent(R.id.widget_wird_progress, link(context, rows.wirdDestination))
         }
         views.setViewVisibility(R.id.widget_wird_action, if (rows.showWirdAction) View.VISIBLE else View.GONE)
         views.setTextViewText(R.id.widget_wird_action, localized.getString(R.string.widget_wird_action))
         views.setOnClickPendingIntent(R.id.widget_wird_action, link(context, "wird"))
-        val showEmpty = rows.prayerLine == null && rows.reviewLine == null && rows.wirdLine == null
+        val showEmpty = rows.hijriLine == null &&
+            rows.prayerLine == null &&
+            rows.reviewLine == null &&
+            rows.wirdLine == null
         views.setViewVisibility(R.id.widget_empty, if (showEmpty) View.VISIBLE else View.GONE)
         val emptyText = when {
             rows.stale -> R.string.widget_stale
@@ -159,13 +204,14 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
     }
 
     // API 31 resolves these in the launcher, so night mode and system colors
-    // update without a new snapshot. Older releases use the night-qualified
-    // colors baked in when the widget is redrawn.
+    // update without a new snapshot. Using background tint preserves the
+    // rounded shape drawables instead of replacing them with a square color.
     private fun applyColors(views: RemoteViews) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        views.setColor(R.id.widget_root, "setBackgroundColor", R.color.widget_background)
+        views.setColorStateList(R.id.widget_root, "setBackgroundTintList", R.color.widget_background)
         views.setColor(R.id.widget_prayer, "setTextColor", R.color.widget_text_primary)
         for (id in intArrayOf(
+            R.id.widget_hijri,
             R.id.widget_review,
             R.id.widget_wird,
             R.id.widget_wird_range,
@@ -173,10 +219,24 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         )) {
             views.setColor(id, "setTextColor", R.color.widget_text_secondary)
         }
+        views.setColorStateList(R.id.widget_wird_progress, "setProgressTintList", R.color.widget_progress)
+        views.setColorStateList(
+            R.id.widget_wird_progress,
+            "setProgressBackgroundTintList",
+            R.color.widget_progress_track,
+        )
+        views.setColorStateList(R.id.widget_wird_action, "setBackgroundTintList", R.color.widget_text_primary)
         views.setColor(R.id.widget_wird_action, "setTextColor", R.color.widget_background)
+        for (id in intArrayOf(
+            R.id.widget_prayer_icon,
+            R.id.widget_review_icon,
+            R.id.widget_wird_icon,
+        )) {
+            views.setColorStateList(id, "setImageTintList", R.color.widget_progress)
+        }
     }
 
-    private fun setRow(
+    private fun setTextRow(
         views: RemoteViews,
         id: Int,
         text: String?,
@@ -185,6 +245,21 @@ class TaliaHomeWidgetProvider : AppWidgetProvider() {
         views.setViewVisibility(id, if (text == null) View.GONE else View.VISIBLE)
         if (text != null) views.setTextViewText(id, text)
         views.setOnClickPendingIntent(id, pendingIntent)
+    }
+
+    private fun setIconRow(
+        views: RemoteViews,
+        rowId: Int,
+        textId: Int,
+        text: String?,
+        pendingIntent: PendingIntent,
+    ) {
+        val visibility = if (text == null) View.GONE else View.VISIBLE
+        views.setViewVisibility(rowId, visibility)
+        views.setViewVisibility(textId, visibility)
+        if (text != null) views.setTextViewText(textId, text)
+        views.setOnClickPendingIntent(rowId, pendingIntent)
+        views.setOnClickPendingIntent(textId, pendingIntent)
     }
 
     // Each URI identifies its own immutable intent. The plugin supplies the

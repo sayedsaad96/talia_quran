@@ -46,7 +46,13 @@ object WidgetLayoutPolicy {
                 val prayer = rows.prayerLine
                 val review = if (prayer == null) rows.reviewLine else null
                 val wird = if (prayer == null && review == null) rows.wirdLine else null
+                val hijri = if (prayer == null && review == null && wird == null) {
+                    rows.hijriLine
+                } else {
+                    null
+                }
                 rows.copy(
+                    hijriLine = hijri,
                     prayerLine = prayer,
                     reviewLine = review,
                     wirdLine = wird,
@@ -64,7 +70,8 @@ object WidgetLayoutPolicy {
             )
             WidgetSize.LARGE -> rows
         }
-        val blank = sized.prayerLine == null &&
+        val blank = sized.hijriLine == null &&
+            sized.prayerLine == null &&
             sized.reviewLine == null &&
             sized.wirdLine == null
         return sized.copy(empty = blank)

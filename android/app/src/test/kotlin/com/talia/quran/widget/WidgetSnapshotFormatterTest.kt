@@ -18,7 +18,7 @@ class WidgetSnapshotFormatterTest {
         wirdLine = { name, done, total -> "$name · $done/$total pages" },
     )
     private val arabicLabels = WidgetSnapshotLabels(
-        prayerNames = mapOf("fajr" to "الفجر"),
+        prayerNames = mapOf("fajr" to "الفجر", "isha" to "العشاء"),
         reviewLine = { count -> "$count مراجعات مستحقة" },
         wirdLine = { name, done, total -> "$name · $done/$total" },
     )
@@ -47,7 +47,7 @@ class WidgetSnapshotFormatterTest {
     }
 
     @Test
-    fun `arabic prayer line uses a canonical name and Arabic Indic time`() {
+    fun `arabic prayer line uses a canonical name and 12-hour Arabic Indic time`() {
         val rows = WidgetSnapshotFormatter.format(
             """{
               "schemaVersion":1,
@@ -60,8 +60,22 @@ class WidgetSnapshotFormatterTest {
             nowMillis,
         )
 
-        assertEquals("الفجر · ٠٥:٠٣", rows.prayerLine)
+        assertEquals("الفجر · ٥:٠٣ ص", rows.prayerLine)
         assertFalse(rows.empty)
+    }
+
+    @Test
+    fun `evening prayer uses PM and Arabic masa marker`() {
+        // 19:45 UTC = 71_100_000 ms
+        val json = """{
+          "schemaVersion":1,
+          "isEmpty":false,
+          "nextPrayerKey":"isha",
+          "nextPrayerAt":71100000
+        }""".trimIndent()
+
+        assertEquals("Isha · 7:45 PM", WidgetSnapshotFormatter.format(json, labels, false, nowMillis).prayerLine)
+        assertEquals("العشاء · ٧:٤٥ م", WidgetSnapshotFormatter.format(json, arabicLabels, true, nowMillis).prayerLine)
     }
 
     @Test
@@ -141,8 +155,8 @@ class WidgetSnapshotFormatterTest {
     }
 
     @Test
-    fun `valid rows retain only safe snapshot display values`() {
-        val rows = WidgetSnapshotFormatter.format(
+    fun `valid rows retain only safe snapshot display values and localize surah names`() {
+        val rowsEn = WidgetSnapshotFormatter.format(
             """{
               "schemaVersion":1,
               "isEmpty":false,
@@ -152,18 +166,34 @@ class WidgetSnapshotFormatterTest {
               "wirdFromPage":10,
               "wirdToPage":12,
               "wirdDonePages":9,
-              "wirdSurahName":"الفاتحة"
+              "wirdSurahName":"الفاتحة",
+              "wirdSurahNumber":1
             }""".trimIndent(),
             labels,
             false,
             nowMillis,
         )
 
-        assertEquals("Dhuhr · 08:00", rows.prayerLine)
-        assertTrue(rows.reviewLine!!.contains("2"))
-        assertTrue(rows.wirdLine!!.contains("الفاتحة"))
-        assertTrue(rows.wirdLine!!.contains("3/3"))
-        assertFalse(rows.empty)
+        assertEquals("Dhuhr · 8:00 AM", rowsEn.prayerLine)
+        assertTrue(rowsEn.reviewLine!!.contains("2"))
+        assertTrue(rowsEn.wirdLine!!.contains("Al-Fatihah"))
+        assertTrue(rowsEn.wirdLine!!.contains("3/3"))
+        assertFalse(rowsEn.empty)
+
+        val rowsAr = WidgetSnapshotFormatter.format(
+            """{
+              "schemaVersion":1,
+              "isEmpty":false,
+              "wirdFromPage":10,
+              "wirdToPage":12,
+              "wirdDonePages":1,
+              "wirdSurahNumber":2
+            }""".trimIndent(),
+            arabicLabels,
+            true,
+            nowMillis,
+        )
+        assertEquals("البقرة · ١/٣", rowsAr.wirdLine)
     }
 
     @Test
@@ -181,7 +211,7 @@ class WidgetSnapshotFormatterTest {
             nowMillis,
         )
 
-        assertEquals("Fajr · 08:00", rows.prayerLine)
+        assertEquals("Fajr · 8:00 AM", rows.prayerLine)
     }
 
     @Test
@@ -225,7 +255,7 @@ class WidgetSnapshotFormatterTest {
             nowMillis,
         )
 
-        assertEquals("Morning prayer · 05:03", rows.prayerLine)
+        assertEquals("Morning prayer · 5:03 AM", rows.prayerLine)
     }
 
     @Test
@@ -242,9 +272,9 @@ class WidgetSnapshotFormatterTest {
           ]
         }""".trimIndent()
 
-        assertEquals("Dhuhr · 01:00", WidgetSnapshotFormatter.format(json, labels, false, 0L).prayerLine)
-        assertEquals("Asr · 02:00", WidgetSnapshotFormatter.format(json, labels, false, 3_600_000L).prayerLine)
-        assertEquals("Maghrib · 03:00", WidgetSnapshotFormatter.format(json, labels, false, 7_200_000L).prayerLine)
+        assertEquals("Dhuhr · 1:00 AM", WidgetSnapshotFormatter.format(json, labels, false, 0L).prayerLine)
+        assertEquals("Asr · 2:00 AM", WidgetSnapshotFormatter.format(json, labels, false, 3_600_000L).prayerLine)
+        assertEquals("Maghrib · 3:00 AM", WidgetSnapshotFormatter.format(json, labels, false, 7_200_000L).prayerLine)
         assertNull(WidgetSnapshotFormatter.format(json, labels, false, 10_800_000L).prayerLine)
     }
 
@@ -266,7 +296,7 @@ class WidgetSnapshotFormatterTest {
             0L,
         )
 
-        assertEquals("Asr · 03:00", rows.prayerLine)
+        assertEquals("Asr · 3:00 AM", rows.prayerLine)
     }
 
     @Test
@@ -279,7 +309,7 @@ class WidgetSnapshotFormatterTest {
           ]
         }""".trimIndent()
 
-        assertEquals("Fajr · 05:03", WidgetSnapshotFormatter.format(json, labels, false, 2000L).prayerLine)
+        assertEquals("Fajr · 5:03 AM", WidgetSnapshotFormatter.format(json, labels, false, 2000L).prayerLine)
     }
 
     @Test
@@ -304,7 +334,7 @@ class WidgetSnapshotFormatterTest {
             0L,
         )
 
-        assertEquals("Fajr · 05:03", rows.prayerLine)
+        assertEquals("Fajr · 5:03 AM", rows.prayerLine)
     }
 
     @Test
@@ -331,7 +361,7 @@ class WidgetSnapshotFormatterTest {
 
         assertNotNull(before.reviewLine)
         assertNotNull(before.wirdLine)
-        assertEquals("Fajr · 05:03", rows.prayerLine)
+        assertEquals("Fajr · 5:03 AM", rows.prayerLine)
         assertNull(rows.reviewLine)
         assertNull(rows.wirdLine)
         assertFalse(rows.empty)
@@ -355,7 +385,7 @@ class WidgetSnapshotFormatterTest {
             88_200_000L,
         )
 
-        assertEquals("Fajr · 05:03", rows.prayerLine)
+        assertEquals("Fajr · 5:03 AM", rows.prayerLine)
         assertNotNull(rows.reviewLine)
         assertNotNull(rows.wirdLine)
     }
@@ -438,12 +468,36 @@ class WidgetSnapshotFormatterTest {
         )
 
         assertNull(rows.reviewLine)
-        assertEquals("الفاتحة · 1/3 pages", rows.wirdLine)
+        assertEquals("Al-Fatihah · 1/3 pages", rows.wirdLine)
         assertEquals("10–12", rows.wirdRange)
         assertEquals(1, rows.wirdDone)
         assertEquals(3, rows.wirdTotal)
         assertTrue(rows.showWirdAction)
         assertEquals("wird", rows.wirdDestination)
+    }
+
+    @Test
+    fun `hijri date follows day slice and showHijri toggle`() {
+        val json = """{
+          "schemaVersion":1,
+          "isEmpty":false,
+          "expiresAt":172800000,
+          "dayEndsAt":86400000,
+          "hijriLabel":"15 Ramadan 1447",
+          "nextDay":{"hijriLabel":"16 Ramadan 1447"},
+          "upcomingPrayers":[{"key":"fajr","at":104580000,"offsetMinutes":0}]
+        }""".trimIndent()
+
+        assertEquals("15 Ramadan 1447", WidgetSnapshotFormatter.format(json, labels, false, 80_000_000L).hijriLine)
+        assertEquals("16 Ramadan 1447", WidgetSnapshotFormatter.format(json, labels, false, 88_200_000L).hijriLine)
+
+        val hidden = WidgetSnapshotFormatter.format(
+            """{"schemaVersion":1,"isEmpty":false,"showHijri":false,"hijriLabel":"15 Ramadan 1447","nextPrayerKey":"fajr","nextPrayerAt":18180000}""",
+            labels,
+            false,
+            0L,
+        )
+        assertNull(hidden.hijriLine)
     }
 
     @Test
@@ -471,12 +525,12 @@ class WidgetSnapshotFormatterTest {
         val before = WidgetSnapshotFormatter.format(json, labels, false, 80_000_000L)
         val after = WidgetSnapshotFormatter.format(json, labels, false, 88_200_000L)
 
-        assertEquals("الفاتحة · 1/3 pages", before.wirdLine)
+        assertEquals("Al-Fatihah · 1/3 pages", before.wirdLine)
         assertEquals("4 reviews due", after.reviewLine)
-        assertEquals("البقرة · 0/3 pages", after.wirdLine)
+        assertEquals("Al-Baqarah · 0/3 pages", after.wirdLine)
         assertEquals("20–22", after.wirdRange)
         assertTrue(after.showWirdAction)
-        assertEquals("Fajr · 05:03", after.prayerLine)
+        assertEquals("Fajr · 5:03 AM", after.prayerLine)
         assertFalse(after.stale)
     }
 
@@ -508,6 +562,7 @@ class WidgetSnapshotFormatterTest {
               "showPrayer":false,
               "showReviews":false,
               "showWird":false,
+              "showHijri":false,
               "dueReviewCount":3,
               "nextPrayerKey":"fajr",
               "nextPrayerAt":18180000
@@ -520,6 +575,7 @@ class WidgetSnapshotFormatterTest {
         assertNull(rows.prayerLine)
         assertNull(rows.reviewLine)
         assertNull(rows.wirdLine)
+        assertNull(rows.hijriLine)
         assertTrue(rows.empty)
         assertTrue(rows.adultNoData)
         assertFalse(rows.stale)

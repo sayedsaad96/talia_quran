@@ -1,13 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/experience/experience_feature_flags.dart';
 import '../../../../../core/experience/feature_preferences.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/home_widget/home_widget_publisher.dart';
+import '../../../../../core/home_widget/widget_section_preferences.dart';
 import '../../../../../core/icons/talia_icons.dart';
 import '../../../../../core/l10n/app_localizations.dart';
 import '../../../../../core/services/notification_scheduler.dart';
@@ -37,6 +40,9 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
       ? getIt<FeaturePreferences>()
       : null;
 
+  bool get _supportsHomeWidget =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -45,10 +51,11 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
       title: l10n.settingsFeaturesPageTitle,
       children: [
         for (final group in _FeatureGroup.values)
-          SettingsGroup(
-            title: group.title(l10n),
-            children: _rows(context, group),
-          ),
+          if (_rowsForGroup(group).isNotEmpty)
+            SettingsGroup(
+              title: group.title(l10n),
+              children: _buildRows(context, _rowsForGroup(group)),
+            ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: TextButton(
@@ -57,6 +64,11 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
                 : () async {
                     final l10n = context.l10n;
                     await _store!.resetToDefaults();
+                    if (getIt.isRegistered<SharedPreferences>()) {
+                      await WidgetSectionPreferences(
+                        getIt<SharedPreferences>(),
+                      ).resetToDefaults();
+                    }
                     if (!mounted) return;
                     setState(() {});
                     if (getIt.isRegistered<NotificationScheduler>()) {
@@ -79,16 +91,23 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
     );
   }
 
-  List<Widget> _rows(BuildContext context, _FeatureGroup group) {
+  List<_FeatureRow> _rowsForGroup(_FeatureGroup group) {
+    final store = _store;
+    return [
+      // Only what ships in this release and on this platform; a hidden feature
+      // shows no switch.
+      for (final row in _FeatureRow.values)
+        if (row.group == group &&
+            (row != _FeatureRow.homeWidget || _supportsHomeWidget) &&
+            (store?.isAvailable(row.feature) ?? false))
+          row,
+    ];
+  }
+
+  List<Widget> _buildRows(BuildContext context, List<_FeatureRow> rows) {
     final l10n = context.l10n;
     final isDark = context.isDark;
     final store = _store;
-    final rows = [
-      // Only what ships in this release; a hidden feature shows no switch.
-      for (final row in _FeatureRow.values)
-        if (row.group == group && (store?.isAvailable(row.feature) ?? false))
-          row,
-    ];
     return [
       for (var i = 0; i < rows.length; i++) ...[
         if (i > 0) SettingsDivider(isDark: isDark, indent: 0),
@@ -136,7 +155,7 @@ class _FeaturesSettingsPageState extends State<FeaturesSettingsPage> {
     }
     if (feature == ExperienceFeature.homeWidget &&
         getIt.isRegistered<HomeWidgetPublisher>()) {
-      unawaited(_refreshHomeWidget());
+      await _refreshHomeWidget();
     }
   }
 

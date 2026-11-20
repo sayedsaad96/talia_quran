@@ -11,87 +11,156 @@
     android:paddingBottom="12dp">
 
     <TextView
-        android:id="@+id/widget_prayer"
-        android:maxLines="1"
-        android:ellipsize="end"
+        android:id="@+id/widget_hijri"
         android:layout_width="match_parent"
-        android:visibility="gone"
         android:layout_height="wrap_content"
-        android:gravity="left"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium"
-        android:textColor="@color/widget_text_primary" />
-
-    <TextView
-        android:id="@+id/widget_review"
-        android:maxLines="1"
+        android:layout_marginBottom="4dp"
         android:ellipsize="end"
+        android:gravity="left"
+        android:maxLines="1"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/widget_prayer_row"
         android:layout_width="match_parent"
-        android:visibility="gone"
+        android:layout_height="wrap_content"
+        android:gravity="left|center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_prayer_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginRight="8dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_prayer" />
+
+        <TextView
+            android:id="@+id/widget_prayer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="left"
+            android:maxLines="1"
+            android:textAppearance="@android:style/TextAppearance.Material.Medium"
+            android:textColor="@color/widget_text_primary"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_review_row"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:gravity="left"
-        android:textAppearance="@android:style/TextAppearance.Material.Small"
-        android:textColor="@color/widget_text_secondary" />
+        android:gravity="left|center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
 
-    <TextView
-        android:id="@+id/widget_wird"
-        android:maxLines="1"
-        android:ellipsize="end"
+        <ImageView
+            android:id="@+id/widget_review_icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginRight="8dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_review" />
+
+        <TextView
+            android:id="@+id/widget_review"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="left"
+            android:maxLines="1"
+            android:textAppearance="@android:style/TextAppearance.Material.Small"
+            android:textColor="@color/widget_text_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_wird_row"
         android:layout_width="match_parent"
-        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:gravity="left"
-        android:textAppearance="@android:style/TextAppearance.Material.Small"
-        android:textColor="@color/widget_text_secondary" />
+        android:gravity="left|center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_wird_icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginRight="8dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_wird" />
+
+        <TextView
+            android:id="@+id/widget_wird"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="left"
+            android:maxLines="1"
+            android:textAppearance="@android:style/TextAppearance.Material.Small"
+            android:textColor="@color/widget_text_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/widget_wird_range"
-        android:maxLines="1"
-        android:ellipsize="end"
         android:layout_width="match_parent"
-        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:ellipsize="end"
         android:gravity="left"
+        android:maxLines="1"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
-        android:textColor="@color/widget_text_secondary" />
+        android:textColor="@color/widget_text_secondary"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/widget_wird_progress"
         style="?android:attr/progressBarStyleHorizontal"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="8dp"
         android:layout_marginTop="8dp"
         android:max="1"
         android:progress="0"
         android:progressBackgroundTint="@color/widget_progress_track"
-        android:progressTint="@color/widget_progress" />
+        android:progressTint="@color/widget_progress"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/widget_wird_action"
         android:layout_width="wrap_content"
-        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/talia_home_widget_action"
         android:gravity="left"
-        android:paddingLeft="12dp"
+        android:paddingLeft="14dp"
         android:paddingTop="6dp"
-        android:paddingRight="12dp"
+        android:paddingRight="14dp"
         android:paddingBottom="6dp"
         android:text="@string/widget_wird_action"
-        android:textColor="@color/widget_background" />
+        android:textColor="@color/widget_background"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/widget_empty"
-        android:maxLines="1"
-        android:ellipsize="end"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="2"
         android:text="@string/widget_empty_hint"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
         android:textColor="@color/widget_text_secondary" />
